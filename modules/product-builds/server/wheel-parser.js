@@ -7,20 +7,15 @@
 function parseWheelFilename(filename) {
   const stem = filename.slice(0, -4)
   const parts = stem.split('-')
-  if (parts.length < 5) return null
-
-  const platform = parts[parts.length - 1]
-  const abi = parts[parts.length - 2]
-  const python = parts[parts.length - 3]
-
-  const remaining = parts.slice(0, parts.length - 3)
-  if (remaining.length < 2) return null
-
-  const hasBuildTag = remaining.length >= 3 && /^\d/.test(remaining[remaining.length - 1])
-  const versionEnd = hasBuildTag ? remaining.length - 1 : remaining.length
-  const version = remaining.slice(1, versionEnd).join('-')
-
-  return { version, python, abi, platform }
+  // PEP 427: name-version-python-abi-platform (5 parts)
+  //      or: name-version-build-python-abi-platform (6 parts)
+  if (parts.length === 5) {
+    return { version: parts[1], python: parts[2], abi: parts[3], platform: parts[4] }
+  }
+  if (parts.length === 6) {
+    return { version: parts[1], python: parts[3], abi: parts[4], platform: parts[5] }
+  }
+  return null
 }
 
 function parseSdistFilename(filename) {

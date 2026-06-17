@@ -1,3 +1,22 @@
+const MAX_CONCURRENT_FETCHES = 20
+
+async function pMap(items, fn, concurrency) {
+  const results = new Array(items.length)
+  let idx = 0
+  async function worker() {
+    while (idx < items.length) {
+      const i = idx++
+      results[i] = await fn(items[i], i)
+    }
+  }
+  const workers = []
+  for (let w = 0; w < Math.min(concurrency, items.length); w++) {
+    workers.push(worker())
+  }
+  await Promise.allSettled(workers)
+  return results
+}
+
 const ACCEPT_HEADER =
   'application/vnd.pypi.simple.v1+json, ' +
   'application/vnd.pypi.simple.v1+html;q=0.5, ' +
@@ -194,5 +213,7 @@ module.exports = {
   getProductVersions,
   getDefaultProductVersion,
   clearCache,
-  getCacheStats
+  getCacheStats,
+  pMap,
+  MAX_CONCURRENT_FETCHES
 }

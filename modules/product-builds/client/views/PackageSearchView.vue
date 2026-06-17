@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { usePackageSearch } from '../composables/usePackageSearch'
 
 const {
@@ -7,14 +7,12 @@ const {
   results,
   loading,
   error,
-  archFilter,
   loadOptions,
   search,
   productVersions,
   anyFound,
   anyPackageFound,
   anyIndexExists,
-  availableArchs,
   packageUiHref
 } = usePackageSearch()
 
@@ -23,6 +21,20 @@ const packageVersion = ref('')
 const selectedProductVersion = ref('')
 const selectedVariant = ref('')
 const selectedRepoTypes = ref('default')
+
+function compareVersionsDesc(a, b) {
+  const normalize = v => v.replace(/([a-zA-Z]+)/g, '.$1.').split('.').filter(Boolean)
+  const pa = normalize(a)
+  const pb = normalize(b)
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const na = Number(pa[i]), nb = Number(pb[i])
+    const aNum = !isNaN(na), bNum = !isNaN(nb)
+    if (aNum && bNum) { if (nb !== na) return nb - na }
+    else if (aNum !== bNum) { return aNum ? -1 : 1 }
+    else { const cmp = (pa[i] || '').localeCompare(pb[i] || ''); if (cmp !== 0) return cmp }
+  }
+  return 0
+}
 
 const REPO_TYPE_LABELS = {
   production: 'Production',
@@ -72,20 +84,15 @@ onMounted(async () => {
 
 async function handleSubmit() {
   if (!canSubmit.value) return
+  expandedVersions.value = new Set()
+  versionVariantFilter.value = ''
+  versionRepoFilter.value = ''
   await search({
     packageName: packageName.value,
     packageVersion: packageVersion.value,
     productVersion: selectedProductVersion.value,
     variant: selectedVariant.value,
     repoTypes: selectedRepoTypes.value
-  })
-}
-
-function filterFiles(files) {
-  if (!archFilter.value) return files
-  return files.filter(f => {
-    if (archFilter.value === 'source') return !f.platform
-    return f.platform && f.platform.includes(archFilter.value)
   })
 }
 
@@ -98,27 +105,12 @@ function getVariantsForVersion(versionResults) {
   return [...new Set(versionResults.map(r => r.variant))]
 }
 
-function getRepoTypesForVersion(versionResults) {
-  const rts = [...new Set(versionResults.map(r => r.repo_type))]
-  return rts.sort((a, b) => REPO_TYPE_ORDER.indexOf(a) - REPO_TYPE_ORDER.indexOf(b))
-}
-
 function getResult(versionResults, variant, repoType) {
   return versionResults.find(r => r.variant === variant && r.repo_type === repoType)
 }
 
-function badgeFor(result) {
-  if (!result) return null
-  if (!result.index_exists && result.error === 'timeout') return { label: 'Timeout', style: 'warn' }
-  if (!result.index_exists) return { label: 'No index', style: 'muted' }
-  if (!result.found) return { label: 'Not found', style: 'warn' }
-  const count = filterFiles(result.files).length
-  if (count === 0) return { label: '0 files', style: 'muted' }
-  return { label: count + ' file' + (count !== 1 ? 's' : ''), style: 'success' }
-}
-
 function hasFiles(r) {
-  return r && r.found && r.files && filterFiles(r.files).length > 0
+  return r && r.found && r.files && r.files.length > 0
 }
 
 const repoAvailability = computed(() => {
@@ -170,6 +162,18 @@ function toggleRepoFilter(rt) {
   versionRepoFilter.value = versionRepoFilter.value === rt ? '' : rt
 }
 
+function jumpToVersion(version) {
+  if (!expandedVersions.value.has(version)) {
+    const next = new Set(expandedVersions.value)
+    next.add(version)
+    expandedVersions.value = next
+  }
+  nextTick(() => {
+    const el = document.getElementById('pkg-ver-' + version)
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  })
+}
+
 function toggleVersion(version) {
   const next = new Set(expandedVersions.value)
   if (next.has(version)) next.delete(version)
@@ -182,7 +186,7 @@ const versionBreakdown = computed(() => {
   const byVersion = {}
   for (const r of results.value.results) {
     if (!r.found || !r.files) continue
-    for (const f of filterFiles(r.files)) {
+    for (const f of r.files) {
       if (f.version === 'unknown') continue
       if (!byVersion[f.version]) {
         byVersion[f.version] = {
@@ -199,11 +203,14 @@ const versionBreakdown = computed(() => {
       entry.variants.add(r.variant)
       entry.repoTypes.add(r.repo_type)
       entry.productVersions.add(r.product_version)
-      const variantKey = r.variant + ' / ' + (REPO_TYPE_LABELS[r.repo_type] || r.repo_type)
-      if (!entry.byVariant[variantKey]) {
-        entry.byVariant[variantKey] = { variant: r.variant, repoType: r.repo_type, label: variantKey, indexUrl: r.index_url, files: [] }
+      if (!entry.byVariant[r.variant]) {
+        entry.byVariant[r.variant] = { variant: r.variant, repoTypes: {} }
       }
-      entry.byVariant[variantKey].files.push(f)
+      const variantGroup = entry.byVariant[r.variant]
+      if (!variantGroup.repoTypes[r.repo_type]) {
+        variantGroup.repoTypes[r.repo_type] = { repoType: r.repo_type, indexUrl: r.index_url, files: [] }
+      }
+      variantGroup.repoTypes[r.repo_type].files.push(f)
     }
   }
   return Object.values(byVersion)
@@ -213,28 +220,34 @@ const versionBreakdown = computed(() => {
       variants: [...v.variants].sort(),
       repoTypes: [...v.repoTypes].sort((a, b) => REPO_TYPE_ORDER.indexOf(a) - REPO_TYPE_ORDER.indexOf(b)),
       productVersions: [...v.productVersions],
-      groups: Object.values(v.byVariant).sort((a, b) => a.label.localeCompare(b.label))
+      groups: Object.values(v.byVariant)
+        .map(g => ({
+          variant: g.variant,
+          columns: REPO_TYPE_ORDER
+            .filter(rt => g.repoTypes[rt])
+            .map(rt => g.repoTypes[rt])
+        }))
+        .sort((a, b) => a.variant.localeCompare(b.variant))
     }))
-    .sort((a, b) => {
-      const pa = a.version.split('.').map(Number)
-      const pb = b.version.split('.').map(Number)
-      for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-        if ((pb[i] || 0) !== (pa[i] || 0)) return (pb[i] || 0) - (pa[i] || 0)
-      }
-      return 0
-    })
+    .sort((a, b) => compareVersionsDesc(a.version, b.version))
 })
 
 const filteredVersionBreakdown = computed(() => {
   if (!versionVariantFilter.value && !versionRepoFilter.value) return versionBreakdown.value
   return versionBreakdown.value
     .map(v => {
-      const groups = v.groups.filter(g =>
-        (!versionVariantFilter.value || g.variant === versionVariantFilter.value) &&
-        (!versionRepoFilter.value || g.repoType === versionRepoFilter.value)
-      )
+      let groups = v.groups
+      if (versionVariantFilter.value) {
+        groups = groups.filter(g => g.variant === versionVariantFilter.value)
+      }
+      if (versionRepoFilter.value) {
+        groups = groups.map(g => ({
+          ...g,
+          columns: g.columns.filter(c => c.repoType === versionRepoFilter.value)
+        })).filter(g => g.columns.length > 0)
+      }
       if (groups.length === 0) return null
-      const files = groups.reduce((sum, g) => sum + g.files.length, 0)
+      const files = groups.reduce((sum, g) => sum + g.columns.reduce((s, c) => s + c.files.length, 0), 0)
       return { ...v, groups, files }
     })
     .filter(Boolean)
@@ -272,7 +285,7 @@ const versionMatrix = computed(() => {
 
   for (const r of results.value.results) {
     if (!r.found || !r.files) continue
-    for (const f of filterFiles(r.files)) {
+    for (const f of r.files) {
       if (f.version === 'unknown') continue
       pkgVersions.add(f.version)
       const key = f.version + '\0' + r.product_version
@@ -282,14 +295,7 @@ const versionMatrix = computed(() => {
     }
   }
 
-  const sortedPkgVersions = [...pkgVersions].sort((a, b) => {
-    const pa = a.split('.').map(Number)
-    const pb = b.split('.').map(Number)
-    for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-      if ((pb[i] || 0) !== (pa[i] || 0)) return (pb[i] || 0) - (pa[i] || 0)
-    }
-    return 0
-  })
+  const sortedPkgVersions = [...pkgVersions].sort(compareVersionsDesc)
 
   function getCell(pkgVer, prodVer) {
     return cells[pkgVer + '\0' + prodVer] || null
@@ -430,7 +436,7 @@ const versionMatrix = computed(() => {
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
       </svg>
-      <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">Searching {{ results ? results.total : '' }} indexes...</p>
+      <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">Searching indexes...</p>
     </div>
 
     <!-- Error -->
@@ -506,13 +512,16 @@ const versionMatrix = computed(() => {
       </div>
 
       <!-- Version × Product Version Matrix -->
-      <div v-if="versionMatrix && versionMatrix.pkgVersions.length > 0" class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden shadow-sm">
-        <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/40">
-          <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+      <details v-if="versionMatrix && versionMatrix.pkgVersions.length > 0" class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden group/matrix" open>
+        <summary class="px-4 py-3 bg-gray-100 dark:bg-gray-700 cursor-pointer flex items-center gap-2 hover:bg-gray-200/80 dark:hover:bg-gray-600 transition-colors">
+          <svg class="w-3.5 h-3.5 text-gray-400 transition-transform group-open/matrix:rotate-90 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+          </svg>
+          <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
             Version availability across product versions
-          </p>
-        </div>
-        <div class="overflow-x-auto">
+          </span>
+        </summary>
+        <div class="overflow-x-auto border-t border-gray-100 dark:border-gray-700">
           <table class="w-full text-sm">
             <thead>
               <tr class="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
@@ -530,7 +539,13 @@ const versionMatrix = computed(() => {
                 :key="pkgVer"
                 class="hover:bg-gray-50/80 dark:hover:bg-gray-900/30"
               >
-                <td class="px-4 py-3 font-medium text-gray-900 dark:text-gray-100 sticky left-0 bg-white dark:bg-gray-800">{{ pkgVer }}</td>
+                <td class="px-4 py-3 font-medium sticky left-0 bg-white dark:bg-gray-800">
+                  <button
+                    type="button"
+                    class="text-primary-600 dark:text-primary-400 hover:underline"
+                    @click="jumpToVersion(pkgVer)"
+                  >{{ pkgVer }}</button>
+                </td>
                 <td
                   v-for="pv in versionMatrix.prodVersions"
                   :key="pv"
@@ -548,7 +563,7 @@ const versionMatrix = computed(() => {
             </tbody>
           </table>
         </div>
-      </div>
+      </details>
 
       <!-- Version Breakdown (expandable with filters) -->
       <div v-if="showVersionBreakdown" class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden shadow-sm">
@@ -593,7 +608,7 @@ const versionMatrix = computed(() => {
         </div>
         <!-- Version rows -->
         <div class="divide-y divide-gray-100 dark:divide-gray-700">
-          <div v-for="v in filteredVersionBreakdown" :key="v.version">
+          <div v-for="v in filteredVersionBreakdown" :key="v.version" :id="'pkg-ver-' + v.version">
             <div
               class="px-4 py-3 flex items-center gap-4 cursor-pointer hover:bg-gray-50/80 dark:hover:bg-gray-900/30 transition-colors"
               @click="toggleVersion(v.version)"
@@ -630,106 +645,48 @@ const versionMatrix = computed(() => {
               </div>
             </div>
             <!-- Expanded: files grouped by variant -->
-            <div v-if="expandedVersions.has(v.version)" class="px-4 pb-4 pt-1 ml-8 border-l-2 border-gray-100 dark:border-gray-700">
-              <div v-for="group in v.groups" :key="group.label" class="mb-3 last:mb-0">
-                <div class="flex items-center gap-2 mb-1.5">
-                  <span class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ group.variant }}</span>
-                  <span
-                    class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium"
-                    :class="{
-                      'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300': group.repoType === 'production',
-                      'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300': group.repoType === 'test',
-                      'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400': group.repoType !== 'production' && group.repoType !== 'test'
-                    }"
-                  >{{ REPO_TYPE_LABELS[group.repoType] || group.repoType }}</span>
-                  <a
-                    :href="group.indexUrl"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="text-xs text-primary-600 dark:text-primary-400 hover:underline truncate ml-auto"
-                    @click.stop
-                  >{{ group.indexUrl }} &#8599;</a>
+            <div v-if="expandedVersions.has(v.version)" class="px-4 pb-4 pt-2 ml-8 border-l-2 border-gray-100 dark:border-gray-700">
+              <div v-for="group in v.groups" :key="group.variant" class="mb-4 last:mb-0">
+                <div class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">{{ group.variant }}</div>
+                <div class="grid gap-4" :style="{ gridTemplateColumns: 'repeat(' + group.columns.length + ', 1fr)' }">
+                  <div v-for="col in group.columns" :key="col.repoType">
+                    <div class="flex items-center gap-2 mb-1.5">
+                      <span
+                        class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium"
+                        :class="{
+                          'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300': col.repoType === 'production',
+                          'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300': col.repoType === 'test',
+                          'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400': col.repoType !== 'production' && col.repoType !== 'test'
+                        }"
+                      >{{ REPO_TYPE_LABELS[col.repoType] || col.repoType }}</span>
+                      <a
+                        :href="col.indexUrl"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-xs text-primary-600 dark:text-primary-400 hover:underline truncate"
+                        @click.stop
+                      >&#8599;</a>
+                    </div>
+                    <ul class="pl-1">
+                      <li v-for="f in col.files" :key="f.filename" class="text-sm py-0.5">
+                        <a
+                          :href="f.url"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:underline"
+                          @click.stop
+                        >{{ f.filename }}</a>
+                        <span v-if="f.platform && f.platform !== 'any'" class="text-gray-400 dark:text-gray-500 text-xs ml-1">{{ f.platform.replace(/^linux_/, '') }}</span>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
-                <ul class="pl-3">
-                  <li v-for="f in group.files" :key="f.filename" class="text-sm py-0.5">
-                    <a
-                      :href="f.url"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:underline"
-                      @click.stop
-                    >{{ f.filename }}</a>
-                    <span v-if="f.platform" class="text-gray-400 dark:text-gray-500 text-xs ml-1">{{ f.platform.replace(/^linux_/, '') }}</span>
-                  </li>
-                </ul>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Results Card -->
-      <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden shadow-sm">
-        <!-- Architecture filter -->
-        <div v-if="availableArchs.length > 1" class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/40 flex items-center gap-3">
-          <label class="text-xs uppercase tracking-wide font-medium text-gray-500 dark:text-gray-400">Architecture</label>
-          <select
-            v-model="archFilter"
-            class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-gray-300"
-          >
-            <option value="">All</option>
-            <option v-for="a in availableArchs" :key="a" :value="a">{{ a }}</option>
-          </select>
-        </div>
-
-        <div class="overflow-x-auto">
-          <!-- Results Table per Product Version -->
-          <div v-for="pv in productVersions" :key="pv">
-            <div class="px-4 py-2 bg-gray-50/80 dark:bg-gray-900/40 border-b border-gray-100 dark:border-gray-700">
-              <p class="text-xs uppercase tracking-wide font-medium text-gray-500 dark:text-gray-400">{{ pv }}</p>
-            </div>
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
-                  <th class="px-4 py-3 font-medium">Variant</th>
-                  <th
-                    v-for="rt in getRepoTypesForVersion(getVersionResults(pv))"
-                    :key="rt"
-                    class="px-4 py-3 font-medium text-center"
-                  >{{ REPO_TYPE_LABELS[rt] || rt }}</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                <tr
-                  v-for="variant in getVariantsForVersion(getVersionResults(pv))"
-                  :key="variant"
-                  class="hover:bg-gray-50/80 dark:hover:bg-gray-900/30"
-                >
-                  <td class="px-4 py-3 text-gray-600 dark:text-gray-300 whitespace-nowrap">{{ variant }}</td>
-                  <td
-                    v-for="rt in getRepoTypesForVersion(getVersionResults(pv))"
-                    :key="rt"
-                    class="px-4 py-3 text-center"
-                  >
-                    <template v-if="badgeFor(getResult(getVersionResults(pv), variant, rt))">
-                      <span
-                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                        :class="{
-                          'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300': badgeFor(getResult(getVersionResults(pv), variant, rt)).style === 'success',
-                          'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300': badgeFor(getResult(getVersionResults(pv), variant, rt)).style === 'warn',
-                          'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400': badgeFor(getResult(getVersionResults(pv), variant, rt)).style === 'muted'
-                        }"
-                      >{{ badgeFor(getResult(getVersionResults(pv), variant, rt)).label }}</span>
-                    </template>
-                    <span v-else class="text-gray-300 dark:text-gray-600">&mdash;</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </div>
     </template>
   </div>
 </template>

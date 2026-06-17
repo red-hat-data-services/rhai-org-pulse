@@ -11,7 +11,9 @@ const {
   getVariants,
   getProductVersions,
   getDefaultProductVersion,
-  getCacheStats
+  getCacheStats,
+  pMap,
+  MAX_CONCURRENT_FETCHES
 } = require('./package-index');
 const { parsePackageFile } = require('./wheel-parser');
 
@@ -839,47 +841,43 @@ module.exports = function registerRoutes(router, context) {
       }
     }
 
-    const settled = await Promise.allSettled(
-      tasks.map(function (task) {
-        return fetchIndex(task.indexUrl, package_name).then(function (raw) {
-          let files = [];
-          if (raw.found && raw.files) {
-            files = raw.files.map(function (f) {
-              return parsePackageFile(f.filename, f.url);
+    const results = await pMap(tasks, async function (task) {
+      try {
+        const raw = await fetchIndex(task.indexUrl, package_name);
+        let files = [];
+        if (raw.found && raw.files) {
+          files = raw.files.map(function (f) {
+            return parsePackageFile(f.filename, f.url);
+          });
+          if (requestedVersion) {
+            files = files.filter(function (f) {
+              return f.version !== 'unknown' && f.version === requestedVersion;
             });
-            if (requestedVersion) {
-              files = files.filter(function (f) {
-                return f.version !== 'unknown' && f.version === requestedVersion;
-              });
-            }
           }
-          return {
-            product_version: task.productVersion,
-            variant: task.variant,
-            repo_type: task.repoType,
-            index_url: task.indexUrl,
-            index_exists: raw.indexExists,
-            found: raw.found,
-            files,
-            error: raw.error
-          };
-        });
-      })
-    );
-
-    const results = settled.map(function (s) {
-      if (s.status === 'fulfilled') return s.value;
-      return {
-        product_version: 'unknown',
-        variant: 'unknown',
-        repo_type: 'unknown',
-        index_url: '',
-        index_exists: false,
-        found: false,
-        files: [],
-        error: s.reason ? s.reason.message : 'Unknown error'
-      };
-    });
+        }
+        return {
+          product_version: task.productVersion,
+          variant: task.variant,
+          repo_type: task.repoType,
+          index_url: task.indexUrl,
+          index_exists: raw.indexExists,
+          found: raw.found,
+          files,
+          error: raw.error
+        };
+      } catch (err) {
+        return {
+          product_version: task.productVersion,
+          variant: task.variant,
+          repo_type: task.repoType,
+          index_url: task.indexUrl,
+          index_exists: false,
+          found: false,
+          files: [],
+          error: err.message
+        };
+      }
+    }, MAX_CONCURRENT_FETCHES);
 
     res.json({
       package_name,
