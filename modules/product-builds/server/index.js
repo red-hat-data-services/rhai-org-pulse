@@ -1,6 +1,19 @@
 const { proxyGet } = require('./proxy');
 const { createJiraClient } = require('../../../shared/server/jira');
 const { buildReport, getPackagesOnboarded } = require('./analysis');
+const {
+  PACKAGE_NAME_RE,
+  VERSION_RE,
+  ALL_REPO_TYPES,
+  DEFAULT_REPO_TYPES,
+  fetchIndex,
+  getBaseUrl,
+  getVariants,
+  getProductVersions,
+  getDefaultProductVersion,
+  getCacheStats
+} = require('./package-index');
+const { parsePackageFile } = require('./wheel-parser');
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 const PKG_STORAGE_PREFIX = 'product-builds/package-reports';
@@ -677,6 +690,205 @@ module.exports = function registerRoutes(router, context) {
     });
   }
 
+  // --- Package Search ---
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/package-search/options:
+   *   get:
+   *     tags: [Package Search]
+   *     summary: Get available filter options for package search
+   *     responses:
+   *       200:
+   *         description: Available variants, repo types, product versions, and package UI URL
+   */
+  router.get('/package-search/options', function (_req, res) {
+    const variants = getVariants();
+    const productVersions = getProductVersions();
+    const defaultProductVersion = getDefaultProductVersion();
+
+    const baseUrl = getBaseUrl();
+    let packageUiUrl = null;
+    const parts = baseUrl.split('/api/pypi/');
+    if (parts.length === 2) {
+      const origin = parts[0];
+      const domain = parts[1].split('/')[0];
+      packageUiUrl = origin + '/domains/' + domain + '/distributions';
+    }
+
+    res.json({
+      variants,
+      repo_types: Object.keys(ALL_REPO_TYPES),
+      default_repo_types: DEFAULT_REPO_TYPES,
+      product_versions: productVersions,
+      default_product_version: defaultProductVersion,
+      package_ui_url: packageUiUrl
+    });
+  });
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/package-search/search:
+   *   get:
+   *     tags: [Package Search]
+   *     summary: Search for a package across PyPI Simple indexes
+   *     parameters:
+   *       - name: package_name
+   *         in: query
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Package name to search for
+   *       - name: package_version
+   *         in: query
+   *         schema:
+   *           type: string
+   *         description: Optional version filter (e.g. 2.5.1)
+   *       - name: product_version
+   *         in: query
+   *         schema:
+   *           type: string
+   *         description: Filter to a specific product version
+   *       - name: variant
+   *         in: query
+   *         schema:
+   *           type: string
+   *         description: Filter to a specific variant (e.g. cpu-ubi9)
+   *       - name: repo_type
+   *         in: query
+   *         schema:
+   *           type: string
+   *         description: Repo types to check (repeatable, default test+production)
+   *     responses:
+   *       200:
+   *         description: Search results with package availability across indexes
+   *       422:
+   *         description: Validation error
+   */
+  router.get('/package-search/search', async function (req, res) {
+    const { package_name, package_version, product_version, variant } = req.query;
+    let repoTypeParam = req.query.repo_type;
+
+    if (!package_name || !PACKAGE_NAME_RE.test(package_name)) {
+      return res.status(422).json({
+        error: 'Invalid package name',
+        message: 'Package name must match ^[a-zA-Z][a-zA-Z0-9._-]*$'
+      });
+    }
+
+    let requestedVersion = null;
+    if (package_version) {
+      const versionStr = package_version.replace(/^v/, '');
+      if (!VERSION_RE.test(versionStr)) {
+        return res.status(422).json({
+          error: 'Invalid version',
+          message: 'Version must match ^[a-zA-Z0-9._-]+$'
+        });
+      }
+      requestedVersion = versionStr;
+    }
+
+    const allVariants = getVariants();
+    const allProductVersions = getProductVersions();
+
+    if (product_version) {
+      if (!/^\d+\.\d+(-EA\d+)?$/.test(product_version)) {
+        return res.status(422).json({
+          error: 'Invalid product version',
+          message: 'Must be a version like 3.4 or 3.5-EA1'
+        });
+      }
+    }
+    const selectedProductVersions = product_version ? [product_version] : allProductVersions;
+
+    if (variant && !allVariants.includes(variant)) {
+      return res.status(422).json({
+        error: 'Invalid variant',
+        message: 'Must be one of: ' + allVariants.join(', ')
+      });
+    }
+    const selectedVariants = variant ? [variant] : allVariants;
+
+    if (repoTypeParam && !Array.isArray(repoTypeParam)) {
+      repoTypeParam = [repoTypeParam];
+    }
+    const selectedRepoTypes = repoTypeParam || DEFAULT_REPO_TYPES;
+    const invalidRepoTypes = selectedRepoTypes.filter(function (rt) {
+      return !(rt in ALL_REPO_TYPES);
+    });
+    if (invalidRepoTypes.length > 0) {
+      return res.status(422).json({
+        error: 'Invalid repo type(s)',
+        message: 'Must be one of: ' + Object.keys(ALL_REPO_TYPES).join(', ')
+      });
+    }
+
+    const baseUrl = getBaseUrl();
+    const seenUrls = new Set();
+    const tasks = [];
+
+    for (const pv of selectedProductVersions) {
+      for (const v of selectedVariants) {
+        for (const rt of selectedRepoTypes) {
+          const suffix = ALL_REPO_TYPES[rt];
+          const indexUrl = baseUrl + '/' + pv + '/' + v + suffix + '/simple/';
+          if (seenUrls.has(indexUrl)) continue;
+          seenUrls.add(indexUrl);
+          tasks.push({ productVersion: pv, variant: v, repoType: rt, indexUrl });
+        }
+      }
+    }
+
+    const settled = await Promise.allSettled(
+      tasks.map(function (task) {
+        return fetchIndex(task.indexUrl, package_name).then(function (raw) {
+          let files = [];
+          if (raw.found && raw.files) {
+            files = raw.files.map(function (f) {
+              return parsePackageFile(f.filename, f.url);
+            });
+            if (requestedVersion) {
+              files = files.filter(function (f) {
+                return f.version !== 'unknown' && f.version === requestedVersion;
+              });
+            }
+          }
+          return {
+            product_version: task.productVersion,
+            variant: task.variant,
+            repo_type: task.repoType,
+            index_url: task.indexUrl,
+            index_exists: raw.indexExists,
+            found: raw.found,
+            files,
+            error: raw.error
+          };
+        });
+      })
+    );
+
+    const results = settled.map(function (s) {
+      if (s.status === 'fulfilled') return s.value;
+      return {
+        product_version: 'unknown',
+        variant: 'unknown',
+        repo_type: 'unknown',
+        index_url: '',
+        index_exists: false,
+        found: false,
+        files: [],
+        error: s.reason ? s.reason.message : 'Unknown error'
+      };
+    });
+
+    res.json({
+      package_name,
+      requested_version: requestedVersion,
+      total: tasks.length,
+      results
+    });
+  });
+
   if (context.registerDiagnostics) {
     context.registerDiagnostics(async function() {
       const index = readFromStorage(PKG_INDEX_PATH);
@@ -685,6 +897,7 @@ module.exports = function registerRoutes(router, context) {
         status: hasReports ? 'ok' : 'no_data',
         latestReport: hasReports ? index[0].report_date : null,
         reportCount: hasReports ? index.length : 0,
+        packageSearchCache: getCacheStats(),
       };
     });
   }

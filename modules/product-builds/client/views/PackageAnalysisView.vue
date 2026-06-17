@@ -1,7 +1,9 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, defineAsyncComponent } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 import { useAuth } from '@shared/client/composables/useAuth'
+
+const PackageSearchView = defineAsyncComponent(() => import('./PackageSearchView.vue'))
 
 const { isAdmin } = useAuth()
 
@@ -344,6 +346,15 @@ onMounted(() => {
               :class="activeTab === 'daily' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'"
             >{{ reports.length }}</span>
           </button>
+          <button
+            @click="activeTab = 'search'"
+            class="py-2.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2"
+            :class="activeTab === 'search'
+              ? 'border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100'
+              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+          >
+            Package Search
+          </button>
         </nav>
       </div>
 
@@ -454,6 +465,11 @@ onMounted(() => {
             </table>
           </div>
         </div>
+      </div>
+
+      <!-- ==================== PACKAGE SEARCH TAB ==================== -->
+      <div v-if="activeTab === 'search'">
+        <PackageSearchView />
       </div>
 
       <!-- ==================== DAILY REPORT TAB ==================== -->
