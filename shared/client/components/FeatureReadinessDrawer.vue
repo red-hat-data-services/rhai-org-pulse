@@ -380,11 +380,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
                 <span class="text-gray-400 dark:text-gray-500 ml-auto">{{ (feature.targetVersions || []).length ? feature.targetVersions.join(', ') : 'Missing' }}</span>
               </div>
               <div class="flex items-center gap-2 text-xs">
-                <span :class="feature.hygieneStatus === 'unknown' ? 'text-amber-500 dark:text-amber-400' : (readinessGates.noBlockingViolations ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400')">
-                  {{ feature.hygieneStatus === 'unknown' ? '○' : (readinessGates.noBlockingViolations ? '●' : '○') }}
+                <span :class="feature.hygieneStatus === 'unknown' ? 'text-amber-500 dark:text-amber-400' : feature.hygieneStatus === 'warning' ? 'text-green-600 dark:text-green-400' : (readinessGates.noBlockingViolations ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400')">
+                  {{ feature.hygieneStatus === 'unknown' ? '○' : feature.hygieneStatus === 'warning' ? '○' : (readinessGates.noBlockingViolations ? '●' : '○') }}
                 </span>
                 <span class="text-gray-700 dark:text-gray-300">Hygiene</span>
-                <span class="text-gray-400 dark:text-gray-500 ml-auto">{{ feature.hygieneStatus === 'unknown' ? 'Unknown' : (readinessGates.noBlockingViolations ? 'All clear' : violationCount + ' violations') }}</span>
+                <span class="text-gray-400 dark:text-gray-500 ml-auto">{{ feature.hygieneStatus === 'unknown' ? 'Unknown' : feature.hygieneStatus === 'warning' ? violationCount + ' non-blocking' : (readinessGates.noBlockingViolations ? 'All clear' : violationCount + ' violations') }}</span>
               </div>
             </div>
           </section>
@@ -399,8 +399,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
               <span class="flex items-center gap-2">
                 Hygiene
                 <span
-                  v-if="violationCount > 0"
+                  v-if="violationCount > 0 && feature.hygieneStatus === 'blocking'"
                   class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
+                >{{ violationCount }}</span>
+                <span
+                  v-else-if="violationCount > 0"
+                  class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
                 >{{ violationCount }}</span>
                 <span
                   v-else-if="feature && feature.hygieneStatus === 'unknown'"
