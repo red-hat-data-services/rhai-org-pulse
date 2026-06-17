@@ -77,7 +77,7 @@
           </thead>
           <tbody>
             <tr
-              v-for="page in topPages"
+              v-for="page in allPages"
               :key="page.pageId"
               class="border-b border-gray-100 dark:border-gray-700/50"
             >
@@ -104,10 +104,12 @@ const {
   loading,
   error,
   fetchDashboard,
+  fetchPages,
   totalViews,
   uniqueUsers,
   activePages,
   topPages,
+  allPages,
   userTypes,
   daily,
 } = useMetricsDashboard()
@@ -122,11 +124,12 @@ function formatPageId(pageId) {
   return `${mod} / ${view}`
 }
 
-watch([fromDate, toDate], () => {
+function fetchAll() {
   fetchDashboard(fromDate.value, toDate.value)
-})
+  fetchPages({ from: fromDate.value, to: toDate.value, limit: 200 })
+}
 
-onMounted(() => {
-  fetchDashboard(fromDate.value, toDate.value)
-})
+watch([fromDate, toDate], fetchAll)
+
+onMounted(fetchAll)
 </script>

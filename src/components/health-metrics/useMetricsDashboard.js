@@ -25,6 +25,7 @@ export function useMetricsDashboard() {
   }
 
   async function fetchPages(options = {}) {
+    pagesData.value = null
     try {
       const params = new URLSearchParams()
       if (options.from) params.set('from', options.from)
@@ -33,8 +34,8 @@ export function useMetricsDashboard() {
       if (options.limit) params.set('limit', String(options.limit))
       const qs = params.toString()
       pagesData.value = await apiRequest(`/health-metrics/pages${qs ? '?' + qs : ''}`)
-    } catch (err) {
-      error.value = err.message || 'Failed to load pages data'
+    } catch {
+      pagesData.value = null
     }
   }
 
@@ -67,6 +68,7 @@ export function useMetricsDashboard() {
   const uniqueUsers = computed(() => dashboardData.value?.uniqueUsers || 0)
   const activePages = computed(() => dashboardData.value?.activePages || 0)
   const topPages = computed(() => dashboardData.value?.topPages || [])
+  const allPages = computed(() => pagesData.value?.pages || [])
   const userTypes = computed(() => dashboardData.value?.userTypes || {})
   const daily = computed(() => dashboardData.value?.daily || {})
 
@@ -84,6 +86,7 @@ export function useMetricsDashboard() {
     uniqueUsers,
     activePages,
     topPages,
+    allPages,
     userTypes,
     daily,
   }
