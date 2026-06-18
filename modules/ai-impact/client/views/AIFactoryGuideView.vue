@@ -302,6 +302,7 @@ const autofixTriageLabels = [
   { name: 'jira-triage-missing-info', color: 'amber', desc: 'Ticket needs more information from the reporter' },
   { name: 'jira-triage-not-fixable', color: 'gray', desc: 'Not suitable for automated fixing' },
   { name: 'jira-triage-external', color: 'amber', desc: 'External reporter, needs Red Hat engineer approval' },
+  { name: 'jira-triage-security-review', color: 'rose', desc: 'Flagged as security-sensitive, needs human review' },
   { name: 'jira-triage-stale', color: 'gray', desc: 'No response for 14 days' },
 ]
 
@@ -349,6 +350,7 @@ function labelColorClasses(color) {
     red: 'bg-red-500/15 text-red-600 dark:text-red-400',
     gray: 'bg-gray-500/15 text-gray-600 dark:text-gray-400',
     purple: 'bg-purple-500/15 text-purple-600 dark:text-purple-400',
+    rose: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
   }
   return map[color] || map.gray
 }
