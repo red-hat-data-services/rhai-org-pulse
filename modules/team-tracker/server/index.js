@@ -23,6 +23,7 @@ module.exports = function registerRoutes(router, context) {
   const { fetchGitlabData } = require('./gitlab/contributions');
   const consolidatedSync = require('../../../shared/server/roster-sync/consolidated-sync');
   const rosterSyncConfig = require('../../../shared/server/roster-sync/config');
+  const ipaClient = require('../../../shared/server/roster-sync/ipa-client');
   const { readRosterFull: sharedReadRosterFull } = require('../../../shared/server/roster');
   const jiraSyncConfig = require('./jira/config');
   const { RESERVED_KEYS, DEFAULT_EXCLUDED_TITLES } = require('../../../shared/server/roster-sync/constants');
@@ -160,6 +161,11 @@ module.exports = function registerRoutes(router, context) {
       if (primary) primaryDisplayField = primary.key;
     }
 
+    var enabledLdapFields = (liveConfig?.ldapFields?.enabled) || [];
+    for (var lvi = 0; lvi < enabledLdapFields.length; lvi++) {
+      visibleFields.push({ key: 'ldap_' + enabledLdapFields[lvi].attribute, label: enabledLdapFields[lvi].label });
+    }
+
     for (const [orgKey, orgData] of Object.entries(full.orgs)) {
       const teamMap = {};
       const allMembers = [orgData.leader, ...orgData.members].filter(Boolean);
@@ -194,6 +200,13 @@ module.exports = function registerRoutes(router, context) {
         } else {
           memberEntry.customFields.specialty = person.specialty || null;
           memberEntry.customFields.jiraComponent = person.jiraComponent || null;
+        }
+
+        if (person.ldapExtra && enabledLdapFields.length > 0) {
+          for (var eli = 0; eli < enabledLdapFields.length; eli++) {
+            var ldapAttr = enabledLdapFields[eli].attribute;
+            memberEntry.customFields['ldap_' + ldapAttr] = person.ldapExtra[ldapAttr] || null;
+          }
         }
 
         // Determine team placement based on data source
@@ -3599,6 +3612,24 @@ module.exports = function registerRoutes(router, context) {
         config.teamDataSource = teamDataSource;
       }
 
+      if (req.body.ldapFields !== undefined) {
+        if (typeof req.body.ldapFields !== 'object' || Array.isArray(req.body.ldapFields)) {
+          return res.status(400).json({ error: 'ldapFields must be an object' });
+        }
+        if (!config.ldapFields) config.ldapFields = {};
+        if (Array.isArray(req.body.ldapFields.enabled)) {
+          var validEnabled = [];
+          for (var lfi = 0; lfi < req.body.ldapFields.enabled.length; lfi++) {
+            var lf = req.body.ldapFields.enabled[lfi];
+            if (!lf || typeof lf.attribute !== 'string' || !lf.attribute.trim()) continue;
+            if (typeof lf.label !== 'string' || !lf.label.trim()) continue;
+            if (validEnabled.length >= 20) break;
+            validEnabled.push({ attribute: lf.attribute.trim(), label: lf.label.trim() });
+          }
+          config.ldapFields.enabled = validEnabled;
+        }
+      }
+
       if (config.teamStructure) {
         const fm = {};
         fm.name = config.teamStructure.nameColumn;
@@ -3698,6 +3729,74 @@ module.exports = function registerRoutes(router, context) {
     } catch (error) {
       console.error('Save custom fields error:', error);
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/admin/roster-sync/ldap-discover:
+   *   get:
+   *     tags: ['TT: Admin']
+   *     summary: Get cached LDAP attribute discovery results
+   *     responses:
+   *       200:
+   *         description: Cached discovered attributes
+   */
+  router.get('/admin/roster-sync/ldap-discover', requireAdmin, requireScope('roster:write'), function(req, res) {
+    try {
+      var config = rosterSyncConfig.loadConfig(storage) || {};
+      var ldapFields = config.ldapFields || {};
+      res.json({
+        discovered: ldapFields.discovered || [],
+        discoveredAt: ldapFields.discoveredAt || null
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/admin/roster-sync/ldap-discover:
+   *   post:
+   *     tags: ['TT: Admin']
+   *     summary: Discover available LDAP attributes by querying the directory schema
+   *     responses:
+   *       200:
+   *         description: Discovered attributes
+   *       400:
+   *         description: IPA not configured
+   */
+  router.post('/admin/roster-sync/ldap-discover', requireAdmin, requireScope('roster:write'), async function(req, res) {
+    var conn;
+    try {
+      var ipaStatus = ipaClient.getIpaStatus();
+      if (!ipaStatus.ready) {
+        return res.status(400).json({ error: 'IPA/LDAP credentials are not configured' });
+      }
+
+      conn = ipaClient.createClient();
+      await ipaClient.bindClient(conn.client, conn.config.bindDn, conn.config.bindPassword);
+      var discovered = await ipaClient.discoverAttributes(conn.client);
+
+      var config = rosterSyncConfig.loadConfig(storage) || {};
+      if (!config.ldapFields) config.ldapFields = {};
+      config.ldapFields.discovered = discovered;
+      config.ldapFields.discoveredAt = new Date().toISOString();
+      rosterSyncConfig.saveConfig(storage, config);
+
+      res.json({
+        discovered: discovered,
+        discoveredAt: config.ldapFields.discoveredAt,
+        count: discovered.length
+      });
+    } catch (error) {
+      console.error('LDAP discover error:', error);
+      res.status(500).json({ error: error.message });
+    } finally {
+      if (conn && conn.client) {
+        conn.client.unbind(function() {});
+      }
     }
   });
 

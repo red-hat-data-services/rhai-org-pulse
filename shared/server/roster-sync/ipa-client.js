@@ -238,7 +238,37 @@ function extractManagerUid(entry) {
   return match ? match[1] : null;
 }
 
-function entryToPerson(entry) {
+/**
+ * Discover all available LDAP attributes by querying the directory schema.
+ * Queries cn=schema for attributeTypes and extracts NAME values.
+ * Returns a sorted array of all attribute name strings.
+ */
+async function discoverAttributes(client) {
+  return new Promise(function(resolve, reject) {
+    client.search('cn=schema', {
+      scope: 'base',
+      filter: '(objectclass=*)',
+      attributes: ['attributeTypes']
+    }, function(err, res) {
+      if (err) return reject(err);
+
+      var attrs = [];
+      res.on('searchEntry', function(entry) {
+        for (var i = 0; i < entry.attributes.length; i++) {
+          var values = entry.attributes[i].values;
+          for (var j = 0; j < values.length; j++) {
+            var match = values[j].match(/NAME\s+'([^']+)'/);
+            if (match) attrs.push(match[1]);
+          }
+        }
+      });
+      res.on('error', function(err) { reject(err); });
+      res.on('end', function() { resolve(attrs.sort()); });
+    });
+  });
+}
+
+function entryToPerson(entry, extraAttrs) {
   var ghResult = pickBestCandidate(extractAllGithubCandidates(entry), entry);
   var glResult = pickBestCandidate(extractAllGitlabCandidates(entry), entry);
 
@@ -269,6 +299,19 @@ function entryToPerson(entry) {
     }
   }
 
+  if (extraAttrs && extraAttrs.length > 0) {
+    var ldapExtra = {};
+    for (var k = 0; k < extraAttrs.length; k++) {
+      var attrName = extraAttrs[k];
+      if (entry[attrName] != null) {
+        ldapExtra[attrName] = entry[attrName];
+      }
+    }
+    if (Object.keys(ldapExtra).length > 0) {
+      person.ldapExtra = ldapExtra;
+    }
+  }
+
   return person;
 }
 
@@ -276,13 +319,14 @@ function entryToPerson(entry) {
  * Recursively traverse an org tree starting from a root UID.
  * Returns { leader, people } where people is a flat array including the leader.
  */
-async function traverseOrg(client, baseDn, rootUid, excludedTitles) {
-  var rootEntries = await searchEntries(client, baseDn, '(uid=' + escapeLdapFilter(rootUid) + ')');
+async function traverseOrg(client, baseDn, rootUid, excludedTitles, extraAttrs) {
+  var attrs = extraAttrs && extraAttrs.length > 0 ? LDAP_ATTRS.concat(extraAttrs) : undefined;
+  var rootEntries = await searchEntries(client, baseDn, '(uid=' + escapeLdapFilter(rootUid) + ')', attrs);
   if (rootEntries.length === 0) {
     throw new Error('Could not find ' + rootUid + ' in IPA');
   }
 
-  var leader = entryToPerson(rootEntries[0]);
+  var leader = entryToPerson(rootEntries[0], extraAttrs);
   var people = [leader];
   var visited = new Set();
 
@@ -290,13 +334,13 @@ async function traverseOrg(client, baseDn, rootUid, excludedTitles) {
     if (visited.has(managerUid)) return;
     visited.add(managerUid);
     var filter = '(manager=uid=' + escapeLdapFilter(managerUid) + ',' + baseDn + ')';
-    var reports = await searchEntries(client, baseDn, filter);
+    var reports = await searchEntries(client, baseDn, filter, attrs);
 
     for (var i = 0; i < reports.length; i++) {
       // Skip deprovisioned accounts (no group memberships in IPA)
       if (!reports[i].memberOf) continue;
 
-      var person = entryToPerson(reports[i]);
+      var person = entryToPerson(reports[i], extraAttrs);
 
       if (excludedTitles && excludedTitles.length > 0) {
         var excluded = false;
@@ -321,10 +365,11 @@ async function traverseOrg(client, baseDn, rootUid, excludedTitles) {
 /**
  * Look up a single person by UID.
  */
-async function lookupPerson(client, baseDn, uid) {
-  var entries = await searchEntries(client, baseDn, '(uid=' + escapeLdapFilter(uid) + ')');
+async function lookupPerson(client, baseDn, uid, extraAttrs) {
+  var attrs = extraAttrs && extraAttrs.length > 0 ? LDAP_ATTRS.concat(extraAttrs) : undefined;
+  var entries = await searchEntries(client, baseDn, '(uid=' + escapeLdapFilter(uid) + ')', attrs);
   if (entries.length === 0) return null;
-  return entryToPerson(entries[0]);
+  return entryToPerson(entries[0], extraAttrs);
 }
 
 /**
@@ -354,13 +399,14 @@ async function testConnection() {
  * @param {string} query - Search query string
  * @param {number} [limit=10] - Maximum results (passed as sizeLimit to LDAP)
  */
-async function searchPeople(client, baseDn, query, limit) {
+async function searchPeople(client, baseDn, query, limit, extraAttrs) {
   if (!query || !query.trim()) return [];
   var escaped = escapeLdapFilter(query.trim());
   var filter = '(|(cn=*' + escaped + '*)(uid=*' + escaped + '*)(mail=*' + escaped + '*))';
   var sizeLimit = limit || 10;
-  var entries = await searchEntries(client, baseDn, filter, LDAP_ATTRS, { sizeLimit: sizeLimit });
-  return entries.map(entryToPerson);
+  var attrs = extraAttrs && extraAttrs.length > 0 ? LDAP_ATTRS.concat(extraAttrs) : LDAP_ATTRS;
+  var entries = await searchEntries(client, baseDn, filter, attrs, { sizeLimit: sizeLimit });
+  return entries.map(function(e) { return entryToPerson(e, extraAttrs); });
 }
 
 /**
@@ -434,6 +480,7 @@ function createIpaClient(config) {
     traverseOrg: traverseOrg,
     lookupPerson: lookupPerson,
     searchPeople: searchPeople,
+    discoverAttributes: discoverAttributes,
     testConnection: instanceTestConnection,
     getIpaStatus: instanceGetIpaStatus,
     getConfig: function() {
@@ -454,6 +501,7 @@ module.exports = {
   traverseOrg,
   lookupPerson,
   searchPeople,
+  discoverAttributes,
   testConnection,
   getIpaStatus,
   getConfig,
@@ -464,5 +512,6 @@ module.exports = {
   extractAllGithubCandidates,
   extractAllGitlabCandidates,
   pickBestCandidate,
-  createIpaClient
+  createIpaClient,
+  LDAP_ATTRS
 };

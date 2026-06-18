@@ -84,6 +84,7 @@
     <PeopleAndTeamsSettings v-if="activeTab === 'people-teams'" @config-saved="handleConfigSaved" @toast="$emit('toast', $event)" />
     <GoogleSheetsSettings v-if="activeTab === 'google-sheets'" @config-saved="handleConfigSaved" @toast="$emit('toast', $event)" />
     <JiraSyncSettings v-if="activeTab === 'jira-sync'" />
+    <LdapFieldsSettings v-if="activeTab === 'ldap-fields'" />
     <SnapshotSettings v-if="activeTab === 'snapshots'" />
     <AuditLogView v-if="activeTab === 'audit-log'" />
     <AllocationSettings v-if="activeTab === 'allocation'" />
@@ -97,6 +98,7 @@ import SyncStatusPanel from './SyncStatusPanel.vue'
 import PeopleAndTeamsSettings from './PeopleAndTeamsSettings.vue'
 import GoogleSheetsSettings from './GoogleSheetsSettings.vue'
 import JiraSyncSettings from './JiraSyncSettings.vue'
+import LdapFieldsSettings from './LdapFieldsSettings.vue'
 import SnapshotSettings from './SnapshotSettings.vue'
 import AuditLogView from './AuditLogView.vue'
 import AllocationSettings from './AllocationSettings.vue'
@@ -181,6 +183,7 @@ const isInAppMode = computed(() => editTeamDataSource.value === 'in-app')
 const baseTabs = [
   { id: 'people-teams', label: 'People & Teams' },
   { id: 'jira-sync', label: 'Jira Sync' },
+  { id: 'ldap-fields', label: 'LDAP Fields' },
   { id: 'snapshots', label: 'Snapshots' },
   { id: 'allocation', label: '40/40/20 Allocation' }
 ]

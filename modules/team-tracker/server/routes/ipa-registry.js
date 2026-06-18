@@ -40,6 +40,13 @@ function registerIpaRegistryRoutes(router, context) {
     return loadRegistry(storage).people || {};
   }
 
+  function getEnabledLdapExtraAttrs() {
+    var config = loadConfig(storage);
+    var enabled = config?.ldapFields?.enabled;
+    if (!Array.isArray(enabled) || enabled.length === 0) return [];
+    return enabled.map(function(f) { return f.attribute; }).filter(Boolean);
+  }
+
   function writePeopleUpdate(uid, updater) {
     var reg = loadRegistry(storage);
     if (!reg.people || !Object.prototype.hasOwnProperty.call(reg.people, uid)) return null;
@@ -621,7 +628,7 @@ function registerIpaRegistryRoutes(router, context) {
       try {
         conn = ipaClient.createClient();
         await ipaClient.bindClient(conn.client, conn.config.bindDn, conn.config.bindPassword);
-        var results = await ipaClient.searchPeople(conn.client, conn.config.baseDn, query, limit);
+        var results = await ipaClient.searchPeople(conn.client, conn.config.baseDn, query, limit, getEnabledLdapExtraAttrs());
 
         clearTimeout(timeout);
         if (res.headersSent) return;
@@ -704,7 +711,8 @@ function registerIpaRegistryRoutes(router, context) {
       try {
         conn = ipaClient.createClient();
         await ipaClient.bindClient(conn.client, conn.config.bindDn, conn.config.bindPassword);
-        var ldapPerson = await ipaClient.lookupPerson(conn.client, conn.config.baseDn, uid);
+        var ldapExtraAttrs = getEnabledLdapExtraAttrs();
+        var ldapPerson = await ipaClient.lookupPerson(conn.client, conn.config.baseDn, uid, ldapExtraAttrs);
 
         clearTimeout(timeout);
         if (res.headersSent) return;
@@ -730,7 +738,7 @@ function registerIpaRegistryRoutes(router, context) {
 
           var mgrPerson = lookupCache[mgrUid];
           if (!mgrPerson) {
-            mgrPerson = await ipaClient.lookupPerson(conn.client, conn.config.baseDn, mgrUid);
+            mgrPerson = await ipaClient.lookupPerson(conn.client, conn.config.baseDn, mgrUid, ldapExtraAttrs);
             lookupCache[mgrUid] = mgrPerson;
           }
           if (!mgrPerson) break;
