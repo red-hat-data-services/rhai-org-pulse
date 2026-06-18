@@ -97,8 +97,6 @@ const availableStatuses = computed(() => {
   return [...statuses].sort()
 })
 
-const stateFilterOptions = STATE_OPTIONS.filter(o => o.value !== 'all')
-
 const stateFilterLabel = computed(() => {
   if (stateFilter.value.length === 0) return 'All States'
   if (stateFilter.value.length === 1) {
@@ -251,6 +249,8 @@ const STATE_OPTIONS = [
   { value: 'autofix-researched', label: 'AI Researched' },
   { value: 'autofix-blocked', label: 'AI Blocked' }
 ]
+
+const stateFilterOptions = STATE_OPTIONS.filter(o => o.value !== 'all')
 
 const timeFilteredIssues = computed(() => {
   if (!projectFilteredIssues.value.length) return []
