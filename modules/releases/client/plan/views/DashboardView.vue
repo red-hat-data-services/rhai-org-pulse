@@ -10,6 +10,7 @@ import { useClickOutside } from '../composables/useClickOutside'
 import { exportMarkdown as exportMd, exportCsv as exportCsvFile } from '../utils/outcomes-export'
 import { formatDate } from '@shared/client'
 import BigRocksTable from '../components/BigRocksTable.vue'
+import BigRocksTree from '../components/BigRocksTree.vue'
 import BigRockEditPanel from '../components/BigRockEditPanel.vue'
 import BigRockDeleteDialog from '../components/BigRockDeleteDialog.vue'
 import NewReleaseDialog from '../components/NewReleaseDialog.vue'
@@ -38,6 +39,7 @@ const {
 
 const selectedVersion = ref('')
 const activeTab = ref('big-rocks')
+const viewMode = ref('table')
 
 // Delete dialog state
 const deleteDialogOpen = ref(false)
@@ -415,9 +417,67 @@ onMounted(async function() {
         </div>
       </div>
 
-      <!-- Tab content -->
-      <div v-if="activeTab === 'big-rocks'">
+      <!-- View mode toggle -->
+      <div v-if="activeTab === 'big-rocks'" class="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 w-fit">
+        <button
+          @click="viewMode = 'table'"
+          :class="[
+            'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+            viewMode === 'table'
+              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+          ]"
+        >
+          <svg class="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M3 6h18M3 18h18" />
+          </svg>
+          Table
+        </button>
+        <button
+          @click="viewMode = 'tree'"
+          :class="[
+            'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+            viewMode === 'tree'
+              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+          ]"
+        >
+          <svg class="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h4" />
+          </svg>
+          Tree
+        </button>
+      </div>
+
+      <!-- Tab content: Table view -->
+      <div v-if="activeTab === 'big-rocks' && viewMode === 'table'">
         <BigRocksTable
+          :bigRocks="filteredBigRocks"
+          :jiraBaseUrl="jiraBaseUrl"
+          :canEdit="canEdit"
+          :canAdd="canAdd"
+          :canDelete="canDelete"
+          :canReorder="canReorder"
+          :rockHealth="rockHealth"
+          :rockFeatures="rockFeatures"
+          :loading="loading"
+          :healthLoading="healthLoading"
+          :releasePhaseMode="releasePhaseMode"
+          :exportMenuOpen="exportMenuOpen"
+          @editRock="handleEditRock"
+          @addRock="handleAddRock"
+          @deleteRock="handleDeleteRock"
+          @reorder="handleReorder"
+          @toggleExport="toggleExportMenu"
+          @closeExport="closeExportMenu"
+          @exportMarkdown="handleExportMarkdown"
+          @exportCsv="exportCsv"
+        />
+      </div>
+
+      <!-- Tab content: Tree view -->
+      <div v-if="activeTab === 'big-rocks' && viewMode === 'tree'">
+        <BigRocksTree
           :bigRocks="filteredBigRocks"
           :jiraBaseUrl="jiraBaseUrl"
           :canEdit="canEdit"
