@@ -85,7 +85,7 @@ export const PERMANENT_TARGET = 'permanent'
 export function targetReleaseBadgeCls(target) {
   if (!target) return ''
   if (target === PERMANENT_TARGET) return 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
-  if (target.includes('-ea')) return 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
+  if (/[.-]ea/i.test(target)) return 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
   return 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
 }
 

@@ -633,7 +633,7 @@
           </li>
           <li class="flex items-start gap-2">
             <span class="shrink-0 mt-1 w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            <span>Existing exceptions valid until expiration. Exceptions expiring before <strong>Jun 12, 2026</strong> are auto-extended 2 weeks.</span>
+            <span>Existing exceptions valid until expiration. Exceptions expiring before <strong>{{ selectedRelease.gaDate }}</strong> are auto-extended 2 weeks.</span>
           </li>
         </ul>
       </div>
@@ -1300,7 +1300,7 @@ const scatterChartData = computed(() => {
     const daysAfter = (expMs - gaMs) / 86400000
     const y = catIndex[ex.category] ?? catIndex['other'] ?? 0
     const point = {
-      x: expMs, y, label: ex.value, ref: ex.reference,
+      x: expMs, y, label: ex.value, references: ex.references,
       extensionJiraKey: ex.extensionJiraKey,
       extensionJiraUrl: ex.extensionJiraUrl,
       isActionable: ex.isActionable,
