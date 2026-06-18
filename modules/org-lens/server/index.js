@@ -1,5 +1,6 @@
 'use strict';
 
+const fs = require('fs');
 const path = require('path');
 const { loadAllDatasets, resolveDataset } = require('./dataset-loader');
 const { createGeminiClient, buildSystemPrompt, processChat } = require('./gemini');
@@ -25,7 +26,9 @@ module.exports = function registerRoutes(router, context) {
   const fixturesDir = path.join(__dirname, '../../../fixtures/org-lens');
   const dataDir = path.join(__dirname, '../../../data/org-lens');
 
-  if (DEMO_MODE) {
+  if (DEMO_MODE && fs.existsSync(dataDir) && fs.readdirSync(dataDir).length > 0) {
+    datasets = loadAllDatasets(dataDir);
+  } else if (DEMO_MODE) {
     datasets = loadAllDatasets(fixturesDir);
   } else {
     datasets = loadAllDatasets(dataDir);
@@ -90,18 +93,6 @@ module.exports = function registerRoutes(router, context) {
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('X-Accel-Buffering', 'no');
 
-    if (DEMO_MODE) {
-      const idx = Math.abs(hashCode(message)) % DEMO_RESPONSES.length;
-      const response = DEMO_RESPONSES[idx];
-      const words = response.split(' ');
-      for (let i = 0; i < words.length; i++) {
-        const text = (i === 0 ? '' : ' ') + words[i];
-        sendSSE(res, 'chunk', { text });
-      }
-      sendSSE(res, 'done', {});
-      return res.end();
-    }
-
     let index;
     try {
       index = resolveDataset(datasets, dataset || null);
@@ -113,6 +104,17 @@ module.exports = function registerRoutes(router, context) {
 
     const model = getGeminiModel();
     if (!model) {
+      if (DEMO_MODE) {
+        const idx = Math.abs(hashCode(message)) % DEMO_RESPONSES.length;
+        const response = DEMO_RESPONSES[idx];
+        const words = response.split(' ');
+        for (let i = 0; i < words.length; i++) {
+          const text = (i === 0 ? '' : ' ') + words[i];
+          sendSSE(res, 'chunk', { text });
+        }
+        sendSSE(res, 'done', {});
+        return res.end();
+      }
       sendSSE(res, 'error', { error: 'GEMINI_API_KEY not configured' });
       sendSSE(res, 'done', {});
       return res.end();

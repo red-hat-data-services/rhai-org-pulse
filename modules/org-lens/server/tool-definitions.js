@@ -111,6 +111,14 @@ function getToolDeclarations() {
         },
       },
     },
+    {
+      name: 'list_categories',
+      description: 'List all work categories with descriptions and people counts. Use for "What categories exist?" or when a category name lookup fails.',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
   ];
 }
 
@@ -168,6 +176,15 @@ function executeToolCall(index, toolName, args) {
 
     case 'list_products':
       return { products: index.listProducts(args.limit || 20) };
+
+    case 'list_categories':
+      return {
+        categories: index.categories.map(c => ({
+          name: c.category_name,
+          description: c.description || '',
+          peopleCount: (c.people || []).length,
+        })),
+      };
 
     default:
       return { error: 'Unknown tool: ' + toolName };

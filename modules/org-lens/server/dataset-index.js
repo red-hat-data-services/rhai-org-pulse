@@ -277,8 +277,18 @@ class DatasetIndex {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
       .map(([name, count]) => ({ name, count }));
+    const topManagers = this.people
+      .filter(p => !p.manager)
+      .map(p => ({ name: p.name, uid: p.uid, title: p.title }));
+    const managers = this.people
+      .filter(p => (this.byManager[p.uid] || []).length > 0)
+      .map(p => ({ name: p.name, uid: p.uid, title: p.title, directReportCount: this.byManager[p.uid].length }))
+      .sort((a, b) => b.directReportCount - a.directReportCount)
+      .slice(0, 10);
     return {
       headcount: this.people.length,
+      topManagers,
+      largestTeams: managers,
       topTechnologies: topTech,
       topProducts: topProd,
       categories: this.categories.map(c => ({

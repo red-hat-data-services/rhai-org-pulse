@@ -60,7 +60,8 @@ function resolveDataset(datasets, datasetName) {
     return datasets[datasetName];
   }
   if (keys.length === 1) return datasets[keys[0]];
-  throw new Error('Multiple datasets loaded (' + keys.join(', ') + '). Specify which one.');
+  const sorted = keys.sort((a, b) => (datasets[b].people.length || 0) - (datasets[a].people.length || 0));
+  return datasets[sorted[0]];
 }
 
 module.exports = { loadAllDatasets, resolveDataset };
