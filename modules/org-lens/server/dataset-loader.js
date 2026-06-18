@@ -1,19 +1,13 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
 const { DatasetIndex } = require('./dataset-index');
 
 function loadAllDatasets(storage) {
   const datasets = {};
-  const { readFromStorage, listStorageFiles } = storage;
-  const baseDir = storage.DATA_DIR || storage.FIXTURES_DIR;
-  const orgLensDir = path.join(baseDir, 'org-lens');
+  const { readFromStorage, listStorageFiles, listStorageDirectories } = storage;
 
-  let entries;
-  try {
-    entries = fs.readdirSync(orgLensDir).sort();
-  } catch {
+  const entries = listStorageDirectories('org-lens').sort();
+  if (entries.length === 0) {
     console.warn('[org-lens] No org-lens directory found');
     return datasets;
   }

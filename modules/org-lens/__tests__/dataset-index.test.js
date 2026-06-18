@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import path from 'path'
+import fs from 'fs'
 
 const { DatasetIndex } = require('../server/dataset-index');
 
@@ -9,12 +10,11 @@ describe('DatasetIndex', () => {
   let index;
 
   beforeAll(() => {
-    index = new DatasetIndex(
-      'demo_dataset',
-      path.join(FIXTURES_DIR, 'people_summaries_demo_dataset.json'),
-      path.join(FIXTURES_DIR, 'people_categories_demo_dataset.json'),
-      path.join(FIXTURES_DIR, 'projects_demo_dataset.json')
-    );
+    const summariesData = JSON.parse(fs.readFileSync(path.join(FIXTURES_DIR, 'people_summaries_demo_dataset.json'), 'utf-8'));
+    const categoriesData = JSON.parse(fs.readFileSync(path.join(FIXTURES_DIR, 'people_categories_demo_dataset.json'), 'utf-8'));
+    const projectsData = JSON.parse(fs.readFileSync(path.join(FIXTURES_DIR, 'projects_demo_dataset.json'), 'utf-8'));
+
+    index = new DatasetIndex('demo_dataset', summariesData, categoriesData, projectsData);
   });
 
   describe('constructor / loading', () => {

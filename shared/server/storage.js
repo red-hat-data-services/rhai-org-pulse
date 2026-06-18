@@ -106,6 +106,29 @@ function listStorageFiles(dir) {
 }
 
 /**
+ * List subdirectories in a directory of storage
+ * @param {string} dir - Subdirectory name (e.g., 'org-lens')
+ * @returns {string[]} Array of directory names (without path)
+ */
+function listStorageDirectories(dir) {
+  const dirPath = path.resolve(DATA_DIR, dir);
+  if (!isPathSafe(dirPath)) {
+    console.error(`[storage] Blocked path traversal attempt: ${dir}`);
+    return [];
+  }
+  try {
+    return fs.readdirSync(dirPath, { withFileTypes: true })
+      .filter(e => e.isDirectory())
+      .map(e => e.name);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return [];
+    }
+    throw error;
+  }
+}
+
+/**
  * Recursively delete a subdirectory of storage
  * @param {string} dir - Subdirectory name (e.g., 'snapshots')
  * @returns {{ deleted: number }} Count of JSON files that were in the directory
@@ -184,6 +207,7 @@ module.exports = {
   writeToStorage,
   writeToStorageAtomic,
   listStorageFiles,
+  listStorageDirectories,
   deleteStorageDirectory,
   deleteFromStorage,
   getFileMtime,

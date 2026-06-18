@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 const express = require('express');
 const request = require('supertest');
+const demoStorage = require('../../../shared/server/demo-storage');
 
 describe('org-lens routes', () => {
   let app;
@@ -15,9 +16,7 @@ describe('org-lens routes', () => {
     const registerRoutes = require('../server/index');
 
     const context = {
-      storage: {
-        readFromStorage: () => null,
-      },
+      storage: demoStorage,
       secrets: {},
       resolveSecret: () => undefined,
       requireAuth: (_req, _res, next) => next(),

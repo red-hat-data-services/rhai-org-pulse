@@ -75,6 +75,29 @@ function listStorageFiles(dir) {
 }
 
 /**
+ * List subdirectories in a directory of fixtures
+ * @param {string} dir - Subdirectory name (e.g., 'org-lens')
+ * @returns {string[]} Array of directory names (without path)
+ */
+function listStorageDirectories(dir) {
+  const dirPath = path.resolve(FIXTURES_DIR, dir);
+  if (!isPathSafe(dirPath)) {
+    console.error(`[demo-storage] Blocked path traversal attempt: ${dir}`);
+    return [];
+  }
+  try {
+    return fs.readdirSync(dirPath, { withFileTypes: true })
+      .filter(e => e.isDirectory())
+      .map(e => e.name);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return [];
+    }
+    throw error;
+  }
+}
+
+/**
  * No-op delete for demo mode (fixtures are read-only)
  * @param {string} dir - Would-be directory to delete
  * @returns {{ deleted: number }}
@@ -117,6 +140,7 @@ module.exports = {
   writeToStorage,
   writeToStorageAtomic,
   listStorageFiles,
+  listStorageDirectories,
   deleteStorageDirectory,
   deleteFromStorage,
   getFileMtime,
