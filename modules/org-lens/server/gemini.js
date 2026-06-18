@@ -36,7 +36,7 @@ async function processChat(model, message, history, toolDeclarations, options) {
 
   const chat = model.startChat({
     history: history || [],
-    systemInstruction: systemPrompt,
+    systemInstruction: { role: 'user', parts: [{ text: systemPrompt }] },
     tools,
   });
 
