@@ -239,7 +239,7 @@ Modules can import shared composables and utilities:
 ```javascript
 import { useRoster } from '@shared/client/composables/useRoster'
 import { useAuth } from '@shared/client/composables/useAuth'
-import { apiRequest, cachedRequest } from '@shared/client/services/api'
+import { apiRequest } from '@shared/client/services/api'
 ```
 
 **Modules cannot import from other modules** — only from `@shared`. This is enforced

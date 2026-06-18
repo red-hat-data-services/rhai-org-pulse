@@ -21,11 +21,11 @@ export function useConformaExceptions() {
       state.error = null
     })
     .catch((err) => {
-    state.loading = false
-    state.error = err.status === 404
-      ? 'No conforma data available yet. Run the ingestion pipeline to populate.'
-      : (err.message || 'Failed to load conforma data.')
-  })
+      state.loading = false
+      state.error = err.status === 404
+        ? 'No conforma data available yet. Run the ingestion pipeline to populate.'
+        : (err.message || 'Failed to load conforma data.')
+    })
 
   return state
 }
