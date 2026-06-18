@@ -132,6 +132,7 @@ module.exports = function registerRoutes(router, context) {
     return {
       key: issue.key,
       summary: issue.summary,
+      status: issue.status,
       issueType: issue.issueType,
       priority: issue.priority,
       created: issue.created,

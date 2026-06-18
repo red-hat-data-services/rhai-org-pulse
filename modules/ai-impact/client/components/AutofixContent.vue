@@ -25,8 +25,12 @@ onMounted(() => {
     isDark.value = document.documentElement.classList.contains('dark')
   })
   darkObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+  document.addEventListener('click', handleClickOutside)
 })
-onBeforeUnmount(() => { if (darkObserver) darkObserver.disconnect() })
+onBeforeUnmount(() => {
+  if (darkObserver) darkObserver.disconnect()
+  document.removeEventListener('click', handleClickOutside)
+})
 
 const textColor = computed(() => isDark.value ? 'rgba(209, 213, 219, 1)' : 'rgba(107, 114, 128, 1)')
 const gridColor = computed(() => isDark.value ? 'rgba(75, 85, 99, 0.5)' : 'rgba(229, 231, 235, 1)')
@@ -41,7 +45,12 @@ const props = defineProps({
 const emit = defineEmits(['update:timeWindow', 'retry'])
 
 const searchQuery = ref('')
-const stateFilter = ref('all')
+const stateFilter = ref([])
+const statusFilter = ref([])
+const stateDropdownOpen = ref(false)
+const stateDropdownRef = ref(null)
+const statusDropdownOpen = ref(false)
+const statusDropdownRef = ref(null)
 const selectedProject = ref('all')
 const selectedIssueType = ref('all')
 const selectedComponent = ref('all')
@@ -78,6 +87,59 @@ const availableComponents = computed(() => {
   }
   return [...comps].sort()
 })
+
+const availableStatuses = computed(() => {
+  if (!props.autofixData?.issues) return []
+  const statuses = new Set()
+  for (const issue of props.autofixData.issues) {
+    if (issue.status && issue.status !== 'Unknown') statuses.add(issue.status)
+  }
+  return [...statuses].sort()
+})
+
+const stateFilterOptions = STATE_OPTIONS.filter(o => o.value !== 'all')
+
+const stateFilterLabel = computed(() => {
+  if (stateFilter.value.length === 0) return 'All States'
+  if (stateFilter.value.length === 1) {
+    const opt = stateFilterOptions.find(o => o.value === stateFilter.value[0])
+    return opt ? opt.label : stateFilter.value[0]
+  }
+  return `${stateFilter.value.length} states`
+})
+
+const statusFilterLabel = computed(() => {
+  if (statusFilter.value.length === 0) return 'All Statuses'
+  if (statusFilter.value.length === 1) return statusFilter.value[0]
+  return `${statusFilter.value.length} statuses`
+})
+
+function toggleStateFilter(value) {
+  const idx = stateFilter.value.indexOf(value)
+  if (idx >= 0) {
+    stateFilter.value = stateFilter.value.filter(v => v !== value)
+  } else {
+    stateFilter.value = [...stateFilter.value, value]
+  }
+}
+
+function toggleStatusFilter(value) {
+  const idx = statusFilter.value.indexOf(value)
+  if (idx >= 0) {
+    statusFilter.value = statusFilter.value.filter(v => v !== value)
+  } else {
+    statusFilter.value = [...statusFilter.value, value]
+  }
+}
+
+function handleClickOutside(e) {
+  if (stateDropdownRef.value && !stateDropdownRef.value.contains(e.target)) {
+    stateDropdownOpen.value = false
+  }
+  if (statusDropdownRef.value && !statusDropdownRef.value.contains(e.target)) {
+    statusDropdownOpen.value = false
+  }
+}
 
 const projectFilteredIssues = computed(() => {
   if (!props.autofixData?.issues) return []
@@ -199,13 +261,14 @@ const timeFilteredIssues = computed(() => {
 
 const filteredIssues = computed(() => {
   return timeFilteredIssues.value.filter(issue => {
-    const matchesState = stateFilter.value === 'all' || issue.pipelineState === stateFilter.value
+    const matchesState = stateFilter.value.length === 0 || stateFilter.value.includes(issue.pipelineState)
+    const matchesStatus = statusFilter.value.length === 0 || statusFilter.value.includes(issue.status)
     const q = searchQuery.value.toLowerCase()
     const matchesSearch = !q ||
       issue.key.toLowerCase().includes(q) ||
       issue.summary.toLowerCase().includes(q) ||
       (issue.assignee && issue.assignee.toLowerCase().includes(q))
-    return matchesState && matchesSearch
+    return matchesState && matchesStatus && matchesSearch
   })
 })
 
@@ -860,12 +923,64 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
                   placeholder="Search issues..."
                   class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 w-48"
                 />
-                <select
-                  v-model="stateFilter"
-                  class="border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1.5 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-300"
-                >
-                  <option v-for="opt in STATE_OPTIONS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                </select>
+                <div class="relative" ref="stateDropdownRef">
+                  <button
+                    @click="stateDropdownOpen = !stateDropdownOpen"
+                    class="text-sm border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-300 flex items-center gap-1.5 min-w-[130px]"
+                  >
+                    <span>{{ stateFilterLabel }}</span>
+                    <svg class="w-3.5 h-3.5 ml-auto shrink-0 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                    </svg>
+                  </button>
+                  <div
+                    v-if="stateDropdownOpen"
+                    class="absolute right-0 z-20 mt-1 w-56 max-h-64 overflow-y-auto rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-lg py-1"
+                  >
+                    <label
+                      v-for="opt in stateFilterOptions"
+                      :key="opt.value"
+                      class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        :checked="stateFilter.includes(opt.value)"
+                        @change="toggleStateFilter(opt.value)"
+                        class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
+                      />
+                      {{ opt.label }}
+                    </label>
+                  </div>
+                </div>
+                <div v-if="availableStatuses.length > 1" class="relative" ref="statusDropdownRef">
+                  <button
+                    @click="statusDropdownOpen = !statusDropdownOpen"
+                    class="text-sm border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-300 flex items-center gap-1.5 min-w-[130px]"
+                  >
+                    <span>{{ statusFilterLabel }}</span>
+                    <svg class="w-3.5 h-3.5 ml-auto shrink-0 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                    </svg>
+                  </button>
+                  <div
+                    v-if="statusDropdownOpen"
+                    class="absolute right-0 z-20 mt-1 w-48 max-h-64 overflow-y-auto rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-lg py-1"
+                  >
+                    <label
+                      v-for="s in availableStatuses"
+                      :key="s"
+                      class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        :checked="statusFilter.includes(s)"
+                        @change="toggleStatusFilter(s)"
+                        class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
+                      />
+                      {{ s }}
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="overflow-x-auto">
@@ -874,6 +989,7 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
                   <tr class="border-b border-gray-200 dark:border-gray-700">
                     <th class="px-5 py-2 text-left text-gray-500 dark:text-gray-400 font-medium">Key</th>
                     <th class="px-5 py-2 text-left text-gray-500 dark:text-gray-400 font-medium">Summary</th>
+                    <th class="px-5 py-2 text-left text-gray-500 dark:text-gray-400 font-medium">Status</th>
                     <th class="px-5 py-2 text-left text-gray-500 dark:text-gray-400 font-medium">State</th>
                     <th class="px-5 py-2 text-left text-gray-500 dark:text-gray-400 font-medium">Component</th>
                     <th class="px-5 py-2 text-left text-gray-500 dark:text-gray-400 font-medium">Created</th>
@@ -895,6 +1011,9 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
                     </td>
                     <td class="px-5 py-2 text-gray-900 dark:text-gray-100 max-w-xs truncate">{{ issue.summary }}</td>
                     <td class="px-5 py-2">
+                      <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">{{ issue.status }}</span>
+                    </td>
+                    <td class="px-5 py-2">
                       <span
                         class="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold"
                         :class="stateColorClass(issue.pipelineState)"
@@ -906,7 +1025,7 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
                     <td class="px-5 py-2 text-gray-500 dark:text-gray-400 text-xs whitespace-nowrap">{{ formatDate(issue.created) }}</td>
                   </tr>
                   <tr v-if="filteredIssues.length === 0">
-                    <td colspan="5" class="px-5 py-8 text-center text-gray-500 dark:text-gray-400">
+                    <td colspan="6" class="px-5 py-8 text-center text-gray-500 dark:text-gray-400">
                       No issues found matching the current filters.
                     </td>
                   </tr>

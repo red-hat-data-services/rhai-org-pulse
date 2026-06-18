@@ -127,24 +127,27 @@ describe('AutofixContent', () => {
     expect(rows[0].text()).toContain('AIPCC-100')
   })
 
-  it('renders new triage states in state filter dropdown', () => {
+  it('renders new triage states in state filter dropdown', async () => {
     const wrapper = mount(AutofixContent, {
       props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'month' }
     })
-    const allOptions = wrapper.findAll('option')
-    const optionValues = allOptions.map(o => o.attributes('value'))
-    expect(optionValues).toContain('triage-external')
-    expect(optionValues).toContain('triage-security-review')
+    const stateBtn = wrapper.findAll('button').find(b => b.text().includes('All States'))
+    await stateBtn.trigger('click')
+    const labels = wrapper.findAll('label')
+    const labelTexts = labels.map(l => l.text())
+    expect(labelTexts).toContain('External Reporter')
+    expect(labelTexts).toContain('Security Review')
   })
 
   it('filters issues by state', async () => {
     const wrapper = mount(AutofixContent, {
       props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'month' }
     })
-    const select = wrapper.findAll('select').find(s => {
-      return s.findAll('option').some(o => o.attributes('value') === 'all' && o.text() === 'All')
-    })
-    await select.setValue('triage-not-fixable')
+    const stateBtn = wrapper.findAll('button').find(b => b.text().includes('All States'))
+    await stateBtn.trigger('click')
+    const notFixableLabel = wrapper.findAll('label').find(l => l.text().includes('Not AI-Fixable'))
+    const checkbox = notFixableLabel.find('input[type="checkbox"]')
+    await checkbox.setValue(true)
     const rows = findIssueTableRows(wrapper)
     expect(rows).toHaveLength(1)
     expect(rows[0].text()).toContain('RHOAIENG-200')
