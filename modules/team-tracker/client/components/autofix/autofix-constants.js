@@ -10,6 +10,8 @@ export const STATE_OPTIONS = [
   { value: 'triage-missing-info', label: 'Missing Info' },
   { value: 'triage-not-fixable', label: 'Not AI-Fixable' },
   { value: 'triage-stale', label: 'Stale' },
+  { value: 'triage-external', label: 'External Reporter' },
+  { value: 'triage-security-review', label: 'Security Review' },
   { value: 'autofix-ready', label: 'Queued for AI' },
   { value: 'autofix-pending', label: 'AI Working' },
   { value: 'autofix-review', label: 'AI Fix Under Review' },
@@ -47,6 +49,8 @@ export function stateColorClass(state) {
   if (state === 'autofix-blocked' || state === 'triage-missing-info') return 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400'
   if (state === 'triage-not-fixable') return 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400'
   if (state === 'triage-stale') return 'bg-gray-100 dark:bg-gray-600/20 text-gray-600 dark:text-gray-400'
+  if (state === 'triage-external') return 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400'
+  if (state === 'triage-security-review') return 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400'
   return 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
 }
 
@@ -68,7 +72,9 @@ export function computeTeamMetrics(issues, timeWindow) {
     missingInfo: windowIssues.filter(i => i.pipelineState === 'triage-missing-info').length,
     notFixable: windowIssues.filter(i => i.pipelineState === 'triage-not-fixable').length,
     stale: windowIssues.filter(i => i.pipelineState === 'triage-stale').length,
-    pending: windowIssues.filter(i => i.pipelineState === 'triage-pending').length
+    pending: windowIssues.filter(i => i.pipelineState === 'triage-pending').length,
+    external: windowIssues.filter(i => i.pipelineState === 'triage-external').length,
+    securityReview: windowIssues.filter(i => i.pipelineState === 'triage-security-review').length
   }
 
   const autofixStates = {

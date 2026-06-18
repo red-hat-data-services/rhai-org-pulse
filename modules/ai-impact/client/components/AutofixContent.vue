@@ -118,7 +118,9 @@ const metrics = computed(() => {
     missingInfo: windowIssues.filter(i => i.pipelineState === 'triage-missing-info').length,
     notFixable: windowIssues.filter(i => i.pipelineState === 'triage-not-fixable').length,
     stale: windowIssues.filter(i => i.pipelineState === 'triage-stale').length,
-    pending: windowIssues.filter(i => i.pipelineState === 'triage-pending').length
+    pending: windowIssues.filter(i => i.pipelineState === 'triage-pending').length,
+    external: windowIssues.filter(i => i.pipelineState === 'triage-external').length,
+    securityReview: windowIssues.filter(i => i.pipelineState === 'triage-security-review').length
   }
 
   const autofixStates = {
@@ -159,9 +161,11 @@ const trendData = computed(() => {
     const maxRetries = weekIssues.filter(i => i.pipelineState === 'autofix-max-retries').length
     const missingInfo = weekIssues.filter(i => i.pipelineState === 'triage-missing-info').length
     const stale = weekIssues.filter(i => i.pipelineState === 'triage-stale').length
+    const external = weekIssues.filter(i => i.pipelineState === 'triage-external').length
+    const securityReview = weekIssues.filter(i => i.pipelineState === 'triage-security-review').length
     points.push({
       date: weekEnd.toISOString().slice(0, 10), triaged, autofixed, merged, total: weekIssues.length,
-      review, ciFailing, blocked, maxRetries, missingInfo, stale
+      review, ciFailing, blocked, maxRetries, missingInfo, stale, external, securityReview
     })
   }
   return points
@@ -173,6 +177,8 @@ const STATE_OPTIONS = [
   { value: 'triage-missing-info', label: 'Missing Info' },
   { value: 'triage-not-fixable', label: 'Not AI-Fixable' },
   { value: 'triage-stale', label: 'Stale' },
+  { value: 'triage-external', label: 'External Reporter' },
+  { value: 'triage-security-review', label: 'Security Review' },
   { value: 'autofix-ready', label: 'Queued for AI' },
   { value: 'autofix-pending', label: 'AI Working' },
   { value: 'autofix-review', label: 'AI Fix Under Review' },
@@ -305,6 +311,8 @@ const triageWaitingData = computed(() => ({
   labels: trendData.value.map(p => p.date),
   datasets: [
     { label: 'Missing Info', data: trendData.value.map(p => p.missingInfo || 0), backgroundColor: 'rgba(245, 158, 11, 0.6)' },
+    { label: 'External Reporter', data: trendData.value.map(p => p.external || 0), backgroundColor: 'rgba(168, 85, 247, 0.6)' },
+    { label: 'Security Review', data: trendData.value.map(p => p.securityReview || 0), backgroundColor: 'rgba(244, 63, 94, 0.6)' },
     { label: 'Stale', data: trendData.value.map(p => p.stale || 0), backgroundColor: 'rgba(156, 163, 175, 0.6)' }
   ]
 }))
@@ -337,6 +345,8 @@ function stateColorClass(state) {
   if (state === 'autofix-blocked' || state === 'triage-missing-info') return 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400'
   if (state === 'triage-not-fixable') return 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400'
   if (state === 'triage-stale') return 'bg-gray-100 dark:bg-gray-600/20 text-gray-600 dark:text-gray-400'
+  if (state === 'triage-external') return 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400'
+  if (state === 'triage-security-review') return 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400'
   return 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
 }
 
@@ -352,6 +362,8 @@ const triageSegments = computed(() => {
     { label: 'Ready for AI', count: v.ready || 0, color: 'bg-green-500', textClass: 'text-green-600 dark:text-green-400', jiraLabels: ['jira-autofix', 'jira-autofix-pending', 'jira-autofix-review', 'jira-autofix-ci-failing', 'jira-autofix-merged', 'jira-autofix-rejected', 'jira-autofix-max-retries', 'jira-autofix-researched', 'jira-autofix-blocked'] },
     { label: 'Missing Info', count: v.missingInfo || 0, color: 'bg-yellow-500', textClass: 'text-yellow-600 dark:text-yellow-400', jiraLabels: ['jira-triage-missing-info'] },
     { label: 'Not AI-Fixable', count: v.notFixable || 0, color: 'bg-red-500', textClass: 'text-red-600 dark:text-red-400', jiraLabels: ['jira-triage-not-fixable'] },
+    { label: 'External Reporter', count: v.external || 0, color: 'bg-purple-500', textClass: 'text-purple-600 dark:text-purple-400', jiraLabels: ['jira-triage-external'] },
+    { label: 'Security Review', count: v.securityReview || 0, color: 'bg-rose-500', textClass: 'text-rose-600 dark:text-rose-400', jiraLabels: ['jira-triage-security-review'] },
     { label: 'Stale', count: v.stale || 0, color: 'bg-gray-400', textClass: 'text-gray-500 dark:text-gray-400', jiraLabels: ['jira-triage-stale'] },
     { label: 'AI Assessing', count: v.pending || 0, color: 'bg-gray-300 dark:bg-gray-600', textClass: 'text-gray-500 dark:text-gray-400', jiraLabels: ['jira-triage-pending'] }
   ].filter(s => s.count > 0)
@@ -429,6 +441,8 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
                   <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">AI Assessing</td><td class="text-gray-400 py-0.5">Bot is evaluating the ticket</td></tr>
                   <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">Missing Info</td><td class="text-gray-400 py-0.5">Ticket incomplete, waiting on reporter</td></tr>
                   <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">Not AI-Fixable</td><td class="text-gray-400 py-0.5">Not suitable for automated fixing</td></tr>
+                  <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">External Reporter</td><td class="text-gray-400 py-0.5">Non-RH reporter, needs RH engineer approval</td></tr>
+                  <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">Security Review</td><td class="text-gray-400 py-0.5">Flagged as security-sensitive, needs human review</td></tr>
                   <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">Stale</td><td class="text-gray-400 py-0.5">No response for 14+ days</td></tr>
                   <tr><td colspan="2" class="font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] pb-1 pt-3">Autofix</td></tr>
                   <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">Queued for AI</td><td class="text-gray-400 py-0.5">Waiting for bot pickup</td></tr>
@@ -582,16 +596,16 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
               <div class="absolute right-0 top-6 z-20 hidden group-hover:block w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50 p-3 text-xs text-gray-700 dark:text-gray-300 text-left">
                 Issues where human action can help unblock progress. Includes:
                 <div class="mt-1.5 space-y-0.5">
-                  <div><span class="font-medium">Triage:</span> missing info, stale (no response 14+ days)</div>
+                  <div><span class="font-medium">Triage:</span> missing info, external reporter, security review, stale</div>
                   <div><span class="font-medium">Autofix:</span> CI failing, blocked, max retries exhausted</div>
                 </div>
               </div>
             </div>
             <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-              {{ (metrics.triageVerdicts.missingInfo || 0) + (metrics.triageVerdicts.stale || 0) + (metrics.autofixStates.ciFailing || 0) + (metrics.autofixStates.blocked || 0) + (metrics.autofixStates.maxRetries || 0) }}
+              {{ (metrics.triageVerdicts.missingInfo || 0) + (metrics.triageVerdicts.stale || 0) + (metrics.triageVerdicts.external || 0) + (metrics.triageVerdicts.securityReview || 0) + (metrics.autofixStates.ciFailing || 0) + (metrics.autofixStates.blocked || 0) + (metrics.autofixStates.maxRetries || 0) }}
             </div>
             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-wide">Needs Attention</div>
-            <div class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{{ (metrics.triageVerdicts.missingInfo || 0) + (metrics.triageVerdicts.stale || 0) }} triage · {{ (metrics.autofixStates.ciFailing || 0) + (metrics.autofixStates.blocked || 0) + (metrics.autofixStates.maxRetries || 0) }} autofix</div>
+            <div class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{{ (metrics.triageVerdicts.missingInfo || 0) + (metrics.triageVerdicts.stale || 0) + (metrics.triageVerdicts.external || 0) + (metrics.triageVerdicts.securityReview || 0) }} triage · {{ (metrics.autofixStates.ciFailing || 0) + (metrics.autofixStates.blocked || 0) + (metrics.autofixStates.maxRetries || 0) }} autofix</div>
           </div>
           <div class="relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center">
             <div class="absolute top-2 right-2 group">
@@ -632,6 +646,8 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
                       <div class="flex justify-between"><span class="font-medium">Ready for AI</span><span class="text-gray-400">Qualified for autofix</span></div>
                       <div class="flex justify-between"><span class="font-medium">Missing Info</span><span class="text-gray-400">Waiting on reporter</span></div>
                       <div class="flex justify-between"><span class="font-medium">Not AI-Fixable</span><span class="text-gray-400">Not suitable for AI</span></div>
+                      <div class="flex justify-between"><span class="font-medium">External Reporter</span><span class="text-gray-400">Needs RH approval</span></div>
+                      <div class="flex justify-between"><span class="font-medium">Security Review</span><span class="text-gray-400">Needs human review</span></div>
                       <div class="flex justify-between"><span class="font-medium">Stale</span><span class="text-gray-400">No response 14+ days</span></div>
                       <div class="flex justify-between"><span class="font-medium">AI Assessing</span><span class="text-gray-400">Bot is evaluating</span></div>
                     </div>
@@ -746,7 +762,7 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <div class="absolute left-0 top-6 z-10 hidden group-hover:block w-64 p-2 text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50">
-                    Triage issues where a human can help. Missing Info: reporter hasn't provided details the bot needs. Stale: no response for 14+ days.
+                    Triage issues where a human can help. Missing Info: reporter hasn't provided details. External Reporter: non-RH reporter, needs RH approval. Security Review: flagged as security-sensitive. Stale: no response for 14+ days.
                   </div>
                 </div>
               </div>
@@ -818,6 +834,8 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
                       <div class="flex justify-between"><span>AI Assessing</span><span class="text-gray-400">Bot is evaluating</span></div>
                       <div class="flex justify-between"><span>Missing Info</span><span class="text-gray-400">Waiting on reporter</span></div>
                       <div class="flex justify-between"><span>Not AI-Fixable</span><span class="text-gray-400">Not suitable for AI</span></div>
+                      <div class="flex justify-between"><span>External Reporter</span><span class="text-gray-400">Needs RH approval</span></div>
+                      <div class="flex justify-between"><span>Security Review</span><span class="text-gray-400">Needs human review</span></div>
                       <div class="flex justify-between"><span>Stale</span><span class="text-gray-400">No response 14+ days</span></div>
                     </div>
                     <p class="font-medium text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide text-[10px]">Autofix</p>

@@ -6,7 +6,9 @@ const TRIAGE_LABELS = [
   'jira-triage-pending',
   'jira-triage-missing-info',
   'jira-triage-not-fixable',
-  'jira-triage-stale'
+  'jira-triage-stale',
+  'jira-triage-external',
+  'jira-triage-security-review'
 ];
 
 const AUTOFIX_LABELS = [
@@ -38,7 +40,10 @@ function classifyIssue(labels) {
   if (labelSet.has('jira-autofix-review')) return 'autofix-review';
   if (labelSet.has('jira-autofix-pending')) return 'autofix-pending';
   if (labelSet.has('jira-autofix')) return 'autofix-ready';
-  // Triage states
+  // Triage states (security-review first: it's added alongside other verdicts
+  // and should take precedence since it requires human review)
+  if (labelSet.has('jira-triage-security-review')) return 'triage-security-review';
+  if (labelSet.has('jira-triage-external')) return 'triage-external';
   if (labelSet.has('jira-triage-not-fixable')) return 'triage-not-fixable';
   if (labelSet.has('jira-triage-stale')) return 'triage-stale';
   if (labelSet.has('jira-triage-missing-info')) return 'triage-missing-info';
@@ -100,11 +105,14 @@ function computeAutofixMetrics(issues, timeWindow) {
     missingInfo: get('triage-missing-info'),
     notFixable: get('triage-not-fixable'),
     stale: get('triage-stale'),
-    pending: get('triage-pending')
+    pending: get('triage-pending'),
+    external: get('triage-external'),
+    securityReview: get('triage-security-review')
   };
 
   const triageTotal = autofixTotal + triageVerdicts.missingInfo +
-    triageVerdicts.notFixable + triageVerdicts.stale + triageVerdicts.pending;
+    triageVerdicts.notFixable + triageVerdicts.stale + triageVerdicts.pending +
+    triageVerdicts.external + triageVerdicts.securityReview;
 
   const terminalTotal = autofixStates.merged + autofixStates.rejected + autofixStates.maxRetries;
   const successRate = terminalTotal > 0
@@ -142,7 +150,7 @@ function buildTrendData(issues, timeWindow) {
       weekEnd: weekEnd.getTime(),
       triaged: 0, autofixed: 0, merged: 0, total: 0,
       review: 0, ciFailing: 0, blocked: 0, maxRetries: 0,
-      missingInfo: 0, stale: 0
+      missingInfo: 0, stale: 0, external: 0, securityReview: 0
     });
   }
 
@@ -173,6 +181,8 @@ function buildTrendData(issues, timeWindow) {
     else if (state === 'autofix-max-retries') bucket.maxRetries++;
     else if (state === 'triage-missing-info') bucket.missingInfo++;
     else if (state === 'triage-stale') bucket.stale++;
+    else if (state === 'triage-external') bucket.external++;
+    else if (state === 'triage-security-review') bucket.securityReview++;
   }
 
   return buckets.map(function(b) {
@@ -180,7 +190,8 @@ function buildTrendData(issues, timeWindow) {
       date: b.date, triaged: b.triaged, autofixed: b.autofixed,
       merged: b.merged, total: b.total, review: b.review,
       ciFailing: b.ciFailing, blocked: b.blocked, maxRetries: b.maxRetries,
-      missingInfo: b.missingInfo, stale: b.stale
+      missingInfo: b.missingInfo, stale: b.stale,
+      external: b.external, securityReview: b.securityReview
     };
   });
 }

@@ -66,6 +66,8 @@ describe('autofix-constants', () => {
       expect(values).toContain('triage-missing-info')
       expect(values).toContain('triage-not-fixable')
       expect(values).toContain('triage-stale')
+      expect(values).toContain('triage-external')
+      expect(values).toContain('triage-security-review')
       expect(values).toContain('autofix-ready')
       expect(values).toContain('autofix-pending')
       expect(values).toContain('autofix-review')
