@@ -1,7 +1,5 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
 const { loadAllDatasets, resolveDataset } = require('./dataset-loader');
 const { createGeminiClient, buildSystemPrompt, processChat } = require('./gemini');
 const { getToolDeclarations, executeToolCall } = require('./tool-definitions');
@@ -15,6 +13,7 @@ const DEMO_RESPONSES = [
 
 module.exports = function registerRoutes(router, context) {
   const DEMO_MODE = process.env.DEMO_MODE === 'true';
+  const { storage, requireAuth, requireScope } = context;
 
   if (context.registerScopes) {
     context.registerScopes([
@@ -22,17 +21,7 @@ module.exports = function registerRoutes(router, context) {
     ]);
   }
 
-  let datasets = {};
-  const fixturesDir = path.join(__dirname, '../../../fixtures/org-lens');
-  const dataDir = path.join(__dirname, '../../../data/org-lens');
-
-  if (DEMO_MODE && fs.existsSync(dataDir) && fs.readdirSync(dataDir).length > 0) {
-    datasets = loadAllDatasets(dataDir);
-  } else if (DEMO_MODE) {
-    datasets = loadAllDatasets(fixturesDir);
-  } else {
-    datasets = loadAllDatasets(dataDir);
-  }
+  const datasets = loadAllDatasets(storage);
 
   let geminiModel = null;
 
@@ -81,7 +70,7 @@ module.exports = function registerRoutes(router, context) {
    *       503:
    *         description: Gemini API key not configured
    */
-  router.post('/chat', function(req, res) {
+  router.post('/chat', requireAuth, requireScope('org-lens:read'), function(req, res) {
     const { message, history, dataset } = req.body || {};
 
     if (!message || typeof message !== 'string') {
@@ -159,7 +148,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: List of loaded datasets
    */
-  router.get('/datasets', function(req, res) {
+  router.get('/datasets', requireAuth, requireScope('org-lens:read'), function(req, res) {
     const datasetList = Object.keys(datasets).map(function(name) {
       const idx = datasets[name];
       return {

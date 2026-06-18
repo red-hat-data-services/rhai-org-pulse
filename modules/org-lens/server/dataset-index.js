@@ -1,9 +1,7 @@
 'use strict';
 
-const fs = require('fs');
-
 class DatasetIndex {
-  constructor(name, summariesPath, categoriesPath, projectsPath) {
+  constructor(name, summariesData, categoriesData, projectsData) {
     this.name = name;
     this.people = [];
     this.metadata = {};
@@ -28,24 +26,21 @@ class DatasetIndex {
     this.allProducts = {};
     this.allWorkFocus = {};
 
-    this._load(summariesPath, categoriesPath, projectsPath);
+    this._init(summariesData, categoriesData, projectsData);
   }
 
-  _load(summariesPath, categoriesPath, projectsPath) {
-    const data = JSON.parse(fs.readFileSync(summariesPath, 'utf-8'));
-    this.metadata = data.metadata || {};
-    this.people = data.people_summaries || [];
+  _init(summariesData, categoriesData, projectsData) {
+    this.metadata = summariesData.metadata || {};
+    this.people = summariesData.people_summaries || [];
 
-    if (categoriesPath && fs.existsSync(categoriesPath)) {
-      const catData = JSON.parse(fs.readFileSync(categoriesPath, 'utf-8'));
-      this.categories = catData.categories || [];
+    if (categoriesData) {
+      this.categories = categoriesData.categories || [];
     }
 
-    if (projectsPath && fs.existsSync(projectsPath)) {
-      const projData = JSON.parse(fs.readFileSync(projectsPath, 'utf-8'));
-      this.jiraProjects = projData.jira_projects || [];
-      this.products = projData.products || [];
-      this.repos = projData.repos || [];
+    if (projectsData) {
+      this.jiraProjects = projectsData.jira_projects || [];
+      this.products = projectsData.products || [];
+      this.repos = projectsData.repos || [];
     }
 
     this._buildIndexes();

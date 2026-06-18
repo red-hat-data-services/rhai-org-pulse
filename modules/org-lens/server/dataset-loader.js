@@ -4,36 +4,52 @@ const fs = require('fs');
 const path = require('path');
 const { DatasetIndex } = require('./dataset-index');
 
-function loadAllDatasets(dataDir) {
+function loadAllDatasets(storage) {
   const datasets = {};
+  const { readFromStorage, listStorageFiles } = storage;
+  const baseDir = storage.DATA_DIR || storage.FIXTURES_DIR;
+  const orgLensDir = path.join(baseDir, 'org-lens');
 
-  if (!fs.existsSync(dataDir) || !fs.statSync(dataDir).isDirectory()) {
-    console.warn('[org-lens] Data directory does not exist:', dataDir);
+  let entries;
+  try {
+    entries = fs.readdirSync(orgLensDir).sort();
+  } catch {
+    console.warn('[org-lens] No org-lens directory found');
     return datasets;
   }
 
-  console.log('[org-lens] Scanning for datasets in:', dataDir);
+  console.log('[org-lens] Scanning for datasets in org-lens storage');
 
-  const entries = fs.readdirSync(dataDir).sort();
   for (const entry of entries) {
     if (entry.startsWith('.')) continue;
-    const entryPath = path.join(dataDir, entry);
-    if (!fs.statSync(entryPath).isDirectory()) continue;
 
-    const summariesFiles = fs.readdirSync(entryPath)
-      .filter(f => f.startsWith('people_summaries_') && f.endsWith('.json'));
-    if (summariesFiles.length === 0) continue;
+    const subFiles = listStorageFiles('org-lens/' + entry);
+    if (subFiles.length === 0) continue;
 
-    const summariesPath = path.join(entryPath, summariesFiles[0]);
-    const categoriesFiles = fs.readdirSync(entryPath)
-      .filter(f => f.startsWith('people_categories_') && f.endsWith('.json'));
-    const categoriesPath = categoriesFiles.length > 0 ? path.join(entryPath, categoriesFiles[0]) : null;
-    const projectsFiles = fs.readdirSync(entryPath)
-      .filter(f => f.startsWith('projects_') && f.endsWith('.json'));
-    const projectsPath = projectsFiles.length > 0 ? path.join(entryPath, projectsFiles[0]) : null;
+    const summariesFile = subFiles.find(function(f) {
+      return f.startsWith('people_summaries_');
+    });
+    if (!summariesFile) continue;
+
+    const summariesData = readFromStorage('org-lens/' + entry + '/' + summariesFile);
+    if (!summariesData) continue;
+
+    const categoriesFile = subFiles.find(function(f) {
+      return f.startsWith('people_categories_');
+    });
+    const categoriesData = categoriesFile
+      ? readFromStorage('org-lens/' + entry + '/' + categoriesFile)
+      : null;
+
+    const projectsFile = subFiles.find(function(f) {
+      return f.startsWith('projects_');
+    });
+    const projectsData = projectsFile
+      ? readFromStorage('org-lens/' + entry + '/' + projectsFile)
+      : null;
 
     try {
-      datasets[entry] = new DatasetIndex(entry, summariesPath, categoriesPath, projectsPath);
+      datasets[entry] = new DatasetIndex(entry, summariesData, categoriesData, projectsData);
     } catch (err) {
       console.error('[org-lens] Failed to load dataset', entry, err.message);
     }
@@ -42,7 +58,7 @@ function loadAllDatasets(dataDir) {
   if (Object.keys(datasets).length > 0) {
     console.log('[org-lens] Ready —', Object.keys(datasets).length, 'dataset(s) loaded:', Object.keys(datasets).join(', '));
   } else {
-    console.warn('[org-lens] No datasets found in', dataDir);
+    console.warn('[org-lens] No datasets found in org-lens storage');
   }
 
   return datasets;
