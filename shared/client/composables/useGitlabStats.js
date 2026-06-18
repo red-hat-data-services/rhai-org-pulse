@@ -44,10 +44,7 @@ export function useGitlabStats() {
     if (gitlabData.value) return
     loading.value = true
     try {
-      await getGitlabContributions((data) => {
-        gitlabData.value = data
-        loading.value = false
-      })
+      gitlabData.value = await getGitlabContributions()
     } catch (err) {
       console.error('Failed to load GitLab stats:', err)
     } finally {

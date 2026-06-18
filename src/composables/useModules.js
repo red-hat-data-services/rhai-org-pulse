@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { getModules, apiRequest } from '@shared/client/services/api'
+import { apiRequest, getModules } from '@shared/client/services/api'
 
 const modulesData = ref(null)
 const loading = ref(false)
@@ -12,10 +12,7 @@ export function useModules() {
     loading.value = true
     error.value = null
     try {
-      await getModules((data) => {
-        modulesData.value = data
-        loading.value = false
-      })
+      modulesData.value = await getModules()
     } catch (err) {
       error.value = err.message
       console.error('Failed to load modules:', err)

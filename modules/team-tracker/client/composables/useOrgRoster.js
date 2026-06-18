@@ -1,44 +1,6 @@
 import { ref, computed } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 
-const CACHE_PREFIX = 'org_roster_cache:'
-
-function cacheGet(key) {
-  try {
-    const raw = localStorage.getItem(CACHE_PREFIX + key)
-    if (!raw) return null
-    return JSON.parse(raw)
-  } catch {
-    return null
-  }
-}
-
-function cacheSet(key, data) {
-  try {
-    localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(data))
-  } catch {
-    // localStorage full, skip
-  }
-}
-
-async function cachedRequest(cacheKey, path, onData) {
-  const cached = cacheGet(cacheKey)
-  if (cached && onData) onData(cached)
-
-  try {
-    const fresh = await apiRequest(`/modules/team-tracker${path}`)
-    cacheSet(cacheKey, fresh)
-    if (onData) onData(fresh)
-    return fresh
-  } catch (err) {
-    if (cached) {
-      console.warn(`Using cached data for ${path}:`, err.message)
-      return cached
-    }
-    throw err
-  }
-}
-
 // Shared reactive state
 const teams = ref([])
 const unassigned = ref([])
@@ -58,13 +20,11 @@ export function useOrgRoster() {
     error.value = null
     try {
       const path = orgFilter ? `/org-teams?org=${encodeURIComponent(orgFilter)}` : '/org-teams'
-      const cacheKey = orgFilter ? `teams:${orgFilter}` : 'teams:all'
-      await cachedRequest(cacheKey, path, (data) => {
-        teams.value = data.teams || []
-        unassigned.value = data.unassigned || []
-        totalPeople.value = data.totalPeople || 0
-        fetchedAt.value = data.fetchedAt || null
-      })
+      const data = await apiRequest(`/modules/team-tracker${path}`)
+      teams.value = data.teams || []
+      unassigned.value = data.unassigned || []
+      totalPeople.value = data.totalPeople || 0
+      fetchedAt.value = data.fetchedAt || null
     } catch (err) {
       error.value = err.message
     } finally {
@@ -74,9 +34,8 @@ export function useOrgRoster() {
 
   async function loadOrgs() {
     try {
-      await cachedRequest('orgs', '/org-list', (data) => {
-        orgs.value = data.orgs || []
-      })
+      const data = await apiRequest('/modules/team-tracker/org-list')
+      orgs.value = data.orgs || []
     } catch (err) {
       console.warn('Failed to load orgs:', err.message)
     }
@@ -90,35 +49,32 @@ export function useOrgRoster() {
       if (filters.team) params.push(`team=${encodeURIComponent(filters.team)}`)
       if (params.length > 0) path += '?' + params.join('&')
 
-      const cacheKey = `people:${filters.org || 'all'}:${filters.team || 'all'}`
-      await cachedRequest(cacheKey, path, (data) => {
-        people.value = data.people || []
-      })
+      const data = await apiRequest(`/modules/team-tracker${path}`)
+      people.value = data.people || []
     } catch (err) {
       console.warn('Failed to load people:', err.message)
     }
   }
 
-  async function loadTeamDetail(teamKey, onData) {
-    return cachedRequest(`team:${teamKey}`, `/org-teams/${encodeURIComponent(teamKey)}`, onData)
+  async function loadTeamDetail(teamKey) {
+    return apiRequest(`/modules/team-tracker/org-teams/${encodeURIComponent(teamKey)}`)
   }
 
   async function loadTeamMembers(teamKey) {
-    return cachedRequest(`members:${teamKey}`, `/org-teams/${encodeURIComponent(teamKey)}/members`)
+    return apiRequest(`/modules/team-tracker/org-teams/${encodeURIComponent(teamKey)}/members`)
   }
 
   async function loadOrgSummary(orgName) {
-    return cachedRequest(`org-summary:${orgName}`, `/org-summary/${encodeURIComponent(orgName)}`)
+    return apiRequest(`/modules/team-tracker/org-summary/${encodeURIComponent(orgName)}`)
   }
 
   async function loadComponents() {
-    return cachedRequest('components', '/components')
+    return apiRequest('/modules/team-tracker/components')
   }
 
   async function loadRfeBacklog(orgFilter) {
     const path = orgFilter ? `/rfe-backlog?org=${encodeURIComponent(orgFilter)}` : '/rfe-backlog'
-    const cacheKey = orgFilter ? `rfe:${orgFilter}` : 'rfe:all'
-    return cachedRequest(cacheKey, path)
+    return apiRequest(`/modules/team-tracker${path}`)
   }
 
   async function loadRfeConfig() {

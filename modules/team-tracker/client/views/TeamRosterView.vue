@@ -505,9 +505,7 @@ async function fetchTeamDetail() {
   teamDetailError.value = false
   const detailKey = team.value.displayKey || team.value.key
   try {
-    await loadTeamDetail(detailKey, (data) => {
-      teamDetail.value = data
-    })
+    teamDetail.value = await loadTeamDetail(detailKey)
   } catch {
     teamDetailError.value = true
   }
@@ -529,9 +527,7 @@ const showRefreshModal = ref(false)
 async function fetchTeamMetrics() {
   if (!team.value) return
   try {
-    await getTeamMetrics(team.value.key, (data) => {
-      teamMetrics.value = data
-    })
+    teamMetrics.value = await getTeamMetrics(team.value.key)
   } catch (error) {
     console.error('Failed to fetch team metrics:', error)
   }
