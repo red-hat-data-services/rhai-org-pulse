@@ -4,9 +4,24 @@ const { DatasetIndex } = require('./dataset-index');
 
 function loadAllDatasets(storage) {
   const datasets = {};
-  const { readFromStorage, listStorageFiles, listStorageDirectories } = storage;
+  const { readFromStorage, listStorageFiles } = storage;
 
-  const entries = listStorageDirectories('org-lens').sort();
+  let entries;
+  if (typeof storage.listStorageDirectories === 'function') {
+    entries = storage.listStorageDirectories('org-lens').sort();
+  } else {
+    const fs = require('fs');
+    const path = require('path');
+    const orgLensDir = path.join(process.cwd(), 'data', 'org-lens');
+    try {
+      entries = fs.readdirSync(orgLensDir)
+        .filter(function(e) { return fs.statSync(path.join(orgLensDir, e)).isDirectory(); })
+        .sort();
+    } catch {
+      entries = [];
+    }
+  }
+
   if (entries.length === 0) {
     console.warn('[org-lens] No org-lens directory found');
     return datasets;

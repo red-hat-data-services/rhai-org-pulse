@@ -1,0 +1,37 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: org-pulse
+
+resources:
+  - ../../base
+
+configMapGenerator:
+  - name: team-tracker-config
+    behavior: merge
+    literals:
+      - ADMIN_EMAILS=aavraham@redhat.com
+      - CRON_ADMIN_EMAIL=aavraham@redhat.com
+
+images:
+  - name: quay.io/org-pulse/org-pulse-core-backend
+    newName: quay.io/aviavraham/org-pulse-backend
+    newTag: poc
+  - name: quay.io/org-pulse/org-pulse-core-frontend
+    newName: quay.io/aviavraham/org-pulse-frontend
+    newTag: poc
+
+patches:
+  - target:
+      kind: Deployment
+      name: backend
+    patch: |
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: org-lens-secrets
+              key: GEMINI_API_KEY
+              optional: true

@@ -73,10 +73,20 @@ function getToolDeclarations() {
     },
     {
       name: 'get_site_overview',
-      description: 'Get high-level site stats: headcount, top technologies, products, categories. Use for "Give me an overview" or "How big is the team?".',
+      description: 'Get high-level org stats including: headcount, top managers (people at the top of the hierarchy), largest teams sorted by direct report count, top technologies, top products, and work categories. Use for ANY aggregate question: "Who is the top manager?", "Who has the most reports?", "How big is the org?", "Give me an overview".',
       parameters: {
         type: 'object',
         properties: {},
+      },
+    },
+    {
+      name: 'list_managers',
+      description: 'List all managers sorted by team size (number of direct reports). Use for "Who are the biggest managers?", "List managers by team size", "Which manager has the most people?".',
+      parameters: {
+        type: 'object',
+        properties: {
+          limit: { type: 'integer', description: 'Maximum results to return (default 20)' },
+        },
       },
     },
     {
@@ -176,6 +186,21 @@ function executeToolCall(index, toolName, args) {
 
     case 'list_products':
       return { products: index.listProducts(args.limit || 20) };
+
+    case 'list_managers': {
+      const allManagers = index.people
+        .filter(p => (index.byManager[p.uid] || []).length > 0)
+        .map(p => ({
+          name: p.name,
+          uid: p.uid,
+          title: p.title,
+          directReportCount: (index.byManager[p.uid] || []).length,
+          manager: p.manager || null,
+        }))
+        .sort((a, b) => b.directReportCount - a.directReportCount);
+      const lim = args.limit || 20;
+      return { managers: allManagers.slice(0, lim), total: allManagers.length };
+    }
 
     case 'list_categories':
       return {
