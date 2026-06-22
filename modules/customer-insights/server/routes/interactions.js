@@ -138,7 +138,7 @@ module.exports = function registerInteractionsRoutes(router, context) {
    *         in: query
    *         schema:
    *           type: string
-   *         description: Filter by component (navigator, autox, platform, etc.)
+   *         description: Filter by Red Hat AI component (e.g., 'vLLM', 'Project Navigator', 'Model Serving')
    *       - name: status
    *         in: query
    *         schema:

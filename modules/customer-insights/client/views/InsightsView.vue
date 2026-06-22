@@ -2,9 +2,12 @@
   <div class="p-6">
     <!-- Header -->
     <div class="mb-6 flex justify-between items-center">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">AI Insights</h1>
-        <p class="text-gray-600 mt-1">AI-generated insights from customer interactions</p>
+      <div class="flex items-center gap-2">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">AI Insights</h1>
+          <p class="text-gray-600 mt-1">AI-generated insights from customer interactions</p>
+        </div>
+        <InfoTooltip text="AI-powered analysis of customer feedback patterns. Identifies common themes, pain points, and feature requests across interactions. Click 'Generate Insights' to analyze current data." />
       </div>
 
       <div class="flex gap-3 items-center">
@@ -162,6 +165,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import InfoTooltip from '../components/InfoTooltip.vue'
 import { useComponentSelector } from '../composables/useComponentSelector'
 import { useInsights } from '../composables/useInsights'
 

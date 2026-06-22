@@ -1,7 +1,10 @@
 <template>
   <div class="p-6">
     <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">Import Data</h1>
+      <div class="flex items-center gap-2 mb-1">
+        <h1 class="text-2xl font-bold text-gray-900">Import Data</h1>
+        <InfoTooltip text="Bulk import customer interactions from CSV files or Google Drive documents. Data is validated and appended to your configured Google Sheet. Supports drag-and-drop upload." />
+      </div>
       <p class="text-gray-600 mt-1">Import customer interactions from various sources</p>
     </div>
 
@@ -435,6 +438,7 @@ Meeting with John Smith from Acme Financial Corp (Banking, North America)
 
 <script setup>
 import { ref, computed, inject } from 'vue'
+import InfoTooltip from '../components/InfoTooltip.vue'
 import { useGoogleDrive } from '../composables/useGoogleDrive'
 
 const moduleNav = inject('moduleNav')

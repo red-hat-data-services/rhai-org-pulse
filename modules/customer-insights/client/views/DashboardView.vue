@@ -2,9 +2,12 @@
   <div class="p-6">
     <!-- Header -->
     <div class="mb-6 flex justify-between items-center">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
-        <p class="text-gray-600 mt-1">View aggregated customer insights and trends</p>
+      <div class="flex items-center gap-2">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
+          <p class="text-gray-600 mt-1">View aggregated customer insights and trends</p>
+        </div>
+        <InfoTooltip text="Visual analytics and charts showing customer interaction trends, component distribution, geographic spread, and industry verticals. Filter by component to see specific metrics." />
       </div>
 
       <!-- Component Selector -->
@@ -117,6 +120,7 @@
 import { computed } from 'vue'
 import { Bar, Doughnut, Pie } from 'vue-chartjs'
 import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ArcElement } from 'chart.js'
+import InfoTooltip from '../components/InfoTooltip.vue'
 import { useComponentSelector } from '../composables/useComponentSelector'
 import { useAnalytics } from '../composables/useAnalytics'
 

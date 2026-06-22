@@ -13,10 +13,8 @@
       { "id": "insights", "label": "AI Insights", "icon": "Brain" },
       { "id": "roadmap", "label": "Roadmap", "icon": "Map", "separatorBefore": true },
       { "id": "rfe-creator", "label": "Create RFE", "icon": "PenSquare" },
-      { "id": "import", "label": "Import Data", "icon": "FileUp" },
-      { "id": "settings", "label": "Settings", "icon": "Settings", "separatorBefore": true }
-    ],
-    "settingsComponent": "./client/components/CustomerInsightsSettings.vue"
+      { "id": "import", "label": "Import Data", "icon": "FileUp" }
+    ]
   },
   "server": {
     "entry": "./server/index.js"

@@ -2,9 +2,12 @@
   <div class="p-6">
     <!-- Header -->
     <div class="mb-6 flex justify-between items-center">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Product Roadmap</h1>
-        <p class="text-gray-600 mt-1">Customer-driven initiatives and feature development</p>
+      <div class="flex items-center gap-2">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Product Roadmap</h1>
+          <p class="text-gray-600 mt-1">Customer-driven initiatives and feature development</p>
+        </div>
+        <InfoTooltip text="AI-generated product roadmap recommendations based on customer feedback. Shows initiatives with ARR impact, deliverables, and quick actions to create RFEs. Click 'Generate Roadmap' to analyze and prioritize customer requests." />
       </div>
 
       <div class="flex gap-3 items-center">
@@ -635,6 +638,7 @@
 
 <script setup>
 import { ref, computed, inject } from 'vue'
+import InfoTooltip from '../components/InfoTooltip.vue'
 import { useComponentSelector } from '../composables/useComponentSelector'
 import { useRoadmap } from '../composables/useRoadmap'
 import RoadmapCard from '../components/RoadmapCard.vue'

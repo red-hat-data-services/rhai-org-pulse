@@ -2,7 +2,10 @@
   <div class="p-6 max-w-5xl mx-auto">
     <!-- Header -->
     <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">Create RFE from Customer Feedback</h1>
+      <div class="flex items-center gap-2 mb-1">
+        <h1 class="text-2xl font-bold text-gray-900">Create RFE from Customer Feedback</h1>
+        <InfoTooltip text="Convert customer feedback into Jira RFEs (Request for Enhancement). AI analyzes pain points and searches for potential duplicates. Connect your Jira account to create RFEs directly." />
+      </div>
       <p class="text-gray-600 mt-1">Transform customer pain points into structured RFE requests with AI-powered duplicate detection</p>
 
       <!-- Jira Connection Status -->
@@ -596,6 +599,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import InfoTooltip from '../components/InfoTooltip.vue'
 import { useComponentSelector } from '../composables/useComponentSelector'
 import { useInteractions } from '../composables/useInteractions'
 import { useRfeCreator } from '../composables/useRfeCreator'
