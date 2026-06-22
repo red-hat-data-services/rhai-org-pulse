@@ -1,7 +1,6 @@
-const { getShowcaseData, fetchShowcaseData, clearCache } = require('./sheets-sync');
+const { getShowcaseData, fetchShowcaseData, clearCache, STORAGE_KEY } = require('./sheets-sync');
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
-const STORAGE_KEY = 'catalyst-showcase/showcase-data.json';
 
 /**
  * @param {import('express').Router} router

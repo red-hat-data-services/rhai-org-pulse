@@ -24,6 +24,7 @@
     ]
   },
   "secrets": {
+    "platform": ["google"],
     "module": [
       {
         "key": "CATALYST_SHOWCASE_SHEET_ID",

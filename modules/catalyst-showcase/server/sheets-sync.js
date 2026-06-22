@@ -3,6 +3,7 @@ const { createGoogleSheetsClient } = require('../../../shared/server/google-shee
 const ENTRIES_TAB = 'showcase_entries';
 const PILLARS_TAB = 'strategy_pillars';
 
+const STORAGE_KEY = 'catalyst-showcase/showcase-data.json';
 const CACHE_TTL = 5 * 60 * 1000;
 
 const ENTRY_COLUMN_MAP = {
@@ -99,7 +100,7 @@ async function fetchShowcaseData(sheetId, keyFilePath, storage) {
   _cache = { data: result, ts: Date.now() };
 
   if (storage) {
-    storage.writeToStorage('catalyst-showcase/showcase-data.json', result);
+    storage.writeToStorage(STORAGE_KEY, result);
   }
 
   return result;
@@ -119,7 +120,7 @@ async function getShowcaseData(sheetId, keyFilePath, storage) {
     }
 
     if (storage) {
-      const stored = storage.readFromStorage('catalyst-showcase/showcase-data.json');
+      const stored = storage.readFromStorage(STORAGE_KEY);
       if (stored) {
         console.error('[catalyst-showcase] Sheet fetch failed, using stored fallback:', err.message);
         _cache = { data: stored, ts: 0 };
@@ -144,4 +145,5 @@ module.exports = {
   ENTRY_COLUMN_MAP,
   PILLAR_COLUMN_MAP,
   PIPE_DELIMITED_FIELDS,
+  STORAGE_KEY,
 };

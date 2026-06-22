@@ -106,7 +106,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, inject } from 'vue'
+import { ref, computed, watch, inject, onUnmounted } from 'vue'
 import { Search as SearchIcon, AlertCircle as AlertCircleIcon } from 'lucide-vue-next'
 import { useShowcase } from '../composables/useShowcase.js'
 import ShowcaseCard from '../components/ShowcaseCard.vue'
@@ -129,6 +129,7 @@ watch(searchInput, (val) => {
     searchQuery.value = val
   }, 300)
 })
+onUnmounted(() => clearTimeout(searchTimer))
 
 const pillarMap = computed(() => {
   const map = {}

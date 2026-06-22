@@ -40,6 +40,7 @@
             :src="embedUrl"
             class="w-full h-full"
             frameborder="0"
+            sandbox="allow-scripts allow-same-origin allow-popups"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowfullscreen
           />
