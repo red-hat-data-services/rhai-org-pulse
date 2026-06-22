@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 
-// CJS mocking of node-fetch is unreliable in vitest node env,
-// so we test the structural aspects of the module (same pattern as git-sync tests).
+// We test the structural aspects of the module (same pattern as git-sync tests).
 const registerRoutes = (await import('../../server/index.js')).default
 
 describe('upstream-pulse server module', () => {
