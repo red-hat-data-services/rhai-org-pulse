@@ -3,5 +3,6 @@
   "ai-impact": true,
   "releases": true,
   "team-tracker": true,
-  "system-health": true
+  "system-health": true,
+  "catalyst-showcase": true
 }
