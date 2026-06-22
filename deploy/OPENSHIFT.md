@@ -103,7 +103,7 @@ rm -rf "$TMPDIR"
 ```bash
 # Create a temp context with native node_modules
 cat > /tmp/backend-amd64.Dockerfile <<'EOF'
-FROM node:20-alpine
+FROM node:22-alpine
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY node_modules/ ./node_modules/

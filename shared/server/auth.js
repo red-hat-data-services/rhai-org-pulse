@@ -106,7 +106,7 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
     }
     req.userRoles = roleStore ? roleStore.getRoles(req.userEmail) : [];
     req.isTeamAdmin = req.userRoles.includes('team-admin');
-    req.isReleaseManager = req.userRoles.includes('release-manager');
+    req.isPlanningManager = req.userRoles.includes('planning-manager');
     req.isManager = isManager(req.userUid, registry);
   }
 
@@ -140,7 +140,7 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
     req.isAdmin = isAdmin(req.userEmail);
     req.userRoles = roleStore ? roleStore.getRoles(req.userEmail) : [];
     req.isTeamAdmin = req.userRoles.includes('team-admin');
-    req.isReleaseManager = req.userRoles.includes('release-manager');
+    req.isPlanningManager = req.userRoles.includes('planning-manager');
     req.isManager = isManager(req.userUid, registry);
     req.isImpersonating = true;
     req.impersonatedDisplayName = target.name || null;
@@ -208,6 +208,13 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
     next()
   }
 
+  function requireAuth(req, res, next) {
+    if (!req.userEmail) {
+      return res.status(401).json({ error: 'Authentication required.' })
+    }
+    next()
+  }
+
   function requireAdmin(req, res, next) {
     if (!req.isAdmin) {
       return res.status(403).json({ error: 'Admin access required.' })
@@ -257,7 +264,7 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
     };
   }
 
-  return { authMiddleware, requireAdmin, requireTeamAdmin, requireRole, requireScope, isAdmin, seedRoles }
+  return { authMiddleware, requireAuth, requireAdmin, requireTeamAdmin, requireRole, requireScope, isAdmin, seedRoles }
 }
 
 let _emptySecretWarned = false;

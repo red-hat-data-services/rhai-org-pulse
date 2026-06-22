@@ -10,7 +10,7 @@ const MOCK_DATA = {
   jiraHost: 'https://redhat.atlassian.net',
   metrics: {
     triageTotal: 10,
-    triageVerdicts: { ready: 6, missingInfo: 2, notFixable: 1, stale: 1, pending: 0 },
+    triageVerdicts: { ready: 6, missingInfo: 2, notFixable: 1, stale: 1, pending: 0, external: 0, securityReview: 0 },
     autofixStates: { ready: 1, pending: 1, review: 1, ciFailing: 0, merged: 2, rejected: 0, maxRetries: 0, researched: 0, blocked: 1 },
     autofixTotal: 6,
     successRate: 100,
@@ -18,8 +18,8 @@ const MOCK_DATA = {
     totalIssues: 10
   },
   trendData: [
-    { date: daysAgo(7).slice(0, 10), triaged: 3, autofixed: 2, merged: 1, total: 3, review: 1, ciFailing: 0, blocked: 0, maxRetries: 0, missingInfo: 1, stale: 0 },
-    { date: daysAgo(0).slice(0, 10), triaged: 7, autofixed: 4, merged: 1, total: 7, review: 1, ciFailing: 1, blocked: 0, maxRetries: 0, missingInfo: 1, stale: 1 }
+    { date: daysAgo(7).slice(0, 10), triaged: 3, autofixed: 2, merged: 1, total: 3, review: 1, ciFailing: 0, blocked: 0, maxRetries: 0, missingInfo: 1, stale: 0, external: 0, securityReview: 0 },
+    { date: daysAgo(0).slice(0, 10), triaged: 7, autofixed: 4, merged: 1, total: 7, review: 1, ciFailing: 1, blocked: 0, maxRetries: 0, missingInfo: 1, stale: 1, external: 0, securityReview: 0 }
   ],
   componentBreakdown: [
     { component: 'Model Server', triaged: 5, autofixed: 3, done: 1 },
@@ -127,14 +127,27 @@ describe('AutofixContent', () => {
     expect(rows[0].text()).toContain('AIPCC-100')
   })
 
+  it('renders new triage states in state filter dropdown', async () => {
+    const wrapper = mount(AutofixContent, {
+      props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'month' }
+    })
+    const stateBtn = wrapper.findAll('button').find(b => b.text().includes('All States'))
+    await stateBtn.trigger('click')
+    const labels = wrapper.findAll('label')
+    const labelTexts = labels.map(l => l.text())
+    expect(labelTexts).toContain('External Reporter')
+    expect(labelTexts).toContain('Security Review')
+  })
+
   it('filters issues by state', async () => {
     const wrapper = mount(AutofixContent, {
       props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'month' }
     })
-    const select = wrapper.findAll('select').find(s => {
-      return s.findAll('option').some(o => o.attributes('value') === 'all' && o.text() === 'All')
-    })
-    await select.setValue('triage-not-fixable')
+    const stateBtn = wrapper.findAll('button').find(b => b.text().includes('All States'))
+    await stateBtn.trigger('click')
+    const notFixableLabel = wrapper.findAll('label').find(l => l.text().includes('Not AI-Fixable'))
+    const checkbox = notFixableLabel.find('input[type="checkbox"]')
+    await checkbox.setValue(true)
     const rows = findIssueTableRows(wrapper)
     expect(rows).toHaveLength(1)
     expect(rows[0].text()).toContain('RHOAIENG-200')

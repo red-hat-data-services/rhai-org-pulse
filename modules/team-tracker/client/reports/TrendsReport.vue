@@ -345,10 +345,7 @@ async function loadTrends() {
   loading.value = true
   error.value = null
   try {
-    await getTrends((data) => {
-      trendsData.value = data
-      loading.value = false
-    })
+    trendsData.value = await getTrends()
   } catch (err) {
     console.error('Failed to load trends:', err)
     error.value = 'Failed to load trend data. Please try again later.'

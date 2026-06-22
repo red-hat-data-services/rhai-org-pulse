@@ -285,9 +285,9 @@
           <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-amber-100 dark:bg-amber-900/40">
             <svg class="w-3 h-3 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
           </span>
-          <span class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Avg / Release</span>
+          <span class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Avg / Monthly Release</span>
         </div>
-        <div class="text-2xl font-bold text-amber-600 dark:text-amber-400 ml-7">{{ formattedAvgPerRelease }}</div>
+        <div class="text-2xl font-bold text-amber-600 dark:text-amber-400 ml-7">{{ velocity ? velocity.avgPerRelease : '—' }}<span v-if="velocity && velocity.hasPartialYear" class="text-sm font-normal text-gray-400 dark:text-gray-500 ml-0.5" title="Includes components with less than a year of data">*</span></div>
       </div>
       <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5">
         <div class="absolute top-0 left-0 w-1 h-full bg-gray-400 rounded-l-xl" />
@@ -331,6 +331,9 @@
       ref="tableRef"
       :groups="clientFilteredGroups"
       :componentLeads="componentLeads"
+      :velocity="velocity"
+      :initialSort="savedSort"
+      @sort-changed="onSortChanged"
     />
 
     <!-- Pillar config panel -->
@@ -348,9 +351,9 @@ import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { getApiBase } from '@shared/client/services/api'
 import ComponentReleaseLoadTable from '../components/ComponentReleaseLoadTable.vue'
 import PillarConfigPanel from '../components/PillarConfigPanel.vue'
-import { avgPerRelease } from '../utils/summary-stats.js'
 
 const API_BASE = '/modules/releases/pm-hub'
+var STORAGE_KEY = 'pm-hub-filters'
 
 var selectedPillars = ref([])
 var selectedComponents = ref([])
@@ -403,7 +406,55 @@ var pmOwnerDropdownOpen = ref(false)
 var pmOwnerDropdownRef = ref(null)
 var pmOwnerSearch = ref('')
 
+var savedSort = ref({ column: null, direction: 'asc' })
+
 var availableProducts = ['RHOAI', 'RHELAI', 'RHAII']
+
+// ═══ FILTER PERSISTENCE ═══
+
+function saveFilters() {
+  try {
+    var state = {
+      pillars: selectedPillars.value,
+      components: selectedComponents.value,
+      versions: selectedVersions.value,
+      product: filterProduct.value,
+      type: filterType.value,
+      releaseType: filterReleaseType.value,
+      status: filterStatus.value,
+      blocked: filterBlocked.value,
+      delOwner: filterDelOwner.value,
+      pmOwner: filterPmOwner.value,
+      sort: savedSort.value
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  } catch (e) { void e }
+}
+
+function restoreFilters() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return false
+    var state = JSON.parse(raw)
+    if (state.pillars && Array.isArray(state.pillars)) selectedPillars.value = state.pillars
+    if (state.components && Array.isArray(state.components)) selectedComponents.value = state.components
+    if (state.versions && Array.isArray(state.versions)) selectedVersions.value = state.versions
+    if (state.product && Array.isArray(state.product)) filterProduct.value = state.product
+    if (state.type && Array.isArray(state.type)) filterType.value = state.type
+    if (state.releaseType && Array.isArray(state.releaseType)) filterReleaseType.value = state.releaseType
+    if (state.status && Array.isArray(state.status)) filterStatus.value = state.status
+    if (state.blocked !== undefined) filterBlocked.value = state.blocked
+    if (state.delOwner && Array.isArray(state.delOwner)) filterDelOwner.value = state.delOwner
+    if (state.pmOwner && Array.isArray(state.pmOwner)) filterPmOwner.value = state.pmOwner
+    if (state.sort && typeof state.sort === 'object') savedSort.value = state.sort
+    return true
+  } catch { return false }
+}
+
+function onSortChanged(sort) {
+  savedSort.value = sort
+  saveFilters()
+}
 
 function statusDotClass(s) {
   if (s === 'Green') return 'bg-emerald-500 ring-emerald-300 dark:ring-emerald-700'
@@ -457,6 +508,8 @@ function clearAllFilters() {
   filterBlocked.value = null
   filterDelOwner.value = []
   filterPmOwner.value = []
+  savedSort.value = { column: null, direction: 'asc' }
+  try { localStorage.removeItem(STORAGE_KEY) } catch (e) { void e }
 }
 
 function extractProduct(versionName) {
@@ -699,15 +752,19 @@ var pillarAllowedComponents = computed(function() {
   return allowed
 })
 
+function normalizeComponentName(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
 function componentMatchesPillar(jiraName) {
   var allowed = pillarAllowedComponents.value
   if (!allowed) return true
-  var lower = jiraName.toLowerCase()
+  if (allowed.has(jiraName.toLowerCase())) return true
+  var normalized = normalizeComponentName(jiraName)
   var iter = allowed.values()
   var next = iter.next()
   while (!next.done) {
-    var entry = next.value
-    if (lower.includes(entry) || entry.includes(lower)) return true
+    if (normalizeComponentName(next.value) === normalized) return true
     next = iter.next()
   }
   return false
@@ -731,26 +788,36 @@ var filteredVersions = computed(function() {
 })
 
 var totalRequested = computed(function() {
+  var source = clientFilteredGroups.value
   var count = 0
-  for (var i = 0; i < groups.value.length; i++) count += groups.value[i].requestedCount || 0
+  for (var i = 0; i < source.length; i++) {
+    var comps = source[i].components || []
+    for (var ci = 0; ci < comps.length; ci++) count += comps[ci].requestedCount || 0
+  }
   return count
 })
 
 var totalCommitted = computed(function() {
+  var source = clientFilteredGroups.value
   var count = 0
-  for (var i = 0; i < groups.value.length; i++) count += groups.value[i].committedCount || 0
+  for (var i = 0; i < source.length; i++) {
+    var comps = source[i].components || []
+    for (var ci = 0; ci < comps.length; ci++) count += comps[ci].committedCount || 0
+  }
   return count
 })
 
 var totalBlocked = computed(function() {
+  var source = clientFilteredGroups.value
   var count = 0
-  for (var i = 0; i < groups.value.length; i++) count += groups.value[i].blockedCount || 0
+  for (var i = 0; i < source.length; i++) {
+    var comps = source[i].components || []
+    for (var ci = 0; ci < comps.length; ci++) count += comps[ci].blockedCount || 0
+  }
   return count
 })
 
-var formattedAvgPerRelease = computed(function() {
-  return avgPerRelease(totalRequested.value, selectedVersions.value.length)
-})
+var velocity = ref(null)
 
 function togglePillar(name) {
   var idx = selectedPillars.value.indexOf(name)
@@ -843,15 +910,22 @@ async function fetchComponents() {
   }
 }
 
+function getEffectiveComponents() {
+  if (selectedComponents.value.length > 0) return selectedComponents.value
+  if (pillarAllowedComponents.value) return pillarFilteredComponents.value
+  return []
+}
+
 async function loadData() {
-  if (selectedComponents.value.length === 0 && selectedVersions.value.length === 0) return
+  var effectiveComponents = getEffectiveComponents()
+  if (effectiveComponents.length === 0 && selectedVersions.value.length === 0) return
   loadingData.value = true
   dataError.value = null
   hasFetched.value = true
 
   try {
     var params = new URLSearchParams()
-    if (selectedComponents.value.length > 0) params.set('components', selectedComponents.value.join(','))
+    if (effectiveComponents.length > 0) params.set('components', effectiveComponents.join(','))
     if (selectedVersions.value.length > 0) {
       var jiraVersions = resolveJiraVersions(selectedVersions.value)
       params.set('versions', jiraVersions.join(','))
@@ -863,9 +937,11 @@ async function loadData() {
     }
     var data = await response.json()
     groups.value = data.groups || []
+    velocity.value = data.velocity || null
   } catch (err) {
     dataError.value = err.message
     groups.value = []
+    velocity.value = null
   } finally {
     loadingData.value = false
   }
@@ -878,8 +954,9 @@ watch(selectedPillars, function() {
   })
 }, { deep: true })
 
-watch([selectedComponents, selectedVersions], function() {
-  if (selectedComponents.value.length === 0 && selectedVersions.value.length === 0) {
+watch([selectedComponents, selectedVersions, selectedPillars], function() {
+  var effectiveComponents = getEffectiveComponents()
+  if (effectiveComponents.length === 0 && selectedVersions.value.length === 0) {
     groups.value = []
     hasFetched.value = false
     return
@@ -887,7 +964,15 @@ watch([selectedComponents, selectedVersions], function() {
   loadData()
 }, { deep: true })
 
+// Save filters to localStorage on any filter change
+watch(
+  [selectedPillars, selectedComponents, selectedVersions, filterProduct, filterType, filterReleaseType, filterStatus, filterBlocked, filterDelOwner, filterPmOwner],
+  saveFilters,
+  { deep: true }
+)
+
 onMounted(function() {
+  restoreFilters()
   fetchPillarConfig()
   fetchComponents()
   document.addEventListener('mousedown', handleClickOutside)

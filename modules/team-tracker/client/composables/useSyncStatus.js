@@ -1,8 +1,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import {
   getRosterSyncStatus,
-  triggerUnifiedSync,
-  clearApiCache
+  triggerUnifiedSync
 } from '@shared/client/services/api'
 import { useRoster } from '@shared/client/composables/useRoster'
 
@@ -67,7 +66,6 @@ function startPolling() {
         configDirty.value = false
         try { sessionStorage.removeItem(SESSION_KEY) } catch { /* ignore */ }
       }
-      clearApiCache()
       const { reloadRoster } = useRoster()
       reloadRoster()
     }

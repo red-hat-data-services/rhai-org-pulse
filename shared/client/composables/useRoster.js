@@ -108,10 +108,7 @@ export function useRoster() {
     loading.value = true
     error.value = null
     try {
-      await getRoster((data) => {
-        rosterData.value = data
-        loading.value = false
-      })
+      rosterData.value = await getRoster()
     } catch (err) {
       error.value = err.message
       console.error('Failed to load roster:', err)

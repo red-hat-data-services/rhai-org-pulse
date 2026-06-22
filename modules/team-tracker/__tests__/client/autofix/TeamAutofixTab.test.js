@@ -52,9 +52,19 @@ const sampleApiResponse = {
 }
 
 function setupFetchSuccess(data = sampleApiResponse) {
-  mockFetchAutofixData.mockImplementation((onData) => {
-    if (onData) onData(data)
-    return Promise.resolve(data)
+  mockFetchAutofixData.mockImplementation((onData, opts) => {
+    let result = data
+    if (opts?.components?.length) {
+      const componentSet = new Set(opts.components)
+      result = {
+        ...data,
+        issues: data.issues.filter(i =>
+          (i.components || []).some(c => componentSet.has(c))
+        )
+      }
+    }
+    if (onData) onData(result)
+    return Promise.resolve(result)
   })
 }
 

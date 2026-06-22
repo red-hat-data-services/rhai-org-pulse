@@ -113,8 +113,11 @@ jobs:
             echo "EOF" >> $GITHUB_OUTPUT
           fi
 
+      # On pull_request_review, the status was already set by the earlier
+      # pull_request_target run. Skip to avoid 403 on fork PRs where the
+      # GITHUB_TOKEN lacks statuses:write on the base repo.
       - name: Set status — no sensitive files changed
-        if: steps.check_sensitive_files.outputs.detected != 'true'
+        if: steps.check_sensitive_files.outputs.detected != 'true' && github.event_name != 'pull_request_review'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HEAD_SHA: ${{ steps.metadata.outputs.head_sha }}
@@ -129,20 +132,22 @@ jobs:
         if: steps.check_sensitive_files.outputs.detected == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
           PR_NUMBER: ${{ steps.metadata.outputs.pr_number }}
           MODIFIED_FILES_LIST: ${{ steps.check_sensitive_files.outputs.modified_files }}
         run: |
-          COMMENT_EXISTS=$(gh pr view "$PR_NUMBER" --json comments -q '.comments[] | select(.author.login=="github-actions") | select(.body | contains("AI Configuration Guard")) | .id' | head -1)
+          COMMENT_EXISTS=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json comments -q '.comments[] | select(.author.login=="github-actions") | select(.body | contains("AI Configuration Guard")) | .id' | head -1)
           if [ -z "$COMMENT_EXISTS" ]; then
             COMMENT_BODY=$(printf "**AI Configuration Guard**\n\nThis PR modifies sensitive AI configuration files or workflows that require approval from a member of: **@%s**\n\nThe following sensitive files were detected:\n%s\nAn approval from an authorized team member is required before this PR can be merged." "${ALLOWED_APPROVER_TEAM}" "${MODIFIED_FILES_LIST}")
-            gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY"
+            gh pr comment "$PR_NUMBER" --repo "$REPO" --body "$COMMENT_BODY"
           else
             echo "Comment already exists (ID: $COMMENT_EXISTS), skipping duplicate."
           fi
 
-      # Generates "APP_TOKEN" to verify the reviewer belongs to the team of approvers.
-      # Both triggers (pull_request_target and pull_request_review) run in the base
-      # repo context, so secrets are always available.
+      # Generates "APP_TOKEN" to verify the reviewer belongs to the team of
+      # approvers AND to write commit statuses. The GITHUB_TOKEN on
+      # pull_request_review events lacks statuses:write for fork PRs, so the
+      # App token is used for all status writes in the sensitive-files path.
       - name: Generate GitHub App token
         id: app-token
         if: steps.check_sensitive_files.outputs.detected == 'true'
@@ -154,27 +159,24 @@ jobs:
       - name: Check for team approval and set status
         if: steps.check_sensitive_files.outputs.detected == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           PR_NUMBER: ${{ steps.metadata.outputs.pr_number }}
           HEAD_SHA: ${{ steps.metadata.outputs.head_sha }}
           REPO: ${{ github.repository }}
         run: |
-          if [ -z "$APP_TOKEN" ]; then
+          if [ -z "$GH_TOKEN" ]; then
             echo "::error::App token unavailable — cannot verify team membership."
-            gh api "repos/${REPO}/statuses/${HEAD_SHA}" \
-              -f state=failure \
-              -f context="${STATUS_CONTEXT}" \
-              -f description="App token unavailable — cannot verify approval" || true
             exit 1
           fi
 
-          # Use app token to query team membership (requires org members:read)
-          REVIEWS=$(gh pr view "$PR_NUMBER" --json reviews -q '.reviews[] | select(.state=="APPROVED") | .author.login')
+          # App token is used for all calls: team membership, PR reviews, and
+          # commit status writes. This ensures fork PRs work (GITHUB_TOKEN on
+          # pull_request_review lacks statuses:write for forks).
+          REVIEWS=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json reviews -q '.reviews[] | select(.state=="APPROVED") | .author.login')
 
           ORG=$(echo "${ALLOWED_APPROVER_TEAM}" | cut -d'/' -f1)
           TEAM_SLUG=$(echo "${ALLOWED_APPROVER_TEAM}" | cut -d'/' -f2)
-          TEAM_MEMBERS=$(GH_TOKEN="$APP_TOKEN" gh api "/orgs/${ORG}/teams/${TEAM_SLUG}/members" -q '.[].login')
+          TEAM_MEMBERS=$(gh api "/orgs/${ORG}/teams/${TEAM_SLUG}/members" -q '.[].login')
 
           APPROVED=false
           APPROVER=""

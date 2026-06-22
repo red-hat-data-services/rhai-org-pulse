@@ -8,6 +8,9 @@ ARG CORE_TAG=latest
 # Stage 1: Build with all AI Eng modules
 FROM quay.io/org-pulse/org-pulse-core-frontend-builder:${CORE_TAG} AS build
 
+# Add platform customizations
+COPY platform/ ./platform/
+
 # Add AI Eng modules
 COPY modules/ai-impact/ ./modules/ai-impact/
 COPY modules/releases/ ./modules/releases/

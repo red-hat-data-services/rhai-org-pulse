@@ -1,7 +1,5 @@
 /**
- * API Service
- * Handles communication with the backend
- * Uses localStorage for stale-while-revalidate caching
+ * API Service — handles communication with the backend.
  *
  * Authentication is handled by the OpenShift OAuth proxy —
  * no client-side token management needed.
@@ -9,21 +7,8 @@
 
 import { impersonatingUid } from '@shared/client/state/impersonation'
 
-const CACHE_PREFIX = 'app_cache:'
-/** Prefix for sessionStorage-only caches (same family as app_cache: localStorage keys). */
+/** Prefix for sessionStorage-only caches. */
 export const SESSION_CACHE_PREFIX = 'app_cache:session:'
-
-// One-time migration from old tt_cache: prefix
-try {
-  const keysToMigrate = []
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i)
-    if (k && k.startsWith('tt_cache:')) keysToMigrate.push(k)
-  }
-  for (const k of keysToMigrate) {
-    localStorage.removeItem(k)
-  }
-} catch { /* ignore */ }
 
 /**
  * Base URL for REST calls. Relative paths default to `/api` (Vite proxy in dev).
@@ -56,59 +41,6 @@ export function getApiBase() {
   return _cachedApiBase
 }
 
-// ─── LocalStorage Cache ───
-
-function cacheGet(key) {
-  try {
-    const raw = localStorage.getItem(CACHE_PREFIX + key)
-    if (!raw) return null
-    return JSON.parse(raw)
-  } catch {
-    return null
-  }
-}
-
-function cacheSet(key, data) {
-  try {
-    localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(data))
-  } catch {
-    // localStorage full — evict oldest cache entries and retry
-    evictOldest()
-    try {
-      localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(data))
-    } catch {
-      // still full, skip caching
-    }
-  }
-}
-
-function evictOldest() {
-  const keys = []
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i)
-    if (k.startsWith(CACHE_PREFIX)) keys.push(k)
-  }
-  // Remove first half of cache keys (oldest by insertion order)
-  const toRemove = keys.slice(0, Math.max(1, Math.floor(keys.length / 2)))
-  for (const k of toRemove) {
-    localStorage.removeItem(k)
-  }
-}
-
-/**
- * Clear all API cache entries from localStorage
- */
-export function clearApiCache() {
-  const keys = []
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i)
-    if (k.startsWith(CACHE_PREFIX)) keys.push(k)
-  }
-  for (const k of keys) {
-    localStorage.removeItem(k)
-  }
-}
-
 export async function apiRequest(path, options = {}) {
   const headers = { ...(options.headers || {}) }
   if (impersonatingUid.value) {
@@ -137,35 +69,6 @@ export async function apiRequest(path, options = {}) {
   return response.json()
 }
 
-/**
- * Stale-while-revalidate: return cached data immediately via onData callback,
- * then fetch fresh data and call onData again if it changed.
- * If no cache exists, fetches and returns normally.
- */
-export async function cachedRequest(cacheKey, path, onData) {
-  const cached = cacheGet(cacheKey)
-
-  if (cached && onData) {
-    onData(cached)
-  }
-
-  try {
-    const fresh = await apiRequest(path)
-    cacheSet(cacheKey, fresh)
-    if (onData) {
-      onData(fresh)
-    }
-    return fresh
-  } catch (err) {
-    // If we have cached data, swallow network errors silently
-    if (cached) {
-      console.warn(`Using cached data for ${path}:`, err.message)
-      return cached
-    }
-    throw err
-  }
-}
-
 // ─── Site Config ───
 
 export async function getSiteConfig() {
@@ -188,20 +91,20 @@ export async function getLastRefreshed() {
 
 // ─── Roster & Person Metrics ───
 
-export async function getRoster(onData) {
-  return cachedRequest('roster', '/roster', onData)
+export async function getRoster() {
+  return apiRequest('/roster')
 }
 
-export async function getAllPeopleMetrics(onData) {
-  return cachedRequest('people-metrics', '/people/metrics', onData)
+export async function getAllPeopleMetrics() {
+  return apiRequest('/people/metrics')
 }
 
 export async function getPersonMetrics(jiraDisplayName) {
-  return cachedRequest(`person:${jiraDisplayName}`, `/person/${encodeURIComponent(jiraDisplayName)}/metrics`)
+  return apiRequest(`/person/${encodeURIComponent(jiraDisplayName)}/metrics`)
 }
 
-export async function getTeamMetrics(teamKey, onData) {
-  return cachedRequest(`team:${teamKey}`, `/team/${encodeURIComponent(teamKey)}/metrics`, onData)
+export async function getTeamMetrics(teamKey) {
+  return apiRequest(`/team/${encodeURIComponent(teamKey)}/metrics`)
 }
 
 // ─── Unified Refresh ───
@@ -216,20 +119,20 @@ export async function refreshMetrics({ scope, name, teamKey, orgKey, force, sour
 
 // ─── GitHub Contributions ───
 
-export async function getGithubContributions(onData) {
-  return cachedRequest('github-contributions', '/github/contributions', onData)
+export async function getGithubContributions() {
+  return apiRequest('/github/contributions')
 }
 
 // ─── GitLab Contributions ───
 
-export async function getGitlabContributions(onData) {
-  return cachedRequest('gitlab-contributions', '/gitlab/contributions', onData)
+export async function getGitlabContributions() {
+  return apiRequest('/gitlab/contributions')
 }
 
 // ─── Trends ───
 
-export async function getTrends(onData) {
-  return cachedRequest('trends', '/trends', onData)
+export async function getTrends() {
+  return apiRequest('/trends')
 }
 
 // ─── Annotations ───
@@ -340,8 +243,8 @@ export async function deleteAllSnapshots() {
 
 // ─── Modules ───
 
-export async function getModules(onData) {
-  return cachedRequest('modules', '/modules', onData)
+export async function getModules() {
+  return apiRequest('/modules')
 }
 
 // Generic admin API request (not cached)

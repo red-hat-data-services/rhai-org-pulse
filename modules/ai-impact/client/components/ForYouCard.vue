@@ -111,7 +111,7 @@ function scorePillClass(val) {
 
 const actionGuidance = computed(() => {
   const s = props.item.state.id
-  const guideBase = '#/ai-impact/ai-factory-guide?from=state-of-the-union&section='
+  const guideBase = '#/ai-impact/ai-factory-guide?from=sotu&section='
   if (props.item.type === 'rfe') {
     switch (s) {
       case 'needs-revision': return {

@@ -1,11 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { useForYouPreferences, sanitizeComponents } from '../../client/composables/useForYouPreferences.js'
+import { useForYouPreferences, sanitizeComponents, _resetForTesting } from '../../client/composables/useForYouPreferences.js'
 
 const STORAGE_KEY = 'ai_impact_foryou_prefs'
 
 describe('useForYouPreferences', () => {
   beforeEach(() => {
     localStorage.clear()
+    _resetForTesting()
   })
 
   it('returns defaults when no stored data', () => {
@@ -22,6 +23,7 @@ describe('useForYouPreferences', () => {
       manualComponents: ['Comp A', 'Comp B'],
       wizardSeen: true
     }))
+    _resetForTesting()
     const { mode, manualComponents, wizardSeen } = useForYouPreferences()
     expect(mode.value).toBe('manual')
     expect(manualComponents.value).toEqual(['Comp A', 'Comp B'])
@@ -30,6 +32,7 @@ describe('useForYouPreferences', () => {
 
   it('falls back to defaults on corrupted JSON', () => {
     localStorage.setItem(STORAGE_KEY, 'not-json{{{')
+    _resetForTesting()
     const { mode, manualComponents, wizardSeen } = useForYouPreferences()
     expect(mode.value).toBe('auto')
     expect(manualComponents.value).toEqual([])
@@ -42,6 +45,7 @@ describe('useForYouPreferences', () => {
       manualComponents: [],
       wizardSeen: false
     }))
+    _resetForTesting()
     const { mode } = useForYouPreferences()
     expect(mode.value).toBe('auto')
   })
@@ -52,6 +56,7 @@ describe('useForYouPreferences', () => {
       manualComponents: 'not-an-array',
       wizardSeen: false
     }))
+    _resetForTesting()
     const { manualComponents } = useForYouPreferences()
     expect(manualComponents.value).toEqual([])
   })
@@ -91,6 +96,7 @@ describe('useForYouPreferences', () => {
       manualComponents: ['Comp A'],
       wizardSeen: true
     }))
+    _resetForTesting()
     const { activeTab, mode } = useForYouPreferences()
     expect(mode.value).toBe('manual')
     expect(activeTab.value).toBe('actions')

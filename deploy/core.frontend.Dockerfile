@@ -5,7 +5,7 @@
 # core.frontend-builder.Dockerfile + core.frontend-runtime.Dockerfile instead.
 
 # Stage 1: Build the Vue SPA
-FROM registry.access.redhat.com/ubi9/nodejs-20-minimal AS build
+FROM registry.access.redhat.com/ubi9/nodejs-22-minimal AS build
 
 USER 0
 

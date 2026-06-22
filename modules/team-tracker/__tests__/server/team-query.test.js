@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest'
 
-vi.mock('node-fetch', () => ({ default: vi.fn() }))
 
 function makeStorage(initial = {}) {
   const data = { ...initial }

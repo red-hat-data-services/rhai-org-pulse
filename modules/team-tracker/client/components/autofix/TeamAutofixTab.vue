@@ -139,6 +139,35 @@
             </label>
           </div>
         </div>
+        <div v-if="availableStatuses.length > 1" class="relative" ref="statusDropdownRef">
+          <button
+            @click="statusDropdownOpen = !statusDropdownOpen"
+            class="text-sm border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 flex items-center gap-1.5 min-w-[130px]"
+          >
+            <span>{{ statusFilterLabel }}</span>
+            <svg class="w-3.5 h-3.5 ml-auto shrink-0 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+          </button>
+          <div
+            v-if="statusDropdownOpen"
+            class="absolute z-20 mt-1 w-48 max-h-64 overflow-y-auto rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-lg py-1"
+          >
+            <label
+              v-for="s in availableStatuses"
+              :key="s"
+              class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                :checked="statusFilter.includes(s)"
+                @change="toggleStatusFilter(s)"
+                class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
+              />
+              {{ s }}
+            </label>
+          </div>
+        </div>
         <input
           v-model="searchQuery"
           type="text"
@@ -154,6 +183,7 @@
             <tr class="border-b border-gray-200 dark:border-gray-700 text-left text-gray-500 dark:text-gray-400">
               <th class="pb-2 pr-4 font-medium">Key</th>
               <th class="pb-2 pr-4 font-medium">Summary</th>
+              <th class="pb-2 pr-4 font-medium">Status</th>
               <th class="pb-2 pr-4 font-medium">Type</th>
               <th class="pb-2 pr-4 font-medium">Priority</th>
               <th class="pb-2 pr-4 font-medium">Pipeline State</th>
@@ -176,6 +206,11 @@
                 >{{ issue.key }}</a>
               </td>
               <td class="py-2 pr-4 max-w-xs truncate" :title="issue.summary">{{ issue.summary }}</td>
+              <td class="py-2 pr-4">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                  {{ issue.status }}
+                </span>
+              </td>
               <td class="py-2 pr-4">
                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
                   {{ issue.issueType }}
@@ -270,6 +305,9 @@ const timeWindow = ref('month')
 const stateFilter = ref([])
 const stateDropdownOpen = ref(false)
 const stateDropdownRef = ref(null)
+const statusFilter = ref([])
+const statusDropdownOpen = ref(false)
+const statusDropdownRef = ref(null)
 const searchQuery = ref('')
 
 const stateFilterOptions = STATE_OPTIONS.filter(o => o.value !== 'all')
@@ -291,13 +329,20 @@ const jiraHost = computed(() => rawData.value?.jiraHost || 'https://redhat.atlas
 
 const dataNotFetched = computed(() => fetched.value && !rawData.value?.fetchedAt)
 
-const teamComponentSet = computed(() => new Set(teamComponents.value))
+const teamIssues = computed(() => rawData.value?.issues || [])
 
-const teamIssues = computed(() => {
-  if (!rawData.value?.issues || teamComponentSet.value.size === 0) return []
-  return rawData.value.issues.filter(issue =>
-    (issue.components || []).some(c => teamComponentSet.value.has(c))
-  )
+const availableStatuses = computed(() => {
+  const statuses = new Set()
+  for (const issue of teamIssues.value) {
+    if (issue.status && issue.status !== 'Unknown') statuses.add(issue.status)
+  }
+  return [...statuses].sort()
+})
+
+const statusFilterLabel = computed(() => {
+  if (statusFilter.value.length === 0) return 'All Statuses'
+  if (statusFilter.value.length === 1) return statusFilter.value[0]
+  return `${statusFilter.value.length} statuses`
 })
 
 const metrics = computed(() => computeTeamMetrics(teamIssues.value, timeWindow.value))
@@ -347,12 +392,13 @@ const timeFilteredIssues = computed(() => {
 const displayedIssues = computed(() => {
   return timeFilteredIssues.value.filter(issue => {
     const matchesState = stateFilter.value.length === 0 || stateFilter.value.includes(issue.pipelineState)
+    const matchesStatus = statusFilter.value.length === 0 || statusFilter.value.includes(issue.status)
     const q = searchQuery.value.toLowerCase()
     const matchesSearch = !q ||
       issue.key.toLowerCase().includes(q) ||
       issue.summary.toLowerCase().includes(q) ||
       (issue.assignee && issue.assignee.toLowerCase().includes(q))
-    return matchesState && matchesSearch
+    return matchesState && matchesStatus && matchesSearch
   })
 })
 
@@ -427,9 +473,21 @@ function toggleStateFilter(value) {
   }
 }
 
+function toggleStatusFilter(value) {
+  const idx = statusFilter.value.indexOf(value)
+  if (idx >= 0) {
+    statusFilter.value = statusFilter.value.filter(v => v !== value)
+  } else {
+    statusFilter.value = [...statusFilter.value, value]
+  }
+}
+
 function handleClickOutside(e) {
   if (stateDropdownRef.value && !stateDropdownRef.value.contains(e.target)) {
     stateDropdownOpen.value = false
+  }
+  if (statusDropdownRef.value && !statusDropdownRef.value.contains(e.target)) {
+    statusDropdownOpen.value = false
   }
 }
 
@@ -453,7 +511,7 @@ async function fetchData() {
   try {
     await fetchAutofixData((data) => {
       rawData.value = data
-    })
+    }, { components: teamComponents.value })
     fetched.value = true
   } catch (err) {
     if (err?.status === 404) {

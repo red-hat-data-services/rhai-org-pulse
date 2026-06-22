@@ -5,6 +5,12 @@
 **Date:** 2026-06-09
 **Module:** releases (planning + health sub-modules)
 
+> **Note (2026-06-15):** This plan references the `release-manager` role
+> throughout. That role has since been renamed to `planning-manager` in the
+> Big Rocks Access Control plan (`big-rocks-add-permission.md`). All
+> references to `release-manager` in this document should be read as
+> `planning-manager`. This document is preserved as a historical record.
+
 ---
 
 ## 1. Problem Statement

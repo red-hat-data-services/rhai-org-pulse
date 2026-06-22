@@ -1,7 +1,6 @@
-const fetch = require('node-fetch');
 const { resolveGitlabToken } = require('../mr-status');
 
-let _fetch = fetch;
+let _fetch = globalThis.fetch;
 
 const MR_KPI_SOURCES = [
   {

@@ -60,6 +60,24 @@ module.exports = function registerRoutes(router, context) {
 
   const VALID_TIME_WINDOWS = ['week', 'month', '3months'];
 
+  /**
+   * @openapi
+   * /modules/ai-impact/rfe-data:
+   *   get:
+   *     summary: RFE data with computed metrics and pipeline friction
+   *     tags: [ai-impact]
+   *     parameters:
+   *       - in: query
+   *         name: timeWindow
+   *         schema:
+   *           type: string
+   *           enum: [week, month, 3months]
+   *           default: month
+   *         description: Time window for metric computation
+   *     responses:
+   *       200:
+   *         description: RFE dataset with metrics, trend data, breakdown, and pipeline friction
+   */
   router.get('/rfe-data', requireScope('ai-impact:read'), function(req, res) {
     const timeWindow = VALID_TIME_WINDOWS.includes(req.query.timeWindow)
       ? req.query.timeWindow
@@ -73,13 +91,14 @@ module.exports = function registerRoutes(router, context) {
         metrics: { createdPct: 0, createdChange: 0, trend: 'stable', revisedCount: 0, priorRevisedCount: 0, windowTotal: 0, totalRFEs: 0 },
         trendData: [],
         breakdown: [],
+        pipelineFriction: { needsAttentionPct: 0, needsAttentionChange: 0, needsAttentionTrend: 'stable', feasibilityBlockedPct: 0, feasibilityBlockedChange: 0, feasibilityBlockedTrend: 'stable' },
         issues: []
       });
     }
 
     // Compute metrics server-side from cached issues
     const config = getConfig(readFromStorage);
-    const { metrics, trendData, breakdown } = computeAllMetrics(data.issues, timeWindow, config);
+    const { metrics, trendData, breakdown, pipelineFriction } = computeAllMetrics(data.issues, timeWindow, config);
 
     res.json({
       fetchedAt: data.fetchedAt,
@@ -87,6 +106,7 @@ module.exports = function registerRoutes(router, context) {
       metrics,
       trendData,
       breakdown,
+      pipelineFriction,
       issues: data.issues
     });
   });
@@ -95,12 +115,63 @@ module.exports = function registerRoutes(router, context) {
 
   const VALID_AUTOFIX_TIME_WINDOWS = ['week', 'month', '3months'];
 
+  let autofixDataCache = null;
+
+  function getAutofixData() {
+    if (!autofixDataCache) {
+      autofixDataCache = readFromStorage('ai-impact/autofix-data.json');
+    }
+    return autofixDataCache;
+  }
+
+  function invalidateAutofixCache() {
+    autofixDataCache = null;
+  }
+
+  function stripIssueFields(issue) {
+    return {
+      key: issue.key,
+      summary: issue.summary,
+      status: issue.status,
+      issueType: issue.issueType,
+      priority: issue.priority,
+      created: issue.created,
+      updated: issue.updated,
+      components: issue.components,
+      assignee: issue.assignee,
+      pipelineState: issue.pipelineState
+    };
+  }
+
+  /**
+   * @openapi
+   * /modules/ai-impact/autofix-data:
+   *   get:
+   *     summary: Autofix pipeline data with computed metrics and trend
+   *     tags: [ai-impact]
+   *     parameters:
+   *       - in: query
+   *         name: timeWindow
+   *         schema:
+   *           type: string
+   *           enum: [week, month, 3months]
+   *           default: month
+   *         description: Time window for metric computation
+   *       - in: query
+   *         name: components
+   *         schema:
+   *           type: string
+   *         description: Comma-separated Jira component names to filter issues by
+   *     responses:
+   *       200:
+   *         description: Autofix dataset with metrics, trend data, and issues
+   */
   router.get('/autofix-data', requireScope('ai-impact:read'), function(req, res) {
     const timeWindow = VALID_AUTOFIX_TIME_WINDOWS.includes(req.query.timeWindow)
       ? req.query.timeWindow
       : 'month';
 
-    const data = readFromStorage('ai-impact/autofix-data.json');
+    const data = getAutofixData();
     if (!data || !data.issues) {
       return res.json({
         fetchedAt: null,
@@ -111,15 +182,27 @@ module.exports = function registerRoutes(router, context) {
       });
     }
 
-    const metrics = computeAutofixMetrics(data.issues, timeWindow);
-    const trendData = buildAutofixTrend(data.issues, timeWindow);
+    let issues = data.issues;
+    if (req.query.components) {
+      const componentSet = new Set(
+        req.query.components.split(',').map(function(c) { return c.trim(); }).filter(Boolean)
+      );
+      if (componentSet.size > 0) {
+        issues = issues.filter(function(issue) {
+          return (issue.components || []).some(function(c) { return componentSet.has(c); });
+        });
+      }
+    }
+
+    const metrics = computeAutofixMetrics(issues, timeWindow);
+    const trendData = buildAutofixTrend(issues, timeWindow);
 
     res.json({
       fetchedAt: data.fetchedAt,
       jiraHost: JIRA_HOST,
       metrics,
       trendData,
-      issues: data.issues
+      issues: issues.map(stripIssueFields)
     });
   });
 
@@ -218,6 +301,7 @@ module.exports = function registerRoutes(router, context) {
   router.delete('/cache', requireAdmin, requireScope('ai-impact:write'), function(req, res) {
     writeToStorage('ai-impact/rfe-data.json', null);
     writeToStorage('ai-impact/autofix-data.json', null);
+    invalidateAutofixCache();
     writeToStorage('ai-impact/doc-data.json', null);
     writeToStorage('ai-impact/doc-mr-kpi-data.json', null);
     res.json({ status: 'cleared' });
@@ -246,6 +330,7 @@ module.exports = function registerRoutes(router, context) {
         fetchedAt: new Date().toISOString(),
         issues: autofixIssues
       });
+      invalidateAutofixCache();
       autofixCount = autofixIssues.length;
     } catch (autofixErr) {
       console.error('[ai-impact] Autofix data refresh failed:', autofixErr.message);
@@ -351,6 +436,10 @@ module.exports = function registerRoutes(router, context) {
         await runAiImpactRefresh();
       }
     });
+  }
+
+  if (context.registerExport) {
+    context.registerExport(require('./export'));
   }
 
   if (context.registerDiagnostics) {

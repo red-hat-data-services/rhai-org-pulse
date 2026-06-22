@@ -136,17 +136,18 @@ Kustomize layers: `base/` (core platform + team-tracker) → `overlays/ai-eng/` 
 
 ### CI/CD
 - **`ci.yml`** — PRs + main: lint, test, build, kustomize validate. Required check: "Test & Build".
-- **`build-images.yml`** — main pushes: builds core images first (backend, frontend, frontend-builder, frontend-runtime), then AI Eng images FROM core, runs smoke tests, pushes to Quay (`:<sha>` + `:latest`), creates PR to update prod image tags, auto-merges.
+- **`build-images.yml`** — main pushes: builds core images first (backend, frontend, frontend-builder, frontend-runtime), then AI Eng images FROM core, runs smoke tests, pushes to Quay (`:<sha>` + `:latest`), commits prod image tag update directly to main (`[skip ci]`).
 - ConfigMap changes auto-trigger rollouts via kustomize `configMapGenerator` — ConfigMap names include a content hash suffix (e.g., `team-tracker-config-5h2f9k`), so any data change produces a new name and triggers a pod rollout automatically.
 
 **Branch protection** uses a GitHub repository ruleset on `main`:
 - Requires PRs (no direct pushes)
 - Requires "Test & Build" status check
-- Admin role has bypass (used by `GH_PAT` secret for CI auto-merge PRs)
+- GitHub App (`APP_ID`/`APP_PRIVATE_KEY`) has bypass for CI commits (version bumps, deploy tag updates)
 
 **Repo secrets:**
 - `QUAY_USERNAME` / `QUAY_PASSWORD` — Quay.io registry credentials for image push
-- `GH_PAT` — Personal access token with admin bypass, used by CI to create and auto-merge image tag update PRs
+- `APP_ID` / `APP_PRIVATE_KEY` — GitHub App credentials with branch protection bypass, used by CI for version bumps and deploy commits
+- `GH_PAT` — Personal access token, used by Claude issue workflows
 - `GCP_SA_KEY` — GCP service account JSON key for Vertex AI auth (Claude code review)
 
 **CronJob** (`deploy/openshift/base/cronjob-sync-refresh.yaml`): Fires every 15 minutes (`*/15 * * * *`), triggers cadence-aware `POST /api/admin/refresh-all`. Each handler declares its own cadence (e.g., `24h` for roster sync, `12h` for execution pipeline). Handlers that have run within their cadence window are skipped — most ticks complete in seconds. Backup runs as a refresh handler (`platform:backup`, cadence `24h`), not as a separate CronJob step. Uses `CRON_ADMIN_EMAIL` from ConfigMap.
@@ -182,7 +183,7 @@ CI workflow (`build-images.yml`):
 1. Builds core images (backend, frontend, frontend-builder, frontend-runtime) with smoke test
 2. Builds AI Eng images FROM core (backend extends core-backend, frontend uses core-builder + core-runtime)
 3. Runs Playwright smoke tests against AI Eng images
-4. Pushes all images to Quay, creates PR to update prod image tags
+4. Pushes all images to Quay, commits prod image tag update directly to main
 
 **Integration tests** use Playwright to verify module-specific functionality against production containers in demo mode. Located in `tests/integration/<module>.spec.js`:
 

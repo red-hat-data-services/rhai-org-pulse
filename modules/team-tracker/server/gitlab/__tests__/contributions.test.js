@@ -258,10 +258,9 @@ describe('fetchGitlabData integration', () => {
   function setup() {
     mockFetch = vi.fn()
 
-    // Replace node-fetch in require cache
-    const fetchModulePath = require.resolve('node-fetch')
-    const originalModule = require.cache[fetchModulePath]
-    require.cache[fetchModulePath] = { id: fetchModulePath, exports: mockFetch }
+    // Mock global fetch used by contributions module
+    const originalFetch = globalThis.fetch
+    vi.stubGlobal('fetch', mockFetch)
 
     // Clear contributions module cache and reload
     const contribPath = require.resolve('../../gitlab/contributions')
@@ -276,14 +275,12 @@ describe('fetchGitlabData integration', () => {
     // Reset test secrets
     testSecrets.GITLAB_TOKEN = 'test-token'
 
-    // Restore original fetch module for cleanup
-    return { fetchModulePath, originalModule, contribPath }
+    return { originalFetch, contribPath }
   }
 
   function cleanup(refs) {
-    if (refs.originalModule) {
-      require.cache[refs.fetchModulePath] = refs.originalModule
-    }
+    globalThis.fetch = refs.originalFetch
+    vi.unstubAllGlobals()
     delete require.cache[refs.contribPath]
   }
 

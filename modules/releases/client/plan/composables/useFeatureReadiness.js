@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { cachedRequest } from '@shared/client/services/api'
+import { apiRequest } from '@shared/client/services/api'
 
 const API_PATH = '/modules/releases/planning/feature-readiness'
 const CACHE_TTL = 300_000 // 5 minutes — data changes only when strat pipeline runs (~2h)
@@ -25,12 +25,11 @@ export function useFeatureReadiness() {
     error.value = null
 
     try {
-      await cachedRequest('feature-readiness', API_PATH, function(data) {
-        pendingReview.value = data.pendingReview || []
-        ready.value = data.ready || []
-        filterMeta.value = data.filterMeta || {}
-        meta.value = data.meta || null
-      })
+      const data = await apiRequest(API_PATH)
+      pendingReview.value = data.pendingReview || []
+      ready.value = data.ready || []
+      filterMeta.value = data.filterMeta || {}
+      meta.value = data.meta || null
       lastFetchAt = Date.now()
     } catch (err) {
       error.value = err.message || 'Failed to load feature readiness data'

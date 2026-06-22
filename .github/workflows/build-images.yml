@@ -16,6 +16,7 @@ on:
       - 'public/**'
       - 'modules/*/client/**'
       - 'shared/client/**'
+      - 'platform/**'
       - 'index.html'
       - 'vite.config.mjs'
       - 'tailwind.config.mjs'
@@ -72,7 +73,7 @@ jobs:
           fi
 
           # Check frontend paths
-          if echo "$CHANGED" | grep -qE '^(src/|public/|modules/[^/]+/client/|modules/[^/]+/module\.json|shared/client/|index\.html|vite\.config|tailwind\.config|postcss\.config|deploy/(core|ai-eng)\.frontend.*\.Dockerfile|deploy/nginx-default\.conf|deploy/openshift/base/nginx-app\.conf\.template|tests/smoke/|playwright\.config|package)'; then
+          if echo "$CHANGED" | grep -qE '^(src/|public/|modules/[^/]+/client/|modules/[^/]+/module\.json|shared/client/|platform/|index\.html|vite\.config|tailwind\.config|postcss\.config|deploy/(core|ai-eng)\.frontend.*\.Dockerfile|deploy/nginx-default\.conf|deploy/openshift/base/nginx-app\.conf\.template|tests/smoke/|playwright\.config|package)'; then
             FRONTEND=true
           fi
 
@@ -94,7 +95,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - run: npm ci
@@ -133,7 +134,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Bump patch version
         id: bump
@@ -610,9 +611,7 @@ jobs:
       - name: Validate kustomize build
         run: kustomize build deploy/openshift/overlays/ai-eng-prod > /dev/null
 
-      - name: Create PR
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+      - name: Push deploy commit
         run: |
           VERSION=${{ needs.version-bump.outputs.version || 'unknown' }}
           PARTS=""
@@ -624,15 +623,9 @@ jobs:
             PARTS="${PARTS}frontend"
           fi
 
-          BRANCH="deploy/image-update-${BUILD_SHA}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b "$BRANCH"
           git add deploy/openshift/overlays/ai-eng-prod/kustomization.yaml
-          git commit -m "deploy: update ${PARTS} image to ${VERSION} (${BUILD_SHA})"
-          git push origin "$BRANCH"
-          gh pr create \
-            --title "deploy: update ${PARTS} image to ${VERSION}" \
-            --body "Automated image tag update for ${PARTS} to \`${BUILD_SHA}\` (${VERSION})." \
-            --label automated
-          gh pr merge "$BRANCH" --auto --squash
+          git diff --cached --quiet && { echo "No changes to commit"; exit 0; }
+          git commit -m "deploy: update ${PARTS} image to ${VERSION} (${BUILD_SHA}) [skip ci]"
+          git push origin main

@@ -245,23 +245,23 @@ describe('BigRocksTable', () => {
     expect(wrapper.text()).toContain('No Big Rocks configured')
   })
 
-  it('shows Add button when canEdit is true', () => {
+  it('shows Add button when canAdd is true', () => {
     const wrapper = mount(BigRocksTable, {
-      props: { bigRocks, canEdit: true }
+      props: { bigRocks, canEdit: true, canAdd: true }
     })
     expect(wrapper.text()).toContain('Add Big Rock')
   })
 
-  it('hides Add button when canEdit is false', () => {
+  it('hides Add button when canAdd is false', () => {
     const wrapper = mount(BigRocksTable, {
-      props: { bigRocks, canEdit: false }
+      props: { bigRocks, canEdit: true, canAdd: false }
     })
     expect(wrapper.text()).not.toContain('Add Big Rock')
   })
 
   it('emits addRock when Add button is clicked', async () => {
     const wrapper = mount(BigRocksTable, {
-      props: { bigRocks, canEdit: true }
+      props: { bigRocks, canEdit: true, canAdd: true }
     })
     const addBtn = wrapper.findAll('button').find(b => b.text().includes('Add Big Rock'))
     await addBtn.trigger('click')
@@ -340,25 +340,25 @@ describe('BigRocksTable', () => {
     expect(editBtn.exists()).toBe(false)
   })
 
-  it('sets draggable="true" on edit-mode rows', () => {
+  it('sets draggable="true" when canReorder is true', () => {
     const wrapper = mount(BigRocksTable, {
-      props: { bigRocks, canEdit: true }
+      props: { bigRocks, canEdit: true, canReorder: true }
     })
     const rows = wrapper.findAll('tbody tr')
     expect(rows[0].attributes('draggable')).toBe('true')
   })
 
-  it('does not set draggable on read-only rows', () => {
+  it('sets draggable="false" when canReorder is false', () => {
     const wrapper = mount(BigRocksTable, {
-      props: { bigRocks, canEdit: false }
+      props: { bigRocks, canEdit: true, canReorder: false }
     })
     const rows = wrapper.findAll('tbody tr')
-    expect(rows[0].attributes('draggable')).toBeUndefined()
+    expect(rows[0].attributes('draggable')).toBe('false')
   })
 
-  it('shows toolbar text without click-to-edit language', () => {
+  it('shows toolbar reorder text when canReorder is true', () => {
     const wrapper = mount(BigRocksTable, {
-      props: { bigRocks, canEdit: true }
+      props: { bigRocks, canEdit: true, canReorder: true }
     })
     expect(wrapper.text()).not.toContain('Click a row to edit')
     expect(wrapper.text()).toContain('Drag to reorder')

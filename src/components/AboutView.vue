@@ -131,70 +131,9 @@
       </div>
     </template>
 
-    <!-- Docs tab -->
-    <template v-if="activeTab === 'docs'">
-      <template v-for="(section, sIdx) in docsSections" :key="section.id">
-        <h2
-          class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3"
-          :class="{ 'mt-8': sIdx > 0 }"
-        >
-          {{ section.label }}
-        </h2>
-
-        <div
-          v-for="cat in section.categories"
-          :key="cat.id"
-          class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
-        >
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-            {{ cat.title }}
-            <a
-              v-if="cat.slackChannel"
-              :href="cat.slackChannel.url"
-              target="_blank"
-              rel="noopener"
-              class="ml-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
-            >
-              {{ cat.slackChannel.name }}
-            </a>
-          </h3>
-          <template v-if="cat.resolvedLinkGroups">
-            <div v-for="group in cat.resolvedLinkGroups" :key="group.date" class="mb-4 last:mb-0">
-              <span class="inline-block mb-2 px-2.5 py-0.5 text-xs font-semibold rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">
-                {{ group.date }}
-              </span>
-              <div class="flex flex-wrap gap-4">
-                <a
-                  v-for="link in group.links"
-                  :key="link.url"
-                  :href="link.url"
-                  target="_blank"
-                  rel="noopener"
-                  class="flex items-center gap-2.5 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
-                >
-                  <component :is="link.icon" :size="18" :stroke-width="1.7" class="flex-shrink-0 text-gray-500 dark:text-gray-400" />
-                  <span>{{ link.label }}</span>
-                  <ExternalLink :size="14" class="flex-shrink-0 text-gray-400 dark:text-gray-500" />
-                </a>
-              </div>
-            </div>
-          </template>
-          <div v-else class="flex flex-wrap gap-4">
-            <a
-              v-for="link in cat.resolvedLinks"
-              :key="link.url"
-              :href="link.url"
-              target="_blank"
-              rel="noopener"
-              class="flex items-center gap-2.5 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
-            >
-              <component :is="link.icon" :size="18" :stroke-width="1.7" class="flex-shrink-0 text-gray-500 dark:text-gray-400" />
-              <span>{{ link.label }}</span>
-              <ExternalLink :size="14" class="flex-shrink-0 text-gray-400 dark:text-gray-500" />
-            </a>
-          </div>
-        </div>
-      </template>
+    <!-- Platform-contributed tabs -->
+    <template v-for="tab in platformTabs" :key="tab.id">
+      <component v-if="activeTab === tab.id" :is="tab.component" />
     </template>
 
     <!-- Site Usage tab -->
@@ -435,58 +374,65 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import {
   Info,
-  BookOpen,
   Wrench,
   BarChart3 as BarChart3Icon,
   ExternalLink,
   Download as DownloadIcon,
   Copy as CopyIcon,
   Github as GithubIcon,
-  Video,
-  Presentation,
-  StickyNote,
-  Play,
   TrendingUp,
   BarChart3,
   PieChart,
   Milestone,
   Bug,
-  MessageSquare,
   MessageSquarePlus,
   FileCode2,
   DatabaseBackup
 } from 'lucide-vue-next'
 import { useAuth } from '@shared/client'
 import SiteUsageTab from './health-metrics/SiteUsageTab.vue'
-import { enablementCategories, enablementSections } from '@shared/client/enablement-links.js'
 
 const { isAdmin: authIsAdmin, roles } = useAuth()
 
 const props = defineProps({
   isAdmin: Boolean,
-  initialTab: { type: String, default: null }
+  initialTab: { type: String, default: null },
+  platformAboutTabs: { type: Array, default: () => [] }
 })
 
 const canViewMetrics = computed(() =>
   props.isAdmin || authIsAdmin.value || roles.value.includes('usage-metrics-viewer')
 )
 
-const tabs = computed(() => {
-  const base = [
-    { id: 'about', label: 'About', icon: Info },
-    { id: 'docs', label: 'Docs', icon: BookOpen },
-  ]
-  if (canViewMetrics.value) {
-    base.push({ id: 'usage', label: 'Site Usage', icon: BarChart3Icon })
-  }
-  if (props.isAdmin || authIsAdmin.value) {
-    base.push({ id: 'backups', label: 'Backups', icon: DatabaseBackup })
-  }
-  base.push({ id: 'help', label: 'Help & Debug', icon: Wrench })
-  return base
+const platformTabs = computed(() => {
+  return props.platformAboutTabs.filter(tab => {
+    if (!tab.requireRole) return true
+    if (props.isAdmin || authIsAdmin.value) return true
+    return roles.value.includes(tab.requireRole)
+  })
 })
 
-const activeTab = ref(props.initialTab || 'about')
+const tabs = computed(() => {
+  const coreTabs = [
+    { id: 'about', label: 'About', icon: Info, order: 10 },
+  ]
+  if (canViewMetrics.value) {
+    coreTabs.push({ id: 'usage', label: 'Site Usage', icon: BarChart3Icon, order: 30 })
+  }
+  if (props.isAdmin || authIsAdmin.value) {
+    coreTabs.push({ id: 'backups', label: 'Backups', icon: DatabaseBackup, order: 40 })
+  }
+  coreTabs.push({ id: 'help', label: 'Help & Debug', icon: Wrench, order: 50 })
+
+  return [...coreTabs, ...platformTabs.value]
+    .sort((a, b) => a.order - b.order)
+})
+
+const activeTab = ref(
+  (props.initialTab && tabs.value.some(t => t.id === props.initialTab))
+    ? props.initialTab
+    : 'about'
+)
 
 watch(() => props.initialTab, (val) => {
   if (val && tabs.value.some(t => t.id === val)) {
@@ -529,28 +475,6 @@ const issueTemplates = [
   { label: 'Feature Request / Feedback', icon: MessageSquarePlus, url: repoBase + '/issues/new?template=general-feedback.yml' },
   { label: 'Bug Report', icon: Bug, url: repoBase + '/issues/new?template=bug-report.yml' }
 ]
-
-const iconMap = { Video, Presentation, StickyNote, Play, MessageSquare }
-
-function resolveIcon(name) {
-  return iconMap[name] || Video
-}
-
-const docsSections = enablementSections.map(s => ({
-  ...s,
-  categories: enablementCategories
-    .filter(c => c.section === s.id)
-    .map(c => ({
-      ...c,
-      resolvedLinks: c.links ? c.links.map(l => ({ ...l, icon: resolveIcon(l.icon) })) : null,
-      resolvedLinkGroups: c.linkGroups
-        ? c.linkGroups.map(g => ({
-          ...g,
-          links: g.links.map(l => ({ ...l, icon: resolveIcon(l.icon) })),
-        }))
-        : null,
-    })),
-}))
 
 // --- Backups state ---
 const backupsList = ref([])

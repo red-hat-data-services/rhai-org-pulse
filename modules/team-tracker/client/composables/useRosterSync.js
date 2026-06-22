@@ -5,8 +5,7 @@ import {
   triggerRosterSync,
   getRosterSyncStatus,
   getRosterSyncFieldDefinitions,
-  saveCustomFields as apiSaveCustomFields,
-  clearApiCache
+  saveCustomFields as apiSaveCustomFields
 } from '@shared/client/services/api'
 import { useRoster } from '@shared/client/composables/useRoster'
 
@@ -81,8 +80,6 @@ async function triggerSync() {
       if (!syncStatus.value.syncing) {
         clearInterval(poll)
         syncing.value = false
-        // Clear stale cache and reload roster with fresh data
-        clearApiCache()
         await fetchConfig()
         const { reloadRoster } = useRoster()
         await reloadRoster()

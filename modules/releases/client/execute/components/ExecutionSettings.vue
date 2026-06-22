@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { apiRequest } from '@shared/client/services/api.js'
 
 const config = ref(null)
@@ -60,6 +60,30 @@ async function saveConfig() {
   }
 }
 
+function formatAge(timestamp) {
+  if (!timestamp) return 'unknown'
+  const ms = Date.now() - new Date(timestamp).getTime()
+  const hours = Math.floor(ms / (1000 * 60 * 60))
+  if (hours < 1) return 'just now'
+  if (hours < 24) return hours + 'h ago'
+  const days = Math.floor(hours / 24)
+  return days === 1 ? '1 day ago' : days + ' days ago'
+}
+
+const jiraEnrichmentStatusClass = computed(() => {
+  const je = statusData.value?.jiraEnrichment
+  if (!je) return ''
+  if (!je.jiraConfigured || je.stale || je.warning) return 'bg-yellow-50 dark:bg-yellow-900/20'
+  return 'bg-green-50 dark:bg-green-900/20'
+})
+
+const jiraEnrichmentTextClass = computed(() => {
+  const je = statusData.value?.jiraEnrichment
+  if (!je) return ''
+  if (!je.jiraConfigured || je.stale || je.warning) return 'text-yellow-700 dark:text-yellow-300'
+  return 'text-green-700 dark:text-green-300'
+})
+
 onMounted(() => {
   loadConfig()
   loadStatus()
@@ -87,6 +111,27 @@ onMounted(() => {
       <div v-if="statusData?.staleWarning" class="rounded-md p-3 bg-yellow-50 dark:bg-yellow-900/20">
         <p class="text-sm text-yellow-700 dark:text-yellow-300">
           Data is stale ({{ statusData.dataAge }} old). Last fetch status: {{ statusData.lastFetch?.status || 'unknown' }}
+        </p>
+      </div>
+
+      <!-- Jira Enrichment Status -->
+      <div v-if="statusData?.jiraEnrichment" class="rounded-md p-3" :class="jiraEnrichmentStatusClass">
+        <p class="text-sm font-medium" :class="jiraEnrichmentTextClass">Jira Enrichment</p>
+        <p class="text-sm mt-1" :class="jiraEnrichmentTextClass">
+          <template v-if="!statusData.jiraEnrichment.jiraConfigured">
+            Jira client not configured — feature status, assignees, and fields cannot be synced from Jira.
+          </template>
+          <template v-else-if="statusData.jiraEnrichment.warning">
+            {{ statusData.jiraEnrichment.warning }}.
+            Feature statuses may be outdated.
+          </template>
+          <template v-else-if="statusData.jiraEnrichment.lastSync">
+            Last synced {{ formatAge(statusData.jiraEnrichment.lastSync.timestamp) }},
+            {{ statusData.jiraEnrichment.lastSync.enrichedCount }} features updated.
+          </template>
+          <template v-else>
+            Enabled but has not run yet.
+          </template>
         </p>
       </div>
 

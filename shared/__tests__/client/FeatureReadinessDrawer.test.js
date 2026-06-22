@@ -27,8 +27,10 @@ function makeStratFeature(overrides = {}) {
     dataSource: 'strat-creator',
     confidence: 'committed',
     readinessGates: {
-      ownerAssigned: true,
-      notBlocked: true,
+      isApproved: true,
+      hasRubric: true,
+      pmAssigned: true,
+      deliveryOwnerAssigned: true,
       pastRefinement: true,
       hasTargetVersion: true,
       noBlockingViolations: true
@@ -60,11 +62,14 @@ function makeHealthFeature(overrides = {}) {
     blockingDimensions: [],
     actionRequired: null,
     deliveryOwner: 'Jane Smith',
+    pmOwner: 'Product PM',
     dataSource: 'health-pipeline',
     confidence: 'ready',
     readinessGates: {
-      ownerAssigned: true,
-      notBlocked: true,
+      isApproved: true,
+      hasRubric: true,
+      pmAssigned: true,
+      deliveryOwnerAssigned: true,
       pastRefinement: true,
       hasTargetVersion: true,
       noBlockingViolations: true
@@ -181,10 +186,12 @@ describe('FeatureReadinessDrawer', () => {
       expect(headerDiv.text()).not.toContain('Awaiting Sign-off')
     })
 
-    it('does not show rubric section', () => {
+    it('does not show rubric scoring section with dimension bars', () => {
       const wrapper = mountDrawer(makeHealthFeature())
-      expect(wrapper.text()).not.toContain('Rubric')
       expect(wrapper.text()).not.toContain('feasibility')
+      expect(wrapper.text()).not.toContain('testability')
+      expect(wrapper.text()).not.toContain('scope')
+      expect(wrapper.text()).not.toContain('architecture')
     })
 
     it('shows delivery owner in details section', () => {
@@ -215,23 +222,25 @@ describe('FeatureReadinessDrawer', () => {
       expect(wrapper.text()).toContain('Readiness Gates')
     })
 
-    it('shows all five readiness gate labels', () => {
+    it('shows all seven readiness gate labels', () => {
       const wrapper = mountDrawer(makeHealthFeature())
-      expect(wrapper.text()).toContain('Owner assigned')
-      expect(wrapper.text()).toContain('No blockers')
-      expect(wrapper.text()).toContain('Status beyond Refinement')
-      expect(wrapper.text()).toContain('Target version assigned')
-      expect(wrapper.text()).toContain('No blocking hygiene violations')
+      expect(wrapper.text()).toContain('Approved')
+      expect(wrapper.text()).toContain('Rubric')
+      expect(wrapper.text()).toContain('Product Manager')
+      expect(wrapper.text()).toContain('Delivery Owner')
+      expect(wrapper.text()).toContain('Status')
+      expect(wrapper.text()).toContain('Target Version')
+      expect(wrapper.text()).toContain('Hygiene')
     })
 
     it('shows filled circle for passing gates and empty circle for failing gates', () => {
       const wrapper = mountDrawer(makeHealthFeature({
-        readinessGates: { ownerAssigned: true, notBlocked: false, pastRefinement: true, hasTargetVersion: false, noBlockingViolations: true }
+        readinessGates: { isApproved: true, hasRubric: false, pmAssigned: true, deliveryOwnerAssigned: false, pastRefinement: true, hasTargetVersion: false, noBlockingViolations: true }
       }))
       const gateSection = wrapper.findAll('section').find(s => s.text().includes('Readiness Gates'))
       const gateItems = gateSection.findAll('.flex.items-center.gap-2')
       const indicators = gateItems.map(item => item.findAll('span')[0].text())
-      expect(indicators).toEqual(['●', '○', '●', '○', '●'])
+      expect(indicators).toEqual(['●', '○', '●', '○', '●', '○', '●'])
     })
 
     it('shows green class for passing gates', () => {
@@ -243,7 +252,7 @@ describe('FeatureReadinessDrawer', () => {
 
     it('shows red class for failing gates', () => {
       const wrapper = mountDrawer(makeHealthFeature({
-        readinessGates: { ownerAssigned: false, notBlocked: true, pastRefinement: true, hasTargetVersion: true, noBlockingViolations: true }
+        readinessGates: { isApproved: false, hasRubric: true, pmAssigned: true, deliveryOwnerAssigned: true, pastRefinement: true, hasTargetVersion: true, noBlockingViolations: true }
       }))
       const gateSection = wrapper.findAll('section').find(s => s.text().includes('Readiness Gates'))
       const firstIndicator = gateSection.findAll('.flex.items-center.gap-2')[0].findAll('span')[0]
@@ -403,6 +412,29 @@ describe('FeatureReadinessDrawer', () => {
       expect(wrapper.text()).toContain('Missing')
       expect(wrapper.text()).toContain('Tier')
       expect(wrapper.text()).toContain('Target Version')
+    })
+  })
+
+  describe('Fix in Jira link in hygiene violations', () => {
+    it('renders "Fix in Jira" links when violations exist', () => {
+      const wrapper = mountDrawer(makeStratFeature({
+        key: 'RHAISTRAT-42',
+        violations: [
+          { id: 'missing-assignee', name: 'Missing Assignee', category: 'ownership', message: 'No assignee' }
+        ]
+      }))
+      const links = wrapper.findAll('a').filter(a => a.text().includes('Fix in Jira'))
+      expect(links.length).toBe(1)
+      expect(links[0].attributes('href')).toBe('https://issues.redhat.com/browse/RHAISTRAT-42')
+    })
+
+    it('shows remediation text in hygiene violation cards', () => {
+      const wrapper = mountDrawer(makeStratFeature({
+        violations: [
+          { id: 'missing-assignee', name: 'Missing Assignee', category: 'ownership', message: 'No assignee', remediation: 'Set the Assignee field' }
+        ]
+      }))
+      expect(wrapper.text()).toContain('Set the Assignee field')
     })
   })
 })

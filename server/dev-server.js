@@ -12,6 +12,7 @@
  */
 
 const express = require('express');
+const compression = require('compression');
 const errorBuffer = require('./error-buffer');
 const requestTracker = require('./request-tracker');
 
@@ -64,15 +65,13 @@ secretRegistry.resolve();
 
 // ─── Platform Secret Validators ───
 
-const nodeFetch = require('node-fetch');
-
 secretRegistry.registerValidator('JIRA_TOKEN', async () => {
   const email = process.env.JIRA_EMAIL;
   const token = process.env.JIRA_TOKEN;
   if (!email || !token) return { valid: false, message: 'JIRA_EMAIL or JIRA_TOKEN not configured' };
   const host = process.env.JIRA_HOST || 'https://redhat.atlassian.net';
   const auth = Buffer.from(`${email}:${token}`).toString('base64');
-  const res = await nodeFetch(`${host}/rest/api/2/myself`, {
+  const res = await fetch(`${host}/rest/api/2/myself`, {
     headers: { Authorization: `Basic ${auth}`, Accept: 'application/json' }
   });
   if (!res.ok) return { valid: false, message: `Jira auth failed (${res.status})` };
@@ -83,7 +82,7 @@ secretRegistry.registerValidator('JIRA_TOKEN', async () => {
 secretRegistry.registerValidator('GITHUB_TOKEN', async () => {
   const token = process.env.GITHUB_TOKEN;
   if (!token) return { valid: false, message: 'GITHUB_TOKEN not configured' };
-  const res = await nodeFetch('https://api.github.com/user', {
+  const res = await fetch('https://api.github.com/user', {
     headers: { Authorization: `token ${token}`, Accept: 'application/json' }
   });
   if (!res.ok) return { valid: false, message: `GitHub auth failed (${res.status})` };
@@ -95,7 +94,7 @@ secretRegistry.registerValidator('GITLAB_TOKEN', async () => {
   const token = process.env.GITLAB_TOKEN;
   if (!token) return { valid: false, message: 'GITLAB_TOKEN not configured' };
   const host = process.env.GITLAB_BASE_URL || 'https://gitlab.com';
-  const res = await nodeFetch(`${host}/api/v4/user`, {
+  const res = await fetch(`${host}/api/v4/user`, {
     headers: { 'PRIVATE-TOKEN': token, Accept: 'application/json' }
   });
   if (!res.ok) return { valid: false, message: `GitLab auth failed (${res.status})` };
@@ -173,6 +172,7 @@ apiTokens.init(storageModule, { scopeRegistry });
 const PORT = process.env.API_PORT || 3001;
 
 const app = express();
+app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 
 // Session middleware for OAuth flows (Google Drive + Jira per-user auth)
@@ -246,7 +246,7 @@ const roleStore = createRoleStore(readFromStorage, writeToStorage, {
   },
   roleRegistry
 });
-const { authMiddleware, requireAdmin, requireTeamAdmin, requireRole, requireScope, seedRoles } = createAuthMiddleware(readFromStorage, writeToStorage, {
+const { authMiddleware, requireAuth, requireAdmin, requireTeamAdmin, requireRole, requireScope, seedRoles } = createAuthMiddleware(readFromStorage, writeToStorage, {
   tokenValidator: apiTokens,
   roleStore
 });
@@ -2201,7 +2201,7 @@ function exportRateLimit(req, res, next) {
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-app.get('/api/export/test-data', requireAdmin, requireScope('admin:manage'), exportRateLimit, function(req, res) {
+app.get('/api/export/test-data', requireAuth, exportRateLimit, function(req, res) {
   handleExport(req, res, storageModule, exportRegistry);
 });
 

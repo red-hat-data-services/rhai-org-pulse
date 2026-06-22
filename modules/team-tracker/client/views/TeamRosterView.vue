@@ -12,10 +12,10 @@
       </svg>
       <p class="text-gray-500 dark:text-gray-400 text-sm">This team has no members or could not be found.</p>
       <button
-        @click="nav.goBack()"
+        @click="handleBack()"
         class="mt-4 px-4 py-2 text-sm text-primary-600 dark:text-primary-400 hover:underline"
       >
-        Back to directory
+        {{ fromSotu ? 'Back to Overview' : 'Back to directory' }}
       </button>
     </div>
 
@@ -25,9 +25,9 @@
         <div class="flex items-center justify-between mb-2">
           <div class="flex items-center gap-3">
             <button
-              @click="nav.goBack()"
+              @click="handleBack()"
               class="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
-              title="Back to Dashboard"
+              :title="fromSotu ? 'Back to Overview' : 'Back to Dashboard'"
             >
               <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -367,6 +367,16 @@ const { canEditTeam, managedUids } = usePermissions()
 const { definitions, fetchDefinitions } = useFieldDefinitions()
 const { resumeTourIfActive, destroyTour } = useManagerTutorial()
 
+const fromSotu = computed(() => nav.params.value?.from === 'sotu')
+
+function handleBack() {
+  if (fromSotu.value) {
+    window.location.hash = '#/'
+  } else {
+    nav.goBack()
+  }
+}
+
 const isInAppMode = computed(() => rosterData.value?.teamDataSource === 'in-app')
 
 // --- Team resolution (moved up for use by allPeople) ---
@@ -495,9 +505,7 @@ async function fetchTeamDetail() {
   teamDetailError.value = false
   const detailKey = team.value.displayKey || team.value.key
   try {
-    await loadTeamDetail(detailKey, (data) => {
-      teamDetail.value = data
-    })
+    teamDetail.value = await loadTeamDetail(detailKey)
   } catch {
     teamDetailError.value = true
   }
@@ -519,9 +527,7 @@ const showRefreshModal = ref(false)
 async function fetchTeamMetrics() {
   if (!team.value) return
   try {
-    await getTeamMetrics(team.value.key, (data) => {
-      teamMetrics.value = data
-    })
+    teamMetrics.value = await getTeamMetrics(team.value.key)
   } catch (error) {
     console.error('Failed to fetch team metrics:', error)
   }

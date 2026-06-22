@@ -6,9 +6,37 @@
   "order": 5,
   "client": {
     "entry": "./client/index.js",
+    "sotuWidgets": [
+      {
+        "id": "rfe-actions",
+        "name": "RFE Action Items",
+        "description": "RFEs needing your attention, filtered by your components",
+        "component": "./client/widgets/RfeActionsWidget.vue",
+        "defaultSize": "full",
+        "icon": "ClipboardList",
+        "category": "action-items"
+      },
+      {
+        "id": "feature-board",
+        "name": "Feature Board",
+        "description": "Kanban view of features in your pipeline",
+        "component": "./client/widgets/FeatureBoardWidget.vue",
+        "defaultSize": "full",
+        "icon": "Columns",
+        "category": "boards"
+      },
+      {
+        "id": "pipeline-stats",
+        "name": "Pipeline Stats",
+        "description": "Summary stats for your RFE and feature pipeline",
+        "component": "./client/widgets/PipelineStatsWidget.vue",
+        "defaultSize": "half",
+        "icon": "BarChart3",
+        "category": "metrics"
+      }
+    ],
     "navItems": [
-      { "id": "state-of-the-union", "label": "State of the Union", "icon": "UserCircle" },
-      { "id": "ai-factory-guide", "label": "AI Factory Guide", "icon": "BookOpen", "default": true, "separatorBefore": true },
+      { "id": "ai-factory-guide", "label": "AI Factory Guide", "icon": "BookOpen", "default": true },
       { "id": "rfe-review", "label": "RFE Review", "icon": "ClipboardList", "separatorBefore": true },
       { "id": "feature-review", "label": "Feature Review", "icon": "Target" },
       { "id": "test-plan-review", "label": "Test Plan Review", "icon": "ClipboardCheck" },
@@ -31,6 +59,19 @@
         "description": "GitLab token for internal docs MR quality KPI",
         "required": false
       }
+    ]
+  },
+  "export": {
+    "files": [
+      { "path": "ai-impact/rfe-data.json", "notes": "Anonymized RFE issues from Jira" },
+      { "path": "ai-impact/autofix-data.json", "notes": "Anonymized autofix-tagged issues" },
+      { "path": "ai-impact/doc-data.json", "notes": "Anonymized documentation contribution data" },
+      { "path": "ai-impact/doc-mr-kpi-data.json", "notes": "Anonymized GitLab MR KPI data" },
+      { "path": "ai-impact/config.json", "notes": "Module configuration (no PII)" },
+      { "path": "ai-impact/assessments.json", "notes": "Anonymized RFE quality assessments" },
+      { "path": "ai-impact/test-plans.json", "notes": "Anonymized test plan reviews" },
+      { "path": "ai-impact/features.json", "notes": "Anonymized feature reviews (legacy store)" },
+      { "path": "ai-impact/component-onboarding-data.json", "notes": "Anonymized component onboarding data" }
     ]
   },
   "defaultEnabled": true,

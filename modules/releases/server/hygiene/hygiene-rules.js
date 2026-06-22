@@ -337,7 +337,8 @@ function evaluateHygiene(feature, rulesConfig) {
         id: rule.id,
         name: rule.name,
         category: rule.category,
-        message: rule.message(feature)
+        message: rule.message(feature),
+        remediation: rule.remediation
       })
     }
   }

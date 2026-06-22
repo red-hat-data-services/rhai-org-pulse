@@ -18,11 +18,17 @@ vi.mock('../../components/health-metrics/useMetricsDashboard.js', () => ({
     loading: ref(false),
     error: ref(null),
     fetchDashboard: vi.fn(),
+    fetchPages: vi.fn(),
     totalViews: ref(1500),
     uniqueUsers: ref(42),
     activePages: ref(8),
     topPages: ref([
       { pageId: 'team-tracker::home', views: 523, uniqueUsers: 34, byUserType: {}, byPermissionTier: {} },
+    ]),
+    allPages: ref([
+      { pageId: 'team-tracker::home', views: 523, uniqueUsers: 34, byUserType: {}, byPermissionTier: {} },
+      { pageId: 'team-tracker::org-dashboard', views: 342, uniqueUsers: 28, byUserType: {}, byPermissionTier: {} },
+      { pageId: 'upstream-pulse::dashboard', views: 45, uniqueUsers: 12, byUserType: {}, byPermissionTier: {} },
     ]),
     userTypes: ref({ Backend: 400, Frontend: 300 }),
     daily: ref({}),
@@ -68,8 +74,14 @@ describe('SiteUsageTab', () => {
     expect(wrapper.text()).toContain('User Type Breakdown');
   });
 
-  it('renders pages table', () => {
+  it('renders pages table with all pages including low-traffic modules', () => {
     expect(wrapper.text()).toContain('All Pages');
     expect(wrapper.text()).toContain('team-tracker / home');
+    expect(wrapper.text()).toContain('upstream-pulse / dashboard');
+  });
+
+  it('does not show expand toggle when pages fit within preview limit', () => {
+    expect(wrapper.find('button').exists()).toBe(false);
+    expect(wrapper.text()).not.toContain('Show all');
   });
 });

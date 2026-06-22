@@ -1,6 +1,4 @@
-const fetch = require('node-fetch');
-
-let _fetch = fetch;
+let _fetch = globalThis.fetch;
 
 const GITLAB_MR_RE = /^(https?:\/\/[^/]+)\/(.+?)\/-\/merge_requests\/(\d+)/;
 const GITLAB_MR_LEGACY_RE = /^(https?:\/\/[^/]+)\/(.+?)\/merge_requests\/(\d+)/;

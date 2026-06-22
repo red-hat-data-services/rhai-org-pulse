@@ -219,26 +219,31 @@ test.describe('AI Impact Views @ai-impact', () => {
     await testView(page, 'build-release', 'Build & Release');
   });
 
-  test('should load State of the Union view', async ({ page }) => {
-    await testView(page, 'state-of-the-union', 'State of the Union');
+  test('should load State of the Union on landing page', async ({ page }) => {
+    // SOTU content now lives on the landing page (home), not as an AI Impact nav item
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const mainContentVisible = await mainContentIsVisible(page);
+    expect(mainContentVisible).toBe(true);
+
+    // The SOTU heading should be visible on the landing page
+    const sotuHeading = page.locator('text=State of the Union');
+    const isVisible = await sotuHeading.isVisible().catch(() => false);
+    expect(isVisible).toBe(true);
+
+    expect(page.errors).toHaveLength(0);
   });
 
-  test('should show wizard on first visit to State of the Union', async ({ page }) => {
-    // localStorage is clean in test environment, so wizard should appear
+  test('should redirect legacy SOTU hash to home', async ({ page }) => {
     await page.goto('/#/ai-impact/state-of-the-union');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    // The wizard modal should be visible
-    const wizardText = page.locator('text=Welcome to State of the Union');
-    const isVisible = await wizardText.isVisible().catch(() => false);
-    // In demo mode the wizard should appear since localStorage is fresh
-    if (isVisible) {
-      // Verify both mode options are present within the wizard dialog
-      const wizard = page.getByRole('dialog');
-      await expect(wizard.getByRole('button', { name: /Auto/ })).toBeVisible();
-      await expect(wizard.getByRole('button', { name: /Manual/ })).toBeVisible();
-    }
+    // Should redirect to home (root hash)
+    const url = page.url();
+    expect(url).toMatch(/\/#?\/?$/);
 
     expect(page.errors).toHaveLength(0);
   });

@@ -11,4 +11,5 @@ export const routes = {
   'wheel-collections': defineAsyncComponent(() => import('./views/WheelCollectionsView.vue')),
   'drop-detail': defineAsyncComponent(() => import('./views/DropDetailView.vue')),
   'artifact-detail': defineAsyncComponent(() => import('./views/ArtifactDetailView.vue')),
+  'package-analysis': defineAsyncComponent(() => import('./views/PackageAnalysisView.vue')),
 }

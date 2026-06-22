@@ -1,4 +1,25 @@
 const { proxyGet } = require('./proxy');
+const { createJiraClient } = require('../../../shared/server/jira');
+const { buildReport, getPackagesOnboarded } = require('./analysis');
+const {
+  PACKAGE_NAME_RE,
+  VERSION_RE,
+  ALL_REPO_TYPES,
+  DEFAULT_REPO_TYPES,
+  fetchIndex,
+  getBaseUrl,
+  getVariants,
+  getProductVersions,
+  getDefaultProductVersion,
+  getCacheStats,
+  pMap,
+  MAX_CONCURRENT_FETCHES
+} = require('./package-index');
+const { parsePackageFile } = require('./wheel-parser');
+
+const DEMO_MODE = process.env.DEMO_MODE === 'true';
+const PKG_STORAGE_PREFIX = 'product-builds/package-reports';
+const PKG_INDEX_PATH = `${PKG_STORAGE_PREFIX}/index.json`;
 
 const CONFIG_PATH = 'product-builds/config.json';
 
@@ -490,6 +511,398 @@ module.exports = function registerRoutes(router, context) {
   router.get('/artifacts/:key/containers', function(req, res) {
     upstream(`/artifacts/${encodeURIComponent(req.params.key)}/containers`, req, res);
   });
+
+  // --- Package Analysis ---
+
+  let _jira;
+  function getJira() {
+    if (!_jira) {
+      _jira = createJiraClient({
+        email: (context.secrets && context.secrets.JIRA_EMAIL) || '',
+        token: (context.secrets && context.secrets.JIRA_TOKEN) || '',
+      });
+    }
+    return _jira;
+  }
+
+  function rebuildPackageIndex() {
+    const files = storage.listStorageFiles(PKG_STORAGE_PREFIX + '/');
+    const index = [];
+    for (const file of files) {
+      if (file === 'index.json' || !file.endsWith('.json')) continue;
+      const report = readFromStorage(`${PKG_STORAGE_PREFIX}/${file}`);
+      if (report && report.summary) {
+        index.push({
+          report_date: report.report_date,
+          report_time: report.report_time,
+          summary: report.summary,
+        });
+      }
+    }
+    index.sort((a, b) => b.report_date.localeCompare(a.report_date));
+    return index;
+  }
+
+  async function generatePackageReport(reportDate) {
+    const report = await buildReport(getJira(), { reportDate });
+    writeToStorage(`${PKG_STORAGE_PREFIX}/${report.report_date}.json`, report);
+    const index = rebuildPackageIndex();
+    writeToStorage(PKG_INDEX_PATH, index);
+    return report;
+  }
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/package-reports:
+   *   get:
+   *     tags: [Package Analysis]
+   *     summary: List all package analysis reports (summaries only)
+   *     responses:
+   *       200:
+   *         description: Array of report summaries sorted by date descending
+   */
+  router.get('/package-reports', function(req, res) {
+    const index = readFromStorage(PKG_INDEX_PATH);
+    res.json(index || []);
+  });
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/package-reports/latest:
+   *   get:
+   *     tags: [Package Analysis]
+   *     summary: Get the most recent full package analysis report
+   *     responses:
+   *       200:
+   *         description: Full report with categories and epic details
+   *       404:
+   *         description: No reports available
+   */
+  router.get('/package-reports/latest', function(req, res) {
+    const index = readFromStorage(PKG_INDEX_PATH);
+    if (!index || index.length === 0) {
+      return res.status(404).json({ error: 'No reports available' });
+    }
+    const latest = readFromStorage(`${PKG_STORAGE_PREFIX}/${index[0].report_date}.json`);
+    if (!latest) {
+      return res.status(404).json({ error: 'Report file not found' });
+    }
+    res.json(latest);
+  });
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/package-reports/onboarded:
+   *   get:
+   *     tags: [Package Analysis]
+   *     summary: Get packages onboarded (closed) in a recent time window
+   *     parameters:
+   *       - name: days
+   *         in: query
+   *         schema:
+   *           type: integer
+   *           default: 7
+   *         description: Number of days to look back (7, 14, or 30)
+   *     responses:
+   *       200:
+   *         description: Array of onboarded package EPICs
+   *       500:
+   *         description: Failed to query JIRA
+   */
+  router.get('/package-reports/onboarded', async function(req, res) {
+    const days = Math.min(Math.max(parseInt(req.query.days, 10) || 7, 1), 90);
+    try {
+      const epics = await getPackagesOnboarded(getJira(), days);
+      res.json({ days, count: epics.length, epics });
+    } catch (err) {
+      console.error('[package-analysis] Onboarded query failed:', err.message);
+      res.status(500).json({ error: 'Failed to fetch onboarded packages' });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/package-reports/{date}:
+   *   get:
+   *     tags: [Package Analysis]
+   *     summary: Get full package analysis report for a specific date
+   *     parameters:
+   *       - name: date
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: string
+   *           pattern: '^\d{4}-\d{2}-\d{2}$'
+   *         description: Report date (YYYY-MM-DD)
+   *     responses:
+   *       200:
+   *         description: Full report with categories and epic details
+   *       404:
+   *         description: No report for the specified date
+   */
+  router.get('/package-reports/:date', function(req, res) {
+    const date = req.params.date;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ error: 'Invalid date format, expected YYYY-MM-DD' });
+    }
+    const report = readFromStorage(`${PKG_STORAGE_PREFIX}/${date}.json`);
+    if (!report) {
+      return res.status(404).json({ error: `No report for ${date}` });
+    }
+    res.json(report);
+  });
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/package-reports/generate:
+   *   post:
+   *     tags: [Package Analysis]
+   *     summary: Generate a package analysis report for today (admin only)
+   *     responses:
+   *       200:
+   *         description: Generated report
+   *       500:
+   *         description: Report generation failed
+   */
+  router.post('/package-reports/generate', requireAdmin, async function(req, res) {
+    try {
+      const report = await generatePackageReport();
+      res.json(report);
+    } catch (err) {
+      console.error('[package-analysis] Generation failed:', err.message);
+      res.status(500).json({ error: 'Report generation failed' });
+    }
+  });
+
+  if (context.registerRefresh) {
+    context.registerRefresh('package-analysis', {
+      description: 'Generate daily AIPCC package analysis report from JIRA (after 6am UTC)',
+      order: 200,
+      timeout: 600000,
+      cadence: '24h',
+      handler: async function() {
+        if (DEMO_MODE) return;
+        const now = new Date();
+        if (now.getUTCHours() < 6) return;
+        const today = now.toISOString().slice(0, 10);
+        const existing = readFromStorage(`${PKG_STORAGE_PREFIX}/${today}.json`);
+        if (existing) return;
+        await generatePackageReport(today);
+      },
+    });
+  }
+
+  // --- Package Search ---
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/package-search/options:
+   *   get:
+   *     tags: [Package Search]
+   *     summary: Get available filter options for package search
+   *     responses:
+   *       200:
+   *         description: Available variants, repo types, product versions, and package UI URL
+   */
+  router.get('/package-search/options', function (_req, res) {
+    const variants = getVariants();
+    const productVersions = getProductVersions();
+    const defaultProductVersion = getDefaultProductVersion();
+
+    const baseUrl = getBaseUrl();
+    let packageUiUrl = null;
+    const parts = baseUrl.split('/api/pypi/');
+    if (parts.length === 2) {
+      const origin = parts[0];
+      const domain = parts[1].split('/')[0];
+      packageUiUrl = origin + '/domains/' + domain + '/distributions';
+    }
+
+    res.json({
+      variants,
+      repo_types: Object.keys(ALL_REPO_TYPES),
+      default_repo_types: DEFAULT_REPO_TYPES,
+      product_versions: productVersions,
+      default_product_version: defaultProductVersion,
+      package_ui_url: packageUiUrl
+    });
+  });
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/package-search/search:
+   *   get:
+   *     tags: [Package Search]
+   *     summary: Search for a package across PyPI Simple indexes
+   *     parameters:
+   *       - name: package_name
+   *         in: query
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Package name to search for
+   *       - name: package_version
+   *         in: query
+   *         schema:
+   *           type: string
+   *         description: Optional version filter (e.g. 2.5.1)
+   *       - name: product_version
+   *         in: query
+   *         schema:
+   *           type: string
+   *         description: Filter to a specific product version
+   *       - name: variant
+   *         in: query
+   *         schema:
+   *           type: string
+   *         description: Filter to a specific variant (e.g. cpu-ubi9)
+   *       - name: repo_type
+   *         in: query
+   *         schema:
+   *           type: string
+   *         description: Repo types to check (repeatable, default test+production)
+   *     responses:
+   *       200:
+   *         description: Search results with package availability across indexes
+   *       422:
+   *         description: Validation error
+   */
+  router.get('/package-search/search', async function (req, res) {
+    const { package_name, package_version, product_version, variant } = req.query;
+    let repoTypeParam = req.query.repo_type;
+
+    if (!package_name || !PACKAGE_NAME_RE.test(package_name)) {
+      return res.status(422).json({
+        error: 'Invalid package name',
+        message: 'Package name must match ^[a-zA-Z][a-zA-Z0-9._-]*$'
+      });
+    }
+
+    let requestedVersion = null;
+    if (package_version) {
+      const versionStr = package_version.replace(/^v/, '');
+      if (!VERSION_RE.test(versionStr)) {
+        return res.status(422).json({
+          error: 'Invalid version',
+          message: 'Version must match ^[a-zA-Z0-9._-]+$'
+        });
+      }
+      requestedVersion = versionStr;
+    }
+
+    const allVariants = getVariants();
+    const allProductVersions = getProductVersions();
+
+    if (product_version) {
+      if (!/^\d+\.\d+(-EA\d+)?$/.test(product_version)) {
+        return res.status(422).json({
+          error: 'Invalid product version',
+          message: 'Must be a version like 3.4 or 3.5-EA1'
+        });
+      }
+    }
+    const selectedProductVersions = product_version ? [product_version] : allProductVersions;
+
+    if (variant && !allVariants.includes(variant)) {
+      return res.status(422).json({
+        error: 'Invalid variant',
+        message: 'Must be one of: ' + allVariants.join(', ')
+      });
+    }
+    const selectedVariants = variant ? [variant] : allVariants;
+
+    if (repoTypeParam && !Array.isArray(repoTypeParam)) {
+      repoTypeParam = [repoTypeParam];
+    }
+    const selectedRepoTypes = repoTypeParam || DEFAULT_REPO_TYPES;
+    const invalidRepoTypes = selectedRepoTypes.filter(function (rt) {
+      return !(rt in ALL_REPO_TYPES);
+    });
+    if (invalidRepoTypes.length > 0) {
+      return res.status(422).json({
+        error: 'Invalid repo type(s)',
+        message: 'Must be one of: ' + Object.keys(ALL_REPO_TYPES).join(', ')
+      });
+    }
+
+    const baseUrl = getBaseUrl();
+    const seenUrls = new Set();
+    const tasks = [];
+
+    for (const pv of selectedProductVersions) {
+      for (const v of selectedVariants) {
+        for (const rt of selectedRepoTypes) {
+          const suffix = ALL_REPO_TYPES[rt];
+          const indexUrl = baseUrl + '/' + pv + '/' + v + suffix + '/simple/';
+          if (seenUrls.has(indexUrl)) continue;
+          seenUrls.add(indexUrl);
+          tasks.push({ productVersion: pv, variant: v, repoType: rt, indexUrl });
+        }
+      }
+    }
+
+    const results = await pMap(tasks, async function (task) {
+      try {
+        const raw = await fetchIndex(task.indexUrl, package_name);
+        let files = [];
+        if (raw.found && raw.files) {
+          files = raw.files.map(function (f) {
+            return parsePackageFile(f.filename, f.url);
+          });
+          if (requestedVersion) {
+            files = files.filter(function (f) {
+              return f.version !== 'unknown' && f.version === requestedVersion;
+            });
+          }
+        }
+        return {
+          product_version: task.productVersion,
+          variant: task.variant,
+          repo_type: task.repoType,
+          index_url: task.indexUrl,
+          index_exists: raw.indexExists,
+          found: raw.found,
+          files,
+          error: raw.error
+        };
+      } catch (err) {
+        return {
+          product_version: task.productVersion,
+          variant: task.variant,
+          repo_type: task.repoType,
+          index_url: task.indexUrl,
+          index_exists: false,
+          found: false,
+          files: [],
+          error: err.message
+        };
+      }
+    }, MAX_CONCURRENT_FETCHES);
+
+    res.json({
+      package_name,
+      requested_version: requestedVersion,
+      total: tasks.length,
+      results
+    });
+  });
+
+  if (context.registerDiagnostics) {
+    context.registerDiagnostics(async function() {
+      const index = readFromStorage(PKG_INDEX_PATH);
+      const hasReports = index && index.length > 0;
+      return {
+        status: hasReports ? 'ok' : 'no_data',
+        latestReport: hasReports ? index[0].report_date : null,
+        reportCount: hasReports ? index.length : 0,
+        packageSearchCache: getCacheStats(),
+      };
+    });
+  }
+
+  if (context.registerExport) {
+    context.registerExport(require('./export'));
+  }
 };
 
 module.exports.getConfig = getConfig;

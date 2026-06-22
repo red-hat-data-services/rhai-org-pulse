@@ -35,50 +35,51 @@ export function sanitizeComponents(stored, allowed) {
   return stored.filter(c => allowedSet.has(c))
 }
 
+// Singleton refs — same reactive state returned on every call
+const initial = loadPrefs()
+const mode = ref(initial.mode)
+const manualComponents = ref(initial.manualComponents)
+const wizardSeen = ref(initial.wizardSeen)
+const activeTab = ref(initial.activeTab)
+
+function persist() {
+  savePrefs({
+    mode: mode.value,
+    manualComponents: manualComponents.value,
+    wizardSeen: wizardSeen.value,
+    activeTab: activeTab.value
+  })
+}
+
+function setMode(val) {
+  mode.value = val
+  persist()
+}
+
+function setManualComponents(components) {
+  manualComponents.value = components
+  persist()
+}
+
+function markWizardSeen() {
+  wizardSeen.value = true
+  persist()
+}
+
+function setActiveTab(tab) {
+  activeTab.value = tab
+  persist()
+}
+
+function resetPreferences() {
+  mode.value = DEFAULTS.mode
+  manualComponents.value = [...DEFAULTS.manualComponents]
+  wizardSeen.value = DEFAULTS.wizardSeen
+  activeTab.value = DEFAULTS.activeTab
+  persist()
+}
+
 export function useForYouPreferences() {
-  const initial = loadPrefs()
-  const mode = ref(initial.mode)
-  const manualComponents = ref(initial.manualComponents)
-  const wizardSeen = ref(initial.wizardSeen)
-  const activeTab = ref(initial.activeTab)
-
-  function persist() {
-    savePrefs({
-      mode: mode.value,
-      manualComponents: manualComponents.value,
-      wizardSeen: wizardSeen.value,
-      activeTab: activeTab.value
-    })
-  }
-
-  function setMode(val) {
-    mode.value = val
-    persist()
-  }
-
-  function setManualComponents(components) {
-    manualComponents.value = components
-    persist()
-  }
-
-  function markWizardSeen() {
-    wizardSeen.value = true
-    persist()
-  }
-
-  function setActiveTab(tab) {
-    activeTab.value = tab
-    persist()
-  }
-
-  function resetPreferences() {
-    mode.value = DEFAULTS.mode
-    manualComponents.value = [...DEFAULTS.manualComponents]
-    wizardSeen.value = DEFAULTS.wizardSeen
-    activeTab.value = DEFAULTS.activeTab
-    persist()
-  }
-
   return {
     mode,
     manualComponents,
@@ -90,4 +91,12 @@ export function useForYouPreferences() {
     setActiveTab,
     resetPreferences
   }
+}
+
+export function _resetForTesting() {
+  const fresh = loadPrefs()
+  mode.value = fresh.mode
+  manualComponents.value = fresh.manualComponents
+  wizardSeen.value = fresh.wizardSeen
+  activeTab.value = fresh.activeTab
 }

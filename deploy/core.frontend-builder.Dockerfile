@@ -12,7 +12,7 @@
 #   FROM quay.io/org-pulse/org-pulse-core-frontend-runtime:v1.x
 #   COPY --from=build /app/dist /usr/share/nginx/html
 
-FROM registry.access.redhat.com/ubi9/nodejs-20-minimal
+FROM registry.access.redhat.com/ubi9/nodejs-22-minimal
 
 USER 0
 

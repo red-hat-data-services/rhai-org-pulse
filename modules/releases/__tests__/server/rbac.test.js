@@ -27,26 +27,26 @@ function createTestRoleRegistry() {
   const registry = createRoleRegistry();
   registry.register('admin', { label: 'Admin', description: 'Full access', module: 'platform' });
   registry.register('team-admin', { label: 'Team Admin', description: 'Team mgmt', module: 'platform' });
-  registry.register('release-manager', { label: 'Release Manager', description: 'Manage releases', module: 'releases' });
+  registry.register('planning-manager', { label: 'Planning Manager', description: 'Manage releases', module: 'releases' });
   return registry;
 }
 
-describe('release-manager role in role registry', () => {
-  it('recognizes release-manager as a valid role', () => {
+describe('planning-manager role in role registry', () => {
+  it('recognizes planning-manager as a valid role', () => {
     const registry = createTestRoleRegistry();
-    expect(registry.isValid('release-manager')).toBe(true);
+    expect(registry.isValid('planning-manager')).toBe(true);
   });
 });
 
-describe('role store: release-manager assignment and revocation', () => {
-  it('assigns release-manager role to a user', () => {
+describe('role store: planning-manager assignment and revocation', () => {
+  it('assigns planning-manager role to a user', () => {
     const registry = createTestRoleRegistry();
     const storage = createMockStorage();
     const roleStore = createRoleStore(storage.readFromStorage, storage.writeToStorage, { roleRegistry: registry });
 
-    const result = roleStore.assignRole('manager@redhat.com', 'release-manager', 'admin@redhat.com');
+    const result = roleStore.assignRole('manager@redhat.com', 'planning-manager', 'admin@redhat.com');
     expect(result.email).toBe('manager@redhat.com');
-    expect(result.roles).toContain('release-manager');
+    expect(result.roles).toContain('planning-manager');
   });
 
   it('confirms hasRole returns true after assignment', () => {
@@ -54,19 +54,19 @@ describe('role store: release-manager assignment and revocation', () => {
     const storage = createMockStorage();
     const roleStore = createRoleStore(storage.readFromStorage, storage.writeToStorage, { roleRegistry: registry });
 
-    roleStore.assignRole('manager@redhat.com', 'release-manager', 'admin@redhat.com');
-    expect(roleStore.hasRole('manager@redhat.com', 'release-manager')).toBe(true);
+    roleStore.assignRole('manager@redhat.com', 'planning-manager', 'admin@redhat.com');
+    expect(roleStore.hasRole('manager@redhat.com', 'planning-manager')).toBe(true);
   });
 
-  it('revokes release-manager role from a user', () => {
+  it('revokes planning-manager role from a user', () => {
     const registry = createTestRoleRegistry();
     const storage = createMockStorage();
     const roleStore = createRoleStore(storage.readFromStorage, storage.writeToStorage, { roleRegistry: registry });
 
-    roleStore.assignRole('manager@redhat.com', 'release-manager', 'admin@redhat.com');
-    const result = roleStore.revokeRole('manager@redhat.com', 'release-manager', 'admin@redhat.com');
-    expect(result.roles).not.toContain('release-manager');
-    expect(roleStore.hasRole('manager@redhat.com', 'release-manager')).toBe(false);
+    roleStore.assignRole('manager@redhat.com', 'planning-manager', 'admin@redhat.com');
+    const result = roleStore.revokeRole('manager@redhat.com', 'planning-manager', 'admin@redhat.com');
+    expect(result.roles).not.toContain('planning-manager');
+    expect(roleStore.hasRole('manager@redhat.com', 'planning-manager')).toBe(false);
   });
 
   it('throws when revoking a role the user does not have', () => {
@@ -75,23 +75,23 @@ describe('role store: release-manager assignment and revocation', () => {
     const roleStore = createRoleStore(storage.readFromStorage, storage.writeToStorage, { roleRegistry: registry });
 
     expect(() => {
-      roleStore.revokeRole('nobody@redhat.com', 'release-manager', 'admin@redhat.com');
+      roleStore.revokeRole('nobody@redhat.com', 'planning-manager', 'admin@redhat.com');
     }).toThrow(/does not have role/);
   });
 
-  it('does not affect other roles when assigning release-manager', () => {
+  it('does not affect other roles when assigning planning-manager', () => {
     const registry = createTestRoleRegistry();
     const storage = createMockStorage();
     const roleStore = createRoleStore(storage.readFromStorage, storage.writeToStorage, { roleRegistry: registry });
 
     roleStore.assignRole('user@redhat.com', 'admin', 'system');
-    roleStore.assignRole('user@redhat.com', 'release-manager', 'system');
+    roleStore.assignRole('user@redhat.com', 'planning-manager', 'system');
     expect(roleStore.hasRole('user@redhat.com', 'admin')).toBe(true);
-    expect(roleStore.hasRole('user@redhat.com', 'release-manager')).toBe(true);
+    expect(roleStore.hasRole('user@redhat.com', 'planning-manager')).toBe(true);
   });
 });
 
-describe('requireRole("release-manager") middleware', () => {
+describe('requireRole("planning-manager") middleware', () => {
   function createMiddleware() {
     const storage = createMockStorage();
     const roleStore = createRoleStore(storage.readFromStorage, storage.writeToStorage);
@@ -100,42 +100,42 @@ describe('requireRole("release-manager") middleware', () => {
       storage.writeToStorage,
       { roleStore }
     );
-    const requireReleaseManager = requireRole('release-manager');
-    return { requireReleaseManager, roleStore, storage };
+    const requirePlanningManager = requireRole('planning-manager');
+    return { requirePlanningManager, roleStore, storage };
   }
 
   it('allows admins through', () => {
-    const { requireReleaseManager } = createMiddleware();
-    const req = { isAdmin: true, isReleaseManager: false, userEmail: 'admin@test.com' };
+    const { requirePlanningManager } = createMiddleware();
+    const req = { isAdmin: true, isPlanningManager: false, userEmail: 'admin@test.com' };
     const res = createMockRes();
     let nextCalled = false;
 
-    requireReleaseManager(req, res, () => { nextCalled = true; });
+    requirePlanningManager(req, res, () => { nextCalled = true; });
     expect(nextCalled).toBe(true);
     expect(res._status).toBeNull();
   });
 
-  it('allows release managers through', () => {
-    const { requireReleaseManager, roleStore } = createMiddleware();
-    roleStore.assignRole('pm@test.com', 'release-manager', 'admin');
-    const req = { isAdmin: false, isReleaseManager: true, userEmail: 'pm@test.com' };
+  it('allows planning managers through', () => {
+    const { requirePlanningManager, roleStore } = createMiddleware();
+    roleStore.assignRole('pm@test.com', 'planning-manager', 'admin');
+    const req = { isAdmin: false, isPlanningManager: true, userEmail: 'pm@test.com' };
     const res = createMockRes();
     let nextCalled = false;
 
-    requireReleaseManager(req, res, () => { nextCalled = true; });
+    requirePlanningManager(req, res, () => { nextCalled = true; });
     expect(nextCalled).toBe(true);
     expect(res._status).toBeNull();
   });
 
   it('blocks regular users with 403', () => {
-    const { requireReleaseManager } = createMiddleware();
-    const req = { isAdmin: false, isReleaseManager: false, userEmail: 'user@test.com' };
+    const { requirePlanningManager } = createMiddleware();
+    const req = { isAdmin: false, isPlanningManager: false, userEmail: 'user@test.com' };
     const res = createMockRes();
     let nextCalled = false;
 
-    requireReleaseManager(req, res, () => { nextCalled = true; });
+    requirePlanningManager(req, res, () => { nextCalled = true; });
     expect(nextCalled).toBe(false);
     expect(res._status).toBe(403);
-    expect(res._json.error).toMatch(/release-manager/);
+    expect(res._json.error).toMatch(/planning-manager/);
   });
 });

@@ -3,8 +3,21 @@ import { reactive, computed } from 'vue'
 
 const props = defineProps({
   groups: { type: Array, default: () => [] },
-  componentLeads: { type: Object, default: () => ({}) }
+  componentLeads: { type: Object, default: () => ({}) },
+  velocity: { type: Object, default: null },
+  initialSort: { type: Object, default: () => ({ column: null, direction: 'asc' }) }
 })
+
+var emit = defineEmits(['sort-changed'])
+
+function getComponentVelocity(componentName) {
+  if (!props.velocity || !props.velocity.components) return null
+  var comps = props.velocity.components
+  for (var i = 0; i < comps.length; i++) {
+    if (comps[i].component === componentName) return comps[i]
+  }
+  return null
+}
 
 const JIRA_BASE = 'https://redhat.atlassian.net/browse'
 
@@ -14,6 +27,82 @@ const COMP_STYLE = {
 }
 
 var expandedComponents = reactive({})
+
+// ═══ SORT STATE ═══
+
+var SORT_COLUMNS = ['key', 'summary', 'priority', 'type', 'releaseType', 'status', 'colorStatus', 'fixVersion', 'targetVersion', 'blocked', 'assignee', 'pmOwner']
+
+var PRIORITY_ORDER = { 'Blocker': 0, 'Critical': 1, 'Major': 2, 'Normal': 3 }
+var COLOR_STATUS_ORDER = { 'red': 0, 'yellow': 1, 'green': 2 }
+
+var sortState = reactive({
+  column: props.initialSort.column,
+  direction: props.initialSort.direction || 'asc'
+})
+
+function toggleSort(column) {
+  if (SORT_COLUMNS.indexOf(column) === -1) return
+  if (sortState.column === column) {
+    if (sortState.direction === 'asc') {
+      sortState.direction = 'desc'
+    } else {
+      sortState.column = null
+      sortState.direction = 'asc'
+    }
+  } else {
+    sortState.column = column
+    sortState.direction = 'asc'
+  }
+  emit('sort-changed', { column: sortState.column, direction: sortState.direction })
+}
+
+function getSortValue(feature, column) {
+  if (column === 'key') return feature.key || ''
+  if (column === 'summary') return (feature.summary || '').toLowerCase()
+  if (column === 'priority') {
+    var po = PRIORITY_ORDER[feature.priority]
+    return po !== undefined ? po : 99
+  }
+  if (column === 'type') {
+    return (feature.isCommitted ? 2 : 0) + (feature.isRequested ? 1 : 0)
+  }
+  if (column === 'releaseType') return (feature.releaseType || '').toLowerCase()
+  if (column === 'status') return (feature.status || '').toLowerCase()
+  if (column === 'colorStatus') {
+    var co = COLOR_STATUS_ORDER[(feature.colorStatus || '').toLowerCase()]
+    return co !== undefined ? co : 99
+  }
+  if (column === 'fixVersion') {
+    return feature.fixVersions && feature.fixVersions.length > 0 ? feature.fixVersions[0] : ''
+  }
+  if (column === 'targetVersion') {
+    return feature.targetVersions && feature.targetVersions.length > 0 ? feature.targetVersions[0] : ''
+  }
+  if (column === 'blocked') return feature.isBlocked ? 1 : 0
+  if (column === 'assignee') return (feature.assignee || '').toLowerCase()
+  if (column === 'pmOwner') return (feature.pmOwner || '').toLowerCase()
+  return ''
+}
+
+function sortFeatures(features) {
+  if (!sortState.column) return features
+  var col = sortState.column
+  var dir = sortState.direction === 'asc' ? 1 : -1
+  var sorted = features.slice()
+  sorted.sort(function(a, b) {
+    var va = getSortValue(a, col)
+    var vb = getSortValue(b, col)
+    if (va < vb) return -1 * dir
+    if (va > vb) return 1 * dir
+    return 0
+  })
+  return sorted
+}
+
+function sortIcon(column) {
+  if (sortState.column !== column) return 'none'
+  return sortState.direction
+}
 
 function toggleComponent(component) {
   if (expandedComponents[component]) {
@@ -115,11 +204,15 @@ var componentGroups = computed(function() {
             colorStatus: feat.colorStatus,
             statusSummary: feat.statusSummary,
             releaseType: feat.releaseType,
+            priority: feat.priority,
             isBlocked: feat.isBlocked,
             components: feat.components,
+            fixVersions: feat.fixVersions || [],
+            targetVersions: feat.targetVersions || [],
             assignee: feat.assignee,
             pmOwner: feat.pmOwner,
             products: [],
+            versions: [],
             isRequested: false,
             isCommitted: false
           }
@@ -129,6 +222,9 @@ var componentGroups = computed(function() {
         var product = extractProduct(version)
         if (entry.products.indexOf(product) === -1) {
           entry.products.push(product)
+        }
+        if (entry.versions.indexOf(version) === -1) {
+          entry.versions.push(version)
         }
         if (isReq) entry.isRequested = true
         if (isCom) entry.isCommitted = true
@@ -180,12 +276,10 @@ function colorStatusRing(colorStatus) {
   return 'ring-gray-200 dark:ring-gray-700'
 }
 
-function productBadgeClass(product) {
-  var p = (product || '').toUpperCase()
-  if (p === 'RHOAI') return 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300'
-  if (p === 'RHELAI') return 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300'
-  if (p === 'RHAII') return 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300'
-  return 'bg-gray-100 dark:bg-gray-700/60 text-gray-600 dark:text-gray-400'
+
+var SortArrow = {
+  props: { direction: { type: String, default: 'none' } },
+  template: '<svg v-if="direction !== \'none\'" class="w-3 h-3 inline-block transition-transform" :class="{ \'rotate-180\': direction === \'desc\' }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" /></svg>'
 }
 
 defineExpose({ expandAll, collapseAll })
@@ -202,7 +296,7 @@ defineExpose({ expandAll, collapseAll })
             :class="COMP_STYLE.border"
             @click="toggleComponent(comp.component)"
           >
-            <td colspan="9" class="px-4 py-3">
+            <td colspan="12" class="px-4 py-3">
               <div class="flex items-center gap-3">
                 <svg
                   class="w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 flex-shrink-0"
@@ -225,6 +319,11 @@ defineExpose({ expandAll, collapseAll })
                     ? 'bg-red-100 dark:bg-red-800/40 text-red-700 dark:text-red-300'
                     : 'bg-gray-100 dark:bg-gray-700/60 text-gray-400 dark:text-gray-500'"
                 >{{ comp.blockedCount }} blocked</span>
+                <span
+                  v-if="getComponentVelocity(comp.component)"
+                  class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300"
+                  :title="getComponentVelocity(comp.component).isPartialYear ? 'Less than a year of data' : ''"
+                >{{ getComponentVelocity(comp.component).avgPerRelease }} avg/rel<span v-if="getComponentVelocity(comp.component).isPartialYear" class="ml-0.5 text-gray-400 dark:text-gray-500">*</span></span>
               </div>
               <div v-if="getLeads(comp.component)" class="flex items-center gap-5 mt-2 ml-[38px]">
                 <div v-if="getLeads(comp.component).pmLead" class="flex items-center gap-1.5">
@@ -254,21 +353,48 @@ defineExpose({ expandAll, collapseAll })
             v-if="isComponentExpanded(comp.component)"
             class="border-b border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/80 sticky top-0"
           >
-            <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-36">Feature</th>
-            <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
-            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">Product</th>
-            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24">Type</th>
-            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-28">Release Type</th>
-            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16">Status</th>
-            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16">Blocked</th>
-            <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">Delivery Owner</th>
-            <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">PM Owner</th>
+            <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-36 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('key')">
+              <span class="inline-flex items-center gap-1">Feature<SortArrow :direction="sortIcon('key')" /></span>
+            </th>
+            <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('summary')">
+              <span class="inline-flex items-center gap-1">Title<SortArrow :direction="sortIcon('summary')" /></span>
+            </th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('priority')">
+              <span class="inline-flex items-center gap-1 justify-center">Priority<SortArrow :direction="sortIcon('priority')" /></span>
+            </th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('type')">
+              <span class="inline-flex items-center gap-1 justify-center">Type<SortArrow :direction="sortIcon('type')" /></span>
+            </th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-28 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('releaseType')">
+              <span class="inline-flex items-center gap-1 justify-center">Release Type<SortArrow :direction="sortIcon('releaseType')" /></span>
+            </th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('status')">
+              <span class="inline-flex items-center gap-1 justify-center">Status<SortArrow :direction="sortIcon('status')" /></span>
+            </th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('colorStatus')">
+              <span class="inline-flex items-center gap-1 justify-center">Color Status<SortArrow :direction="sortIcon('colorStatus')" /></span>
+            </th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('fixVersion')">
+              <span class="inline-flex items-center gap-1 justify-center">Fix Version<SortArrow :direction="sortIcon('fixVersion')" /></span>
+            </th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('targetVersion')">
+              <span class="inline-flex items-center gap-1 justify-center">Target Version<SortArrow :direction="sortIcon('targetVersion')" /></span>
+            </th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('blocked')">
+              <span class="inline-flex items-center gap-1 justify-center">Blocked<SortArrow :direction="sortIcon('blocked')" /></span>
+            </th>
+            <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('assignee')">
+              <span class="inline-flex items-center gap-1">Delivery Owner<SortArrow :direction="sortIcon('assignee')" /></span>
+            </th>
+            <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('pmOwner')">
+              <span class="inline-flex items-center gap-1">PM Owner<SortArrow :direction="sortIcon('pmOwner')" /></span>
+            </th>
           </tr>
 
           <!-- Feature rows -->
           <template v-if="isComponentExpanded(comp.component)">
             <tr
-              v-for="feature in comp.features"
+              v-for="feature in sortFeatures(comp.features)"
               :key="feature.key"
               class="border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
             >
@@ -284,14 +410,17 @@ defineExpose({ expandAll, collapseAll })
                 {{ feature.summary }}
               </td>
               <td class="px-3 py-2.5 text-center">
-                <div class="flex items-center justify-center gap-1 flex-wrap">
-                  <span
-                    v-for="prod in feature.products"
-                    :key="prod"
-                    class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold"
-                    :class="productBadgeClass(prod)"
-                  >{{ prod }}</span>
-                </div>
+                <span
+                  v-if="feature.priority"
+                  class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold"
+                  :class="{
+                    'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300': feature.priority === 'Blocker' || feature.priority === 'Critical',
+                    'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300': feature.priority === 'Major',
+                    'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300': feature.priority === 'Normal',
+                    'bg-gray-100 dark:bg-gray-700/60 text-gray-600 dark:text-gray-400': feature.priority !== 'Blocker' && feature.priority !== 'Critical' && feature.priority !== 'Major' && feature.priority !== 'Normal'
+                  }"
+                >{{ feature.priority }}</span>
+                <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
               </td>
               <td class="px-3 py-2.5 text-center">
                 <div class="flex items-center justify-center gap-1">
@@ -314,11 +443,38 @@ defineExpose({ expandAll, collapseAll })
               </td>
               <td class="px-3 py-2.5 text-center">
                 <span
+                  v-if="feature.status"
+                  class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 dark:bg-gray-700/60 text-gray-700 dark:text-gray-300"
+                >{{ feature.status }}</span>
+                <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
+              </td>
+              <td class="px-3 py-2.5 text-center">
+                <span
                   v-if="feature.colorStatus"
                   class="inline-block w-3.5 h-3.5 rounded-full ring-2"
                   :class="[colorStatusClass(feature.colorStatus), colorStatusRing(feature.colorStatus)]"
                   :title="feature.colorStatus"
                 />
+                <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
+              </td>
+              <td class="px-3 py-2.5 text-center">
+                <div v-if="feature.fixVersions && feature.fixVersions.length > 0" class="flex items-center justify-center gap-1 flex-wrap">
+                  <span
+                    v-for="fv in feature.fixVersions"
+                    :key="fv"
+                    class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
+                  >{{ fv }}</span>
+                </div>
+                <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
+              </td>
+              <td class="px-3 py-2.5 text-center">
+                <div v-if="feature.targetVersions && feature.targetVersions.length > 0" class="flex items-center justify-center gap-1 flex-wrap">
+                  <span
+                    v-for="tv in feature.targetVersions"
+                    :key="tv"
+                    class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
+                  >{{ tv }}</span>
+                </div>
                 <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
               </td>
               <td class="px-3 py-2.5 text-center">
@@ -346,7 +502,7 @@ defineExpose({ expandAll, collapseAll })
 
           <!-- Empty state -->
           <tr v-if="isComponentExpanded(comp.component) && comp.features.length === 0">
-            <td colspan="9" class="px-8 py-6 text-sm text-gray-400 dark:text-gray-500 italic text-center">
+            <td colspan="12" class="px-8 py-6 text-sm text-gray-400 dark:text-gray-500 italic text-center">
               No features found for {{ comp.component }}
             </td>
           </tr>
@@ -354,7 +510,7 @@ defineExpose({ expandAll, collapseAll })
 
         <!-- No results -->
         <tr v-if="componentGroups.length === 0">
-          <td colspan="9" class="px-8 py-10 text-sm text-gray-400 dark:text-gray-500 italic text-center">
+          <td colspan="12" class="px-8 py-10 text-sm text-gray-400 dark:text-gray-500 italic text-center">
             No features match the current filters.
           </td>
         </tr>

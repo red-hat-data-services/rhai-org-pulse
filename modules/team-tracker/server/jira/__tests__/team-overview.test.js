@@ -17,7 +17,6 @@ vi.mock('../orchestration', () => ({
   discoverBoards: vi.fn(),
   performRefresh: vi.fn()
 }))
-vi.mock('node-fetch', () => ({ default: vi.fn() }))
 
 // We need to test the Express routes directly
 import express from 'express'

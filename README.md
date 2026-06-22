@@ -23,7 +23,7 @@ For real Jira and GitHub data:
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 22+
 - Red Hat VPN (required for LDAP roster sync)
 - @redhat.com Google account
 
@@ -114,7 +114,7 @@ make test-module MODULE=<name>  # Run integration tests for a module
 
 ## Tech Stack
 
-- **Frontend**: Vue 3, Vite 6, Tailwind CSS 3, Chart.js 4
+- **Frontend**: Vue 3, Vite 8, Tailwind CSS 3, Chart.js 4
 - **Backend**: Express (single server for local dev and production)
 - **Auth**: OpenShift OAuth proxy (production), no auth (local dev)
 - **Storage**: Local filesystem (`./data/`), PVC in OpenShift

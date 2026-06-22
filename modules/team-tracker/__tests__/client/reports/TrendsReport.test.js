@@ -38,9 +38,7 @@ const mockTrendsData = {
 }
 
 vi.mock('@shared/client/services/api', () => ({
-  getTrends: vi.fn(async (onData) => {
-    onData(mockTrendsData)
-  }),
+  getTrends: vi.fn(async () => mockTrendsData),
 }))
 
 describe('TrendsReport', () => {
@@ -79,9 +77,7 @@ describe('TrendsReport', () => {
 
   it('shows no data message when trends data is null', async () => {
     const { getTrends } = await import('@shared/client/services/api')
-    getTrends.mockImplementationOnce(async (_onData) => {
-      // Don't call onData -- simulate no data
-    })
+    getTrends.mockImplementationOnce(async () => null)
     const wrapper = createWrapper()
     await nextTick()
     await nextTick()

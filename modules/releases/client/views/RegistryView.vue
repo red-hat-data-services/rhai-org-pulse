@@ -3,7 +3,7 @@
     <!-- Permission guard -->
     <div v-if="!hasAccess" class="text-center py-16">
       <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Access Denied</h2>
-      <p class="text-gray-500 dark:text-gray-400">You don't have permission to view this page. The release-manager role is required.</p>
+      <p class="text-gray-500 dark:text-gray-400">You don't have permission to view this page. The planning-manager role is required.</p>
     </div>
 
     <template v-else>
@@ -572,7 +572,7 @@ watch(() => nav.params.value?.tab, (tabParam) => {
 }, { immediate: true })
 
 const { isAdmin, roles: userRoles } = useAuth()
-const hasAccess = computed(() => isAdmin.value || userRoles.value.includes('release-manager'))
+const hasAccess = computed(() => isAdmin.value || userRoles.value.includes('planning-manager'))
 
 const releases = ref([])
 const loading = ref(true)

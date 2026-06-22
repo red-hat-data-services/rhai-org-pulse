@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- **Node.js 20+** and npm
+- **Node.js 22+** and npm
 - **Red Hat VPN** connection (for LDAP roster sync)
 - A **Jira Cloud API token** for live data — [create one here](https://id.atlassian.com/manage-profile/security/api-tokens)
 - Or just use **Demo Mode** (no credentials needed)

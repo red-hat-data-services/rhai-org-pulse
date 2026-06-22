@@ -3,8 +3,6 @@
  * Fetches open Feature Requests per Jira component.
  */
 
-const fetch = require('node-fetch');
-
 // Module-level credentials, set once via init()
 let _secrets = {};
 

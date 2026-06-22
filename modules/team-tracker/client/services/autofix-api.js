@@ -1,6 +1,13 @@
-import { cachedRequest } from '@shared/client/services/api.js'
+import { apiRequest } from '@shared/client/services/api.js'
 
-export function fetchAutofixData(onData) {
+export async function fetchAutofixData(onData, { components } = {}) {
   /* eslint-disable-next-line org-pulse/no-cross-module-imports -- approved cross-module API call; guarded by enabledBuiltInSlugs check */
-  return cachedRequest('autofix-data', '/modules/ai-impact/autofix-data', onData)
+  let path = '/modules/ai-impact/autofix-data'
+  if (components && components.length > 0) {
+    const sorted = [...components].sort()
+    path += '?components=' + encodeURIComponent(sorted.join(','))
+  }
+  const data = await apiRequest(path)
+  if (onData) onData(data)
+  return data
 }

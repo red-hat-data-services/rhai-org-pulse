@@ -10,7 +10,7 @@
 
 /**
  * @typedef {object} RoleConfig
- * @property {string} id          - Unique role identifier (e.g. 'release-manager')
+ * @property {string} id          - Unique role identifier (e.g. 'planning-manager')
  * @property {string} label       - Human-readable label for Settings UI
  * @property {string} description - Short description for Settings UI
  * @property {string} module      - Module slug that registered this role (or 'platform')

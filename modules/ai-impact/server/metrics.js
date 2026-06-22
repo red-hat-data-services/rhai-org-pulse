@@ -1,3 +1,72 @@
+const FRICTION_LABELS = {
+  needsAttention: 'rfe-creator-needs-attention',
+  feasibilityFail: 'rfe-creator-feasibility-fail',
+  feasibilityUnknown: 'rfe-creator-feasibility-unknown'
+};
+
+/**
+ * Compute pipeline friction metrics for a given time window.
+ *
+ * Denominator is AI-touched RFEs only (aiInvolvement !== 'none').
+ *
+ * @param {Array} issues - Cached RFE issue list
+ * @param {string} timeWindow - 'week' | 'month' | '3months'
+ * @param {object} config - Module config (for trendThresholdPp)
+ */
+function computePipelineFrictionMetrics(issues, timeWindow, config) {
+  const threshold = config?.trendThresholdPp || 2;
+  const now = new Date();
+  const { cutoff, priorCutoff } = getTimeWindowDates(now, timeWindow);
+
+  const currentAI = issues.filter(i =>
+    i.aiInvolvement !== 'none' && new Date(i.created) >= cutoff);
+  const priorAI = issues.filter(i => {
+    const d = new Date(i.created);
+    return i.aiInvolvement !== 'none' && d >= priorCutoff && d < cutoff;
+  });
+
+  function pct(subset, total) {
+    return total > 0 ? Math.round((subset / total) * 100) : 0;
+  }
+
+  function frictionTrend(change) {
+    if (change > threshold) return 'worsening';
+    if (change < -threshold) return 'improving';
+    return 'stable';
+  }
+
+  const currentNeedsAttention = currentAI.filter(i =>
+    (i.labels || []).includes(FRICTION_LABELS.needsAttention)).length;
+  const priorNeedsAttention = priorAI.filter(i =>
+    (i.labels || []).includes(FRICTION_LABELS.needsAttention)).length;
+
+  const needsAttentionPct = pct(currentNeedsAttention, currentAI.length);
+  const priorNeedsAttentionPct = pct(priorNeedsAttention, priorAI.length);
+  const needsAttentionChange = needsAttentionPct - priorNeedsAttentionPct;
+
+  const currentFeasBlocked = currentAI.filter(i => {
+    const labels = new Set(i.labels || []);
+    return labels.has(FRICTION_LABELS.feasibilityFail) || labels.has(FRICTION_LABELS.feasibilityUnknown);
+  }).length;
+  const priorFeasBlocked = priorAI.filter(i => {
+    const labels = new Set(i.labels || []);
+    return labels.has(FRICTION_LABELS.feasibilityFail) || labels.has(FRICTION_LABELS.feasibilityUnknown);
+  }).length;
+
+  const feasibilityBlockedPct = pct(currentFeasBlocked, currentAI.length);
+  const priorFeasibilityBlockedPct = pct(priorFeasBlocked, priorAI.length);
+  const feasibilityBlockedChange = feasibilityBlockedPct - priorFeasibilityBlockedPct;
+
+  return {
+    needsAttentionPct,
+    needsAttentionChange,
+    needsAttentionTrend: frictionTrend(needsAttentionChange),
+    feasibilityBlockedPct,
+    feasibilityBlockedChange,
+    feasibilityBlockedTrend: frictionTrend(feasibilityBlockedChange)
+  };
+}
+
 /**
  * Compute adoption metrics for a given time window.
  *
@@ -8,7 +77,7 @@
  * @param {Array} issues - Cached RFE issue list
  * @param {string} timeWindow - 'week' | 'month' | '3months'
  * @param {object} config - Module config (for trendThresholdPp)
- * @returns {{ metrics, trendData, breakdown }}
+ * @returns {{ metrics, trendData, breakdown, pipelineFriction }}
  */
 function computeAllMetrics(issues, timeWindow, config) {
   const { cutoff } = getTimeWindowDates(new Date(), timeWindow);
@@ -16,7 +85,8 @@ function computeAllMetrics(issues, timeWindow, config) {
   return {
     metrics: computeMetrics(issues, timeWindow, config),
     trendData: buildTrendData(issues, timeWindow),
-    breakdown: buildBreakdownData(windowIssues)
+    breakdown: buildBreakdownData(windowIssues),
+    pipelineFriction: computePipelineFrictionMetrics(issues, timeWindow, config)
   };
 }
 
@@ -119,4 +189,4 @@ function buildBreakdownData(issues) {
   ];
 }
 
-module.exports = { computeAllMetrics, computeMetrics, buildTrendData, buildBreakdownData, getTimeWindowDates };
+module.exports = { computeAllMetrics, computeMetrics, buildTrendData, buildBreakdownData, getTimeWindowDates, computePipelineFrictionMetrics, FRICTION_LABELS };

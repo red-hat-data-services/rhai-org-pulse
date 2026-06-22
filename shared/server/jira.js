@@ -1,5 +1,3 @@
-const fetch = require('node-fetch');
-
 const JIRA_HOST = process.env.JIRA_HOST || 'https://redhat.atlassian.net';
 
 /** @deprecated Use createJiraClient() instead */

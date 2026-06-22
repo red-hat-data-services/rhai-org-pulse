@@ -1,4 +1,3 @@
-const fetch = require('node-fetch');
 const { getAllPeople } = require('../../../shared/server/roster');
 
 const DEFAULT_BASE_URL = 'http://backend.ambient-code--upstream-pulse.svc.cluster.local:3000';
@@ -36,7 +35,7 @@ async function proxyRequest(path, query = {}) {
   }
 
   const response = await fetch(url.toString(), {
-    timeout: PROXY_TIMEOUT,
+    signal: AbortSignal.timeout(PROXY_TIMEOUT),
     headers: { 'Accept': 'application/json' }
   });
 
@@ -75,7 +74,7 @@ async function proxyMutatingRequest(path, body, req) {
 
   const response = await fetch(url.toString(), {
     method: 'POST',
-    timeout: PROXY_TIMEOUT,
+    signal: AbortSignal.timeout(PROXY_TIMEOUT),
     headers,
     body: JSON.stringify(body),
   });
@@ -103,7 +102,7 @@ async function proxyAdminGet(path, query, req) {
   const headers = buildIdentityHeaders(req);
 
   const response = await fetch(url.toString(), {
-    timeout: PROXY_TIMEOUT,
+    signal: AbortSignal.timeout(PROXY_TIMEOUT),
     headers,
   });
 
@@ -120,7 +119,7 @@ async function proxyAdminGet(path, query, req) {
 async function checkConnection() {
   try {
     const base = getBaseUrl();
-    const response = await fetch(`${base}/health`, { timeout: 5000 });
+    const response = await fetch(`${base}/health`, { signal: AbortSignal.timeout(5000) });
     return { reachable: true, status: response.status };
   } catch (err) {
     return { reachable: false, error: err.message };
@@ -149,7 +148,7 @@ async function fetchPytorchAccess() {
 
   const url = `https://gitlab.com/api/v4/projects/${getGitlabProjectId()}/repository/files/${GITLAB_DATA_FILE_PATH}/raw?ref=main`;
   const resp = await fetch(url, {
-    timeout: 10000,
+    signal: AbortSignal.timeout(10000),
     headers: { 'PRIVATE-TOKEN': token, 'Accept': 'application/json' },
   });
 
@@ -216,7 +215,7 @@ async function pushRosterToUpstream(storage) {
   console.log('[upstream-pulse] Pushing ' + people.length + ' roster members to ' + url);
   const response = await fetch(url, {
     method: 'POST',
-    timeout: ROSTER_PUSH_TIMEOUT,
+    signal: AbortSignal.timeout(ROSTER_PUSH_TIMEOUT),
     headers: getServiceIdentityHeaders(),
     body: JSON.stringify(body)
   });
@@ -559,7 +558,7 @@ module.exports = function registerRoutes(router, context) {
       }
       const base = getBaseUrl();
       const response = await fetch(`${base}/api/system/status`, {
-        timeout: PROXY_TIMEOUT,
+        signal: AbortSignal.timeout(PROXY_TIMEOUT),
         headers: { 'Accept': 'application/json' },
       });
       if (!response.ok) {

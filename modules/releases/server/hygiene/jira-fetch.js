@@ -241,7 +241,6 @@ function transformIssue(rawIssue, rfeMap) {
   }
 
   // Blocked: check for unresolved inward "Blocks" links
-  const CLOSED_LINK_STATUSES = ['Closed', 'Resolved', 'Done']
   let isBlocked = false
   const issueLinks = fields.issuelinks
   if (Array.isArray(issueLinks)) {
@@ -250,15 +249,19 @@ function transformIssue(rawIssue, rfeMap) {
       if (!link.inwardIssue) continue
       const type = link.type || {}
       if (type.name !== 'Blocks' && type.inward !== 'is blocked by') continue
-      const linkedStatus = link.inwardIssue.fields &&
+      const linkedStatusCat = link.inwardIssue.fields &&
         link.inwardIssue.fields.status &&
-        link.inwardIssue.fields.status.name
-      if (CLOSED_LINK_STATUSES.indexOf(linkedStatus) === -1) {
+        link.inwardIssue.fields.status.statusCategory &&
+        link.inwardIssue.fields.status.statusCategory.name
+      if (linkedStatusCat !== 'Done') {
         isBlocked = true
         break
       }
     }
   }
+
+  // Priority
+  const priority = fields.priority ? fields.priority.name : null
 
   // PM Owner from Product Manager custom field
   const pmOwnerField = fields[CUSTOM_FIELDS.productManager]
@@ -286,6 +289,7 @@ function transformIssue(rawIssue, rfeMap) {
     targetEnd: fields[CUSTOM_FIELDS.targetEnd] || null,
     riceStatus: computeRiceStatus(fields),
     riceScore: fields[CUSTOM_FIELDS.riceScore] || null,
+    priority,
     isBlocked,
     pmOwner,
     linkedRfeKey,

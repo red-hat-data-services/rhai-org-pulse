@@ -34,6 +34,7 @@ const phase = PHASES.find(p => p.id === 'rfe-review')
 const metrics = computed(() => rfeData.value?.metrics || null)
 const trendData = computed(() => rfeData.value?.trendData || [])
 const breakdown = computed(() => rfeData.value?.breakdown || [])
+const pipelineFriction = computed(() => rfeData.value?.pipelineFriction || null)
 
 const timeWindowCutoff = computed(() => {
   const days = timeWindow.value === 'week' ? 7 : timeWindow.value === '3months' ? 90 : 30
@@ -101,7 +102,7 @@ function handleSelectRFE(rfe) {
 
 function handleCloseModal() {
   selectedRFE.value = null
-  const params = fromForYou.value ? { from: 'state-of-the-union' } : {}
+  const params = fromForYou.value ? { from: 'sotu' } : {}
   moduleNav.navigateTo('rfe-review', params)
 }
 
@@ -116,10 +117,10 @@ function handleNavigateToTestPlan(sourceKey) {
   moduleNav.navigateTo('test-plan-review', { select: sourceKey })
 }
 
-const fromForYou = computed(() => moduleNav.params.value?.from === 'state-of-the-union')
+const fromForYou = computed(() => moduleNav.params.value?.from === 'sotu' || moduleNav.params.value?.from === 'state-of-the-union')
 
 function goBackToForYou() {
-  moduleNav.navigateTo('state-of-the-union')
+  window.location.hash = '#/'
 }
 
 // Handle incoming select param (cross-link from Feature Review)
@@ -174,6 +175,7 @@ watch([() => moduleNav.params.value, rfeData], ([params]) => {
       :statusFilter="statusFilter"
       :selectedRFE="selectedRFE"
       :rfeToFeature="rfeToFeature"
+      :pipelineFriction="pipelineFriction"
       @update:timeWindow="timeWindow = $event"
       @update:filter="filter = $event"
       @update:searchQuery="searchQuery = $event"

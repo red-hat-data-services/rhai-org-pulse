@@ -1,7 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
 
-// Mock node-fetch (required by transitive imports)
-vi.mock('node-fetch', () => ({ default: vi.fn() }))
 
 function makeStorage(initial = {}) {
   const data = { ...initial }

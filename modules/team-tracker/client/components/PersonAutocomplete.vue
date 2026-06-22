@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import { apiRequest } from '@shared/client/services/api.js'
 
 const props = defineProps({
@@ -18,7 +18,35 @@ const ldapLoading = ref(false)
 const ldapAvailable = ref(true)
 const ldapError = ref(null)
 let ldapDebounceTimer = null
-let blurTimer = null
+
+const rootEl = ref(null)
+const dropdownEl = ref(null)
+const dropdownStyle = ref({})
+
+function updateDropdownPosition(el) {
+  const target = el || rootEl.value?.querySelector('input')
+  if (!target) return
+  const rect = target.getBoundingClientRect()
+  dropdownStyle.value = {
+    position: 'fixed',
+    top: `${rect.bottom + 4}px`,
+    left: `${rect.left}px`,
+    width: `${rect.width}px`,
+    zIndex: 50
+  }
+}
+
+function onClickOutside(e) {
+  const inRoot = rootEl.value && rootEl.value.contains(e.target)
+  const inDropdown = dropdownEl.value && dropdownEl.value.contains(e.target)
+  if (!inRoot && !inDropdown) {
+    isOpen.value = false
+    initSearchText()
+  }
+}
+
+onMounted(() => document.addEventListener('mousedown', onClickOutside))
+onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
 
 const filteredPeople = computed(() => {
   if (!searchText.value) return props.people.slice(0, 10)
@@ -48,7 +76,6 @@ initSearchText()
 
 onUnmounted(() => {
   if (ldapDebounceTimer) clearTimeout(ldapDebounceTimer)
-  if (blurTimer) clearTimeout(blurTimer)
 })
 
 // Re-initialize when modelValue changes externally
@@ -92,15 +119,16 @@ function searchLdap(term) {
   }, 300)
 }
 
-function onInput() {
+function onInput(event) {
+  updateDropdownPosition(event.target)
   isOpen.value = true
   highlightedIndex.value = -1
   searchLdap(searchText.value)
 }
 
-function onBlur() {
-  if (blurTimer) clearTimeout(blurTimer)
-  blurTimer = setTimeout(() => { isOpen.value = false }, 200)
+function onFocus(event) {
+  updateDropdownPosition(event.target)
+  isOpen.value = true
 }
 
 async function selectPerson(person) {
@@ -159,7 +187,7 @@ function getOptionIndex(localIdx, isLdap) {
 </script>
 
 <template>
-  <div class="relative">
+  <div ref="rootEl" class="relative">
     <input
       v-model="searchText"
       role="combobox"
@@ -169,14 +197,17 @@ function getOptionIndex(localIdx, isLdap) {
       class="w-full rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm"
       :placeholder="placeholder"
       @input="onInput"
-      @focus="isOpen = true"
-      @blur="onBlur"
+      @focus="onFocus"
+      @click="onFocus"
       @keydown="onKeydown"
     >
+    <Teleport to="body">
     <ul
       v-if="isOpen && (totalOptions > 0 || ldapLoading)"
+      ref="dropdownEl"
       role="listbox"
-      class="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg max-h-48 overflow-y-auto"
+      :style="dropdownStyle"
+      class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg max-h-48 overflow-y-auto"
     >
       <!-- Local results -->
       <li
@@ -218,6 +249,7 @@ function getOptionIndex(localIdx, isLdap) {
         <div v-if="p.title" class="text-xs text-gray-400 dark:text-gray-500">{{ p.title }}</div>
       </li>
     </ul>
+    </Teleport>
 
     <!-- Import error message -->
     <div v-if="ldapError" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ ldapError }}</div>

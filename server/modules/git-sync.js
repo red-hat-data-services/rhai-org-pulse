@@ -76,6 +76,15 @@ async function syncModule(storage, mod) {
 
     try {
       if (isExisting) {
+        // Reconcile remote URL if the configured gitUrl has changed since the initial clone
+        const currentUrl = await execGit(
+          ['remote', 'get-url', 'origin'], { cwd: moduleDir, env }, mod.gitToken
+        ).then(s => s.trim());
+        if (currentUrl !== mod.gitUrl) {
+          console.log(`[module-sync] ${mod.slug}: updating origin remote from ${currentUrl} to ${mod.gitUrl}`);
+          await execGit(['remote', 'set-url', 'origin', mod.gitUrl], { cwd: moduleDir, env }, mod.gitToken);
+        }
+
         // Fetch and reset
         await execGit(['fetch', 'origin', branch], { cwd: moduleDir, env }, mod.gitToken);
         await execGit(['reset', '--hard', `origin/${branch}`], { cwd: moduleDir, env }, mod.gitToken);

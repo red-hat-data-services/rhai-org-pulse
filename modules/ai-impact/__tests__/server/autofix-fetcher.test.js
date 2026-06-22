@@ -60,6 +60,18 @@ describe('classifyIssue', () => {
     expect(classifyIssue(['jira-triage-pending'])).toBe('triage-pending')
   })
 
+  it('returns triage-external for jira-triage-external', () => {
+    expect(classifyIssue(['jira-triage-external'])).toBe('triage-external')
+  })
+
+  it('returns triage-security-review for jira-triage-security-review', () => {
+    expect(classifyIssue(['jira-triage-security-review'])).toBe('triage-security-review')
+  })
+
+  it('prioritizes triage-security-review over other triage states', () => {
+    expect(classifyIssue(['jira-triage-not-fixable', 'jira-triage-security-review'])).toBe('triage-security-review')
+  })
+
   it('returns unknown when no pipeline labels present', () => {
     expect(classifyIssue(['some-other-label'])).toBe('unknown')
   })
@@ -133,19 +145,23 @@ describe('computeAutofixMetrics', () => {
     { created: recent, pipelineState: 'autofix-rejected', components: ['A'] },
     { created: recent, pipelineState: 'triage-missing-info', components: ['B'] },
     { created: recent, pipelineState: 'triage-not-fixable', components: ['B'] },
+    { created: recent, pipelineState: 'triage-external', components: ['B'] },
+    { created: recent, pipelineState: 'triage-security-review', components: ['B'] },
     { created: old, pipelineState: 'autofix-merged', components: ['A'] }
   ]
 
   it('computes metrics for a week window', () => {
     const m = computeAutofixMetrics(issues, 'week')
-    expect(m.windowTotal).toBe(5)
+    expect(m.windowTotal).toBe(7)
     expect(m.triageVerdicts.ready).toBe(3)
     expect(m.triageVerdicts.missingInfo).toBe(1)
     expect(m.triageVerdicts.notFixable).toBe(1)
+    expect(m.triageVerdicts.external).toBe(1)
+    expect(m.triageVerdicts.securityReview).toBe(1)
     expect(m.autofixStates.merged).toBe(1)
     expect(m.autofixStates.review).toBe(1)
     expect(m.autofixStates.rejected).toBe(1)
-    expect(m.totalIssues).toBe(6)
+    expect(m.totalIssues).toBe(8)
   })
 
   it('computes success rate from terminal states (merged / (merged + rejected + maxRetries))', () => {
@@ -177,6 +193,8 @@ describe('buildTrendData', () => {
     expect(trend[0]).toHaveProperty('maxRetries')
     expect(trend[0]).toHaveProperty('missingInfo')
     expect(trend[0]).toHaveProperty('stale')
+    expect(trend[0]).toHaveProperty('external')
+    expect(trend[0]).toHaveProperty('securityReview')
   })
 
   it('returns 13 points for 3months window', () => {
@@ -195,7 +213,9 @@ describe('buildTrendData', () => {
       { created: recent, pipelineState: 'autofix-max-retries', components: [] },
       { created: recent, pipelineState: 'autofix-merged', components: [] },
       { created: recent, pipelineState: 'triage-missing-info', components: [] },
-      { created: recent, pipelineState: 'triage-stale', components: [] }
+      { created: recent, pipelineState: 'triage-stale', components: [] },
+      { created: recent, pipelineState: 'triage-external', components: [] },
+      { created: recent, pipelineState: 'triage-security-review', components: [] }
     ]
     const trend = buildTrendData(issues, 'week')
     const lastPoint = trend[trend.length - 1]
@@ -206,5 +226,7 @@ describe('buildTrendData', () => {
     expect(lastPoint.merged).toBe(1)
     expect(lastPoint.missingInfo).toBe(1)
     expect(lastPoint.stale).toBe(1)
+    expect(lastPoint.external).toBe(1)
+    expect(lastPoint.securityReview).toBe(1)
   })
 })

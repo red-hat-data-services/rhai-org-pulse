@@ -29,7 +29,6 @@ function loadSyncLog(storage) {
 function registerIpaRegistryRoutes(router, context) {
   var storage = context.storage;
   var requireAdmin = context.requireAdmin;
-  var requireTeamAdmin = context.requireTeamAdmin;
   var requireScope = context.requireScope;
   var DEMO_MODE = process.env.DEMO_MODE === 'true';
 
@@ -660,12 +659,17 @@ function registerIpaRegistryRoutes(router, context) {
    *     responses:
    *       200:
    *         description: Imported person (or existing if already present)
+   *       403:
+   *         description: Requires admin, team-admin, or manager role
    *       404:
    *         description: Person not found in LDAP
    *       503:
    *         description: LDAP not available
    */
-  router.post('/registry/people/ldap-import', requireTeamAdmin, requireScope('team-tracker:write'), function(req, res) {
+  router.post('/registry/people/ldap-import', requireScope('team-tracker:write'), function(req, res) {
+    if (!req.isAdmin && !req.isTeamAdmin && !req.isManager) {
+      return res.status(403).json({ error: 'Requires team-admin, admin, or manager role' });
+    }
     if (DEMO_MODE) {
       return res.status(503).json({ error: 'LDAP not available in demo mode', code: 'LDAP_UNAVAILABLE' });
     }

@@ -1,5 +1,16 @@
 export const enablementCategories = [
   {
+    id: 'release-planning-overview',
+    title: 'Release Planning Overview',
+    section: 'release-planning',
+    slackChannel: { name: 'Submit Suggestion', url: 'https://forms.gle/fioq7nF6Qh5vVkTF8' },
+    links: [
+      { label: 'Enablement Recording', icon: 'Video', url: 'https://drive.google.com/file/d/1GpZv_hyY3-TOve9EzZ3jQ0p4iW2mgA3B/view' },
+      { label: 'Enablement Notes', icon: 'StickyNote', url: 'https://docs.google.com/document/d/1LUudV27xT9SRx8xGcC00MDp1IK_xU8b8nT2-vXDgljs/edit?tab=t.pw30ggryjpo7' },
+      { label: 'Enablement Chat', icon: 'MessageSquare', url: 'https://drive.google.com/file/d/1O8WwDcifjv1rlNmKLe7_0CoDAqFENY-I/view' },
+    ],
+  },
+  {
     id: 'rfe-builder',
     title: 'RFE Builder',
     section: 'ai-sdlc',
@@ -124,6 +135,7 @@ export const enablementCategories = [
 ]
 
 export const enablementSections = [
+  { id: 'release-planning', label: 'Release Planning Materials' },
   { id: 'ai-sdlc', label: 'AI SDLC Materials' },
   { id: 'ai-workflows', label: 'AI Workflows Enablement' },
   { id: 'other', label: 'Other Enablement' },

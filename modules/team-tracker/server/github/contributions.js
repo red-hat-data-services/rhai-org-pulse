@@ -9,8 +9,6 @@
  * Batches users into groups to minimize API calls.
  */
 
-const fetch = require('node-fetch');
-
 const GITHUB_GRAPHQL_URL = 'https://api.github.com/graphql';
 const BATCH_SIZE = 5; // Uses history query (larger response), so smaller batches
 const BATCH_DELAY_MS = 2000;

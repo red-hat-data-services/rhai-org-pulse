@@ -327,6 +327,55 @@ describe('buildExport', () => {
     expect(summary.alignment_pct).toBe(50);
   });
 
+  it('includes ga_date and planning_freeze from releaseDates', () => {
+    const classifications = [
+      { release: 'rhoai-3.5', category: 'aligned', key: 'X-1', url: '', summary: '', status: '', color_status: '', product_manager: '', assignee: '', team: '', components: [], component: '', target_version: '', fix_versions: '' },
+    ];
+    const releaseDates = {
+      'rhoai-3.5': { dueDate: '2026-08-20', planningFreezeDate: '2026-06-24' },
+    };
+    const result = buildExport(classifications, ['rhoai-3.5'], '2026-01-01T00:00:00Z', [], 'RHAISTRAT', releaseDates);
+    const summary = result.executive_summary[0];
+    expect(summary.ga_date).toBe('2026-08-20');
+    expect(summary.planning_freeze).toBe('2026-06-24');
+  });
+
+  it('sets ga_date and planning_freeze to null when releaseDates is not provided', () => {
+    const classifications = [
+      { release: 'rhoai-3.5', category: 'aligned', key: 'X-1', url: '', summary: '', status: '', color_status: '', product_manager: '', assignee: '', team: '', components: [], component: '', target_version: '', fix_versions: '' },
+    ];
+    const result = buildExport(classifications, ['rhoai-3.5'], '2026-01-01T00:00:00Z', [], 'RHAISTRAT');
+    const summary = result.executive_summary[0];
+    expect(summary.ga_date).toBeNull();
+    expect(summary.planning_freeze).toBeNull();
+  });
+
+  it('falls back to normVer lookup when release key does not match directly', () => {
+    const classifications = [
+      { release: 'RHOAI-3.5', category: 'aligned', key: 'X-1', url: '', summary: '', status: '', color_status: '', product_manager: '', assignee: '', team: '', components: [], component: '', target_version: '', fix_versions: '' },
+    ];
+    const releaseDates = {
+      'rhoai-3.5': { dueDate: '2026-08-20', planningFreezeDate: '2026-06-24' },
+    };
+    const result = buildExport(classifications, ['RHOAI-3.5'], '2026-01-01T00:00:00Z', [], 'RHAISTRAT', releaseDates);
+    const summary = result.executive_summary[0];
+    expect(summary.ga_date).toBe('2026-08-20');
+    expect(summary.planning_freeze).toBe('2026-06-24');
+  });
+
+  it('handles partial releaseDates (only ga_date, no planning_freeze)', () => {
+    const classifications = [
+      { release: 'rhoai-3.5', category: 'aligned', key: 'X-1', url: '', summary: '', status: '', color_status: '', product_manager: '', assignee: '', team: '', components: [], component: '', target_version: '', fix_versions: '' },
+    ];
+    const releaseDates = {
+      'rhoai-3.5': { dueDate: '2026-08-20' },
+    };
+    const result = buildExport(classifications, ['rhoai-3.5'], '2026-01-01T00:00:00Z', [], 'RHAISTRAT', releaseDates);
+    const summary = result.executive_summary[0];
+    expect(summary.ga_date).toBe('2026-08-20');
+    expect(summary.planning_freeze).toBeNull();
+  });
+
   it('generates correct JQL links for tv_only (fixVersion is EMPTY, not OR)', () => {
     const classifications = [
       { release: 'rhoai-3.5', category: 'tv_only', key: 'X-1', url: '', summary: '', status: '', color_status: '', product_manager: '', assignee: '', team: '', components: [], component: '', target_version: '', fix_versions: '' },

@@ -6,8 +6,6 @@
  * Modifies person objects in place (adds githubUsername / gitlabUsername).
  */
 
-const fetch = require('node-fetch');
-
 const BATCH_DELAY_MS = 200;
 
 function delay(ms) {

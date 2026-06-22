@@ -72,7 +72,27 @@ function createMockAnalysisState(overrides = {}) {
   }
 }
 
+function seedPortfolioConfig(releases) {
+  const releaseNumbers = releases.map(function (r) { return r.releaseNumber })
+  while (releaseNumbers.length < 3) releaseNumbers.push('placeholder-' + releaseNumbers.length)
+  const config = {
+    portfolioReleases: [{
+      id: 'pf-test',
+      name: 'Test Portfolio',
+      releases: releaseNumbers.slice(0, 3),
+      codeFreezeDate: null,
+      dueDate: null,
+      enabled: true
+    }]
+  }
+  sessionStorage.setItem('tt_cache:session:risk-dashboard-config:v1', JSON.stringify({
+    data: config,
+    _cachedAt: Date.now()
+  }))
+}
+
 function mountView(releases = [], analysisOverrides = {}) {
+  if (releases.length) seedPortfolioConfig(releases)
   const mockFilter = createMockFilter(releases)
   const mockAnalysis = createMockAnalysisState(analysisOverrides)
   return mount(MainView, {
