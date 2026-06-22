@@ -75,6 +75,12 @@ jobs:
               - 'modules/releases/client/components/FeatureTable.vue'
               - 'modules/releases/client/components/ClickableCount.vue'
               - 'tests/integration/tv-fv-delta.spec.js'
+            about-tabs:
+              - 'platform/about-tabs/**'
+              - 'src/components/AboutView.vue'
+              - 'src/platform-loader.js'
+              - 'src/utils/icon-map.js'
+              - 'tests/integration/about-tabs.spec.js'
             sotu-dashboard:
               - 'src/components/LandingPage.vue'
               - 'src/components/SotuWidget.vue'
@@ -111,7 +117,7 @@ jobs:
           echo "Changed files:"
           echo "$CHANGED"
 
-          ALL_MODULES='["ai-impact", "system-health", "people-teams", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "sotu-dashboard"]'
+          ALL_MODULES='["about-tabs", "ai-impact", "system-health", "people-teams", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "sotu-dashboard"]'
 
           # If shared test infrastructure changed, test all modules
           if echo "$CHANGED" | grep -qE '^tests/integration/(constants|helpers)\.js$'; then
@@ -130,6 +136,8 @@ jobs:
             fi
           }
 
+          check_module "about-tabs" \
+            "^(platform/about-tabs/|src/components/AboutView\.vue|src/platform-loader\.js|src/utils/icon-map\.js|tests/integration/about-tabs\.spec\.js)"
           check_module "ai-impact" \
             "^(modules/ai-impact/|tests/integration/ai-impact\.spec\.js)"
           check_module "system-health" \
@@ -158,7 +166,7 @@ jobs:
           if [ "${{ github.event_name }}" = "merge_group" ]; then
             MODULES='${{ steps.git-filter.outputs.modules }}'
           elif [ "${{ steps.filter.outputs.shared-test-files }}" == "true" ]; then
-            MODULES='["ai-impact", "system-health", "people-teams", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "sotu-dashboard"]'
+            MODULES='["about-tabs", "ai-impact", "system-health", "people-teams", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "sotu-dashboard"]'
           else
             # Use the modules that have direct changes
             MODULES='${{ steps.filter.outputs.changes }}'

@@ -17,6 +17,7 @@
     "test:integration": "playwright test tests/integration",
     "lint": "eslint .",
     "validate:modules": "node scripts/validate-modules.js",
+    "validate:platform": "node scripts/validate-platform.js",
     "validate:openapi": "node scripts/validate-openapi.js",
     "prepare": "husky || true"
   },

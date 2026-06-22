@@ -228,104 +228,16 @@
 <script setup>
 import {
   Home,
-  BarChart3,
-  Box,
-  Briefcase,
-  Building2,
-  Factory,
-  PackageOpen,
-  ChartColumnStacked,
-  FolderOpen,
-  FolderTree,
-  Lightbulb,
-  Map,
-  Milestone,
-  Target,
-  UserCog,
-  Users,
-  UsersRound,
-  User,
-  TrendingUp,
-  FileText,
-  FileCode2,
-  Shield,
-  Settings,
   ExternalLink,
-  Network,
-  Layers,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ChartCandlestick,
-  GitBranch,
-  PieChart,
-  Sparkles,
-  Activity,
-  Wand2,
   Info,
-  KeyRound,
-  ClipboardList,
-  BookOpen,
-  Database,
-  History,
-  Hospital,
-  CalendarDays,
-  LayoutDashboard,
-  Rocket,
-  UserCircle
+  FileCode2,
+  Settings
 } from 'lucide-vue-next'
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
-
-const ICON_MAP = {
-  BarChart3,
-  Box,
-  Briefcase,
-  Building2,
-  Factory,
-  PackageOpen,
-  ChartColumnStacked,
-  FolderOpen,
-  FolderTree,
-  Lightbulb,
-  Map,
-  Milestone,
-  Target,
-  UserCog,
-  Users,
-  UsersRound,
-  User,
-  TrendingUp,
-  FileText,
-  Home,
-  Shield,
-  Settings,
-  ExternalLink,
-  Network,
-  Layers,
-  Sparkles,
-  Activity,
-  Wand2,
-  'bar-chart': BarChart3,
-  'users-round': UsersRound,
-  'chart-candlestick': ChartCandlestick,
-  'pie-chart': PieChart,
-  'git-branch': GitBranch,
-  'sparkles': Sparkles,
-  'activity': Activity,
-  'network': Network,
-  'clipboard-list': ClipboardList,
-  BookOpen,
-  ClipboardList,
-  Database,
-  History,
-  Hospital,
-  'hospital': Hospital,
-  CalendarDays,
-  LayoutDashboard,
-  Rocket,
-  UserCircle,
-  'rocket': Rocket
-}
+import { resolveIcon } from '../utils/icon-map'
 
 const props = defineProps({
   collapsed: Boolean,
@@ -384,10 +296,6 @@ function toggleSection(sectionId) {
   if (!wasExpanded) {
     expandedSections.value[sectionId] = true
   }
-}
-
-function resolveIcon(iconName) {
-  return ICON_MAP[iconName] || BarChart3
 }
 
 const externalModules = computed(() => {

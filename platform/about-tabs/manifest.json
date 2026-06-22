@@ -1,0 +1,11 @@
+{
+  "tabs": [
+    {
+      "id": "docs",
+      "label": "Docs",
+      "icon": "BookOpen",
+      "component": "./DocsTab.vue",
+      "order": 15
+    }
+  ]
+}

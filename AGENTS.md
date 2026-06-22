@@ -18,6 +18,7 @@ deployed on OpenShift via ArgoCD.
 - **Auth**: OpenShift OAuth proxy in prod; no auth locally (uses `ADMIN_EMAILS`)
 - **Storage**: Local filesystem (`./data/`), mounted as PVC in OpenShift
 - **Shared code**: `shared/client/` and `shared/server/`, importable via `@shared` alias
+- **Platform extensions**: `platform/` holds deployment-specific core UI customizations (e.g., About page tabs), importable via `@platform` alias. Separate from modules — see `docs/PLATFORM.md`
 
 See `docs/MODULES.md` for the module development guide.
 
@@ -60,17 +61,24 @@ data that relates to an existing module's purpose, add it as a view there.
 Current modules: ai-impact, releases, system-health, team-tracker,
 upstream-pulse.
 
-### 5. No TypeScript
+### 5. Platform extensions are not modules
+
+`platform/` customizes core chrome (tabs, panels, branding) for specific
+deployments. `modules/` are for feature domains. Don't put deployment-specific
+UI customizations in a module, and don't put feature domains in `platform/`.
+See `docs/PLATFORM.md`.
+
+### 6. No TypeScript
 
 Plain JavaScript throughout. CommonJS (`require`) for server-side code, ES
 modules (`import`) for frontend code.
 
-### 6. API routes require OpenAPI annotations
+### 7. API routes require OpenAPI annotations
 
 Every new or modified Express route handler must have an `@openapi` JSDoc
 annotation. CI enforces a minimum operation count via `validate:openapi`.
 
-### 7. Keep documentation in sync
+### 8. Keep documentation in sync
 
 Documentation changes must land in the same PR as the code they describe:
 
@@ -81,7 +89,7 @@ Documentation changes must land in the same PR as the code they describe:
 - **npm scripts or Makefile commands** (additions, removals, or changes) → update Commands section in `README.md`
 - **Testing stack changes** (test frameworks added/removed from `package.json` devDependencies, test types added/removed from `tests/`, or test-related scripts/Makefile targets added/removed/changed) → update `README.md` (Tech Stack), `docs/MODULES.md` (Testing), and `CONTRIBUTING.md` (Testing)
 
-### 8. Module code must not read secrets from `process.env`
+### 9. Module code must not read secrets from `process.env`
 
 Declare secrets in `module.json` under `secrets` and read them from
 `context.secrets` or `context.resolveSecret()`. Use shared client factories
@@ -103,7 +111,7 @@ Non-secret config (e.g. `JIRA_HOST`, `DEMO_MODE`) is exempt. See
 - **Unit tests**: Vitest + @vue/test-utils for frontend, Vitest for backend
 - **Smoke tests**: Playwright against production containers (verify app loads)
 - **Integration tests**: Playwright module-specific tests (`make test-module MODULE=<name>`)
-- **Validation**: `npm run validate:modules` for module manifests
+- **Validation**: `npm run validate:modules` for module manifests, `npm run validate:platform` for platform extensions
 - Run `npm test` before committing
 
 **Integration test enforcement:** PRs that modify files in `modules/` (views, components, server routes, server logic) **require** corresponding integration test updates. This is enforced during code review. See `.github/instructions/review.instructions.md` for the full policy and exceptions.
@@ -126,6 +134,7 @@ npm run test:watch            # Watch mode
 npm run lint                  # Lint check
 npm run build                 # Production build
 npm run validate:modules      # Validate module manifests
+npm run validate:platform     # Validate platform extension manifests
 npm run validate:openapi      # Validate OpenAPI annotations
 
 # Container-based tests (requires Docker/Podman)
@@ -144,4 +153,5 @@ make test-module MODULE=<name>  # Run integration tests for a module
 | `CONTRIBUTING.md` | Getting started, workflow | Human contributors |
 | `shared/API.md` | Shared export stability contract | All |
 | `docs/MODULES.md` | Module development guide | All |
+| `docs/PLATFORM.md` | Platform extensions guide | All |
 | `docs/DATA-FORMATS.md` | JSON schemas for data files | All |

@@ -36,7 +36,7 @@ jobs:
           fi
 
           CHANGED=$(git diff --name-only ${BASE_SHA} HEAD)
-          if echo "$CHANGED" | grep -qE '^(src/|server/|modules/|shared/|scripts/validate|package|vite\.config|tailwind\.config|postcss\.config|vitest\.config|index\.html|public/|tests/smoke/|playwright\.config|Makefile)'; then
+          if echo "$CHANGED" | grep -qE '^(src/|server/|modules/|shared/|platform/|scripts/validate|package|vite\.config|tailwind\.config|postcss\.config|vitest\.config|index\.html|public/|tests/smoke/|playwright\.config|Makefile)'; then
             echo "app=true" >> "$GITHUB_OUTPUT"
           fi
           if echo "$CHANGED" | grep -q '^deploy/'; then
@@ -73,6 +73,10 @@ jobs:
       - name: Validate module manifests
         if: steps.changes.outputs.app == 'true'
         run: npm run validate:modules
+
+      - name: Validate platform manifests
+        if: steps.changes.outputs.app == 'true'
+        run: npm run validate:platform
 
       - name: Run linting
         if: steps.changes.outputs.app == 'true'

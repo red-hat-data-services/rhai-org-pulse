@@ -15,7 +15,8 @@ const sharedConfig = {
   resolve: {
     alias: {
       '@shared': path.resolve(__dirname, 'shared'),
-      '@modules': path.resolve(__dirname, 'modules')
+      '@modules': path.resolve(__dirname, 'modules'),
+      '@platform': path.resolve(__dirname, 'platform')
     }
   },
 }

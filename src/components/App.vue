@@ -167,6 +167,7 @@
           v-else-if="activeModule === 'about'"
           :is-admin="authIsAdmin"
           :initial-tab="aboutInitialTab"
+          :platform-about-tabs="platformAboutTabs"
         />
 
         <LoadingOverlay v-if="isLoading" />
@@ -219,6 +220,8 @@ import { useModules } from '../composables/useModules'
 import { useTheme } from '../composables/useTheme'
 import { refreshMetrics, getLastRefreshed, apiRequest, getSiteConfig } from '@shared/client/services/api'
 import { loadModuleManifests, loadModuleClient } from '../module-loader'
+import { loadPlatformAboutTabs } from '../platform-loader'
+import { resolveIcon } from '../utils/icon-map'
 
 export default {
   name: 'App',
@@ -422,6 +425,12 @@ export default {
       moduleSlug: readonly(activeModuleSlugRef)
     })
 
+    const rawPlatformTabs = loadPlatformAboutTabs()
+    const platformAboutTabs = rawPlatformTabs.map(tab => ({
+      ...tab,
+      icon: resolveIcon(tab.iconName)
+    }))
+
     function handleStopImpersonating() {
       stopImpersonating({ refreshAuth, refreshPermissions })
     }
@@ -465,6 +474,7 @@ export default {
       routeParams,
       themeMode,
       cycleTheme,
+      platformAboutTabs,
       appMessages,
       fetchMessages,
       dismissMessage
