@@ -5,7 +5,7 @@
       <div>
         <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Conforma Insights</h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Policy exceptions approved for each RHOAI release, sourced from Enterprise Contract Policy YAMLs.
+          Policy exceptions approved for each release, sourced from Enterprise Contract Policy YAMLs.
         </p>
       </div>
       <div class="flex flex-col items-end gap-2">
@@ -94,7 +94,7 @@
       </div>
 
       <!-- Summary cards -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         <div
           v-for="card in summaryCards"
           :key="card.label"
@@ -137,7 +137,7 @@
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <p class="text-xs text-center text-gray-500 dark:text-gray-400 mb-2">FBC vs Components</p>
+              <p class="text-xs text-center text-gray-500 dark:text-gray-400 mb-2">By Policy File</p>
               <div style="height: 180px; position: relative;">
                 <Doughnut :key="`policy-donut-${chartKey}`" :data="policyFileDonutData" :options="donutOptions" />
               </div>
@@ -240,7 +240,7 @@
                   </div>
                   <div class="flex items-center justify-between pl-0.5">
                     <span class="text-gray-400">
-                      {{ ex.policyFile === 'fbc' ? 'FBC' : 'Components' }}
+                      {{ policyLabel(ex.policyFile) }}
                       &middot; Expires {{ new Date(ex.effectiveUntil).toISOString().slice(0, 10) }}
                       <span
                         :class="ex.daysAfterGa <= 0 ? 'text-red-400' : 'text-amber-400'"
@@ -340,8 +340,7 @@
               class="text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All Policies</option>
-              <option value="fbc">FBC</option>
-              <option value="registry">Components</option>
+              <option v-for="pf in activePolicyFiles" :key="pf" :value="pf">{{ policyLabel(pf) }}</option>
             </select>
 
             <!-- Type filter -->
@@ -451,8 +450,8 @@
                 <td class="px-4 py-3 whitespace-nowrap">
                   <span
                     class="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase"
-                    :class="ex.policyFile === 'fbc' ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' : 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'"
-                  >{{ ex.policyFile === 'fbc' ? 'FBC' : 'Components' }}</span>
+                    :class="policyBadgeCls(ex.policyFile)"
+                  >{{ policyLabel(ex.policyFile) }}</span>
                 </td>
                 <!-- Type -->
                 <td class="px-4 py-3 whitespace-nowrap">
@@ -668,7 +667,6 @@ import {
   Filler
 } from 'chart.js'
 
-import { useConformaExceptions } from '../composables/useConformaExceptions'
 import { extractProduct, extractVersion, normalizeVersionKey } from '../composables/release-utils'
 import ConformaHelpText from '../components/ConformaHelpText.vue'
 import ConformaAiCategoryChart from '../components/ConformaAiCategoryChart.vue'
@@ -676,7 +674,7 @@ import {
   KNOWN_CATEGORIES, CATEGORY_BADGE, CATEGORY_DOCS,
   AI_CATEGORIES, PERMANENT_TARGET, targetReleaseBadgeCls, targetReleaseLabel,
   normalizeTargetRelease, EXTENSION_JIRA_TEMPLATE_URL, ACTIONABLE_DAYS_THRESHOLD,
-  extractCategory
+  extractCategory, policyLabel, policyColor, sortPolicyFiles
 } from '../constants/conforma'
 
 ChartJS.register(
@@ -709,7 +707,7 @@ const TABLE_COLUMNS = [
 const filter = inject('releaseFilter')
 const moduleNav = inject('moduleNav', null)
 
-const state = useConformaExceptions()
+const state = inject('conformaState')
 const chartKey = ref(0)
 const todayStr = new Date().toLocaleDateString('sv-SE') // YYYY-MM-DD in local time
 
@@ -813,8 +811,8 @@ const flatExceptions = computed(() => {
   const aiMap = aiCategoryMap.value
   const result = []
 
-  for (const policyFile of ['fbc', 'registry']) {
-    const exc = r.exceptions?.[policyFile]
+  for (const policyFile of Object.keys(r.exceptions || {})) {
+    const exc = r.exceptions[policyFile]
     if (!exc) continue
 
     for (const v of exc.configExcludes || []) {
@@ -1032,38 +1030,43 @@ const filteredSortedExceptions = computed(() => {
 
 // ─── Summary cards ──────────────────────────────────────────────────────────
 
+const activePolicyFiles = computed(() => {
+  if (!selectedRelease.value) return []
+  return sortPolicyFiles(Object.keys(selectedRelease.value.exceptions || {}))
+})
+
+const SUMMARY_CARD_STYLES = [
+  { cls: 'border-blue-200 dark:border-blue-700/50 bg-blue-50/60 dark:bg-blue-900/20', labelCls: 'text-blue-600 dark:text-blue-400', valueCls: 'text-blue-700 dark:text-blue-300' },
+  { cls: 'border-emerald-200 dark:border-emerald-700/50 bg-emerald-50/60 dark:bg-emerald-900/20', labelCls: 'text-emerald-600 dark:text-emerald-400', valueCls: 'text-emerald-700 dark:text-emerald-300' },
+  { cls: 'border-violet-200 dark:border-violet-700/50 bg-violet-50/60 dark:bg-violet-900/20', labelCls: 'text-violet-600 dark:text-violet-400', valueCls: 'text-violet-700 dark:text-violet-300' },
+  { cls: 'border-pink-200 dark:border-pink-700/50 bg-pink-50/60 dark:bg-pink-900/20', labelCls: 'text-pink-600 dark:text-pink-400', valueCls: 'text-pink-700 dark:text-pink-300' }
+]
+
 const summaryCards = computed(() => {
   const all = displayExceptions.value
-  const fbc = all.filter(e => e.policyFile === 'fbc').length
-  const registry = all.filter(e => e.policyFile === 'registry').length
   const volatile = all.filter(e => e.type === 'volatile').length
-  return [
+  const cards = [
     {
       label: 'Total Exceptions', value: all.length,
       cls: 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60',
       labelCls: 'text-gray-500 dark:text-gray-400',
       valueCls: 'text-gray-900 dark:text-gray-100'
-    },
-    {
-      label: 'FBC Policy', value: fbc,
-      cls: 'border-blue-200 dark:border-blue-700/50 bg-blue-50/60 dark:bg-blue-900/20',
-      labelCls: 'text-blue-600 dark:text-blue-400',
-      valueCls: 'text-blue-700 dark:text-blue-300'
-    },
-    {
-      label: 'Components Policy', value: registry,
-      cls: 'border-emerald-200 dark:border-emerald-700/50 bg-emerald-50/60 dark:bg-emerald-900/20',
-      labelCls: 'text-emerald-600 dark:text-emerald-400',
-      valueCls: 'text-emerald-700 dark:text-emerald-300'
-    },
-    {
-      label: 'Volatile (Time-bound)', value: volatile,
-      sub: `${all.length - volatile} permanent`,
-      cls: 'border-amber-200 dark:border-amber-700/50 bg-amber-50/60 dark:bg-amber-900/20',
-      labelCls: 'text-amber-600 dark:text-amber-400',
-      valueCls: 'text-amber-700 dark:text-amber-300'
     }
   ]
+  for (let i = 0; i < activePolicyFiles.value.length; i++) {
+    const pf = activePolicyFiles.value[i]
+    const count = all.filter(e => e.policyFile === pf).length
+    const style = SUMMARY_CARD_STYLES[i % SUMMARY_CARD_STYLES.length]
+    cards.push({ label: `${policyLabel(pf)} Policy`, value: count, ...style })
+  }
+  cards.push({
+    label: 'Volatile (Time-bound)', value: volatile,
+    sub: `${all.length - volatile} permanent`,
+    cls: 'border-amber-200 dark:border-amber-700/50 bg-amber-50/60 dark:bg-amber-900/20',
+    labelCls: 'text-amber-600 dark:text-amber-400',
+    valueCls: 'text-amber-700 dark:text-amber-300'
+  })
+  return cards
 })
 
 // ─── Category horizontal bar chart ──────────────────────────────────────────
@@ -1071,39 +1074,35 @@ const summaryCards = computed(() => {
 const categoryChartData = computed(() => {
   const all = displayExceptions.value
   if (!all.length) return null
+  const pfs = activePolicyFiles.value
 
-  const fbcCounts = {}
-  const regCounts = {}
-  for (const cat of KNOWN_CATEGORIES) { fbcCounts[cat] = 0; regCounts[cat] = 0 }
-
+  const countsByPf = {}
+  for (const pf of pfs) {
+    countsByPf[pf] = {}
+    for (const cat of KNOWN_CATEGORIES) countsByPf[pf][cat] = 0
+  }
   for (const e of all) {
     const cat = KNOWN_CATEGORIES.includes(e.category) ? e.category : 'other'
-    if (e.policyFile === 'fbc') fbcCounts[cat]++
-    else regCounts[cat]++
+    if (countsByPf[e.policyFile]) countsByPf[e.policyFile][cat]++
   }
 
-  const chartCategories = KNOWN_CATEGORIES.filter(c => (fbcCounts[c] || 0) + (regCounts[c] || 0) > 0)
+  const chartCategories = KNOWN_CATEGORIES.filter(c =>
+    pfs.some(pf => (countsByPf[pf]?.[c] || 0) > 0)
+  )
 
   return {
     labels: chartCategories,
-    datasets: [
-      {
-        label: 'FBC',
-        data: chartCategories.map(c => fbcCounts[c]),
-        backgroundColor: 'rgba(59,130,246,0.75)',
-        borderColor: 'rgb(59,130,246)',
-        borderWidth: 1,
-        borderRadius: 3
-      },
-      {
-        label: 'Components',
-        data: chartCategories.map(c => regCounts[c]),
-        backgroundColor: 'rgba(16,185,129,0.75)',
-        borderColor: 'rgb(16,185,129)',
+    datasets: pfs.map(pf => {
+      const color = policyColor(pf, pfs)
+      return {
+        label: policyLabel(pf),
+        data: chartCategories.map(c => countsByPf[pf]?.[c] || 0),
+        backgroundColor: color.bg,
+        borderColor: color.border,
         borderWidth: 1,
         borderRadius: 3
       }
-    ]
+    })
   }
 })
 
@@ -1184,14 +1183,15 @@ const donutOptions = {
 
 const policyFileDonutData = computed(() => {
   const all = displayExceptions.value
-  const fbc = all.filter(e => e.policyFile === 'fbc').length
-  const reg = all.filter(e => e.policyFile === 'registry').length
+  const pfs = activePolicyFiles.value
+  const counts = pfs.map(pf => all.filter(e => e.policyFile === pf).length)
+  const colors = pfs.map(pf => policyColor(pf, pfs))
   return {
-    labels: ['FBC', 'Components'],
+    labels: pfs.map(pf => policyLabel(pf)),
     datasets: [{
-      data: [fbc, reg],
-      backgroundColor: ['rgba(59,130,246,0.8)', 'rgba(16,185,129,0.8)'],
-      borderColor: ['rgb(59,130,246)', 'rgb(16,185,129)'],
+      data: counts,
+      backgroundColor: colors.map(c => c.bg.replace('0.75', '0.8')),
+      borderColor: colors.map(c => c.border),
       borderWidth: 2
     }]
   }
@@ -1215,62 +1215,60 @@ const typeDonutData = computed(() => {
 // ─── Trend line chart ────────────────────────────────────────────────────────
 
 const trendChartData = computed(() => {
-  const sorted = [...allReleasesRaw.value].sort((a, b) => a.gaDate.localeCompare(b.gaDate))
+  const prods = filter.selectedProducts
+  const sorted = [...allReleasesRaw.value]
+    .filter(r => !prods.size || prods.has(extractProduct(r.version)))
+    .sort((a, b) => a.gaDate.localeCompare(b.gaDate))
   if (sorted.length < 2) return null
 
-  const labels = sorted.map(r => r.version.replace('rhoai-', ''))
-  function countFor(r, filter) {
+  const labels = sorted.map(r => extractVersion(r.version))
+  function countFor(r, filterFn) {
     let all = []
-    for (const pf of ['fbc', 'registry']) {
-      const exc = r.exceptions?.[pf]
+    for (const pf of Object.keys(r.exceptions || {})) {
+      const exc = r.exceptions[pf]
       if (!exc) continue
       for (const v of exc.configExcludes || []) all.push({ type: 'permanent', policyFile: pf, value: v, category: extractCategory(v), team: null })
       for (const ex of exc.volatileExcludes || []) all.push({ type: 'volatile', policyFile: pf, value: ex.value, category: extractCategory(ex.value), team: ex.team || null })
     }
     if (tableFilterTeam.value) all = all.filter(e => e.team === tableFilterTeam.value)
-    return filter ? all.filter(filter).length : all.length
+    return filterFn ? all.filter(filterFn).length : all.length
   }
 
-  return {
-    labels,
-    datasets: [
-      {
-        label: 'Total',
-        data: sorted.map(r => countFor(r)),
-        borderColor: 'rgb(139,92,246)',
-        backgroundColor: 'rgba(139,92,246,0.1)',
-        tension: 0.3, fill: false, pointRadius: 4
-      },
-      {
-        label: 'FIPS',
-        data: sorted.map(r => countFor(r, e => e.category === 'fips')),
-        borderColor: 'rgb(6,182,212)',
-        backgroundColor: 'transparent',
-        tension: 0.3, fill: false, pointRadius: 3, borderDash: [3, 2]
-      },
-      {
-        label: 'FBC',
-        data: sorted.map(r => countFor(r, e => e.policyFile === 'fbc')),
-        borderColor: 'rgb(59,130,246)',
-        backgroundColor: 'transparent',
-        tension: 0.3, fill: false, pointRadius: 3
-      },
-      {
-        label: 'Components',
-        data: sorted.map(r => countFor(r, e => e.policyFile === 'registry')),
-        borderColor: 'rgb(16,185,129)',
-        backgroundColor: 'transparent',
-        tension: 0.3, fill: false, pointRadius: 3
-      },
-      {
-        label: 'Volatile',
-        data: sorted.map(r => countFor(r, e => e.type === 'volatile')),
-        borderColor: 'rgb(245,158,11)',
-        backgroundColor: 'transparent',
-        tension: 0.3, fill: false, pointRadius: 3, borderDash: [4, 3]
-      }
-    ]
+  const trendPfs = sortPolicyFiles([...new Set(sorted.flatMap(r => Object.keys(r.exceptions || {})))])
+  const datasets = [
+    {
+      label: 'Total',
+      data: sorted.map(r => countFor(r)),
+      borderColor: 'rgb(139,92,246)',
+      backgroundColor: 'rgba(139,92,246,0.1)',
+      tension: 0.3, fill: false, pointRadius: 4
+    },
+    {
+      label: 'FIPS',
+      data: sorted.map(r => countFor(r, e => e.category === 'fips')),
+      borderColor: 'rgb(6,182,212)',
+      backgroundColor: 'transparent',
+      tension: 0.3, fill: false, pointRadius: 3, borderDash: [3, 2]
+    }
+  ]
+  for (const pf of trendPfs) {
+    const color = policyColor(pf, trendPfs)
+    datasets.push({
+      label: policyLabel(pf),
+      data: sorted.map(r => countFor(r, e => e.policyFile === pf)),
+      borderColor: color.border,
+      backgroundColor: 'transparent',
+      tension: 0.3, fill: false, pointRadius: 3
+    })
   }
+  datasets.push({
+    label: 'Volatile',
+    data: sorted.map(r => countFor(r, e => e.type === 'volatile')),
+    borderColor: 'rgb(245,158,11)',
+    backgroundColor: 'transparent',
+    tension: 0.3, fill: false, pointRadius: 3, borderDash: [4, 3]
+  })
+  return { labels, datasets }
 })
 
 const trendChartOptions = {
@@ -1472,5 +1470,9 @@ function daysAfterGaCls(days) {
 
 function categoryBadgeCls(cat) {
   return CATEGORY_BADGE[cat] || CATEGORY_BADGE.other
+}
+
+function policyBadgeCls(pf) {
+  return policyColor(pf, activePolicyFiles.value).badgeCls
 }
 </script>

@@ -1,3 +1,5 @@
+import { extractProduct, extractVersion } from '../composables/release-utils'
+
 // FIPS is first because it is matched by keyword, not by value prefix.
 export const KNOWN_CATEGORIES = [
   'fips', 'hermetic_task', 'test', 'tasks', 'schedule',
@@ -82,6 +84,45 @@ export const AI_CATEGORIES = {
 
 export const PERMANENT_TARGET = 'permanent'
 
+// ─── Policy file display helpers ────────────────────────────────────────────
+
+const POLICY_LABELS = {
+  fbc: 'FBC',
+  registry: 'Components',
+}
+
+const POLICY_COLORS = [
+  { bg: 'rgba(59,130,246,0.75)', border: 'rgb(59,130,246)', badgeCls: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' },
+  { bg: 'rgba(16,185,129,0.75)', border: 'rgb(16,185,129)', badgeCls: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300' },
+  { bg: 'rgba(245,158,11,0.75)', border: 'rgb(245,158,11)', badgeCls: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300' },
+  { bg: 'rgba(139,92,246,0.75)', border: 'rgb(139,92,246)', badgeCls: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300' },
+  { bg: 'rgba(236,72,153,0.75)', border: 'rgb(236,72,153)', badgeCls: 'bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300' },
+  { bg: 'rgba(100,116,139,0.75)', border: 'rgb(100,116,139)', badgeCls: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300' }
+]
+
+export function policyLabel(key) {
+  return POLICY_LABELS[key] || key.split(/[-_]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+}
+
+export function policyColor(key, orderedKeys) {
+  const idx = orderedKeys.indexOf(key)
+  return POLICY_COLORS[(idx >= 0 ? idx : 0) % POLICY_COLORS.length]
+}
+
+export function sortPolicyFiles(keys) {
+  const order = ['fbc', 'registry']
+  return [...keys].sort((a, b) => {
+    const ai = order.indexOf(a)
+    const bi = order.indexOf(b)
+    if (ai >= 0 && bi >= 0) return ai - bi
+    if (ai >= 0) return -1
+    if (bi >= 0) return 1
+    return a.localeCompare(b)
+  })
+}
+
+// ─── Target release helpers ──────────────────────────────────────────────────
+
 export function targetReleaseBadgeCls(target) {
   if (!target) return ''
   if (target === PERMANENT_TARGET) return 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
@@ -92,7 +133,7 @@ export function targetReleaseBadgeCls(target) {
 export function targetReleaseLabel(target) {
   if (!target) return ''
   if (target === PERMANENT_TARGET) return 'Permanent'
-  return target.replace('rhoai-', '')
+  return extractVersion(target) || target
 }
 
 export function normalizeTargetRelease(raw) {
@@ -100,10 +141,11 @@ export function normalizeTargetRelease(raw) {
   const trimmed = raw.trim()
   if (!trimmed) return null
   if (trimmed.toLowerCase().includes('permanent')) return PERMANENT_TARGET
-  let v = trimmed.replace(/^rhoai-/i, '').replace(/^v/i, '')
+  const product = extractProduct(trimmed)
+  let v = product ? extractVersion(trimmed) : trimmed.replace(/^v/i, '')
   v = v.replace(/[\s.-]+[Ee][Aa][\s.-]*(\d+)/, '.EA$1')
   v = v.replace(/^[\s.-]+|[\s.-]+$/g, '')
-  return `rhoai-${v}`
+  return product ? `${product}-${v}` : v
 }
 
 export function extractCategory(value) {

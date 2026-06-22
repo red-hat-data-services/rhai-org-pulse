@@ -1,13 +1,19 @@
+export const KNOWN_PRODUCTS = ['base-images', 'rhel-ai', 'rhoai', 'rhaii']
+
 export function extractProduct(releaseNumber) {
   const s = (releaseNumber || '').toLowerCase()
-  const dash = s.indexOf('-')
-  return dash > 0 ? s.slice(0, dash) : s
+  for (const p of KNOWN_PRODUCTS) {
+    if (s.startsWith(p + '-') && /\d/.test(s[p.length + 1])) return p
+  }
+  const m = s.match(/^(.+?)-(\d.*)$/)
+  return m ? m[1] : ''
 }
 
 export function extractVersion(releaseNumber) {
   const s = releaseNumber || ''
-  const dash = s.indexOf('-')
-  return dash > 0 ? s.slice(dash + 1) : s
+  const product = extractProduct(s)
+  if (product) return s.slice(product.length + 1)
+  return s
 }
 
 export function normalizeVersionKey(version) {

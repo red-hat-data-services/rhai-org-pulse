@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { Bar } from 'vue-chartjs'
-import { AI_CATEGORIES, PERMANENT_TARGET, targetReleaseLabel, normalizeTargetRelease } from '../constants/conforma'
+import { AI_CATEGORIES, PERMANENT_TARGET, targetReleaseLabel, normalizeTargetRelease, policyLabel, policyColor, sortPolicyFiles } from '../constants/conforma'
 import ConformaHelpText from './ConformaHelpText.vue'
 
 const props = defineProps({
@@ -10,61 +10,55 @@ const props = defineProps({
   chartKey: { type: Number, default: 0 }
 })
 
+const activePfs = computed(() =>
+  sortPolicyFiles([...new Set(props.exceptions.map(e => e.policyFile).filter(Boolean))])
+)
+
 const categorized = computed(() => {
+  const pfs = activePfs.value
   const cats = {}
   for (const [key, info] of Object.entries(AI_CATEGORIES)) {
-    cats[key] = { ...info, fbc: 0, registry: 0 }
+    const entry = { ...info, total: 0 }
+    for (const pf of pfs) entry[pf] = 0
+    cats[key] = entry
   }
   for (const ex of props.exceptions) {
     if (ex.aiCategory && cats[ex.aiCategory]) {
-      if (ex.policyFile === 'fbc') cats[ex.aiCategory].fbc++
-      else cats[ex.aiCategory].registry++
+      if (ex.policyFile && cats[ex.aiCategory][ex.policyFile] !== undefined) {
+        cats[ex.aiCategory][ex.policyFile]++
+      }
+      cats[ex.aiCategory].total++
     }
   }
   return cats
 })
 
-const resolvedCount = computed(() => {
-  const c = categorized.value.resolved
-  return c ? c.fbc + c.registry : 0
-})
+const resolvedCount = computed(() => categorized.value.resolved?.total || 0)
 
-const componentUpdateCount = computed(() => {
-  const c = categorized.value.component_update
-  return c ? c.fbc + c.registry : 0
-})
+const componentUpdateCount = computed(() => categorized.value.component_update?.total || 0)
 
 const policyMappedCount = computed(() =>
   props.exceptions.filter(e => e.policyMapped === true).length
 )
 
-const permanentCount = computed(() => {
-  const c = categorized.value.partner_permanent
-  return c ? c.fbc + c.registry : 0
-})
+const permanentCount = computed(() => categorized.value.partner_permanent?.total || 0)
 
 const categoryChartData = computed(() => {
   const entries = Object.entries(AI_CATEGORIES)
+  const pfs = activePfs.value
   return {
     labels: entries.map(([, info]) => info.label),
-    datasets: [
-      {
-        label: 'FBC',
-        data: entries.map(([key]) => categorized.value[key]?.fbc || 0),
-        backgroundColor: 'rgba(59,130,246,0.75)',
-        borderColor: 'rgb(59,130,246)',
-        borderWidth: 1,
-        borderRadius: 3
-      },
-      {
-        label: 'Components',
-        data: entries.map(([key]) => categorized.value[key]?.registry || 0),
-        backgroundColor: 'rgba(16,185,129,0.75)',
-        borderColor: 'rgb(16,185,129)',
+    datasets: pfs.map(pf => {
+      const color = policyColor(pf, pfs)
+      return {
+        label: policyLabel(pf),
+        data: entries.map(([key]) => categorized.value[key]?.[pf] || 0),
+        backgroundColor: color.bg,
+        borderColor: color.border,
         borderWidth: 1,
         borderRadius: 3
       }
-    ]
+    })
   }
 })
 

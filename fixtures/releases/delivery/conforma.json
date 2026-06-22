@@ -1,7 +1,7 @@
 {
   "fetchedAt": "2026-05-10T06:00:00.000Z",
   "minDate": "2025-05-22",
-  "count": 4,
+  "count": 7,
   "releases": [
     {
       "version": "rhoai-3.4",
@@ -449,6 +449,87 @@
               "comment": "nodejs-18 deprecated image exception for 2.25 z-stream."
             }
           ]
+        }
+      }
+    },
+    {
+      "version": "rhel-ai-3.4",
+      "gaDate": "2026-06-20",
+      "codeFreezeDate": "2026-06-10",
+      "exceptions": {
+        "registry": {
+          "configExcludes": [
+            "cve.cve_blockers",
+            "hermetic_task",
+            "labels.disallowed_inherited_labels",
+            "buildah_build_task.add_capabilities_param",
+            "buildah_build_task.build_task_uses_buildah",
+            "schedule.weekday_restriction"
+          ],
+          "volatileExcludes": [
+            {
+              "value": "rpm_packages.unique_version:ibm-spyre-models",
+              "effectiveUntil": "2026-09-30T00:00:00Z",
+              "references": ["https://issues.redhat.com/browse/RHELAI-1234"],
+              "imageUrl": null,
+              "team": "RHEL AI Platform",
+              "comment": "IBM Spyre model packages require specific version pinning."
+            },
+            {
+              "value": "hermetic_task.hermetic",
+              "effectiveUntil": "2026-08-15T00:00:00Z",
+              "references": ["https://issues.redhat.com/browse/RHELAI-1001"],
+              "imageUrl": "quay.io/rhelai/instructlab-rhel9",
+              "team": "InstructLab",
+              "comment": "InstructLab container has network dependencies during model download."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "version": "rhaii-3.4",
+      "gaDate": "2026-05-30",
+      "codeFreezeDate": "2026-05-20",
+      "exceptions": {
+        "registry": {
+          "configExcludes": [
+            "cve.cve_blockers",
+            "test.test_data_found",
+            "hermetic_task",
+            "buildah_build_task.add_capabilities_param",
+            "schedule.weekday_restriction"
+          ],
+          "volatileExcludes": [
+            {
+              "value": "hermetic_task.hermetic",
+              "effectiveUntil": "2026-07-31T00:00:00Z",
+              "references": ["https://issues.redhat.com/browse/RHAIIS-500"],
+              "imageUrl": "quay.io/rhaii/inference-server-rhel9",
+              "team": "Inference",
+              "comment": "Inference server has network build dependencies for model weights."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "version": "base-images-3.4",
+      "gaDate": "2026-06-01",
+      "codeFreezeDate": "2026-05-22",
+      "exceptions": {
+        "registry": {
+          "configExcludes": [
+            "cve.cve_blockers",
+            "test.test_data_found",
+            "hermetic_task",
+            "buildah_build_task.add_capabilities_param",
+            "schedule.weekday_restriction",
+            "rpm_packages.unique_version:ibm-spyre-firmware",
+            "rpm_packages.unique_version:ibm-spyre-models",
+            "rpm_packages.unique_version:ibm-spyre-runtime"
+          ],
+          "volatileExcludes": []
         }
       }
     }

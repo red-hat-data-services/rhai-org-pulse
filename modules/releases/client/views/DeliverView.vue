@@ -35,6 +35,7 @@
 import { ref, computed, provide, inject, watch, defineAsyncComponent } from 'vue'
 import { useReleaseAnalysis } from '../deliver/composables/useReleaseAnalysis.js'
 import { useReleaseFilter } from '../deliver/composables/useReleaseFilter.js'
+import { useConformaExceptions } from '../deliver/composables/useConformaExceptions.js'
 import ReleaseChipBar from '../deliver/components/ReleaseChipBar.vue'
 
 const RiskDashboard = defineAsyncComponent(() => import('../deliver/views/MainView.vue'))
@@ -42,13 +43,22 @@ const ConformaInsights = defineAsyncComponent(() => import('../deliver/views/Con
 const PostReleaseDefects = defineAsyncComponent(() => import('../deliver/views/PostReleaseDefectsView.vue'))
 
 const { loading, refreshing, error, analysis, refreshAnalysis } = useReleaseAnalysis()
+const conformaState = useConformaExceptions()
 
-const allReleases = computed(() => analysis.value?.releases || [])
+const allReleases = computed(() => {
+  const analysisReleases = analysis.value?.releases || []
+  const seen = new Set(analysisReleases.map(r => r.releaseNumber))
+  const conformaExtras = (conformaState.releases || [])
+    .filter(r => r.version && !seen.has(r.version))
+    .map(r => ({ releaseNumber: r.version }))
+  return [...analysisReleases, ...conformaExtras]
+})
 
 const filter = useReleaseFilter(allReleases)
 
 provide('releaseFilter', filter)
 provide('analysisState', { loading, refreshing, error, analysis, refreshAnalysis })
+provide('conformaState', conformaState)
 
 const tabs = [
   { id: 'risk-dashboard', label: 'Risk Dashboard' },

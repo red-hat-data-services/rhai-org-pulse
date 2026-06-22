@@ -128,6 +128,7 @@ import VersionSelector from '../quality-components/VersionSelector.vue';
 import ComponentFilter from '../quality-components/ComponentFilter.vue';
 import CumulativeBugChart from '../quality-components/CumulativeBugChart.vue';
 import { getVersions, getBugData, getComponents, refreshData } from '../quality-services/api';
+import { extractProduct } from '../composables/release-utils';
 
 const { isAdmin } = useAuth();
 
@@ -141,14 +142,11 @@ const loading = ref(true);
 const refreshing = ref(false);
 const error = ref(null);
 
-// Extract unique products from version names (rhoai-3.4 → rhoai)
 const products = computed(() => {
   const productSet = new Set();
   for (const v of versions.value) {
-    const match = v.name.match(/^(rhoai|rhelai|rhaiis|rhaii)/i);
-    if (match) {
-      productSet.add(match[1].toLowerCase());
-    }
+    const p = extractProduct(v.name);
+    if (p) productSet.add(p);
   }
   return Array.from(productSet).sort();
 });
