@@ -126,8 +126,8 @@ test.describe('Catalyst Showcase Catalog @catalyst-showcase', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const firstCard = page.locator('main .grid .rounded-xl').first();
-    await firstCard.click();
+    const firstCardTitle = page.locator('main .grid h3').first();
+    await firstCardTitle.click();
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
     expect(page.url()).toMatch(/catalyst-showcase\/detail\?slug=/);
