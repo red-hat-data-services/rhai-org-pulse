@@ -60,4 +60,79 @@ describe('org-lens routes', () => {
       expect(Array.isArray(res.body.datasets)).toBe(true);
     });
   });
+
+  describe('POST /datasets/:scopeId', () => {
+    const validSummaries = {
+      metadata: { scope: 'test_upload', generated: '2026-06-21' },
+      people_summaries: [
+        { name: 'Alice Test', uid: 'atest', title: 'Engineer', technologies: ['Go'], products: [] },
+        { name: 'Bob Test', uid: 'btest', title: 'SRE', technologies: ['Python'], products: [] },
+      ],
+    };
+
+    it('accepts valid upload with people_summaries', async () => {
+      const res = await request(app)
+        .post('/api/modules/org-lens/datasets/test_upload')
+        .send({ people_summaries: validSummaries })
+        .expect(200);
+
+      expect(res.body.status).toBe('ok');
+      expect(res.body.scopeId).toBe('test_upload');
+      expect(res.body.headcount).toBe(2);
+    });
+
+    it('returns 400 when people_summaries is missing', async () => {
+      const res = await request(app)
+        .post('/api/modules/org-lens/datasets/bad_payload')
+        .send({ projects: {} })
+        .expect(400);
+
+      expect(res.body.error).toContain('people_summaries');
+    });
+
+    it('returns 400 for invalid scopeId with path traversal', async () => {
+      await request(app)
+        .post('/api/modules/org-lens/datasets/..%2Fetc')
+        .send({ people_summaries: validSummaries })
+        .expect(400);
+    });
+
+    it('returns 400 for scopeId with special characters', async () => {
+      await request(app)
+        .post('/api/modules/org-lens/datasets/scope%20with%20spaces')
+        .send({ people_summaries: validSummaries })
+        .expect(400);
+    });
+
+    it('accepts upload with all three fields', async () => {
+      const categories = { categories: [{ name: 'Platform', people: ['atest'] }] };
+      const projects = { projects: [{ key: 'TST', name: 'Test Project' }] };
+
+      const res = await request(app)
+        .post('/api/modules/org-lens/datasets/full_upload')
+        .send({
+          people_summaries: validSummaries,
+          people_categories: categories,
+          projects: projects,
+        })
+        .expect(200);
+
+      expect(res.body.status).toBe('ok');
+      expect(res.body.headcount).toBe(2);
+    });
+
+    it('makes uploaded dataset visible in GET /datasets', async () => {
+      await request(app)
+        .post('/api/modules/org-lens/datasets/visible_test')
+        .send({ people_summaries: validSummaries })
+        .expect(200);
+
+      const res = await request(app)
+        .get('/api/modules/org-lens/datasets')
+        .expect(200);
+
+      const names = res.body.datasets.map(d => d.name);
+      expect(names).toContain('visible_test');
+    });
+  });
 });

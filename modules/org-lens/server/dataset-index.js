@@ -106,6 +106,8 @@ class DatasetIndex {
       const name = prod.name || '';
       if (name) this.productByName[name.toLowerCase()] = prod;
     }
+
+    this.orgRoots = this.people.filter(p => !p.manager || !this.byUid[p.manager]);
   }
 
   search(query, limit = 10) {
@@ -272,9 +274,11 @@ class DatasetIndex {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
       .map(([name, count]) => ({ name, count }));
-    const topManagers = this.people
-      .filter(p => !p.manager)
-      .map(p => ({ name: p.name, uid: p.uid, title: p.title }));
+    const topManagers = this.orgRoots
+      .map(p => ({
+        name: p.name, uid: p.uid, title: p.title,
+        directReportCount: (this.byManager[p.uid] || []).length,
+      }));
     const managers = this.people
       .filter(p => (this.byManager[p.uid] || []).length > 0)
       .map(p => ({ name: p.name, uid: p.uid, title: p.title, directReportCount: this.byManager[p.uid].length }))

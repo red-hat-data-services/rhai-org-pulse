@@ -1,6 +1,7 @@
 'use strict';
 
 const { loadAllDatasets, resolveDataset } = require('./dataset-loader');
+const { DatasetIndex } = require('./dataset-index');
 const { createGeminiClient, buildSystemPrompt, processChat } = require('./gemini');
 const { getToolDeclarations, executeToolCall } = require('./tool-definitions');
 
@@ -117,7 +118,7 @@ module.exports = function registerRoutes(router, context) {
       };
     });
 
-    const systemPrompt = buildSystemPrompt(index.name, index.people.length);
+    const systemPrompt = buildSystemPrompt(index);
 
     processChat(model, message, geminiHistory, getToolDeclarations(), {
       onChunk: function(text) {
@@ -158,6 +159,71 @@ module.exports = function registerRoutes(router, context) {
       };
     });
     res.json({ datasets: datasetList });
+  });
+
+  /**
+   * @openapi
+   * /api/modules/org-lens/datasets/{scopeId}:
+   *   post:
+   *     tags: [Org Lens]
+   *     summary: Upload dataset from pipeline
+   *     parameters:
+   *       - in: path
+   *         name: scopeId
+   *         required: true
+   *         schema:
+   *           type: string
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [people_summaries]
+   *             properties:
+   *               people_summaries:
+   *                 type: object
+   *               people_categories:
+   *                 type: object
+   *               projects:
+   *                 type: object
+   *     responses:
+   *       200:
+   *         description: Dataset uploaded and loaded
+   *       400:
+   *         description: Invalid request
+   */
+  router.post('/datasets/:scopeId', function(req, res) {
+    var scopeId = req.params.scopeId;
+
+    if (!/^[a-zA-Z0-9_-]+$/.test(scopeId)) {
+      return res.status(400).json({ error: 'Invalid scopeId format' });
+    }
+
+    var body = req.body || {};
+    var summaries = body.people_summaries;
+    var categories = body.people_categories || null;
+    var projects = body.projects || null;
+
+    if (!summaries || typeof summaries !== 'object') {
+      return res.status(400).json({ error: 'people_summaries is required' });
+    }
+
+    storage.writeToStorage('org-lens/' + scopeId + '/people_summaries_' + scopeId + '.json', summaries);
+    if (categories) {
+      storage.writeToStorage('org-lens/' + scopeId + '/people_categories_' + scopeId + '.json', categories);
+    }
+    if (projects) {
+      storage.writeToStorage('org-lens/' + scopeId + '/projects_' + scopeId + '.json', projects);
+    }
+
+    datasets[scopeId] = new DatasetIndex(scopeId, summaries, categories, projects);
+
+    res.json({
+      status: 'ok',
+      scopeId: scopeId,
+      headcount: datasets[scopeId].people.length,
+    });
   });
 
   if (context.registerDiagnostics) {

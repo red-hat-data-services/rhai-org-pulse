@@ -167,6 +167,27 @@ describe('DatasetIndex', () => {
     });
   });
 
+  describe('orgRoots', () => {
+    it('identifies org roots (people with no manager)', () => {
+      expect(index.orgRoots.length).toBe(1);
+      expect(index.orgRoots[0].uid).toBe('mrodr');
+    });
+
+    it('identifies org roots when manager points outside dataset', () => {
+      const scopedData = {
+        metadata: {},
+        people_summaries: [
+          { uid: 'root', name: 'Root Manager', title: 'Director', manager: 'outside_uid' },
+          { uid: 'child1', name: 'Child One', title: 'Engineer', manager: 'root' },
+          { uid: 'child2', name: 'Child Two', title: 'Engineer', manager: 'root' },
+        ],
+      };
+      const scoped = new DatasetIndex('manager_root', scopedData, null, null);
+      expect(scoped.orgRoots.length).toBe(1);
+      expect(scoped.orgRoots[0].uid).toBe('root');
+    });
+  });
+
   describe('getSiteOverview', () => {
     it('returns headcount and top items', () => {
       const overview = index.getSiteOverview();
@@ -174,6 +195,29 @@ describe('DatasetIndex', () => {
       expect(overview.topTechnologies.length).toBeGreaterThan(0);
       expect(overview.topProducts.length).toBeGreaterThan(0);
       expect(overview.categories.length).toBeGreaterThan(0);
+    });
+
+    it('returns org roots as topManagers with directReportCount', () => {
+      const overview = index.getSiteOverview();
+      expect(overview.topManagers.length).toBe(1);
+      expect(overview.topManagers[0].uid).toBe('mrodr');
+      expect(overview.topManagers[0].directReportCount).toBeGreaterThan(0);
+    });
+
+    it('returns topManagers for scoped datasets', () => {
+      const scopedData = {
+        metadata: {},
+        people_summaries: [
+          { uid: 'boss', name: 'The Boss', title: 'VP', manager: 'external_vp' },
+          { uid: 'emp1', name: 'Employee 1', title: 'Eng', manager: 'boss' },
+          { uid: 'emp2', name: 'Employee 2', title: 'Eng', manager: 'boss' },
+        ],
+      };
+      const scoped = new DatasetIndex('manager_boss', scopedData, null, null);
+      const overview = scoped.getSiteOverview();
+      expect(overview.topManagers.length).toBe(1);
+      expect(overview.topManagers[0].name).toBe('The Boss');
+      expect(overview.topManagers[0].directReportCount).toBe(2);
     });
   });
 

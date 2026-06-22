@@ -6,7 +6,7 @@ describe('tool-definitions', () => {
     it('returns an array of function declarations', () => {
       const tools = getToolDeclarations();
       expect(Array.isArray(tools)).toBe(true);
-      expect(tools.length).toBe(11);
+      expect(tools.length).toBe(12);
     });
 
     it('each tool has name, description, and parameters', () => {

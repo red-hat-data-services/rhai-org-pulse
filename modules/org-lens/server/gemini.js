@@ -13,12 +13,32 @@ function createGeminiClient(apiKey, modelName) {
   });
 }
 
-function buildSystemPrompt(siteName, headcount) {
+function buildSystemPrompt(index) {
+  const siteName = index.name;
+  const headcount = index.people.length;
+  const orgRoots = index.orgRoots || [];
+
+  const scopeParts = [];
+
+  const nameParts = siteName.split('_');
+  if (nameParts[0] === 'manager' && nameParts.length > 1) {
+    scopeParts.push('This dataset is scoped to the organization under manager UID "' + nameParts.slice(1).join('_') + '".');
+  }
+
+  if (orgRoots.length > 0) {
+    const rootDescriptions = orgRoots.map(function(p) {
+      return p.name + ' (' + (p.title || 'no title') + ', uid: ' + p.uid + ')';
+    });
+    scopeParts.push('Organization root(s): ' + rootDescriptions.join('; ') + '.');
+  }
+
+  const scopeContext = scopeParts.length > 0 ? '\n' + scopeParts.join('\n') + '\n' : '';
+
   return [
     'You are a helpful assistant for exploring an organization\'s people data.',
     'You have access to a dataset called "' + siteName + '" with ' + headcount + ' people.',
     'The dataset includes people profiles, skills, projects, org hierarchy, and work categories.',
-    '',
+    scopeContext,
     'TOOL SELECTION GUIDE:',
     '- "Who is X?" / "Tell me about X" → get_person (returns profile, manager, direct reports)',
     '- "Who knows X?" / "Find experts in X" → find_experts (ranked by relevance)',
