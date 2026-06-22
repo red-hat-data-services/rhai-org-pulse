@@ -5,8 +5,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
  * the org-teams routes on a mock router and invoking the GET /org-teams handler.
  */
 
-// Mock node-fetch (required by transitive imports)
-vi.mock('node-fetch', () => ({ default: vi.fn() }))
 
 const rosterSyncConfig = require('../../../../shared/server/roster-sync/config')
 

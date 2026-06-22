@@ -5,10 +5,7 @@
  * event counts per user. Queries each configured group in monthly
  * windows (the API has a 93-day max per query).
  *
- * Uses node-fetch (v2) for HTTP requests.
  */
-
-const fetch = require('node-fetch');
 
 const INSTANCE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes per instance
 
@@ -122,7 +119,7 @@ async function graphqlRequest(query, variables, { baseUrl, token }) {
       'Authorization': `Bearer ${token}`
     },
     body: JSON.stringify({ query, variables }),
-    timeout: 30000
+    signal: AbortSignal.timeout(30000)
   });
 
   if (!res.ok) {

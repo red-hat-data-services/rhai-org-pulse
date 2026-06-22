@@ -7,7 +7,7 @@
  * candidate is a User or an Organization, picking the correct one.
  */
 
-var _fetch = require('node-fetch');
+var _fetch = globalThis.fetch;
 
 var BATCH_DELAY_MS = 200;
 

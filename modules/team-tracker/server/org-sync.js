@@ -208,7 +208,6 @@ function extractBoardId(url) {
  * Returns a map of boardUrl -> boardName.
  */
 async function resolveBoardNames(teams, secrets) {
-  const fetch = require('node-fetch');
   const token = secrets.JIRA_TOKEN;
   const email = secrets.JIRA_EMAIL;
   if (!token || !email) {

@@ -15,7 +15,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  _setFetch(require('node-fetch'))
+  _setFetch(globalThis.fetch)
 })
 
 describe('validateGithubCandidates', () => {

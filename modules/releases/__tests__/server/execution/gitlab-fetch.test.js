@@ -51,7 +51,7 @@ describe('fetchArtifacts', () => {
 
     mockFetch.mockResolvedValue({
       ok: true,
-      buffer: () => Promise.resolve(zipBuf)
+      arrayBuffer: () => Promise.resolve(zipBuf.buffer.slice(zipBuf.byteOffset, zipBuf.byteOffset + zipBuf.byteLength))
     })
 
     const storage = makeStorage()
@@ -77,7 +77,7 @@ describe('fetchArtifacts', () => {
       'output/features/RHAISTRAT-1.json': { key: 'RHAISTRAT-1' }
     })
 
-    mockFetch.mockResolvedValue({ ok: true, buffer: () => Promise.resolve(zipBuf) })
+    mockFetch.mockResolvedValue({ ok: true, arrayBuffer: () => Promise.resolve(zipBuf.buffer.slice(zipBuf.byteOffset, zipBuf.byteOffset + zipBuf.byteLength)) })
 
     await fetchArtifacts(storage, baseConfig, 'token')
 
@@ -91,7 +91,7 @@ describe('fetchArtifacts', () => {
       'output/features/RHAISTRAT-1.json': { key: 'RHAISTRAT-1' }
     })
 
-    mockFetch.mockResolvedValue({ ok: true, buffer: () => Promise.resolve(zipBuf) })
+    mockFetch.mockResolvedValue({ ok: true, arrayBuffer: () => Promise.resolve(zipBuf.buffer.slice(zipBuf.byteOffset, zipBuf.byteOffset + zipBuf.byteLength)) })
 
     const storage = makeStorage()
     await expect(fetchArtifacts(storage, baseConfig, 'token'))
@@ -128,7 +128,7 @@ describe('fetchArtifacts', () => {
     zip.addFile('output/index.json', Buffer.from(JSON.stringify({ features: [], featureCount: 0 })))
     zip.addFile('output/readme.txt', Buffer.from('hello'))
 
-    mockFetch.mockResolvedValue({ ok: true, buffer: () => Promise.resolve(zip.toBuffer()) })
+    mockFetch.mockResolvedValue({ ok: true, arrayBuffer: () => { const b = zip.toBuffer(); return Promise.resolve(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength)); } })
 
     const storage = makeStorage()
     const result = await fetchArtifacts(storage, baseConfig, 'token')
@@ -141,7 +141,7 @@ describe('fetchArtifacts', () => {
     zip.addFile('output/index.json', Buffer.from(JSON.stringify({ features: [], featureCount: 0 })))
     zip.addFile('output/../../../etc/passwd.json', Buffer.from(JSON.stringify({ evil: true })))
 
-    mockFetch.mockResolvedValue({ ok: true, buffer: () => Promise.resolve(zip.toBuffer()) })
+    mockFetch.mockResolvedValue({ ok: true, arrayBuffer: () => { const b = zip.toBuffer(); return Promise.resolve(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength)); } })
 
     const storage = makeStorage()
     await fetchArtifacts(storage, baseConfig, 'token')
@@ -154,7 +154,7 @@ describe('fetchArtifacts', () => {
     zip.addFile('output/index.json', Buffer.from(JSON.stringify({ features: [], featureCount: 0 })))
     zip.addFile('output/features/bad.json', Buffer.from('not valid json {{{'))
 
-    mockFetch.mockResolvedValue({ ok: true, buffer: () => Promise.resolve(zip.toBuffer()) })
+    mockFetch.mockResolvedValue({ ok: true, arrayBuffer: () => { const b = zip.toBuffer(); return Promise.resolve(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength)); } })
 
     const storage = makeStorage()
     const result = await fetchArtifacts(storage, baseConfig, 'token')
@@ -174,7 +174,7 @@ describe('fetchArtifacts', () => {
     const zipBuf = createZipBuffer({
       'output/index.json': { features: [], featureCount: 0 }
     })
-    mockFetch.mockResolvedValue({ ok: true, buffer: () => Promise.resolve(zipBuf) })
+    mockFetch.mockResolvedValue({ ok: true, arrayBuffer: () => Promise.resolve(zipBuf.buffer.slice(zipBuf.byteOffset, zipBuf.byteOffset + zipBuf.byteLength)) })
 
     const storage = makeStorage()
     await fetchArtifacts(storage, { ...baseConfig, projectPath: 'group/sub/project' }, 'token')
@@ -187,7 +187,7 @@ describe('fetchArtifacts', () => {
     const zipBuf = createZipBuffer({
       'output/index.json': { features: [], featureCount: 0 }
     })
-    mockFetch.mockResolvedValue({ ok: true, buffer: () => Promise.resolve(zipBuf) })
+    mockFetch.mockResolvedValue({ ok: true, arrayBuffer: () => Promise.resolve(zipBuf.buffer.slice(zipBuf.byteOffset, zipBuf.byteOffset + zipBuf.byteLength)) })
 
     const storage = makeStorage()
     await fetchArtifacts(storage, baseConfig, 'token')

@@ -23,7 +23,7 @@ describe('mr-kpi-fetcher', () => {
   })
 
   afterEach(() => {
-    _setFetch(require('node-fetch'))
+    _setFetch(globalThis.fetch)
     initMrStatus({})
   })
 

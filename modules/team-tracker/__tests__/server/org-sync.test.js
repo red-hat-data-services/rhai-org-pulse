@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-vi.mock('node-fetch', () => ({ default: vi.fn() }))
 
 // Clear the org display names cache before each test
 const rosterSyncConfig = require('../../../../shared/server/roster-sync/config')

@@ -3,13 +3,11 @@
  * Downloads artifact zip, extracts in-memory, writes to storage.
  */
 
-const nodeFetch = require('node-fetch');
-const { HttpsProxyAgent } = require('https-proxy-agent');
 const AdmZip = require('adm-zip');
 const path = require('path');
 
 // Allows test override
-let _fetch = nodeFetch;
+let _fetch = globalThis.fetch;
 
 const DATA_PREFIX = 'releases/execution';
 
@@ -56,14 +54,8 @@ async function fetchArtifacts(storage, config, token, jira) {
 
   const fetchOptions = {
     headers: { 'Authorization': `Bearer ${token}` },
-    timeout: 30000
+    signal: AbortSignal.timeout(30000)
   };
-
-  // Use HTTPS proxy if configured (required in OpenShift environments)
-  const proxyUrl = process.env.HTTPS_PROXY || process.env.https_proxy;
-  if (proxyUrl) {
-    fetchOptions.agent = new HttpsProxyAgent(proxyUrl);
-  }
 
   const response = await _fetch(url, fetchOptions);
 
@@ -85,7 +77,7 @@ async function fetchArtifacts(storage, config, token, jira) {
     throw new Error(`GitLab API returned ${status}: ${response.statusText}`);
   }
 
-  const buffer = await response.buffer();
+  const buffer = Buffer.from(await response.arrayBuffer());
   const zip = new AdmZip(buffer);
   const entries = zip.getEntries();
 

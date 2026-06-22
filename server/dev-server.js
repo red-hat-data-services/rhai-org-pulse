@@ -65,15 +65,13 @@ secretRegistry.resolve();
 
 // ─── Platform Secret Validators ───
 
-const nodeFetch = require('node-fetch');
-
 secretRegistry.registerValidator('JIRA_TOKEN', async () => {
   const email = process.env.JIRA_EMAIL;
   const token = process.env.JIRA_TOKEN;
   if (!email || !token) return { valid: false, message: 'JIRA_EMAIL or JIRA_TOKEN not configured' };
   const host = process.env.JIRA_HOST || 'https://redhat.atlassian.net';
   const auth = Buffer.from(`${email}:${token}`).toString('base64');
-  const res = await nodeFetch(`${host}/rest/api/2/myself`, {
+  const res = await fetch(`${host}/rest/api/2/myself`, {
     headers: { Authorization: `Basic ${auth}`, Accept: 'application/json' }
   });
   if (!res.ok) return { valid: false, message: `Jira auth failed (${res.status})` };
@@ -84,7 +82,7 @@ secretRegistry.registerValidator('JIRA_TOKEN', async () => {
 secretRegistry.registerValidator('GITHUB_TOKEN', async () => {
   const token = process.env.GITHUB_TOKEN;
   if (!token) return { valid: false, message: 'GITHUB_TOKEN not configured' };
-  const res = await nodeFetch('https://api.github.com/user', {
+  const res = await fetch('https://api.github.com/user', {
     headers: { Authorization: `token ${token}`, Accept: 'application/json' }
   });
   if (!res.ok) return { valid: false, message: `GitHub auth failed (${res.status})` };
@@ -96,7 +94,7 @@ secretRegistry.registerValidator('GITLAB_TOKEN', async () => {
   const token = process.env.GITLAB_TOKEN;
   if (!token) return { valid: false, message: 'GITLAB_TOKEN not configured' };
   const host = process.env.GITLAB_BASE_URL || 'https://gitlab.com';
-  const res = await nodeFetch(`${host}/api/v4/user`, {
+  const res = await fetch(`${host}/api/v4/user`, {
     headers: { 'PRIVATE-TOKEN': token, Accept: 'application/json' }
   });
   if (!res.ok) return { valid: false, message: `GitLab auth failed (${res.status})` };

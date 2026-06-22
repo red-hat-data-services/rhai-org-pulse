@@ -89,7 +89,7 @@ describe('enrichMRStatuses', () => {
   })
 
   afterEach(() => {
-    _setFetch(require('node-fetch'))
+    _setFetch(globalThis.fetch)
     init({})
   })
 

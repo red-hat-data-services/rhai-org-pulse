@@ -92,7 +92,6 @@ vi.mock('../../server/rfe', () => ({
 vi.mock('../../../../shared/server/google-sheets', () => ({
   fetchRawSheet: vi.fn(async () => ({ headers: [], rows: [] }))
 }))
-vi.mock('node-fetch', () => ({ default: vi.fn() }))
 
 function createApp() {
   const app = express()

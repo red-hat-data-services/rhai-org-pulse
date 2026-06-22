@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
 
-vi.mock('node-fetch', () => ({ default: vi.fn() }))
 
 const { previewMigration, executeMigration } = require('../../server/migration/field-options-migration')
 const fieldStore = require('../../../../shared/server/field-store')

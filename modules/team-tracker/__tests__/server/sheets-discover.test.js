@@ -32,7 +32,6 @@ vi.mock('../../server/jira/orchestration', () => ({
   discoverBoards: vi.fn(),
   performRefresh: vi.fn()
 }))
-vi.mock('node-fetch', () => ({ default: vi.fn() }))
 
 import { readFromStorage, writeToStorage } from '../../../../shared/server/storage'
 
