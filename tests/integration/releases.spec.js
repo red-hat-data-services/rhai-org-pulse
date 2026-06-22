@@ -177,6 +177,10 @@ test.describe('Releases Views @releases', () => {
   test('should load Audit view', async ({ page }) => {
     await testView(page, 'audit', 'Audit');
   });
+
+  test('should load Schedule view', async ({ page }) => {
+    await testView(page, 'schedule', 'Schedule');
+  });
 });
 
 /**

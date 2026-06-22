@@ -236,7 +236,8 @@ async function runRegistrySync(storage, options) {
       displayName: stripZStream(releaseNumber),
       productName: ppRelease.productName,
       dueDate: ppRelease.dueDate,
-      codeFreezeDate: ppRelease.codeFreezeDate
+      codeFreezeDate: ppRelease.codeFreezeDate,
+      planningFreezeDate: ppRelease.planningFreezeDate
     });
 
     const existing = existingById.get(id);
@@ -251,7 +252,8 @@ async function runRegistrySync(storage, options) {
         existing.milestones = {
           ...(existing.milestones || {}),
           ga: ppRelease.dueDate || existing.milestones?.ga || null,
-          codeFreeze: ppRelease.codeFreezeDate || existing.milestones?.codeFreeze || null
+          codeFreeze: ppRelease.codeFreezeDate || existing.milestones?.codeFreeze || null,
+          planningFreeze: ppRelease.planningFreezeDate || existing.milestones?.planningFreeze || null
         };
         existing.updatedAt = new Date().toISOString();
         updated++;
@@ -264,7 +266,8 @@ async function runRegistrySync(storage, options) {
         productPagesVersion: releaseNumber,
         milestones: {
           ga: ppRelease.dueDate || null,
-          codeFreeze: ppRelease.codeFreezeDate || null
+          codeFreeze: ppRelease.codeFreezeDate || null,
+          planningFreeze: ppRelease.planningFreezeDate || null
         },
         source: 'product-pages',
         state: 'active'
