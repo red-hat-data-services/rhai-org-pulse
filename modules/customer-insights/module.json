@@ -69,5 +69,14 @@
     ]
   },
   "defaultEnabled": true,
-  "requires": []
+  "requires": [],
+  "export": {
+    "hook": "./server/export.js",
+    "files": [
+      "customer-insights/interactions.json",
+      "customer-insights/rfes.json",
+      "customer-insights/roadmap.json",
+      "customer-insights/insights.json"
+    ]
+  }
 }
