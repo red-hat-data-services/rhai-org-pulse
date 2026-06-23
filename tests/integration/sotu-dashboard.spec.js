@@ -96,8 +96,8 @@ test.describe('SOTU Widget Dashboard @sotu-dashboard', () => {
     await expect(scheduleWidget).toBeVisible();
     await scheduleWidget.click();
 
-    // Close the picker
-    await page.locator('button:has(svg)').filter({ has: page.locator('[class*="lucide"]') }).first().click();
+    // Close the picker by clicking the backdrop
+    await page.locator('.fixed.inset-0.bg-black').click();
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
     // Widget should render with its heading
