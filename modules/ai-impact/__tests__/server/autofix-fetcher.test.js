@@ -22,10 +22,6 @@ describe('classifyIssue', () => {
     expect(classifyIssue(['jira-autofix-max-retries'])).toBe('autofix-max-retries')
   })
 
-  it('returns autofix-researched for jira-autofix-researched', () => {
-    expect(classifyIssue(['jira-autofix-researched'])).toBe('autofix-researched')
-  })
-
   it('returns autofix-ci-failing for jira-autofix-ci-failing', () => {
     expect(classifyIssue(['jira-autofix-ci-failing'])).toBe('autofix-ci-failing')
   })

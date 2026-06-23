@@ -19,7 +19,6 @@ export const STATE_OPTIONS = [
   { value: 'autofix-merged', label: 'AI Fix Merged' },
   { value: 'autofix-rejected', label: 'AI Fix Rejected' },
   { value: 'autofix-max-retries', label: 'AI Max Retries' },
-  { value: 'autofix-researched', label: 'AI Researched' },
   { value: 'autofix-blocked', label: 'AI Blocked' }
 ]
 
@@ -29,8 +28,7 @@ export const PIPELINE_BAR_SEGMENTS = [
   { state: 'autofix-pending', label: 'Pending', color: 'bg-gray-400' },
   { state: 'autofix-ci-failing', label: 'CI Failing', color: 'bg-orange-500' },
   { state: 'autofix-blocked', label: 'Blocked', color: 'bg-yellow-500' },
-  { state: 'autofix-max-retries', label: 'Max Retries', color: 'bg-red-500' },
-  { state: 'autofix-researched', label: 'Researched', color: 'bg-teal-500' }
+  { state: 'autofix-max-retries', label: 'Max Retries', color: 'bg-red-500' }
 ]
 
 export function stateLabel(state) {
@@ -40,7 +38,6 @@ export function stateLabel(state) {
 
 export function stateColorClass(state) {
   if (state === 'autofix-merged') return 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400'
-  if (state === 'autofix-researched') return 'bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-400'
   if (state === 'autofix-review') return 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400'
   if (state === 'autofix-ci-failing') return 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400'
   if (state === 'autofix-pending' || state === 'autofix-ready') return 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400'
@@ -55,7 +52,7 @@ export function stateColorClass(state) {
 }
 
 export const TERMINAL_STATES = new Set([
-  'autofix-merged', 'autofix-rejected', 'autofix-max-retries', 'autofix-researched'
+  'autofix-merged', 'autofix-rejected', 'autofix-max-retries'
 ])
 
 export function getLastWeekBounds() {
@@ -121,7 +118,6 @@ export function computeTeamMetrics(issues, timeWindow) {
     merged: windowIssues.filter(i => i.pipelineState === 'autofix-merged').length,
     rejected: windowIssues.filter(i => i.pipelineState === 'autofix-rejected').length,
     maxRetries: windowIssues.filter(i => i.pipelineState === 'autofix-max-retries').length,
-    researched: windowIssues.filter(i => i.pipelineState === 'autofix-researched').length,
     blocked: windowIssues.filter(i => i.pipelineState === 'autofix-blocked').length
   }
 

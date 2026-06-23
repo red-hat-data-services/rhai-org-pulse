@@ -97,7 +97,6 @@ describe('autofix-constants', () => {
       expect(values).toContain('autofix-merged')
       expect(values).toContain('autofix-rejected')
       expect(values).toContain('autofix-max-retries')
-      expect(values).toContain('autofix-researched')
       expect(values).toContain('autofix-blocked')
     })
   })

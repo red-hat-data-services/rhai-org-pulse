@@ -4,12 +4,11 @@ const { validateJqlSafeString } = require('../config');
 const TERMINAL_LABELS = [
   'jira-autofix-merged',
   'jira-autofix-rejected',
-  'jira-autofix-max-retries',
-  'jira-autofix-researched'
+  'jira-autofix-max-retries'
 ];
 
 const TERMINAL_STATES = new Set([
-  'autofix-merged', 'autofix-rejected', 'autofix-max-retries', 'autofix-researched'
+  'autofix-merged', 'autofix-rejected', 'autofix-max-retries'
 ]);
 
 // All labels from the jira-autofix triage + autofix pipelines
@@ -30,7 +29,6 @@ const AUTOFIX_LABELS = [
   'jira-autofix-merged',
   'jira-autofix-rejected',
   'jira-autofix-max-retries',
-  'jira-autofix-researched',
   'jira-autofix-blocked'
 ];
 
@@ -43,7 +41,6 @@ function classifyIssue(labels) {
   if (labelSet.has('jira-autofix-merged')) return 'autofix-merged';
   if (labelSet.has('jira-autofix-rejected')) return 'autofix-rejected';
   if (labelSet.has('jira-autofix-max-retries')) return 'autofix-max-retries';
-  if (labelSet.has('jira-autofix-researched')) return 'autofix-researched';
   // Active autofix states (blocked before pending — blocked is added when
   // the bot gets stuck after starting, but pending may not be removed)
   if (labelSet.has('jira-autofix-blocked')) return 'autofix-blocked';
@@ -153,7 +150,6 @@ function computeAutofixMetrics(issues, timeWindow) {
     merged: get('autofix-merged'),
     rejected: get('autofix-rejected'),
     maxRetries: get('autofix-max-retries'),
-    researched: get('autofix-researched'),
     blocked: get('autofix-blocked')
   };
 

@@ -901,13 +901,13 @@
       "updated": "2026-04-21T14:33:10.934+0000",
       "labels": [
         "jira-autofix",
-        "jira-autofix-researched"
+        "jira-autofix-merged"
       ],
       "components": [
         "Accelerator Enablement"
       ],
       "assignee": "AIPCC JIRABOT",
-      "pipelineState": "autofix-researched",
+      "pipelineState": "autofix-merged",
       "terminalAt": "2026-04-21T14:33:10.934+0000"
     },
     {
@@ -939,13 +939,13 @@
       "updated": "2026-04-21T14:33:11.560+0000",
       "labels": [
         "jira-autofix",
-        "jira-autofix-researched"
+        "jira-autofix-rejected"
       ],
       "components": [
         "Accelerator Enablement"
       ],
       "assignee": "AIPCC JIRABOT",
-      "pipelineState": "autofix-researched",
+      "pipelineState": "autofix-rejected",
       "terminalAt": "2026-04-21T14:33:11.560+0000"
     },
     {

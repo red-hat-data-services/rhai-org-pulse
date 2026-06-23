@@ -56,7 +56,7 @@ const selectedIssueType = ref('all')
 const selectedComponent = ref('all')
 
 const TERMINAL_STATES = new Set([
-  'autofix-merged', 'autofix-rejected', 'autofix-max-retries', 'autofix-researched'
+  'autofix-merged', 'autofix-rejected', 'autofix-max-retries'
 ])
 
 function getLastWeekBounds() {
@@ -245,7 +245,6 @@ const metrics = computed(() => {
     merged: windowIssues.filter(i => i.pipelineState === 'autofix-merged').length,
     rejected: windowIssues.filter(i => i.pipelineState === 'autofix-rejected').length,
     maxRetries: windowIssues.filter(i => i.pipelineState === 'autofix-max-retries').length,
-    researched: windowIssues.filter(i => i.pipelineState === 'autofix-researched').length,
     blocked: windowIssues.filter(i => i.pipelineState === 'autofix-blocked').length
   }
 
@@ -311,7 +310,6 @@ const STATE_OPTIONS = [
   { value: 'autofix-merged', label: 'AI Fix Merged' },
   { value: 'autofix-rejected', label: 'AI Fix Rejected' },
   { value: 'autofix-max-retries', label: 'AI Max Retries' },
-  { value: 'autofix-researched', label: 'AI Researched' },
   { value: 'autofix-blocked', label: 'AI Blocked' }
 ]
 
@@ -478,7 +476,6 @@ function stateLabel(state) {
 
 function stateColorClass(state) {
   if (state === 'autofix-merged') return 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400'
-  if (state === 'autofix-researched') return 'bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-400'
   if (state === 'autofix-review') return 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400'
   if (state === 'autofix-ci-failing') return 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400'
   if (state === 'autofix-pending' || state === 'autofix-ready') return 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400'
@@ -501,7 +498,7 @@ const triageSegments = computed(() => {
   if (!metrics.value) return []
   const v = metrics.value.triageVerdicts
   return [
-    { label: 'Ready for AI', count: v.ready || 0, color: 'bg-green-500', textClass: 'text-green-600 dark:text-green-400', jiraLabels: ['jira-autofix', 'jira-autofix-pending', 'jira-autofix-review', 'jira-autofix-ci-failing', 'jira-autofix-merged', 'jira-autofix-rejected', 'jira-autofix-max-retries', 'jira-autofix-researched', 'jira-autofix-blocked'] },
+    { label: 'Ready for AI', count: v.ready || 0, color: 'bg-green-500', textClass: 'text-green-600 dark:text-green-400', jiraLabels: ['jira-autofix', 'jira-autofix-pending', 'jira-autofix-review', 'jira-autofix-ci-failing', 'jira-autofix-merged', 'jira-autofix-rejected', 'jira-autofix-max-retries', 'jira-autofix-blocked'] },
     { label: 'Missing Info', count: v.missingInfo || 0, color: 'bg-yellow-500', textClass: 'text-yellow-600 dark:text-yellow-400', jiraLabels: ['jira-triage-missing-info'] },
     { label: 'Not AI-Fixable', count: v.notFixable || 0, color: 'bg-red-500', textClass: 'text-red-600 dark:text-red-400', jiraLabels: ['jira-triage-not-fixable'] },
     { label: 'External Reporter', count: v.external || 0, color: 'bg-purple-500', textClass: 'text-purple-600 dark:text-purple-400', jiraLabels: ['jira-triage-external'] },
@@ -518,11 +515,10 @@ const autofixSegments = computed(() => {
   const a = metrics.value.autofixStates
   return [
     { label: 'AI Fix Merged', count: a.merged || 0, color: 'bg-green-500', textClass: 'text-green-600 dark:text-green-400', jiraLabels: ['jira-autofix-merged'] },
-    { label: 'AI Researched', count: a.researched || 0, color: 'bg-teal-500', textClass: 'text-teal-600 dark:text-teal-400', jiraLabels: ['jira-autofix-researched'] },
     { label: 'AI Fix Under Review', count: a.review || 0, color: 'bg-blue-500', textClass: 'text-blue-600 dark:text-blue-400', jiraLabels: ['jira-autofix-review'] },
     { label: 'AI Fix CI Failing', count: a.ciFailing || 0, color: 'bg-orange-500', textClass: 'text-orange-600 dark:text-orange-400', jiraLabels: ['jira-autofix-ci-failing'] },
-    { label: 'AI Working', count: a.pending || 0, color: 'bg-indigo-500', textClass: 'text-indigo-600 dark:text-indigo-400', jiraLabels: ['jira-autofix-pending'], excludeLabels: ['jira-autofix-blocked', 'jira-autofix-ci-failing', 'jira-autofix-review', 'jira-autofix-merged', 'jira-autofix-rejected', 'jira-autofix-max-retries', 'jira-autofix-researched'] },
-    { label: 'Queued for AI', count: a.ready || 0, color: 'bg-gray-400', textClass: 'text-gray-500 dark:text-gray-400', jiraLabels: ['jira-autofix'], excludeLabels: ['jira-autofix-pending', 'jira-autofix-review', 'jira-autofix-ci-failing', 'jira-autofix-merged', 'jira-autofix-rejected', 'jira-autofix-max-retries', 'jira-autofix-researched', 'jira-autofix-blocked'] },
+    { label: 'AI Working', count: a.pending || 0, color: 'bg-indigo-500', textClass: 'text-indigo-600 dark:text-indigo-400', jiraLabels: ['jira-autofix-pending'], excludeLabels: ['jira-autofix-blocked', 'jira-autofix-ci-failing', 'jira-autofix-review', 'jira-autofix-merged', 'jira-autofix-rejected', 'jira-autofix-max-retries'] },
+    { label: 'Queued for AI', count: a.ready || 0, color: 'bg-gray-400', textClass: 'text-gray-500 dark:text-gray-400', jiraLabels: ['jira-autofix'], excludeLabels: ['jira-autofix-pending', 'jira-autofix-review', 'jira-autofix-ci-failing', 'jira-autofix-merged', 'jira-autofix-rejected', 'jira-autofix-max-retries', 'jira-autofix-blocked'] },
     { label: 'AI Fix Rejected', count: a.rejected || 0, color: 'bg-red-500', textClass: 'text-red-600 dark:text-red-400', jiraLabels: ['jira-autofix-rejected'] },
     { label: 'AI Max Retries', count: a.maxRetries || 0, color: 'bg-orange-500', textClass: 'text-orange-600 dark:text-orange-400', jiraLabels: ['jira-autofix-max-retries'] },
     { label: 'AI Blocked', count: a.blocked || 0, color: 'bg-yellow-500', textClass: 'text-yellow-600 dark:text-yellow-400', jiraLabels: ['jira-autofix-blocked'] }
@@ -537,7 +533,7 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
   if (props.timeWindow === 'lastWeek') {
     const isTerminalLabel = jiraLabels.some(l =>
       l === 'jira-autofix-merged' || l === 'jira-autofix-rejected' ||
-      l === 'jira-autofix-max-retries' || l === 'jira-autofix-researched'
+      l === 'jira-autofix-max-retries'
     )
     if (isTerminalLabel) {
       const matchingStates = new Set()
@@ -623,7 +619,6 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
                   <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">AI Fix Merged</td><td class="text-gray-400 py-0.5">Fix landed successfully</td></tr>
                   <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">AI Fix Rejected</td><td class="text-gray-400 py-0.5">MR/PR closed without merge</td></tr>
                   <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">AI Max Retries</td><td class="text-gray-400 py-0.5">Bot hit iteration limit, needs human</td></tr>
-                  <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">AI Researched</td><td class="text-gray-400 py-0.5">Spike completed, findings posted</td></tr>
                   <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">AI Blocked</td><td class="text-gray-400 py-0.5">Bot stuck, needs human intervention</td></tr>
                 </tbody>
               </table>
@@ -747,7 +742,7 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div class="absolute right-0 top-6 z-20 hidden group-hover:block w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50 p-3 text-xs text-gray-700 dark:text-gray-300 text-left">
-                Percentage of successfully merged autofixes out of all terminal outcomes. Calculated as: <span class="font-medium">merged ÷ (merged + rejected + max-retries) × 100</span>. In-progress and researched issues are excluded since they haven't reached a final outcome.
+                Percentage of successfully merged autofixes out of all terminal outcomes. Calculated as: <span class="font-medium">merged ÷ (merged + rejected + max-retries) × 100</span>. In-progress issues are excluded since they haven't reached a final outcome.
               </div>
             </div>
             <div class="text-2xl font-bold" :class="metrics.successRate >= 50 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'">
@@ -881,7 +876,6 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
                   <div class="absolute left-0 top-6 z-20 hidden group-hover:block w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50 p-3 text-xs text-gray-700 dark:text-gray-300">
                     <div class="space-y-1">
                       <div class="flex justify-between"><span class="font-medium">AI Fix Merged</span><span class="text-gray-400">Fix landed</span></div>
-                      <div class="flex justify-between"><span class="font-medium">AI Researched</span><span class="text-gray-400">Spike completed</span></div>
                       <div class="flex justify-between"><span class="font-medium">AI Fix Under Review</span><span class="text-gray-400">Human reviewing</span></div>
                       <div class="flex justify-between"><span class="font-medium">AI Fix CI Failing</span><span class="text-gray-400">CI is red</span></div>
                       <div class="flex justify-between"><span class="font-medium">AI Working</span><span class="text-gray-400">Generating fix</span></div>
@@ -1027,7 +1021,6 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
                       <div class="flex justify-between"><span>AI Fix Merged</span><span class="text-gray-400">Fix landed</span></div>
                       <div class="flex justify-between"><span>AI Fix Rejected</span><span class="text-gray-400">MR closed</span></div>
                       <div class="flex justify-between"><span>AI Max Retries</span><span class="text-gray-400">Bot gave up</span></div>
-                      <div class="flex justify-between"><span>AI Researched</span><span class="text-gray-400">Spike completed</span></div>
                       <div class="flex justify-between"><span>AI Blocked</span><span class="text-gray-400">Needs human help</span></div>
                     </div>
                   </div>
