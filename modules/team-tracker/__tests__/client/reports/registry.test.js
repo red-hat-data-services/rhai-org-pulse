@@ -69,6 +69,7 @@ describe('Report Registry', () => {
 
 describe('Report Registry without strategy', () => {
   it('excludes allocation report when no strategy configured', async () => {
+    vi.resetModules()
     vi.doMock('@/platform-loader', () => ({
       loadAllocationStrategy: () => null
     }))

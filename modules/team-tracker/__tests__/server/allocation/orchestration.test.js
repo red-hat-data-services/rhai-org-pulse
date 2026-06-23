@@ -2,8 +2,29 @@
 import { describe, it, expect, vi } from 'vitest';
 import { processBoard, processKanbanBoard, refreshTeam, performRefresh } from '../../../server/allocation/orchestration.js';
 
+const TEST_STRATEGY = {
+  id: 'test-strategy',
+  name: 'Test Strategy',
+  description: 'Test allocation strategy',
+  categories: [
+    { key: 'tech-debt-quality', name: 'Tech Debt & Quality', color: 'amber', target: 40 },
+    { key: 'new-features', name: 'New Features', color: 'blue', target: 40 },
+    { key: 'learning-enablement', name: 'Learning & Enablement', color: 'green', target: 20 }
+  ],
+  classifyIssue: (issue) => {
+    if (issue.issueType === 'Vulnerability' || issue.issueType === 'Weakness') return 'tech-debt-quality';
+    switch (issue.activityType) {
+      case 'Tech Debt & Quality': return 'tech-debt-quality';
+      case 'New Features': return 'new-features';
+      case 'Learning & Enablement': return 'learning-enablement';
+      default: return 'uncategorized';
+    }
+  }
+};
+
 function makeDeps(overrides = {}) {
   return {
+    strategy: TEST_STRATEGY,
     fetchSprints: vi.fn().mockResolvedValue([]),
     fetchSprintIssues: vi.fn().mockResolvedValue([]),
     fetchBoardConfiguration: vi.fn().mockResolvedValue({ filterId: '555' }),
@@ -60,6 +81,7 @@ describe('processBoard', () => {
 
   it('uses cached data for closed sprints when not hard refreshing', async () => {
     const cachedData = {
+      strategyId: 'test-strategy',
       issues: [{ key: 'PROJ-1' }],
       summary: { totalPoints: 10, buckets: {} }
     };
