@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { X, Plus, Check, Box } from 'lucide-vue-next'
 import {
   ClipboardList, Columns, BarChart3, UsersRound, Users, Link2,
-  Sparkles, LayoutDashboard, Search
+  Sparkles, LayoutDashboard, Search, CalendarDays
 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -15,7 +15,7 @@ const emit = defineEmits(['close', 'toggle'])
 
 const iconMap = {
   ClipboardList, Columns, BarChart3, UsersRound, Users, Link2,
-  Sparkles, LayoutDashboard, Search, Box
+  Sparkles, LayoutDashboard, Search, CalendarDays, Box
 }
 
 function getIcon(iconName) {

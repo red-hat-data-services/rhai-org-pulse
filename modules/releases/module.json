@@ -16,6 +16,17 @@
       { "id": "reports", "label": "Reports", "icon": "BarChart3" },
       { "id": "audit", "label": "Audit", "icon": "History" }
     ],
+    "sotuWidgets": [
+      {
+        "id": "schedule",
+        "name": "Release Schedule",
+        "description": "Upcoming release milestones with countdowns",
+        "component": "./client/widgets/ScheduleWidget.vue",
+        "defaultSize": "half",
+        "icon": "CalendarDays",
+        "category": "releases"
+      }
+    ],
     "settingsComponent": "./client/components/ReleasesSettings.vue",
     "hiddenRoutes": {
       "feature-detail": "execute"
