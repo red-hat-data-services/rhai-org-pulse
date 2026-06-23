@@ -85,7 +85,7 @@ function processIssue(issue) {
 
 function extractTerminalAt(changelog, pipelineState) {
   if (!changelog || !changelog.histories) return null;
-  const targetLabel = 'jira-' + pipelineState.replace('-', '-');
+  const targetLabel = 'jira-' + pipelineState;
   let latest = null;
   for (const history of changelog.histories) {
     for (const item of history.items) {
@@ -201,34 +201,19 @@ function buildTrendData(issues, timeWindow) {
   const weekCounts = (timeWindow === 'week' || isLastWeek) ? 4 : timeWindow === 'month' ? 8 : 13;
   const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
 
-  const buckets = [];
+  const anchor = isLastWeek ? getLastWeekBounds().end : Date.now();
 
-  if (isLastWeek) {
-    const { end: thisMonday } = getLastWeekBounds();
-    for (let w = weekCounts - 1; w >= 0; w--) {
-      const weekEnd = new Date(thisMonday - w * MS_PER_WEEK);
-      buckets.push({
-        date: weekEnd.toISOString().slice(0, 10),
-        weekStart: weekEnd.getTime() - MS_PER_WEEK,
-        weekEnd: weekEnd.getTime(),
-        triaged: 0, autofixed: 0, merged: 0, total: 0,
-        review: 0, ciFailing: 0, blocked: 0, maxRetries: 0,
-        missingInfo: 0, stale: 0, external: 0, securityReview: 0
-      });
-    }
-  } else {
-    const now = new Date();
-    for (let w = weekCounts - 1; w >= 0; w--) {
-      const weekEnd = new Date(now.getTime() - w * MS_PER_WEEK);
-      buckets.push({
-        date: weekEnd.toISOString().slice(0, 10),
-        weekStart: weekEnd.getTime() - MS_PER_WEEK,
-        weekEnd: weekEnd.getTime(),
-        triaged: 0, autofixed: 0, merged: 0, total: 0,
-        review: 0, ciFailing: 0, blocked: 0, maxRetries: 0,
-        missingInfo: 0, stale: 0, external: 0, securityReview: 0
-      });
-    }
+  const buckets = [];
+  for (let w = weekCounts - 1; w >= 0; w--) {
+    const weekEnd = new Date(anchor - w * MS_PER_WEEK);
+    buckets.push({
+      date: weekEnd.toISOString().slice(0, 10),
+      weekStart: weekEnd.getTime() - MS_PER_WEEK,
+      weekEnd: weekEnd.getTime(),
+      triaged: 0, autofixed: 0, merged: 0, total: 0,
+      review: 0, ciFailing: 0, blocked: 0, maxRetries: 0,
+      missingInfo: 0, stale: 0, external: 0, securityReview: 0
+    });
   }
 
   const earliest = buckets[0].weekStart;
