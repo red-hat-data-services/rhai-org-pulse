@@ -76,9 +76,6 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /app/data
-            - name: google-sa-key
-              mountPath: /etc/secrets
-              readOnly: true
           readinessProbe:
             httpGet:
               path: /healthz
@@ -102,7 +99,3 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: team-tracker-data
-        - name: google-sa-key
-          secret:
-            secretName: google-sa-key
-            optional: true
