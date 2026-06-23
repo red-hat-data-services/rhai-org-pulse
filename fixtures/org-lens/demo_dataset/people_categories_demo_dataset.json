@@ -1,0 +1,34 @@
+{
+  "categories": [
+    {
+      "category_name": "AI & Machine Learning",
+      "description": "AI/ML platform, model serving, training pipelines",
+      "people": ["bkap", "naloni", "rlevi"]
+    },
+    {
+      "category_name": "Infrastructure & DevOps",
+      "description": "Kubernetes operators, CI/CD, platform tooling",
+      "people": ["acohen", "schen"]
+    },
+    {
+      "category_name": "Networking",
+      "description": "Container networking, CNI plugins, service mesh",
+      "people": ["jlee"]
+    },
+    {
+      "category_name": "Storage",
+      "description": "Distributed storage, CSI drivers, Ceph",
+      "people": ["tgunders"]
+    },
+    {
+      "category_name": "Security",
+      "description": "Container security, vulnerability scanning, compliance",
+      "people": ["ybar"]
+    },
+    {
+      "category_name": "Management",
+      "description": "Engineering management and leadership",
+      "people": ["dgur", "mrodr"]
+    }
+  ]
+}

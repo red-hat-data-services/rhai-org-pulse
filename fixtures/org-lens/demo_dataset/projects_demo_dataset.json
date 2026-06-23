@@ -1,0 +1,62 @@
+{
+  "jira_projects": [
+    {
+      "key": "OCPBUGS",
+      "name": "OpenShift Bugs",
+      "issue_count": 1500,
+      "contributors": ["acohen", "jlee"],
+      "components": ["Autoscaler", "Networking", "Node Management"]
+    },
+    {
+      "key": "RHOAIENG",
+      "name": "Red Hat OpenShift AI Engineering",
+      "issue_count": 800,
+      "contributors": ["bkap", "naloni", "rlevi", "dgur"],
+      "components": ["Model Serving", "Dashboard", "Testing"]
+    },
+    {
+      "key": "ODF",
+      "name": "OpenShift Data Foundation",
+      "issue_count": 600,
+      "contributors": ["tgunders"],
+      "components": ["Ceph CSI", "Rook"]
+    },
+    {
+      "key": "ROX",
+      "name": "Red Hat Advanced Cluster Security",
+      "issue_count": 450,
+      "contributors": ["ybar"],
+      "components": ["Scanner", "Image Analysis"]
+    }
+  ],
+  "products": [
+    {
+      "name": "OpenShift",
+      "people_count": 3,
+      "technologies": ["Kubernetes", "Go"]
+    },
+    {
+      "name": "OpenShift AI",
+      "people_count": 4,
+      "technologies": ["Python", "KServe", "PyTorch"]
+    },
+    {
+      "name": "OVN-Kubernetes",
+      "people_count": 1,
+      "technologies": ["Go", "OVN"]
+    },
+    {
+      "name": "ACS",
+      "people_count": 1,
+      "technologies": ["Go", "Python"]
+    }
+  ],
+  "repos": [
+    {"path": "openshift/cluster-autoscaler-operator", "contributors": ["acohen"]},
+    {"path": "kserve/kserve", "contributors": ["bkap"]},
+    {"path": "opendatahub-io/odh-dashboard", "contributors": ["bkap", "naloni"]},
+    {"path": "ovn-org/ovn-kubernetes", "contributors": ["jlee"]},
+    {"path": "stackrox/stackrox", "contributors": ["ybar"]},
+    {"path": "rook/rook", "contributors": ["tgunders"]}
+  ]
+}

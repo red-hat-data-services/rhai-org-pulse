@@ -1,0 +1,273 @@
+{
+  "metadata": {
+    "scope_id": "demo_dataset",
+    "generated_at": "2026-01-01T00:00:00Z",
+    "total_people": 10
+  },
+  "people_summaries": [
+    {
+      "uid": "acohen",
+      "name": "Avi Cohen",
+      "email": "acohen@example.com",
+      "title": "Senior Software Engineer",
+      "manager": "dgur",
+      "summary": "Full-stack engineer working on Kubernetes operators and CI/CD pipelines. Contributed to cluster autoscaler and operator SDK.",
+      "technologies": ["Kubernetes", "Go", "Python", "Operator SDK"],
+      "products": ["OpenShift", "Cluster Autoscaler"],
+      "work_focus": ["Kubernetes operators", "CI/CD automation"],
+      "jira_projects": ["OCPBUGS", "SRVKP"],
+      "code_activity": {
+        "repos": [
+          {"path": "openshift/cluster-autoscaler-operator", "description": "Cluster autoscaler operator"},
+          {"path": "kubernetes/kubernetes", "description": "Kubernetes core"}
+        ],
+        "recent_mr_entries": [
+          "Fix autoscaler race condition in scale-down",
+          "Add Kubernetes e2e tests for node pool"
+        ]
+      },
+      "jira_highlights": {
+        "epics": ["Cluster Autoscaler Improvements"],
+        "recent_tasks": ["OCPBUGS-1234 Fix node scaling timeout", "SRVKP-567 Add operator health checks"],
+        "labels": ["kubernetes", "operator", "scaling"],
+        "components": ["Autoscaler", "Node Management"]
+      }
+    },
+    {
+      "uid": "bkap",
+      "name": "Benjamin Kapner",
+      "email": "bkap@example.com",
+      "title": "Staff Engineer",
+      "manager": "dgur",
+      "summary": "AI/ML platform architect focused on model serving and training pipelines. Leads KServe integration.",
+      "technologies": ["Python", "KServe", "PyTorch", "Kubernetes"],
+      "products": ["OpenShift AI", "KServe"],
+      "work_focus": ["Model serving", "ML infrastructure"],
+      "jira_projects": ["RHOAIENG", "KSERVE"],
+      "code_activity": {
+        "repos": [
+          {"path": "kserve/kserve", "description": "Kubernetes model serving"},
+          {"path": "opendatahub-io/odh-dashboard", "description": "ODH dashboard"}
+        ],
+        "recent_mr_entries": [
+          "Add multi-model serving support to KServe",
+          "Implement model mesh integration tests"
+        ]
+      },
+      "jira_highlights": {
+        "epics": ["KServe Multi-Model Serving"],
+        "recent_tasks": ["RHOAIENG-100 Integrate KServe 0.12", "KSERVE-50 Fix gRPC inference"],
+        "labels": ["ai-ml", "model-serving", "kserve"],
+        "components": ["Model Serving", "KServe"]
+      }
+    },
+    {
+      "uid": "schen",
+      "name": "Sarah Chen",
+      "email": "schen@example.com",
+      "title": "Software Engineer",
+      "manager": "dgur",
+      "summary": "Backend engineer working on data pipelines and observability. Maintains Prometheus exporters and Grafana dashboards.",
+      "technologies": ["Go", "Prometheus", "Grafana", "Python"],
+      "products": ["Observability Stack", "Monitoring"],
+      "work_focus": ["Observability", "Data pipelines"],
+      "jira_projects": ["OBSRV", "MON"],
+      "code_activity": {
+        "repos": [
+          {"path": "prometheus/prometheus", "description": "Monitoring system"},
+          {"path": "grafana/grafana", "description": "Dashboard platform"}
+        ],
+        "recent_mr_entries": [
+          "Add custom Prometheus metrics for pipeline latency",
+          "Fix Grafana dashboard refresh interval"
+        ]
+      },
+      "jira_highlights": {
+        "epics": ["Unified Observability Platform"],
+        "recent_tasks": ["OBSRV-200 Add metrics endpoint", "MON-55 Dashboard templates"],
+        "labels": ["observability", "monitoring", "prometheus"],
+        "components": ["Prometheus", "Grafana"]
+      }
+    },
+    {
+      "uid": "dgur",
+      "name": "Daniel Gur",
+      "email": "dgur@example.com",
+      "title": "Engineering Manager",
+      "manager": "mrodr",
+      "summary": "Engineering manager overseeing Kubernetes platform and AI/ML infrastructure teams. Previously a principal engineer focused on distributed systems.",
+      "technologies": ["Kubernetes", "Python", "Go"],
+      "products": ["OpenShift", "OpenShift AI"],
+      "work_focus": ["Team leadership", "Platform strategy"],
+      "jira_projects": ["OCPBUGS", "RHOAIENG"],
+      "code_activity": {
+        "repos": [],
+        "recent_mr_entries": []
+      },
+      "jira_highlights": {
+        "epics": [],
+        "recent_tasks": ["RHOAIENG-50 Q2 planning"],
+        "labels": ["management"],
+        "components": []
+      }
+    },
+    {
+      "uid": "jlee",
+      "name": "Jordan Lee",
+      "email": "jlee@example.com",
+      "title": "Senior Software Engineer",
+      "manager": "mrodr",
+      "summary": "Networking specialist working on CNI plugins and service mesh. Core contributor to OVN-Kubernetes.",
+      "technologies": ["Go", "OVN", "Kubernetes", "Networking"],
+      "products": ["OVN-Kubernetes", "Service Mesh"],
+      "work_focus": ["Container networking", "Service mesh"],
+      "jira_projects": ["SDN", "OCPBUGS"],
+      "code_activity": {
+        "repos": [
+          {"path": "ovn-org/ovn-kubernetes", "description": "OVN CNI plugin for Kubernetes"}
+        ],
+        "recent_mr_entries": [
+          "Implement dual-stack support for OVN-Kubernetes",
+          "Fix network policy race condition"
+        ]
+      },
+      "jira_highlights": {
+        "epics": ["OVN Dual-Stack Migration"],
+        "recent_tasks": ["SDN-300 Dual-stack e2e tests", "OCPBUGS-800 Fix pod DNS resolution"],
+        "labels": ["networking", "ovn", "cni"],
+        "components": ["OVN-Kubernetes", "Networking"]
+      }
+    },
+    {
+      "uid": "mrodr",
+      "name": "Mike Rodriguez",
+      "email": "mrodr@example.com",
+      "title": "Senior Engineering Manager",
+      "manager": "",
+      "summary": "Senior manager leading the platform engineering organization. Oversees Kubernetes platform, AI/ML infrastructure, and networking teams.",
+      "technologies": ["Kubernetes"],
+      "products": ["OpenShift"],
+      "work_focus": ["Organization leadership", "Technical strategy"],
+      "jira_projects": [],
+      "code_activity": {
+        "repos": [],
+        "recent_mr_entries": []
+      },
+      "jira_highlights": {
+        "epics": [],
+        "recent_tasks": [],
+        "labels": ["management"],
+        "components": []
+      }
+    },
+    {
+      "uid": "naloni",
+      "name": "Noa Aloni",
+      "email": "naloni@example.com",
+      "title": "Software Engineer",
+      "manager": "dgur",
+      "summary": "Frontend engineer specializing in React and Vue. Builds dashboards and developer tools. Working on the ODH dashboard redesign.",
+      "technologies": ["JavaScript", "Vue", "React", "TypeScript"],
+      "products": ["ODH Dashboard", "Developer Tools"],
+      "work_focus": ["Frontend development", "Dashboard UI"],
+      "jira_projects": ["RHOAIENG"],
+      "code_activity": {
+        "repos": [
+          {"path": "opendatahub-io/odh-dashboard", "description": "ODH dashboard"}
+        ],
+        "recent_mr_entries": [
+          "Redesign model registry page with new sidebar",
+          "Add dark mode support to ODH dashboard"
+        ]
+      },
+      "jira_highlights": {
+        "epics": ["Dashboard Redesign 2026"],
+        "recent_tasks": ["RHOAIENG-200 Model registry UI", "RHOAIENG-210 Dashboard accessibility"],
+        "labels": ["frontend", "dashboard", "ui"],
+        "components": ["Dashboard"]
+      }
+    },
+    {
+      "uid": "rlevi",
+      "name": "Ron Levi",
+      "email": "rlevi@example.com",
+      "title": "Quality Engineer",
+      "manager": "dgur",
+      "summary": "QE engineer building test automation frameworks. Maintains CI/CD test pipelines for OpenShift AI components.",
+      "technologies": ["Python", "Pytest", "Robot Framework", "Jenkins"],
+      "products": ["OpenShift AI", "Test Automation"],
+      "work_focus": ["Test automation", "CI/CD"],
+      "jira_projects": ["RHOAIENG"],
+      "code_activity": {
+        "repos": [
+          {"path": "red-hat-data-services/ods-ci", "description": "OpenShift Data Science CI"}
+        ],
+        "recent_mr_entries": [
+          "Add model serving E2E test suite",
+          "Fix flaky notebook spawn test"
+        ]
+      },
+      "jira_highlights": {
+        "epics": ["E2E Test Coverage Expansion"],
+        "recent_tasks": ["RHOAIENG-300 Model serving test suite", "RHOAIENG-310 Fix CI reliability"],
+        "labels": ["qe", "testing", "ci-cd"],
+        "components": ["Testing"]
+      }
+    },
+    {
+      "uid": "tgunders",
+      "name": "Tom Gunders",
+      "email": "tgunders@example.com",
+      "title": "Principal Engineer",
+      "manager": "mrodr",
+      "summary": "Principal engineer and technical lead for the storage team. Expert in Ceph, CSI drivers, and persistent volume management.",
+      "technologies": ["Go", "Ceph", "CSI", "Kubernetes"],
+      "products": ["ODF", "Rook-Ceph"],
+      "work_focus": ["Storage infrastructure", "CSI drivers"],
+      "jira_projects": ["ODF", "RHSTOR"],
+      "code_activity": {
+        "repos": [
+          {"path": "rook/rook", "description": "Cloud-native storage orchestrator"},
+          {"path": "ceph/ceph-csi", "description": "Ceph CSI driver"}
+        ],
+        "recent_mr_entries": [
+          "Add NVMe-oF transport support to Ceph CSI",
+          "Optimize Rook operator reconcile loop"
+        ]
+      },
+      "jira_highlights": {
+        "epics": ["NVMe-oF Storage Support"],
+        "recent_tasks": ["ODF-400 NVMe-oF CSI integration", "RHSTOR-100 Performance benchmarks"],
+        "labels": ["storage", "ceph", "csi", "nvme"],
+        "components": ["Ceph CSI", "Rook"]
+      }
+    },
+    {
+      "uid": "ybar",
+      "name": "Yael Bar",
+      "email": "ybar@example.com",
+      "title": "Software Engineer",
+      "manager": "mrodr",
+      "summary": "Security engineer working on container image scanning and vulnerability management. Maintains the ACS scanner integration.",
+      "technologies": ["Go", "Python", "Trivy", "ACS"],
+      "products": ["ACS", "Image Scanning"],
+      "work_focus": ["Container security", "Vulnerability scanning"],
+      "jira_projects": ["ROX"],
+      "code_activity": {
+        "repos": [
+          {"path": "stackrox/stackrox", "description": "Advanced Cluster Security"}
+        ],
+        "recent_mr_entries": [
+          "Add SBOM generation to scanner v4",
+          "Fix CVE deduplication in multi-arch images"
+        ]
+      },
+      "jira_highlights": {
+        "epics": ["Scanner V4 Migration"],
+        "recent_tasks": ["ROX-500 SBOM generation", "ROX-510 Multi-arch scanning"],
+        "labels": ["security", "scanning", "acs"],
+        "components": ["Scanner", "Image Analysis"]
+      }
+    }
+  ]
+}
