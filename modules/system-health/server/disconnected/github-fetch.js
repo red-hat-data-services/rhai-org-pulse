@@ -1,10 +1,8 @@
-const nodeFetch = require('node-fetch');
-const { HttpsProxyAgent } = require('https-proxy-agent');
 const AdmZip = require('adm-zip');
 const path = require('path');
 const { upsertReport, readReports, writeReportsAtomic } = require('./storage');
 
-let _fetch = nodeFetch;
+let _fetch = fetch;
 
 const SCORER_OWNER = 'opendatahub-io';
 const SCORER_REPO = 'disconnected-readiness-scorer';
@@ -18,12 +16,11 @@ function buildFetchOptions(token) {
       'Accept': 'application/vnd.github+json',
       'X-GitHub-Api-Version': '2022-11-28'
     },
-    timeout: 30000
+    signal: AbortSignal.timeout(30000)
   };
-  const proxyUrl = process.env.HTTPS_PROXY || process.env.https_proxy;
-  if (proxyUrl) {
-    opts.agent = new HttpsProxyAgent(proxyUrl);
-  }
+  // Note: Proxy support with native fetch requires different approach than node-fetch.
+  // For now, proxies must be configured at the OS/container level (e.g., HTTP_PROXY env var).
+  // Future enhancement could use undici ProxyAgent with dispatcher option.
   return opts;
 }
 
@@ -69,13 +66,14 @@ async function fetchConsolidatedReport(token) {
   }
 
   const downloadUrl = artifact.archive_download_url;
+  let parsed;
   try {
-    const parsed = new URL(downloadUrl);
-    if (parsed.hostname !== 'api.github.com') {
-      throw new Error('Unexpected download URL hostname');
-    }
+    parsed = new URL(downloadUrl);
   } catch {
     throw new Error('Invalid artifact download URL');
+  }
+  if (parsed.hostname !== 'api.github.com') {
+    throw new Error('Unexpected download URL hostname: ' + parsed.hostname);
   }
 
   const downloadOpts = buildFetchOptions(token);
@@ -86,7 +84,7 @@ async function fetchConsolidatedReport(token) {
     throw new Error(`Artifact download failed (${downloadResponse.status})`);
   }
 
-  const buffer = await downloadResponse.buffer();
+  const buffer = Buffer.from(await downloadResponse.arrayBuffer());
   const zip = new AdmZip(buffer);
   const entries = zip.getEntries();
 
@@ -94,10 +92,10 @@ async function fetchConsolidatedReport(token) {
   for (const entry of entries) {
     if (entry.isDirectory) continue;
 
+    // Guard against zip traversal attacks: ensure entry stays within safe bounds
     const resolved = path.resolve('/', entry.entryName);
-    if (!resolved.startsWith('/')) continue;
     const normalized = resolved.slice(1);
-    if (normalized.includes('..') || path.isAbsolute(entry.entryName)) continue;
+    if (normalized.includes('..')) continue;
 
     if (!normalized.endsWith('.json') || normalized === 'summary.json') continue;
 

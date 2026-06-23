@@ -5,6 +5,18 @@ const summary = ref(null)
 const loading = ref(false)
 const error = ref(null)
 
+export function formatRelativeTime(dateStr) {
+  if (!dateStr) return '—'
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return mins + ' min ago'
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return hours + 'h ago'
+  const days = Math.floor(hours / 24)
+  return days + 'd ago'
+}
+
 export function useDisconnectedReadiness() {
   async function loadSummary() {
     loading.value = true
@@ -34,6 +46,6 @@ export function useDisconnectedReadiness() {
   return {
     summary, loading, error,
     readyCount, notReadyCount, totalRepos, readinessPercent,
-    loadSummary, loadRepoDetail
+    loadSummary, loadRepoDetail, formatRelativeTime
   }
 }

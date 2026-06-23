@@ -101,15 +101,6 @@ function upsertReport(data, report) {
   return 'updated';
 }
 
-function validateReport(report) {
-  const errors = [];
-  if (!report || typeof report !== 'object') return { valid: false, errors: ['must be an object'] };
-  if (!report.repo || typeof report.repo !== 'string') errors.push('missing or invalid repo');
-  if (!report.date || typeof report.date !== 'string') errors.push('missing or invalid date');
-  if (!report.score || (report.score !== 'READY' && report.score !== 'NOT READY')) errors.push('score must be READY or NOT READY');
-  if (!Array.isArray(report.rules)) errors.push('rules must be an array');
-  return { valid: errors.length === 0, errors };
-}
 
 function computeTrend(latest, history) {
   if (!history || history.length === 0) return { direction: 'new', blockerDelta: 0 };
@@ -173,7 +164,6 @@ module.exports = {
   buildLatest,
   toDay,
   upsertReport,
-  validateReport,
   computeTrend,
   getSummaryProjection
 };

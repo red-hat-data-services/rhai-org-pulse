@@ -36,8 +36,8 @@ module.exports = function registerRoutes(router, context) {
 
   if (context.registerDiagnostics) {
     context.registerDiagnostics(async function() {
-      var data = storage.readFromStorage('system-health/disconnected/reports.json');
-      var lastFetch = storage.readFromStorage('system-health/disconnected/last-fetch.json');
+      const data = storage.readFromStorage('system-health/disconnected/reports.json');
+      const lastFetch = storage.readFromStorage('system-health/disconnected/last-fetch.json');
       return {
         dataAvailable: !!(data && data.repos && Object.keys(data.repos).length > 0),
         repoCount: data ? Object.keys(data.repos || {}).length : 0,

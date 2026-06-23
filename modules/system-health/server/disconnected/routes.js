@@ -121,7 +121,8 @@ module.exports = function registerDisconnectedRoutes(router, context) {
       return res.status(400).json({ error: 'Invalid repo key format. Expected owner--repo.' });
     }
 
-    const repoSlug = repoKey.replace('--', '/');
+    const sepIdx = repoKey.indexOf('--');
+    const repoSlug = repoKey.slice(0, sepIdx) + '/' + repoKey.slice(sepIdx + 2);
     const data = readReports(readFromStorage);
     const entry = data.repos[repoSlug];
 

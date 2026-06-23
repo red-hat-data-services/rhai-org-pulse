@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { ChevronUpIcon, ChevronDownIcon, SearchIcon, TrendingUpIcon, TrendingDownIcon } from 'lucide-vue-next'
+import { formatRelativeTime } from '../composables/useDisconnectedReadiness.js'
 
 const props = defineProps({
   repos: { type: Array, default: () => [] }
@@ -26,7 +27,7 @@ function toggleSort(field) {
     sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
   } else {
     sortBy.value = field
-    sortDir.value = field === 'trend' ? 'asc' : 'asc'
+    sortDir.value = 'asc'
   }
 }
 
@@ -57,18 +58,6 @@ const filteredRepos = computed(() => {
   })
   return list
 })
-
-function formatRelativeTime(dateStr) {
-  if (!dateStr) return '—'
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return mins + 'm ago'
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return hours + 'h ago'
-  const days = Math.floor(hours / 24)
-  return days + 'd ago'
-}
 
 
 </script>

@@ -1,8 +1,10 @@
 const githubFetch = require('./github-fetch');
 
 let fetchInProgress = false;
+let fetchStartTime = 0;
 let lastSuccessfulFetch = 0;
 const COOLDOWN_MS = 5 * 60 * 1000;
+const FETCH_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes safety timeout
 
 let _secrets = {};
 
@@ -20,8 +22,16 @@ function getTokenSource() {
 }
 
 async function runFetch(storage) {
+  // Safety check: reset stuck fetchInProgress if timeout exceeded
   if (fetchInProgress) {
-    return { status: 'skipped', message: 'Fetch already in progress' };
+    const elapsed = Date.now() - fetchStartTime;
+    if (elapsed > FETCH_TIMEOUT_MS) {
+      console.warn('[system-health/disconnected] Fetch timeout exceeded, resetting fetchInProgress flag');
+      fetchInProgress = false;
+      fetchStartTime = 0;
+    } else {
+      return { status: 'skipped', message: 'Fetch already in progress' };
+    }
   }
 
   const token = getToken();
@@ -30,6 +40,7 @@ async function runFetch(storage) {
   }
 
   fetchInProgress = true;
+  fetchStartTime = Date.now();
   try {
     const fetchResult = await githubFetch.fetchAllReports(storage, token);
     if (fetchResult.status === 'success') {
@@ -44,6 +55,7 @@ async function runFetch(storage) {
     return errorResult;
   } finally {
     fetchInProgress = false;
+    fetchStartTime = 0;
   }
 }
 

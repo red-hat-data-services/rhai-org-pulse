@@ -9,7 +9,7 @@ const nav = inject('moduleNav')
 const {
   summary, loading, error,
   readyCount, notReadyCount, totalRepos, readinessPercent,
-  loadSummary
+  loadSummary, formatRelativeTime
 } = useDisconnectedReadiness()
 
 onMounted(() => { loadSummary() })
@@ -18,17 +18,6 @@ function viewRepoDetail(repoKey) {
   nav.navigateTo('disconnected-repo-detail', { repo: repoKey })
 }
 
-function formatRelativeTime(dateStr) {
-  if (!dateStr) return ''
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return mins + ' min ago'
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return hours + 'h ago'
-  const days = Math.floor(hours / 24)
-  return days + 'd ago'
-}
 </script>
 
 <template>

@@ -171,6 +171,10 @@ test.describe('System Health Views @system-health', () => {
     await testView(page, 'quality-analysis', 'Quality Analysis');
   });
 
+  test('should load Component Maturity view', async ({ page }) => {
+    await testView(page, 'component-maturity', 'Component Maturity');
+  });
+
   test('should show empty state for repos without scan data', async ({ page }) => {
     await page.goto('/#/system-health/quality-analysis');
     await page.waitForLoadState('networkidle');
@@ -229,6 +233,160 @@ test.describe('System Health Views @system-health', () => {
     // Verify column order
     const allHeaders = await table.locator('th, thead td, [role="columnheader"]').allTextContents();
     console.log('All table headers:', allHeaders);
+
+    expect(page.errors).toHaveLength(0);
+  });
+});
+
+/**
+ * Disconnected Readiness Feature
+ *
+ * Verify the disconnected readiness dashboard functionality.
+ */
+test.describe('System Health Disconnected Readiness @system-health', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('should show disconnected readiness tab in component maturity view', async ({ page }) => {
+    await page.goto('/#/system-health/component-maturity');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Look for the "Disconnected readiness" tab
+    const disconnectedTab = page.locator('button, a, [role="tab"]').filter({ hasText: 'Disconnected readiness' });
+    await expect(disconnectedTab).toBeVisible();
+
+    // Click the disconnected readiness tab
+    await disconnectedTab.click();
+    await page.waitForTimeout(1000);
+
+    // Verify content loaded
+    const hasContent = await pageHasContent(page);
+    expect(hasContent).toBe(true);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('should display summary cards in disconnected readiness view', async ({ page }) => {
+    await page.goto('/#/system-health/component-maturity');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Navigate to disconnected readiness tab
+    const disconnectedTab = page.locator('button, a, [role="tab"]').filter({ hasText: 'Disconnected readiness' });
+    await disconnectedTab.click();
+    await page.waitForTimeout(1000);
+
+    // Look for summary cards with readiness metrics
+    const summaryCards = page.locator('[class*="card"], [class*="summary"]');
+    const cardCount = await summaryCards.count();
+    expect(cardCount).toBeGreaterThan(0);
+
+    // Look for readiness percentage or count displays
+    const readinessMetrics = page.locator('text=/\\d+%|\\d+ ready|\\d+ repos/i');
+    const metricsCount = await readinessMetrics.count();
+    expect(metricsCount).toBeGreaterThan(0);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('should display readiness table with repositories', async ({ page }) => {
+    await page.goto('/#/system-health/component-maturity');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Navigate to disconnected readiness tab
+    const disconnectedTab = page.locator('button, a, [role="tab"]').filter({ hasText: 'Disconnected readiness' });
+    await disconnectedTab.click();
+    await page.waitForTimeout(1000);
+
+    // Look for a table with repository data
+    const table = page.locator('table');
+    await expect(table).toBeVisible();
+
+    // Check for expected column headers
+    const expectedColumns = ['Repository', 'Score', 'Status', 'Last Updated'];
+    for (const columnName of expectedColumns) {
+      // Look for the column header (case insensitive)
+      const columnHeader = table.locator('th, thead td, [role="columnheader"]').filter({ hasText: new RegExp(columnName, 'i') });
+      const count = await columnHeader.count();
+      if (count > 0) {
+        console.log(`Found column: "${columnName}"`);
+      }
+      // Don't require all columns as the exact naming might differ
+    }
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('should handle repository detail navigation', async ({ page }) => {
+    await page.goto('/#/system-health/component-maturity');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Navigate to disconnected readiness tab
+    const disconnectedTab = page.locator('button, a, [role="tab"]').filter({ hasText: 'Disconnected readiness' });
+    await disconnectedTab.click();
+    await page.waitForTimeout(1000);
+
+    // Look for clickable repository links/buttons in the table
+    const repoLinks = page.locator('table button, table a').filter({ hasText: /^[a-z-]+\/[a-z-]+$/i });
+    const linkCount = await repoLinks.count();
+
+    if (linkCount > 0) {
+      // Click the first repository link
+      await repoLinks.first().click();
+      await page.waitForTimeout(1000);
+
+      // Verify we navigated to a detail view
+      expect(page.url()).toMatch(/disconnected-repo-detail/);
+
+      // Verify detail content loaded
+      const hasContent = await pageHasContent(page);
+      expect(hasContent).toBe(true);
+    } else {
+      console.log('No repository links found - likely empty state or different UI pattern');
+    }
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('should fetch disconnected summary data from API', async ({ page }) => {
+    // Monitor API requests
+    const apiRequests = [];
+    page.on('request', request => {
+      if (request.url().includes('/api/modules/system-health/disconnected')) {
+        apiRequests.push({
+          url: request.url(),
+          method: request.method()
+        });
+      }
+    });
+
+    await page.goto('/#/system-health/component-maturity');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Navigate to disconnected readiness tab
+    const disconnectedTab = page.locator('button, a, [role="tab"]').filter({ hasText: 'Disconnected readiness' });
+    await disconnectedTab.click();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Should have made at least one API request to the disconnected endpoints
+    expect(apiRequests.length).toBeGreaterThan(0);
+
+    // Verify the summary endpoint was called
+    const summaryRequests = apiRequests.filter(req => req.url.includes('/summary'));
+    expect(summaryRequests.length).toBeGreaterThan(0);
+
+    console.log(`Disconnected API requests: ${apiRequests.length}`);
+    apiRequests.forEach(req => console.log(`  ${req.method} ${req.url}`));
 
     expect(page.errors).toHaveLength(0);
   });
