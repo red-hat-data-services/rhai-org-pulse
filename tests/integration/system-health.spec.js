@@ -282,8 +282,8 @@ test.describe('System Health Disconnected Readiness @system-health', () => {
     await disconnectedTab.click();
     await page.waitForTimeout(1000);
 
-    // Look for summary cards with readiness metrics
-    const summaryCards = page.locator('[class*="card"], [class*="summary"]');
+    // Look for summary cards - ReadinessSummaryCards renders as a grid with white/gray cards
+    const summaryCards = page.locator('div.grid.grid-cols-2 > div');
     const cardCount = await summaryCards.count();
     expect(cardCount).toBeGreaterThan(0);
 
