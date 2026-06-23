@@ -11,12 +11,8 @@ FROM quay.io/org-pulse/org-pulse-core-frontend-builder:${CORE_TAG} AS build
 # Add platform customizations
 COPY platform/ ./platform/
 
-# Add AI Eng modules
-COPY modules/ai-impact/ ./modules/ai-impact/
-COPY modules/releases/ ./modules/releases/
-COPY modules/upstream-pulse/ ./modules/upstream-pulse/
-COPY modules/product-builds/ ./modules/product-builds/
-COPY modules/system-health/ ./modules/system-health/
+# Add all non-core modules (core builder already has team-tracker)
+COPY modules/ ./modules/
 
 RUN npm run build
 

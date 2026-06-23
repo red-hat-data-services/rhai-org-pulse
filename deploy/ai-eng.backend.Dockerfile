@@ -7,16 +7,10 @@ FROM quay.io/org-pulse/org-pulse-core-backend:${CORE_TAG}
 
 USER 0
 
-# Add AI Eng modules
-COPY modules/ai-impact/ ./modules/ai-impact/
-COPY modules/releases/ ./modules/releases/
-COPY modules/upstream-pulse/ ./modules/upstream-pulse/
-COPY modules/product-builds/ ./modules/product-builds/
-COPY modules/system-health/ ./modules/system-health/
+# Add all non-core modules (core image already has team-tracker)
+COPY modules/ ./modules/
 
-# Add AI Eng fixtures (for demo mode)
-COPY fixtures/ai-impact/ ./fixtures/ai-impact/
-COPY fixtures/releases/ ./fixtures/releases/
-COPY fixtures/modules-state.json ./fixtures/modules-state.json
+# Add all non-core fixtures (core image already has core fixtures)
+COPY fixtures/ ./fixtures/
 
 USER 65532
