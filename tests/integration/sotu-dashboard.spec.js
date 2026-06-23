@@ -82,4 +82,32 @@ test.describe('SOTU Widget Dashboard @sotu-dashboard', () => {
     const hasContent = await pageHasContent(page);
     expect(hasContent).toBe(true);
   });
+
+  test('should add and render Release Schedule widget', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'networkidle' });
+    await pageLoadComplete(page);
+
+    // Open widget picker
+    await page.locator('text=Add Widgets').first().click();
+    await expect(page.locator('h2:has-text("Add Widgets")')).toBeVisible({ timeout: DEFAULT_PAGE_WAIT_TIME });
+
+    // Find and toggle the Release Schedule widget
+    const scheduleWidget = page.locator('button', { hasText: 'Release Schedule' });
+    await expect(scheduleWidget).toBeVisible();
+    await scheduleWidget.click();
+
+    // Close the picker
+    await page.locator('button:has(svg)').filter({ has: page.locator('[class*="lucide"]') }).first().click();
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Widget should render with its heading
+    await expect(page.locator('h3:has-text("Release Schedule")')).toBeVisible({ timeout: DEFAULT_PAGE_WAIT_TIME });
+
+    // Should show milestone rows or empty state (not an error)
+    const hasMilestones = await page.locator('text=Plan Freeze').or(page.locator('text=Code Freeze')).or(page.locator('text=Release')).count() > 0;
+    const hasEmpty = await page.locator('text=No upcoming milestones').count() > 0;
+    expect(hasMilestones || hasEmpty).toBe(true);
+
+    expect(page.errors).toHaveLength(0);
+  });
 });
