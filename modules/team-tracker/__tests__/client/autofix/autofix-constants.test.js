@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { computeTeamMetrics, buildTeamTrendData, STATE_OPTIONS } from '../../../client/components/autofix/autofix-constants.js'
+import { computeTeamMetrics, buildTeamTrendData, STATE_OPTIONS, getLastWeekBounds } from '../../../client/components/autofix/autofix-constants.js'
 
 describe('autofix-constants', () => {
   beforeEach(() => {
@@ -55,6 +55,28 @@ describe('autofix-constants', () => {
         expect(point).toHaveProperty('merged')
         expect(point).toHaveProperty('review')
       }
+    })
+  })
+
+  describe('computeTeamMetrics with lastWeek', () => {
+    it('uses terminalAt for terminal issues in lastWeek window', () => {
+      const { start, end } = getLastWeekBounds()
+      const midLastWeek = new Date(start + (end - start) / 2).toISOString()
+      const issues = [
+        { key: 'A-1', created: '2026-01-01', terminalAt: midLastWeek, pipelineState: 'autofix-merged', issueType: 'Bug' },
+        { key: 'A-2', created: midLastWeek, terminalAt: null, pipelineState: 'autofix-review', issueType: 'Bug' }
+      ]
+      const result = computeTeamMetrics(issues, 'lastWeek')
+      expect(result.autofixStates.merged).toBe(1)
+      expect(result.autofixStates.review).toBe(1)
+      expect(result.windowTotal).toBe(2)
+    })
+  })
+
+  describe('buildTeamTrendData with lastWeek', () => {
+    it('returns 4 weekly buckets for lastWeek', () => {
+      const result = buildTeamTrendData([], 'lastWeek')
+      expect(result).toHaveLength(4)
     })
   })
 

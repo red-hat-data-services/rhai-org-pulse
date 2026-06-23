@@ -55,6 +55,46 @@ const selectedProject = ref('all')
 const selectedIssueType = ref('all')
 const selectedComponent = ref('all')
 
+const TERMINAL_STATES = new Set([
+  'autofix-merged', 'autofix-rejected', 'autofix-max-retries', 'autofix-researched'
+])
+
+function getLastWeekBounds() {
+  const now = new Date()
+  const day = now.getUTCDay()
+  const diffToMonday = day === 0 ? 6 : day - 1
+  const thisMonday = new Date(Date.UTC(
+    now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - diffToMonday
+  ))
+  const lastMonday = new Date(thisMonday.getTime() - 7 * 24 * 60 * 60 * 1000)
+  return { start: lastMonday.getTime(), end: thisMonday.getTime() }
+}
+
+function issueTimestamp(issue, isLastWeek) {
+  if (isLastWeek && TERMINAL_STATES.has(issue.pipelineState) && issue.terminalAt) {
+    return new Date(issue.terminalAt).getTime()
+  }
+  return new Date(issue.created).getTime()
+}
+
+const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+function formatUTCShortDate(d) {
+  return SHORT_MONTHS[d.getUTCMonth()] + ' ' + d.getUTCDate()
+}
+
+const windowDateRange = computed(() => {
+  if (props.timeWindow === 'lastWeek') {
+    const { start, end } = getLastWeekBounds()
+    const s = new Date(start)
+    const e = new Date(end - 86400000)
+    return 'Mon ' + formatUTCShortDate(s) + ' – Sun ' + formatUTCShortDate(e)
+  }
+  const days = props.timeWindow === 'week' ? 7 : props.timeWindow === 'month' ? 30 : 90
+  const endDate = new Date()
+  const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+  return formatUTCShortDate(startDate) + ' – ' + formatUTCShortDate(endDate)
+})
+
 const jiraHost = computed(() => props.autofixData?.jiraHost || 'https://redhat.atlassian.net')
 const isEmpty = computed(() => !props.autofixData?.fetchedAt)
 
@@ -165,9 +205,23 @@ const metrics = computed(() => {
   if (!hasActiveFilter.value) return props.autofixData.metrics
 
   const issues = projectFilteredIssues.value
-  const days = props.timeWindow === 'week' ? 7 : props.timeWindow === 'month' ? 30 : 90
-  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-  const windowIssues = issues.filter(i => new Date(i.created) >= cutoff)
+  const isLastWeek = props.timeWindow === 'lastWeek'
+  let windowStart, windowEnd
+
+  if (isLastWeek) {
+    const bounds = getLastWeekBounds()
+    windowStart = bounds.start
+    windowEnd = bounds.end
+  } else {
+    const days = props.timeWindow === 'week' ? 7 : props.timeWindow === 'month' ? 30 : 90
+    windowEnd = Date.now()
+    windowStart = windowEnd - days * 24 * 60 * 60 * 1000
+  }
+
+  const windowIssues = issues.filter(i => {
+    const ts = issueTimestamp(i, isLastWeek)
+    return ts >= windowStart && ts < windowEnd
+  })
 
   const triageTotal = windowIssues.filter(i =>
     i.pipelineState.startsWith('triage-') || i.pipelineState.startsWith('autofix-')
@@ -205,13 +259,24 @@ const trendData = computed(() => {
   if (!hasActiveFilter.value) return props.autofixData?.trendData || []
 
   const issues = projectFilteredIssues.value
-  const weekCounts = props.timeWindow === 'week' ? 4 : props.timeWindow === 'month' ? 8 : 13
-  const now = new Date()
+  const isLW = props.timeWindow === 'lastWeek'
+  const weekCounts = (props.timeWindow === 'week' || isLW) ? 4 : props.timeWindow === 'month' ? 8 : 13
+  const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000
+  let anchor
+  if (isLW) {
+    const { end: thisMonday } = getLastWeekBounds()
+    anchor = thisMonday
+  } else {
+    anchor = Date.now()
+  }
   const points = []
   for (let w = weekCounts - 1; w >= 0; w--) {
-    const weekEnd = new Date(now.getTime() - w * 7 * 24 * 60 * 60 * 1000)
-    const weekStart = new Date(weekEnd.getTime() - 7 * 24 * 60 * 60 * 1000)
-    const weekIssues = issues.filter(i => { const d = new Date(i.created); return d >= weekStart && d < weekEnd })
+    const weekEnd = new Date(anchor - w * MS_PER_WEEK)
+    const weekStart = new Date(weekEnd.getTime() - MS_PER_WEEK)
+    const weekIssues = issues.filter(i => {
+      const ts = issueTimestamp(i, isLW)
+      return ts >= weekStart.getTime() && ts < weekEnd.getTime()
+    })
     const triaged = weekIssues.filter(i => i.pipelineState.startsWith('triage-') || i.pipelineState.startsWith('autofix-')).length
     const autofixed = weekIssues.filter(i => i.pipelineState.startsWith('autofix-')).length
     const merged = weekIssues.filter(i => i.pipelineState === 'autofix-merged').length
@@ -254,9 +319,23 @@ const stateFilterOptions = STATE_OPTIONS.filter(o => o.value !== 'all')
 
 const timeFilteredIssues = computed(() => {
   if (!projectFilteredIssues.value.length) return []
-  const days = props.timeWindow === 'week' ? 7 : props.timeWindow === 'month' ? 30 : 90
-  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-  return projectFilteredIssues.value.filter(i => new Date(i.created) >= cutoff)
+  const isLastWeek = props.timeWindow === 'lastWeek'
+  let windowStart, windowEnd
+
+  if (isLastWeek) {
+    const bounds = getLastWeekBounds()
+    windowStart = bounds.start
+    windowEnd = bounds.end
+  } else {
+    const days = props.timeWindow === 'week' ? 7 : props.timeWindow === 'month' ? 30 : 90
+    windowEnd = Date.now()
+    windowStart = windowEnd - days * 24 * 60 * 60 * 1000
+  }
+
+  return projectFilteredIssues.value.filter(i => {
+    const ts = issueTimestamp(i, isLastWeek)
+    return ts >= windowStart && ts < windowEnd
+  })
 })
 
 const filteredIssues = computed(() => {
@@ -454,6 +533,28 @@ const autofixSegmentTotal = computed(() => autofixSegments.value.reduce((s, v) =
 
 function buildJiraLabelUrl(jiraLabels, excludeLabels) {
   const host = jiraHost.value
+
+  if (props.timeWindow === 'lastWeek') {
+    const isTerminalLabel = jiraLabels.some(l =>
+      l === 'jira-autofix-merged' || l === 'jira-autofix-rejected' ||
+      l === 'jira-autofix-max-retries' || l === 'jira-autofix-researched'
+    )
+    if (isTerminalLabel) {
+      const matchingStates = new Set()
+      for (const l of jiraLabels) {
+        const state = l.replace('jira-', '')
+        if (TERMINAL_STATES.has(state)) matchingStates.add(state)
+      }
+      const keys = timeFilteredIssues.value
+        .filter(i => matchingStates.has(i.pipelineState))
+        .map(i => i.key)
+      if (keys.length > 0) {
+        const jql = `key IN (${keys.map(k => `"${k}"`).join(', ')}) ORDER BY updated DESC`
+        return `${host}/issues/?jql=${encodeURIComponent(jql)}`
+      }
+    }
+  }
+
   const labels = jiraLabels.map(l => `"${l}"`).join(', ')
   let jql = `labels IN (${labels})`
   if (excludeLabels && excludeLabels.length > 0) {
@@ -472,15 +573,22 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
   if (selectedComponent.value !== 'all') {
     jql += ` AND component = "${selectedComponent.value}"`
   }
-  const days = props.timeWindow === 'week' ? 7 : props.timeWindow === 'month' ? 30 : 90
-  const windowCutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-  const earliestIssue = projectFilteredIssues.value.length > 0
-    ? projectFilteredIssues.value.reduce((min, i) => i.created < min ? i.created : min, projectFilteredIssues.value[0].created)
-    : null
-  const dataCutoff = earliestIssue ? new Date(earliestIssue) : null
-  const cutoff = dataCutoff && dataCutoff > windowCutoff ? dataCutoff : windowCutoff
-  jql += ` AND created >= "${cutoff.toISOString().slice(0, 10)}"`
-  jql += ' ORDER BY created DESC'
+  if (props.timeWindow === 'lastWeek') {
+    const { start, end } = getLastWeekBounds()
+    jql += ` AND created >= "${new Date(start).toISOString().slice(0, 10)}"`
+    jql += ` AND created < "${new Date(end).toISOString().slice(0, 10)}"`
+    jql += ' ORDER BY created DESC'
+  } else {
+    const days = props.timeWindow === 'week' ? 7 : props.timeWindow === 'month' ? 30 : 90
+    const windowCutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+    const earliestIssue = projectFilteredIssues.value.length > 0
+      ? projectFilteredIssues.value.reduce((min, i) => i.created < min ? i.created : min, projectFilteredIssues.value[0].created)
+      : null
+    const dataCutoff = earliestIssue ? new Date(earliestIssue) : null
+    const cutoff = dataCutoff && dataCutoff > windowCutoff ? dataCutoff : windowCutoff
+    jql += ` AND created >= "${cutoff.toISOString().slice(0, 10)}"`
+    jql += ' ORDER BY created DESC'
+  }
   return `${host}/issues/?jql=${encodeURIComponent(jql)}`
 }
 </script>
@@ -558,11 +666,20 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
           class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-gray-300"
         >
           <option value="week">This Week</option>
+          <option value="lastWeek">Last Week</option>
           <option value="month">This Month</option>
           <option value="3months">Last 3 Months</option>
         </select>
       </div>
     </header>
+
+    <!-- Date range banner -->
+    <div class="bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-100 dark:border-indigo-800/30 px-6 py-2 text-xs text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
+      <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+      </svg>
+      <span>{{ windowDateRange }}</span>
+    </div>
 
     <!-- Content -->
     <div class="flex-1 overflow-auto">

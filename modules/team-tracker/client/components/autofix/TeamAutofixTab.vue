@@ -267,7 +267,9 @@ import {
   stateLabel,
   stateColorClass,
   computeTeamMetrics,
-  buildTeamTrendData
+  buildTeamTrendData,
+  getLastWeekBounds,
+  issueTimestamp
 } from './autofix-constants.js'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, BarController, Filler, Tooltip, Legend)
@@ -313,6 +315,7 @@ const searchQuery = ref('')
 const stateFilterOptions = STATE_OPTIONS.filter(o => o.value !== 'all')
 const timeWindows = [
   { value: 'week', label: 'Week' },
+  { value: 'lastWeek', label: 'Last Week' },
   { value: 'month', label: 'Month' },
   { value: '3months', label: '3 Months' }
 ]
@@ -348,10 +351,21 @@ const statusFilterLabel = computed(() => {
 const metrics = computed(() => computeTeamMetrics(teamIssues.value, timeWindow.value))
 
 const bugsMerged = computed(() => {
-  const days = timeWindow.value === 'week' ? 7 : timeWindow.value === 'month' ? 30 : 90
-  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-  return teamIssues.value.filter(i =>
-    new Date(i.created) >= cutoff &&
+  const isLW = timeWindow.value === 'lastWeek'
+  let windowStart, windowEnd
+  if (isLW) {
+    const bounds = getLastWeekBounds()
+    windowStart = bounds.start
+    windowEnd = bounds.end
+  } else {
+    const days = timeWindow.value === 'week' ? 7 : timeWindow.value === 'month' ? 30 : 90
+    windowEnd = Date.now()
+    windowStart = windowEnd - days * 24 * 60 * 60 * 1000
+  }
+  return teamIssues.value.filter(i => {
+    const ts = issueTimestamp(i, isLW)
+    return ts >= windowStart && ts < windowEnd
+  }).filter(i =>
     i.pipelineState === 'autofix-merged' &&
     i.issueType === 'Bug'
   ).length
@@ -384,9 +398,21 @@ const pipelineSegments = computed(() => {
 })
 
 const timeFilteredIssues = computed(() => {
-  const days = timeWindow.value === 'week' ? 7 : timeWindow.value === 'month' ? 30 : 90
-  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-  return teamIssues.value.filter(i => new Date(i.created) >= cutoff)
+  const isLW = timeWindow.value === 'lastWeek'
+  let windowStart, windowEnd
+  if (isLW) {
+    const bounds = getLastWeekBounds()
+    windowStart = bounds.start
+    windowEnd = bounds.end
+  } else {
+    const days = timeWindow.value === 'week' ? 7 : timeWindow.value === 'month' ? 30 : 90
+    windowEnd = Date.now()
+    windowStart = windowEnd - days * 24 * 60 * 60 * 1000
+  }
+  return teamIssues.value.filter(i => {
+    const ts = issueTimestamp(i, isLW)
+    return ts >= windowStart && ts < windowEnd
+  })
 })
 
 const displayedIssues = computed(() => {

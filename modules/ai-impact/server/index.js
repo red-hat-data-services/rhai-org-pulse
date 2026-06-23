@@ -113,7 +113,7 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Autofix data ───
 
-  const VALID_AUTOFIX_TIME_WINDOWS = ['week', 'month', '3months'];
+  const VALID_AUTOFIX_TIME_WINDOWS = ['week', 'lastWeek', 'month', '3months'];
 
   let autofixDataCache = null;
 
@@ -137,6 +137,7 @@ module.exports = function registerRoutes(router, context) {
       priority: issue.priority,
       created: issue.created,
       updated: issue.updated,
+      terminalAt: issue.terminalAt || null,
       components: issue.components,
       assignee: issue.assignee,
       pipelineState: issue.pipelineState
@@ -154,9 +155,9 @@ module.exports = function registerRoutes(router, context) {
    *         name: timeWindow
    *         schema:
    *           type: string
-   *           enum: [week, month, 3months]
+   *           enum: [week, lastWeek, month, 3months]
    *           default: month
-   *         description: Time window for metric computation
+   *         description: Time window for metric computation. lastWeek uses calendar week (Mon-Sun) with terminalAt for resolved issues.
    *       - in: query
    *         name: components
    *         schema:

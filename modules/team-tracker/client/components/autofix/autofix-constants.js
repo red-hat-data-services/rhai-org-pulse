@@ -54,14 +54,50 @@ export function stateColorClass(state) {
   return 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
 }
 
+export const TERMINAL_STATES = new Set([
+  'autofix-merged', 'autofix-rejected', 'autofix-max-retries', 'autofix-researched'
+])
+
+export function getLastWeekBounds() {
+  const now = new Date()
+  const day = now.getUTCDay()
+  const diffToMonday = day === 0 ? 6 : day - 1
+  const thisMonday = new Date(Date.UTC(
+    now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - diffToMonday
+  ))
+  const lastMonday = new Date(thisMonday.getTime() - 7 * 24 * 60 * 60 * 1000)
+  return { start: lastMonday.getTime(), end: thisMonday.getTime() }
+}
+
+export function issueTimestamp(issue, isLastWeek) {
+  if (isLastWeek && TERMINAL_STATES.has(issue.pipelineState) && issue.terminalAt) {
+    return new Date(issue.terminalAt).getTime()
+  }
+  return new Date(issue.created).getTime()
+}
+
 /**
  * Compute autofix metrics for a set of team-filtered issues.
  * Mirrors computeAutofixMetrics() from ai-impact autofix-fetcher.js.
  */
 export function computeTeamMetrics(issues, timeWindow) {
-  const days = timeWindow === 'week' ? 7 : timeWindow === 'month' ? 30 : 90
-  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-  const windowIssues = issues.filter(i => new Date(i.created) >= cutoff)
+  const isLastWeek = timeWindow === 'lastWeek'
+  let windowStart, windowEnd
+
+  if (isLastWeek) {
+    const bounds = getLastWeekBounds()
+    windowStart = bounds.start
+    windowEnd = bounds.end
+  } else {
+    const days = timeWindow === 'week' ? 7 : timeWindow === 'month' ? 30 : 90
+    windowEnd = Date.now()
+    windowStart = windowEnd - days * 24 * 60 * 60 * 1000
+  }
+
+  const windowIssues = issues.filter(i => {
+    const ts = issueTimestamp(i, isLastWeek)
+    return ts >= windowStart && ts < windowEnd
+  })
 
   const triageTotal = windowIssues.filter(i =>
     i.pipelineState.startsWith('triage-') || i.pipelineState.startsWith('autofix-')
@@ -109,15 +145,23 @@ export function computeTeamMetrics(issues, timeWindow) {
  * Mirrors buildTrendData() from ai-impact autofix-fetcher.js.
  */
 export function buildTeamTrendData(issues, timeWindow) {
-  const weekCounts = timeWindow === 'week' ? 4 : timeWindow === 'month' ? 8 : 13
-  const now = new Date()
+  const isLW = timeWindow === 'lastWeek'
+  const weekCounts = (timeWindow === 'week' || isLW) ? 4 : timeWindow === 'month' ? 8 : 13
+  const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000
+  let anchor
+  if (isLW) {
+    const { end: thisMonday } = getLastWeekBounds()
+    anchor = thisMonday
+  } else {
+    anchor = Date.now()
+  }
   const points = []
   for (let w = weekCounts - 1; w >= 0; w--) {
-    const weekEnd = new Date(now.getTime() - w * 7 * 24 * 60 * 60 * 1000)
-    const weekStart = new Date(weekEnd.getTime() - 7 * 24 * 60 * 60 * 1000)
+    const weekEnd = new Date(anchor - w * MS_PER_WEEK)
+    const weekStart = new Date(weekEnd.getTime() - MS_PER_WEEK)
     const weekIssues = issues.filter(i => {
-      const d = new Date(i.created)
-      return d >= weekStart && d < weekEnd
+      const ts = issueTimestamp(i, isLW)
+      return ts >= weekStart.getTime() && ts < weekEnd.getTime()
     })
     const triaged = weekIssues.filter(i => i.pipelineState.startsWith('triage-') || i.pipelineState.startsWith('autofix-')).length
     const autofixed = weekIssues.filter(i => i.pipelineState.startsWith('autofix-')).length

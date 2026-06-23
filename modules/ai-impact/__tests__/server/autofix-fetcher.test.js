@@ -3,6 +3,8 @@ import { describe, it, expect } from 'vitest'
 const {
   classifyIssue,
   processIssue,
+  extractTerminalAt,
+  getLastWeekBounds,
   computeAutofixMetrics,
   buildTrendData
 } = require('../../server/jira/autofix-fetcher')
@@ -108,6 +110,7 @@ describe('processIssue', () => {
     expect(result.components).toEqual(['Model Server'])
     expect(result.assignee).toBe('Jane Doe')
     expect(result.pipelineState).toBe('autofix-review')
+    expect(result.terminalAt).toBeNull()
   })
 
   it('handles missing optional fields', () => {
@@ -228,5 +231,146 @@ describe('buildTrendData', () => {
     expect(lastPoint.stale).toBe(1)
     expect(lastPoint.external).toBe(1)
     expect(lastPoint.securityReview).toBe(1)
+  })
+
+  it('returns 4 points for lastWeek window', () => {
+    const trend = buildTrendData([], 'lastWeek')
+    expect(trend).toHaveLength(4)
+  })
+
+  it('uses terminalAt for merged issues in lastWeek window', () => {
+    const { start, end } = getLastWeekBounds()
+    const midLastWeek = new Date(start + (end - start) / 2).toISOString()
+    const threeMonthsAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+    const issues = [
+      { created: threeMonthsAgo, terminalAt: midLastWeek, pipelineState: 'autofix-merged' },
+      { created: midLastWeek, terminalAt: null, pipelineState: 'autofix-review' }
+    ]
+    const trend = buildTrendData(issues, 'lastWeek')
+    const lastBucket = trend[trend.length - 1]
+    expect(lastBucket.merged).toBe(1)
+    expect(lastBucket.review).toBe(1)
+  })
+
+  it('does not use terminalAt for existing time windows', () => {
+    const recent = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+    const old = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString()
+    const issues = [
+      { created: old, terminalAt: recent, pipelineState: 'autofix-merged' }
+    ]
+    const trend = buildTrendData(issues, 'week')
+    const lastBucket = trend[trend.length - 1]
+    expect(lastBucket.merged).toBe(0)
+  })
+})
+
+describe('extractTerminalAt', () => {
+  it('returns timestamp when terminal label appears in changelog', () => {
+    const changelog = {
+      histories: [
+        {
+          created: '2026-06-18T15:11:11.202+0000',
+          items: [
+            { field: 'labels', toString: 'jira-autofix jira-autofix-merged' }
+          ]
+        }
+      ]
+    }
+    expect(extractTerminalAt(changelog, 'autofix-merged')).toBe('2026-06-18T15:11:11.202Z')
+  })
+
+  it('returns the latest timestamp when label was added multiple times', () => {
+    const changelog = {
+      histories: [
+        {
+          created: '2026-04-21T17:30:05.162+0000',
+          items: [
+            { field: 'labels', toString: 'jira-autofix jira-autofix-merged' }
+          ]
+        },
+        {
+          created: '2026-06-11T15:05:41.099+0000',
+          items: [
+            { field: 'labels', toString: 'jira-autofix jira-autofix-merged' }
+          ]
+        }
+      ]
+    }
+    expect(extractTerminalAt(changelog, 'autofix-merged')).toBe('2026-06-11T15:05:41.099Z')
+  })
+
+  it('returns null when label is not found in changelog', () => {
+    const changelog = {
+      histories: [
+        {
+          created: '2026-06-18T15:11:11.202+0000',
+          items: [
+            { field: 'labels', toString: 'jira-autofix jira-autofix-review' }
+          ]
+        }
+      ]
+    }
+    expect(extractTerminalAt(changelog, 'autofix-merged')).toBeNull()
+  })
+
+  it('returns null for empty changelog', () => {
+    expect(extractTerminalAt(null, 'autofix-merged')).toBeNull()
+    expect(extractTerminalAt({}, 'autofix-merged')).toBeNull()
+  })
+
+  it('ignores non-label changelog entries', () => {
+    const changelog = {
+      histories: [
+        {
+          created: '2026-06-18T15:11:11.202+0000',
+          items: [
+            { field: 'status', toString: 'Closed' }
+          ]
+        }
+      ]
+    }
+    expect(extractTerminalAt(changelog, 'autofix-merged')).toBeNull()
+  })
+})
+
+describe('computeAutofixMetrics with lastWeek', () => {
+  it('uses terminalAt for terminal issues in lastWeek window', () => {
+    const { start, end } = getLastWeekBounds()
+    const midLastWeek = new Date(start + (end - start) / 2).toISOString()
+    const threeMonthsAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+    const issues = [
+      { created: threeMonthsAgo, terminalAt: midLastWeek, pipelineState: 'autofix-merged' },
+      { created: midLastWeek, terminalAt: null, pipelineState: 'autofix-review' },
+      { created: threeMonthsAgo, terminalAt: null, pipelineState: 'autofix-merged' }
+    ]
+    const m = computeAutofixMetrics(issues, 'lastWeek')
+    expect(m.autofixStates.merged).toBe(1)
+    expect(m.autofixStates.review).toBe(1)
+    expect(m.windowTotal).toBe(2)
+  })
+
+  it('does not include terminal issues outside lastWeek window', () => {
+    const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
+    const issues = [
+      { created: twoWeeksAgo, terminalAt: twoWeeksAgo, pipelineState: 'autofix-merged' }
+    ]
+    const m = computeAutofixMetrics(issues, 'lastWeek')
+    expect(m.autofixStates.merged).toBe(0)
+  })
+})
+
+describe('getLastWeekBounds', () => {
+  it('returns Monday-to-Monday boundaries', () => {
+    const { start, end } = getLastWeekBounds()
+    const startDate = new Date(start)
+    const endDate = new Date(end)
+    expect(startDate.getUTCDay()).toBe(1)
+    expect(endDate.getUTCDay()).toBe(1)
+    expect(end - start).toBe(7 * 24 * 60 * 60 * 1000)
+  })
+
+  it('end is before now', () => {
+    const { end } = getLastWeekBounds()
+    expect(end).toBeLessThanOrEqual(Date.now())
   })
 })

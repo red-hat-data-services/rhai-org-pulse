@@ -18,7 +18,8 @@
         "AI Core Platform Security"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-59198",
@@ -36,7 +37,8 @@
         "AI Core Platform"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-59193",
@@ -56,7 +58,8 @@
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-pending"
+      "pipelineState": "triage-pending",
+      "terminalAt": null
     },
     {
       "key": "AIPCC-14654",
@@ -74,7 +77,8 @@
         "AI Testing + Workflow Validation"
       ],
       "assignee": "Lance Barto",
-      "pipelineState": "autofix-blocked"
+      "pipelineState": "autofix-blocked",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-59101",
@@ -93,7 +97,8 @@
         "AI Core Platform"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "autofix-blocked"
+      "pipelineState": "autofix-blocked",
+      "terminalAt": null
     },
     {
       "key": "AIPCC-14633",
@@ -109,7 +114,8 @@
       ],
       "components": [],
       "assignee": "Unassigned",
-      "pipelineState": "autofix-pending"
+      "pipelineState": "autofix-pending",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-59075",
@@ -128,7 +134,8 @@
         "AI Core Platform"
       ],
       "assignee": "AIPCC JIRABOT",
-      "pipelineState": "autofix-merged"
+      "pipelineState": "autofix-merged",
+      "terminalAt": "2026-04-21T17:30:05.162+0000"
     },
     {
       "key": "RHOAIENG-59073",
@@ -148,7 +155,8 @@
         "AI Core Platform"
       ],
       "assignee": "Gowtham Shanmugasundaram",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-59067",
@@ -167,7 +175,8 @@
         "Notebooks Images"
       ],
       "assignee": "Vath Sok",
-      "pipelineState": "autofix-blocked"
+      "pipelineState": "autofix-blocked",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-59066",
@@ -185,7 +194,8 @@
         "Notebooks Images"
       ],
       "assignee": "Vath Sok",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-59060",
@@ -203,7 +213,8 @@
         "Notebooks Images"
       ],
       "assignee": "Vath Sok",
-      "pipelineState": "triage-not-fixable"
+      "pipelineState": "triage-not-fixable",
+      "terminalAt": null
     },
     {
       "key": "AIPCC-14624",
@@ -221,7 +232,8 @@
         "AIPCC Ecosystems"
       ],
       "assignee": "Doug Hellmann",
-      "pipelineState": "autofix-review"
+      "pipelineState": "autofix-review",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-59055",
@@ -239,7 +251,8 @@
         "AI Core Platform"
       ],
       "assignee": "Gowtham Shanmugasundaram",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58992",
@@ -257,7 +270,8 @@
         "AI Core Platform"
       ],
       "assignee": "Davide Bianchi",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58984",
@@ -278,7 +292,8 @@
         "Notebooks Server"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "autofix-blocked"
+      "pipelineState": "autofix-blocked",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58983",
@@ -297,7 +312,8 @@
         "AI Core Dashboard"
       ],
       "assignee": "Christian Vogt",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58940",
@@ -316,7 +332,8 @@
         "AI Core Dashboard"
       ],
       "assignee": "Claudia Alphonse",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58933",
@@ -335,7 +352,8 @@
         "AI Core Platform"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58847",
@@ -353,7 +371,8 @@
         "AI Core Dashboard"
       ],
       "assignee": "Manaswini Das",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58830",
@@ -371,7 +390,8 @@
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58829",
@@ -390,7 +410,8 @@
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "AIPCC-14469",
@@ -410,7 +431,8 @@
         "Development Platform"
       ],
       "assignee": "Ryan Petrello",
-      "pipelineState": "autofix-blocked"
+      "pipelineState": "autofix-blocked",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58758",
@@ -429,7 +451,8 @@
         "Gen AI Studio"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58747",
@@ -449,7 +472,8 @@
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58734",
@@ -469,7 +493,8 @@
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "AIPCC-14461",
@@ -488,7 +513,8 @@
         "Wheel Package Index"
       ],
       "assignee": "Ryan Petrello",
-      "pipelineState": "autofix-merged"
+      "pipelineState": "autofix-merged",
+      "terminalAt": "2026-04-21T14:33:05.510+0000"
     },
     {
       "key": "AIPCC-14460",
@@ -507,7 +533,8 @@
         "Wheel Package Index"
       ],
       "assignee": "Ryan Petrello",
-      "pipelineState": "autofix-merged"
+      "pipelineState": "autofix-merged",
+      "terminalAt": "2026-04-21T14:33:05.973+0000"
     },
     {
       "key": "AIPCC-14459",
@@ -526,7 +553,8 @@
         "Wheel Package Index"
       ],
       "assignee": "Ryan Petrello",
-      "pipelineState": "autofix-merged"
+      "pipelineState": "autofix-merged",
+      "terminalAt": "2026-04-21T14:33:06.540+0000"
     },
     {
       "key": "AIPCC-14458",
@@ -545,7 +573,8 @@
         "Wheel Package Index"
       ],
       "assignee": "Ryan Petrello",
-      "pipelineState": "autofix-merged"
+      "pipelineState": "autofix-merged",
+      "terminalAt": "2026-04-21T14:33:07.030+0000"
     },
     {
       "key": "AIPCC-14457",
@@ -564,7 +593,8 @@
         "Wheel Package Index"
       ],
       "assignee": "Ryan Petrello",
-      "pipelineState": "autofix-merged"
+      "pipelineState": "autofix-merged",
+      "terminalAt": "2026-04-21T14:33:07.452+0000"
     },
     {
       "key": "AIPCC-14456",
@@ -583,7 +613,8 @@
         "Wheel Package Index"
       ],
       "assignee": "Ryan Petrello",
-      "pipelineState": "autofix-blocked"
+      "pipelineState": "autofix-blocked",
+      "terminalAt": null
     },
     {
       "key": "AIPCC-14455",
@@ -602,7 +633,8 @@
         "Wheel Package Index"
       ],
       "assignee": "Ryan Petrello",
-      "pipelineState": "autofix-merged"
+      "pipelineState": "autofix-merged",
+      "terminalAt": "2026-04-21T14:33:07.890+0000"
     },
     {
       "key": "AIPCC-14454",
@@ -621,7 +653,8 @@
         "Wheel Package Index"
       ],
       "assignee": "Ryan Petrello",
-      "pipelineState": "autofix-blocked"
+      "pipelineState": "autofix-blocked",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58730",
@@ -640,7 +673,8 @@
         "Gen AI Studio"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58729",
@@ -659,7 +693,8 @@
         "Gen AI Studio"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58728",
@@ -678,7 +713,8 @@
         "Gen AI Studio"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58724",
@@ -698,7 +734,8 @@
         "AI Core Dashboard"
       ],
       "assignee": "Moulali Shikalwadi",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58678",
@@ -716,7 +753,8 @@
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58677",
@@ -734,7 +772,8 @@
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58676",
@@ -752,7 +791,8 @@
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58655",
@@ -770,7 +810,8 @@
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "AIPCC-14433",
@@ -789,7 +830,8 @@
         "Development Platform"
       ],
       "assignee": "Sean Johnston",
-      "pipelineState": "autofix-blocked"
+      "pipelineState": "autofix-blocked",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58577",
@@ -808,7 +850,8 @@
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58544",
@@ -826,7 +869,8 @@
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58513",
@@ -844,7 +888,8 @@
         "AI Core Dashboard"
       ],
       "assignee": "Claudia Alphonse",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "AIPCC-14345",
@@ -862,7 +907,8 @@
         "Accelerator Enablement"
       ],
       "assignee": "AIPCC JIRABOT",
-      "pipelineState": "autofix-researched"
+      "pipelineState": "autofix-researched",
+      "terminalAt": "2026-04-21T14:33:10.934+0000"
     },
     {
       "key": "AIPCC-14342",
@@ -880,7 +926,8 @@
         "Accelerator Enablement"
       ],
       "assignee": "Lance Barto",
-      "pipelineState": "autofix-merged"
+      "pipelineState": "autofix-merged",
+      "terminalAt": "2026-04-21T20:13:13.938+0000"
     },
     {
       "key": "AIPCC-14341",
@@ -898,7 +945,8 @@
         "Accelerator Enablement"
       ],
       "assignee": "AIPCC JIRABOT",
-      "pipelineState": "autofix-researched"
+      "pipelineState": "autofix-researched",
+      "terminalAt": "2026-04-21T14:33:11.560+0000"
     },
     {
       "key": "RHOAIENG-58426",
@@ -917,7 +965,8 @@
         "Gen AI Studio"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58425",
@@ -936,7 +985,8 @@
         "Gen AI Studio"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-not-fixable"
+      "pipelineState": "triage-not-fixable",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58424",
@@ -956,7 +1006,8 @@
         "Gen AI Studio"
       ],
       "assignee": "AIPCC JIRABOT",
-      "pipelineState": "autofix-ci-failing"
+      "pipelineState": "autofix-ci-failing",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58423",
@@ -976,7 +1027,8 @@
         "Gen AI Studio"
       ],
       "assignee": "AIPCC JIRABOT",
-      "pipelineState": "autofix-ci-failing"
+      "pipelineState": "autofix-ci-failing",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58422",
@@ -996,7 +1048,8 @@
         "Gen AI Studio"
       ],
       "assignee": "AIPCC JIRABOT",
-      "pipelineState": "autofix-ci-failing"
+      "pipelineState": "autofix-ci-failing",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58413",
@@ -1015,7 +1068,8 @@
         "Gen AI Studio"
       ],
       "assignee": "AIPCC JIRABOT",
-      "pipelineState": "autofix-blocked"
+      "pipelineState": "autofix-blocked",
+      "terminalAt": null
     },
     {
       "key": "AIPCC-14332",
@@ -1033,7 +1087,8 @@
         "PyTorch"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-not-fixable"
+      "pipelineState": "triage-not-fixable",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58388",
@@ -1053,7 +1108,8 @@
         "AI Core Dashboard"
       ],
       "assignee": "AIPCC JIRABOT",
-      "pipelineState": "autofix-blocked"
+      "pipelineState": "autofix-blocked",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58373",
@@ -1071,7 +1127,8 @@
         "AutoRAG"
       ],
       "assignee": "Jakub Walaszczyk",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "AIPCC-14329",
@@ -1089,7 +1146,8 @@
         "Development Platform"
       ],
       "assignee": "AIPCC JIRABOT",
-      "pipelineState": "autofix-review"
+      "pipelineState": "autofix-review",
+      "terminalAt": null
     },
     {
       "key": "AIPCC-14320",
@@ -1107,7 +1165,8 @@
         "Accelerator Enablement"
       ],
       "assignee": "Anu Oguntayo",
-      "pipelineState": "autofix-merged"
+      "pipelineState": "autofix-merged",
+      "terminalAt": "2026-04-21T14:33:08.401+0000"
     },
     {
       "key": "RHOAIENG-58326",
@@ -1127,7 +1186,8 @@
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-missing-info"
+      "pipelineState": "triage-missing-info",
+      "terminalAt": null
     },
     {
       "key": "AIPCC-14318",
@@ -1145,7 +1205,8 @@
         "PyTorch"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-not-fixable"
+      "pipelineState": "triage-not-fixable",
+      "terminalAt": null
     },
     {
       "key": "RHOAIENG-58288",
@@ -1166,7 +1227,8 @@
         "Notebooks Images"
       ],
       "assignee": "AIPCC JIRABOT",
-      "pipelineState": "autofix-blocked"
+      "pipelineState": "autofix-blocked",
+      "terminalAt": null
     },
     {
       "key": "AIPCC-14272",
@@ -1183,7 +1245,8 @@
         "Accelerator Enablement"
       ],
       "assignee": "AIPCC JIRABOT",
-      "pipelineState": "autofix-ready"
+      "pipelineState": "autofix-ready",
+      "terminalAt": null
     },
     {
       "key": "AIPCC-14220",
@@ -1199,7 +1262,8 @@
       ],
       "components": [],
       "assignee": "AIPCC JIRABOT",
-      "pipelineState": "autofix-review"
+      "pipelineState": "autofix-review",
+      "terminalAt": null
     },
     {
       "key": "AIPCC-14216",
@@ -1217,7 +1281,8 @@
         "Wheel Package Index"
       ],
       "assignee": "AIPCC JIRABOT",
-      "pipelineState": "autofix-merged"
+      "pipelineState": "autofix-merged",
+      "terminalAt": "2026-04-21T14:33:08.929+0000"
     },
     {
       "key": "AIPCC-14188",
@@ -1235,7 +1300,8 @@
         "AIPCC Productization"
       ],
       "assignee": "AIPCC JIRABOT",
-      "pipelineState": "autofix-merged"
+      "pipelineState": "autofix-merged",
+      "terminalAt": "2026-04-21T14:33:09.420+0000"
     },
     {
       "key": "AIPCC-14074",
@@ -1253,7 +1319,8 @@
         "Accelerator Enablement"
       ],
       "assignee": "AIPCC JIRABOT",
-      "pipelineState": "autofix-merged"
+      "pipelineState": "autofix-merged",
+      "terminalAt": "2026-04-21T14:33:09.858+0000"
     },
     {
       "key": "AIPCC-14062",
@@ -1271,7 +1338,8 @@
         "Wheel Package Index"
       ],
       "assignee": "AIPCC JIRABOT",
-      "pipelineState": "autofix-merged"
+      "pipelineState": "autofix-merged",
+      "terminalAt": "2026-04-21T14:33:10.434+0000"
     },
     {
       "key": "AIPCC-14049",
@@ -1290,7 +1358,8 @@
         "Wheel Package Index"
       ],
       "assignee": "Emilien Macchi",
-      "pipelineState": "autofix-blocked"
+      "pipelineState": "autofix-blocked",
+      "terminalAt": null
     },
     {
       "key": "AIPCC-12897",
@@ -1306,7 +1375,8 @@
       ],
       "components": [],
       "assignee": "Martin Prpic",
-      "pipelineState": "autofix-blocked"
+      "pipelineState": "autofix-blocked",
+      "terminalAt": null
     },
     {
       "key": "AIPCC-12895",
@@ -1325,7 +1395,8 @@
         "Accelerator Enablement"
       ],
       "assignee": "Emilien Macchi",
-      "pipelineState": "autofix-blocked"
+      "pipelineState": "autofix-blocked",
+      "terminalAt": null
     }
   ]
 }

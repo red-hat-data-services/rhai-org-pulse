@@ -1,6 +1,17 @@
 const { fetchAllJqlResults } = require('../../../../shared/server/jira');
 const { validateJqlSafeString } = require('../config');
 
+const TERMINAL_LABELS = [
+  'jira-autofix-merged',
+  'jira-autofix-rejected',
+  'jira-autofix-max-retries',
+  'jira-autofix-researched'
+];
+
+const TERMINAL_STATES = new Set([
+  'autofix-merged', 'autofix-rejected', 'autofix-max-retries', 'autofix-researched'
+]);
+
 // All labels from the jira-autofix triage + autofix pipelines
 const TRIAGE_LABELS = [
   'jira-triage-pending',
@@ -64,6 +75,7 @@ function processIssue(issue) {
     priority: issue.fields.priority?.name || 'None',
     created: issue.fields.created,
     updated: issue.fields.updated,
+    terminalAt: null,
     labels,
     components,
     assignee: issue.fields.assignee?.displayName || null,
@@ -71,15 +83,62 @@ function processIssue(issue) {
   };
 }
 
+function extractTerminalAt(changelog, pipelineState) {
+  if (!changelog || !changelog.histories) return null;
+  const targetLabel = 'jira-' + pipelineState.replace('-', '-');
+  let latest = null;
+  for (const history of changelog.histories) {
+    for (const item of history.items) {
+      if (item.field !== 'labels') continue;
+      const after = item.toString || '';
+      if (after.includes(targetLabel)) {
+        const ts = new Date(history.created).getTime();
+        if (latest === null || ts > latest) latest = ts;
+      }
+    }
+  }
+  return latest ? new Date(latest).toISOString() : null;
+}
+
+function getLastWeekBounds() {
+  const now = new Date();
+  const day = now.getUTCDay();
+  const diffToMonday = day === 0 ? 6 : day - 1;
+  const thisMonday = new Date(Date.UTC(
+    now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - diffToMonday
+  ));
+  const lastMonday = new Date(thisMonday.getTime() - 7 * 24 * 60 * 60 * 1000);
+  return { start: lastMonday.getTime(), end: thisMonday.getTime() };
+}
+
+function issueInWindow(issue, windowStart, windowEnd, isLastWeek) {
+  if (isLastWeek && TERMINAL_STATES.has(issue.pipelineState) && issue.terminalAt) {
+    const t = new Date(issue.terminalAt).getTime();
+    return t >= windowStart && t < windowEnd;
+  }
+  const c = new Date(issue.created).getTime();
+  return c >= windowStart && c < windowEnd;
+}
+
 function computeAutofixMetrics(issues, timeWindow) {
-  const days = timeWindow === 'week' ? 7 : timeWindow === 'month' ? 30 : 90;
-  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const isLastWeek = timeWindow === 'lastWeek';
+  let windowStart, windowEnd;
+
+  if (isLastWeek) {
+    const bounds = getLastWeekBounds();
+    windowStart = bounds.start;
+    windowEnd = bounds.end;
+  } else {
+    const days = timeWindow === 'week' ? 7 : timeWindow === 'month' ? 30 : 90;
+    windowEnd = Date.now();
+    windowStart = windowEnd - days * 24 * 60 * 60 * 1000;
+  }
 
   const counts = {};
   let windowTotal = 0;
 
   for (const issue of issues) {
-    if (new Date(issue.created) < cutoff) continue;
+    if (!issueInWindow(issue, windowStart, windowEnd, isLastWeek)) continue;
     windowTotal++;
     counts[issue.pipelineState] = (counts[issue.pipelineState] || 0) + 1;
   }
@@ -135,39 +194,61 @@ function computeAutofixMetrics(issues, timeWindow) {
 // created 3 weeks ago that later moved to autofix-merged appears as "merged"
 // in the week it was created, not when it was merged. This is a known
 // limitation — Jira labels don't carry timestamps for state transitions.
+// The 'lastWeek' time window mitigates this for terminal states by using
+// terminalAt (from the Jira changelog) instead of created.
 function buildTrendData(issues, timeWindow) {
-  const weekCounts = timeWindow === 'week' ? 4 : timeWindow === 'month' ? 8 : 13;
-  const now = new Date();
+  const isLastWeek = timeWindow === 'lastWeek';
+  const weekCounts = (timeWindow === 'week' || isLastWeek) ? 4 : timeWindow === 'month' ? 8 : 13;
   const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
 
-  // Initialize empty buckets
   const buckets = [];
-  for (let w = weekCounts - 1; w >= 0; w--) {
-    const weekEnd = new Date(now.getTime() - w * MS_PER_WEEK);
-    buckets.push({
-      date: weekEnd.toISOString().slice(0, 10),
-      weekStart: weekEnd.getTime() - MS_PER_WEEK,
-      weekEnd: weekEnd.getTime(),
-      triaged: 0, autofixed: 0, merged: 0, total: 0,
-      review: 0, ciFailing: 0, blocked: 0, maxRetries: 0,
-      missingInfo: 0, stale: 0, external: 0, securityReview: 0
-    });
+
+  if (isLastWeek) {
+    const { end: thisMonday } = getLastWeekBounds();
+    for (let w = weekCounts - 1; w >= 0; w--) {
+      const weekEnd = new Date(thisMonday - w * MS_PER_WEEK);
+      buckets.push({
+        date: weekEnd.toISOString().slice(0, 10),
+        weekStart: weekEnd.getTime() - MS_PER_WEEK,
+        weekEnd: weekEnd.getTime(),
+        triaged: 0, autofixed: 0, merged: 0, total: 0,
+        review: 0, ciFailing: 0, blocked: 0, maxRetries: 0,
+        missingInfo: 0, stale: 0, external: 0, securityReview: 0
+      });
+    }
+  } else {
+    const now = new Date();
+    for (let w = weekCounts - 1; w >= 0; w--) {
+      const weekEnd = new Date(now.getTime() - w * MS_PER_WEEK);
+      buckets.push({
+        date: weekEnd.toISOString().slice(0, 10),
+        weekStart: weekEnd.getTime() - MS_PER_WEEK,
+        weekEnd: weekEnd.getTime(),
+        triaged: 0, autofixed: 0, merged: 0, total: 0,
+        review: 0, ciFailing: 0, blocked: 0, maxRetries: 0,
+        missingInfo: 0, stale: 0, external: 0, securityReview: 0
+      });
+    }
   }
 
   const earliest = buckets[0].weekStart;
   const latest = buckets[buckets.length - 1].weekEnd;
 
   for (const issue of issues) {
-    const created = new Date(issue.created).getTime();
-    if (created < earliest || created >= latest) continue;
+    const state = issue.pipelineState;
+    const useTerminalAt = isLastWeek && TERMINAL_STATES.has(state) && issue.terminalAt;
+    const ts = useTerminalAt
+      ? new Date(issue.terminalAt).getTime()
+      : new Date(issue.created).getTime();
 
-    const bucketIdx = Math.floor((created - earliest) / MS_PER_WEEK);
+    if (ts < earliest || ts >= latest) continue;
+
+    const bucketIdx = Math.floor((ts - earliest) / MS_PER_WEEK);
     if (bucketIdx < 0 || bucketIdx >= buckets.length) continue;
     const bucket = buckets[bucketIdx];
 
     bucket.total++;
 
-    const state = issue.pipelineState;
     const isTriage = state.startsWith('triage-');
     const isAutofix = state.startsWith('autofix-');
 
@@ -218,16 +299,40 @@ async function fetchAutofixData(jiraRequest, config) {
   const fields = 'summary,status,issuetype,priority,created,updated,labels,components,assignee';
   const rawIssues = await fetchAllJqlResults(jiraRequest, jql, fields);
 
-  return rawIssues.map(processIssue);
+  const processed = rawIssues.map(processIssue);
+
+  const terminalIssues = processed.filter(i => TERMINAL_STATES.has(i.pipelineState));
+  const BATCH = 10;
+  for (let i = 0; i < terminalIssues.length; i += BATCH) {
+    const batch = terminalIssues.slice(i, i + BATCH);
+    const results = await Promise.allSettled(batch.map(function(issue) {
+      return jiraRequest(
+        '/rest/api/3/issue/' + encodeURIComponent(issue.key) + '?expand=changelog&fields=labels'
+      ).then(function(detail) {
+        issue.terminalAt = extractTerminalAt(detail.changelog, issue.pipelineState);
+      });
+    }));
+    for (const r of results) {
+      if (r.status === 'rejected') {
+        console.error('[autofix] changelog fetch failed:', r.reason?.message || r.reason);
+      }
+    }
+  }
+
+  return processed;
 }
 
 module.exports = {
   fetchAutofixData,
   processIssue,
   classifyIssue,
+  extractTerminalAt,
+  getLastWeekBounds,
   computeAutofixMetrics,
   buildTrendData,
   ALL_PIPELINE_LABELS,
   TRIAGE_LABELS,
-  AUTOFIX_LABELS
+  AUTOFIX_LABELS,
+  TERMINAL_LABELS,
+  TERMINAL_STATES
 };
