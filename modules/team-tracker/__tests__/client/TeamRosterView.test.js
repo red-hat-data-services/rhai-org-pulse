@@ -106,6 +106,23 @@ vi.mock('../../client/services/autofix-api.js', () => ({
   fetchAutofixData: vi.fn().mockResolvedValue({ issues: [], fetchedAt: null })
 }))
 
+vi.mock('../../client/composables/useAllocationStrategy', () => ({
+  useAllocationStrategy: () => ({
+    configured: { value: true },
+    strategyId: { value: 'ai-eng-40-40-20' },
+    name: { value: '40/40/20 Allocation' },
+    description: { value: '' },
+    categories: {
+      value: [
+        { key: 'tech-debt-quality', name: 'Tech Debt & Quality', color: 'amber', target: 40 },
+        { key: 'new-features', name: 'New Features', color: 'blue', target: 40 },
+        { key: 'learning-enablement', name: 'Learning & Enablement', color: 'green', target: 20 }
+      ]
+    },
+    settingsComponent: { value: null }
+  })
+}))
+
 // Mock chart dependencies
 vi.mock('vue-chartjs', () => ({
   Doughnut: { template: '<div></div>', props: ['data', 'options'] },

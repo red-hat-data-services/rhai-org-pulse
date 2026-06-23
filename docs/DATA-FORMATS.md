@@ -417,6 +417,35 @@ Stores all in-app managed teams. Created when `teamDataSource` is set to `"in-ap
 
 **Note:** Sprint tracking boards (`sprint-data/teams.json`) and team record boards (`team-data/teams.json[].boards`) are separate data stores with different lifecycles. Sprint tracking boards are auto-discovered from Jira and include sprint-specific metadata (filters, staleness). Team record boards are user-managed URLs. A future enhancement may link these two systems.
 
+## Allocation Data — `data/allocation/`
+
+Sprint allocation data is stored under `data/allocation/` with an `allocation/` storage prefix. Key files:
+
+- `allocation/sprints/{sprintId}.json` — Per-sprint issue classification data
+- `allocation/summaries/{teamKey}.json` — Aggregated team allocation summary
+- `allocation/org/{orgKey}.json` — Org-level allocation summary
+
+Sprint data files include a `strategyId` field that records which allocation strategy was used for classification. When the strategy changes (different `id` in `platform/allocation-strategy/manifest.json`), cached closed sprint data is invalidated and re-classified on next refresh.
+
+```json
+{
+  "sprintId": 12345,
+  "sprintName": "Sprint 42",
+  "strategyId": "ai-eng-40-40-20",
+  "summary": {
+    "totalPoints": 100,
+    "totalCount": 20,
+    "buckets": {
+      "tech-debt-quality": { "points": 40, "count": 8, "completedPoints": 30, "completedCount": 6 },
+      "new-features": { "points": 40, "count": 8, "completedPoints": 35, "completedCount": 7 },
+      "uncategorized": { "points": 20, "count": 4, "completedPoints": 10, "completedCount": 2 }
+    }
+  }
+}
+```
+
+Bucket keys are dynamic — they come from the active allocation strategy's `categories[].key` values plus a built-in `uncategorized` key. When no allocation strategy is configured (`platform/allocation-strategy/` absent), allocation features are hidden and no data is written.
+
 ## Field Definitions — `data/team-data/field-definitions.json`
 
 Stores custom field definitions for person-level and team-level fields. Created when `teamDataSource` is set to `"in-app"` and fields are defined via the Field Definitions UI or migration.

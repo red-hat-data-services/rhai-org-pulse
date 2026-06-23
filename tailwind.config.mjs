@@ -8,6 +8,13 @@ export default {
     "./src/**/*.{vue,js}",
     "./shared/client/**/*.{vue,js}",
     "./modules/*/client/**/*.{vue,js}",
+    "./platform/**/*.{vue,js,json}",
+  ],
+  safelist: [
+    // Dynamic allocation category colors (used via template literals in AllocationBar, BucketBreakdown, AllocationTeamCard)
+    { pattern: /bg-(amber|blue|green|gray|red|purple|indigo|cyan|teal|orange|pink|yellow|lime|emerald|sky|violet|fuchsia|rose)-400/ },
+    { pattern: /text-(amber|blue|green|gray|red|purple|indigo|cyan|teal|orange|pink|yellow|lime|emerald|sky|violet|fuchsia|rose)-900/ },
+    { pattern: /border-l-(amber|blue|green|gray|red|purple|indigo|cyan|teal|orange|pink|yellow|lime|emerald|sky|violet|fuchsia|rose)-400/ },
   ],
   theme: {
     extend: {

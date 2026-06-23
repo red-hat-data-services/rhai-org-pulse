@@ -3,6 +3,14 @@ import { mount } from '@vue/test-utils'
 import { ref, readonly } from 'vue'
 import ReportsHub from '../../../client/reports/ReportsHub.vue'
 
+vi.mock('@/platform-loader', () => ({
+  loadAllocationStrategy: () => ({
+    id: 'ai-eng-40-40-20',
+    name: '40/40/20 Allocation',
+    categories: []
+  })
+}))
+
 // Mock dependencies
 vi.mock('@shared/client/composables/useRoster', () => ({
   useRoster: () => ({

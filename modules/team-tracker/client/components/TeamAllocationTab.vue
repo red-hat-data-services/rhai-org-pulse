@@ -122,6 +122,7 @@
 import { computed, ref, watch, onMounted } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 import { getBoardSprints, getSprintIssues } from '../services/allocation-api'
+import { useAllocationStrategy } from '../composables/useAllocationStrategy'
 import SprintSelector from './allocation/SprintSelector.vue'
 import SprintStatusBadge from './allocation/SprintStatusBadge.vue'
 import AllocationBar from './allocation/AllocationBar.vue'
@@ -136,14 +137,14 @@ const props = defineProps({
   teamDetail: { type: Object, default: null }
 })
 
-const BUCKET_CONFIGS = [
-  { key: 'tech-debt-quality', name: 'Tech Debt & Quality', target: 40, color: 'amber' },
-  { key: 'new-features', name: 'New Features', target: 40, color: 'blue' },
-  { key: 'learning-enablement', name: 'Learning & Enablement', target: 20, color: 'green' },
-  { key: 'uncategorized', name: 'Uncategorized', target: 0, color: 'gray' }
-]
+const { categories: strategyCategories } = useAllocationStrategy()
 
-const BUCKET_KEYS = BUCKET_CONFIGS.map(b => b.key)
+const BUCKET_CONFIGS = computed(() => [
+  ...strategyCategories.value,
+  { key: 'uncategorized', name: 'Uncategorized', target: 0, color: 'gray' }
+])
+
+const BUCKET_KEYS = computed(() => BUCKET_CONFIGS.value.map(b => b.key))
 
 // --- State ---
 const selectedBoardId = ref(null)
@@ -202,7 +203,7 @@ function getBucketData(key) {
 }
 
 function transformSprintData(data) {
-  const issuesByBucket = Object.fromEntries(BUCKET_KEYS.map(k => [k, []]))
+  const issuesByBucket = Object.fromEntries(BUCKET_KEYS.value.map(k => [k, []]))
   for (const issue of (data.issues || [])) {
     const bucket = issuesByBucket[issue.bucket]
     if (bucket) bucket.push(issue)

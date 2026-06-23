@@ -139,7 +139,9 @@ function buildModuleContext(coreServices, slug, registries = {}) {
 
     registerSecretValidator: secretRegistry
       ? function (key, fn) { secretRegistry.registerValidator(key, fn) }
-      : function () {}
+      : function () {},
+
+    allocationStrategy: coreServices.allocationStrategy || null
   }
 
   return Object.freeze(ctx)
@@ -182,7 +184,8 @@ function createTestContext(overrides = {}) {
     isRefreshRunning: function () { return false },
     secrets: {},
     resolveSecret: function () { return undefined },
-    registerSecretValidator: noop
+    registerSecretValidator: noop,
+    allocationStrategy: null
   }
 
   return { ...defaults, ...overrides }

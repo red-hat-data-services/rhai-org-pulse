@@ -1,54 +1,44 @@
 // @vitest-environment node
 import { describe, it, expect } from 'vitest';
 import {
-  classifyIssue,
   buildSprintSummary,
   buildTeamSummary,
   buildOrgSummary,
+  emptyBuckets,
   getLatestSprintEndDate,
   determineStaleness,
   STALE_THRESHOLD_MS
 } from '../../../server/allocation/classification.js';
 
-describe('classifyIssue', () => {
-  it('classifies Tech Debt & Quality', () => {
-    expect(classifyIssue({ activityType: 'Tech Debt & Quality' })).toBe('tech-debt-quality');
+// Classification tests now live in platform/allocation-strategy tests.
+// The classifyIssue function is no longer exported from classification.js.
+
+const TEST_CATEGORIES = [
+  { key: 'tech-debt-quality', name: 'Tech Debt & Quality', color: 'amber', target: 40 },
+  { key: 'new-features', name: 'New Features', color: 'blue', target: 40 },
+  { key: 'learning-enablement', name: 'Learning & Enablement', color: 'green', target: 20 }
+];
+
+describe('emptyBuckets', () => {
+  it('creates buckets from categories plus uncategorized', () => {
+    const buckets = emptyBuckets(TEST_CATEGORIES);
+    expect(Object.keys(buckets)).toEqual([
+      'tech-debt-quality', 'new-features', 'learning-enablement', 'uncategorized'
+    ]);
+    for (const key of Object.keys(buckets)) {
+      expect(buckets[key]).toEqual({ points: 0, count: 0, issueCount: 0, completedPoints: 0, completedCount: 0 });
+    }
   });
 
-  it('classifies New Features', () => {
-    expect(classifyIssue({ activityType: 'New Features' })).toBe('new-features');
-  });
-
-  it('classifies Learning & Enablement', () => {
-    expect(classifyIssue({ activityType: 'Learning & Enablement' })).toBe('learning-enablement');
-  });
-
-  it('classifies null activityType as uncategorized', () => {
-    expect(classifyIssue({ activityType: null })).toBe('uncategorized');
-  });
-
-  it('classifies undefined activityType as uncategorized', () => {
-    expect(classifyIssue({})).toBe('uncategorized');
-  });
-
-  it('classifies unknown activityType as uncategorized', () => {
-    expect(classifyIssue({ activityType: 'Something Else' })).toBe('uncategorized');
-  });
-
-  it('classifies Vulnerability issue type as tech-debt-quality regardless of activityType', () => {
-    expect(classifyIssue({ issueType: 'Vulnerability', activityType: null })).toBe('tech-debt-quality');
-    expect(classifyIssue({ issueType: 'Vulnerability', activityType: 'New Features' })).toBe('tech-debt-quality');
-  });
-
-  it('classifies Weakness issue type as tech-debt-quality regardless of activityType', () => {
-    expect(classifyIssue({ issueType: 'Weakness', activityType: null })).toBe('tech-debt-quality');
-    expect(classifyIssue({ issueType: 'Weakness', activityType: 'New Features' })).toBe('tech-debt-quality');
+  it('returns only uncategorized when no categories', () => {
+    const buckets = emptyBuckets([]);
+    expect(Object.keys(buckets)).toEqual(['uncategorized']);
   });
 });
 
 describe('buildSprintSummary', () => {
   it('returns zeroed summary for empty issues array', () => {
-    const summary = buildSprintSummary([]);
+    const summary = buildSprintSummary([], 'points', TEST_CATEGORIES);
     expect(summary.totalPoints).toBe(0);
     expect(summary.estimatedIssueCount).toBe(0);
     expect(summary.unestimatedIssueCount).toBe(0);
@@ -66,7 +56,7 @@ describe('buildSprintSummary', () => {
       { bucket: 'uncategorized', storyPoints: 2, completed: true }
     ];
 
-    const summary = buildSprintSummary(issues);
+    const summary = buildSprintSummary(issues, 'points', TEST_CATEGORIES);
     expect(summary.totalPoints).toBe(18);
     expect(summary.estimatedIssueCount).toBe(4);
     expect(summary.unestimatedIssueCount).toBe(0);
@@ -83,7 +73,7 @@ describe('buildSprintSummary', () => {
       { bucket: 'tech-debt-quality', storyPoints: undefined, completed: false }
     ];
 
-    const summary = buildSprintSummary(issues);
+    const summary = buildSprintSummary(issues, 'points', TEST_CATEGORIES);
     expect(summary.estimatedIssueCount).toBe(1);
     expect(summary.unestimatedIssueCount).toBe(2);
     expect(summary.totalPoints).toBe(5);
@@ -95,7 +85,7 @@ describe('buildSprintSummary', () => {
       { bucket: 'new-features', storyPoints: 3, completed: false }
     ];
 
-    const summary = buildSprintSummary(issues);
+    const summary = buildSprintSummary(issues, 'points', TEST_CATEGORIES);
     expect(summary.buckets['new-features'].completedPoints).toBe(5);
     expect(summary.buckets['new-features'].points).toBe(8);
   });
@@ -107,7 +97,7 @@ describe('buildSprintSummary', () => {
       { bucket: 'new-features', storyPoints: 3, completed: false }
     ];
 
-    const summary = buildSprintSummary(issues);
+    const summary = buildSprintSummary(issues, 'points', TEST_CATEGORIES);
     expect(summary.buckets['tech-debt-quality'].issueCount).toBe(2);
     expect(summary.buckets['new-features'].issueCount).toBe(1);
   });
@@ -117,7 +107,7 @@ describe('buildSprintSummary', () => {
       { bucket: 'unknown-bucket', storyPoints: 10, completed: false }
     ];
 
-    const summary = buildSprintSummary(issues);
+    const summary = buildSprintSummary(issues, 'points', TEST_CATEGORIES);
     expect(summary.totalPoints).toBe(0);
   });
 
@@ -129,7 +119,7 @@ describe('buildSprintSummary', () => {
       { bucket: 'uncategorized', storyPoints: null, completed: false }
     ];
 
-    const summary = buildSprintSummary(issues, 'counts');
+    const summary = buildSprintSummary(issues, 'counts', TEST_CATEGORIES);
 
     expect(summary.totalCount).toBe(4);
     expect(summary.estimatedIssueCount).toBe(3);
@@ -149,8 +139,8 @@ describe('buildSprintSummary', () => {
       { bucket: 'new-features', storyPoints: 3, completed: false }
     ];
 
-    const summaryDefault = buildSprintSummary(issues);
-    const summaryExplicit = buildSprintSummary(issues, 'points');
+    const summaryDefault = buildSprintSummary(issues, undefined, TEST_CATEGORIES);
+    const summaryExplicit = buildSprintSummary(issues, 'points', TEST_CATEGORIES);
 
     expect(summaryDefault).toEqual(summaryExplicit);
   });
@@ -281,7 +271,7 @@ describe('buildTeamSummary', () => {
   }
 
   it('returns zeroed summary for empty array', () => {
-    const result = buildTeamSummary([]);
+    const result = buildTeamSummary([], TEST_CATEGORIES);
     expect(result.totalPoints).toBe(0);
     expect(result.boardCount).toBe(0);
     expect(result.buckets['tech-debt-quality'].points).toBe(0);
@@ -297,7 +287,7 @@ describe('buildTeamSummary', () => {
     summaries[1].buckets['learning-enablement'].points = 2;
     summaries[1].buckets['uncategorized'].points = 2;
 
-    const result = buildTeamSummary(summaries);
+    const result = buildTeamSummary(summaries, TEST_CATEGORIES);
     expect(result.totalPoints).toBe(30);
     expect(result.boardCount).toBe(2);
     expect(result.buckets['tech-debt-quality'].points).toBe(12);
@@ -309,7 +299,7 @@ describe('buildTeamSummary', () => {
   it('aggregates issue counts and completed points', () => {
     const summaries = [makeBoardSummary(), makeBoardSummary()];
 
-    const result = buildTeamSummary(summaries);
+    const result = buildTeamSummary(summaries, TEST_CATEGORIES);
     expect(result.estimatedIssueCount).toBe(10);
     expect(result.unestimatedIssueCount).toBe(2);
     expect(result.buckets['tech-debt-quality'].completedPoints).toBe(6);
@@ -317,7 +307,7 @@ describe('buildTeamSummary', () => {
   });
 
   it('works with a single board', () => {
-    const result = buildTeamSummary([makeBoardSummary()]);
+    const result = buildTeamSummary([makeBoardSummary()], TEST_CATEGORIES);
     expect(result.totalPoints).toBe(10);
     expect(result.boardCount).toBe(1);
   });
@@ -352,7 +342,7 @@ describe('buildTeamSummary', () => {
       }
     ];
 
-    const result = buildTeamSummary(summaries);
+    const result = buildTeamSummary(summaries, TEST_CATEGORIES);
 
     expect(result.percentages['tech-debt-quality']).toBeCloseTo(46.67, 1);
     expect(result.percentages['new-features']).toBeCloseTo(33.33, 1);
@@ -379,7 +369,7 @@ describe('buildOrgSummary', () => {
   }
 
   it('returns zeroed summary for empty array', () => {
-    const result = buildOrgSummary([]);
+    const result = buildOrgSummary([], TEST_CATEGORIES);
     expect(result.totalPoints).toBe(0);
     expect(result.teamCount).toBe(0);
     expect(result.boardCount).toBe(0);
@@ -395,7 +385,7 @@ describe('buildOrgSummary', () => {
     teams[1].buckets['learning-enablement'].points = 3;
     teams[1].buckets['uncategorized'].points = 3;
 
-    const result = buildOrgSummary(teams);
+    const result = buildOrgSummary(teams, TEST_CATEGORIES);
     expect(result.totalPoints).toBe(50);
     expect(result.teamCount).toBe(2);
     expect(result.boardCount).toBe(8);
@@ -406,7 +396,7 @@ describe('buildOrgSummary', () => {
   it('sums estimatedIssueCount and unestimatedIssueCount', () => {
     const teams = [makeTeamSummary(), makeTeamSummary()];
 
-    const result = buildOrgSummary(teams);
+    const result = buildOrgSummary(teams, TEST_CATEGORIES);
     expect(result.estimatedIssueCount).toBe(20);
     expect(result.unestimatedIssueCount).toBe(4);
   });

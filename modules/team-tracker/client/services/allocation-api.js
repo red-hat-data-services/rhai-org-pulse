@@ -38,3 +38,7 @@ export async function getGlobalAllocationSummary() {
   return apiRequest(`${BASE}/global/summary`)
 }
 
+export async function getAllocationStrategy() {
+  return apiRequest(`${BASE}/strategy`)
+}
+

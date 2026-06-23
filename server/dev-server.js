@@ -50,6 +50,7 @@ const {
 
 const { SecretRegistry } = require('../shared/server/secret-registry');
 const platformSecretGroups = require('../shared/server/platform-secrets');
+const { loadAllocationStrategy } = require('./platform-loader');
 
 const builtInModules = getDiscoveredModules();
 
@@ -1653,7 +1654,13 @@ messageRegistry.registerProvider('backup-staleness', async function(userContext)
     return [];
   }
 });
-const coreServices = { storage: storageModule, requireAuth: authMiddleware, requireAdmin, requireTeamAdmin, requireRole, requireScope, roleStore, roleRegistry, scopeRegistry, secretRegistry };
+const allocationStrategy = loadAllocationStrategy();
+if (allocationStrategy) {
+  console.log(`[platform] Loaded allocation strategy: ${allocationStrategy.name} (${allocationStrategy.id})`);
+} else {
+  console.log('[platform] No allocation strategy found — allocation features will be hidden');
+}
+const coreServices = { storage: storageModule, requireAuth: authMiddleware, requireAdmin, requireTeamAdmin, requireRole, requireScope, roleStore, roleRegistry, scopeRegistry, secretRegistry, allocationStrategy };
 const registries = { diagnostics: diagnosticsRegistry, messages: messageRegistry, refresh: refreshRegistry, exports: exportRegistry };
 
 const persistedState = loadModuleState(storageModule);

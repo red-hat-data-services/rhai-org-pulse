@@ -1,5 +1,6 @@
 /**
- * Pure business logic for 40-40-20 issue classification and sprint summarization.
+ * Pure business logic for issue classification and sprint summarization.
+ * Category-generic — works with any allocation strategy's categories.
  * No I/O dependencies — safe to use in Lambda, dev server, or tests.
  */
 
@@ -9,37 +10,13 @@
 const STALE_THRESHOLD_MS = 90 * 24 * 60 * 60 * 1000;
 
 /**
- * Classify an issue into a 40-40-20 bucket based on Activity Type custom field
- */
-function classifyIssue(issue) {
-  if (issue.issueType === 'Vulnerability' || issue.issueType === 'Weakness') {
-    return 'tech-debt-quality';
-  }
-
-  switch (issue.activityType) {
-    case 'Tech Debt & Quality':
-      return 'tech-debt-quality';
-    case 'New Features':
-      return 'new-features';
-    case 'Learning & Enablement':
-      return 'learning-enablement';
-    default:
-      return 'uncategorized';
-  }
-}
-
-/**
- * Build sprint summary from classified issues
- * @param {Array} issues - Classified issues
+ * Build sprint summary from classified issues.
+ * @param {Array} issues - Classified issues (each has a .bucket key)
  * @param {string} calculationMode - 'points' (default) or 'counts'
+ * @param {Array} categories - Strategy categories array
  */
-function buildSprintSummary(issues, calculationMode = 'points') {
-  const buckets = {
-    'tech-debt-quality': { points: 0, count: 0, issueCount: 0, completedPoints: 0, completedCount: 0 },
-    'new-features': { points: 0, count: 0, issueCount: 0, completedPoints: 0, completedCount: 0 },
-    'learning-enablement': { points: 0, count: 0, issueCount: 0, completedPoints: 0, completedCount: 0 },
-    'uncategorized': { points: 0, count: 0, issueCount: 0, completedPoints: 0, completedCount: 0 }
-  };
+function buildSprintSummary(issues, calculationMode = 'points', categories = []) {
+  const buckets = emptyBuckets(categories);
 
   let totalPoints = 0;
   let totalCount = 0;
@@ -129,15 +106,17 @@ function determineStaleness(sprints, now = new Date()) {
 }
 
 /**
- * Create a zeroed buckets object.
+ * Create a zeroed buckets object from strategy categories.
+ * Always includes 'uncategorized' as a catch-all.
+ * @param {Array} categories - Strategy categories array
  */
-function emptyBuckets() {
-  return {
-    'tech-debt-quality': { points: 0, count: 0, issueCount: 0, completedPoints: 0, completedCount: 0 },
-    'new-features': { points: 0, count: 0, issueCount: 0, completedPoints: 0, completedCount: 0 },
-    'learning-enablement': { points: 0, count: 0, issueCount: 0, completedPoints: 0, completedCount: 0 },
-    'uncategorized': { points: 0, count: 0, issueCount: 0, completedPoints: 0, completedCount: 0 }
-  };
+function emptyBuckets(categories = []) {
+  const buckets = {};
+  for (const cat of categories) {
+    buckets[cat.key] = { points: 0, count: 0, issueCount: 0, completedPoints: 0, completedCount: 0 };
+  }
+  buckets['uncategorized'] = { points: 0, count: 0, issueCount: 0, completedPoints: 0, completedCount: 0 };
+  return buckets;
 }
 
 /**
@@ -157,9 +136,12 @@ function addBuckets(target, source) {
 
 /**
  * Build a team-level summary by aggregating across board summaries.
+ * @param {Array} boardSummaries - Array of sprint summaries
+ * @param {Array} categories - Strategy categories array
  */
-function buildTeamSummary(boardSummaries) {
-  const buckets = emptyBuckets();
+function buildTeamSummary(boardSummaries, categories = []) {
+  const buckets = emptyBuckets(categories);
+  const allKeys = Object.keys(buckets);
   let totalPoints = 0;
   let totalCount = 0;
   let estimatedIssueCount = 0;
@@ -175,20 +157,10 @@ function buildTeamSummary(boardSummaries) {
     }
   }
 
-  const percentages = {
-    'tech-debt-quality': 0,
-    'new-features': 0,
-    'learning-enablement': 0,
-    'uncategorized': 0
-  };
+  const percentages = Object.fromEntries(allKeys.map(k => [k, 0]));
 
   let totalWeight = 0;
-  const bucketWeights = {
-    'tech-debt-quality': 0,
-    'new-features': 0,
-    'learning-enablement': 0,
-    'uncategorized': 0
-  };
+  const bucketWeights = Object.fromEntries(allKeys.map(k => [k, 0]));
 
   for (const summary of boardSummaries) {
     const weight = (summary.calculationMode === 'counts')
@@ -199,7 +171,7 @@ function buildTeamSummary(boardSummaries) {
 
     totalWeight += weight;
 
-    for (const bucketKey of Object.keys(bucketWeights)) {
+    for (const bucketKey of allKeys) {
       const bucket = summary.buckets?.[bucketKey];
       if (!bucket) continue;
 
@@ -212,7 +184,7 @@ function buildTeamSummary(boardSummaries) {
   }
 
   if (totalWeight > 0) {
-    for (const bucketKey of Object.keys(percentages)) {
+    for (const bucketKey of allKeys) {
       percentages[bucketKey] = (bucketWeights[bucketKey] / totalWeight) * 100;
     }
   }
@@ -230,9 +202,12 @@ function buildTeamSummary(boardSummaries) {
 
 /**
  * Build an org-level summary by aggregating across team summaries.
+ * @param {Array} teamSummaries - Array of team summaries
+ * @param {Array} categories - Strategy categories array
  */
-function buildOrgSummary(teamSummaries) {
-  const buckets = emptyBuckets();
+function buildOrgSummary(teamSummaries, categories = []) {
+  const buckets = emptyBuckets(categories);
+  const allKeys = Object.keys(buckets);
   let totalPoints = 0;
   let totalCount = 0;
   let teamCount = 0;
@@ -252,20 +227,14 @@ function buildOrgSummary(teamSummaries) {
     }
   }
 
-  const percentages = {
-    'tech-debt-quality': 0,
-    'new-features': 0,
-    'learning-enablement': 0,
-    'uncategorized': 0
-  };
+  const percentages = Object.fromEntries(allKeys.map(k => [k, 0]));
 
-  // Use points for percentages when available; fall back to counts.
   if (totalPoints > 0) {
-    for (const bucketKey of Object.keys(percentages)) {
+    for (const bucketKey of allKeys) {
       percentages[bucketKey] = (buckets[bucketKey].points / totalPoints) * 100;
     }
   } else if (totalCount > 0) {
-    for (const bucketKey of Object.keys(percentages)) {
+    for (const bucketKey of allKeys) {
       percentages[bucketKey] = (buckets[bucketKey].count / totalCount) * 100;
     }
   }
@@ -284,10 +253,10 @@ function buildOrgSummary(teamSummaries) {
 
 module.exports = {
   STALE_THRESHOLD_MS,
-  classifyIssue,
   buildSprintSummary,
   buildTeamSummary,
   buildOrgSummary,
   getLatestSprintEndDate,
-  determineStaleness
+  determineStaleness,
+  emptyBuckets
 };

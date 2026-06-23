@@ -31,6 +31,9 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useAllocationStrategy } from '../../composables/useAllocationStrategy'
+
+const { categories } = useAllocationStrategy()
 
 const props = defineProps({
   summary: {
@@ -67,12 +70,14 @@ const completionPercent = computed(() => {
   return Math.round((displayCompleted.value / displayTotal.value) * 100)
 })
 
-const bucketLabels = {
-  'tech-debt-quality': 'Tech Debt & Quality',
-  'new-features': 'New Features',
-  'learning-enablement': 'Learning & Enablement',
-  'uncategorized': 'Uncategorized'
-}
+const categoryLabels = computed(() => {
+  const labels = {}
+  for (const cat of categories.value) {
+    labels[cat.key] = cat.name
+  }
+  labels['uncategorized'] = 'Uncategorized'
+  return labels
+})
 
 const visibleBuckets = computed(() => {
   const valueField = props.metricMode === 'counts' ? 'count' : 'points'
@@ -81,7 +86,7 @@ const visibleBuckets = computed(() => {
     .filter(([, data]) => (data[valueField] || 0) > 0)
     .map(([key, data]) => ({
       key,
-      label: bucketLabels[key] || key,
+      label: categoryLabels.value[key] || key,
       displayValue: data[valueField] || 0,
       displayCompleted: data[completedField] || 0
     }))

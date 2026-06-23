@@ -316,7 +316,7 @@
           </svg>
           <h3 class="text-lg font-medium text-gray-700 mb-2">No allocation boards configured</h3>
           <p class="text-sm max-w-md mx-auto">
-            Add a Jira board URL to this team's board list to enable 40/40/20 allocation tracking.
+            Add a Jira board URL to this team's board list to enable allocation tracking.
             Boards can be configured in the team settings.
           </p>
         </div>
@@ -355,6 +355,7 @@ import { useFieldDefinitions } from '@shared/client/composables/useFieldDefiniti
 import { useOrgRoster } from '../composables/useOrgRoster'
 import { refreshMetrics, getTeamMetrics, apiRequest } from '@shared/client/services/api'
 import { useManagerTutorial } from '../composables/useManagerTutorial'
+import { useAllocationStrategy } from '../composables/useAllocationStrategy'
 import { Marked } from 'marked'
 import DOMPurify from 'dompurify'
 
@@ -366,6 +367,7 @@ const { isAdmin } = useAuth()
 const { canEditTeam, managedUids } = usePermissions()
 const { definitions, fetchDefinitions } = useFieldDefinitions()
 const { resumeTourIfActive, destroyTour } = useManagerTutorial()
+const { configured: allocationConfigured } = useAllocationStrategy()
 
 const fromSotu = computed(() => nav.params.value?.from === 'sotu')
 
@@ -663,13 +665,18 @@ const teamHasAllocationBoards = computed(() => {
   return boards.some(b => b.boardId != null)
 })
 
-const visibleTabs = computed(() => [
-  { id: 'overview', label: 'Overview', icon: TAB_ICONS.overview },
-  { id: 'delivery', label: 'Delivery', icon: TAB_ICONS.delivery },
-  { id: 'backlog', label: 'RFE Backlog', icon: TAB_ICONS.backlog },
-  { id: 'allocation', label: '40/40/20 Allocation', icon: TAB_ICONS.allocation },
-  { id: 'autofix', label: 'Autofix', icon: TAB_ICONS.autofix },
-])
+const visibleTabs = computed(() => {
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: TAB_ICONS.overview },
+    { id: 'delivery', label: 'Delivery', icon: TAB_ICONS.delivery },
+    { id: 'backlog', label: 'RFE Backlog', icon: TAB_ICONS.backlog },
+  ]
+  if (allocationConfigured.value) {
+    tabs.push({ id: 'allocation', label: 'Allocation', icon: TAB_ICONS.allocation })
+  }
+  tabs.push({ id: 'autofix', label: 'Autofix', icon: TAB_ICONS.autofix })
+  return tabs
+})
 
 const VALID_TABS = ['overview', 'delivery', 'backlog', 'allocation', 'autofix']
 let updatingFromUrl = false

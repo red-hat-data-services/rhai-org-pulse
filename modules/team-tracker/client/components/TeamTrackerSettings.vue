@@ -104,12 +104,14 @@ import MigrationFieldConfig from './MigrationFieldConfig.vue'
 import { useSyncStatus } from '../composables/useSyncStatus'
 import { useRosterSync } from '../composables/useRosterSync'
 import { useRoster } from '@shared/client'
+import { useAllocationStrategy } from '../composables/useAllocationStrategy'
 
 defineEmits(['toast'])
 
 const { markConfigDirty } = useSyncStatus()
 const { reloadRoster } = useRoster()
 const { config, fetchConfig, saveConfig } = useRosterSync()
+const { configured: allocationConfigured, name: allocationName } = useAllocationStrategy()
 
 // --- Data source state ---
 const editTeamDataSource = ref('sheets')
@@ -182,7 +184,6 @@ const baseTabs = [
   { id: 'people-teams', label: 'People & Teams' },
   { id: 'jira-sync', label: 'Jira Sync' },
   { id: 'snapshots', label: 'Snapshots' },
-  { id: 'allocation', label: '40/40/20 Allocation' }
 ]
 
 const sheetsTabs = [
@@ -194,8 +195,11 @@ const inAppTabs = [
 ]
 
 const tabs = computed(() => {
-  if (isInAppMode.value) return [...baseTabs, ...inAppTabs]
-  return [...baseTabs, ...sheetsTabs]
+  const result = isInAppMode.value ? [...baseTabs, ...inAppTabs] : [...baseTabs, ...sheetsTabs]
+  if (allocationConfigured.value) {
+    result.push({ id: 'allocation', label: allocationName.value || 'Allocation' })
+  }
+  return result
 })
 
 const activeTab = ref('people-teams')

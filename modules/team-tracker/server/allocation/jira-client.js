@@ -1,24 +1,63 @@
 /**
  * Factory for Jira API client functions.
  *
- * Wraps the shared team-tracker jiraRequest to provide the same interface
- * as the standalone 40-40-20-tracker's jira-client.js.
+ * Wraps the shared team-tracker jiraRequest to provide the allocation
+ * data-fetching interface. Supports strategy-declared extra fields
+ * via the extraFields parameter.
  *
  * Returns { fetchBoards, fetchSprints, fetchSprintIssues, fetchBoardConfiguration, fetchFilterJql, fetchIssuesByJql }.
  */
 
-const FIELD_IDS = {
+const BASE_FIELD_IDS = {
   storyPoints: 'customfield_10028',
-  activityType: 'customfield_10464',
 };
 
-const ISSUE_FIELDS = [
+const BASE_ISSUE_FIELDS = [
   'summary', 'issuetype', 'status', 'assignee',
-  FIELD_IDS.storyPoints, FIELD_IDS.activityType,
+  BASE_FIELD_IDS.storyPoints,
   'resolution', 'resolutiondate'
 ];
 
-function createJiraClient({ jiraRequest, jiraHost }) {
+/**
+ * @param {Object} options
+ * @param {function} options.jiraRequest - Shared Jira request function
+ * @param {string} options.jiraHost - Jira host URL
+ * @param {Object} [options.extraFields] - Strategy-declared extra fields
+ * @param {string[]} [options.extraFields.fieldIds] - Additional Jira field IDs to fetch
+ * @param {function} [options.extraFields.extract] - Extract strategy values from raw fields
+ */
+function createJiraClient({ jiraRequest, jiraHost, extraFields }) {
+  const allFieldIds = [...BASE_ISSUE_FIELDS]
+  if (extraFields?.fieldIds) {
+    for (const id of extraFields.fieldIds) {
+      if (!allFieldIds.includes(id)) allFieldIds.push(id)
+    }
+  }
+
+  const fieldsParam = allFieldIds.join(',')
+
+  function mapIssue(issue) {
+    const storyPoints = issue.fields[BASE_FIELD_IDS.storyPoints] ?? null;
+
+    const mapped = {
+      key: issue.key,
+      summary: issue.fields.summary,
+      issueType: issue.fields.issuetype?.name || null,
+      status: issue.fields.status?.name || null,
+      assignee: issue.fields.assignee?.displayName || null,
+      storyPoints: storyPoints,
+      resolution: issue.fields.resolution?.name || null,
+      resolutionDate: issue.fields.resolutiondate || null,
+      url: `${jiraHost}/browse/${issue.key}`
+    };
+
+    if (extraFields?.extract) {
+      Object.assign(mapped, extraFields.extract(mapped, issue.fields));
+    }
+
+    return mapped;
+  }
+
   /**
    * Fetch all scrum boards for a project (paginated)
    */
@@ -89,28 +128,11 @@ function createJiraClient({ jiraRequest, jiraHost }) {
 
     while (startAt < total) {
       const data = await jiraRequest(
-        `/rest/agile/1.0/sprint/${sprintId}/issue?startAt=${startAt}&maxResults=${maxResults}&fields=summary,issuetype,status,assignee,${FIELD_IDS.storyPoints},${FIELD_IDS.activityType},resolution,resolutiondate`
+        `/rest/agile/1.0/sprint/${sprintId}/issue?startAt=${startAt}&maxResults=${maxResults}&fields=${fieldsParam}`
       );
 
       total = data.total;
-
-      issues.push(...data.issues.map(issue => {
-        const storyPoints = issue.fields[FIELD_IDS.storyPoints] ?? null;
-
-        return {
-          key: issue.key,
-          summary: issue.fields.summary,
-          issueType: issue.fields.issuetype?.name || null,
-          status: issue.fields.status?.name || null,
-          assignee: issue.fields.assignee?.displayName || null,
-          storyPoints: storyPoints,
-          activityType: issue.fields[FIELD_IDS.activityType]?.value || null,
-          resolution: issue.fields.resolution?.name || null,
-          resolutionDate: issue.fields.resolutiondate || null,
-          url: `${jiraHost}/browse/${issue.key}`
-        };
-      }));
-
+      issues.push(...data.issues.map(mapIssue));
       startAt += maxResults;
     }
 
@@ -138,7 +160,6 @@ function createJiraClient({ jiraRequest, jiraHost }) {
 
   /**
    * Fetch issues by JQL query (cursor-based pagination via POST)
-   * NOTE: shared jiraRequest auto-stringifies body — pass body as plain object
    */
   async function fetchIssuesByJql(jql) {
     const issues = [];
@@ -147,7 +168,7 @@ function createJiraClient({ jiraRequest, jiraHost }) {
     let isLast = false;
 
     while (!isLast) {
-      const requestBody = { jql, fields: ISSUE_FIELDS, maxResults };
+      const requestBody = { jql, fields: allFieldIds, maxResults };
       if (nextPageToken) requestBody.nextPageToken = nextPageToken;
 
       const data = await jiraRequest('/rest/api/3/search/jql', {
@@ -155,23 +176,8 @@ function createJiraClient({ jiraRequest, jiraHost }) {
         body: requestBody
       });
 
-      issues.push(...data.issues.map(issue => {
-        const storyPoints = issue.fields[FIELD_IDS.storyPoints] ?? null;
-        return {
-          key: issue.key,
-          summary: issue.fields.summary,
-          issueType: issue.fields.issuetype?.name || null,
-          status: issue.fields.status?.name || null,
-          assignee: issue.fields.assignee?.displayName || null,
-          storyPoints: storyPoints,
-          activityType: issue.fields[FIELD_IDS.activityType]?.value || null,
-          resolution: issue.fields.resolution?.name || null,
-          resolutionDate: issue.fields.resolutiondate || null,
-          url: `${jiraHost}/browse/${issue.key}`
-        };
-      }));
+      issues.push(...data.issues.map(mapIssue));
 
-      // Stop when isLast is explicitly true OR there's no next page token
       isLast = data.isLast === true || !data.nextPageToken;
       nextPageToken = data.nextPageToken;
     }

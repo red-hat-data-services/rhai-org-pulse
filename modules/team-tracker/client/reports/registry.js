@@ -1,3 +1,7 @@
+import { loadAllocationStrategy } from '@/platform-loader'
+
+const allocationStrategy = loadAllocationStrategy()
+
 export const reports = [
   {
     id: 'trends',
@@ -17,13 +21,13 @@ export const reports = [
     component: () => import('./TeamComparisonReport.vue'),
     filters: ['org', 'team'],
   },
-  {
+  ...(allocationStrategy ? [{
     id: 'allocation',
     title: 'Work Allocation',
-    description: '40/40/20 breakdown of tech debt, features, and learning across teams.',
+    description: `${allocationStrategy.name} breakdown across teams.`,
     icon: 'PieChart',
-    tags: ['40/40/20'],
+    tags: ['Allocation'],
     component: () => import('./AllocationReport.vue'),
     filters: [],
-  },
+  }] : []),
 ]

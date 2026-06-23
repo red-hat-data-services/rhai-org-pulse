@@ -12,6 +12,18 @@ vi.mock('../../../client/composables/useOrgRoster', () => ({
   })
 }))
 
+vi.mock('../../../client/composables/useAllocationStrategy', () => ({
+  useAllocationStrategy: () => ({
+    categories: {
+      value: [
+        { key: 'tech-debt-quality', name: 'Tech Debt & Quality', color: 'amber', target: 40 },
+        { key: 'new-features', name: 'New Features', color: 'blue', target: 40 },
+        { key: 'learning-enablement', name: 'Learning & Enablement', color: 'green', target: 20 }
+      ]
+    }
+  })
+}))
+
 const mockSummary = {
   totalPoints: 100,
   totalCount: 20,

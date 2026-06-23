@@ -1,6 +1,6 @@
 /** Orchestration logic for allocation sprint refresh. */
 
-const { classifyIssue, buildSprintSummary, buildTeamSummary, buildOrgSummary } = require('./classification');
+const { buildSprintSummary, buildTeamSummary, buildOrgSummary } = require('./classification');
 
 /**
  * Allowed issue types for calculation.
@@ -10,7 +10,7 @@ const ALLOWED_ISSUE_TYPES = ['Bug', 'Task', 'Story', 'Spike', 'Vulnerability', '
 /**
  * Process a single scrum board: fetch sprints and issues, classify, write to storage.
  */
-async function processBoard({ board, teamId, allocationMode, hardRefresh, fetchSprints, fetchSprintIssues, readStorage, writeStorage }) {
+async function processBoard({ board, teamId, allocationMode, strategy, hardRefresh, fetchSprints, fetchSprintIssues, readStorage, writeStorage }) {
   const calculationMode = allocationMode || 'points';
   console.log(`[allocation] Processing board: ${board.name || board.boardId} (${board.boardId})`);
 
@@ -36,10 +36,10 @@ async function processBoard({ board, teamId, allocationMode, hardRefresh, fetchS
   const sprintResults = [];
 
   for (const sprint of sprintsToProcess) {
-    // Closed-sprint caching: skip Jira fetch if cached and not hard refresh
+    // Closed-sprint caching: skip Jira fetch if cached, strategy matches, and not hard refresh
     if (!hardRefresh && sprint.state === 'closed') {
       const cached = readStorage(`sprints/${sprint.id}.json`);
-      if (cached) {
+      if (cached && cached.strategyId === strategy.id) {
         console.log(`  [allocation] Using cached data for closed sprint: ${sprint.name}`);
         sprintResults.push({
           sprintId: sprint.id,
@@ -63,11 +63,11 @@ async function processBoard({ board, teamId, allocationMode, hardRefresh, fetchS
 
     const classifiedIssues = filteredIssues.map(issue => ({
       ...issue,
-      bucket: classifyIssue(issue),
+      bucket: strategy.classifyIssue(issue),
       completed: issue.resolution != null
     }));
 
-    const summary = buildSprintSummary(classifiedIssues, calculationMode);
+    const summary = buildSprintSummary(classifiedIssues, calculationMode, strategy.categories);
 
     const sprintData = {
       sprintId: sprint.id,
@@ -78,6 +78,7 @@ async function processBoard({ board, teamId, allocationMode, hardRefresh, fetchS
       completeDate: sprint.completeDate,
       boardId: board.boardId,
       teamId,
+      strategyId: strategy.id,
       lastUpdated: new Date().toISOString(),
       issues: classifiedIssues,
       summary
@@ -129,7 +130,7 @@ async function processBoard({ board, teamId, allocationMode, hardRefresh, fetchS
  * Process a kanban board: fetch board config, filter JQL, issues by date range,
  * classify, and create a synthetic sprint.
  */
-async function processKanbanBoard({ board, teamId, allocationMode, fetchBoardConfiguration, fetchFilterJql, fetchIssuesByJql, writeStorage }) {
+async function processKanbanBoard({ board, teamId, allocationMode, strategy, fetchBoardConfiguration, fetchFilterJql, fetchIssuesByJql, writeStorage }) {
   const calculationMode = allocationMode || 'points';
   console.log(`[allocation] Processing kanban board: ${board.name || board.boardId} (${board.boardId})`);
 
@@ -146,11 +147,11 @@ async function processKanbanBoard({ board, teamId, allocationMode, fetchBoardCon
 
   const classifiedIssues = filteredIssues.map(issue => ({
     ...issue,
-    bucket: classifyIssue(issue),
+    bucket: strategy.classifyIssue(issue),
     completed: issue.resolution != null
   }));
 
-  const summary = buildSprintSummary(classifiedIssues, calculationMode);
+  const summary = buildSprintSummary(classifiedIssues, calculationMode, strategy.categories);
 
   const syntheticSprintId = `kanban-${board.boardId}`;
   const syntheticSprint = {
@@ -170,6 +171,7 @@ async function processKanbanBoard({ board, teamId, allocationMode, fetchBoardCon
     completeDate: null,
     boardId: board.boardId,
     teamId,
+    strategyId: strategy.id,
     lastUpdated: new Date().toISOString(),
     issues: classifiedIssues,
     summary
@@ -213,7 +215,7 @@ async function processKanbanBoard({ board, teamId, allocationMode, fetchBoardCon
  * Refresh allocation data for a single team.
  * Iterates the team's boards that have a valid boardId.
  */
-async function refreshTeam({ team, hardRefresh, fetchSprints, fetchSprintIssues, fetchBoardConfiguration, fetchFilterJql, fetchIssuesByJql, fetchBoardType, readStorage, writeStorage }) {
+async function refreshTeam({ team, strategy, hardRefresh, fetchSprints, fetchSprintIssues, fetchBoardConfiguration, fetchFilterJql, fetchIssuesByJql, fetchBoardType, readStorage, writeStorage }) {
   const teamId = team.id;
   const allocationMode = team.metadata?.allocationMode || 'points';
   const boards = (team.boards || []).filter(b => b.boardId);
@@ -243,12 +245,12 @@ async function refreshTeam({ team, hardRefresh, fetchSprints, fetchSprintIssues,
       let result;
       if (boardType === 'kanban') {
         result = await processKanbanBoard({
-          board, teamId, allocationMode,
+          board, teamId, allocationMode, strategy,
           fetchBoardConfiguration, fetchFilterJql, fetchIssuesByJql, writeStorage
         });
       } else {
         result = await processBoard({
-          board, teamId, allocationMode, hardRefresh,
+          board, teamId, allocationMode, strategy, hardRefresh,
           fetchSprints, fetchSprintIssues, readStorage, writeStorage
         });
       }
@@ -263,13 +265,14 @@ async function refreshTeam({ team, hardRefresh, fetchSprints, fetchSprintIssues,
     .filter(r => r.dashboardSprintResult?.summary)
     .map(r => r.dashboardSprintResult.summary);
 
-  const teamSummary = buildTeamSummary(boardSummaries);
+  const teamSummary = buildTeamSummary(boardSummaries, strategy.categories);
 
   const summaryData = {
     teamId,
     teamName: team.name,
     orgKey: team.orgKey,
     allocationMode,
+    strategyId: strategy.id,
     lastUpdated: new Date().toISOString(),
     ...teamSummary,
     boards: {}
@@ -300,7 +303,7 @@ async function refreshTeam({ team, hardRefresh, fetchSprints, fetchSprintIssues,
 /**
  * Full refresh: read teams from team-store, process each, then build org and global summaries.
  */
-async function performRefresh({ teams, hardRefresh, fetchSprints, fetchSprintIssues, fetchBoardConfiguration, fetchFilterJql, fetchIssuesByJql, fetchBoardType, readStorage, writeStorage }) {
+async function performRefresh({ teams, strategy, hardRefresh, fetchSprints, fetchSprintIssues, fetchBoardConfiguration, fetchFilterJql, fetchIssuesByJql, fetchBoardType, readStorage, writeStorage }) {
   console.log(`[allocation] Starting refresh for ${teams.length} teams (hardRefresh: ${hardRefresh})`);
   const refreshStart = Date.now();
 
@@ -309,7 +312,7 @@ async function performRefresh({ teams, hardRefresh, fetchSprints, fetchSprintIss
   for (const team of teams) {
     try {
       const result = await refreshTeam({
-        team, hardRefresh,
+        team, strategy, hardRefresh,
         fetchSprints, fetchSprintIssues,
         fetchBoardConfiguration, fetchFilterJql, fetchIssuesByJql,
         fetchBoardType, readStorage, writeStorage
@@ -332,9 +335,10 @@ async function performRefresh({ teams, hardRefresh, fetchSprints, fetchSprintIss
 
   const orgSummaries = [];
   for (const [orgKey, orgTeams] of orgGroups) {
-    const orgSummary = buildOrgSummary(orgTeams);
+    const orgSummary = buildOrgSummary(orgTeams, strategy.categories);
     const orgData = {
       orgKey,
+      strategyId: strategy.id,
       lastUpdated: new Date().toISOString(),
       ...orgSummary,
       teams: orgTeams.map(t => ({
@@ -351,8 +355,9 @@ async function performRefresh({ teams, hardRefresh, fetchSprints, fetchSprintIss
   }
 
   // Build global summary
-  const globalSummary = buildOrgSummary(teamResults);
+  const globalSummary = buildOrgSummary(teamResults, strategy.categories);
   writeStorage('summaries/global.json', {
+    strategyId: strategy.id,
     lastUpdated: new Date().toISOString(),
     ...globalSummary,
     teams: teamResults.map(t => ({

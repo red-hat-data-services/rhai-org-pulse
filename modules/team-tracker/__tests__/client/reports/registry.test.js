@@ -1,5 +1,19 @@
-import { describe, it, expect } from 'vitest'
-import { reports } from '../../../client/reports/registry'
+import { describe, it, expect, vi } from 'vitest'
+
+vi.mock('@/platform-loader', () => ({
+  loadAllocationStrategy: () => ({
+    id: 'ai-eng-40-40-20',
+    name: '40/40/20 Allocation',
+    description: 'AI Engineering allocation strategy',
+    categories: [
+      { key: 'tech-debt-quality', name: 'Tech Debt & Quality', color: 'amber', target: 40 },
+      { key: 'new-features', name: 'New Features', color: 'blue', target: 40 },
+      { key: 'learning-enablement', name: 'Learning & Enablement', color: 'green', target: 20 }
+    ]
+  })
+}))
+
+const { reports } = await import('../../../client/reports/registry')
 
 describe('Report Registry', () => {
   it('has at least one report', () => {
@@ -30,7 +44,7 @@ describe('Report Registry', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it('contains expected reports', () => {
+  it('contains expected reports when strategy is configured', () => {
     const ids = reports.map(r => r.id)
     expect(ids).toContain('trends')
     expect(ids).toContain('team-comparison')
@@ -45,5 +59,22 @@ describe('Report Registry', () => {
   it('allocation report uses no shared filters', () => {
     const allocation = reports.find(r => r.id === 'allocation')
     expect(allocation.filters).toEqual([])
+  })
+
+  it('allocation report description includes strategy name', () => {
+    const allocation = reports.find(r => r.id === 'allocation')
+    expect(allocation.description).toContain('40/40/20 Allocation')
+  })
+})
+
+describe('Report Registry without strategy', () => {
+  it('excludes allocation report when no strategy configured', async () => {
+    vi.doMock('@/platform-loader', () => ({
+      loadAllocationStrategy: () => null
+    }))
+    const { reports: reportsNoStrategy } = await import('../../../client/reports/registry')
+    const ids = reportsNoStrategy.map(r => r.id)
+    expect(ids).not.toContain('allocation')
+    vi.doUnmock('@/platform-loader')
   })
 })

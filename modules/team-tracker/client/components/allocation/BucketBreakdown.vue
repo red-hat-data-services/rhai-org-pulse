@@ -46,15 +46,7 @@ const displayValue = computed(() => props.metricMode === 'counts' ? props.count 
 const displayCompleted = computed(() => props.metricMode === 'counts' ? props.completedCount : props.completedPoints)
 const unitLabel = computed(() => props.metricMode === 'counts' ? 'issues' : 'pts')
 
-const borderClass = computed(() => {
-  const map = {
-    amber: 'border-l-amber-400',
-    blue: 'border-l-blue-400',
-    green: 'border-l-green-400',
-    gray: 'border-l-gray-400'
-  }
-  return map[props.color] || 'border-l-gray-400'
-})
+const borderClass = computed(() => `border-l-${props.color}-400`)
 
 const variance = computed(() => props.percentage - props.targetPercentage)
 

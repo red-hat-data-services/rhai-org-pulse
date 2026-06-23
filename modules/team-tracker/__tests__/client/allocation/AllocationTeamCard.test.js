@@ -1,6 +1,18 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import AllocationTeamCard from '../../../client/components/allocation/AllocationTeamCard.vue'
+
+vi.mock('../../../client/composables/useAllocationStrategy', () => ({
+  useAllocationStrategy: () => ({
+    categories: {
+      value: [
+        { key: 'tech-debt-quality', name: 'Tech Debt', color: 'amber', target: 40 },
+        { key: 'new-features', name: 'Features', color: 'blue', target: 40 },
+        { key: 'learning-enablement', name: 'Learning', color: 'green', target: 20 }
+      ]
+    }
+  })
+}))
 
 describe('AllocationTeamCard', () => {
   const defaultProps = {

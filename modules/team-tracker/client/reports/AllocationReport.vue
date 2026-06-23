@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch, inject } from 'vue'
 import { useOrgRoster } from '../composables/useOrgRoster'
+import { useAllocationStrategy } from '../composables/useAllocationStrategy'
 import { getOrgAllocationSummary, getGlobalAllocationSummary } from '../services/allocation-api'
 import OrgSelector from '../components/OrgSelector.vue'
 import AllocationBar from '../components/allocation/AllocationBar.vue'
@@ -9,6 +10,7 @@ import MetricToggle from '../components/allocation/MetricToggle.vue'
 
 const nav = inject('moduleNav')
 const { orgs, loadOrgs } = useOrgRoster()
+const { categories } = useAllocationStrategy()
 
 const selectedOrg = ref(null)
 const metricMode = ref('points')
@@ -69,7 +71,8 @@ function teamBuckets(team) {
   if (team.buckets) return team.buckets
   const buckets = {}
   const p = team.percentages || {}
-  for (const key of ['tech-debt-quality', 'new-features', 'learning-enablement', 'uncategorized']) {
+  const keys = [...categories.value.map(c => c.key), 'uncategorized']
+  for (const key of keys) {
     const pct = p[key] || 0
     buckets[key] = {
       points: Math.round((pct / 100) * (team.totalPoints || 0)),

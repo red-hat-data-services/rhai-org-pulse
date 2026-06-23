@@ -17,16 +17,45 @@ module.exports = function registerAllocationRoutes(router, context) {
 
   const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
+  // Read allocation strategy (loaded by server/platform-loader.js, passed via module context)
+  const strategy = context.allocationStrategy || null;
+
   const { JIRA_HOST, jiraRequest } = require('../../../../shared/server/jira');
 
   const { createJiraClient } = require('./jira-client');
-  const jiraClient = createJiraClient({ jiraRequest, jiraHost: JIRA_HOST });
+  const extraFields = strategy?.getJiraFields ? strategy.getJiraFields() : null;
+  const jiraClient = createJiraClient({ jiraRequest, jiraHost: JIRA_HOST, extraFields });
 
   const { performRefresh } = require('./orchestration');
 
   // Storage helpers — all allocation data under allocation/ prefix
   function allocRead(key) { return readFromStorage(allocationKey(key)); }
   function allocWrite(key, data) { writeToStorage(allocationKey(key), data); }
+
+  // ─── Strategy metadata endpoint ───
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/allocation/strategy:
+   *   get:
+   *     tags: ['Allocation']
+   *     summary: Get active allocation strategy metadata
+   *     responses:
+   *       200:
+   *         description: Strategy metadata or unconfigured status
+   */
+  router.get('/allocation/strategy', requireScope('metrics:read'), function(_req, res) {
+    if (!strategy) {
+      return res.json({ configured: false });
+    }
+    res.json({
+      configured: true,
+      id: strategy.id,
+      name: strategy.name,
+      description: strategy.description,
+      categories: strategy.categories
+    });
+  });
 
   // ─── Refresh state (in-memory) ───
 
@@ -69,6 +98,9 @@ module.exports = function registerAllocationRoutes(router, context) {
   router.post('/allocation/refresh', requireAdmin, requireScope('metrics:write'), async function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Refresh disabled in demo mode' });
+    }
+    if (!strategy) {
+      return res.json({ status: 'skipped', message: 'No allocation strategy configured' });
     }
     if (refreshState.running) {
       return res.json({ status: 'already_running' });
@@ -121,6 +153,7 @@ module.exports = function registerAllocationRoutes(router, context) {
 
         const result = await performRefresh({
           teams,
+          strategy,
           hardRefresh,
           fetchSprints: jiraClient.fetchSprints,
           fetchSprintIssues: jiraClient.fetchSprintIssues,
@@ -178,6 +211,7 @@ module.exports = function registerAllocationRoutes(router, context) {
 
   async function runAllocationRefresh(options = {}) {
     if (DEMO_MODE) return;
+    if (!strategy) return;
     if (refreshState.running) return;
 
     if (!options.skipCooldown && refreshState.completedAt) {
@@ -203,6 +237,7 @@ module.exports = function registerAllocationRoutes(router, context) {
 
       const result = await performRefresh({
         teams,
+        strategy,
         hardRefresh: false,
         fetchSprints: jiraClient.fetchSprints,
         fetchSprintIssues: jiraClient.fetchSprintIssues,

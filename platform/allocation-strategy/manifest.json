@@ -1,0 +1,11 @@
+{
+  "id": "ai-eng-40-40-20",
+  "name": "AI Engineering 40/40/20",
+  "description": "Classifies work into Tech Debt & Quality (40%), New Features (40%), and Learning & Enablement (20%)",
+  "categories": [
+    { "key": "tech-debt-quality", "name": "Tech Debt & Quality", "color": "amber", "target": 40 },
+    { "key": "new-features", "name": "New Features", "color": "blue", "target": 40 },
+    { "key": "learning-enablement", "name": "Learning & Enablement", "color": "green", "target": 20 }
+  ],
+  "classify": "./classify.js"
+}
