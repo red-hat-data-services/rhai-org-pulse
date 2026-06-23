@@ -5,6 +5,7 @@ import FeatureTable from '../components/FeatureTable.vue'
 import { useReleasePicker } from '../composables/useReleasePicker'
 import { useComponentBreakdown } from '../composables/useComponentBreakdown'
 import { useTvFvData } from '../composables/useTvFvData'
+import { useReleaseFamily, getAlignmentTarget } from '../composables/useReleaseFamily'
 
 const FEATURE_COLS = ['key', 'summary', 'status', 'target_version', 'fix_versions', 'color_status', 'product_manager', 'assignee', 'team', 'component']
 
@@ -62,6 +63,22 @@ const filteredSummary = computed(() => {
   }
   return rows
 })
+
+// ---------------------------------------------------------------------------
+// Product filter + release family sorting
+// ---------------------------------------------------------------------------
+
+const {
+  selectedFamily, availableFamilies,
+  toggleSummarySort, summarySortIcon,
+  sortedSummary,
+} = useReleaseFamily(filteredSummary, data)
+
+/** Compute target alignment for a row based on days to GA */
+function targetForRow(row) {
+  var d = daysToGa(row.ga_date)
+  return getAlignmentTarget(d)
+}
 
 const { releaseComponentBreakdown } = useComponentBreakdown(data, releaseData)
 
@@ -161,6 +178,26 @@ onBeforeUnmount(() => {
         <span class="italic">Counts reflect data at fetch time; live Jira may differ</span>
       </div>
 
+      <!-- Release Family Filter -->
+      <div class="flex items-center gap-1.5 mb-4 flex-wrap">
+        <button
+          class="px-3 py-1.5 text-xs font-medium rounded-md border transition-colors"
+          :class="selectedFamily === 'all'
+            ? 'bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900 border-gray-800 dark:border-gray-200'
+            : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'"
+          @click="selectedFamily = 'all'"
+        >All</button>
+        <button
+          v-for="fam in availableFamilies"
+          :key="fam.key"
+          class="px-3 py-1.5 text-xs font-medium rounded-md border transition-colors"
+          :class="selectedFamily === fam.key
+            ? 'bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900 border-gray-800 dark:border-gray-200'
+            : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'"
+          @click="selectedFamily = fam.key"
+        >{{ fam.label }}</button>
+      </div>
+
       <!-- Executive Summary -->
       <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
         <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
@@ -170,21 +207,40 @@ onBeforeUnmount(() => {
           <table class="min-w-full text-sm">
             <thead>
               <tr class="bg-gray-50 dark:bg-gray-800/50">
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Release</th>
-                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Total</th>
-                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Aligned</th>
-                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">TV-Only</th>
-                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">FV-Only</th>
-                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Mismatched</th>
-                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Alignment</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">GA Date</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSummarySort('release')">
+                  <span class="inline-flex items-center gap-1">Release<svg v-if="summarySortIcon('release') !== 'none'" class="w-3 h-3 inline-block transition-transform" :class="{ 'rotate-180': summarySortIcon('release') === 'desc' }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" /></svg></span>
+                </th>
+                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSummarySort('total')">
+                  <span class="inline-flex items-center gap-1 justify-end">Total<svg v-if="summarySortIcon('total') !== 'none'" class="w-3 h-3 inline-block transition-transform" :class="{ 'rotate-180': summarySortIcon('total') === 'desc' }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" /></svg></span>
+                </th>
+                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSummarySort('aligned')">
+                  <span class="inline-flex items-center gap-1 justify-end">Aligned<svg v-if="summarySortIcon('aligned') !== 'none'" class="w-3 h-3 inline-block transition-transform" :class="{ 'rotate-180': summarySortIcon('aligned') === 'desc' }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" /></svg></span>
+                </th>
+                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSummarySort('tv_only')">
+                  <span class="inline-flex items-center gap-1 justify-end">TV-Only<svg v-if="summarySortIcon('tv_only') !== 'none'" class="w-3 h-3 inline-block transition-transform" :class="{ 'rotate-180': summarySortIcon('tv_only') === 'desc' }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" /></svg></span>
+                </th>
+                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSummarySort('fv_only')">
+                  <span class="inline-flex items-center gap-1 justify-end">FV-Only<svg v-if="summarySortIcon('fv_only') !== 'none'" class="w-3 h-3 inline-block transition-transform" :class="{ 'rotate-180': summarySortIcon('fv_only') === 'desc' }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" /></svg></span>
+                </th>
+                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSummarySort('mismatched')">
+                  <span class="inline-flex items-center gap-1 justify-end">Mismatched<svg v-if="summarySortIcon('mismatched') !== 'none'" class="w-3 h-3 inline-block transition-transform" :class="{ 'rotate-180': summarySortIcon('mismatched') === 'desc' }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" /></svg></span>
+                </th>
+                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSummarySort('alignment_pct')">
+                  <span class="inline-flex items-center gap-1 justify-end">Alignment<svg v-if="summarySortIcon('alignment_pct') !== 'none'" class="w-3 h-3 inline-block transition-transform" :class="{ 'rotate-180': summarySortIcon('alignment_pct') === 'desc' }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" /></svg></span>
+                </th>
+                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Target</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSummarySort('ga_date')">
+                  <span class="inline-flex items-center gap-1">GA Date<svg v-if="summarySortIcon('ga_date') !== 'none'" class="w-3 h-3 inline-block transition-transform" :class="{ 'rotate-180': summarySortIcon('ga_date') === 'desc' }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" /></svg></span>
+                </th>
                 <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Days to GA</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Planning Freeze</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSummarySort('planning_freeze')">
+                  <span class="inline-flex items-center gap-1">Planning Freeze<svg v-if="summarySortIcon('planning_freeze') !== 'none'" class="w-3 h-3 inline-block transition-transform" :class="{ 'rotate-180': summarySortIcon('planning_freeze') === 'desc' }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" /></svg></span>
+                </th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
               <tr
-                v-for="row in filteredSummary"
+                v-for="row in sortedSummary"
                 :key="row.release"
                 class="hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
                 :class="{ 'bg-blue-50/50 dark:bg-blue-900/10': row.release === selectedRelease }"
@@ -227,6 +283,19 @@ onBeforeUnmount(() => {
                   >
                     {{ row.alignment_pct }}%
                   </span>
+                  <span v-else class="text-gray-400">&mdash;</span>
+                </td>
+                <td class="px-4 py-2 text-right text-xs whitespace-nowrap">
+                  <template v-if="!row._pending && targetForRow(row)">
+                    <span
+                      class="font-semibold"
+                      :class="{
+                        'text-red-600 dark:text-red-400': row.alignment_pct < targetForRow(row).target,
+                        'text-green-600 dark:text-green-400': row.alignment_pct >= targetForRow(row).target,
+                      }"
+                      :title="'Target: ' + targetForRow(row).label + ' (based on ' + daysToGa(row.ga_date) + ' days to GA)'"
+                    >{{ targetForRow(row).label }}</span>
+                  </template>
                   <span v-else class="text-gray-400">&mdash;</span>
                 </td>
                 <td class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
