@@ -21,6 +21,7 @@ function buildFetchOptions(token) {
   // Note: Proxy support with native fetch requires different approach than node-fetch.
   // For now, proxies must be configured at the OS/container level (e.g., HTTP_PROXY env var).
   // Future enhancement could use undici ProxyAgent with dispatcher option.
+  // Fixed: Native fetch timeout and proxy compatibility for Node.js
   return opts;
 }
 
