@@ -650,11 +650,7 @@ export default {
         return
       }
 
-      // Redirect legacy SOTU bookmarks to central landing page
-      if (parts[0] === 'ai-impact' && parts[1] === 'state-of-the-union') {
-        window.location.replace('#/')
-        return
-      }
+
 
       // Git-static iframe modules
       if (parts[0] === 'modules' && parts[1]) {

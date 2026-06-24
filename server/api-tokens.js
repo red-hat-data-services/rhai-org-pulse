@@ -24,17 +24,12 @@ const EXPIRATION_OPTIONS = {
 let _scopeRegistry = null;
 
 /**
- * Old scope names that map to new unified releases scopes.
+ * Old scope names that map to new unified scopes.
  * Used to auto-migrate existing tokens on startup.
+ * Configurable via init() options.scopeMigrationMap to support
+ * module-specific scope renames without hardcoding them here.
  */
-const SCOPE_MIGRATION_MAP = {
-  'feature-traffic:read': 'releases:read',
-  'feature-traffic:write': 'releases:write',
-  'release-analysis:read': 'releases:read',
-  'release-analysis:write': 'releases:write',
-  'release-planning:read': 'releases:read',
-  'release-planning:write': 'releases:write',
-};
+let SCOPE_MIGRATION_MAP = {};
 
 /**
  * Validate a scopes value. Returns normalized scopes or throws on invalid input.
@@ -164,6 +159,9 @@ function _migrateScopes() {
 function init(storageModule, options = {}) {
   _storage = storageModule;
   _scopeRegistry = options.scopeRegistry || null;
+  if (options.scopeMigrationMap) {
+    SCOPE_MIGRATION_MAP = options.scopeMigrationMap;
+  }
   _hashIndex = null;
   _lastUsedWriteTimes = new Map();
   _migrateScopes();

@@ -6,11 +6,36 @@
 const fs = require('fs');
 const path = require('path');
 
-const FIXTURES_DIR = path.join(__dirname, '..', '..', 'fixtures');
+let FIXTURES_DIRS = [path.join(__dirname, '..', '..', 'fixtures')];
 
-function isPathSafe(resolvedPath) {
-  const resolvedFixturesDir = path.resolve(FIXTURES_DIR);
-  return resolvedPath === resolvedFixturesDir || resolvedPath.startsWith(resolvedFixturesDir + path.sep);
+/**
+ * Initialize demo storage with custom fixture directories.
+ * Directories are searched in order; first match wins.
+ * @param {{ fixturesDirs: string[] }} options
+ */
+function initDemoStorage({ fixturesDirs }) {
+  FIXTURES_DIRS = fixturesDirs.map(d => path.resolve(d));
+}
+
+function isPathSafeForDir(resolvedPath, baseDir) {
+  const resolvedBase = path.resolve(baseDir);
+  return resolvedPath === resolvedBase || resolvedPath.startsWith(resolvedBase + path.sep);
+}
+
+/**
+ * Find a file across all fixture directories. Returns the first match.
+ * @param {string} key - Relative path
+ * @returns {{ filePath: string, baseDir: string } | null}
+ */
+function findInFixtures(key) {
+  for (const dir of FIXTURES_DIRS) {
+    const filePath = path.resolve(dir, key);
+    if (!isPathSafeForDir(filePath, dir)) continue;
+    if (fs.existsSync(filePath)) {
+      return { filePath, baseDir: dir };
+    }
+  }
+  return null;
 }
 
 /**
@@ -19,13 +44,10 @@ function isPathSafe(resolvedPath) {
  * @returns {object|null} Parsed JSON or null if not found
  */
 function readFromStorage(key) {
-  const filePath = path.resolve(FIXTURES_DIR, key);
-  if (!isPathSafe(filePath)) {
-    console.error(`[demo-storage] Blocked path traversal attempt: ${key}`);
-    return null;
-  }
+  const found = findInFixtures(key);
+  if (!found) return null;
   try {
-    const content = fs.readFileSync(filePath, 'utf-8');
+    const content = fs.readFileSync(found.filePath, 'utf-8');
     return JSON.parse(content);
   } catch (error) {
     if (error.code === 'ENOENT') {
@@ -59,19 +81,23 @@ function writeToStorageAtomic(key, _data) {
  * @returns {string[]} Array of filenames (without path)
  */
 function listStorageFiles(dir) {
-  const dirPath = path.resolve(FIXTURES_DIR, dir);
-  if (!isPathSafe(dirPath)) {
-    console.error(`[demo-storage] Blocked path traversal attempt: ${dir}`);
-    return [];
-  }
-  try {
-    return fs.readdirSync(dirPath).filter(f => f.endsWith('.json'));
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      return [];
+  const seen = new Set();
+  const results = [];
+  for (const baseDir of FIXTURES_DIRS) {
+    const dirPath = path.resolve(baseDir, dir);
+    if (!isPathSafeForDir(dirPath, baseDir)) continue;
+    try {
+      for (const f of fs.readdirSync(dirPath)) {
+        if (f.endsWith('.json') && !seen.has(f)) {
+          seen.add(f);
+          results.push(f);
+        }
+      }
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
     }
-    throw error;
   }
+  return results;
 }
 
 /**
@@ -99,13 +125,10 @@ function deleteFromStorage(key) {
  * @returns {number|null} mtime in milliseconds, or null if not found
  */
 function getFileMtime(key) {
-  const filePath = path.resolve(FIXTURES_DIR, key);
-  if (!isPathSafe(filePath)) {
-    console.error(`[demo-storage] Blocked path traversal attempt: ${key}`);
-    return null;
-  }
+  const found = findInFixtures(key);
+  if (!found) return null;
   try {
-    return fs.statSync(filePath).mtimeMs;
+    return fs.statSync(found.filePath).mtimeMs;
   } catch (err) {
     if (err.code === 'ENOENT') return null;
     throw err;
@@ -113,6 +136,7 @@ function getFileMtime(key) {
 }
 
 module.exports = {
+  initDemoStorage,
   readFromStorage,
   writeToStorage,
   writeToStorageAtomic,
@@ -120,5 +144,5 @@ module.exports = {
   deleteStorageDirectory,
   deleteFromStorage,
   getFileMtime,
-  FIXTURES_DIR
+  get FIXTURES_DIR() { return FIXTURES_DIRS[0]; }
 };

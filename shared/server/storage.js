@@ -6,7 +6,16 @@
 const fs = require('fs');
 const path = require('path');
 
-const DATA_DIR = path.join(__dirname, '..', '..', 'data');
+let DATA_DIR = path.join(__dirname, '..', '..', 'data');
+
+/**
+ * Initialize storage with a custom data directory.
+ * Must be called before any read/write operations if overriding the default.
+ * @param {{ dataDir: string }} options
+ */
+function initStorage({ dataDir }) {
+  DATA_DIR = path.resolve(dataDir);
+}
 
 /**
  * Verify that a resolved path stays within DATA_DIR to prevent path traversal.
@@ -180,6 +189,7 @@ function getFileMtime(key) {
 }
 
 module.exports = {
+  initStorage,
   readFromStorage,
   writeToStorage,
   writeToStorageAtomic,
@@ -187,5 +197,5 @@ module.exports = {
   deleteStorageDirectory,
   deleteFromStorage,
   getFileMtime,
-  DATA_DIR
+  get DATA_DIR() { return DATA_DIR; }
 };

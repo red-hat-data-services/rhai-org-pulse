@@ -8,24 +8,35 @@ const MODULES_DIR = path.join(__dirname, '..', 'modules')
 // Track which module slugs had routers created at startup
 const _mountedAtStartup = new Set()
 
-function discoverModules(modulesDir = MODULES_DIR) {
+/**
+ * Discover modules from one or more directories.
+ * @param {string|string[]} modulePaths - Single directory or array of directories to scan.
+ *   When multiple directories are provided, slugs are deduplicated (first-found wins).
+ */
+function discoverModules(modulePaths = MODULES_DIR) {
+  const dirs = Array.isArray(modulePaths) ? modulePaths : [modulePaths]
   const modules = []
-  if (!fs.existsSync(modulesDir)) return modules
-  for (const dir of fs.readdirSync(modulesDir)) {
-    if (dir.startsWith('.') || dir.startsWith('_')) continue
-    const manifestPath = path.join(modulesDir, dir, 'module.json')
-    if (!fs.existsSync(manifestPath)) continue
-    try {
-      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
-      modules.push({
-        ...manifest,
-        slug: dir,
-        _dir: path.join(modulesDir, dir),
-        requires: Array.isArray(manifest.requires) ? manifest.requires : [],
-        defaultEnabled: manifest.defaultEnabled !== undefined ? manifest.defaultEnabled : true
-      })
-    } catch (err) {
-      console.error(`[module-loader] Failed to load manifest for "${dir}":`, err.message)
+  const seen = new Set()
+  for (const modulesDir of dirs) {
+    if (!fs.existsSync(modulesDir)) continue
+    for (const dir of fs.readdirSync(modulesDir)) {
+      if (dir.startsWith('.') || dir.startsWith('_')) continue
+      if (seen.has(dir)) continue
+      const manifestPath = path.join(modulesDir, dir, 'module.json')
+      if (!fs.existsSync(manifestPath)) continue
+      try {
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
+        seen.add(dir)
+        modules.push({
+          ...manifest,
+          slug: dir,
+          _dir: path.join(modulesDir, dir),
+          requires: Array.isArray(manifest.requires) ? manifest.requires : [],
+          defaultEnabled: manifest.defaultEnabled !== undefined ? manifest.defaultEnabled : true
+        })
+      } catch (err) {
+        console.error(`[module-loader] Failed to load manifest for "${dir}":`, err.message)
+      }
     }
   }
   return modules
@@ -34,9 +45,9 @@ function discoverModules(modulesDir = MODULES_DIR) {
 /** Cached module list from disk — avoids readdir/parse on every hot-path request. Invalidate after adding a module folder (or restart). */
 let _discoveredModulesCache = null
 
-function getDiscoveredModules(modulesDir = MODULES_DIR) {
+function getDiscoveredModules(modulePaths = MODULES_DIR) {
   if (_discoveredModulesCache === null) {
-    _discoveredModulesCache = discoverModules(modulesDir)
+    _discoveredModulesCache = discoverModules(modulePaths)
   }
   return _discoveredModulesCache
 }
