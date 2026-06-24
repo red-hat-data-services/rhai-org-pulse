@@ -58,7 +58,7 @@
     "@tailwindcss/typography": "^0.5.20",
     "@vitejs/plugin-vue": "^6.0.7",
     "@vue/test-utils": "^2.4.11",
-    "autoprefixer": "^10.5.0",
+    "autoprefixer": "^10.5.1",
     "concurrently": "^10.0.3",
     "dotenv": "^17.4.2",
     "eslint": "^10.5.0",
