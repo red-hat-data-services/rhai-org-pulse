@@ -160,8 +160,8 @@ describe('getAlignmentTarget', function () {
   })
 
   it('returns 100%* for released (≤0 days)', function () {
-    expect(getAlignmentTarget(0)).toEqual({ target: 100, label: '100%*' })
-    expect(getAlignmentTarget(-5)).toEqual({ target: 100, label: '100%*' })
+    expect(getAlignmentTarget(0)).toEqual({ target: 100, label: '100%*', maxDays: 0 })
+    expect(getAlignmentTarget(-5)).toEqual({ target: 100, label: '100%*', maxDays: 0 })
   })
 
   it('returns 95%* for 31-60 days', function () {
