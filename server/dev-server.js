@@ -2342,7 +2342,8 @@ app.post('/api/admin/secrets/update', requireAdmin, requireScope('admin:manage')
       'PRODUCT_BUILDS_API_URL',
       'MODELS_CORP_API_KEY',
       'MODELS_CORP_BASE_URL',
-      'SESSION_SECRET'
+      'SESSION_SECRET',
+      'CATALYST_SHOWCASE_SHEET_ID'
     ];
 
     // Update with new secrets (only allowlisted keys)

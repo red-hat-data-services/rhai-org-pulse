@@ -8,7 +8,9 @@ const DEMO_MODE = process.env.DEMO_MODE === 'true';
  */
 module.exports = function registerRoutes(router, context) {
   const { storage, requireAuth, requireAdmin } = context;
-  const sheetId = context.secrets.CATALYST_SHOWCASE_SHEET_ID || '';
+  function getSheetId() {
+    return context.resolveSecret('CATALYST_SHOWCASE_SHEET_ID') || '';
+  }
   const keyFile = context.resolveSecret('GOOGLE_SERVICE_ACCOUNT_KEY_FILE') || '/etc/secrets/google-sa-key.json';
 
   function loadDemoData() {
@@ -28,6 +30,7 @@ module.exports = function registerRoutes(router, context) {
   router.get('/entries', requireAuth, async function(req, res) {
     try {
       let data;
+      const sheetId = getSheetId();
       if (DEMO_MODE || !sheetId) {
         data = loadDemoData();
       } else {
@@ -71,6 +74,7 @@ module.exports = function registerRoutes(router, context) {
   router.get('/entries/:slug', requireAuth, async function(req, res) {
     try {
       let data;
+      const sheetId = getSheetId();
       if (DEMO_MODE || !sheetId) {
         data = loadDemoData();
       } else {
@@ -107,6 +111,7 @@ module.exports = function registerRoutes(router, context) {
    *         description: Refresh result
    */
   router.post('/refresh', requireAdmin, async function(req, res) {
+    const sheetId = getSheetId();
     if (DEMO_MODE || !sheetId) {
       return res.json({ status: 'skipped', reason: 'Demo mode or no sheet configured' });
     }
@@ -132,6 +137,7 @@ module.exports = function registerRoutes(router, context) {
       cadence: '1h',
       description: 'Sync AI Catalyst Showcase data from Google Sheets',
       handler: async function() {
+        const sheetId = getSheetId();
         if (DEMO_MODE || !sheetId) return;
         clearCache();
         await fetchShowcaseData(sheetId, keyFile, storage);
@@ -152,7 +158,7 @@ module.exports = function registerRoutes(router, context) {
     context.registerDiagnostics(async function() {
       const data = storage.readFromStorage(STORAGE_KEY);
       return {
-        sheetConfigured: !!sheetId,
+        sheetConfigured: !!getSheetId(),
         dataExists: !!data,
         entryCount: data?.entries?.length || 0,
         pillarCount: data?.pillars?.length || 0,
