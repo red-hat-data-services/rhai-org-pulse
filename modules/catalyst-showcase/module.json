@@ -1,0 +1,36 @@
+{
+  "name": "AI Catalyst Showcase",
+  "slug": "catalyst-showcase",
+  "description": "Catalog of AI catalyst projects with strategy pillar filtering and detail views",
+  "icon": "Sparkles",
+  "order": 15,
+  "defaultEnabled": false,
+  "requires": [],
+  "client": {
+    "entry": "./client/index.js",
+    "navItems": [
+      { "id": "catalog", "label": "Catalog", "icon": "LayoutGrid", "default": true }
+    ],
+    "hiddenRoutes": {
+      "detail": "catalog"
+    }
+  },
+  "server": {
+    "entry": "./server/index.js"
+  },
+  "export": {
+    "files": [
+      { "path": "catalyst-showcase/showcase-data.json", "notes": "Cached showcase entries and pillars from Google Sheet sync" }
+    ]
+  },
+  "secrets": {
+    "platform": ["google"],
+    "module": [
+      {
+        "key": "CATALYST_SHOWCASE_SHEET_ID",
+        "description": "Google Spreadsheet ID for the AI catalyst showcase data",
+        "required": false
+      }
+    ]
+  }
+}
