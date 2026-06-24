@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-const { readRegistry, writeRegistry, validateRelease, normalizeRelease, REGISTRY_FILE } = require('../../server/registry');
+const { readRegistry, writeRegistry, validateRelease, normalizeRelease, migrateNormalizedIds, REGISTRY_FILE } = require('../../server/registry');
 
 function createMockStorage(initial = {}) {
   const store = { ...initial };
@@ -142,5 +142,160 @@ describe('normalizeRelease', () => {
     });
     expect(result.milestones.ga).toBe('2026-07-01');
     expect(result.milestones.codeFreeze).toBe('2026-06-01');
+  });
+});
+
+describe('migrateNormalizedIds', () => {
+  it('normalises a single .z-suffixed entry ID in place', () => {
+    const registry = {
+      releases: [
+        { id: 'rhoai-3.5.z', displayName: 'rhoai-3.5.z', fixVersions: ['rhoai-3.5'], state: 'active' }
+      ]
+    };
+    const count = migrateNormalizedIds(registry);
+    expect(count).toBe(1);
+    expect(registry.releases).toHaveLength(1);
+    expect(registry.releases[0].id).toBe('rhoai-3.5');
+    expect(registry.releases[0].fixVersions).toEqual(['rhoai-3.5']);
+  });
+
+  it('merges .z and clean entries, preserving fixVersions union', () => {
+    const registry = {
+      releases: [
+        { id: 'rhoai-3.5.z', displayName: 'rhoai-3.5.z', fixVersions: ['rhoai-3.5', 'rhoai-3.5.z'], state: 'archived' },
+        { id: 'rhoai-3.5', displayName: 'rhoai-3.5', fixVersions: [], state: 'active' }
+      ]
+    };
+    const count = migrateNormalizedIds(registry);
+    expect(count).toBe(1);
+    expect(registry.releases).toHaveLength(1);
+    expect(registry.releases[0].id).toBe('rhoai-3.5');
+    expect(registry.releases[0].state).toBe('active');
+    // fixVersions from both entries merged
+    expect(registry.releases[0].fixVersions).toContain('rhoai-3.5');
+    expect(registry.releases[0].fixVersions).toContain('rhoai-3.5.z');
+  });
+
+  it('prefers active entry over archived when merging', () => {
+    const registry = {
+      releases: [
+        { id: 'rhoai-3.5.z', displayName: 'rhoai-3.5.z', fixVersions: ['v1'], state: 'archived' },
+        { id: 'rhoai-3.5', displayName: 'rhoai-3.5', fixVersions: ['v2'], state: 'active' }
+      ]
+    };
+    migrateNormalizedIds(registry);
+    expect(registry.releases).toHaveLength(1);
+    expect(registry.releases[0].state).toBe('active');
+    expect(registry.releases[0].fixVersions).toContain('v1');
+    expect(registry.releases[0].fixVersions).toContain('v2');
+  });
+
+  it('handles EA variant merges (rhoai-3.5.z.ea1 → rhoai-3.5.ea1)', () => {
+    const registry = {
+      releases: [
+        { id: 'rhoai-3.5.z.ea1', displayName: 'rhoai-3.5.z.EA1', fixVersions: ['rhoai-3.5.EA1'], state: 'archived' },
+        { id: 'rhoai-3.5.ea1', displayName: 'rhoai-3.5.EA1', fixVersions: [], state: 'active' }
+      ]
+    };
+    migrateNormalizedIds(registry);
+    expect(registry.releases).toHaveLength(1);
+    expect(registry.releases[0].id).toBe('rhoai-3.5.ea1');
+    expect(registry.releases[0].fixVersions).toEqual(['rhoai-3.5.EA1']);
+  });
+
+  it('is idempotent — no-op when IDs are already clean', () => {
+    const registry = {
+      releases: [
+        { id: 'rhoai-3.5', displayName: 'rhoai-3.5', fixVersions: ['v1'], state: 'active' },
+        { id: 'rhoai-3.6', displayName: 'rhoai-3.6', fixVersions: ['v2'], state: 'active' }
+      ]
+    };
+    const count = migrateNormalizedIds(registry);
+    expect(count).toBe(0);
+    expect(registry.releases).toHaveLength(2);
+  });
+
+  it('handles multiple duplicate groups in one pass', () => {
+    const registry = {
+      releases: [
+        { id: 'rhoai-3.5.z', displayName: 'X', fixVersions: ['fv-a'], state: 'archived' },
+        { id: 'rhoai-3.5', displayName: 'X', fixVersions: [], state: 'active' },
+        { id: 'rhoai-3.6.z', displayName: 'Y', fixVersions: ['fv-b'], state: 'archived' },
+        { id: 'rhoai-3.6', displayName: 'Y', fixVersions: [], state: 'active' },
+        { id: 'rhaii-3.5', displayName: 'Z', fixVersions: ['fv-c'], state: 'active' } // no .z counterpart
+      ]
+    };
+    const count = migrateNormalizedIds(registry);
+    expect(count).toBe(2); // two groups merged
+    expect(registry.releases).toHaveLength(3); // 5 → 3
+    const ids = registry.releases.map(r => r.id).sort();
+    expect(ids).toEqual(['rhaii-3.5', 'rhoai-3.5', 'rhoai-3.6']);
+    expect(registry.releases.find(r => r.id === 'rhoai-3.5').fixVersions).toContain('fv-a');
+    expect(registry.releases.find(r => r.id === 'rhoai-3.6').fixVersions).toContain('fv-b');
+  });
+
+  it('does not lose fixVersions when both entries have them', () => {
+    const registry = {
+      releases: [
+        { id: 'rhoai-3.5.z', displayName: 'X', fixVersions: ['a', 'b'], state: 'active' },
+        { id: 'rhoai-3.5', displayName: 'X', fixVersions: ['b', 'c'], state: 'active' }
+      ]
+    };
+    migrateNormalizedIds(registry);
+    expect(registry.releases).toHaveLength(1);
+    const fvs = registry.releases[0].fixVersions.sort();
+    expect(fvs).toEqual(['a', 'b', 'c']); // union, no duplicates
+  });
+
+  it('preserves non-PP entries that happen to have .z in their ID', () => {
+    const registry = {
+      releases: [
+        { id: 'custom.z-release', displayName: 'Custom', fixVersions: [], state: 'active' }
+      ]
+    };
+    // stripZStream removes ".z" word boundary — "custom.z-release" → "custom-release"
+    migrateNormalizedIds(registry);
+    expect(registry.releases).toHaveLength(1);
+    expect(registry.releases[0].id).toBe('custom-release');
+  });
+
+  it('reproduces the exact production bug scenario', () => {
+    // This is the state observed in production: 6 .z entries (archived, with fixVersions)
+    // and 6 clean entries (active, empty fixVersions)
+    const registry = {
+      releases: [
+        { id: 'rhoai-3.5.z.ea1', displayName: 'rhoai-3.5.z.EA1', fixVersions: ['rhoai-3.5.EA1'], state: 'archived', source: 'product-pages' },
+        { id: 'rhoai-3.5.z.ea2', displayName: 'rhoai-3.5.z.EA2', fixVersions: ['rhoai-3.5.EA2'], state: 'archived', source: 'product-pages' },
+        { id: 'rhoai-3.5.z', displayName: 'rhoai-3.5.z', fixVersions: ['rhoai-3.5', 'rhoai-3.5.z'], state: 'archived', source: 'product-pages' },
+        { id: 'rhoai-3.5.ea1', displayName: 'rhoai-3.5.EA1', fixVersions: [], state: 'active', source: 'product-pages' },
+        { id: 'rhoai-3.5.ea2', displayName: 'rhoai-3.5.EA2', fixVersions: [], state: 'active', source: 'product-pages' },
+        { id: 'rhoai-3.5', displayName: 'rhoai-3.5', fixVersions: [], state: 'active', source: 'product-pages' },
+        // Non-duplicate entry — should be untouched
+        { id: 'rhaii-3.5.ea1', displayName: 'RHAII-3.5.EA1', fixVersions: ['RHAII-3.5 EA1'], state: 'active', source: 'product-pages' }
+      ]
+    };
+
+    migrateNormalizedIds(registry);
+
+    // Should be down to 4 entries (3 merged pairs + 1 untouched)
+    expect(registry.releases).toHaveLength(4);
+
+    const ea1 = registry.releases.find(r => r.id === 'rhoai-3.5.ea1');
+    expect(ea1).toBeDefined();
+    expect(ea1.state).toBe('active');
+    expect(ea1.fixVersions).toEqual(['rhoai-3.5.EA1']);
+
+    const ea2 = registry.releases.find(r => r.id === 'rhoai-3.5.ea2');
+    expect(ea2).toBeDefined();
+    expect(ea2.fixVersions).toEqual(['rhoai-3.5.EA2']);
+
+    const ga = registry.releases.find(r => r.id === 'rhoai-3.5');
+    expect(ga).toBeDefined();
+    expect(ga.fixVersions).toContain('rhoai-3.5');
+    expect(ga.fixVersions).toContain('rhoai-3.5.z');
+
+    const rhaii = registry.releases.find(r => r.id === 'rhaii-3.5.ea1');
+    expect(rhaii).toBeDefined();
+    expect(rhaii.fixVersions).toEqual(['RHAII-3.5 EA1']);
   });
 });

@@ -184,6 +184,155 @@ function matchVersionsToReleases(jiraVersions, registryReleases) {
 }
 
 /**
+ * Migrate registry entries with stale .z-suffixed IDs to their normalized form.
+ * Merges fixVersions when both old (.z) and new (clean) entries exist for the
+ * same logical release. Idempotent — safe to run on every sync.
+ *
+ * Background: Product Pages used to include ".z" in release numbers (e.g.
+ * "rhoai-3.5.z"). stripZStream normalises these to "rhoai-3.5", but the
+ * registry lookup used raw IDs, so sync created duplicate entries — the old
+ * one (with fixVersions) got archived, the new one was born empty.
+ *
+ * @param {object} registry - Registry object (mutated in place)
+ * @returns {number} Number of entries merged or renamed
+ */
+function migrateNormalizedIds(registry) {
+  // Group entries by their normalized (stripped) ID
+  const groups = {};
+  for (const r of registry.releases) {
+    const normId = stripZStream(r.id).toLowerCase();
+    if (!groups[normId]) groups[normId] = [];
+    groups[normId].push(r);
+  }
+
+  let migrated = 0;
+  const toRemove = new Set();
+
+  for (const [normId, entries] of Object.entries(groups)) {
+    if (entries.length === 1) {
+      // Single entry — just normalise its ID if needed
+      if (entries[0].id !== normId) {
+        entries[0].id = normId;
+        entries[0].updatedAt = new Date().toISOString();
+        migrated++;
+      }
+      continue;
+    }
+
+    // Multiple entries share the same normalised ID — merge into one.
+    // Prefer the active entry; if multiple active, prefer the one with the
+    // clean (non-.z) ID; if still tied, prefer the one with more fixVersions.
+    entries.sort(function (a, b) {
+      // active before archived
+      if (a.state !== b.state) return a.state === 'active' ? -1 : 1;
+      // clean ID before .z ID
+      var aClean = stripZStream(a.id).toLowerCase() === a.id ? 1 : 0;
+      var bClean = stripZStream(b.id).toLowerCase() === b.id ? 1 : 0;
+      if (aClean !== bClean) return bClean - aClean;
+      // more fixVersions first
+      return (b.fixVersions || []).length - (a.fixVersions || []).length;
+    });
+
+    const winner = entries[0];
+
+    // Union all fixVersions from every duplicate
+    const allFvs = new Set(winner.fixVersions || []);
+    for (let i = 1; i < entries.length; i++) {
+      for (const fv of (entries[i].fixVersions || [])) allFvs.add(fv);
+      toRemove.add(entries[i]);
+    }
+
+    winner.id = normId;
+    winner.fixVersions = [...allFvs];
+    winner.updatedAt = new Date().toISOString();
+    migrated++;
+  }
+
+  if (toRemove.size > 0) {
+    registry.releases = registry.releases.filter(function (r) { return !toRemove.has(r); });
+  }
+
+  return migrated;
+}
+
+/**
+ * Auto-resolve Jira fixVersions for registry releases that have empty mappings.
+ * Uses the existing matchVersionsToReleases fuzzy matcher against all Jira
+ * project versions. Only touches releases with empty fixVersions — never
+ * overwrites manually-curated mappings.
+ *
+ * @param {object} storage - Storage module
+ * @param {object} [deps] - Optional dependency injection for testing
+ * @param {function} [deps.fetchProjectVersions] - Jira version fetcher
+ * @param {function} [deps.jiraRequest] - Jira request function
+ * @returns {Promise<object>} Resolution results
+ */
+async function autoResolveFixVersions(storage, deps) {
+  const { readFromStorage, writeToStorage } = storage;
+  const registry = readRegistry(readFromStorage);
+
+  // Find active releases with no fixVersions
+  const emptyReleases = registry.releases.filter(function (r) {
+    return r.state === 'active' && (!r.fixVersions || r.fixVersions.length === 0);
+  });
+
+  if (emptyReleases.length === 0) {
+    return { status: 'skipped', message: 'All active releases already have fixVersions' };
+  }
+
+  const config = loadRegistryConfig(storage);
+  const projects = config.jiraProjects || [];
+  if (projects.length === 0) {
+    return { status: 'skipped', message: 'No Jira projects configured for version resolution' };
+  }
+
+  const jira = deps || require('../../../shared/server/jira');
+  const jiraVersions = await jira.fetchProjectVersions(jira.jiraRequest, projects);
+
+  if (!Array.isArray(jiraVersions) || jiraVersions.length === 0) {
+    return { status: 'skipped', message: 'No Jira versions found' };
+  }
+
+  // Run fuzzy matching against ALL active releases (matcher needs full context)
+  const result = matchVersionsToReleases(jiraVersions, registry.releases);
+
+  // Apply only to releases that had empty fixVersions
+  const emptyIds = new Set(emptyReleases.map(function (r) { return r.id; }));
+  const applied = [];
+
+  for (const match of result.matches) {
+    if (!emptyIds.has(match.releaseId)) continue;
+    if (!match.proposedFixVersions || match.proposedFixVersions.length === 0) continue;
+
+    // Find the release in the registry and apply
+    const release = registry.releases.find(function (r) { return r.id === match.releaseId; });
+    if (!release) continue;
+
+    release.fixVersions = match.proposedFixVersions;
+    release.updatedAt = new Date().toISOString();
+    applied.push({ releaseId: release.id, fixVersions: release.fixVersions });
+  }
+
+  if (applied.length > 0) {
+    writeRegistry(writeToStorage, registry);
+    logAudit(readFromStorage, writeToStorage, {
+      domain: 'registry',
+      action: 'registry_auto_resolve_versions',
+      user: 'system',
+      summary: 'Auto-resolved Jira fixVersions for ' + applied.length + ' releases',
+      details: { applied: applied, emptyCount: emptyReleases.length }
+    });
+  }
+
+  return {
+    status: 'ok',
+    resolved: applied.length,
+    emptyBefore: emptyReleases.length,
+    applied: applied
+  };
+}
+
+/**
  * Run Product Pages registry sync (discover + update).
  * Extracted from the POST /registry/discover route handler for reuse
  * by the refresh registry.
@@ -216,7 +365,26 @@ async function runRegistrySync(storage, options) {
   }
 
   const registry = readRegistry(readFromStorage);
-  const existingById = new Map(registry.releases.map(r => [r.id, r]));
+
+  // Merge stale .z-suffixed entries into their clean counterparts before lookup.
+  // This fixes the split caused by stripZStream normalising IDs while the old
+  // lookup used raw IDs, creating orphaned duplicates.
+  const migrated = migrateNormalizedIds(registry);
+  if (migrated > 0) {
+    console.log('[releases/registry] Migrated ' + migrated + ' .z-suffixed registry entries');
+  }
+
+  // Build lookup using NORMALISED IDs so that both "rhoai-3.5.z" (old PP name)
+  // and "rhoai-3.5" (current PP name) resolve to the same registry entry.
+  const existingById = new Map();
+  for (const r of registry.releases) {
+    const normId = stripZStream(r.id).toLowerCase();
+    const prev = existingById.get(normId);
+    // Prefer active over archived when there's a collision
+    if (!prev || (prev.state === 'archived' && r.state !== 'archived')) {
+      existingById.set(normId, r);
+    }
+  }
   let created = 0;
   let updated = 0;
   let archived = 0;
@@ -277,7 +445,9 @@ async function runRegistrySync(storage, options) {
   }
 
   for (const release of registry.releases) {
-    if (release.source === 'product-pages' && release.state === 'active' && !discoveredIds.has(release.id)) {
+    // Use normalised ID for the archive check — discoveredIds contains stripped IDs
+    const normReleaseId = stripZStream(release.id).toLowerCase();
+    if (release.source === 'product-pages' && release.state === 'active' && !discoveredIds.has(normReleaseId)) {
       release.state = 'archived';
       release.updatedAt = new Date().toISOString();
       archived++;
@@ -749,10 +919,20 @@ function registerRegistryRoutes(router, context) {
         return runRegistrySync(storage);
       }
     });
+
+    context.registerRefresh('registry-resolve-versions', {
+      order: 66,
+      timeout: 120000,
+      description: 'Auto-resolves Jira fixVersions for registry releases with empty mappings.',
+      handler: async function() {
+        return autoResolveFixVersions(storage);
+      }
+    });
   }
 }
 
 module.exports = {
   registerRegistryRoutes, readRegistry, writeRegistry, validateRelease, normalizeRelease,
-  normalizeVersionName, matchVersionsToReleases, runRegistrySync, REGISTRY_FILE
+  normalizeVersionName, matchVersionsToReleases, runRegistrySync, migrateNormalizedIds,
+  autoResolveFixVersions, REGISTRY_FILE
 };
