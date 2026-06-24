@@ -1,10 +1,32 @@
 {
   "name": "team-tracker",
-  "private": true,
   "version": "1.0.119",
   "engines": {
     "node": ">=22"
   },
+  "exports": {
+    "./server": "./server/index.js",
+    "./vite": "./vite.config.mjs",
+    "./tailwind": "./tailwind.config.mjs",
+    "./eslint": "./eslint.config.mjs",
+    "./postcss": "./postcss.config.mjs",
+    "./scripts/*": "./scripts/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "server/",
+    "shared/",
+    "src/",
+    "modules/team-tracker/",
+    "eslint-rules/",
+    "scripts/",
+    "fixtures/",
+    "index.html",
+    "vite.config.mjs",
+    "tailwind.config.mjs",
+    "postcss.config.mjs",
+    "eslint.config.mjs"
+  ],
   "scripts": {
     "dev": "vite",
     "dev:server": "node -r dotenv/config server/dev-server.js",
