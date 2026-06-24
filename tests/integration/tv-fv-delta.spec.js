@@ -1430,3 +1430,85 @@ test.describe('TV/FV Delta — Release Picker @tv-fv-delta', () => {
     expect(relevantErrors(page)).toHaveLength(0);
   });
 });
+
+
+test.describe('TV/FV Delta — Registry fixVersions Edge Cases @tv-fv-delta', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('should load without errors when registry has empty fixVersions', async ({ page }) => {
+    // Simulate the pre-fix bug: registry returns releases with empty fixVersions.
+    // The view should still load without errors (fallback to cached metadata).
+    const emptyFvRegistry = {
+      releases: [
+        { id: 'rhoai-3.5-ea1', displayName: 'RHOAI 3.5 EA1', state: 'active', fixVersions: [], milestones: {} },
+        { id: 'rhoai-3.5-ea2', displayName: 'RHOAI 3.5 EA2', state: 'active', fixVersions: [], milestones: {} },
+        { id: 'rhoai-3.5', displayName: 'RHOAI 3.5', state: 'active', fixVersions: [], milestones: {} },
+      ],
+    };
+
+    await mockAllApis(page);
+    await page.unroute('**/api/modules/releases/registry');
+    await page.route('**/api/modules/releases/registry', route => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(emptyFvRegistry)
+      });
+    });
+
+    await page.goto('/#/releases/reports?report=tv-fv-delta');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Page should load without errors — data comes from cached TV/FV delta endpoint
+    expect(relevantErrors(page)).toHaveLength(0);
+
+    // The view should still render from the fixture data
+    const heading = page.getByRole('heading', { name: 'TV vs FV Delta' });
+    await expect(heading).toBeVisible();
+  });
+
+  test('should render releases after registry migration populates fixVersions', async ({ page }) => {
+    // Simulate the post-fix state: registry returns clean IDs with populated fixVersions
+    // (after migrateNormalizedIds merged .z entries and carried fixVersions over)
+    const migratedRegistry = {
+      releases: [
+        { id: 'rhoai-3.5-ea1', displayName: 'RHOAI 3.5 EA1', state: 'active', fixVersions: ['rhoai-3.5.EA1'], milestones: { ga: '2026-07-01' } },
+        { id: 'rhoai-3.5-ea2', displayName: 'RHOAI 3.5 EA2', state: 'active', fixVersions: ['rhoai-3.5.EA2'], milestones: { ga: '2026-08-01' } },
+        { id: 'rhoai-3.5', displayName: 'RHOAI 3.5', state: 'active', fixVersions: ['rhoai-3.5', 'rhoai-3.5.z'], milestones: { ga: '2026-09-01' } },
+      ],
+    };
+
+    await mockAllApis(page);
+    await page.unroute('**/api/modules/releases/registry');
+    await page.route('**/api/modules/releases/registry', route => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(migratedRegistry)
+      });
+    });
+
+    await page.goto('/#/releases/reports?report=tv-fv-delta');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    expect(relevantErrors(page)).toHaveLength(0);
+
+    // All three releases should appear as chips (auto-selected because fixVersions are populated)
+    for (const release of ['rhoai-3.5.EA1', 'rhoai-3.5.EA2', 'rhoai-3.5']) {
+      await expect(page.locator('button', { hasText: release }).first()).toBeVisible();
+    }
+
+    // Executive summary should render with all three releases
+    const summarySection = page.locator('div:has(> div > h2:has-text("Executive Summary"))').first();
+    const rows = summarySection.locator('tbody tr');
+    await expect(rows).toHaveCount(3);
+  });
+});

@@ -77,7 +77,7 @@ var ALIGNMENT_TARGETS = [
  */
 function getAlignmentTarget(daysToGa) {
   if (daysToGa === null || daysToGa === undefined) return null
-  if (daysToGa <= 0) return { target: 100, label: '100%*' }
+  if (daysToGa <= 0) return { target: 100, label: '100%*', maxDays: 0 }
   for (var i = 0; i < ALIGNMENT_TARGETS.length; i++) {
     if (daysToGa <= ALIGNMENT_TARGETS[i].maxDays) return ALIGNMENT_TARGETS[i]
   }
