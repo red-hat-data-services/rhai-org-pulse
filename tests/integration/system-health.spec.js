@@ -334,13 +334,13 @@ test.describe('System Health Disconnected Readiness @system-health', () => {
     await disconnectedTab.click();
     await page.waitForTimeout(1000);
 
-    // Look for clickable repository links/buttons in the table
-    const repoLinks = page.locator('table button, table a').filter({ hasText: /^[a-z-]+\/[a-z-]+$/i });
-    const linkCount = await repoLinks.count();
+    // Look for clickable repository rows in the table
+    const repoRow = page.locator('table tbody tr').first();
+    const rowCount = await repoRow.count();
 
-    if (linkCount > 0) {
-      // Click the first repository link
-      await repoLinks.first().click();
+    if (rowCount > 0) {
+      // Click the first repository row
+      await repoRow.click();
       await page.waitForTimeout(1000);
 
       // Verify we navigated to a detail view
