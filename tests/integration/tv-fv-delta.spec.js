@@ -1481,7 +1481,7 @@ test.describe('TV/FV Delta — Registry fixVersions Edge Cases @tv-fv-delta', ()
       releases: [
         { id: 'rhoai-3.5-ea1', displayName: 'RHOAI 3.5 EA1', state: 'active', fixVersions: ['rhoai-3.5.EA1'], milestones: { ga: '2026-07-01' } },
         { id: 'rhoai-3.5-ea2', displayName: 'RHOAI 3.5 EA2', state: 'active', fixVersions: ['rhoai-3.5.EA2'], milestones: { ga: '2026-08-01' } },
-        { id: 'rhoai-3.5', displayName: 'RHOAI 3.5', state: 'active', fixVersions: ['rhoai-3.5', 'rhoai-3.5.z'], milestones: { ga: '2026-09-01' } },
+        { id: 'rhoai-3.5', displayName: 'RHOAI 3.5', state: 'active', fixVersions: ['rhoai-3.5'], milestones: { ga: '2026-09-01' } },
       ],
     };
 
