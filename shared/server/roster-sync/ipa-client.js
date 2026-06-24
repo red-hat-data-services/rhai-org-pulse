@@ -38,7 +38,17 @@ function escapeLdapFilter(value) {
 const DEFAULT_HOST = 'ldaps://ipa.corp.redhat.com';
 const DEFAULT_BASE_DN = 'cn=users,cn=accounts,dc=ipa,dc=redhat,dc=com';
 
-const BUNDLED_CA_PATH = path.join(__dirname, '..', '..', '..', 'deploy', 'certs', 'internal-root-ca.pem');
+let BUNDLED_CA_PATH = path.join(__dirname, '..', '..', '..', 'deploy', 'certs', 'internal-root-ca.pem');
+
+/**
+ * Override the bundled CA cert fallback path.
+ * Useful when the package is consumed from node_modules where the
+ * default __dirname-relative path won't resolve to the deploy dir.
+ * @param {string} certPath - Absolute path to the CA cert PEM file
+ */
+function setBundledCertPath(certPath) {
+  BUNDLED_CA_PATH = certPath;
+}
 
 const LDAP_ATTRS = [
   'cn', 'uid', 'mail', 'title', 'l', 'co',
@@ -464,5 +474,6 @@ module.exports = {
   extractAllGithubCandidates,
   extractAllGitlabCandidates,
   pickBestCandidate,
-  createIpaClient
+  createIpaClient,
+  setBundledCertPath
 };

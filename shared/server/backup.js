@@ -12,7 +12,7 @@ const os = require('os');
 const { pipeline } = require('stream/promises');
 const { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectsCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 
-const DATA_DIR = path.join(__dirname, '..', '..', 'data');
+const storage = require('./storage');
 const BACKUP_PREFIX = 'team-tracker/';
 
 const RETENTION = {
@@ -54,8 +54,8 @@ async function createBackup() {
     // Create tar.gz of the data directory
     execFileSync('tar', [
       'czf', tmpFile,
-      '-C', path.dirname(DATA_DIR),
-      path.basename(DATA_DIR),
+      '-C', path.dirname(storage.DATA_DIR),
+      path.basename(storage.DATA_DIR),
     ]);
 
     const stats = fs.statSync(tmpFile);
@@ -183,7 +183,7 @@ async function restoreBackup(key) {
     // Extract over the data directory
     execFileSync('tar', [
       'xzf', tmpFile,
-      '-C', path.dirname(DATA_DIR),
+      '-C', path.dirname(storage.DATA_DIR),
     ]);
 
     console.log(`[backup] Restored data directory from ${key}`);
@@ -195,12 +195,13 @@ async function restoreBackup(key) {
 
 /**
  * Create a backup client with bound AWS config.
- * @param {{ region?: string, bucket: string }} config
+ * @param {{ region?: string, bucket: string, dataDir?: string }} config
  * @returns {{ createBackup: Function, listBackups: Function, applyRetention: Function, restoreBackup: Function }}
  */
-function createBackupClient({ region, bucket }) {
+function createBackupClient({ region, bucket, dataDir }) {
   if (!bucket) throw new Error('AWS_BACKUP_BUCKET is required');
   const client = new S3Client({ region: region || 'us-east-1' });
+  const resolvedDataDir = dataDir || storage.DATA_DIR;
 
   async function boundCreateBackup() {
     const timestamp = formatDate(new Date());
@@ -211,8 +212,8 @@ function createBackupClient({ region, bucket }) {
     try {
       execFileSync('tar', [
         'czf', tmpFile,
-        '-C', path.dirname(DATA_DIR),
-        path.basename(DATA_DIR),
+        '-C', path.dirname(resolvedDataDir),
+        path.basename(resolvedDataDir),
       ]);
 
       const stats = fs.statSync(tmpFile);
@@ -311,7 +312,7 @@ function createBackupClient({ region, bucket }) {
 
       execFileSync('tar', [
         'xzf', tmpFile,
-        '-C', path.dirname(DATA_DIR),
+        '-C', path.dirname(resolvedDataDir),
       ]);
 
       console.log(`[backup] Restored data directory from ${key}`);
