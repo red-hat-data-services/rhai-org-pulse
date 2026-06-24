@@ -148,7 +148,7 @@ jobs:
 
       - name: Checkout code
         if: steps.check-paths.outputs.needs_review == 'true' && steps.context.outputs.is_fork != 'true' && steps.fork-guard.outputs.is_fork != 'true'
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
@@ -174,7 +174,7 @@ jobs:
 
       - name: Checkout base branch
         if: steps.check-paths.outputs.needs_review == 'true' && steps.context.outputs.is_fork == 'true' && github.event_name == 'pull_request_target'
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.base.sha }}
 

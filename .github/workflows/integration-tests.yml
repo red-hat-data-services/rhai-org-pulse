@@ -21,7 +21,7 @@ jobs:
       enabled-modules: ${{ steps.build-matrix.outputs.modules }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -196,7 +196,7 @@ jobs:
         module: ${{ fromJson(needs.detect-changes.outputs.enabled-modules) }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Run Module Test
         uses: ./.github/actions/test-org-pulse-module
