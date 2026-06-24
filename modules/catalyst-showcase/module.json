@@ -8,6 +8,7 @@
   "requires": [],
   "client": {
     "entry": "./client/index.js",
+    "settingsComponent": "./client/components/CatalystShowcaseSettings.vue",
     "navItems": [
       { "id": "catalog", "label": "Catalog", "icon": "LayoutGrid", "default": true }
     ],
@@ -25,12 +26,6 @@
   },
   "secrets": {
     "platform": ["google"],
-    "module": [
-      {
-        "key": "CATALYST_SHOWCASE_SHEET_ID",
-        "description": "Google Spreadsheet ID for the AI catalyst showcase data",
-        "required": false
-      }
-    ]
+    "module": []
   }
 }

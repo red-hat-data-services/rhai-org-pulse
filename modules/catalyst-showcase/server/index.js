@@ -1,4 +1,5 @@
 const { getShowcaseData, fetchShowcaseData, clearCache, STORAGE_KEY } = require('./sheets-sync');
+const { getConfig, saveConfig } = require('./config');
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
@@ -8,14 +9,47 @@ const DEMO_MODE = process.env.DEMO_MODE === 'true';
  */
 module.exports = function registerRoutes(router, context) {
   const { storage, requireAuth, requireAdmin } = context;
-  function getSheetId() {
-    return context.resolveSecret('CATALYST_SHOWCASE_SHEET_ID') || '';
-  }
+  const { readFromStorage, writeToStorage } = storage;
   const keyFile = context.resolveSecret('GOOGLE_SERVICE_ACCOUNT_KEY_FILE') || '/etc/secrets/google-sa-key.json';
 
   function loadDemoData() {
-    return storage.readFromStorage(STORAGE_KEY) || { entries: [], pillars: [], fetchedAt: null };
+    return readFromStorage(STORAGE_KEY) || { entries: [], pillars: [], fetchedAt: null };
   }
+
+  /**
+   * @openapi
+   * /api/modules/catalyst-showcase/config:
+   *   get:
+   *     tags: [Catalyst Showcase]
+   *     summary: Get module configuration (admin)
+   *     responses:
+   *       200:
+   *         description: Current configuration
+   */
+  router.get('/config', requireAdmin, function(req, res) {
+    res.json(getConfig(readFromStorage));
+  });
+
+  /**
+   * @openapi
+   * /api/modules/catalyst-showcase/config:
+   *   post:
+   *     tags: [Catalyst Showcase]
+   *     summary: Update module configuration (admin)
+   *     responses:
+   *       200:
+   *         description: Configuration saved
+   *       400:
+   *         description: Validation error
+   */
+  router.post('/config', requireAdmin, function(req, res) {
+    try {
+      saveConfig(writeToStorage, req.body);
+      res.json({ status: 'saved' });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
 
   /**
    * @openapi
@@ -30,7 +64,7 @@ module.exports = function registerRoutes(router, context) {
   router.get('/entries', requireAuth, async function(req, res) {
     try {
       let data;
-      const sheetId = getSheetId();
+      const sheetId = getConfig(readFromStorage).sheetId;
       if (DEMO_MODE || !sheetId) {
         data = loadDemoData();
       } else {
@@ -74,7 +108,7 @@ module.exports = function registerRoutes(router, context) {
   router.get('/entries/:slug', requireAuth, async function(req, res) {
     try {
       let data;
-      const sheetId = getSheetId();
+      const sheetId = getConfig(readFromStorage).sheetId;
       if (DEMO_MODE || !sheetId) {
         data = loadDemoData();
       } else {
@@ -111,7 +145,7 @@ module.exports = function registerRoutes(router, context) {
    *         description: Refresh result
    */
   router.post('/refresh', requireAdmin, async function(req, res) {
-    const sheetId = getSheetId();
+    const sheetId = getConfig(readFromStorage).sheetId;
     if (DEMO_MODE || !sheetId) {
       return res.json({ status: 'skipped', reason: 'Demo mode or no sheet configured' });
     }
@@ -137,7 +171,7 @@ module.exports = function registerRoutes(router, context) {
       cadence: '1h',
       description: 'Sync AI Catalyst Showcase data from Google Sheets',
       handler: async function() {
-        const sheetId = getSheetId();
+        const sheetId = getConfig(readFromStorage).sheetId;
         if (DEMO_MODE || !sheetId) return;
         clearCache();
         await fetchShowcaseData(sheetId, keyFile, storage);
@@ -156,9 +190,9 @@ module.exports = function registerRoutes(router, context) {
 
   if (context.registerDiagnostics) {
     context.registerDiagnostics(async function() {
-      const data = storage.readFromStorage(STORAGE_KEY);
+      const data = readFromStorage(STORAGE_KEY);
       return {
-        sheetConfigured: !!getSheetId(),
+        sheetConfigured: !!getConfig(readFromStorage).sheetId,
         dataExists: !!data,
         entryCount: data?.entries?.length || 0,
         pillarCount: data?.pillars?.length || 0,
