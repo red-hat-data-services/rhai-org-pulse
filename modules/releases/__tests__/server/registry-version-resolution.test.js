@@ -49,6 +49,33 @@ describe('normalizeVersionName', () => {
   it('trims whitespace', () => {
     expect(normalizeVersionName('  rhoai-3.5  ')).toBe('rhoai 3 5');
   });
+
+  it('normalizes RHAISTRAT GA format to canonical form', () => {
+    expect(normalizeVersionName('3.5 GA RHOAI RELEASE')).toBe('rhoai 3 5');
+    expect(normalizeVersionName('3.5 GA RHAII RELEASE')).toBe('rhaii 3 5');
+    expect(normalizeVersionName('3.5 GA RHELAI RELEASE')).toBe('rhelai 3 5');
+  });
+
+  it('normalizes RHAISTRAT EA format to canonical form', () => {
+    expect(normalizeVersionName('3.5 EA1 RHOAI RELEASE')).toBe('rhoai 3 5 ea1');
+    expect(normalizeVersionName('3.5 EA2 RHOAI RELEASE')).toBe('rhoai 3 5 ea2');
+    expect(normalizeVersionName('3.5 EA1 RHAII RELEASE')).toBe('rhaii 3 5 ea1');
+  });
+
+  it('RHAISTRAT and RHOAIENG normalize to same form', () => {
+    expect(normalizeVersionName('3.5 GA RHOAI RELEASE')).toBe(normalizeVersionName('rhoai-3.5'));
+    expect(normalizeVersionName('3.5 EA1 RHOAI RELEASE')).toBe(normalizeVersionName('rhoai-3.5.EA1'));
+    expect(normalizeVersionName('3.5 EA2 RHOAI RELEASE')).toBe(normalizeVersionName('rhoai-3.5.EA2'));
+    expect(normalizeVersionName('3.6 EA1 RHOAI RELEASE')).toBe(normalizeVersionName('rhoai-3.6.EA1'));
+    expect(normalizeVersionName('3.5 GA RHAII RELEASE')).toBe(normalizeVersionName('RHAII-3.5'));
+  });
+
+  it('does not rearrange non-RHAISTRAT patterns', () => {
+    // z-stream versions with different format should NOT match
+    expect(normalizeVersionName('RHOAI 3.3.5 GA')).toBe('rhoai 3 3 5 ga');
+    expect(normalizeVersionName('RHAII 3.3.5 Release')).toBe('rhaii 3 3 5 release');
+    expect(normalizeVersionName('rhai-3.5')).toBe('rhai 3 5');
+  });
 });
 
 describe('matchVersionsToReleases', () => {
@@ -167,6 +194,41 @@ describe('matchVersionsToReleases', () => {
     expect(match35.proposedFixVersions).toEqual(['rhoai-3.5']);
     expect(match36.proposedFixVersions).toEqual(['rhoai-3.6']);
   });
+
+  it('matches RHAISTRAT naming to registry releases', () => {
+    const releases = [
+      { id: 'rhoai-3.5', displayName: 'rhoai-3.5', fixVersions: [], state: 'active' },
+      { id: 'rhoai-3.5.ea1', displayName: 'rhoai-3.5.EA1', fixVersions: [], state: 'active' }
+    ];
+    const jiraVersions = [
+      { name: '3.5 GA RHOAI RELEASE', id: '1', project: 'RHAISTRAT' },
+      { name: '3.5 EA1 RHOAI RELEASE', id: '2', project: 'RHAISTRAT' }
+    ];
+    const result = matchVersionsToReleases(jiraVersions, releases);
+    expect(result.matches).toHaveLength(2);
+    expect(result.unmatched).toHaveLength(0);
+
+    const gaMatch = result.matches.find(m => m.releaseId === 'rhoai-3.5');
+    expect(gaMatch.proposedFixVersions).toContain('3.5 GA RHOAI RELEASE');
+
+    const ea1Match = result.matches.find(m => m.releaseId === 'rhoai-3.5.ea1');
+    expect(ea1Match.proposedFixVersions).toContain('3.5 EA1 RHOAI RELEASE');
+  });
+
+  it('matches RHAISTRAT and RHOAIENG versions to the same release', () => {
+    const releases = [
+      { id: 'rhoai-3.5', displayName: 'rhoai-3.5', fixVersions: [], state: 'active' }
+    ];
+    const jiraVersions = [
+      { name: 'rhoai-3.5', id: '1', project: 'RHOAIENG' },
+      { name: '3.5 GA RHOAI RELEASE', id: '2', project: 'RHAISTRAT' }
+    ];
+    const result = matchVersionsToReleases(jiraVersions, releases);
+    expect(result.matches).toHaveLength(1);
+    expect(result.matches[0].jiraMatches).toHaveLength(2);
+    expect(result.matches[0].proposedFixVersions).toContain('rhoai-3.5');
+    expect(result.matches[0].proposedFixVersions).toContain('3.5 GA RHOAI RELEASE');
+  });
 });
 
 describe('registry-config', () => {
@@ -245,44 +307,57 @@ describe('autoResolveFixVersions', () => {
     expect(ea1.fixVersions).toContain('rhoai-3.5.EA1');
   });
 
-  it('skips releases that already have fixVersions', async () => {
+  it('adds new versions to releases that already have fixVersions', async () => {
     const jiraVersions = [
       { name: 'rhoai-3.5', id: '1', project: 'RHOAIENG' },
-      { name: 'rhoai-3.6', id: '2', project: 'RHOAIENG' }
+      { name: '3.5 GA RHOAI RELEASE', id: '2', project: 'RHAISTRAT' },
+      { name: 'rhoai-3.6', id: '3', project: 'RHOAIENG' }
     ];
 
     const storage = createMockStorage({
       [REGISTRY_FILE]: {
         schemaVersion: 1,
         releases: [
-          { id: 'rhoai-3.5', displayName: 'rhoai-3.5', fixVersions: ['already-mapped'], state: 'active' },
+          { id: 'rhoai-3.5', displayName: 'rhoai-3.5', fixVersions: ['rhoai-3.5'], state: 'active' },
           { id: 'rhoai-3.6', displayName: 'rhoai-3.6', fixVersions: [], state: 'active' }
+        ]
+      },
+      [STORAGE_KEY]: { jiraProjects: ['RHOAIENG', 'RHAISTRAT'] }
+    });
+
+    const result = await autoResolveFixVersions(storage, mockJira(jiraVersions));
+    expect(result.status).toBe('ok');
+    expect(result.resolved).toBe(2);
+
+    const registry = storage._store[REGISTRY_FILE];
+    // rhoai-3.5 should now have BOTH the existing and newly-discovered RHAISTRAT version
+    const ga = registry.releases.find(r => r.id === 'rhoai-3.5');
+    expect(ga.fixVersions).toContain('rhoai-3.5');
+    expect(ga.fixVersions).toContain('3.5 GA RHOAI RELEASE');
+    // rhoai-3.6 should get its version populated
+    expect(registry.releases.find(r => r.id === 'rhoai-3.6').fixVersions).toContain('rhoai-3.6');
+  });
+
+  it('does not duplicate existing fixVersions', async () => {
+    const jiraVersions = [
+      { name: 'rhoai-3.5', id: '1', project: 'RHOAIENG' }
+    ];
+
+    const storage = createMockStorage({
+      [REGISTRY_FILE]: {
+        schemaVersion: 1,
+        releases: [
+          { id: 'rhoai-3.5', displayName: 'rhoai-3.5', fixVersions: ['rhoai-3.5'], state: 'active' }
         ]
       },
       [STORAGE_KEY]: { jiraProjects: ['RHOAIENG'] }
     });
 
     const result = await autoResolveFixVersions(storage, mockJira(jiraVersions));
-    expect(result.status).toBe('ok');
-    expect(result.resolved).toBe(1);
-
-    const registry = storage._store[REGISTRY_FILE];
-    expect(registry.releases.find(r => r.id === 'rhoai-3.5').fixVersions).toEqual(['already-mapped']);
-    expect(registry.releases.find(r => r.id === 'rhoai-3.6').fixVersions).toContain('rhoai-3.6');
-  });
-
-  it('returns skipped when all releases already have fixVersions', async () => {
-    const storage = createMockStorage({
-      [REGISTRY_FILE]: {
-        schemaVersion: 1,
-        releases: [
-          { id: 'rhoai-3.5', displayName: 'rhoai-3.5', fixVersions: ['v1'], state: 'active' }
-        ]
-      }
-    });
-
-    const result = await autoResolveFixVersions(storage);
     expect(result.status).toBe('skipped');
+    // fixVersions unchanged — rhoai-3.5 was already present
+    const registry = storage._store[REGISTRY_FILE];
+    expect(registry.releases[0].fixVersions).toEqual(['rhoai-3.5']);
   });
 
   it('returns skipped when Jira returns no versions', async () => {
@@ -388,11 +463,11 @@ describe('migration + auto-resolve pipeline (integration)', () => {
     expect(migrated).toBe(3); // 3 groups merged
     expect(registry.releases).toHaveLength(4); // 7 → 4
 
-    // After migration, the GA entry should have fixVersions from the .z entry
+    // After migration, the GA entry should have fixVersions from the .z entry (minus .z names)
     const gaAfterMigrate = registry.releases.find(r => r.id === 'rhoai-3.5');
     expect(gaAfterMigrate.state).toBe('active');
     expect(gaAfterMigrate.fixVersions).toContain('rhoai-3.5');
-    expect(gaAfterMigrate.fixVersions).toContain('rhoai-3.5.z');
+    expect(gaAfterMigrate.fixVersions).not.toContain('rhoai-3.5.z');
 
     // EA entries should also have fixVersions from their .z counterparts
     const ea1AfterMigrate = registry.releases.find(r => r.id === 'rhoai-3.5.ea1');

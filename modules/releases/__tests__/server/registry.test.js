@@ -159,7 +159,7 @@ describe('migrateNormalizedIds', () => {
     expect(registry.releases[0].fixVersions).toEqual(['rhoai-3.5']);
   });
 
-  it('merges .z and clean entries, preserving fixVersions union', () => {
+  it('merges .z and clean entries, preserving fixVersions union (excluding .z)', () => {
     const registry = {
       releases: [
         { id: 'rhoai-3.5.z', displayName: 'rhoai-3.5.z', fixVersions: ['rhoai-3.5', 'rhoai-3.5.z'], state: 'archived' },
@@ -171,9 +171,9 @@ describe('migrateNormalizedIds', () => {
     expect(registry.releases).toHaveLength(1);
     expect(registry.releases[0].id).toBe('rhoai-3.5');
     expect(registry.releases[0].state).toBe('active');
-    // fixVersions from both entries merged
+    // fixVersions merged but .z-suffixed names stripped
     expect(registry.releases[0].fixVersions).toContain('rhoai-3.5');
-    expect(registry.releases[0].fixVersions).toContain('rhoai-3.5.z');
+    expect(registry.releases[0].fixVersions).not.toContain('rhoai-3.5.z');
   });
 
   it('prefers active entry over archived when merging', () => {
@@ -292,7 +292,7 @@ describe('migrateNormalizedIds', () => {
     const ga = registry.releases.find(r => r.id === 'rhoai-3.5');
     expect(ga).toBeDefined();
     expect(ga.fixVersions).toContain('rhoai-3.5');
-    expect(ga.fixVersions).toContain('rhoai-3.5.z');
+    expect(ga.fixVersions).not.toContain('rhoai-3.5.z');
 
     const rhaii = registry.releases.find(r => r.id === 'rhaii-3.5.ea1');
     expect(rhaii).toBeDefined();

@@ -85,7 +85,8 @@ function normalizeRelease(input) {
 /**
  * Normalize a version name for fuzzy matching.
  * Lowercases, strips ".z" suffixes (Product Pages z-stream convention),
- * collapses separators (hyphens, dots) to spaces, and trims.
+ * collapses separators (hyphens, dots) to spaces, and handles the
+ * RHAISTRAT naming convention ("3.5 GA RHOAI RELEASE" → "rhoai 3 5").
  * @param {string} name
  * @returns {string}
  */
@@ -97,7 +98,16 @@ function normalizeVersionName(name) {
   s = s.replace(/[-._]+/g, ' ');
   // Collapse multiple spaces
   s = s.replace(/\s+/g, ' ');
-  return s.trim();
+  s = s.trim();
+  // RHAISTRAT uses "3.5 GA RHOAI RELEASE" / "3.5 EA1 RHOAI RELEASE" format.
+  // Rearrange to canonical "rhoai 3 5" / "rhoai 3 5 ea1" form.
+  var rhaistrat = /^(\d+\s+\d+)\s+(ga|ea\d+)\s+(rhoai|rhaii|rhelai)\s+release$/.exec(s);
+  if (rhaistrat) {
+    s = rhaistrat[2] === 'ga'
+      ? rhaistrat[3] + ' ' + rhaistrat[1]
+      : rhaistrat[3] + ' ' + rhaistrat[1] + ' ' + rhaistrat[2];
+  }
+  return s;
 }
 
 /**
@@ -235,11 +245,15 @@ function migrateNormalizedIds(registry) {
 
     const winner = entries[0];
 
-    // Union all fixVersions from every duplicate
-    const allFvs = new Set(winner.fixVersions || []);
-    for (let i = 1; i < entries.length; i++) {
-      for (const fv of (entries[i].fixVersions || [])) allFvs.add(fv);
-      toRemove.add(entries[i]);
+    // Union all fixVersions from every duplicate, excluding .z-suffixed names.
+    // Z-stream Jira fixVersions (e.g. "rhoai-3.5.z") track patch work and
+    // shouldn't be queried as TV/FV delta releases.
+    const allFvs = new Set();
+    for (let i = 0; i < entries.length; i++) {
+      for (const fv of (entries[i].fixVersions || [])) {
+        if (!/\.z$/i.test(fv)) allFvs.add(fv);
+      }
+      if (i > 0) toRemove.add(entries[i]);
     }
 
     winner.id = normId;
@@ -256,10 +270,10 @@ function migrateNormalizedIds(registry) {
 }
 
 /**
- * Auto-resolve Jira fixVersions for registry releases that have empty mappings.
+ * Auto-resolve Jira fixVersions for registry releases.
  * Uses the existing matchVersionsToReleases fuzzy matcher against all Jira
- * project versions. Only touches releases with empty fixVersions — never
- * overwrites manually-curated mappings.
+ * project versions. Additive only — adds newly-discovered Jira version names
+ * to existing fixVersions but never removes manually-curated mappings.
  *
  * @param {object} storage - Storage module
  * @param {object} [deps] - Optional dependency injection for testing
@@ -271,13 +285,12 @@ async function autoResolveFixVersions(storage, deps) {
   const { readFromStorage, writeToStorage } = storage;
   const registry = readRegistry(readFromStorage);
 
-  // Find active releases with no fixVersions
-  const emptyReleases = registry.releases.filter(function (r) {
-    return r.state === 'active' && (!r.fixVersions || r.fixVersions.length === 0);
+  const activeReleases = registry.releases.filter(function (r) {
+    return r.state === 'active';
   });
 
-  if (emptyReleases.length === 0) {
-    return { status: 'skipped', message: 'All active releases already have fixVersions' };
+  if (activeReleases.length === 0) {
+    return { status: 'skipped', message: 'No active releases in registry' };
   }
 
   const config = loadRegistryConfig(storage);
@@ -296,21 +309,26 @@ async function autoResolveFixVersions(storage, deps) {
   // Run fuzzy matching against ALL active releases (matcher needs full context)
   const result = matchVersionsToReleases(jiraVersions, registry.releases);
 
-  // Apply only to releases that had empty fixVersions
-  const emptyIds = new Set(emptyReleases.map(function (r) { return r.id; }));
   const applied = [];
 
   for (const match of result.matches) {
-    if (!emptyIds.has(match.releaseId)) continue;
     if (!match.proposedFixVersions || match.proposedFixVersions.length === 0) continue;
 
-    // Find the release in the registry and apply
+    // Find the release in the registry
     const release = registry.releases.find(function (r) { return r.id === match.releaseId; });
-    if (!release) continue;
+    if (!release || release.state !== 'active') continue;
 
-    release.fixVersions = match.proposedFixVersions;
+    // Only add new versions not already present (additive only)
+    var currentFvs = release.fixVersions || [];
+    var newVersions = match.proposedFixVersions.filter(function (fv) {
+      return currentFvs.indexOf(fv) === -1;
+    });
+
+    if (newVersions.length === 0) continue;
+
+    release.fixVersions = currentFvs.concat(newVersions);
     release.updatedAt = new Date().toISOString();
-    applied.push({ releaseId: release.id, fixVersions: release.fixVersions });
+    applied.push({ releaseId: release.id, fixVersions: release.fixVersions, added: newVersions });
   }
 
   if (applied.length > 0) {
@@ -320,14 +338,14 @@ async function autoResolveFixVersions(storage, deps) {
       action: 'registry_auto_resolve_versions',
       user: 'system',
       summary: 'Auto-resolved Jira fixVersions for ' + applied.length + ' releases',
-      details: { applied: applied, emptyCount: emptyReleases.length }
+      details: { applied: applied }
     });
   }
 
   return {
-    status: 'ok',
+    status: applied.length > 0 ? 'ok' : 'skipped',
     resolved: applied.length,
-    emptyBefore: emptyReleases.length,
+    message: applied.length > 0 ? undefined : 'No new fixVersions to add',
     applied: applied
   };
 }
