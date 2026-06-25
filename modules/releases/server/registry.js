@@ -944,7 +944,7 @@ function registerRegistryRoutes(router, context) {
     context.registerRefresh('registry-resolve-versions', {
       order: 66,
       timeout: 120000,
-      description: 'Auto-resolves Jira fixVersions for registry releases with empty mappings.',
+      description: 'Auto-resolves Jira fixVersions for active registry releases (additive only).',
       handler: async function() {
         return autoResolveFixVersions(storage);
       }
