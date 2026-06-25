@@ -10,6 +10,25 @@ resources:
 
 patches:
   - path: backend-secrets-patch.yaml
+  # JSON 6902 append — adds to base arrays without replacing existing entries
+  - target:
+      kind: Deployment
+      name: backend
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/volumeMounts/-
+        value:
+          name: google-sa-key
+          mountPath: /etc/secrets/google-sa-key.json
+          subPath: google-sa-key.json
+          readOnly: true
+      - op: add
+        path: /spec/template/spec/volumes/-
+        value:
+          name: google-sa-key
+          secret:
+            secretName: google-sa-key
+            optional: true
 
 configMapGenerator:
   - name: team-tracker-config
