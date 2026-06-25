@@ -17,11 +17,22 @@ Used by: team-tracker, releases, ai-impact
 
 ### GitHub (`github`)
 
-Used by: team-tracker, ai-impact
+Used by: team-tracker, ai-impact, system-health
+
+**Preferred: GitHub App authentication** — generates short-lived installation
+tokens that auto-expire after 1 hour. Higher rate limits (12,500 GraphQL +
+15,000 REST vs 5,000 each for a PAT).
 
 | Env Var | Required | Description |
 |---------|----------|-------------|
-| `GITHUB_TOKEN` | No | Classic PAT with `read:user` scope (fine-grained tokens don't work with GraphQL) |
+| `GITHUB_APP_ID` | No | GitHub App ID (via ConfigMap) |
+| `GITHUB_APP_PRIVATE_KEY` | No | RSA private key PEM content (via `team-tracker-secrets`) |
+| `GITHUB_APP_INSTALLATION_ID` | No | Installation ID for the target org (via ConfigMap) |
+| `GITHUB_TOKEN` | No | Classic PAT with `read:user` scope (local dev fallback when App vars are not set) |
+
+If all three `GITHUB_APP_*` vars are set, the backend generates installation
+tokens automatically and `GITHUB_TOKEN` is ignored. If App auth fails at
+startup, falls back to `GITHUB_TOKEN` if set.
 
 ### GitLab (`gitlab`)
 
@@ -89,6 +100,11 @@ oc create secret generic team-tracker-secrets \
 oc patch secret team-tracker-secrets -n team-tracker \
   --type merge \
   -p '{"stringData":{"GITHUB_TOKEN":"your-token"}}'
+
+# GitHub App auth (preferred for production) — add PEM key to the same secret
+oc patch secret team-tracker-secrets -n team-tracker \
+  --type merge \
+  -p "{\"stringData\":{\"GITHUB_APP_PRIVATE_KEY\":\"$(cat /path/to/key.pem)\"}}"
 ```
 
 The backend deployment (`deploy/openshift/base/backend-deployment.yaml`) maps each secret key to an env var via `secretKeyRef` with `optional: true` for non-required secrets.
@@ -103,7 +119,7 @@ The backend deployment (`deploy/openshift/base/backend-deployment.yaml`) maps ea
 
 These are non-sensitive configuration values that remain as plain env vars (in ConfigMap or `.env`). They are **not** managed by the secrets system:
 
-`DEMO_MODE`, `NODE_ENV`, `API_PORT`, `JIRA_HOST`, `GITLAB_BASE_URL`, `JIRA_STORY_POINTS_FIELD`, `PRODUCT_PAGES_BASE_URL`, `SMARTSHEET_SHEET_ID`, `UPSTREAM_PULSE_API_URL`, `PRODUCT_BUILDS_API_URL`, `AUTH_EMAIL_DOMAIN`, `ADMIN_EMAILS`
+`DEMO_MODE`, `NODE_ENV`, `API_PORT`, `JIRA_HOST`, `GITLAB_BASE_URL`, `JIRA_STORY_POINTS_FIELD`, `PRODUCT_PAGES_BASE_URL`, `SMARTSHEET_SHEET_ID`, `UPSTREAM_PULSE_API_URL`, `PRODUCT_BUILDS_API_URL`, `AUTH_EMAIL_DOMAIN`, `ADMIN_EMAILS`, `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`
 
 ## Diagnostics
 

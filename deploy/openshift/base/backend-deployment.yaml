@@ -48,6 +48,13 @@ spec:
                   name: team-tracker-secrets
                   key: GITHUB_TOKEN
                   optional: true
+            # GitHub App auth (preferred over GITHUB_TOKEN PAT)
+            - name: GITHUB_APP_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: team-tracker-secrets
+                  key: GITHUB_APP_PRIVATE_KEY
+                  optional: true
             - name: GITLAB_TOKEN
               valueFrom:
                 secretKeyRef:

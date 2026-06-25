@@ -77,6 +77,7 @@ function buildModuleContext(coreServices, slug, registries = {}) {
   const roleRegistry = coreServices.roleRegistry || null
   const scopeRegistry = coreServices.scopeRegistry || null
   const secretRegistry = coreServices.secretRegistry || null
+  const githubAppToken = require('./github-app-token')
 
   const ctx = {
     storage: coreServices.storage,
@@ -124,9 +125,25 @@ function buildModuleContext(coreServices, slug, registries = {}) {
       ? function () { return refresh.isRunning() }
       : function () { return false },
 
-    secrets: secretRegistry
-      ? secretRegistry.getModuleSecrets(slug)
-      : Object.freeze({}),
+    secrets: (function () {
+      if (!secretRegistry) return Object.freeze({})
+      var moduleSecrets = secretRegistry.getModuleSecrets(slug)
+      if (githubAppToken.isAppMode() &&
+          Object.prototype.hasOwnProperty.call(moduleSecrets, 'GITHUB_TOKEN')) {
+        var withGetter = {}
+        var keys = Object.keys(moduleSecrets)
+        for (var i = 0; i < keys.length; i++) {
+          if (keys[i] !== 'GITHUB_TOKEN') withGetter[keys[i]] = moduleSecrets[keys[i]]
+        }
+        Object.defineProperty(withGetter, 'GITHUB_TOKEN', {
+          get: function () { return githubAppToken.getTokenSync() },
+          enumerable: true,
+          configurable: false
+        })
+        return Object.freeze(withGetter)
+      }
+      return moduleSecrets
+    })(),
 
     /**
      * Dynamic secret lookup. Reads process.env at call time.

@@ -36,6 +36,8 @@ configMapGenerator:
     literals:
       - ADMIN_EMAILS=acorvin@redhat.com,acorvin@cluster.local,jalberts@redhat.com
       - CRON_ADMIN_EMAIL=acorvin@redhat.com
+      - GITHUB_APP_ID=3263553
+      - GITHUB_APP_INSTALLATION_ID=121149773
 
 # Override core images with AI Eng full images
 images:

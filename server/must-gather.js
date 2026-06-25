@@ -107,6 +107,7 @@ function collectSystemInfo() {
       JIRA_EMAIL_SET: !!process.env.JIRA_EMAIL,
       JIRA_TOKEN_SET: !!process.env.JIRA_TOKEN,
       GITHUB_TOKEN_SET: !!process.env.GITHUB_TOKEN,
+      GITHUB_APP_CONFIGURED: !!(process.env.GITHUB_APP_ID && process.env.GITHUB_APP_INSTALLATION_ID),
       GITLAB_TOKEN_SET: !!process.env.GITLAB_TOKEN,
       GITLAB_BASE_URL: process.env.GITLAB_BASE_URL || 'https://gitlab.com',
       GOOGLE_SERVICE_ACCOUNT_KEY_FILE: process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE || '/etc/secrets/google-sa-key.json',

@@ -23,7 +23,10 @@ module.exports = [
     label: 'GitHub',
     description: 'GitHub API access for contribution stats',
     secrets: [
-      { key: 'GITHUB_TOKEN', description: 'Classic PAT with read:user scope', required: false }
+      { key: 'GITHUB_TOKEN', description: 'Classic PAT with read:user scope (local dev fallback)', required: false },
+      { key: 'GITHUB_APP_ID', description: 'GitHub App ID', required: false },
+      { key: 'GITHUB_APP_PRIVATE_KEY', description: 'GitHub App RSA private key (PEM)', required: false },
+      { key: 'GITHUB_APP_INSTALLATION_ID', description: 'GitHub App installation ID', required: false },
     ]
   },
   {

@@ -80,7 +80,21 @@ secretRegistry.registerValidator('JIRA_TOKEN', async () => {
   return { valid: true, message: `Authenticated as ${data.displayName || data.emailAddress}` };
 });
 
+const githubAppToken = require('../shared/server/github-app-token');
+githubAppToken.init().catch(function(err) {
+  console.error('[github-app-token] Startup init error:', err.message);
+});
+
 secretRegistry.registerValidator('GITHUB_TOKEN', async () => {
+  if (githubAppToken.isAppMode()) {
+    const token = githubAppToken.getTokenSync();
+    if (!token) return { valid: false, message: 'GitHub App token not generated' };
+    const res = await fetch('https://api.github.com/rate_limit', {
+      headers: { Authorization: `token ${token}`, Accept: 'application/json' }
+    });
+    if (!res.ok) return { valid: false, message: `GitHub App auth failed (${res.status})` };
+    return { valid: true, message: 'GitHub App installation token active' };
+  }
   const token = process.env.GITHUB_TOKEN;
   if (!token) return { valid: false, message: 'GITHUB_TOKEN not configured' };
   const res = await fetch('https://api.github.com/user', {

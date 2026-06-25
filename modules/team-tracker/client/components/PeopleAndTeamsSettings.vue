@@ -137,7 +137,7 @@
             </svg>
             Add GitHub org
           </button>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Requires GITHUB_TOKEN env var.</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Requires GitHub App credentials or GITHUB_TOKEN env var.</p>
         </div>
 
         <div>
