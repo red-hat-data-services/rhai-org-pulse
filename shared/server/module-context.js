@@ -128,15 +128,17 @@ function buildModuleContext(coreServices, slug, registries = {}) {
     secrets: (function () {
       if (!secretRegistry) return Object.freeze({})
       var moduleSecrets = secretRegistry.getModuleSecrets(slug)
-      if (githubAppToken.isAppMode() &&
+      var appConfigured = process.env.GITHUB_APP_ID && process.env.GITHUB_APP_INSTALLATION_ID
+      if (appConfigured &&
           Object.prototype.hasOwnProperty.call(moduleSecrets, 'GITHUB_TOKEN')) {
+        var staticToken = moduleSecrets.GITHUB_TOKEN
         var withGetter = {}
         var keys = Object.keys(moduleSecrets)
         for (var i = 0; i < keys.length; i++) {
           if (keys[i] !== 'GITHUB_TOKEN') withGetter[keys[i]] = moduleSecrets[keys[i]]
         }
         Object.defineProperty(withGetter, 'GITHUB_TOKEN', {
-          get: function () { return githubAppToken.getTokenSync() },
+          get: function () { return githubAppToken.getTokenSync() || staticToken },
           enumerable: true,
           configurable: false
         })
