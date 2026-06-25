@@ -190,6 +190,8 @@
     />
 
     <BackendConnectivityModal />
+
+    <ChatWidget v-if="isAiAssistantEnabled" />
   </div>
 </template>
 
@@ -205,6 +207,7 @@ import AppSidebar from './AppSidebar.vue'
 import LandingPage from './LandingPage.vue'
 import ModuleIframeView from './ModuleIframeView.vue'
 import BackendConnectivityModal from './BackendConnectivityModal.vue'
+import ChatWidget from '@modules/ai-assistant/client/components/ChatWidget.vue'
 import AppMessages from '@shared/client/components/AppMessages.vue'
 import { computed, ref, readonly, provide, onUnmounted, watch } from 'vue'
 import { useAuth } from '@shared/client/composables/useAuth'
@@ -240,7 +243,8 @@ export default {
     LandingPage,
     ModuleIframeView,
     BackendConnectivityModal,
-    AppMessages
+    AppMessages,
+    ChatWidget
   },
   setup() {
     const { user: authUser, isAdmin: authIsAdmin, isTeamAdmin: authIsTeamAdmin, roles: authRoles, refresh: refreshAuth } = useAuth()
@@ -488,6 +492,9 @@ export default {
     }
   },
   computed: {
+    isAiAssistantEnabled() {
+      return this.enabledBuiltInSlugs && this.enabledBuiltInSlugs.includes('ai-assistant')
+    },
     isBuiltInModuleView() {
       const manifest = this.builtInManifests.find(m => m.slug === this.activeModule)
       return !!manifest
