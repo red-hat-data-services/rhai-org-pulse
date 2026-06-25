@@ -103,7 +103,7 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
       for (var ri = 0; ri < rockNames.length; ri++) {
         var rockName = rockNames[ri]
         if (!result[rockName]) {
-          result[rockName] = { worstLevel: 'green', totalFlags: 0, featureCount: 0, dorPassedCount: 0, dodPassedCount: 0, planningReady: 0, planningTotal: 0, planningBlockers: 0, versionedCount: 0, missingVersionCount: 0, committedCount: 0, targetedCount: 0, distinctVersions: new Set(), releaseTypes: new Set() }
+          result[rockName] = { worstLevel: 'green', totalFlags: 0, featureCount: 0, dorPassedCount: 0, dodPassedCount: 0, planningReady: 0, planningTotal: 0, planningBlockers: 0, versionedCount: 0, missingVersionCount: 0, committedCount: 0, targetedCount: 0, distinctVersions: new Set(), releaseTypes: new Set(), totalEpicCount: 0, totalIssueCount: 0, totalStoryPoints: 0 }
         }
 
         // Collect release type from candidates data (available on all features)
@@ -118,6 +118,9 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
 
         result[rockName].featureCount++
         result[rockName].totalFlags += (h.risk.score || 0)
+        result[rockName].totalEpicCount += (h.epicCount || 0)
+        result[rockName].totalIssueCount += (h.issueCount || 0)
+        if (h.storyPoints) result[rockName].totalStoryPoints += h.storyPoints
         if (h.dor && h.dor.passed) result[rockName].dorPassedCount++
         if (h.dod && h.dod.passed) result[rockName].dodPassedCount++
         var level = effectiveLevel(h)
@@ -197,7 +200,11 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
           targetRelease: h ? (h.targetRelease || '') : '',
           versionStatus: h ? (h.versionStatus || 'none') : 'none',
           completionPct: h ? (h.completionPct || 0) : 0,
-          planningChecks: h && h.planningChecks ? h.planningChecks : null
+          planningChecks: h && h.planningChecks ? h.planningChecks : null,
+          epicCount: h ? (h.epicCount || 0) : 0,
+          issueCount: h ? (h.issueCount || 0) : 0,
+          rice: h ? (h.rice || null) : null,
+          storyPoints: h ? (h.storyPoints || null) : null
         })
       }
     }

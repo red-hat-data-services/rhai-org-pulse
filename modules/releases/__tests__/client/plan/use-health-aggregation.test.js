@@ -29,6 +29,10 @@ function makeHealthFeature(key, level, flags, override, extras) {
   if (override) {
     result.risk.override = override
   }
+  if (extras && extras.epicCount !== undefined) result.epicCount = extras.epicCount
+  if (extras && extras.issueCount !== undefined) result.issueCount = extras.issueCount
+  if (extras && extras.rice !== undefined) result.rice = extras.rice
+  if (extras && extras.storyPoints !== undefined) result.storyPoints = extras.storyPoints
   return result
 }
 
@@ -260,6 +264,36 @@ describe('useHealthAggregation', function() {
       expect(result.rockHealth.value['Rock A'].releaseTypes).toEqual([])
     })
 
+    it('aggregates totalEpicCount, totalIssueCount, totalStoryPoints per rock', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'green', [], null, { epicCount: 2, issueCount: 8, storyPoints: 13 }),
+        makeHealthFeature('FEAT-2', 'green', [], null, { epicCount: 1, issueCount: 4, storyPoints: 8 })
+      ]))
+      var features = ref([
+        makeFeature('FEAT-1', null, 'Rock A'),
+        makeFeature('FEAT-2', null, 'Rock A')
+      ])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      expect(result.rockHealth.value['Rock A'].totalEpicCount).toBe(3)
+      expect(result.rockHealth.value['Rock A'].totalIssueCount).toBe(12)
+      expect(result.rockHealth.value['Rock A'].totalStoryPoints).toBe(21)
+    })
+
+    it('defaults size aggregates to zero when health data has no size fields', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'green', [])
+      ]))
+      var features = ref([
+        makeFeature('FEAT-1', null, 'Rock A')
+      ])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      expect(result.rockHealth.value['Rock A'].totalEpicCount).toBe(0)
+      expect(result.rockHealth.value['Rock A'].totalIssueCount).toBe(0)
+      expect(result.rockHealth.value['Rock A'].totalStoryPoints).toBe(0)
+    })
+
     it('collects releaseTypes even for features without health data', function() {
       var hd = ref(makeHealthData([
         makeHealthFeature('FEAT-1', 'green', [])
@@ -307,6 +341,10 @@ describe('useHealthAggregation', function() {
       expect(rf[0].versionStatus).toBe('none')
       expect(rf[0].completionPct).toBe(0)
       expect(rf[0].planningChecks).toBe(null)
+      expect(rf[0].epicCount).toBe(0)
+      expect(rf[0].issueCount).toBe(0)
+      expect(rf[0].rice).toBe(null)
+      expect(rf[0].storyPoints).toBe(null)
 
       expect(rf[1].key).toBe('FEAT-2')
       expect(rf[1].level).toBe('red')
@@ -325,6 +363,10 @@ describe('useHealthAggregation', function() {
       expect(rf[1].versionStatus).toBe('none')
       expect(rf[1].completionPct).toBe(0)
       expect(rf[1].planningChecks).toBe(null)
+      expect(rf[1].epicCount).toBe(0)
+      expect(rf[1].issueCount).toBe(0)
+      expect(rf[1].rice).toBe(null)
+      expect(rf[1].storyPoints).toBe(null)
     })
 
     it('defaults to green when feature has no health data', function() {
@@ -381,6 +423,26 @@ describe('useHealthAggregation', function() {
       expect(unknown.versionStatus).toBe('none')
       expect(unknown.completionPct).toBe(0)
       expect(unknown.planningChecks).toBe(null)
+      expect(unknown.epicCount).toBe(0)
+      expect(unknown.issueCount).toBe(0)
+      expect(unknown.rice).toBe(null)
+      expect(unknown.storyPoints).toBe(null)
+    })
+
+    it('projects size fields (epicCount, issueCount, rice, storyPoints) from health data', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'green', [], null, { epicCount: 3, issueCount: 12, rice: 42, storyPoints: 21 })
+      ]))
+      var features = ref([
+        makeFeature('FEAT-1', null, 'Rock A')
+      ])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      var rf = result.rockFeatures.value['Rock A']
+      expect(rf[0].epicCount).toBe(3)
+      expect(rf[0].issueCount).toBe(12)
+      expect(rf[0].rice).toBe(42)
+      expect(rf[0].storyPoints).toBe(21)
     })
 
     it('splits merged bigRock names into separate entries', function() {
