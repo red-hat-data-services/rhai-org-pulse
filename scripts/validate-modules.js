@@ -4,7 +4,27 @@ const fs = require('fs')
 const path = require('path')
 
 const MODULES_DIR = path.join(__dirname, '..', 'modules')
+const ICON_MAP_PATH = path.join(__dirname, '..', 'src', 'utils', 'icon-map.js')
 const REQUIRED_FIELDS = ['name', 'slug', 'description', 'icon']
+
+function parseIconMapKeys() {
+  const src = fs.readFileSync(ICON_MAP_PATH, 'utf8')
+  const match = src.match(/export const ICON_MAP\s*=\s*\{([\s\S]*?)\n\}/)
+  if (!match) throw new Error('Could not parse ICON_MAP from icon-map.js')
+  const body = match[1]
+  const keys = new Set()
+  for (const line of body.split('\n')) {
+    const trimmed = line.trim().replace(/,\s*$/, '')
+    if (!trimmed || trimmed.startsWith('//')) continue
+    // 'kebab-case': Value  or  'key': Value
+    const quoted = trimmed.match(/^['"]([^'"]+)['"]\s*:/)
+    if (quoted) { keys.add(quoted[1]); continue }
+    // PascalCase (shorthand property or PascalCase: Value)
+    const ident = trimmed.match(/^([A-Za-z]\w*)/)
+    if (ident) keys.add(ident[1])
+  }
+  return keys
+}
 
 let errors = 0
 
@@ -330,6 +350,29 @@ function validate() {
           warn(`Module "${slug}" (defaultEnabled: true) requires "${req}" (defaultEnabled: false)`)
         }
       }
+    }
+  }
+
+  // Unique top-level module icons
+  console.log('\nValidating unique module icons...')
+  const moduleIcons = new Map() // lowercase icon -> first module slug
+  for (const [slug, manifest] of Object.entries(allManifests)) {
+    if (!manifest.icon) continue
+    const iconKey = manifest.icon.toLowerCase()
+    if (moduleIcons.has(iconKey)) {
+      error(`Module "${slug}" uses icon "${manifest.icon}" which conflicts with module "${moduleIcons.get(iconKey)}"`)
+    } else {
+      moduleIcons.set(iconKey, slug)
+    }
+  }
+
+  // Module icons must exist in icon-map.js
+  console.log('\nValidating module icons are registered...')
+  const validIcons = parseIconMapKeys()
+  for (const [slug, manifest] of Object.entries(allManifests)) {
+    if (!manifest.icon) continue
+    if (!validIcons.has(manifest.icon)) {
+      error(`Module "${slug}" uses icon "${manifest.icon}" which is not registered in src/utils/icon-map.js`)
     }
   }
 

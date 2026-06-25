@@ -44,7 +44,8 @@ import {
   LineChart,
   Brain,
   PenSquare,
-  FileUp
+  FileUp,
+  Trophy
 } from 'lucide-vue-next'
 
 export const ICON_MAP = {
@@ -101,7 +102,9 @@ export const ICON_MAP = {
   LayoutDashboard,
   Rocket,
   UserCircle,
-  'rocket': Rocket
+  'rocket': Rocket,
+  'users': Users,
+  Trophy
 }
 
 export function resolveIcon(iconName) {

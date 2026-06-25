@@ -2,7 +2,7 @@
   "name": "AI Catalyst Showcase",
   "slug": "catalyst-showcase",
   "description": "Catalog of AI catalyst projects with strategy pillar filtering and detail views",
-  "icon": "Sparkles",
+  "icon": "Trophy",
   "order": 15,
   "defaultEnabled": false,
   "requires": [],
