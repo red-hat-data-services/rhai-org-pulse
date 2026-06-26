@@ -136,7 +136,7 @@ const rfeLearnLinks = [
 ]
 
 const rfeToolLinks = [
-  { label: 'assess-rfe plugin', icon: Code, url: 'https://github.com/n1hility/assess-rfe' },
+  { label: 'assess-rfe plugin', icon: Code, url: 'https://github.com/opendatahub-io/assess-rfe' },
   { label: 'rfe-creator plugin', icon: Code, url: 'https://github.com/jwforres/rfe-creator' },
   { label: 'Skills Registry', icon: BookOpen, url: 'https://github.com/opendatahub-io/skills-registry' },
   { label: '#wg-rhai-rfe-builder', icon: MessageSquare, url: 'https://app.slack.com/client/E030G10V24F/C0AMPLH0Y9G' },
