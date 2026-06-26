@@ -88,7 +88,6 @@
 <script setup>
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { BotMessageSquare, X, SendHorizonal } from 'lucide-vue-next'
-import { fetchEventSource } from '@microsoft/fetch-event-source'
 import ChatMessage from './ChatMessage.vue'
 
 const STORAGE_KEY = 'ai-assistant-conversation'
@@ -197,54 +196,37 @@ async function handleSubmit() {
   const assistantIdx = messages.value.length - 1
 
   isStreaming.value = true
-  const ctrl = new AbortController()
 
   try {
-    await fetchEventSource('/api/modules/ai-assistant/chat', {
+    const response = await fetch('/api/modules/ai-assistant/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: text,
         sessionId: sessionId.value,
         context: getPageContext()
-      }),
-      signal: ctrl.signal,
-      openWhenHidden: true,
-
-      onopen(response) {
-        if (!response.ok) {
-          throw new Error(`Server returned ${response.status}`)
-        }
-      },
-
-      onmessage(ev) {
-        if (ev.event === 'session') {
-          const data = JSON.parse(ev.data)
-          sessionId.value = data.sessionId
-          sessionStorage.setItem(SESSION_KEY, data.sessionId)
-        } else if (ev.event === 'delta') {
-          const data = JSON.parse(ev.data)
-          messages.value[assistantIdx].content += data.text
-        } else if (ev.event === 'done') {
-          messages.value[assistantIdx].streaming = false
-        } else if (ev.event === 'error') {
-          const data = JSON.parse(ev.data)
-          messages.value[assistantIdx].content += `\n\n*Error: ${data.error}*`
-          messages.value[assistantIdx].streaming = false
-        }
-      },
-
-      onerror(err) {
-        messages.value[assistantIdx].content += '\n\n*Connection lost. Please try again.*'
-        messages.value[assistantIdx].streaming = false
-        throw err // stop retrying
-      }
+      })
     })
-  } catch {
-    // fetchEventSource throws on abort or onerror rethrow — already handled above
-    if (messages.value[assistantIdx]?.streaming) {
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ error: `Server returned ${response.status}` }))
+      messages.value[assistantIdx].content = `*Error: ${err.error || 'Unknown error'}*`
       messages.value[assistantIdx].streaming = false
+      return
     }
+
+    const data = await response.json()
+
+    if (data.sessionId) {
+      sessionId.value = data.sessionId
+      sessionStorage.setItem(SESSION_KEY, data.sessionId)
+    }
+
+    messages.value[assistantIdx].content = data.text || '(No response)'
+    messages.value[assistantIdx].streaming = false
+  } catch {
+    messages.value[assistantIdx].content += '\n\n*Connection lost. Please try again.*'
+    messages.value[assistantIdx].streaming = false
   } finally {
     isStreaming.value = false
   }

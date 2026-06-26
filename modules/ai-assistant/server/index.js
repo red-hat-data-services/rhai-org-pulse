@@ -63,23 +63,11 @@ module.exports = function registerRoutes(router, context) {
       return res.status(400).json({ error: 'message too long (max 4000 characters)' })
     }
 
-    // Set up SSE
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-      'X-Accel-Buffering': 'no'
-    })
-
-    let aborted = false
-    req.on('close', () => { aborted = true })
-
     try {
       // Create or reuse session
       let sessionId = existingSessionId
       if (!sessionId) {
         sessionId = await createSession(baseUrl)
-        res.write(`event: session\ndata: ${JSON.stringify({ sessionId })}\n\n`)
       }
 
       // Prepend page context to the user message
@@ -88,30 +76,12 @@ module.exports = function registerRoutes(router, context) {
         ? `[System context: ${systemPrompt}]\n\n${message}`
         : message
 
-      await sendMessage(baseUrl, sessionId, fullMessage, function (event) {
-        if (aborted) return
+      const responseText = await sendMessage(baseUrl, sessionId, fullMessage)
 
-        // Forward text content events to the client
-        if (event.type === 'message.part.text.delta' || event.type === 'text_delta') {
-          res.write(`event: delta\ndata: ${JSON.stringify({ text: event.properties?.text || event.text || '' })}\n\n`)
-        } else if (event.type === 'message.complete' || event.type === 'message_stop') {
-          res.write(`event: done\ndata: ${JSON.stringify({ sessionId })}\n\n`)
-        } else if (event.type === 'error') {
-          res.write(`event: error\ndata: ${JSON.stringify({ error: event.properties?.message || 'Unknown error' })}\n\n`)
-        }
-      })
-
-      // Ensure done is sent even if no explicit complete event
-      if (!aborted) {
-        res.write(`event: done\ndata: ${JSON.stringify({ sessionId })}\n\n`)
-        res.end()
-      }
+      res.json({ sessionId, text: responseText })
     } catch (err) {
       console.error('[ai-assistant] Chat error:', err.message)
-      if (!aborted) {
-        res.write(`event: error\ndata: ${JSON.stringify({ error: 'Failed to get response from AI assistant' })}\n\n`)
-        res.end()
-      }
+      res.status(500).json({ error: 'Failed to get response from AI assistant' })
     }
   })
 }
