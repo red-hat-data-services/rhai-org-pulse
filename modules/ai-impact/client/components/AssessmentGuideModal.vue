@@ -156,7 +156,7 @@ function handleClose() {
               <div class="rounded-lg bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-700 px-4 py-3">
                 <h4 class="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">CLI Tools</h4>
                 <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                  The scoring rubric is maintained in the <span class="font-mono text-xs bg-gray-200 dark:bg-gray-600 px-1 py-0.5 rounded">assess-rfe</span> plugin (source: <a href="https://github.com/n1hility/assess-rfe" target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-blue-600 dark:text-blue-400 hover:underline">n1hility/assess-rfe</a>).
+                  The scoring rubric is maintained in the <span class="font-mono text-xs bg-gray-200 dark:bg-gray-600 px-1 py-0.5 rounded">assess-rfe</span> plugin (source: <a href="https://github.com/opendatahub-io/assess-rfe" target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-blue-600 dark:text-blue-400 hover:underline">opendatahub-io/assess-rfe</a>).
                 </p>
                 <div class="space-y-1.5 text-xs font-mono">
                   <div class="flex items-start gap-2">
@@ -516,7 +516,7 @@ function handleClose() {
                   </div>
                 </div>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  Source: <a href="https://github.com/n1hility/assess-rfe" target="_blank" rel="noopener noreferrer" class="font-mono text-blue-600 dark:text-blue-400 hover:underline">n1hility/assess-rfe</a> and <a href="https://github.com/jwforres/rfe-creator" target="_blank" rel="noopener noreferrer" class="font-mono text-blue-600 dark:text-blue-400 hover:underline">jwforres/rfe-creator</a>
+                  Source: <a href="https://github.com/opendatahub-io/assess-rfe" target="_blank" rel="noopener noreferrer" class="font-mono text-blue-600 dark:text-blue-400 hover:underline">opendatahub-io/assess-rfe</a> and <a href="https://github.com/jwforres/rfe-creator" target="_blank" rel="noopener noreferrer" class="font-mono text-blue-600 dark:text-blue-400 hover:underline">jwforres/rfe-creator</a>
                 </p>
               </div>
             </div>
