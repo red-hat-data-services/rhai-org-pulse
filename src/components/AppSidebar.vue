@@ -257,7 +257,7 @@ const props = defineProps({
   teamDataSource: { type: String, default: '' }
 })
 
-defineEmits(['navigate', 'toggle-collapse', 'close-mobile'])
+const emit = defineEmits(['navigate', 'toggle-collapse', 'close-mobile'])
 
 const expandedSections = ref({})
 const userMenuOpen = ref(false)
@@ -297,6 +297,10 @@ function toggleSection(sectionId) {
   if (!wasExpanded) {
     expandedSections.value[sectionId] = true
   }
+  // Navigate to the module's default view when expanding
+  if (!wasExpanded) {
+    emit('navigate', sectionId)
+  }
 }
 
 const externalModules = computed(() => {
@@ -326,6 +330,7 @@ const navSections = computed(() => {
       headerIcon: resolveIcon(manifest.icon),
       items: navItems
         .filter(item => {
+          if (item.hidden) return false
           if (item.requireCondition === 'in-app-mode' && props.teamDataSource !== 'in-app') return false
           if (!item.requireRole) return true
           if (props.isAdmin) return true
