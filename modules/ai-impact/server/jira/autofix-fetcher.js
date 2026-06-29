@@ -156,7 +156,7 @@ function computeAutofixMetrics(issues, timeWindow) {
   const autofixTotal = Object.values(autofixStates).reduce(function(s, v) { return s + v; }, 0);
 
   const triageVerdicts = {
-    ready: autofixTotal,
+    ready: get('autofix-ready'),
     missingInfo: get('triage-missing-info'),
     notFixable: get('triage-not-fixable'),
     stale: get('triage-stale'),

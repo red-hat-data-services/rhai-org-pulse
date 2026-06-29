@@ -228,7 +228,7 @@ const metrics = computed(() => {
   ).length
 
   const triageVerdicts = {
-    ready: windowIssues.filter(i => i.pipelineState.startsWith('autofix-')).length,
+    ready: windowIssues.filter(i => i.pipelineState === 'autofix-ready').length,
     missingInfo: windowIssues.filter(i => i.pipelineState === 'triage-missing-info').length,
     notFixable: windowIssues.filter(i => i.pipelineState === 'triage-not-fixable').length,
     stale: windowIssues.filter(i => i.pipelineState === 'triage-stale').length,
@@ -498,7 +498,7 @@ const triageSegments = computed(() => {
   if (!metrics.value) return []
   const v = metrics.value.triageVerdicts
   return [
-    { label: 'Ready for AI', count: v.ready || 0, color: 'bg-green-500', textClass: 'text-green-600 dark:text-green-400', jiraLabels: ['jira-autofix', 'jira-autofix-pending', 'jira-autofix-review', 'jira-autofix-ci-failing', 'jira-autofix-merged', 'jira-autofix-rejected', 'jira-autofix-max-retries', 'jira-autofix-blocked'] },
+    { label: 'Ready for AI', count: v.ready || 0, color: 'bg-green-500', textClass: 'text-green-600 dark:text-green-400', jiraLabels: ['jira-autofix'], excludeLabels: ['jira-autofix-pending', 'jira-autofix-review', 'jira-autofix-ci-failing', 'jira-autofix-merged', 'jira-autofix-rejected', 'jira-autofix-max-retries', 'jira-autofix-researched', 'jira-autofix-blocked'] },
     { label: 'Missing Info', count: v.missingInfo || 0, color: 'bg-yellow-500', textClass: 'text-yellow-600 dark:text-yellow-400', jiraLabels: ['jira-triage-missing-info'] },
     { label: 'Not AI-Fixable', count: v.notFixable || 0, color: 'bg-red-500', textClass: 'text-red-600 dark:text-red-400', jiraLabels: ['jira-triage-not-fixable'] },
     { label: 'External Reporter', count: v.external || 0, color: 'bg-purple-500', textClass: 'text-purple-600 dark:text-purple-400', jiraLabels: ['jira-triage-external'] },
@@ -569,6 +569,7 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
   if (selectedComponent.value !== 'all') {
     jql += ` AND component = "${selectedComponent.value}"`
   }
+  jql += ' AND (component is EMPTY OR component != "Enclave")'
   if (props.timeWindow === 'lastWeek') {
     const { start, end } = getLastWeekBounds()
     jql += ` AND created >= "${new Date(start).toISOString().slice(0, 10)}"`
