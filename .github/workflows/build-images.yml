@@ -532,11 +532,21 @@ jobs:
       github.ref == 'refs/heads/preprod' &&
       (needs.build-backend.result == 'success' || needs.build-frontend.result == 'success') &&
       needs.build-backend.result != 'failure' &&
-      needs.build-frontend.result != 'failure' &&
-      secrets.APP_ID != '' && secrets.APP_PRIVATE_KEY != ''
+      needs.build-frontend.result != 'failure'
     runs-on: ubuntu-latest
     steps:
+      - name: Check for required secrets
+        id: check-secrets
+        run: |
+          if [ -z "${{ secrets.APP_ID }}" ] || [ -z "${{ secrets.APP_PRIVATE_KEY }}" ]; then
+            echo "::notice::Missing required secrets (APP_ID or APP_PRIVATE_KEY) - skipping deploy tag update"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
       - name: Generate GitHub App token
+        if: steps.check-secrets.outputs.skip != 'true'
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
@@ -544,31 +554,35 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - uses: actions/checkout@v7
+        if: steps.check-secrets.outputs.skip != 'true'
         with:
           ref: preprod
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Install kustomize
+        if: steps.check-secrets.outputs.skip != 'true'
         uses: imranismail/setup-kustomize@v3
         with:
           kustomize-version: '5.8.1'
 
       - name: Update backend image tag
-        if: needs.build-backend.result == 'success'
+        if: steps.check-secrets.outputs.skip != 'true' && needs.build-backend.result == 'success'
         working-directory: deploy/openshift/overlays/ai-eng-preprod
         run: |
           kustomize edit set image ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
 
       - name: Update frontend image tag
-        if: needs.build-frontend.result == 'success'
+        if: steps.check-secrets.outputs.skip != 'true' && needs.build-frontend.result == 'success'
         working-directory: deploy/openshift/overlays/ai-eng-preprod
         run: |
           kustomize edit set image ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
 
       - name: Validate kustomize build
+        if: steps.check-secrets.outputs.skip != 'true'
         run: kustomize build deploy/openshift/overlays/ai-eng-preprod > /dev/null
 
       - name: Push deploy commit
+        if: steps.check-secrets.outputs.skip != 'true'
         run: |
           PARTS=""
           if [ "${{ needs.build-backend.result }}" = "success" ]; then
@@ -594,13 +608,23 @@ jobs:
       github.ref == 'refs/heads/main' &&
       (needs.build-backend.result == 'success' || needs.build-frontend.result == 'success') &&
       needs.build-backend.result != 'failure' &&
-      needs.build-frontend.result != 'failure' &&
-      secrets.APP_ID != '' && secrets.APP_PRIVATE_KEY != ''
+      needs.build-frontend.result != 'failure'
     runs-on: ubuntu-latest
     env:
       BUILD_SHA: ${{ needs.version-bump.outputs.build_sha || github.sha }}
     steps:
+      - name: Check for required secrets
+        id: check-secrets
+        run: |
+          if [ -z "${{ secrets.APP_ID }}" ] || [ -z "${{ secrets.APP_PRIVATE_KEY }}" ]; then
+            echo "::notice::Missing required secrets (APP_ID or APP_PRIVATE_KEY) - skipping deploy tag update"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
       - name: Generate GitHub App token
+        if: steps.check-secrets.outputs.skip != 'true'
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
@@ -608,31 +632,35 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - uses: actions/checkout@v7
+        if: steps.check-secrets.outputs.skip != 'true'
         with:
           ref: main
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Install kustomize
+        if: steps.check-secrets.outputs.skip != 'true'
         uses: imranismail/setup-kustomize@v3
         with:
           kustomize-version: '5.8.1'
 
       - name: Update backend image tag
-        if: needs.build-backend.result == 'success'
+        if: steps.check-secrets.outputs.skip != 'true' && needs.build-backend.result == 'success'
         working-directory: deploy/openshift/overlays/ai-eng-prod
         run: |
           kustomize edit set image ${{ env.BACKEND_IMAGE }}:${BUILD_SHA}
 
       - name: Update frontend image tag
-        if: needs.build-frontend.result == 'success'
+        if: steps.check-secrets.outputs.skip != 'true' && needs.build-frontend.result == 'success'
         working-directory: deploy/openshift/overlays/ai-eng-prod
         run: |
           kustomize edit set image ${{ env.FRONTEND_IMAGE }}:${BUILD_SHA}
 
       - name: Validate kustomize build
+        if: steps.check-secrets.outputs.skip != 'true'
         run: kustomize build deploy/openshift/overlays/ai-eng-prod > /dev/null
 
       - name: Push deploy commit
+        if: steps.check-secrets.outputs.skip != 'true'
         run: |
           VERSION=${{ needs.version-bump.outputs.version || 'unknown' }}
           PARTS=""
