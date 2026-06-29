@@ -499,6 +499,7 @@ jobs:
              docker tag ${{ env.CORE_BACKEND_IMAGE }}:latest ${{ env.CORE_BACKEND_IMAGE }}:${BUILD_SHA})
           docker build \
             -f deploy/ai-eng.backend.Dockerfile \
+            --build-arg CORE_IMAGE=${{ env.CORE_BACKEND_IMAGE }} \
             --build-arg CORE_TAG=${BUILD_SHA} \
             -t ${{ env.BACKEND_IMAGE }}:${BUILD_SHA} \
             .
