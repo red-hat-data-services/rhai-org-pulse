@@ -114,14 +114,24 @@ jobs:
     needs: [test, detect-changes]
     if: |
       github.ref == 'refs/heads/main' &&
-      (needs.detect-changes.outputs.backend == 'true' || needs.detect-changes.outputs.frontend == 'true') &&
-      secrets.APP_ID != '' && secrets.APP_PRIVATE_KEY != ''
+      (needs.detect-changes.outputs.backend == 'true' || needs.detect-changes.outputs.frontend == 'true')
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.bump.outputs.version }}
       build_sha: ${{ steps.push.outputs.build_sha }}
     steps:
+      - name: Check for required secrets
+        id: check-secrets
+        run: |
+          if [ -z "${{ secrets.APP_ID }}" ] || [ -z "${{ secrets.APP_PRIVATE_KEY }}" ]; then
+            echo "Missing required secrets (APP_ID or APP_PRIVATE_KEY) - skipping version bump"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
       - name: Generate GitHub App token
+        if: steps.check-secrets.outputs.skip != 'true'
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
@@ -129,15 +139,18 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - uses: actions/checkout@v7
+        if: steps.check-secrets.outputs.skip != 'true'
         with:
           ref: main
           token: ${{ steps.app-token.outputs.token }}
 
       - uses: actions/setup-node@v6
+        if: steps.check-secrets.outputs.skip != 'true'
         with:
           node-version: '22'
 
       - name: Bump patch version
+        if: steps.check-secrets.outputs.skip != 'true'
         id: bump
         run: |
           CURRENT=$(node -p "require('./package.json').version")
@@ -154,6 +167,7 @@ jobs:
           echo "version=${NEW}" >> "$GITHUB_OUTPUT"
 
       - name: Commit and tag
+        if: steps.check-secrets.outputs.skip != 'true'
         id: push
         run: |
           VERSION=${{ steps.bump.outputs.version }}

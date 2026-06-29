@@ -53,7 +53,6 @@ jobs:
     timeout-minutes: 20
     if: |
       github.event_name != 'merge_group' &&
-      secrets.GCP_SA_KEY != '' && secrets.APP_ID != '' && secrets.APP_PRIVATE_KEY != '' &&
       ((github.event_name == 'pull_request' &&
        github.event.pull_request.head.repo.full_name == github.repository &&
        github.event.pull_request.draft != true &&
@@ -75,7 +74,16 @@ jobs:
       (github.event_name == 'workflow_dispatch'))
     runs-on: ubuntu-latest
     steps:
+      - name: Check for required secrets
+        id: check-secrets
+        run: |
+          if [ -z "${{ secrets.GCP_SA_KEY }}" ] || [ -z "${{ secrets.APP_ID }}" ] || [ -z "${{ secrets.APP_PRIVATE_KEY }}" ]; then
+            echo "::notice::Missing required secrets - skipping Claude review (this is expected for forks)"
+            echo "SKIP_REVIEW=true" >> "$GITHUB_ENV"
+          fi
+
       - name: Determine review context
+        if: env.SKIP_REVIEW != 'true'
         id: context
         run: |
           if [ "${{ github.event_name }}" = "pull_request_target" ]; then
@@ -87,6 +95,7 @@ jobs:
           fi
 
       - name: Check for reviewable changes
+        if: env.SKIP_REVIEW != 'true'
         id: check-paths
         run: |
           PR_NUM="${{ steps.context.outputs.pr_number }}"
@@ -118,8 +127,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Reject fork PRs on issue_comment trigger
+        if: env.SKIP_REVIEW != 'true' && steps.check-paths.outputs.needs_review == 'true' && github.event_name == 'issue_comment'
         id: fork-guard
-        if: steps.check-paths.outputs.needs_review == 'true' && github.event_name == 'issue_comment'
         run: |
           IS_FORK=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.issue.number }} \
             --jq '.head.repo.full_name != .base.repo.full_name')
