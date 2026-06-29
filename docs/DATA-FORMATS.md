@@ -1505,9 +1505,9 @@ Disconnected readiness reports tracking repository readiness scores for disconne
 
 ---
 
-## Catalyst Showcase Data — `data/catalyst-showcase/showcase-data.json`
+## AI Catalyst Showcase Data — `data/ai-catalyst/showcase/showcase-data.json`
 
-Synced from a Google Sheet via the catalyst-showcase module. Contains all showcase entries and strategy pillar definitions.
+Synced from a Google Sheet via the ai-catalyst module (showcase feature). Contains all showcase entries and strategy pillar definitions.
 
 ```json
 {

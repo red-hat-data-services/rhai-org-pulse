@@ -1,0 +1,42 @@
+{
+  "name": "AI Catalyst",
+  "slug": "ai-catalyst",
+  "description": "AI/ML open-source project discovery and triage from the POC Explorer pipeline",
+  "icon": "telescope",
+  "order": 15,
+  "defaultEnabled": false,
+  "requires": [],
+  "client": {
+    "entry": "./client/index.js",
+    "navItems": [
+      { "id": "board", "label": "Monthly Board", "icon": "LayoutGrid", "default": true },
+      { "id": "report", "label": "Report", "icon": "BarChart3" },
+      { "id": "catalog", "label": "Catalog", "icon": "Trophy" }
+    ],
+    "hiddenRoutes": {
+      "candidate-detail": "board",
+      "showcase-detail": "catalog"
+    },
+    "settingsComponent": "./client/components/AiCatalystSettings.vue"
+  },
+  "server": {
+    "entry": "./server/index.js"
+  },
+  "secrets": {
+    "platform": ["google"],
+    "module": [
+      {
+        "key": "POC_EXPLORER_SHEET_ID",
+        "description": "Google Sheets spreadsheet ID for POC Explorer board data",
+        "required": true
+      }
+    ]
+  },
+  "export": {
+    "files": [
+      { "path": "ai-catalyst/boards/*.json", "notes": "Parsed monthly board data from Google Sheets" },
+      { "path": "ai-catalyst/index.json", "notes": "Board index with available months" },
+      { "path": "ai-catalyst/showcase/showcase-data.json", "notes": "Cached showcase entries and pillars from Google Sheet sync" }
+    ]
+  }
+}

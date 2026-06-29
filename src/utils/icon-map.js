@@ -45,6 +45,7 @@ import {
   Brain,
   PenSquare,
   FileUp,
+  Telescope,
   Trophy
 } from 'lucide-vue-next'
 
@@ -104,6 +105,8 @@ export const ICON_MAP = {
   UserCircle,
   'rocket': Rocket,
   'users': Users,
+  Telescope,
+  telescope: Telescope,
   Trophy
 }
 

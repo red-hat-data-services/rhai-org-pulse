@@ -90,9 +90,9 @@ jobs:
               - 'modules/*/client/widgets/**'
               - 'modules/*/module.json'
               - 'tests/integration/sotu-dashboard.spec.js'
-            catalyst-showcase:
-              - 'modules/catalyst-showcase/**'
-              - 'tests/integration/catalyst-showcase.spec.js'
+            ai-catalyst:
+              - 'modules/ai-catalyst/**'
+              - 'tests/integration/ai-catalyst.spec.js'
             feature-pressure:
               - 'modules/releases/server/feature-pressure/**'
               - 'modules/releases/server/index.js'
@@ -120,7 +120,7 @@ jobs:
           echo "Changed files:"
           echo "$CHANGED"
 
-          ALL_MODULES='["about-tabs", "ai-impact", "catalyst-showcase", "system-health", "people-teams", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "sotu-dashboard"]'
+          ALL_MODULES='["about-tabs", "ai-impact", "ai-catalyst", "system-health", "people-teams", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "sotu-dashboard"]'
 
           # If shared test infrastructure changed, test all modules
           if echo "$CHANGED" | grep -qE '^tests/integration/(constants|helpers)\.js$'; then
@@ -143,8 +143,8 @@ jobs:
             "^(platform/about-tabs/|src/components/AboutView\.vue|src/platform-loader\.js|src/utils/icon-map\.js|tests/integration/about-tabs\.spec\.js)"
           check_module "ai-impact" \
             "^(modules/ai-impact/|tests/integration/ai-impact\.spec\.js)"
-          check_module "catalyst-showcase" \
-            "^(modules/catalyst-showcase/|tests/integration/catalyst-showcase\.spec\.js)"
+          check_module "ai-catalyst" \
+            "^(modules/ai-catalyst/|tests/integration/ai-catalyst\.spec\.js)"
           check_module "system-health" \
             "^(modules/system-health/|tests/integration/system-health\.spec\.js)"
           check_module "people-teams" \

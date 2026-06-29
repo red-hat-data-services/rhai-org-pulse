@@ -92,7 +92,7 @@
           :entry="entry"
           :pillar-title="pillarMap[entry.strategyPillarKey] || ''"
           :featured="entry.sortOrder === 1"
-          @click="nav.navigateTo('detail', { slug: entry.slug })"
+          @click="nav.navigateTo('showcase-detail', { slug: entry.slug })"
         />
       </div>
 

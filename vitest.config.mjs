@@ -47,6 +47,7 @@ export default defineConfig({
           name: 'client',
           globals: true,
           environment: 'jsdom',
+          setupFiles: ['./vitest.setup.js'],
           include: ['**/*.{test,spec}.js'],
           exclude: [
             ...sharedExclude,

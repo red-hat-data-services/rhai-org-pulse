@@ -1,9 +1,9 @@
-const { createGoogleSheetsClient } = require('../../../shared/server/google-sheets');
+const { createGoogleSheetsClient } = require('../../../../shared/server/google-sheets');
 
 const ENTRIES_TAB = 'showcase_entries';
 const PILLARS_TAB = 'strategy_pillars';
 
-const STORAGE_KEY = 'catalyst-showcase/showcase-data.json';
+const STORAGE_KEY = 'ai-catalyst/showcase/showcase-data.json';
 const CACHE_TTL = 5 * 60 * 1000;
 
 const ENTRY_COLUMN_MAP = {
@@ -115,14 +115,14 @@ async function getShowcaseData(sheetId, keyFilePath, storage) {
     return await fetchShowcaseData(sheetId, keyFilePath, storage);
   } catch (err) {
     if (_cache) {
-      console.error('[catalyst-showcase] Sheet fetch failed, using cached data:', err.message);
+      console.error('[ai-catalyst:showcase] Sheet fetch failed, using cached data:', err.message);
       return _cache.data;
     }
 
     if (storage) {
       const stored = storage.readFromStorage(STORAGE_KEY);
       if (stored) {
-        console.error('[catalyst-showcase] Sheet fetch failed, using stored fallback:', err.message);
+        console.error('[ai-catalyst:showcase] Sheet fetch failed, using stored fallback:', err.message);
         _cache = { data: stored, ts: 0 };
         return stored;
       }

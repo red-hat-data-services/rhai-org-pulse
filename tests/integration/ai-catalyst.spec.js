@@ -3,7 +3,7 @@ const { DEFAULT_PAGE_WAIT_TIME } = require('./constants');
 const { setupErrorTracking, logCapturedErrors, pageHasContent, pageLoadComplete, mainContentIsVisible } = require('./helpers');
 
 /**
- * Integration tests for AI Catalyst Showcase module
+ * Integration tests for AI Catalyst module (includes Showcase)
  *
  * These tests verify:
  * - Module loads and renders correctly
@@ -11,11 +11,11 @@ const { setupErrorTracking, logCapturedErrors, pageHasContent, pageLoadComplete,
  * - Detail view navigates and renders entry content
  * - API endpoints return expected data
  *
- * Tag: @catalyst-showcase
- * Usage: npx playwright test --grep @catalyst-showcase
+ * Tag: @ai-catalyst
+ * Usage: npx playwright test --grep @ai-catalyst
  */
 
-test.describe('Catalyst Showcase Module @catalyst-showcase', () => {
+test.describe('AI Catalyst Module @ai-catalyst', () => {
   test.beforeEach(async ({ page }) => {
     setupErrorTracking(page);
   });
@@ -29,7 +29,7 @@ test.describe('Catalyst Showcase Module @catalyst-showcase', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const moduleNav = page.locator('aside nav').filter({ hasText: 'AI Catalyst Showcase' });
+    const moduleNav = page.locator('aside nav').filter({ hasText: 'AI Catalyst' });
     const count = await moduleNav.count();
     expect(count).toBeGreaterThan(0);
 
@@ -45,7 +45,7 @@ test.describe('Catalyst Showcase Module @catalyst-showcase', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const moduleHeader = page.locator('aside nav button').filter({ hasText: 'AI Catalyst Showcase' }).first();
+    const moduleHeader = page.locator('aside nav button').filter({ hasText: 'AI Catalyst' }).first();
     await moduleHeader.click();
     await page.waitForTimeout(500);
 
@@ -54,7 +54,7 @@ test.describe('Catalyst Showcase Module @catalyst-showcase', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    expect(page.url()).toMatch(/catalyst-showcase\/catalog/);
+    expect(page.url()).toMatch(/ai-catalyst\/catalog/);
 
     const mainContentVisible = await mainContentIsVisible(page);
     expect(mainContentVisible).toBe(true);
@@ -64,7 +64,7 @@ test.describe('Catalyst Showcase Module @catalyst-showcase', () => {
   });
 });
 
-test.describe('Catalyst Showcase Catalog @catalyst-showcase', () => {
+test.describe('AI Catalyst Catalog @ai-catalyst', () => {
   test.beforeEach(async ({ page }) => {
     setupErrorTracking(page);
   });
@@ -74,7 +74,7 @@ test.describe('Catalyst Showcase Catalog @catalyst-showcase', () => {
   });
 
   test('should display entries in card grid', async ({ page }) => {
-    await page.goto('/#/catalyst-showcase/catalog');
+    await page.goto('/#/ai-catalyst/catalog');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -97,7 +97,7 @@ test.describe('Catalyst Showcase Catalog @catalyst-showcase', () => {
   });
 
   test('should display pillar filter tiles', async ({ page }) => {
-    await page.goto('/#/catalyst-showcase/catalog');
+    await page.goto('/#/ai-catalyst/catalog');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -109,7 +109,7 @@ test.describe('Catalyst Showcase Catalog @catalyst-showcase', () => {
   });
 
   test('should have search and filter controls', async ({ page }) => {
-    await page.goto('/#/catalyst-showcase/catalog');
+    await page.goto('/#/ai-catalyst/catalog');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -127,7 +127,7 @@ test.describe('Catalyst Showcase Catalog @catalyst-showcase', () => {
   });
 
   test('should navigate to detail view on card click', async ({ page }) => {
-    await page.goto('/#/catalyst-showcase/catalog');
+    await page.goto('/#/ai-catalyst/catalog');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -135,7 +135,7 @@ test.describe('Catalyst Showcase Catalog @catalyst-showcase', () => {
     await firstCardTitle.click();
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    expect(page.url()).toMatch(/catalyst-showcase\/detail\?slug=/);
+    expect(page.url()).toMatch(/ai-catalyst\/showcase-detail\?slug=/);
 
     const backButton = page.locator('button').filter({ hasText: 'Back to catalog' });
     await expect(backButton).toBeVisible();
@@ -145,7 +145,7 @@ test.describe('Catalyst Showcase Catalog @catalyst-showcase', () => {
   });
 });
 
-test.describe('Catalyst Showcase API @catalyst-showcase', () => {
+test.describe('AI Catalyst Showcase API @ai-catalyst', () => {
   test.beforeEach(async ({ page }) => {
     setupErrorTracking(page);
   });
@@ -158,7 +158,7 @@ test.describe('Catalyst Showcase API @catalyst-showcase', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    const response = await page.request.get('/api/modules/catalyst-showcase/entries');
+    const response = await page.request.get('/api/modules/ai-catalyst/showcase/entries');
     expect(response.ok()).toBe(true);
 
     const data = await response.json();
@@ -168,5 +168,81 @@ test.describe('Catalyst Showcase API @catalyst-showcase', () => {
     expect(data.entries.length).toBeGreaterThan(0);
     expect(data.pillars.length).toBeGreaterThan(0);
     console.log(`API returned ${data.totalEntries} entries, ${data.pillars.length} pillars`);
+  });
+});
+
+test.describe('AI Catalyst Report @ai-catalyst', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('should navigate to report view', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const moduleHeader = page.locator('aside nav button').filter({ hasText: 'AI Catalyst' }).first();
+    await moduleHeader.click();
+    await page.waitForTimeout(500);
+
+    const reportLink = page.locator('aside nav button').filter({ hasText: 'Report' }).first();
+    await reportLink.click();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    expect(page.url()).toMatch(/ai-catalyst\/report/);
+
+    const mainContentVisible = await mainContentIsVisible(page);
+    expect(mainContentVisible).toBe(true);
+
+    const appErrors = page.errors.filter(e => !/status of (429|404)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
+  });
+
+  test('should display report heading and charts', async ({ page }) => {
+    await page.goto('/#/ai-catalyst/report');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const heading = page.locator('h1').filter({ hasText: 'Monthly Report' });
+    await expect(heading).toBeVisible();
+
+    const pageHasFinishedLoading = await pageLoadComplete(page);
+    expect(pageHasFinishedLoading).toBe(true);
+
+    const scatterChart = page.locator('[data-testid="scatter-chart"]');
+    await expect(scatterChart).toBeVisible();
+
+    const highlightCards = page.locator('[data-testid="highlight-card"]');
+    const cardCount = await highlightCards.count();
+    expect(cardCount).toBe(4);
+
+    const appErrors = page.errors.filter(e => !/status of (429|404)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
+  });
+
+  test('should display distribution charts', async ({ page }) => {
+    await page.goto('/#/ai-catalyst/report');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const pageHasFinishedLoading = await pageLoadComplete(page);
+    expect(pageHasFinishedLoading).toBe(true);
+
+    const donut = page.locator('[data-testid="category-donut"]');
+    await expect(donut).toBeVisible();
+
+    const sourceBar = page.locator('[data-testid="source-bar"]');
+    await expect(sourceBar).toBeVisible();
+
+    const languageBar = page.locator('[data-testid="language-bar"]');
+    await expect(languageBar).toBeVisible();
+
+    const appErrors = page.errors.filter(e => !/status of (429|404)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
   });
 });

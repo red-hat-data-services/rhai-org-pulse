@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { apiRequest } from '@shared/client/services/api.js'
 
-const MODULE_API = '/modules/catalyst-showcase'
+const MODULE_API = '/modules/ai-catalyst/showcase'
 
 const entries = ref([])
 const pillars = ref([])

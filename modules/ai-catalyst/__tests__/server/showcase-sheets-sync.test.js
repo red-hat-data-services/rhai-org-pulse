@@ -10,7 +10,7 @@ import {
   ENTRY_COLUMN_MAP,
   PILLAR_COLUMN_MAP,
   PIPE_DELIMITED_FIELDS,
-} from '../../server/sheets-sync.js';
+} from '../../server/showcase/sheets-sync.js';
 
 describe('parseArrayField', () => {
   it('splits pipe-delimited values', () => {

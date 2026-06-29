@@ -1,4 +1,4 @@
-const CONFIG_KEY = 'catalyst-showcase/config.json';
+const CONFIG_KEY = 'ai-catalyst/board-config.json';
 
 const DEFAULT_CONFIG = {
   sheetId: ''

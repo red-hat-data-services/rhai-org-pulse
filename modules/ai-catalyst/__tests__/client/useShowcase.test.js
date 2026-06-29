@@ -36,7 +36,7 @@ describe('useShowcase', () => {
 
     await loadEntries();
 
-    expect(apiRequest).toHaveBeenCalledWith('/modules/catalyst-showcase/entries');
+    expect(apiRequest).toHaveBeenCalledWith('/modules/ai-catalyst/showcase/entries');
     expect(entries.value).toEqual(mockData.entries);
     expect(pillars.value).toEqual(mockData.pillars);
     expect(meta.value.totalEntries).toBe(1);
@@ -64,7 +64,7 @@ describe('useShowcase', () => {
 
     expect(result1).toEqual(mockDetail);
     expect(result2).toEqual(mockDetail);
-    expect(apiRequest).toHaveBeenCalledWith('/modules/catalyst-showcase/entries/test');
+    expect(apiRequest).toHaveBeenCalledWith('/modules/ai-catalyst/showcase/entries/test');
     expect(apiRequest).toHaveBeenCalledTimes(2);
   });
 });
