@@ -170,3 +170,100 @@ describe('discoverAttributes', () => {
     expect(typeof discoverAttributes).toBe('function')
   })
 })
+
+describe('mergePerson ldapExtra cleanup', () => {
+  const now = '2026-06-18T00:00:00.000Z'
+
+  it('clears ldapExtra when fresh has no ldapExtra (admin disabled all fields)', () => {
+    var existing = {
+      uid: 'jdoe', name: 'Jane Doe', email: 'jdoe@test.com',
+      title: 'SRE', city: '', country: '', geo: '', location: '',
+      officeLocation: '', costCenter: '', managerUid: null,
+      orgRoot: 'orgRoot1', github: null, gitlab: null,
+      status: 'active', firstSeenAt: now, lastSeenAt: now,
+      inactiveSince: null,
+      ldapExtra: { rhatRnDComponent: 'AI', rhatJobRole: 'Engineering' }
+    }
+    var fresh = {
+      uid: 'jdoe', name: 'Jane Doe', email: 'jdoe@test.com',
+      title: 'SRE', city: '', country: '', geo: '', location: '',
+      officeLocation: '', costCenter: '', managerUid: null,
+      githubUsername: null, gitlabUsername: null
+    }
+    var result = mergePerson(existing, fresh, 'orgRoot1', now)
+    expect(result.person.ldapExtra).toBeUndefined()
+  })
+
+  it('tracks removal of ldapExtra keys in changelog', () => {
+    var existing = {
+      uid: 'jdoe', name: 'Jane Doe', email: 'jdoe@test.com',
+      title: 'SRE', city: '', country: '', geo: '', location: '',
+      officeLocation: '', costCenter: '', managerUid: null,
+      orgRoot: 'orgRoot1', github: null, gitlab: null,
+      status: 'active', firstSeenAt: now, lastSeenAt: now,
+      inactiveSince: null,
+      ldapExtra: { rhatRnDComponent: 'AI', rhatJobRole: 'Engineering' }
+    }
+    var fresh = {
+      uid: 'jdoe', name: 'Jane Doe', email: 'jdoe@test.com',
+      title: 'SRE', city: '', country: '', geo: '', location: '',
+      officeLocation: '', costCenter: '', managerUid: null,
+      githubUsername: null, gitlabUsername: null
+    }
+    var result = mergePerson(existing, fresh, 'orgRoot1', now)
+    var removals = result.changes.filter(c => c.field.startsWith('ldapExtra.'))
+    expect(removals.length).toBe(2)
+    expect(removals.find(c => c.field === 'ldapExtra.rhatRnDComponent')).toBeDefined()
+    expect(removals.find(c => c.field === 'ldapExtra.rhatJobRole')).toBeDefined()
+  })
+
+  it('preserves empty string and false values (no falsy coercion)', () => {
+    var existing = {
+      uid: 'jdoe', name: 'Jane Doe', email: 'jdoe@test.com',
+      title: 'SRE', city: '', country: '', geo: '', location: '',
+      officeLocation: '', costCenter: '', managerUid: null,
+      orgRoot: 'orgRoot1', github: null, gitlab: null,
+      status: 'active', firstSeenAt: now, lastSeenAt: now,
+      inactiveSince: null
+    }
+    var fresh = {
+      uid: 'jdoe', name: 'Jane Doe', email: 'jdoe@test.com',
+      title: 'SRE', city: '', country: '', geo: '', location: '',
+      officeLocation: '', costCenter: '', managerUid: null,
+      githubUsername: null, gitlabUsername: null,
+      ldapExtra: { rhatTeamLead: 'False', emptyField: '' }
+    }
+    var result = mergePerson(existing, fresh, 'orgRoot1', now)
+    expect(result.person.ldapExtra.rhatTeamLead).toBe('False')
+    expect(result.person.ldapExtra.emptyField).toBe('')
+  })
+})
+
+describe('entryToPerson extraAttrs edge cases', () => {
+  it('handles null values in LDAP entry without crashing', () => {
+    var entry = { uid: 'test', cn: 'Test', rhatRnDComponent: null }
+    var person = entryToPerson(entry, ['rhatRnDComponent'])
+    expect(person.ldapExtra).toBeUndefined()
+  })
+
+  it('handles entry with only some requested attrs present', () => {
+    var entry = { uid: 'test', cn: 'Test', rhatRnDComponent: 'AI' }
+    var person = entryToPerson(entry, ['rhatRnDComponent', 'rhatSubproduct', 'rhatJobRole'])
+    expect(person.ldapExtra).toEqual({ rhatRnDComponent: 'AI' })
+  })
+})
+
+describe('LDAP_ATTRS filtering', () => {
+  it('base attrs should not be accepted as extra attrs', () => {
+    for (const attr of LDAP_ATTRS) {
+      expect(LDAP_ATTRS).toContain(attr)
+    }
+  })
+
+  it('LDAP_ATTRS does not include the new configurable fields', () => {
+    expect(LDAP_ATTRS).not.toContain('rhatRnDComponent')
+    expect(LDAP_ATTRS).not.toContain('rhatSubproduct')
+    expect(LDAP_ATTRS).not.toContain('rhatJobRole')
+    expect(LDAP_ATTRS).not.toContain('rhatProject')
+  })
+})
