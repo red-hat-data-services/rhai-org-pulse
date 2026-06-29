@@ -40,10 +40,10 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  BACKEND_IMAGE: quay.io/org-pulse/team-tracker-backend
-  FRONTEND_IMAGE: quay.io/org-pulse/team-tracker-frontend
-  CORE_BACKEND_IMAGE: quay.io/org-pulse/org-pulse-core-backend
-  CORE_FRONTEND_IMAGE: quay.io/org-pulse/org-pulse-core-frontend
+  BACKEND_IMAGE: ${{ vars.BACKEND_IMAGE || 'quay.io/org-pulse/team-tracker-backend' }}
+  FRONTEND_IMAGE: ${{ vars.FRONTEND_IMAGE || 'quay.io/org-pulse/team-tracker-frontend' }}
+  CORE_BACKEND_IMAGE: ${{ vars.CORE_BACKEND_IMAGE || 'quay.io/org-pulse/org-pulse-core-backend' }}
+  CORE_FRONTEND_IMAGE: ${{ vars.CORE_FRONTEND_IMAGE || 'quay.io/org-pulse/org-pulse-core-frontend' }}
 
 jobs:
   detect-changes:
