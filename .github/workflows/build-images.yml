@@ -426,6 +426,7 @@ jobs:
         run: |
           docker build \
             -f deploy/ai-eng.backend.Dockerfile \
+            --build-arg CORE_IMAGE=${{ env.CORE_BACKEND_IMAGE }} \
             --build-arg CORE_TAG=${BUILD_SHA} \
             -t ${{ env.BACKEND_IMAGE }}:${BUILD_SHA} \
             .
@@ -485,6 +486,8 @@ jobs:
         run: |
           docker build \
             -f deploy/ai-eng.frontend.Dockerfile \
+            --build-arg CORE_BUILDER_IMAGE=${{ env.CORE_FRONTEND_IMAGE }}-builder \
+            --build-arg CORE_RUNTIME_IMAGE=${{ env.CORE_FRONTEND_IMAGE }}-runtime \
             --build-arg CORE_TAG=${BUILD_SHA} \
             -t ${{ env.FRONTEND_IMAGE }}:${BUILD_SHA} \
             .

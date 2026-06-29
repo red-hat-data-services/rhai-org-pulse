@@ -3,10 +3,12 @@
 # Extends the core frontend builder with AI Eng modules, builds, then
 # serves from the core runtime image.
 
+ARG CORE_BUILDER_IMAGE=quay.io/org-pulse/org-pulse-core-frontend-builder
+ARG CORE_RUNTIME_IMAGE=quay.io/org-pulse/org-pulse-core-frontend-runtime
 ARG CORE_TAG=latest
 
 # Stage 1: Build with all AI Eng modules
-FROM quay.io/org-pulse/org-pulse-core-frontend-builder:${CORE_TAG} AS build
+FROM ${CORE_BUILDER_IMAGE}:${CORE_TAG} AS build
 
 # Add platform customizations
 COPY platform/ ./platform/
@@ -17,6 +19,6 @@ COPY modules/ ./modules/
 RUN npm run build
 
 # Stage 2: Serve with hardened nginx
-FROM quay.io/org-pulse/org-pulse-core-frontend-runtime:${CORE_TAG}
+FROM ${CORE_RUNTIME_IMAGE}:${CORE_TAG}
 
 COPY --from=build /app/dist /usr/share/nginx/html

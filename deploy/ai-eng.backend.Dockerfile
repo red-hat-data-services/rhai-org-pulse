@@ -2,8 +2,9 @@
 #
 # Extends the core backend image with AI Eng-specific modules.
 
+ARG CORE_IMAGE=quay.io/org-pulse/org-pulse-core-backend
 ARG CORE_TAG=latest
-FROM quay.io/org-pulse/org-pulse-core-backend:${CORE_TAG}
+FROM ${CORE_IMAGE}:${CORE_TAG}
 
 USER 0
 
