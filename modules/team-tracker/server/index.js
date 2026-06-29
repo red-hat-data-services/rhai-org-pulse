@@ -161,9 +161,9 @@ module.exports = function registerRoutes(router, context) {
       if (primary) primaryDisplayField = primary.key;
     }
 
-    var enabledLdapFields = (liveConfig?.ldapFields?.enabled) || [];
-    for (var lvi = 0; lvi < enabledLdapFields.length; lvi++) {
-      visibleFields.push({ key: 'ldap_' + enabledLdapFields[lvi].attribute, label: enabledLdapFields[lvi].label });
+    const enabledLdapFields = (liveConfig?.ldapFields?.enabled) || [];
+    for (const elf of enabledLdapFields) {
+      visibleFields.push({ key: 'ldap_' + elf.attribute, label: elf.label });
     }
 
     for (const [orgKey, orgData] of Object.entries(full.orgs)) {
@@ -203,9 +203,9 @@ module.exports = function registerRoutes(router, context) {
         }
 
         if (person.ldapExtra && enabledLdapFields.length > 0) {
-          for (var eli = 0; eli < enabledLdapFields.length; eli++) {
-            var ldapAttr = enabledLdapFields[eli].attribute;
-            memberEntry.customFields['ldap_' + ldapAttr] = person.ldapExtra[ldapAttr] || null;
+          for (const elf of enabledLdapFields) {
+            const val = person.ldapExtra[elf.attribute];
+            memberEntry.customFields['ldap_' + elf.attribute] = val != null ? val : null;
           }
         }
 
@@ -3618,13 +3618,16 @@ module.exports = function registerRoutes(router, context) {
         }
         if (!config.ldapFields) config.ldapFields = {};
         if (Array.isArray(req.body.ldapFields.enabled)) {
-          var validEnabled = [];
-          for (var lfi = 0; lfi < req.body.ldapFields.enabled.length; lfi++) {
-            var lf = req.body.ldapFields.enabled[lfi];
+          const baseAttrs = new Set(ipaClient.LDAP_ATTRS);
+          const validEnabled = [];
+          for (const lf of req.body.ldapFields.enabled) {
             if (!lf || typeof lf.attribute !== 'string' || !lf.attribute.trim()) continue;
             if (typeof lf.label !== 'string' || !lf.label.trim()) continue;
+            const attr = lf.attribute.trim();
+            if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(attr)) continue;
+            if (baseAttrs.has(attr)) continue;
             if (validEnabled.length >= 20) break;
-            validEnabled.push({ attribute: lf.attribute.trim(), label: lf.label.trim() });
+            validEnabled.push({ attribute: attr, label: lf.label.trim() });
           }
           config.ldapFields.enabled = validEnabled;
         }
@@ -3748,7 +3751,8 @@ module.exports = function registerRoutes(router, context) {
       var ldapFields = config.ldapFields || {};
       res.json({
         discovered: ldapFields.discovered || [],
-        discoveredAt: ldapFields.discoveredAt || null
+        discoveredAt: ldapFields.discoveredAt || null,
+        baseAttributes: ipaClient.LDAP_ATTRS
       });
     } catch (error) {
       res.status(500).json({ error: error.message });

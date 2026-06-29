@@ -101,20 +101,22 @@ function mergePerson(existing, fresh, orgRootUid, now) {
     }
   }
 
-  if (fresh.ldapExtra) {
-    var oldExtra = existing.ldapExtra || {};
-    var extraKeys = Object.keys(fresh.ldapExtra);
-    for (var xi = 0; xi < extraKeys.length; xi++) {
-      var xk = extraKeys[xi];
-      var oldXVal = oldExtra[xk] || '';
-      var newXVal = fresh.ldapExtra[xk] || '';
-      var oldStr = Array.isArray(oldXVal) ? oldXVal.join(', ') : String(oldXVal);
-      var newStr = Array.isArray(newXVal) ? newXVal.join(', ') : String(newXVal);
-      if (oldStr !== newStr) {
-        changes.push({ uid: fresh.uid, field: 'ldapExtra.' + xk, from: oldStr, to: newStr });
-      }
+  var oldExtra = existing.ldapExtra || {};
+  var newExtra = fresh.ldapExtra || {};
+  var allExtraKeys = new Set(Object.keys(oldExtra).concat(Object.keys(newExtra)));
+  allExtraKeys.forEach(function(xk) {
+    var oldXVal = oldExtra[xk];
+    var newXVal = newExtra[xk];
+    var oldStr = oldXVal == null ? '' : (Array.isArray(oldXVal) ? oldXVal.join(', ') : String(oldXVal));
+    var newStr = newXVal == null ? '' : (Array.isArray(newXVal) ? newXVal.join(', ') : String(newXVal));
+    if (oldStr !== newStr) {
+      changes.push({ uid: fresh.uid, field: 'ldapExtra.' + xk, from: oldStr, to: newStr });
     }
-    merged.ldapExtra = fresh.ldapExtra;
+  });
+  if (Object.keys(newExtra).length > 0) {
+    merged.ldapExtra = newExtra;
+  } else {
+    delete merged.ldapExtra;
   }
 
   return { person: merged, changes: changes, isNew: false };

@@ -44,7 +44,9 @@ function registerIpaRegistryRoutes(router, context) {
     var config = loadConfig(storage);
     var enabled = config?.ldapFields?.enabled;
     if (!Array.isArray(enabled) || enabled.length === 0) return [];
-    return enabled.map(function(f) { return f.attribute; }).filter(Boolean);
+    return enabled
+      .map(function(f) { return f.attribute; })
+      .filter(function(attr) { return attr && ipaClient.LDAP_ATTRS.indexOf(attr) === -1; });
   }
 
   function writePeopleUpdate(uid, updater) {

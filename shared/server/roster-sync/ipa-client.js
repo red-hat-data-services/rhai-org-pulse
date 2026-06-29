@@ -258,6 +258,7 @@ async function discoverAttributes(client) {
           var values = entry.attributes[i].values;
           for (var j = 0; j < values.length; j++) {
             var match = values[j].match(/NAME\s+'([^']+)'/);
+            if (!match) match = values[j].match(/NAME\s+\(\s*'([^']+)'/);
             if (match) attrs.push(match[1]);
           }
         }

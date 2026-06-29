@@ -83,7 +83,7 @@
       </div>
     </div>
 
-    <div v-if="enabledFields.length > 0" class="flex items-center gap-3">
+    <div v-if="discovered.length > 0" class="flex items-center gap-3">
       <button
         @click="handleSave"
         :disabled="saving"
@@ -102,11 +102,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 
-const HARDCODED_ATTRS = new Set([
-  'cn', 'uid', 'mail', 'title', 'l', 'co',
-  'manager', 'rhatGeo', 'rhatLocation', 'rhatOfficeLocation',
-  'rhatCostCenter', 'rhatSocialUrl', 'memberOf'
-])
+const baseAttributes = ref(new Set())
 
 const discovered = ref([])
 const discoveredAt = ref(null)
@@ -125,7 +121,7 @@ const filteredAttributes = computed(() => {
 })
 
 function isHardcoded(attr) {
-  return HARDCODED_ATTRS.has(attr)
+  return baseAttributes.value.has(attr)
 }
 
 function isEnabled(attr) {
@@ -155,6 +151,9 @@ async function loadCachedDiscovery() {
     const data = await apiRequest('/modules/team-tracker/admin/roster-sync/ldap-discover')
     discovered.value = data.discovered || []
     discoveredAt.value = data.discoveredAt || null
+    if (Array.isArray(data.baseAttributes)) {
+      baseAttributes.value = new Set(data.baseAttributes)
+    }
   } catch {
     // Not discovered yet — that's fine
   }
