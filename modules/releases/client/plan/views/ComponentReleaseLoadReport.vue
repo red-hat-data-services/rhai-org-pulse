@@ -249,7 +249,7 @@
 
     <!-- Summary cards -->
     <div v-if="groups.length > 0 && !loadingData" class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-      <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5">
+      <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5 cursor-pointer transition-all" :class="filterType.includes('requested') ? 'ring-2 ring-blue-300 dark:ring-blue-700' : 'hover:shadow-md'" @click="toggleFilter('filterType', 'requested')" title="Filter by Requested">
         <div class="absolute top-0 left-0 w-1 h-full bg-blue-500 rounded-l-xl" />
         <div class="flex items-center gap-2 mb-1.5">
           <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-blue-100 dark:bg-blue-900/40">
@@ -259,7 +259,7 @@
         </div>
         <div class="text-2xl font-bold text-blue-600 dark:text-blue-400 ml-7">{{ totalRequested }}</div>
       </div>
-      <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5">
+      <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5 cursor-pointer transition-all" :class="filterType.includes('committed') ? 'ring-2 ring-emerald-300 dark:ring-emerald-700' : 'hover:shadow-md'" @click="toggleFilter('filterType', 'committed')" title="Filter by Committed">
         <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500 rounded-l-xl" />
         <div class="flex items-center gap-2 mb-1.5">
           <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-emerald-100 dark:bg-emerald-900/40">
@@ -269,7 +269,7 @@
         </div>
         <div class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 ml-7">{{ totalCommitted }}</div>
       </div>
-      <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5">
+      <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5 cursor-pointer transition-all" :class="filterBlocked === true ? 'ring-2 ring-red-300 dark:ring-red-700' : 'hover:shadow-md'" @click="filterBlocked = filterBlocked === true ? null : true" title="Filter by Blocked">
         <div class="absolute top-0 left-0 w-1 h-full bg-red-500 rounded-l-xl" />
         <div class="flex items-center gap-2 mb-1.5">
           <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-red-100 dark:bg-red-900/40">
@@ -277,7 +277,7 @@
           </span>
           <span class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Blocked</span>
         </div>
-        <div class="text-2xl font-bold ml-7" :class="totalBlocked > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'">{{ totalBlocked }}</div>
+        <div class="text-2xl font-bold ml-7" :class="totalBlocked > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'">{{ totalBlocked }}<span v-if="blockedPercent !== null" class="text-sm font-normal text-gray-400 dark:text-gray-500 ml-1">({{ blockedPercent }}%)</span></div>
       </div>
       <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5">
         <div class="absolute top-0 left-0 w-1 h-full bg-amber-500 rounded-l-xl" />
@@ -815,6 +815,34 @@ var totalBlocked = computed(function() {
     for (var ci = 0; ci < comps.length; ci++) count += comps[ci].blockedCount || 0
   }
   return count
+})
+
+var totalFeatures = computed(function() {
+  var source = clientFilteredGroups.value
+  var seen = {}
+  var count = 0
+  for (var gi = 0; gi < source.length; gi++) {
+    var comps = source[gi].components || []
+    for (var ci = 0; ci < comps.length; ci++) {
+      var lists = [comps[ci].requestedFeatures || [], comps[ci].committedFeatures || []]
+      for (var li = 0; li < lists.length; li++) {
+        for (var fi = 0; fi < lists[li].length; fi++) {
+          var key = lists[li][fi].key
+          if (!seen[key]) {
+            seen[key] = true
+            count++
+          }
+        }
+      }
+    }
+  }
+  return count
+})
+
+var blockedPercent = computed(function() {
+  var total = totalFeatures.value
+  if (total === 0) return null
+  return Math.round((totalBlocked.value / total) * 100)
 })
 
 var velocity = ref(null)
