@@ -123,7 +123,7 @@
                       class="w-16 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-center text-xs tabular-nums text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary-400 focus:border-primary-400 outline-none"
                     />
                   </td>
-                  <td class="px-3 py-1.5 text-center font-semibold text-gray-900 dark:text-gray-100 tabular-nums border-l border-gray-200 dark:border-gray-700">{{ monthTotal(monthKey, 'met') }}</td>
+                  <td class="px-3 py-1.5 text-center font-semibold text-gray-900 dark:text-gray-100 tabular-nums border-l border-gray-200 dark:border-gray-700">{{ monthTotal(monthKey, 'met') || '' }}</td>
                 </tr>
                 <!-- Missed row -->
                 <tr class="bg-white dark:bg-gray-900">
@@ -137,7 +137,7 @@
                       class="w-16 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-center text-xs tabular-nums text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary-400 focus:border-primary-400 outline-none"
                     />
                   </td>
-                  <td class="px-3 py-1.5 text-center font-semibold text-gray-900 dark:text-gray-100 tabular-nums border-l border-gray-200 dark:border-gray-700">{{ monthTotal(monthKey, 'missed') }}</td>
+                  <td class="px-3 py-1.5 text-center font-semibold text-gray-900 dark:text-gray-100 tabular-nums border-l border-gray-200 dark:border-gray-700">{{ monthTotal(monthKey, 'missed') || '' }}</td>
                 </tr>
                 <!-- Percentage row -->
                 <tr class="bg-gray-50/50 dark:bg-gray-800/30 border-b border-gray-200 dark:border-gray-700">
@@ -193,32 +193,39 @@ function monthLabel(key) { return MONTH_LABELS[key] || key }
 
 function ensureMonthProduct(monthKey, prod) {
   if (!data.value.months[monthKey]) data.value.months[monthKey] = {}
-  if (!data.value.months[monthKey][prod]) data.value.months[monthKey][prod] = { met: 0, missed: 0 }
+  if (!data.value.months[monthKey][prod]) data.value.months[monthKey][prod] = { met: null, missed: null }
 }
 
 function getVal(monthKey, prod, field) {
   ensureMonthProduct(monthKey, prod)
-  return data.value.months[monthKey][prod][field] || 0
+  var v = data.value.months[monthKey][prod][field]
+  return v === null || v === undefined ? '' : v
+}
+
+function getNumVal(monthKey, prod, field) {
+  ensureMonthProduct(monthKey, prod)
+  var v = data.value.months[monthKey][prod][field]
+  return (v === null || v === undefined) ? 0 : v
 }
 
 function setVal(monthKey, prod, field, event) {
   ensureMonthProduct(monthKey, prod)
-  var v = parseInt(event.target.value, 10)
-  data.value.months[monthKey][prod][field] = isNaN(v) ? 0 : Math.max(0, v)
+  var raw = event.target.value.trim()
+  data.value.months[monthKey][prod][field] = raw === '' ? null : Math.max(0, parseInt(raw, 10) || 0)
   dirty.value = true
 }
 
 function monthTotal(monthKey, field) {
   var sum = 0
   for (var i = 0; i < data.value.products.length; i++) {
-    sum += getVal(monthKey, data.value.products[i], field)
+    sum += getNumVal(monthKey, data.value.products[i], field)
   }
   return sum
 }
 
 function monthPct(monthKey, prod) {
-  var m = getVal(monthKey, prod, 'met')
-  var mi = getVal(monthKey, prod, 'missed')
+  var m = getNumVal(monthKey, prod, 'met')
+  var mi = getNumVal(monthKey, prod, 'missed')
   var total = m + mi
   if (total === 0) return ''
   return Math.round((m / total) * 100) + '%'
