@@ -3747,8 +3747,8 @@ module.exports = function registerRoutes(router, context) {
    */
   router.get('/admin/roster-sync/ldap-discover', requireAdmin, requireScope('roster:write'), function(req, res) {
     try {
-      var config = rosterSyncConfig.loadConfig(storage) || {};
-      var ldapFields = config.ldapFields || {};
+      const config = rosterSyncConfig.loadConfig(storage) || {};
+      const ldapFields = config.ldapFields || {};
       res.json({
         discovered: ldapFields.discovered || [],
         discoveredAt: ldapFields.discoveredAt || null,
@@ -3772,18 +3772,18 @@ module.exports = function registerRoutes(router, context) {
    *         description: IPA not configured
    */
   router.post('/admin/roster-sync/ldap-discover', requireAdmin, requireScope('roster:write'), async function(req, res) {
-    var conn;
+    let conn;
     try {
-      var ipaStatus = ipaClient.getIpaStatus();
+      const ipaStatus = ipaClient.getIpaStatus();
       if (!ipaStatus.ready) {
         return res.status(400).json({ error: 'IPA/LDAP credentials are not configured' });
       }
 
       conn = ipaClient.createClient();
       await ipaClient.bindClient(conn.client, conn.config.bindDn, conn.config.bindPassword);
-      var discovered = await ipaClient.discoverAttributes(conn.client);
+      const discovered = await ipaClient.discoverAttributes(conn.client);
 
-      var config = rosterSyncConfig.loadConfig(storage) || {};
+      const config = rosterSyncConfig.loadConfig(storage) || {};
       if (!config.ldapFields) config.ldapFields = {};
       config.ldapFields.discovered = discovered;
       config.ldapFields.discoveredAt = new Date().toISOString();
