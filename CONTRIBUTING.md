@@ -4,8 +4,7 @@
 
 - **Node.js 22+** and npm
 - **Red Hat VPN** connection (for LDAP roster sync)
-- A **Jira Cloud API token** for live data — [create one here](https://id.atlassian.com/manage-profile/security/api-tokens)
-- Or just use **Demo Mode** (no credentials needed)
+- A **Jira Cloud API token** for live data — [create one here](https://id.atlassian.com/manage-profile/security/api-tokens) or just use **Demo Mode** (no credentials needed)
 
 ## Getting Started
 
@@ -13,7 +12,7 @@
 
 ```bash
 git clone https://github.com/red-hat-data-services/rhai-org-pulse.git
-cd team-tracker
+cd rhai-org-pulse
 npm install
 ```
 
@@ -65,30 +64,51 @@ npm run lint        # linting
 
 ```
 src/
-  components/         # Vue components (App.vue is root with hash routing)
-  composables/        # Composition API hooks (useRoster, useAuth, useGithubStats, etc.)
-  services/api.js     # API client with caching
-  utils/metrics.js    # Metric calculations
-  __tests__/          # Frontend tests (Vitest + jsdom)
+  components/         # App shell components (App.vue, AppSidebar, SettingsView, etc.)
+  composables/        # Shell-only hooks (useModules, useTheme, useApiTokens, etc.)
+  module-loader.js    # Frontend module auto-discovery via import.meta.glob
+  __tests__/          # App shell tests (Vitest + jsdom)
+
+shared/
+  client/
+    composables/      # Shared composables (useRoster, useAuth, useGithubStats, etc.)
+    services/api.js   # API client with caching
+    components/       # Shared UI (Toast, LoadingOverlay, RefreshModal, etc.)
+  server/
+    storage.js        # Local file storage abstraction
+    demo-storage.js   # Demo mode fixture storage
+    auth.js           # Auth middleware (requireAuth, requireAdmin)
+    roster-sync/      # Automated roster building
+      index.js        # Orchestrator (sync + daily scheduler)
+      ipa-client.js   # LDAP client (Red Hat IPA directory)
+      sheets.js       # Google Sheets API (enrichment data)
+      merge.js        # Combines LDAP + Sheets into roster format
+      config.js       # Sync config CRUD (stored on PVC/filesystem)
+      constants.js    # Shared constants
+
+modules/              # Feature modules (auto-discovered via module.json)
+  ai-impact/          # AI Impact assessments
+  releases/           # Release tracking & execution pipeline
+  system-health/      # System health monitoring
+  team-tracker/       # Team metrics (Jira, GitHub, GitLab)
+    server/
+      jira/           # Jira Cloud API integration
+        jira-client.js    # HTTP client (basic auth, Jira Cloud endpoints)
+        person-metrics.js # Per-person JQL metrics
+        sprint-report.js  # Sprint report API
+      github/
+        contributions.js  # GitHub GraphQL API (contribution stats)
+    client/
+      utils/metrics.js    # Metric calculations
+      composables/        # Module-specific hooks
+      views/              # Module views
+  upstream-pulse/     # Upstream community tracking
 
 server/
   dev-server.js       # Express server (local dev + production)
-  storage.js          # Local file storage abstraction
-  demo-storage.js     # Demo mode fixture storage
-  jira/               # Jira Cloud API integration
-    jira-client.js    # HTTP client (basic auth, Jira Cloud endpoints)
-    person-metrics.js # Per-person JQL metrics
-    sprint-report.js  # Sprint report API
-    __tests__/        # Server-side tests
-  github/
-    contributions.js  # GitHub GraphQL API (contribution stats)
-  roster-sync/        # Automated roster building
-    index.js          # Orchestrator (sync + daily scheduler)
-    ldap.js           # LDAP client (Red Hat corporate directory)
-    sheets.js         # Google Sheets API (enrichment data)
-    merge.js          # Combines LDAP + Sheets into roster format
-    config.js         # Sync config CRUD (stored on PVC/filesystem)
-    constants.js      # Shared constants
+  module-loader.js    # Backend module auto-discovery
+
+platform/             # Deployment-specific core UI customizations
 
 deploy/
   core.backend.Dockerfile       # Core backend image (platform + team-tracker)
@@ -106,6 +126,9 @@ deploy/
     overlays/ai-eng-prod/   # AI Eng prod overlay
     overlays/local/     # Local Kind cluster overlay
 
+tests/
+  smoke/              # Playwright smoke tests (container images)
+  integration/        # Playwright module integration tests
 fixtures/             # Demo mode fixture data
 data/                 # Local dev data (gitignored)
 secrets/              # Service account keys (gitignored)
@@ -156,7 +179,7 @@ npm test            # Run all tests
 npm run test:watch  # Watch mode
 
 # Run a specific test file
-npx vitest run server/jira/__tests__/sprint-report.test.js
+npx vitest run modules/team-tracker/server/jira/__tests__/sprint-report.test.js
 ```
 
 #### Smoke tests
