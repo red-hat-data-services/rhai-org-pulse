@@ -244,7 +244,6 @@ function transformIssue(rawIssue, rfeMap) {
   const blockedBy = []
   const issueLinks = fields.issuelinks
   if (Array.isArray(issueLinks)) {
-    const resolvedStatusNames = ['Closed', 'Resolved', 'Release Pending']
     for (let bli = 0; bli < issueLinks.length; bli++) {
       const link = issueLinks[bli]
       if (!link.inwardIssue) continue
@@ -255,7 +254,7 @@ function transformIssue(rawIssue, rfeMap) {
       const linkedStatusCat = linkedStatus.statusCategory &&
         linkedStatus.statusCategory.name
       const linkedStatusName = linkedStatus.name || ''
-      if (linkedStatusCat === 'Done' || resolvedStatusNames.includes(linkedStatusName)) continue
+      if (linkedStatusCat === 'Done' || TERMINAL_STATUSES.includes(linkedStatusName)) continue
       blockedBy.push({
         key: link.inwardIssue.key,
         summary: (linkedFields.summary || ''),
