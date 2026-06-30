@@ -126,10 +126,10 @@ Deployed to OpenShift via ArgoCD. Full guide: `deploy/OPENSHIFT.md`.
 
 | Component | Core Image | AI Eng Image |
 |-----------|-----------|--------------|
-| Backend | `quay.io/org-pulse/org-pulse-core-backend` | `quay.io/org-pulse/team-tracker-backend` (extends core) |
-| Frontend | `quay.io/org-pulse/org-pulse-core-frontend` | `quay.io/org-pulse/team-tracker-frontend` (extends core) |
-| Frontend Builder | `quay.io/org-pulse/org-pulse-core-frontend-builder` | — (used as build stage) |
-| Frontend Runtime | `quay.io/org-pulse/org-pulse-core-frontend-runtime` | — (used as runtime stage) |
+| Backend | `quay.io/edge-infrastructure/org-pulse-core-backend` | `quay.io/org-pulse/team-tracker-backend` (extends core) |
+| Frontend | `quay.io/edge-infrastructure/org-pulse-core-frontend` | `quay.io/org-pulse/team-tracker-frontend` (extends core) |
+| Frontend Builder | `quay.io/edge-infrastructure/org-pulse-core-frontend-builder` | — (used as build stage) |
+| Frontend Runtime | `quay.io/edge-infrastructure/org-pulse-core-frontend-runtime` | — (used as runtime stage) |
 | OAuth Proxy | `quay.io/openshift/origin-oauth-proxy:4.16` (sidecar) | same |
 
 Kustomize layers: `base/` (core platform + team-tracker) → `overlays/ai-eng/` (AI Eng modules + secrets) → `overlays/ai-eng-{dev,preprod,prod}/` (environment-specific). The `overlays/local/` overlay uses core images for Kind testing.
