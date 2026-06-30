@@ -49,6 +49,7 @@
     <!-- Active Report Detail -->
     <OnTimeReleasesReport v-if="activeReport === 'on-time-releases'" />
     <CveSlaReport v-if="activeReport === 'cve-sla'" />
+    <PostReleaseDefectsReport v-if="activeReport === 'post-release-defects'" />
   </div>
 </template>
 
@@ -56,6 +57,7 @@
 import { ref, computed } from 'vue'
 import OnTimeReleasesReport from '../components/OnTimeReleasesReport.vue'
 import CveSlaReport from '../components/CveSlaReport.vue'
+import PostReleaseDefectsReport from '../components/post-release-defects/PostReleaseDefectsReport.vue'
 
 var activeReport = ref(null)
 
@@ -77,6 +79,15 @@ var reports = [
     iconBg: 'bg-purple-50 dark:bg-purple-900/30',
     measure: '100%',
     measureColor: 'text-emerald-600 dark:text-emerald-400'
+  },
+  {
+    id: 'post-release-defects',
+    title: 'Post-Release Defects',
+    description: 'Cumulative bug trends across releases. Compare defect rates by version, product, and component.',
+    icon: '🐛',
+    iconBg: 'bg-red-50 dark:bg-red-900/30',
+    measure: null,
+    measureColor: ''
   }
 ]
 
