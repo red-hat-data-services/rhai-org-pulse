@@ -30,13 +30,13 @@ var expandedComponents = reactive({})
 
 // ═══ SORT STATE ═══
 
-var SORT_COLUMNS = ['key', 'summary', 'priority', 'type', 'releaseType', 'status', 'colorStatus', 'fixVersion', 'targetVersion', 'blocked', 'assignee', 'pmOwner']
+var SORT_COLUMNS = ['key', 'summary', 'priority', 'releaseType', 'status', 'colorStatus', 'fixVersion', 'targetVersion', 'blocked', 'assignee', 'pmOwner']
 
 var PRIORITY_ORDER = { 'Blocker': 0, 'Critical': 1, 'Major': 2, 'Normal': 3 }
 var COLOR_STATUS_ORDER = { 'red': 0, 'yellow': 1, 'green': 2 }
 
 var sortState = reactive({
-  column: props.initialSort.column,
+  column: SORT_COLUMNS.indexOf(props.initialSort.column) !== -1 ? props.initialSort.column : null,
   direction: props.initialSort.direction || 'asc'
 })
 
@@ -62,9 +62,6 @@ function getSortValue(feature, column) {
   if (column === 'priority') {
     var po = PRIORITY_ORDER[feature.priority]
     return po !== undefined ? po : 99
-  }
-  if (column === 'type') {
-    return (feature.isCommitted ? 2 : 0) + (feature.isRequested ? 1 : 0)
   }
   if (column === 'releaseType') return (feature.releaseType || '').toLowerCase()
   if (column === 'status') return (feature.status || '').toLowerCase()
@@ -148,6 +145,11 @@ function extractProduct(versionName) {
   if (lower.startsWith('rhelai')) return 'RHELAI'
   if (lower.startsWith('rhaii')) return 'RHAII'
   return versionName.split('-')[0] || versionName
+}
+
+function normalizeVersion(v) {
+  if (!v || typeof v !== 'string') return v
+  return v.replace(/^rhoai-/i, '')
 }
 
 var componentGroups = computed(function() {
@@ -297,7 +299,7 @@ defineExpose({ expandAll, collapseAll })
             :class="COMP_STYLE.border"
             @click="toggleComponent(comp.component)"
           >
-            <td colspan="12" class="px-4 py-3">
+            <td colspan="11" class="px-4 py-3">
               <div class="flex items-center gap-3">
                 <svg
                   class="w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 flex-shrink-0"
@@ -363,9 +365,6 @@ defineExpose({ expandAll, collapseAll })
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('priority')">
               <span class="inline-flex items-center gap-1 justify-center">Priority<SortArrow :direction="sortIcon('priority')" /></span>
             </th>
-            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('type')">
-              <span class="inline-flex items-center gap-1 justify-center">Type<SortArrow :direction="sortIcon('type')" /></span>
-            </th>
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-28 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('releaseType')">
               <span class="inline-flex items-center gap-1 justify-center">Release Type<SortArrow :direction="sortIcon('releaseType')" /></span>
             </th>
@@ -424,18 +423,6 @@ defineExpose({ expandAll, collapseAll })
                 <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
               </td>
               <td class="px-3 py-2.5 text-center">
-                <div class="flex items-center justify-center gap-1">
-                  <span
-                    v-if="feature.isRequested"
-                    class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 dark:bg-blue-800/40 text-blue-700 dark:text-blue-300"
-                  >REQ</span>
-                  <span
-                    v-if="feature.isCommitted"
-                    class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-800/40 text-emerald-700 dark:text-emerald-300"
-                  >COM</span>
-                </div>
-              </td>
-              <td class="px-3 py-2.5 text-center">
                 <span
                   v-if="feature.releaseType"
                   class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300"
@@ -464,7 +451,7 @@ defineExpose({ expandAll, collapseAll })
                     v-for="fv in feature.fixVersions"
                     :key="fv"
                     class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
-                  >{{ fv }}</span>
+                  >{{ normalizeVersion(fv) }}</span>
                 </div>
                 <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
               </td>
@@ -474,7 +461,7 @@ defineExpose({ expandAll, collapseAll })
                     v-for="tv in feature.targetVersions"
                     :key="tv"
                     class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
-                  >{{ tv }}</span>
+                  >{{ normalizeVersion(tv) }}</span>
                 </div>
                 <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
               </td>
@@ -503,7 +490,7 @@ defineExpose({ expandAll, collapseAll })
 
           <!-- Empty state -->
           <tr v-if="isComponentExpanded(comp.component) && comp.features.length === 0">
-            <td colspan="12" class="px-8 py-6 text-sm text-gray-400 dark:text-gray-500 italic text-center">
+            <td colspan="11" class="px-8 py-6 text-sm text-gray-400 dark:text-gray-500 italic text-center">
               No features found for {{ comp.component }}
             </td>
           </tr>
@@ -511,7 +498,7 @@ defineExpose({ expandAll, collapseAll })
 
         <!-- No results -->
         <tr v-if="componentGroups.length === 0">
-          <td colspan="12" class="px-8 py-10 text-sm text-gray-400 dark:text-gray-500 italic text-center">
+          <td colspan="11" class="px-8 py-10 text-sm text-gray-400 dark:text-gray-500 italic text-center">
             No features match the current filters.
           </td>
         </tr>

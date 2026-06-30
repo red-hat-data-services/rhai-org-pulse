@@ -572,9 +572,6 @@ function getSortValue(feature, column) {
     var po = PRIORITY_ORDER[feature.priority]
     return po !== undefined ? po : 99
   }
-  if (column === 'type') {
-    return (feature.isCommitted ? 2 : 0) + (feature.isRequested ? 1 : 0)
-  }
   if (column === 'releaseType') return (feature.releaseType || '').toLowerCase()
   if (column === 'status') return (feature.status || '').toLowerCase()
   if (column === 'colorStatus') {
@@ -647,25 +644,6 @@ describe('getSortValue', function () {
   it('returns 99 for unknown or null priority', function () {
     expect(getSortValue(makeFeature({ priority: 'Minor' }), 'priority')).toBe(99)
     expect(getSortValue(makeFeature({ priority: null }), 'priority')).toBe(99)
-  })
-
-  it('returns type score based on isRequested/isCommitted', function () {
-    var feat = makeFeature({})
-    feat.isRequested = true
-    feat.isCommitted = false
-    expect(getSortValue(feat, 'type')).toBe(1)
-
-    feat.isRequested = false
-    feat.isCommitted = true
-    expect(getSortValue(feat, 'type')).toBe(2)
-
-    feat.isRequested = true
-    feat.isCommitted = true
-    expect(getSortValue(feat, 'type')).toBe(3)
-
-    feat.isRequested = false
-    feat.isCommitted = false
-    expect(getSortValue(feat, 'type')).toBe(0)
   })
 
   it('returns lowercased releaseType', function () {
@@ -774,11 +752,6 @@ describe('sortFeatures', function () {
   it('sorts by assignee descending', function () {
     var result = sortFeatures(features, 'assignee', 'desc')
     expect(result.map(function (f) { return f.assignee })).toEqual(['Charlie', 'Bob', 'Alice'])
-  })
-
-  it('sorts by type (committed > requested > none)', function () {
-    var result = sortFeatures(features, 'type', 'desc')
-    expect(result.map(function (f) { return f.key })).toEqual(['X-1', 'X-2', 'X-3'])
   })
 
   it('sorts by colorStatus ascending (Red first)', function () {

@@ -315,8 +315,8 @@ test.describe('Releases PM Hub @releases', () => {
       await firstOption.click();
       await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-      // Verify the Avg / Monthly Release summary card is visible
-      var avgCard = page.locator('text=Avg / Monthly Release');
+      // Verify the Avg Features Delivered summary card is visible
+      var avgCard = page.locator('text=Avg Features Delivered');
       await expect(avgCard.first()).toBeVisible();
 
       // Check for component rows with velocity badges (avg/rel text)
