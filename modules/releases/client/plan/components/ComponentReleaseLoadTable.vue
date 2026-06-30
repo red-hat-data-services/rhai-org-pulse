@@ -206,6 +206,7 @@ var componentGroups = computed(function() {
             releaseType: feat.releaseType,
             priority: feat.priority,
             isBlocked: feat.isBlocked,
+            blockedBy: feat.blockedBy || [],
             components: feat.components,
             fixVersions: feat.fixVersions || [],
             targetVersions: feat.targetVersions || [],
@@ -481,7 +482,7 @@ defineExpose({ expandAll, collapseAll })
                 <span
                   v-if="feature.isBlocked"
                   class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/30 ring-1 ring-red-200 dark:ring-red-800"
-                  title="Blocked"
+                  :title="feature.blockedBy && feature.blockedBy.length ? 'Blocked by: ' + feature.blockedBy.map(function(b) { return b.key + ' (' + b.status + ')' }).join(', ') : 'Blocked'"
                 >
                   <svg class="w-3.5 h-3.5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />

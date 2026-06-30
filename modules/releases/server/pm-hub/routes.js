@@ -388,6 +388,7 @@ function buildFeatureObj(f, targetVersions) {
     releaseType: f.releaseType || null,
     priority: f.priority || null,
     isBlocked: f.isBlocked || false,
+    blockedBy: f.blockedBy || [],
     components: f.components || [],
     fixVersions: f.fixVersions || [],
     targetVersions: targetVersions || [],

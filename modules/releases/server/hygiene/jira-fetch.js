@@ -241,24 +241,29 @@ function transformIssue(rawIssue, rfeMap) {
   }
 
   // Blocked: check for unresolved inward "Blocks" links
-  let isBlocked = false
+  const blockedBy = []
   const issueLinks = fields.issuelinks
   if (Array.isArray(issueLinks)) {
+    const resolvedStatusNames = ['Closed', 'Resolved', 'Release Pending']
     for (let bli = 0; bli < issueLinks.length; bli++) {
       const link = issueLinks[bli]
       if (!link.inwardIssue) continue
       const type = link.type || {}
       if (type.name !== 'Blocks' && type.inward !== 'is blocked by') continue
-      const linkedStatusCat = link.inwardIssue.fields &&
-        link.inwardIssue.fields.status &&
-        link.inwardIssue.fields.status.statusCategory &&
-        link.inwardIssue.fields.status.statusCategory.name
-      if (linkedStatusCat !== 'Done') {
-        isBlocked = true
-        break
-      }
+      const linkedFields = link.inwardIssue.fields || {}
+      const linkedStatus = linkedFields.status || {}
+      const linkedStatusCat = linkedStatus.statusCategory &&
+        linkedStatus.statusCategory.name
+      const linkedStatusName = linkedStatus.name || ''
+      if (linkedStatusCat === 'Done' || resolvedStatusNames.includes(linkedStatusName)) continue
+      blockedBy.push({
+        key: link.inwardIssue.key,
+        summary: (linkedFields.summary || ''),
+        status: linkedStatusName
+      })
     }
   }
+  const isBlocked = blockedBy.length > 0
 
   // Priority
   const priority = fields.priority ? fields.priority.name : null
@@ -291,6 +296,7 @@ function transformIssue(rawIssue, rfeMap) {
     riceScore: fields[CUSTOM_FIELDS.riceScore] || null,
     priority,
     isBlocked,
+    blockedBy,
     pmOwner,
     linkedRfeKey,
     linkedRfeApproved,
