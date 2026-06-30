@@ -377,7 +377,19 @@ const FIELDS_TO_FETCH = [
   CUSTOM_FIELDS.productManager
 ].join(',')
 
+function computeRiskLevel(f, targetVersions) {
+  var hasFixVersion = f.fixVersions && f.fixVersions.length > 0
+  var hasTargetVersion = targetVersions && targetVersions.length > 0
+  if (!hasFixVersion && hasTargetVersion) return 'high'
+  if (hasFixVersion) {
+    var cs = (f.colorStatus || '').toLowerCase()
+    if (f.isBlocked || cs === 'red' || cs === 'yellow') return 'medium'
+  }
+  return 'low'
+}
+
 function buildFeatureObj(f, targetVersions) {
+  var tv = targetVersions || []
   return {
     key: f.key,
     summary: f.summary || '',
@@ -391,7 +403,8 @@ function buildFeatureObj(f, targetVersions) {
     blockedBy: f.blockedBy || [],
     components: f.components || [],
     fixVersions: f.fixVersions || [],
-    targetVersions: targetVersions || [],
+    targetVersions: tv,
+    riskLevel: computeRiskLevel(f, tv),
     assignee: f.assignee || null,
     pmOwner: f.pmOwner || null
   }

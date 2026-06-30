@@ -68,7 +68,7 @@ describe('ComponentReleaseLoadTable sorting (component)', function () {
       var groupHeader = wrapper.find('tr.cursor-pointer')
       await groupHeader.trigger('click')
       var ths = wrapper.findAll('th')
-      expect(ths.length).toBe(11)
+      expect(ths.length).toBe(12)
     })
 
     it('all headers have cursor-pointer class', async function () {
