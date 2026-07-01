@@ -7,7 +7,7 @@
   "defaultEnabled": true,
   "requires": ["releases"],
   "secrets": {
-    "platform": ["jira"]
+    "platform": ["jira", "google"]
   },
   "client": {
     "entry": "./client/index.js",

@@ -1,8 +1,15 @@
 const { createJiraClient } = require('../../../shared/server/jira')
+const { createGoogleSheetsClient } = require('../../../shared/server/google-sheets')
 
 var versionsCache = null
 var versionsCacheAt = 0
 var VERSIONS_CACHE_TTL = 10 * 60 * 1000
+
+var techVisCache = null
+var techVisCacheAt = 0
+var TECH_VIS_CACHE_TTL = 15 * 60 * 1000
+var TECH_VIS_SHEET_ID = '1gUAxe2LtmTjzcN8Wt3LfaXswSfK9emM40OtwmSsxMaU'
+var TECH_VIS_TARGET = 5
 
 /**
  * @param {import('express').Router} router
@@ -224,6 +231,128 @@ module.exports = function registerRoutes(router, context) {
     }
   })
 
+  /**
+   * @openapi
+   * /api/modules/okr-hub/reports/tech-visibility:
+   *   get:
+   *     tags: [OKR Hub]
+   *     summary: Technical visibility report - weekly article counts from Google Sheets
+   *     responses:
+   *       200:
+   *         description: Quarterly breakdown of weekly article counts
+   */
+  router.get('/reports/tech-visibility', requireScope('okr-hub:read'), async function(req, res) {
+    try {
+      var now = Date.now()
+      if (techVisCache && (now - techVisCacheAt) < TECH_VIS_CACHE_TTL) {
+        return res.json(techVisCache)
+      }
+
+      var sheetsClient = createGoogleSheetsClient()
+      var tabNames
+      try {
+        tabNames = await sheetsClient.discoverSheetNames(TECH_VIS_SHEET_ID)
+      } catch (authErr) {
+        console.warn('[okr-hub] Google Sheets unavailable, using sample data:', authErr.message)
+        var sample = getSampleTechVisData()
+        techVisCache = sample
+        techVisCacheAt = now
+        return res.json(sample)
+      }
+      if (!tabNames || tabNames.length === 0) {
+        return res.json({ error: 'No tabs found in spreadsheet', quarters: [], overall: { weeksMet: 0, totalWeeks: 0, pct: 0 }, target: TECH_VIS_TARGET, fetchedAt: new Date().toISOString() })
+      }
+
+      var sheetData = null
+      for (var ti = 0; ti < tabNames.length; ti++) {
+        var raw = await sheetsClient.fetchRawSheet(TECH_VIS_SHEET_ID, tabNames[ti])
+        if (raw && raw.headers && raw.headers.length > 0) {
+          var hasWeekCol = findColumnIndex(raw.headers, ['week', 'date', 'week of', 'week starting'])
+          var hasCountCol = findColumnIndex(raw.headers, ['count', 'articles', 'posts', 'total', '# of articles', 'number'])
+          if (hasWeekCol !== -1 && hasCountCol !== -1) {
+            sheetData = { headers: raw.headers, rows: raw.rows, weekCol: hasWeekCol, countCol: hasCountCol, tabName: tabNames[ti] }
+            break
+          }
+        }
+      }
+
+      if (!sheetData) {
+        return res.json({ error: 'Could not find columns for week dates and article counts. Available tabs: ' + tabNames.join(', '), quarters: [], overall: { weeksMet: 0, totalWeeks: 0, pct: 0 }, target: TECH_VIS_TARGET, fetchedAt: new Date().toISOString() })
+      }
+
+      var weeks = []
+      for (var ri = 0; ri < sheetData.rows.length; ri++) {
+        var row = sheetData.rows[ri]
+        var weekVal = row[sheetData.weekCol]
+        var countVal = row[sheetData.countCol]
+        if (weekVal == null || weekVal === '') continue
+
+        var weekDate = parseSheetDate(weekVal)
+        if (!weekDate) continue
+
+        var count = typeof countVal === 'number' ? countVal : parseInt(String(countVal || '0'), 10)
+        if (isNaN(count)) count = 0
+
+        weeks.push({
+          weekOf: weekDate,
+          count: count,
+          met: count >= TECH_VIS_TARGET
+        })
+      }
+
+      weeks.sort(function(a, b) { return a.weekOf.localeCompare(b.weekOf) })
+
+      var quarterMap = {}
+      for (var wi = 0; wi < weeks.length; wi++) {
+        var w = weeks[wi]
+        var d = new Date(w.weekOf + 'T00:00:00Z')
+        var year = d.getUTCFullYear()
+        var month = d.getUTCMonth()
+        var qNum = Math.floor(month / 3) + 1
+        var qLabel = 'Q' + qNum + ' ' + year
+        if (!quarterMap[qLabel]) {
+          quarterMap[qLabel] = { label: qLabel, weeks: [], weeksMet: 0, totalWeeks: 0, pct: 0, sortKey: year * 10 + qNum }
+        }
+        quarterMap[qLabel].weeks.push(w)
+        quarterMap[qLabel].totalWeeks++
+        if (w.met) quarterMap[qLabel].weeksMet++
+      }
+
+      var quarters = Object.keys(quarterMap).map(function(k) { return quarterMap[k] })
+      quarters.sort(function(a, b) { return a.sortKey - b.sortKey })
+      for (var qi = 0; qi < quarters.length; qi++) {
+        quarters[qi].pct = quarters[qi].totalWeeks > 0 ? Math.round((quarters[qi].weeksMet / quarters[qi].totalWeeks) * 100) : 0
+        delete quarters[qi].sortKey
+      }
+
+      var overallMet = 0
+      var overallTotal = 0
+      for (var oi = 0; oi < quarters.length; oi++) {
+        overallMet += quarters[oi].weeksMet
+        overallTotal += quarters[oi].totalWeeks
+      }
+
+      var result = {
+        quarters: quarters,
+        overall: {
+          weeksMet: overallMet,
+          totalWeeks: overallTotal,
+          pct: overallTotal > 0 ? Math.round((overallMet / overallTotal) * 100) : 0
+        },
+        target: TECH_VIS_TARGET,
+        source: sheetData.tabName,
+        fetchedAt: new Date().toISOString()
+      }
+
+      techVisCache = result
+      techVisCacheAt = now
+      res.json(result)
+    } catch (err) {
+      console.error('[okr-hub] tech-visibility error:', err)
+      res.status(500).json({ error: err.message })
+    }
+  })
+
   context.registerDiagnostics(async function() {
     return { status: 'ok' }
   })
@@ -232,6 +361,28 @@ module.exports = function registerRoutes(router, context) {
 function isEaRelease(id) {
   var lower = (id || '').toLowerCase()
   return lower.includes('.ea') || lower.includes('-ea')
+}
+
+function findColumnIndex(headers, candidates) {
+  for (var hi = 0; hi < headers.length; hi++) {
+    var h = (headers[hi] || '').toLowerCase().trim()
+    for (var ci = 0; ci < candidates.length; ci++) {
+      if (h === candidates[ci] || h.includes(candidates[ci])) return hi
+    }
+  }
+  return -1
+}
+
+function parseSheetDate(val) {
+  if (typeof val === 'number') {
+    var epoch = new Date(Date.UTC(1899, 11, 30))
+    var d = new Date(epoch.getTime() + val * 86400000)
+    return d.toISOString().slice(0, 10)
+  }
+  var s = String(val).trim()
+  var parsed = new Date(s)
+  if (!isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10)
+  return null
 }
 
 function getDefaultCveSlaData() {
@@ -292,5 +443,38 @@ function getDefaultCveSlaData() {
       nov: {},
       dec: {}
     }
+  }
+}
+
+function getSampleTechVisData() {
+  var q2Weeks = [
+    { weekOf: '2026-04-06', count: 7, met: true },
+    { weekOf: '2026-04-13', count: 5, met: true },
+    { weekOf: '2026-04-20', count: 3, met: false },
+    { weekOf: '2026-04-27', count: 6, met: true },
+    { weekOf: '2026-05-04', count: 8, met: true },
+    { weekOf: '2026-05-11', count: 4, met: false },
+    { weekOf: '2026-05-18', count: 5, met: true },
+    { weekOf: '2026-05-25', count: 9, met: true },
+    { weekOf: '2026-06-01', count: 6, met: true },
+    { weekOf: '2026-06-08', count: 2, met: false },
+    { weekOf: '2026-06-15', count: 7, met: true },
+    { weekOf: '2026-06-22', count: 5, met: true },
+    { weekOf: '2026-06-29', count: 4, met: false }
+  ]
+  var met = 0
+  for (var i = 0; i < q2Weeks.length; i++) { if (q2Weeks[i].met) met++ }
+  return {
+    quarters: [{
+      label: 'Q2 2026',
+      weeks: q2Weeks,
+      weeksMet: met,
+      totalWeeks: q2Weeks.length,
+      pct: Math.round((met / q2Weeks.length) * 100)
+    }],
+    overall: { weeksMet: met, totalWeeks: q2Weeks.length, pct: Math.round((met / q2Weeks.length) * 100) },
+    target: TECH_VIS_TARGET,
+    source: '(sample data)',
+    fetchedAt: new Date().toISOString()
   }
 }

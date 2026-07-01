@@ -51,6 +51,7 @@
     <CveSlaReport v-if="activeReport === 'cve-sla'" />
     <PostReleaseDefectsReport v-if="activeReport === 'post-release-defects'" />
     <CommitmentTrackingReport v-if="activeReport === 'commitment-tracking'" />
+    <TechVisibilityReport v-if="activeReport === 'tech-visibility'" />
   </div>
 </template>
 
@@ -60,6 +61,7 @@ import OnTimeReleasesReport from '../components/OnTimeReleasesReport.vue'
 import CveSlaReport from '../components/CveSlaReport.vue'
 import PostReleaseDefectsReport from '../components/post-release-defects/PostReleaseDefectsReport.vue'
 import CommitmentTrackingReport from '../components/commitment-tracking/CommitmentTrackingReport.vue'
+import TechVisibilityReport from '../components/TechVisibilityReport.vue'
 
 var activeReport = ref(null)
 
@@ -98,6 +100,15 @@ var reports = [
     icon: '🎯',
     iconBg: 'bg-emerald-50 dark:bg-emerald-900/30',
     measure: '>90%',
+    measureColor: 'text-emerald-600 dark:text-emerald-400'
+  },
+  {
+    id: 'tech-visibility',
+    title: 'Technical Visibility',
+    description: 'Red Hat AI technical visibility across internal and external sources. Tracks weekly article output.',
+    icon: '📝',
+    iconBg: 'bg-amber-50 dark:bg-amber-900/30',
+    measure: '>5 posts/week',
     measureColor: 'text-emerald-600 dark:text-emerald-400'
   }
 ]
