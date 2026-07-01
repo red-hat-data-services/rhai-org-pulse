@@ -3,13 +3,13 @@
  * Each reportUrl is resolved by Vite (?url) so the browser loads a full HTML document
  * inside an iframe — no v-html.
  */
+import reportRedHatDataServicesOdhDashboard from './generated-reports/quality-report-red-hat-data-services-odh-dashboard.html?url'
 import reportOpenclawOpenclaw from './generated-reports/quality-report-openclaw-openclaw.html?url'
 import reportOpendatahubIoOdhDashboard from './generated-reports/quality-report-opendatahub-io-odh-dashboard.html?url'
 import reportKubernetesSigsKueue from './generated-reports/quality-report-kubernetes-sigs-kueue.html?url'
 import reportOpendatahubIoOpenclaw from './generated-reports/quality-report-opendatahub-io-openclaw.html?url'
 import reportLlmDLlmDInferenceScheduler from './generated-reports/quality-report-llm-d-llm-d-inference-scheduler.html?url'
 import reportRedHatDataServicesNotebooks from './generated-reports/quality-report-red-hat-data-services-notebooks.html?url'
-import reportRedHatDataServicesOdhDashboard from './generated-reports/quality-report-red-hat-data-services-odh-dashboard.html?url'
 import reportBerriaiLitellm from './generated-reports/quality-report-BerriAI-litellm.html?url'
 import reportKubeflowPipelines from './generated-reports/quality-report-kubeflow-pipelines.html?url'
 import reportLangfuseLangfuse from './generated-reports/quality-report-langfuse-langfuse.html?url'
@@ -339,7 +339,7 @@ import reportOpendatahubIoGuidesVllmLlmD from './generated-reports/quality-repor
 import reportRedHatDataServicesKronophage from './generated-reports/quality-report-red-hat-data-services-kronophage.html?url'
 
 export const QUALITY_SAMPLE_META = {
-  generatedAt: '2026-06-10 18:26:42',
+  generatedAt: '2026-07-01 20:55:05',
   averageScore: '5.0/10',
   blurb:
     'Quality analysis of 334 repositories.'
@@ -347,6 +347,18 @@ export const QUALITY_SAMPLE_META = {
 
 /** @type {Array<{ id: string, label: string, githubUrl: string, score: string, gaps: string, tier: string, component: string, team: string, reportUrl: string }>} */
 export const QUALITY_REPORTS = [
+  {
+    id: 'red-hat-data-services-odh-dashboard',
+    label: 'red-hat-data-services/odh-dashboard',
+    githubUrl: 'https://github.com/red-hat-data-services/odh-dashboard',
+    score: '9.2/10',
+    gaps:
+      'Coverage enforcement is informational only, No container runtime validation in CI',
+    tier: 'downstream',
+    component: 'AI Core Dashboard',
+    team: 'Crimson',
+    reportUrl: reportRedHatDataServicesOdhDashboard
+  },
   {
     id: 'openclaw-openclaw',
     label: 'openclaw/openclaw',
@@ -365,7 +377,7 @@ export const QUALITY_REPORTS = [
     githubUrl: 'https://github.com/opendatahub-io/odh-dashboard',
     score: '9.1/10',
     gaps:
-      'No container image vulnerability scanning in CI, No PR-time Konflux build simulation',
+      'No container vulnerability scanning (Trivy/Snyk) in PR or periodic CI, No CodeQL/SAST scanning workflow',
     tier: 'midstream',
     component: 'AI Core Dashboard',
     team: 'Crimson',
@@ -417,18 +429,6 @@ export const QUALITY_REPORTS = [
     component: 'Notebooks Server',
     team: '',
     reportUrl: reportRedHatDataServicesNotebooks
-  },
-  {
-    id: 'red-hat-data-services-odh-dashboard',
-    label: 'red-hat-data-services/odh-dashboard',
-    githubUrl: 'https://github.com/red-hat-data-services/odh-dashboard',
-    score: '8.7/10',
-    gaps:
-      'No PR-time Konflux build simulation, No container image runtime validation',
-    tier: 'downstream',
-    component: 'AI Core Dashboard',
-    team: 'Crimson',
-    reportUrl: reportRedHatDataServicesOdhDashboard
   },
   {
     id: 'BerriAI-litellm',

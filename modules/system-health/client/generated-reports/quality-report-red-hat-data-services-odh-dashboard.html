@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:55 AM</p>
+            <p class="timestamp">Generated on July 01, 2026 at 08:38 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/odh-dashboard</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#28a745"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="73.51320600000005"
+                                stroke-dashoffset="45.23889600000003"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">8.7</div>
+                        <div class="score-value">9.2</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">753 unit/spec test files across frontend, backend, and packages using Jest; strong test-to-code ratio</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">891 test files across frontend/backend/packages with Jest + coverage upload to Codecov</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">235 Cypress tests spanning 25+ mocked areas and 21 E2E areas; contract tests across 9 modules; cluster failover E2E</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
+                            <div class="scorecard-status">181 Cypress mock tests, 23 E2E test groups with cluster failover, contract tests for BFF APIs</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Kustomize validation, modular architecture quality gates, BFF build verification; no PR-time Konflux simulation</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
+                            <div class="scorecard-status">PR-time Konflux simulator with hermetic build testing, kustomize validation, workspace COPY verification</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">11 Dockerfiles including Konflux variants; multi-stage builds; no runtime validation or startup testing in CI</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">13 Dockerfiles including Konflux and Sealights variants, multi-arch support, but no runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Codecov integration with merged unit+Cypress coverage; informational mode with 70% patch target; no hard enforcement</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Codecov integration with merged unit+Cypress coverage, 70% patch target (informational mode)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
-                            <div class="scorecard-status">26 workflows with concurrency control, caching, matrix strategies, Tekton pipelines, Turbo-based parallelism</div>
+                            <div class="scorecard-status">26 workflows with concurrency control, turbo caching, matrix strategies, and path-filtered triggers</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
-                            <div class="scorecard-status">19 comprehensive agent rules covering all test types, architecture, security, conventions; 20 custom skills; AgentReady weekly</div>
+                            <div class="scorecard-score" style="color: #28a745;">10.0/10</div>
+                            <div class="scorecard-status">20 agent rules covering all test types, 23 custom skills, AGENTS.md with full architecture guidance</div>
                         </div>
                     </div>
                 </div>
@@ -410,36 +410,36 @@
                 <div class="section-content">
                     <ul class="items-list">
                         
-                        <li class="item-card high">
-                            <div class="item-description">No PR-time Konflux build simulation</div>
-                            <p>Build issues in Konflux Dockerfiles discovered only after merge; divergence between Dockerfile and Dockerfile.konflux</p>
+                        <li class="item-card medium">
+                            <div class="item-description">Coverage enforcement is informational only</div>
+                            <p>Coverage regressions can merge without blocking; the 70% patch target is advisory</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No container image runtime validation</div>
-                            <p>Image startup failures, missing environment variables, or broken Node.js entrypoints not caught until deployment</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">6-8 hours</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No security scanning in GitHub workflows</div>
-                            <p>Vulnerabilities in dependencies or code not detected at PR time; relies entirely on Konflux/external scanning</p>
+                            <div class="item-description">No container runtime validation in CI</div>
+                            <p>Image startup failures or misconfiguration not caught until deployment</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Coverage enforcement is informational only</div>
-                            <p>Coverage can regress without blocking PRs; 70% patch target is advisory</p>
+                            <div class="item-description">No SAST/CodeQL workflow in GitHub Actions</div>
+                            <p>Static application security testing relies solely on semgrep rules (1875 lines) but no automated SAST pipeline</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No Trivy/Snyk container scanning in CI</div>
+                            <p>Container image vulnerabilities not caught until Konflux/production scanning</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +456,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to PR workflow</div>
-                            <p>Early detection of CVEs in base images and dependencies before merge</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Enable Semgrep scanning in CI</div>
-                            <p>Semgrep rules exist (semgrep.yaml) but no CI workflow runs them; immediate SAST coverage</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Switch Codecov from informational to blocking</div>
-                            <p>Prevent coverage regressions by enforcing the 70% patch target</p>
+                            <div class="item-description">Switch Codecov patch coverage from informational to blocking</div>
+                            <p>Prevents coverage regressions from merging; enforces 70% threshold</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Gitleaks scanning to PR workflow</div>
-                            <p>Gitleaks config exists (.gitleaks.toml) but no CI workflow runs it; detect secrets in PRs</p>
+                            <div class="item-description">Add CodeQL or Semgrep CI workflow</div>
+                            <p>Automated SAST scanning on every PR, complementing the existing semgrep rules</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add Trivy container scanning to PR workflow</div>
+                            <p>Early detection of container image CVEs before Konflux</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add image smoke test to PR build validation</div>
+                            <p>Validates container starts and serves healthcheck endpoint</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +501,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add PR-time Konflux Dockerfile build validation — build Dockerfile.konflux in CI to catch build divergence early</li><li>Add container image runtime validation — build and start the image in CI, verify health endpoint responds</li></ul>
+                            <ul><li>Enforce Codecov coverage thresholds (change informational to required) to prevent silent coverage decay</li><li>Add container image vulnerability scanning (Trivy) to PR workflow for early CVE detection</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Enable existing Semgrep and Gitleaks configs in CI workflows — the rules are already authored, just not wired into automation</li><li>Add Trivy or Snyk scanning to the PR workflow for container image vulnerability detection</li><li>Switch Codecov enforcement from informational to required status check</li></ul>
+                            <ul><li>Add CodeQL/Semgrep automated SAST workflow alongside the existing semgrep.yaml rules</li><li>Add container runtime smoke test (health check, port binding) to PR Build Validation workflow</li><li>Enable the disabled quality gate checks (Mock Tests, Contract Testing, Bundle Size) in modular-arch-quality-gates.yml</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add performance regression testing for dashboard page load times</li><li>Enable the disabled modular architecture quality gate checks (mock tests, contract testing, API functional/perf, bundle size)</li><li>Add multi-architecture image build testing (currently single-arch only in CI)</li></ul>
+                            <ul><li>Add performance regression testing for API endpoints and frontend bundle size tracking</li><li>Add accessibility testing (axe-core) to Cypress test suite</li><li>Implement visual regression testing for UI components</li></ul>
                         </div>
                     </div>
                 </div>

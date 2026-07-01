@@ -1,143 +1,141 @@
 ---
 repository: "red-hat-data-services/odh-dashboard"
-overall_score: 8.7
+overall_score: 9.2
 scorecard:
   - dimension: "Unit Tests"
-    score: 8.5
-    status: "753 unit/spec test files across frontend, backend, and packages using Jest; strong test-to-code ratio"
-  - dimension: "Integration/E2E"
     score: 9.0
-    status: "235 Cypress tests spanning 25+ mocked areas and 21 E2E areas; contract tests across 9 modules; cluster failover E2E"
+    status: "891 test files across frontend/backend/packages with Jest + coverage upload to Codecov"
+  - dimension: "Integration/E2E"
+    score: 9.5
+    status: "181 Cypress mock tests, 23 E2E test groups with cluster failover, contract tests for BFF APIs"
   - dimension: "Build Integration"
-    score: 7.5
-    status: "Kustomize validation, modular architecture quality gates, BFF build verification; no PR-time Konflux simulation"
+    score: 9.5
+    status: "PR-time Konflux simulator with hermetic build testing, kustomize validation, workspace COPY verification"
   - dimension: "Image Testing"
-    score: 6.5
-    status: "11 Dockerfiles including Konflux variants; multi-stage builds; no runtime validation or startup testing in CI"
+    score: 8.5
+    status: "13 Dockerfiles including Konflux and Sealights variants, multi-arch support, but no runtime validation"
   - dimension: "Coverage Tracking"
-    score: 8.0
-    status: "Codecov integration with merged unit+Cypress coverage; informational mode with 70% patch target; no hard enforcement"
+    score: 8.5
+    status: "Codecov integration with merged unit+Cypress coverage, 70% patch target (informational mode)"
   - dimension: "CI/CD Automation"
     score: 9.5
-    status: "26 workflows with concurrency control, caching, matrix strategies, Tekton pipelines, Turbo-based parallelism"
+    status: "26 workflows with concurrency control, turbo caching, matrix strategies, and path-filtered triggers"
   - dimension: "Agent Rules"
-    score: 9.5
-    status: "19 comprehensive agent rules covering all test types, architecture, security, conventions; 20 custom skills; AgentReady weekly"
+    score: 10.0
+    status: "20 agent rules covering all test types, 23 custom skills, AGENTS.md with full architecture guidance"
 critical_gaps:
-  - title: "No PR-time Konflux build simulation"
-    impact: "Build issues in Konflux Dockerfiles discovered only after merge; divergence between Dockerfile and Dockerfile.konflux"
-    severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "No container image runtime validation"
-    impact: "Image startup failures, missing environment variables, or broken Node.js entrypoints not caught until deployment"
-    severity: "HIGH"
-    effort: "6-8 hours"
-  - title: "No security scanning in GitHub workflows"
-    impact: "Vulnerabilities in dependencies or code not detected at PR time; relies entirely on Konflux/external scanning"
+  - title: "Coverage enforcement is informational only"
+    impact: "Coverage regressions can merge without blocking; the 70% patch target is advisory"
+    severity: "MEDIUM"
+    effort: "1-2 hours"
+  - title: "No container runtime validation in CI"
+    impact: "Image startup failures or misconfiguration not caught until deployment"
     severity: "MEDIUM"
     effort: "4-6 hours"
-  - title: "Coverage enforcement is informational only"
-    impact: "Coverage can regress without blocking PRs; 70% patch target is advisory"
+  - title: "No SAST/CodeQL workflow in GitHub Actions"
+    impact: "Static application security testing relies solely on semgrep rules (1875 lines) but no automated SAST pipeline"
     severity: "MEDIUM"
-    effort: "1-2 hours"
-quick_wins:
-  - title: "Add Trivy container scanning to PR workflow"
     effort: "2-3 hours"
-    impact: "Early detection of CVEs in base images and dependencies before merge"
-  - title: "Enable Semgrep scanning in CI"
-    effort: "1-2 hours"
-    impact: "Semgrep rules exist (semgrep.yaml) but no CI workflow runs them; immediate SAST coverage"
-  - title: "Switch Codecov from informational to blocking"
+  - title: "No Trivy/Snyk container scanning in CI"
+    impact: "Container image vulnerabilities not caught until Konflux/production scanning"
+    severity: "MEDIUM"
+    effort: "2-3 hours"
+quick_wins:
+  - title: "Switch Codecov patch coverage from informational to blocking"
     effort: "30 minutes"
-    impact: "Prevent coverage regressions by enforcing the 70% patch target"
-  - title: "Add Gitleaks scanning to PR workflow"
+    impact: "Prevents coverage regressions from merging; enforces 70% threshold"
+  - title: "Add CodeQL or Semgrep CI workflow"
     effort: "1-2 hours"
-    impact: "Gitleaks config exists (.gitleaks.toml) but no CI workflow runs it; detect secrets in PRs"
+    impact: "Automated SAST scanning on every PR, complementing the existing semgrep rules"
+  - title: "Add Trivy container scanning to PR workflow"
+    effort: "1-2 hours"
+    impact: "Early detection of container image CVEs before Konflux"
+  - title: "Add image smoke test to PR build validation"
+    effort: "2-3 hours"
+    impact: "Validates container starts and serves healthcheck endpoint"
 recommendations:
   priority_0:
-    - "Add PR-time Konflux Dockerfile build validation — build Dockerfile.konflux in CI to catch build divergence early"
-    - "Add container image runtime validation — build and start the image in CI, verify health endpoint responds"
+    - "Enforce Codecov coverage thresholds (change informational to required) to prevent silent coverage decay"
+    - "Add container image vulnerability scanning (Trivy) to PR workflow for early CVE detection"
   priority_1:
-    - "Enable existing Semgrep and Gitleaks configs in CI workflows — the rules are already authored, just not wired into automation"
-    - "Add Trivy or Snyk scanning to the PR workflow for container image vulnerability detection"
-    - "Switch Codecov enforcement from informational to required status check"
+    - "Add CodeQL/Semgrep automated SAST workflow alongside the existing semgrep.yaml rules"
+    - "Add container runtime smoke test (health check, port binding) to PR Build Validation workflow"
+    - "Enable the disabled quality gate checks (Mock Tests, Contract Testing, Bundle Size) in modular-arch-quality-gates.yml"
   priority_2:
-    - "Add performance regression testing for dashboard page load times"
-    - "Enable the disabled modular architecture quality gate checks (mock tests, contract testing, API functional/perf, bundle size)"
-    - "Add multi-architecture image build testing (currently single-arch only in CI)"
+    - "Add performance regression testing for API endpoints and frontend bundle size tracking"
+    - "Add accessibility testing (axe-core) to Cypress test suite"
+    - "Implement visual regression testing for UI components"
 ---
 
-# Quality Analysis: odh-dashboard
+# Quality Analysis: odh-dashboard (red-hat-data-services/odh-dashboard)
 
 ## Executive Summary
 
-- **Overall Score: 8.7/10**
-- **Repository Type**: TypeScript/React monorepo with Go BFF services and Go operator
-- **Primary Languages**: TypeScript (frontend/backend), Go (BFF services, operator)
-- **Framework**: React 18 + PatternFly v6 + Module Federation + Turbo monorepo
+- **Overall Score: 9.2/10**
+- **Repository Type**: TypeScript/React monorepo with Go BFFs and a Kubernetes operator
+- **Primary Technologies**: React 18, TypeScript, PatternFly v6, Go, Cypress, Jest, Turbo
+- **Monorepo Structure**: 29 packages + frontend + backend + dashboard-operator + distributions
+- **Agent Rules Status**: Exemplary - 20 rules, 23 skills, comprehensive AGENTS.md
 
-### Key Strengths
-- **Multi-layer testing**: Unit (Jest), Cypress mock, Cypress E2E (live cluster), contract tests — one of the most comprehensive test pyramids in the OpenShift AI ecosystem
-- **Contract testing**: 9 modules with contract test suites validating frontend-BFF API boundaries
-- **Agent rules excellence**: 19 detailed agent rules + 20 custom skills + weekly AgentReady assessment — industry-leading AI-assisted development infrastructure
-- **CI/CD sophistication**: 26 GitHub workflows + Tekton pipelines with concurrency control, aggressive caching, matrix parallelization, and smart test selection
-
-### Critical Gaps
-- No PR-time Konflux build simulation — Dockerfile.konflux divergence caught post-merge
-- No container image runtime validation in CI
-- Security scanning tools (Semgrep, Gitleaks) are configured but not wired into CI workflows
-- Coverage enforcement is informational (advisory, not blocking)
-
-### Agent Rules Status: **Exemplary**
-19 rules covering architecture, BFF, contract tests, Cypress E2E/mock, unit tests, security, operator patterns, conventions, CSS/PatternFly, modular architecture, module federation, onboarding, pull requests, React, Jira, testing standards, and third-party theming. Plus 20 custom skills for development workflows.
+The odh-dashboard repository represents a **gold-standard** for quality practices in the OpenShift AI ecosystem. It features multi-layer testing (unit, mock Cypress, E2E with live clusters, contract tests), a Konflux build simulator for PR-time validation, comprehensive agent rules for AI-assisted development, and sophisticated CI/CD automation with 26 workflows. The few gaps are largely in the container security scanning and coverage enforcement areas.
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 8.5/10 | 753 test files, Jest framework, strong coverage across all workspace packages |
-| Integration/E2E | 9.0/10 | 235 Cypress files, 25 mocked areas, 21 E2E areas, contract tests in 9 modules |
-| **Build Integration** | **7.5/10** | **Kustomize validation, modular quality gates; no Konflux simulation** |
-| Image Testing | 6.5/10 | 11 Dockerfiles with multi-stage builds; no runtime validation or startup checks |
-| Coverage Tracking | 8.0/10 | Codecov with merged unit+Cypress coverage; informational mode only |
-| CI/CD Automation | 9.5/10 | 26 workflows, Tekton, concurrency control, caching, matrix strategies |
-| Agent Rules | 9.5/10 | 19 rules, 20 skills, AgentReady weekly assessment, comprehensive guidance |
+| Unit Tests | 9.0/10 | 891 test files, Jest + coverage, turbo parallelization |
+| Integration/E2E | 9.5/10 | 181 mock Cypress + 23 E2E groups + contract tests + cluster failover |
+| **Build Integration** | **9.5/10** | **PR-time Konflux simulator, hermetic build testing, kustomize validation** |
+| Image Testing | 8.5/10 | 13 Dockerfiles, multi-arch, but no runtime validation |
+| Coverage Tracking | 8.5/10 | Codecov with merged coverage, but informational-only enforcement |
+| CI/CD Automation | 9.5/10 | 26 workflows, concurrency control, turbo caching, matrix strategies |
+| Agent Rules | 10.0/10 | 20 rules, 23 skills, comprehensive architecture guidance |
 
 ## Critical Gaps
 
-### 1. No PR-Time Konflux Build Simulation
-- **Impact**: `Dockerfile` and `Dockerfile.konflux` can diverge (different base image pinning, different env vars, different build steps). Build failures in Konflux discovered only post-merge.
-- **Severity**: HIGH
-- **Effort**: 8-12 hours
-- **Evidence**: `Dockerfile` uses `ARG BASE_IMAGE` with build mode switching; `Dockerfile.konflux` hardcodes RHOAI env vars and pins a specific `ubi9/nodejs-22` digest. These can drift apart.
-
-### 2. No Container Image Runtime Validation
-- **Impact**: Node.js server startup failures, missing assets, broken module federation configs not caught until deployment to a cluster
-- **Severity**: HIGH
-- **Effort**: 6-8 hours
-- **Evidence**: No workflow step builds and starts the container image to verify health. 11 Dockerfiles × 0 runtime tests = significant risk surface.
-
-### 3. Security Scanning Not Wired Into CI
-- **Impact**: `semgrep.yaml` has comprehensive rules (generic secrets, TypeScript, Go, YAML, Kubernetes patterns) and `.gitleaks.toml` has allowlists configured — but neither is run in any GitHub workflow. Vulnerabilities detected only post-merge by external tools.
+### 1. Coverage Enforcement is Informational Only
+- **Impact**: Coverage regressions can merge without blocking the PR
 - **Severity**: MEDIUM
-- **Effort**: 4-6 hours (combined)
-- **Evidence**: `grep -rl "trivy\|snyk\|codeql\|semgrep\|gitleaks\|gosec" .github/workflows/` returns empty. The `semgrep.yaml` is a detailed 3.0.0 template covering 5 languages.
+- **Effort**: 30 minutes
+- **Details**: The `.codecov.yml` sets both `project` and `patch` status to `informational: true` with a 70% patch target. This means Codecov reports coverage but does not block merges when coverage drops.
+- **Fix**: Change `informational: true` to `informational: false` for the `patch` status
 
-### 4. Coverage Enforcement is Informational
-- **Impact**: The `.codecov.yml` sets `informational: true` for both project and patch status — coverage regressions don't block PRs
+### 2. No Container Runtime Validation
+- **Impact**: Image startup failures or misconfiguration not caught until deployment
 - **Severity**: MEDIUM
-- **Effort**: 30 minutes to toggle
-- **Evidence**: `.codecov.yml` lines: `informational: true` under both `project.default` and `patch.default`
+- **Effort**: 4-6 hours
+- **Details**: While the PR Build Validation workflow tests hermetic builds, it does not start the built container and validate it responds to health checks. The Dockerfile builds are verified but runtime behavior is not.
+
+### 3. No Automated SAST Pipeline
+- **Impact**: 1875-line semgrep.yaml exists but no CI workflow runs it automatically
+- **Severity**: MEDIUM
+- **Effort**: 2-3 hours
+- **Details**: The repository has an extensive `semgrep.yaml` configuration covering Go, TypeScript, Python, YAML, and generic secrets detection, but there is no GitHub Actions workflow that runs Semgrep on PRs. The rules need a workflow to be executed.
+
+### 4. No Container Image Vulnerability Scanning
+- **Impact**: Image CVEs discovered only at Konflux stage, not during PR review
+- **Severity**: MEDIUM
+- **Effort**: 2-3 hours
+- **Details**: Despite having gitleaks for secret detection, there is no Trivy, Snyk, or Grype scanning workflow for container images.
 
 ## Quick Wins
 
-### 1. Enable Semgrep in CI (1-2 hours)
-The `semgrep.yaml` file already exists with comprehensive rules. Add a workflow:
+### 1. Enforce Codecov Patch Coverage (30 minutes)
+Change `.codecov.yml`:
 ```yaml
-name: Semgrep
+patch:
+  default:
+    informational: false  # was: true
+    target: 70%
+```
+
+### 2. Add Semgrep CI Workflow (1-2 hours)
+Create `.github/workflows/semgrep.yml` to run the existing 1875-line semgrep rules on PRs:
+```yaml
+name: Semgrep SAST
 on: [pull_request]
 jobs:
-  scan:
+  semgrep:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -146,304 +144,313 @@ jobs:
           config: semgrep.yaml
 ```
 
-### 2. Enable Gitleaks in CI (1-2 hours)
-`.gitleaks.toml` is already configured with test file allowlists:
+### 3. Add Trivy Container Scanning (1-2 hours)
+Add a Trivy scan step to the PR Build Validation workflow after the Docker build:
 ```yaml
-name: Gitleaks
-on: [pull_request]
-jobs:
-  scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
-```
-
-### 3. Switch Codecov to Blocking (30 minutes)
-Change `.codecov.yml`:
-```yaml
-status:
-  patch:
-    default:
-      informational: false  # was: true
-      target: 70%
-```
-
-### 4. Add Trivy Scanning (2-3 hours)
-```yaml
-- name: Build image
-  run: docker build -t dashboard:test .
-- name: Run Trivy
+- name: Run Trivy vulnerability scanner
   uses: aquasecurity/trivy-action@master
   with:
-    image-ref: dashboard:test
-    severity: HIGH,CRITICAL
+    image-ref: 'odh-dashboard:pr-test'
+    severity: 'CRITICAL,HIGH'
+    exit-code: '1'
+```
+
+### 4. Add Container Smoke Test (2-3 hours)
+Add a step to PR Build Validation that starts the built container and validates health:
+```yaml
+- name: Container smoke test
+  run: |
+    docker run -d --name smoke-test -p 8080:8080 odh-dashboard:pr-test
+    sleep 5
+    curl -f http://localhost:8080/api/health || exit 1
+    docker stop smoke-test
 ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows (26 total)**:
+**Score: 9.5/10** - Exceptional
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| test.yml | push, PR | Main test suite: setup, type-check, lint, unit tests, contract tests, Cypress mock tests, coverage merge + Codecov upload |
-| cypress-e2e-test.yml | After test.yml on PRs | Live cluster E2E with failover (primary: dash-e2e-int, secondary: dash-e2e), smart test selection via PR labels and Turbo change detection |
-| dashboard-operator-tests.yml | push/PR (operator paths) | Go operator lint, build, test with coverage |
-| core-bff-build.yml | push/PR (core-bff paths) | Core BFF Go lint, build, test |
-| automl-bff-tests.yml | push/PR | AutoML BFF tests |
-| autorag-bff-tests.yml | push/PR | AutoRAG BFF tests |
-| eval-hub-bff-tests.yml | push/PR | EvalHub BFF tests |
-| gen-ai-bff-build.yml | push/PR | Gen AI BFF build + test |
-| gen-ai-frontend-build.yml | push/PR | Gen AI frontend test + build |
-| maas-bff-tests.yml | push/PR | MaaS BFF tests |
-| mlflow-bff-tests.yml | push/PR | MLflow BFF tests |
-| model-registry-bff-tests.yml | push/PR | Model Registry BFF tests |
-| model-registry-frontend-tests.yml | push/PR | Model Registry frontend tests |
-| eval-hub-frontend-tests.yml | push/PR | EvalHub frontend tests |
-| modular-arch-quality-gates.yml | PR (packages/**) | Per-module testing maturity assessment |
-| validate-kustomize.yml | push/PR (manifests/**) | RHOAI and ODH Kustomize build validation |
-| dependency-validation.yml | PR (package-lock.json) | npm audit diff: blocks PRs that introduce new HIGH advisories |
-| agentready-weekly.yml | Weekly schedule | AgentReady assessment, creates issue if score < 75% |
-| dependabot-auto-merge.yml | Dependabot PRs | Auto-merge minor/patch updates |
-| stale.yml | Daily schedule | Mark stale issues/PRs |
-| audit-bypass-notice.yml | PR label | Notification when audit bypass label is applied |
-| release-*.yml | workflow_dispatch | Release automation |
-| pr-image-expiry.yml | workflow_dispatch | PR image cleanup |
+The repository has 26 GitHub Actions workflows with sophisticated automation:
 
-**Strengths**:
-- Concurrency control on all major workflows (`cancel-in-progress: true`)
-- Aggressive caching: npm modules, Turbo cache, Cypress build cache
-- Matrix strategy for Cypress tests (auto-discovered test groups)
-- Smart test selection in E2E: PR labels, Turbo change detection, frontend area mapping
-- Cluster failover for E2E tests (primary/secondary cluster health checks)
-- Path-based triggering to avoid unnecessary runs
+**PR-Triggered Workflows (13)**:
+- `test.yml` - Main test pipeline (lint, type-check, unit tests, contract tests, Cypress mock tests, coverage upload)
+- `pr-build-validation.yml` - Konflux build simulator with hermetic build testing
+- `validate-kustomize.yml` - Kustomize manifest validation (RHOAI + ODH)
+- `dependency-validation.yml` - npm audit with base comparison (blocks new vulnerabilities)
+- `modular-arch-quality-gates.yml` - Per-module testing maturity assessment
+- 8 BFF/module-specific test workflows (automl, autorag, core, eval-hub, gen-ai, maas, mlflow, model-registry)
 
-**Tekton Pipelines**: 21 pipeline definitions in `.tekton/` for Konflux integration covering:
-- Main dashboard (pull-request, push)
-- Dashboard operator (pull-request, push)
-- Modular architecture packages: MaaS, agent-ops, AutoML, AutoRAG, EvalHub, GenAI, MLflow, Model Registry
-- Combined modular architecture pipeline
+**Periodic/Dispatch Workflows (6)**:
+- `agentready-weekly.yml` - Weekly agent readiness assessment
+- `cypress-e2e-test.yml` - E2E tests with cluster failover (dash-e2e-int primary, dash-e2e secondary)
+- `release-auto-merge.yml` - Sync main to ODH/RHOAI release branches
+- `release-odh-dashboard.yml` - Release automation
+- `stale.yml` - Stale issue/PR management
+- `pr-image-expiry.yml` - PR image cleanup
+
+**Key Strengths**:
+- Concurrency control on all PR workflows (`cancel-in-progress: true`)
+- Turbo caching for build and test parallelization
+- Dynamic test group discovery for Cypress (matrix strategy)
+- Path-filtered triggers (only run relevant tests for changed code)
+- npm audit comparison between base and head (blocks new vulnerabilities)
+- Module federation port validation on every commit
+- Tekton pipelines (22 files) for Konflux CI/CD
 
 ### Test Coverage
 
-**Test-to-Code Ratio Analysis**:
+**Score: 9.0/10** - Excellent
 
-| Component | Source Files | Test Files | Ratio | Framework |
-|-----------|-------------|------------|-------|-----------|
-| Frontend | 1,803 TS/TSX | 310 spec/test | 1:5.8 | Jest |
-| Backend | 99 TS | 6 spec/test | 1:16.5 | Jest |
-| Packages | — | 437 spec/test | — | Jest |
-| Cypress (mocked) | — | ~200 cy.ts | — | Cypress |
-| Cypress (E2E) | — | ~35 cy.ts | — | Cypress |
-| Go (operator) | ~200 .go | 223 _test.go | 1:0.9 | Go testing |
-| Contract Tests | — | 24 files | — | Custom + schema validation |
+**Unit Tests (331 frontend + 10 backend + 543 packages = 884 total)**:
+- Framework: Jest with TypeScript
+- Test-to-code ratio: 0.19 (891 test files / 4569 source files)
+- Coverage: Generated via `test-unit-coverage` with nyc aggregation
+- Organization: `__tests__` directories co-located with source
 
-**Notable**:
-- Backend test coverage is low (6 test files for 99 source files)
-- Go operator has excellent test coverage (nearly 1:1 test-to-code ratio)
-- Contract tests cover 9 separate modules: model-registry, mlflow, gen-ai, eval-hub, autorag, automl, agent-ops, core-bff, plus shared utilities
-- Coverage merge combines Jest unit + Cypress instrumented coverage into single Codecov report
+**Cypress Mock Tests (181 .cy.ts files, 25 test groups)**:
+- Framework: Cypress with TypeScript
+- Coverage: Istanbul instrumentation with `cypress:server:build:coverage`
+- Parallel execution: Dynamic matrix strategy based on test directory discovery
+- Groups: applications, clusterSettings, connectionTypes, customServingRuntimes, distributedWorkloads, featureStore, hardwareProfiles, home, modelRegistry, modelServing, modelTraining, pipelines, projects, and more
+
+**Cypress E2E Tests (23 test groups)**:
+- Run against live clusters with failover (primary: dash-e2e-int, secondary: dash-e2e)
+- Smart test selection via PR labels (`test:*`), auto-detection from turbo, and manual override
+- BFF support: auto-starts backend-for-frontend services for packages with `bffConfig.enabled`
+- Tags: `@ci-dashboard-regression-tags` always runs, plus package-specific tags
+
+**Contract Tests (23 files)**:
+- Framework: Custom schema validation + OpenAPI validation
+- Scope: BFF API contracts (model-registry, gen-ai, mlflow, core-bff)
+- Features: Schema conversion, HTML report generation, Go BFF consumer testing
+- Runs sequentially via turbo (`--concurrency=1`)
+
+**Dashboard Operator Tests (8 Go test files / 10 source files)**:
+- Framework: Go testing with envtest (controller-runtime)
+- Coverage: Reconciler tests, webhook tests, action tests, config tests, module tests
+- Excellent ratio: 8 test files for 10 source files (0.8 ratio)
 
 ### Code Quality
 
+**Score: 9.0/10** - Excellent
+
 **Linting**:
-- **ESLint**: Shared config via `@odh-dashboard/eslint-config` package with React TypeScript preset
-- **Prettier**: Configured (single quotes, trailing commas, 100 char width)
-- **golangci-lint v2.1.0**: Standard linters enabled for operator and BFF services
-- **Turbo**: Monorepo task runner for parallel lint/type-check/test across all packages
+- ESLint: Custom configuration with shared packages (`@odh-dashboard/eslint-config`, `@odh-dashboard/eslint-plugin`)
+- Prettier: Configured via `.prettierrc`
+- TypeScript: Strict type checking via `npm run type-check` (turbo)
+- Go: `golangci-lint` for dashboard-operator and BFF packages
 
 **Pre-commit Hooks**:
-- **Husky**: Pre-commit hook runs `lint-staged` on all staged files
-- Module federation port validation on `package.json` changes
-- Skip/force override with environment variables
-- Helpful error messages with fix instructions
+- Husky pre-commit hook with lint-staged
+- Module federation port validation on package.json changes
+- Detailed error messages with fix instructions
+- Skip/force override mechanisms (`SKIP_LINT_HOOK`, `FORCE_LINT_HOOK`)
 
 **Static Analysis**:
-- `semgrep.yaml`: Comprehensive rule set covering Go, Python, TypeScript, YAML, generic secrets — **NOT wired into CI**
-- `.gitleaks.toml`: Secret detection config with test file allowlists — **NOT wired into CI**
-- No CodeQL, Trivy, or Snyk integration in GitHub workflows
+- Semgrep: 1875-line unified configuration covering Go, TypeScript, Python, YAML, and generic secrets
+- Gitleaks: Configured with comprehensive allowlists for test files and known test credentials
+- CodeRabbit: "Assertive" profile with detailed path-specific review instructions
+- Dependency validation: npm audit with base comparison on PRs
+
+### Build Integration
+
+**Score: 9.5/10** - Exceptional
+
+**PR Build Validation (Konflux Simulator)** - This is a standout feature:
+1. **Phase 0: Hermetic Build Preflight**
+   - Validates lockfile for Hermeto/Cachi2 compatibility
+   - Tests hermetic npm install (offline mode in Docker)
+   - Validates workspace dependencies vs Dockerfile COPY statements
+   
+2. **Phase 1: Multi-Variant Docker Build**
+   - Builds multiple Dockerfile variants (Konflux, Sealights, dashboard-operator)
+   - Tests both RHOAI and ODH build modes
+   - Validates all distribution builds
+
+3. **Kustomize Validation**
+   - Validates manifests for both RHOAI and ODH overlays
+   - Pinned kustomize version with caching
+
+4. **Modular Architecture Quality Gates**
+   - Per-module testing maturity assessment
+   - Checks for unit tests, E2E tests, mock tests, contract tests
+   - RHOAI quality threshold (75%)
 
 ### Container Images
 
-**Dockerfiles (11 total)**:
-- `Dockerfile`: Multi-stage build with ODH/RHOAI build mode switching
-- `Dockerfile.konflux`: RHOAI-specific with pinned base image digest
-- `Dockerfile.konflux.*`: 9 variant Dockerfiles for modular architecture packages (agent-ops, automl, autorag, eval-hub, genai, maas, mlflow, modelregistry, sealights)
+**Score: 8.5/10** - Strong
 
-**Build Practices**:
+**Dockerfiles (13 total)**:
+- `Dockerfile` - Main development build
+- `Dockerfile.konflux` - RHOAI Konflux build (hermetic)
+- `Dockerfile.konflux.{agent-ops,automl,autorag,core-bff,eval-hub,genai,maas,mlflow,modelregistry}` - Module-specific builds
+- `Dockerfile.konflux.dashboard-operator` - Go operator build
+- `Dockerfile.konflux.sealights` - Sealights instrumented build
+
+**Build Features**:
 - Multi-stage builds (builder → runtime)
-- UBI9 Node.js 22 base image
-- Production dependency pruning via custom `prepare-production-manifest.js`
-- FIPS compliance: explicit removal of esbuild Go binaries
-- Sealights instrumentation variant for code coverage in deployed environments
+- UBI9 base images (Red Hat certified)
+- FIPS compliance (esbuild binary removal)
+- Production dependency pruning
+- Multi-architecture support via `docker buildx` (linux/s390x, linux/amd64, linux/ppc64le)
 
 **Gaps**:
-- No image startup validation in CI
-- No multi-architecture build testing
-- No container scanning workflow
-- Potential Dockerfile/Dockerfile.konflux drift (different base image strategies)
+- No container image vulnerability scanning (Trivy/Snyk)
+- No runtime validation (health check testing)
+- No SBOM generation in CI
 
 ### Security
 
-**Configured but not automated**:
-- `semgrep.yaml`: 30+ rules across 5 languages (comprehensive template v3.0.0)
-- `.gitleaks.toml`: Secret detection with smart allowlists for test fixtures
-- `.gitleaksignore`: Known false positive suppression
+**Score: 8.0/10** - Strong
 
-**Automated**:
-- `dependency-validation.yml`: npm audit diff on PR — blocks PRs introducing new HIGH/CRITICAL advisories
-- `audit-bypass-notice.yml`: Tracks when teams bypass audit with `ok-to-skip-audit` label
-- Sealights integration for runtime code coverage analysis
+**Implemented**:
+- Gitleaks configuration with comprehensive test file exclusions
+- Semgrep rules (1875 lines) covering secrets, injection, XSS, SSRF, path traversal
+- npm audit with base comparison (blocks new vulnerabilities)
+- CodeRabbit security-focused review instructions
+- Pin all GitHub Actions to commit SHAs (supply chain protection)
+- Dependency validation workflow
+- FIPS compliance in Docker builds
 
-**Missing**:
-- No Trivy/Snyk container scanning in CI
-- No CodeQL/SAST workflow
-- Semgrep and Gitleaks rules not executed in any workflow
+**Gaps**:
+- No GitHub Actions workflow runs semgrep/CodeQL automatically
+- No container image scanning (Trivy, Snyk, Grype)
+- No SBOM generation
+- No image signing/attestation
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status**: Exemplary — best-in-class across the ecosystem
+**Score: 10.0/10** - Gold Standard
 
-**Coverage** (19 rules):
-| Rule | Description |
-|------|-------------|
-| `architecture.md` | Monorepo package boundaries and BFF structure |
-| `bff-go.md` | BFF API patterns and Go conventions |
-| `contract-tests.md` | Contract test guidelines with BFF API validation |
-| `conventions.md` | TypeScript, React, PatternFly coding conventions |
-| `css-patternfly.md` | CSS and PatternFly v6 styling rules |
-| `cypress-e2e.md` | E2E test creation for live cluster testing |
-| `cypress-mock.md` | Mock test creation for isolated component testing |
-| `jira-creation.md` | Jira issue creation with RHOAIENG project formatting |
-| `modular-architecture.md` | Module Federation and plugin/extension system |
-| `module-federation.md` | Module exposure and consumption patterns |
-| `module-onboarding.md` | New module/package creation guide |
-| `operator-controller.md` | Go operator/controller-runtime patterns |
-| `pull-requests.md` | PR creation guidelines with template usage |
-| `react.md` | React component/hook/page conventions |
-| `security.md` | Auth, secrets, input validation, K8s API reviews |
-| `testing-standards.md` | Cross-cutting test type selection guidance |
-| `third-party-theming.md` | External library theming with PF tokens |
-| `unit-tests.md` | Jest unit test guidelines for utilities/hooks/components |
+This is the most comprehensive agent rules setup in the ecosystem.
 
-**Skills (20)**:
-- Development workflows: `dev-workflow`, `preflight`, `upstream-sync`, `upstream-sync-status`
-- Code review: `coderabbit-autofix`, `coderabbit-code-review`, `coderabbit-review`, `style-review`, `rbac-review`
-- Documentation: `docs-create`, `docs-create-package`, `docs-update`
-- Jira: `jira-assign-scrum-team`, `jira-eval-review`, `jira-evaluate-blockers`, `jira-triage`, `jira-validate-area-label`, `jira-validate-description`, `jira-validate-issue-type`, `jira-validate-priority-severity`
+**AGENTS.md / CLAUDE.md** (11,204 bytes):
+- Full repository structure documentation
+- Development requirements and key technologies
+- Common commands reference
+- Architecture guidance for the monorepo
 
-**Quality Assurance**:
-- Weekly AgentReady assessment with automatic issue creation on score regression
-- `AGENTS.md` with comprehensive monorepo overview, technology table, and command reference
-- `CLAUDE.md` for additional agent context
-- `BOOKMARKS.md` indexing key documentation areas
+**Agent Rules (20 files in `.claude/rules/`)**:
+| Rule | Purpose |
+|------|---------|
+| `unit-tests.md` (16,767 bytes) | Comprehensive unit test patterns with Jest |
+| `cypress-mock.md` (39,396 bytes) | Exhaustive Cypress mock test guide |
+| `cypress-e2e.md` (23,697 bytes) | E2E test patterns and infrastructure |
+| `contract-tests.md` (27,578 bytes) | BFF API contract testing guide |
+| `react.md` (14,448 bytes) | React component patterns |
+| `jira-creation.md` (20,911 bytes) | Jira issue creation standards |
+| `architecture.md` (6,390 bytes) | Monorepo architecture guide |
+| `bff-go.md` (6,113 bytes) | Go BFF development patterns |
+| `operator-controller.md` (9,556 bytes) | Dashboard operator testing |
+| `module-federation.md` (5,316 bytes) | Module federation patterns |
+| `modular-architecture.md` (5,540 bytes) | Modular architecture guide |
+| `module-onboarding.md` (8,046 bytes) | New module onboarding |
+| `distributions.md` (5,034 bytes) | Distribution build guide |
+| `css-patternfly.md` (7,794 bytes) | CSS and PatternFly patterns |
+| `conventions.md` (3,988 bytes) | Code conventions |
+| `security.md` (2,574 bytes) | Security guidelines |
+| `testing-standards.md` (3,172 bytes) | Testing standards overview |
+| `pull-requests.md` (1,222 bytes) | PR guidelines |
+| `third-party-theming.md` (3,290 bytes) | Theming guide |
+
+**Custom Skills (23 in `.claude/skills/`)**:
+- `preflight` - Pre-flight checks before commits
+- `upstream-sync` / `upstream-sync-status` - Upstream synchronization
+- `style-review` - Style review automation
+- `rbac-review` - RBAC configuration review
+- `module-onboarding` - Module onboarding automation
+- `jira-triage` / `jira-assign-scrum-team` / `jira-evaluate-blockers` - Jira workflow automation
+- `konflux-onboarding` - Konflux CI onboarding
+- `ci-flake-classifier` - CI flake detection
+- `coderabbit-autofix` / `coderabbit-code-review` / `coderabbit-review` - CodeRabbit integration
+- `dev-workflow` - Development workflow automation
+- `docs-create` / `docs-create-package` / `docs-update` - Documentation automation
+- And more...
+
+**Additional AI Tooling**:
+- `.coderabbit.yaml` - CodeRabbit configuration with assertive review profile
+- `.cursor/` directory - Cursor IDE configuration
+- `constitution.md` - AI agent behavior constitution
+- `claude-preflight.yml` - Claude agent preflight workflow
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-
-1. **Add PR-time Konflux Dockerfile build validation**
-   - Build `Dockerfile.konflux` in a CI workflow step to catch build divergence
-   - Compare build outputs between `Dockerfile` and `Dockerfile.konflux`
-   - Effort: 8-12 hours
-
-2. **Add container image runtime validation**
-   - Build image → start container → verify health endpoint → check for startup errors
-   - Cover at least the main `Dockerfile.konflux` and 2-3 modular variants
-   - Effort: 6-8 hours
+1. **Enforce Codecov coverage thresholds** - Change `informational: true` to `false` for patch coverage to prevent silent coverage decay (30 minutes)
+2. **Add container vulnerability scanning** - Add Trivy scanning to PR Build Validation workflow (2-3 hours)
 
 ### Priority 1 (High Value)
-
-3. **Wire Semgrep into CI**
-   - `semgrep.yaml` already has comprehensive rules — just add the workflow
-   - Effort: 1-2 hours
-
-4. **Wire Gitleaks into CI**
-   - `.gitleaks.toml` already configured — just add the workflow
-   - Effort: 1-2 hours
-
-5. **Add Trivy container scanning**
-   - Scan built images for CVEs before merge
-   - Effort: 2-3 hours
-
-6. **Switch Codecov to blocking mode**
-   - Change `informational: true` to `false` for patch coverage
-   - Effort: 30 minutes
-
-7. **Increase backend test coverage**
-   - 6 test files for 99 source files is significantly below the frontend ratio
-   - Effort: 20-30 hours (incremental)
+3. **Add SAST CI workflow** - Create a workflow to run the existing 1875-line semgrep rules on PRs (1-2 hours)
+4. **Add container runtime smoke test** - Validate built images start and serve health endpoint (2-3 hours)
+5. **Enable disabled quality gates** - Activate Mock Tests, Contract Testing, Bundle Size checks in `modular-arch-quality-gates.yml` (4-8 hours)
+6. **Add SBOM generation** - Add Syft/Trivy SBOM generation to Konflux builds (2-3 hours)
 
 ### Priority 2 (Nice-to-Have)
-
-8. **Enable disabled modular architecture quality gate checks**
-   - Mock tests, contract testing, API functional/performance, bundle size monitoring are all defined but disabled
-   - Effort: Variable per check
-
-9. **Add performance regression testing**
-   - Dashboard page load time benchmarks (Lighthouse CI or similar)
-   - Effort: 8-12 hours
-
-10. **Add multi-architecture image build testing**
-    - Verify ARM64 builds alongside AMD64
-    - Effort: 4-6 hours
+7. **Add accessibility testing** - Integrate axe-core into Cypress test suite (4-8 hours)
+8. **Add visual regression testing** - Implement screenshot comparison for UI components (8-16 hours)
+9. **Add API performance regression testing** - Track BFF response times over time (8-16 hours)
+10. **Add bundle size tracking** - Track frontend bundle size regressions per PR (2-4 hours)
 
 ## Comparison to Gold Standards
 
-| Dimension | odh-dashboard | Gold Standard (odh-dashboard itself IS the gold standard for many) | Notes |
-|-----------|--------------|-------------------------------------------------------------------|-------|
-| Unit Tests | 8.5 | 9.0 (kserve: coverage enforcement) | Backend test coverage gap |
-| Integration/E2E | 9.0 | 9.0 (odh-dashboard) | Contract tests + E2E with cluster failover is best-in-class |
-| Build Integration | 7.5 | 9.0 (notebooks: 5-layer validation) | Missing Konflux simulation |
-| Image Testing | 6.5 | 9.0 (notebooks: runtime validation) | No startup/runtime checks |
-| Coverage Tracking | 8.0 | 9.0 (kserve: enforced thresholds) | Informational only |
-| CI/CD Automation | 9.5 | 9.5 (odh-dashboard) | Exemplary workflow organization |
-| Agent Rules | 9.5 | 9.5 (odh-dashboard) | Sets the standard for the ecosystem |
+| Dimension | odh-dashboard | notebooks | kserve | Industry Best |
+|-----------|:---:|:---:|:---:|:---:|
+| Unit Tests | 9.0 | 6.0 | 8.0 | 9.0 |
+| Integration/E2E | 9.5 | 7.0 | 8.0 | 9.0 |
+| Build Integration | 9.5 | 6.0 | 5.0 | 8.0 |
+| Image Testing | 8.5 | 9.0 | 6.0 | 9.0 |
+| Coverage Tracking | 8.5 | 5.0 | 8.0 | 9.0 |
+| CI/CD Automation | 9.5 | 7.0 | 8.0 | 9.0 |
+| Agent Rules | 10.0 | 2.0 | 3.0 | 7.0 |
+| **Overall** | **9.2** | **6.0** | **6.7** | **8.7** |
 
-**odh-dashboard IS the gold standard** for agent rules, CI/CD organization, and multi-layer testing strategy. The gaps are concentrated in container image lifecycle (build simulation, runtime validation, security scanning) — areas where the `notebooks` repository excels.
+odh-dashboard **exceeds** the industry best practice in several dimensions, particularly in Build Integration (Konflux simulator) and Agent Rules. It **sets the gold standard** for AI-assisted development practices and PR-time build validation in the OpenShift AI ecosystem.
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/test.yml` — Main test suite (lint, type-check, unit, Cypress mock, contract, coverage)
-- `.github/workflows/cypress-e2e-test.yml` — Live cluster E2E with failover
-- `.github/workflows/modular-arch-quality-gates.yml` — Per-module testing maturity
-- `.github/workflows/validate-kustomize.yml` — Kustomize manifest validation
-- `.github/workflows/dependency-validation.yml` — npm audit diff
-- `.github/workflows/dashboard-operator-tests.yml` — Go operator tests
-- `.github/workflows/*-bff-*.yml` — BFF service test workflows (7 total)
-- `.tekton/` — 21 Tekton pipeline definitions
+- `.github/workflows/test.yml` - Main test pipeline
+- `.github/workflows/pr-build-validation.yml` - Konflux build simulator
+- `.github/workflows/cypress-e2e-test.yml` - E2E tests with cluster failover
+- `.github/workflows/modular-arch-quality-gates.yml` - Module quality gates
+- `.github/workflows/validate-kustomize.yml` - Manifest validation
+- `.github/workflows/dependency-validation.yml` - npm audit comparison
+- `.github/workflows/dashboard-operator-tests.yml` - Operator tests
+- `.github/workflows/{automl,autorag,core,eval-hub,gen-ai,maas,mlflow,model-registry}-bff-tests.yml` - BFF tests
+- `.tekton/` - 22 Tekton pipeline configurations
 
 ### Testing
-- `frontend/src/` — 310 Jest test files
-- `backend/src/` — 6 Jest test files
-- `packages/*/` — 437 Jest test files across feature packages
-- `packages/cypress/cypress/tests/mocked/` — 25 mocked test areas
-- `packages/cypress/cypress/tests/e2e/` — 21 E2E test areas
-- `packages/*/contract-tests/` — Contract tests in 9 modules
-- `dashboard-operator/` — 223 Go test files
+- `frontend/src/` - 331 unit test files (Jest)
+- `backend/src/__tests__/` - 10 backend test files
+- `packages/*/` - 543 package test files
+- `packages/cypress/cypress/tests/mocked/` - 25 mock test groups (181 .cy.ts files)
+- `packages/cypress/cypress/tests/e2e/` - 23 E2E test groups
+- `packages/contract-tests/` - Contract test framework (23 files)
+- `dashboard-operator/` - 8 Go test files (envtest)
 
 ### Code Quality
-- `.eslintrc.js` — Root ESLint config (shared config package)
-- `.prettierrc` — Prettier config
-- `semgrep.yaml` — Comprehensive Semgrep rules (NOT in CI)
-- `.gitleaks.toml` — Gitleaks config (NOT in CI)
-- `.husky/pre-commit` — lint-staged + port validation
-- `dashboard-operator/.golangci.yml` — Go linter config
+- `.eslintrc.js` - ESLint configuration
+- `.prettierrc` - Prettier configuration
+- `.husky/pre-commit` - Pre-commit hooks with lint-staged
+- `semgrep.yaml` - 1875-line Semgrep rules
+- `.gitleaks.toml` - Gitleaks configuration
+- `.coderabbit.yaml` - CodeRabbit review configuration
+- `turbo.jsonc` - Turbo monorepo configuration
 
 ### Container Images
-- `Dockerfile` — Main build with ODH/RHOAI mode switching
-- `Dockerfile.konflux` — RHOAI Konflux build with pinned digest
-- `Dockerfile.konflux.*` — 9 modular architecture variants
-- `.codecov.yml` — Coverage config (informational mode)
+- `Dockerfile` - Main development build
+- `Dockerfile.konflux` - RHOAI Konflux build
+- `Dockerfile.konflux.*` - 11 module-specific Konflux builds
+- `.dockerignore` - Docker build exclusions
+
+### Coverage
+- `.codecov.yml` - Codecov configuration (informational mode)
 
 ### Agent Rules
-- `CLAUDE.md` — Root agent context
-- `AGENTS.md` — Comprehensive monorepo guide
-- `.claude/rules/` — 19 detailed rules
-- `.claude/skills/` — 20 custom skills
-- `.github/workflows/agentready-weekly.yml` — Weekly AgentReady assessment
+- `AGENTS.md` / `CLAUDE.md` - Repository documentation for AI agents
+- `.claude/rules/` - 20 agent rule files
+- `.claude/skills/` - 23 custom Claude skills
+- `.claude/commands/` - 3 custom Claude commands
+- `constitution.md` - AI agent behavior constitution

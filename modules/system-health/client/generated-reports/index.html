@@ -45,7 +45,7 @@
 <body>
   <div class="card">
     <h1>Quality Analysis (334 Repos)</h1>
-    <p><strong>Generated:</strong> 2026-06-10 18:26:42</p>
+    <p><strong>Generated:</strong> 2026-07-01 20:55:05</p>
     <p><strong>Average score:</strong> 5.0/10</p>
     <p>Quality analysis of 334 repositories.</p>
   </div>
@@ -65,6 +65,14 @@
       </thead>
       <tbody>
             <tr>
+              <td><a href="quality-report-red-hat-data-services-odh-dashboard.html">red-hat-data-services/odh-dashboard</a></td>
+              <td><a href="https://github.com/red-hat-data-services/odh-dashboard" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Core Dashboard</td>
+              <td>9.2/10</td>
+              <td>Coverage enforcement is informational only, No container runtime validation in CI</td>
+            </tr>
+            <tr>
               <td><a href="quality-report-openclaw-openclaw.html">openclaw/openclaw</a></td>
               <td><a href="https://github.com/openclaw/openclaw" target="_blank">GitHub</a></td>
               <td>upstream</td>
@@ -78,7 +86,7 @@
               <td>midstream</td>
               <td>AI Core Dashboard</td>
               <td>9.1/10</td>
-              <td>No container image vulnerability scanning in CI, No PR-time Konflux build simulation</td>
+              <td>No container vulnerability scanning (Trivy/Snyk) in PR or periodic CI, No CodeQL/SAST scanning workflow</td>
             </tr>
             <tr>
               <td><a href="quality-report-kubernetes-sigs-kueue.html">kubernetes-sigs/kueue</a></td>
@@ -111,14 +119,6 @@
               <td>Notebooks Server</td>
               <td>8.7/10</td>
               <td>Coverage thresholds are informational only, No SBOM generation or image signing in GHA pipeline</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-red-hat-data-services-odh-dashboard.html">red-hat-data-services/odh-dashboard</a></td>
-              <td><a href="https://github.com/red-hat-data-services/odh-dashboard" target="_blank">GitHub</a></td>
-              <td>downstream</td>
-              <td>AI Core Dashboard</td>
-              <td>8.7/10</td>
-              <td>No PR-time Konflux build simulation, No container image runtime validation</td>
             </tr>
             <tr>
               <td><a href="quality-report-BerriAI-litellm.html">BerriAI/litellm</a></td>
