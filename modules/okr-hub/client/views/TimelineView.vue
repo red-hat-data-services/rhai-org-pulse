@@ -48,6 +48,7 @@
         <table class="w-full text-sm border-collapse">
           <thead>
             <tr class="bg-gray-50 dark:bg-gray-800/80 border-b border-gray-200 dark:border-gray-700">
+              <th class="px-3 py-3 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-10">#</th>
               <th class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-48">Objective</th>
               <th class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-56">Measure of Success</th>
               <th
@@ -58,37 +59,60 @@
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="obj in category.objectives"
-              :key="obj.id"
-              class="border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
-              @click="navigateToDeepDive(obj.id)"
-            >
-              <td class="px-4 py-3">
-                <span class="font-semibold text-gray-900 dark:text-gray-100 text-sm">{{ obj.name }}</span>
-              </td>
-              <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 whitespace-pre-line leading-relaxed">
-                {{ obj.measure }}
-              </td>
-              <td
-                v-for="q in quarters"
-                :key="q"
-                class="px-3 py-3 text-center"
+            <template v-for="(obj, objIdx) in category.objectives" :key="obj.id">
+              <!-- Single-row objectives (1 KR or no per-KR quarters) -->
+              <tr
+                v-if="!hasMultiKrRows(obj)"
+                class="border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
+                @click="navigateToDeepDive(obj.id)"
               >
-                <div
-                  v-if="obj.quarters[q]"
-                  class="rounded-lg px-2 py-2 min-h-[3rem] flex items-center justify-center"
-                  :class="statusConfig[obj.quarters[q].status].bg"
+                <td class="px-3 py-3 text-center text-xs font-bold text-gray-400 dark:text-gray-500">{{ objIdx + 1 }}</td>
+                <td class="px-4 py-3">
+                  <span class="font-semibold text-gray-900 dark:text-gray-100 text-sm">{{ obj.name }}</span>
+                </td>
+                <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 whitespace-pre-line leading-relaxed">
+                  {{ obj.measure }}
+                </td>
+                <td v-for="q in quarters" :key="q" class="px-3 py-3 text-center">
+                  <div
+                    v-if="obj.quarters[q]"
+                    class="rounded-lg px-2 py-2 min-h-[3rem] flex items-center justify-center"
+                    :class="statusConfig[obj.quarters[q].status].bg"
+                  >
+                    <span v-if="obj.quarters[q].summary" class="text-[11px] font-medium leading-tight whitespace-pre-line" :class="statusConfig[obj.quarters[q].status].text">{{ obj.quarters[q].summary }}</span>
+                    <span v-else class="text-xs text-gray-300 dark:text-gray-600">—</span>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Multi-row objectives (separate row per KR) -->
+              <template v-if="hasMultiKrRows(obj)">
+                <tr
+                  v-for="(kr, krIdx) in obj.keyResults"
+                  :key="kr.id"
+                  class="border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
+                  @click="navigateToDeepDive(obj.id)"
                 >
-                  <span
-                    v-if="obj.quarters[q].summary"
-                    class="text-[11px] font-medium leading-tight whitespace-pre-line"
-                    :class="statusConfig[obj.quarters[q].status].text"
-                  >{{ obj.quarters[q].summary }}</span>
-                  <span v-else class="text-xs text-gray-300 dark:text-gray-600">—</span>
-                </div>
-              </td>
-            </tr>
+                  <td v-if="krIdx === 0" class="px-3 py-3 text-center align-top text-xs font-bold text-gray-400 dark:text-gray-500" :rowspan="obj.keyResults.length">{{ objIdx + 1 }}</td>
+                  <td v-if="krIdx === 0" class="px-4 py-3 align-top" :rowspan="obj.keyResults.length">
+                    <span class="font-semibold text-gray-900 dark:text-gray-100 text-sm">{{ obj.name }}</span>
+                  </td>
+                  <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                    {{ kr.description }}
+                  </td>
+                  <td v-for="q in quarters" :key="q" class="px-3 py-3 text-center">
+                    <div
+                      v-if="kr.quarters && kr.quarters[q]"
+                      class="rounded-lg px-2 py-2 min-h-[3rem] flex items-center justify-center"
+                      :class="statusConfig[kr.quarters[q].status].bg"
+                    >
+                      <span v-if="kr.quarters[q].summary" class="text-[11px] font-medium leading-tight whitespace-pre-line" :class="statusConfig[kr.quarters[q].status].text">{{ kr.quarters[q].summary }}</span>
+                      <span v-else class="text-xs text-gray-300 dark:text-gray-600">—</span>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </template>
           </tbody>
         </table>
       </div>
@@ -125,6 +149,14 @@ function isCategoryOpen(name) {
 
 function toggleCategory(name) {
   openCategories[name] = !openCategories[name]
+}
+
+function hasMultiKrRows(obj) {
+  if (!obj.keyResults || obj.keyResults.length < 2) return false
+  for (var i = 0; i < obj.keyResults.length; i++) {
+    if (obj.keyResults[i].quarters) return true
+  }
+  return false
 }
 
 function navigateToDeepDive(objectiveId) {
