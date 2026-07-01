@@ -54,7 +54,7 @@
   "devDependencies": {
     "@apidevtools/swagger-parser": "^12.1.0",
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "1.60.0",
+    "@playwright/test": "1.61.1",
     "@tailwindcss/typography": "^0.5.20",
     "@vitejs/plugin-vue": "^6.0.7",
     "@vue/test-utils": "^2.4.11",
