@@ -67,7 +67,7 @@
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
     "lint-staged": "^17.0.7",
-    "postcss": "^8.4.49",
+    "postcss": "^8.5.16",
     "puppeteer": "^24.38.0",
     "tailwindcss": "^3.4.17",
     "vite": "^8.1.0",
