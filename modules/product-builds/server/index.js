@@ -40,9 +40,8 @@ function getConfig(readFromStorage) {
 }
 
 module.exports = function registerRoutes(router, context) {
-  const { storage, requireAdmin } = context;
+  const { storage, requireAdmin, RefreshSkip } = context;
   const { readFromStorage, writeToStorage } = storage;
-  const { RefreshSkip } = require('../../../shared/server/refresh-registry');
 
   // --- Config routes (admin) ---
 

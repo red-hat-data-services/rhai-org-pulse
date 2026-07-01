@@ -604,11 +604,7 @@ context.registerRefresh('package-analysis', {
 
 Without `RefreshSkip`, a bare `return` counts as a success — `lastSuccessfulRun` advances to now and the 24h cadence starts over, meaning the handler won't run again until the next day even though it never produced data.
 
-`RefreshSkip` is available as `context.RefreshSkip` or via direct import:
-
-```javascript
-const { RefreshSkip } = require('../../shared/server/refresh-registry')
-```
+`RefreshSkip` is available on the module context as `context.RefreshSkip`. Prefer this over a direct `require` to stay consistent with the module context pattern.
 
 Existing handlers that return `{ status: 'skipped', reason: '...' }` are also recognized as skips automatically via a legacy compatibility bridge.
 
