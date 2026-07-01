@@ -1,0 +1,30 @@
+{
+  "name": "OKR Hub",
+  "slug": "okr-hub",
+  "description": "Track and manage OKRs (Objectives and Key Results) across teams",
+  "icon": "Target",
+  "order": 7,
+  "defaultEnabled": true,
+  "requires": ["releases"],
+  "secrets": {
+    "platform": ["jira", "google"]
+  },
+  "client": {
+    "entry": "./client/index.js",
+    "navItems": [
+      { "id": "timeline", "label": "Timeline", "icon": "BarChart3", "default": true },
+      { "id": "reports", "label": "Reports", "icon": "BarChart3" }
+    ]
+  },
+  "server": {
+    "entry": "./server/index.js"
+  },
+  "export": {
+    "hook": "./server/export.js",
+    "files": [
+      { "path": "okr-hub/cve-sla-data.json", "notes": "CVE SLA compliance data (products x months)" },
+      { "path": "okr-hub/on-time-overrides.json", "notes": "Custom release overrides for on-time report" },
+      { "path": "okr-hub/support-case-data.json", "notes": "Support case resolution data by quarter and product" }
+    ]
+  }
+}
