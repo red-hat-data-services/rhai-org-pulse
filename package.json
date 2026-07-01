@@ -35,7 +35,7 @@
     "chart.js": "^4.4.7",
     "compression": "^1.8.1",
     "dompurify": "^3.4.11",
-    "driver.js": "^1.5.0",
+    "driver.js": "^1.6.0",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "googleapis": "^173.0.0",
