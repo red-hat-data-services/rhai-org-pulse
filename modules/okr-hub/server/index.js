@@ -749,11 +749,15 @@ function parseNum(val) {
 
 function parsePct(val) {
   if (val == null || val === '') return null
-  if (typeof val === 'number') return Math.round(val * (val < 1 ? 100 : 1))
+  if (typeof val === 'number') {
+    // Google Sheets UNFORMATTED_VALUE returns percentages as decimals (0-1)
+    return Math.round(val <= 1 ? val * 100 : val)
+  }
   var s = String(val).replace('%', '').trim()
   var n = parseFloat(s)
   if (isNaN(n)) return null
-  return Math.round(n < 1 && n > 0 ? n * 100 : n)
+  // String values with '%' stripped: if already 0-100 range, use as-is; if 0-1, convert
+  return Math.round(n <= 1 ? n * 100 : n)
 }
 
 function getSampleContentData() {
