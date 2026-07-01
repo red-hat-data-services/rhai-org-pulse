@@ -23,7 +23,8 @@
   "export": {
     "hook": "./server/export.js",
     "files": [
-      { "path": "okr-hub/cve-sla-data.json", "notes": "CVE SLA compliance data (products x months)" }
+      { "path": "okr-hub/cve-sla-data.json", "notes": "CVE SLA compliance data (products x months)" },
+      { "path": "okr-hub/on-time-overrides.json", "notes": "Custom release overrides for on-time report" }
     ]
   }
 }

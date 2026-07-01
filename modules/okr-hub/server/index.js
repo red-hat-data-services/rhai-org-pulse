@@ -64,17 +64,35 @@ module.exports = function registerRoutes(router, context) {
     try {
       var since = req.query.since || '2026-04-01'
 
-      var registry = storage.readFromStorage('releases/registry.json')
-      if (!registry || !Array.isArray(registry.releases)) {
-        return res.json({ releases: [], summary: { total: 0, onTime: 0, late: 0, upcoming: 0, pct: 0 }, fetchedAt: new Date().toISOString() })
+      var overrides = storage.readFromStorage('okr-hub/on-time-overrides.json')
+      var overrideMap = {}
+      var removedIds = {}
+      var customReleases = []
+      if (overrides && Array.isArray(overrides.releases)) {
+        for (var oi = 0; oi < overrides.releases.length; oi++) {
+          var ov = overrides.releases[oi]
+          if (ov.removed) { removedIds[ov.id] = true; continue }
+          if (ov.custom) { customReleases.push(ov); continue }
+          overrideMap[ov.id] = ov
+        }
       }
 
+      var registry = storage.readFromStorage('releases/registry.json')
+      var registryReleases = (registry && Array.isArray(registry.releases)) ? registry.releases : []
+
       var candidates = []
-      for (var i = 0; i < registry.releases.length; i++) {
-        var rel = registry.releases[i]
+      for (var i = 0; i < registryReleases.length; i++) {
+        var rel = registryReleases[i]
+        if (removedIds[rel.id]) continue
         var ga = rel.milestones && rel.milestones.ga
         if (!ga || ga < since) continue
         if (isEaRelease(rel.id)) continue
+        if (overrideMap[rel.id]) {
+          var ovr = overrideMap[rel.id]
+          rel = Object.assign({}, rel, { milestones: Object.assign({}, rel.milestones, { ga: ovr.plannedGa || rel.milestones.ga }) })
+          rel._overrideActualGa = ovr.actualGa || null
+          rel._overrideDisplayName = ovr.displayName || null
+        }
         candidates.push(rel)
       }
 
@@ -90,16 +108,18 @@ module.exports = function registerRoutes(router, context) {
       for (var ri = 0; ri < candidates.length; ri++) {
         var release = candidates[ri]
         var plannedGa = release.milestones.ga
-        var actualGa = null
-        var released = false
+        var actualGa = release._overrideActualGa || null
+        var released = !!actualGa
 
-        var fvList = release.fixVersions || []
-        for (var fvi = 0; fvi < fvList.length; fvi++) {
-          var match = jiraVersionMap[fvList[fvi].toLowerCase()]
-          if (match && match.released && match.releaseDate) {
-            actualGa = match.releaseDate
-            released = true
-            break
+        if (!actualGa) {
+          var fvList = release.fixVersions || []
+          for (var fvi = 0; fvi < fvList.length; fvi++) {
+            var match = jiraVersionMap[fvList[fvi].toLowerCase()]
+            if (match && match.released && match.releaseDate) {
+              actualGa = match.releaseDate
+              released = true
+              break
+            }
           }
         }
 
@@ -115,12 +135,39 @@ module.exports = function registerRoutes(router, context) {
 
         results.push({
           id: release.id,
-          displayName: release.displayName,
+          displayName: release._overrideDisplayName || release.displayName,
           plannedGa: plannedGa,
           actualGa: actualGa,
           released: released,
           onTime: onTime,
-          daysLate: daysLate
+          daysLate: daysLate,
+          custom: false
+        })
+      }
+
+      for (var ci = 0; ci < customReleases.length; ci++) {
+        var cr = customReleases[ci]
+        if (removedIds[cr.id]) continue
+        if (!cr.plannedGa || cr.plannedGa < since) continue
+        var crReleased = !!cr.actualGa
+        var crOnTime = null
+        var crDaysLate = null
+        if (crReleased && cr.actualGa) {
+          var crPlanned = new Date(cr.plannedGa + 'T00:00:00Z')
+          var crActual = new Date(cr.actualGa + 'T00:00:00Z')
+          var crDiffMs = crActual.getTime() - crPlanned.getTime()
+          crDaysLate = Math.ceil(crDiffMs / (1000 * 60 * 60 * 24))
+          crOnTime = crDaysLate <= 0
+        }
+        results.push({
+          id: cr.id,
+          displayName: cr.displayName,
+          plannedGa: cr.plannedGa,
+          actualGa: cr.actualGa || null,
+          released: crReleased,
+          onTime: crOnTime,
+          daysLate: crDaysLate,
+          custom: true
         })
       }
 
@@ -156,6 +203,50 @@ module.exports = function registerRoutes(router, context) {
       })
     } catch (err) {
       console.error('[okr-hub] on-time-releases error:', err)
+      res.status(500).json({ error: err.message })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/modules/okr-hub/reports/on-time-releases/overrides:
+   *   get:
+   *     tags: [OKR Hub]
+   *     summary: Get custom release overrides
+   *     responses:
+   *       200:
+   *         description: Override entries
+   */
+  router.get('/reports/on-time-releases/overrides', requireScope('okr-hub:read'), function(req, res) {
+    var saved = storage.readFromStorage('okr-hub/on-time-overrides.json')
+    res.json(saved || { releases: [] })
+  })
+
+  /**
+   * @openapi
+   * /api/modules/okr-hub/reports/on-time-releases/overrides:
+   *   put:
+   *     tags: [OKR Hub]
+   *     summary: Save custom release overrides
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema: { type: object }
+   *     responses:
+   *       200:
+   *         description: Saved
+   */
+  router.put('/reports/on-time-releases/overrides', requireScope('okr-hub:write'), function(req, res) {
+    try {
+      var body = req.body
+      if (!body || !Array.isArray(body.releases)) {
+        return res.status(400).json({ error: 'Invalid payload: requires releases array' })
+      }
+      storage.writeToStorage('okr-hub/on-time-overrides.json', body)
+      res.json({ ok: true })
+    } catch (err) {
+      console.error('[okr-hub] on-time-overrides save error:', err)
       res.status(500).json({ error: err.message })
     }
   })

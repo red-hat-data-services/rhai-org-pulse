@@ -7,4 +7,13 @@ module.exports = async function okrHubExport(addFile, storage) {
       months: {}
     })
   }
+
+  var overrides = storage.readFromStorage('okr-hub/on-time-overrides.json')
+  if (overrides) {
+    addFile('okr-hub/on-time-overrides.json', {
+      releases: (overrides.releases || []).map(function(r) {
+        return { id: r.id, displayName: 'Release', plannedGa: r.plannedGa, actualGa: r.actualGa, custom: r.custom || false, removed: r.removed || false }
+      })
+    })
+  }
 }
