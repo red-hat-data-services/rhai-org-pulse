@@ -58,17 +58,19 @@ export var OKR_DATA = {
         {
           id: 'support-cases',
           name: 'Support Case Time to Resolution',
-          measure: 'Defect Rate for Product: 10% | Time to Resolution Target: 10-14 days',
+          measure: 'Defect Rate for Product: 10%\nTime to Resolution Target: 10-14 days',
           quarters: { Q1: emptyQuarter(), Q2: emptyQuarter(), Q3: emptyQuarter(), Q4: emptyQuarter() },
           keyResults: [
-            { id: 'kr-sc-1', label: 'KR1', description: 'Defect rate for product: 10%', status: 'not-started' },
-            { id: 'kr-sc-2', label: 'KR2', description: 'Time to resolution target: 10-14 days', status: 'not-started' }
+            { id: 'kr-sc-rhoai', label: 'RHOAI', description: 'RHOAI', quarters: { Q1: emptyQuarter(), Q2: emptyQuarter(), Q3: emptyQuarter(), Q4: emptyQuarter() } },
+            { id: 'kr-sc-rhelai', label: 'RHEL-AI', description: 'RHEL AI', quarters: { Q1: emptyQuarter(), Q2: emptyQuarter(), Q3: emptyQuarter(), Q4: emptyQuarter() } },
+            { id: 'kr-sc-rhaii', label: 'RHAII', description: 'RHAIIS', quarters: { Q1: emptyQuarter(), Q2: emptyQuarter(), Q3: emptyQuarter(), Q4: emptyQuarter() } }
           ]
         },
         {
           id: 'open-source-leadership',
           name: 'Open Source Leadership',
           measure: 'RH wants to be the open source leader in AI - Investment areas identified.',
+          editable: true,
           quarters: { Q1: emptyQuarter(), Q2: emptyQuarter(), Q3: emptyQuarter(), Q4: emptyQuarter() },
           keyResults: [
             { id: 'kr-osl-1', label: 'KR1', description: 'Upstream contributions and community engagement targets', status: 'not-started' }
@@ -98,6 +100,7 @@ export var OKR_DATA = {
           id: 'adoption-of-ai',
           name: 'Adoption of AI',
           measure: '100% of AI Eng teams using RFE Builder/Ambient Platform as part of the daily release process',
+          editable: true,
           quarters: { Q1: emptyQuarter(), Q2: emptyQuarter(), Q3: emptyQuarter(), Q4: emptyQuarter() },
           keyResults: [
             { id: 'kr-aai-1', label: 'KR1', description: '100% of AI Eng teams using RFE Builder/Ambient Platform as part of the daily release process', status: 'not-started' }

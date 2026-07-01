@@ -74,23 +74,44 @@
                   {{ obj.measure }}
                 </td>
                 <td v-for="q in quarters" :key="q" class="px-3 py-3 text-center">
-                  <!-- Editable text input for objectives like Associate Well Being -->
-                  <div v-if="obj.editable">
+                  <!-- Editable text input with color picker on focus -->
+                  <div
+                    v-if="obj.editable && canEdit"
+                    class="rounded-lg px-2 py-2"
+                    :class="obj.quarters[q] && obj.quarters[q].status !== 'not-started' ? statusConfig[obj.quarters[q].status].bg : 'bg-gray-50 dark:bg-gray-800/30'"
+                    @click.stop
+                  >
+                    <div v-if="editableFocus[obj.id + '-' + q]" class="flex items-center gap-1 mb-1.5 justify-center">
+                      <button
+                        v-for="s in editableStatuses"
+                        :key="s.key"
+                        class="w-4 h-4 rounded-full border-2 transition-all"
+                        :class="[
+                          s.dot,
+                          (obj.quarters[q] && obj.quarters[q].status === s.key) || (!obj.quarters[q] && s.key === 'not-started')
+                            ? 'border-gray-800 dark:border-white scale-110 ring-1 ring-gray-400'
+                            : 'border-transparent opacity-60 hover:opacity-100'
+                        ]"
+                        :title="s.label"
+                        @mousedown.prevent="updateEditableStatus(obj.id, q, s.key)"
+                      />
+                    </div>
                     <textarea
                       :value="obj.quarters[q] ? obj.quarters[q].summary : ''"
                       @input="updateEditableQuarter(obj.id, q, $event.target.value)"
-                      @blur="saveEditableData()"
-                      class="w-full text-[11px] leading-relaxed text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-2 min-h-[5.5rem] resize-y focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+                      @focus="editableFocus[obj.id + '-' + q] = true"
+                      @blur="editableFocus[obj.id + '-' + q] = false; saveEditableData()"
+                      class="w-full text-[11px] leading-relaxed text-gray-700 dark:text-gray-300 bg-transparent border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-2 min-h-[5rem] resize-y focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
                       style="word-wrap: break-word; overflow-wrap: break-word; white-space: pre-wrap;"
                       placeholder="Enter status..."
-                      @click.stop
                     />
                   </div>
-                  <!-- Read-only status box -->
+                  <!-- Read-only status box (clickable if linked to a report) -->
                   <div
                     v-else-if="obj.quarters[q]"
                     class="rounded-lg px-2 py-2 min-h-[3rem] flex items-center justify-center"
-                    :class="statusConfig[obj.quarters[q].status].bg"
+                    :class="[statusConfig[obj.quarters[q].status].bg, reportMap[obj.id] ? 'cursor-pointer hover:ring-2 hover:ring-primary-400 transition-all' : '']"
+                    @click.stop="reportMap[obj.id] ? navigateToReport(reportMap[obj.id]) : null"
                   >
                     <span v-if="obj.quarters[q].summary" class="text-[11px] font-medium leading-tight whitespace-pre-line" :class="statusConfig[obj.quarters[q].status].text">{{ obj.quarters[q].summary }}</span>
                     <span v-else class="text-xs text-gray-300 dark:text-gray-600">—</span>
@@ -117,7 +138,8 @@
                     <div
                       v-if="kr.quarters && kr.quarters[q]"
                       class="rounded-lg px-2 py-2 min-h-[3rem] flex items-center justify-center"
-                      :class="statusConfig[kr.quarters[q].status].bg"
+                      :class="[statusConfig[kr.quarters[q].status].bg, reportMap[obj.id] ? 'cursor-pointer hover:ring-2 hover:ring-primary-400 transition-all' : '']"
+                      @click.stop="reportMap[obj.id] ? navigateToReport(reportMap[obj.id]) : null"
                     >
                       <span v-if="kr.quarters[q].summary" class="text-[11px] font-medium leading-tight whitespace-pre-line" :class="statusConfig[kr.quarters[q].status].text">{{ kr.quarters[q].summary }}</span>
                       <span v-else class="text-xs text-gray-300 dark:text-gray-600">—</span>
@@ -136,8 +158,10 @@
 <script setup>
 import { reactive, inject, onMounted } from 'vue'
 import { OKR_DATA, STATUS_CONFIG, QUARTERS } from '../constants/mock-okrs.js'
+import { useOkrPermissions } from '../composables/useOkrPermissions.js'
 
 var nav = inject('moduleNav', null)
+var { canEdit } = useOkrPermissions()
 
 var data = reactive(JSON.parse(JSON.stringify(OKR_DATA)))
 var statusConfig = STATUS_CONFIG
@@ -151,6 +175,7 @@ var statusList = [
   { key: 'not-started', label: 'Not Started', dot: statusConfig['not-started'].dot }
 ]
 
+var editableFocus = reactive({})
 var openCategories = reactive({})
 for (var i = 0; i < data.categories.length; i++) {
   openCategories[data.categories[i].name] = true
@@ -172,8 +197,45 @@ function hasMultiKrRows(obj) {
   return false
 }
 
+var reportMap = {
+  'on-time-releases': 'on-time-releases',
+  'cve-sla': 'cve-sla',
+  'support-cases': 'support-cases',
+  'tech-visibility': 'tech-visibility'
+}
+
+function navigateToReport(reportId) {
+  if (nav) nav.navigateTo('reports', { report: reportId })
+}
+
 function navigateToDeepDive(objectiveId) {
   if (nav) nav.navigateTo('deep-dive', { okr: objectiveId })
+}
+
+var editableStatuses = [
+  { key: 'green', label: 'On Track', dot: statusConfig.green.dot },
+  { key: 'yellow', label: 'Partial', dot: statusConfig.yellow.dot },
+  { key: 'red', label: 'At Risk', dot: statusConfig.red.dot },
+  { key: 'not-started', label: 'Not Started', dot: statusConfig['not-started'].dot }
+]
+
+function updateEditableQuarter(objId, q, text) {
+  var obj = findObjective(objId)
+  if (!obj) return
+  if (!obj.quarters[q]) obj.quarters[q] = { status: 'not-started', summary: '' }
+  obj.quarters[q].summary = text
+}
+
+function updateEditableStatus(objId, q, statusKey) {
+  var obj = findObjective(objId)
+  if (!obj) return
+  if (!obj.quarters[q]) obj.quarters[q] = { status: 'not-started', summary: '' }
+  obj.quarters[q].status = statusKey
+  saveEditableData()
+}
+
+function saveEditableData() {
+  // placeholder for future persistence
 }
 
 function findObjective(id) {
@@ -280,6 +342,18 @@ async function fetchCveSla() {
   }
 }
 
+var productKrMap = {
+  'RHOAI': 'kr-sc-rhoai',
+  'RHEL-AI': 'kr-sc-rhelai',
+  'RHAII': 'kr-sc-rhaii'
+}
+
+function scStatus(defectRate, avgRes) {
+  var defectOk = parseFloat(defectRate) <= 10
+  var resOk = avgRes != null && parseFloat(avgRes) <= 14
+  return (defectOk && resOk) ? 'green' : (defectOk || resOk) ? 'yellow' : 'red'
+}
+
 async function fetchSupportCases() {
   try {
     var res = await fetch('/api/modules/okr-hub/reports/support-cases')
@@ -288,42 +362,32 @@ async function fetchSupportCases() {
     if (!result.quarters || !result.products) return
 
     var obj = findObjective('support-cases')
-    if (!obj) return
+    if (!obj || !obj.keyResults) return
 
     for (var qi = 0; qi < quarters.length; qi++) {
       var q = quarters[qi]
       var qData = result.quarters[q]
       if (!qData) continue
 
-      var totalCases = 0
-      var totalDefects = 0
-      var hasData = false
-      var avgResSum = 0
-      var avgResCount = 0
-
       for (var pi = 0; pi < result.products.length; pi++) {
-        var pd = qData[result.products[pi]]
-        if (!pd) continue
-        if (pd.totalCases != null && pd.totalCases > 0) {
-          hasData = true
-          totalCases += pd.totalCases
-          totalDefects += pd.defects || 0
-        }
-        if (pd.avgResolutionDays != null && pd.avgResolutionDays > 0) {
-          avgResSum += pd.avgResolutionDays
-          avgResCount++
-        }
-      }
+        var productName = result.products[pi]
+        var krId = productKrMap[productName]
+        if (!krId) continue
 
-      if (hasData) {
-        var defectRate = totalCases > 0 ? ((totalDefects / totalCases) * 100).toFixed(1) : 0
-        var avgRes = avgResCount > 0 ? (avgResSum / avgResCount).toFixed(1) : null
-        var defectOk = parseFloat(defectRate) <= 10
-        var resOk = avgRes != null && parseFloat(avgRes) <= 14
-        var status = (defectOk && resOk) ? 'green' : (defectOk || resOk) ? 'yellow' : 'red'
-        var summary = defectRate + '% defect rate'
-        if (avgRes != null) summary += '\n——————\n' + avgRes + ' avg days'
-        obj.quarters[q] = { status: status, summary: summary }
+        var kr = null
+        for (var ki = 0; ki < obj.keyResults.length; ki++) {
+          if (obj.keyResults[ki].id === krId) { kr = obj.keyResults[ki]; break }
+        }
+        if (!kr) continue
+
+        var pd = qData[productName]
+        if (!pd || pd.totalCases == null || pd.totalCases === 0) continue
+
+        var defectRate = ((pd.defects || 0) / pd.totalCases * 100).toFixed(1)
+        var avgRes = pd.avgResolutionDays != null ? pd.avgResolutionDays.toFixed(1) : null
+        var summary = defectRate + '% defect rate\n——————\n' + (avgRes != null ? avgRes + ' avg days' : '0 avg days')
+        if (!kr.quarters) kr.quarters = {}
+        kr.quarters[q] = { status: scStatus(defectRate, avgRes), summary: summary }
       }
     }
   } catch (err) {
