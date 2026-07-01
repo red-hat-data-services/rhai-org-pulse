@@ -106,7 +106,7 @@
 
 <script setup>
 import { computed, inject } from 'vue'
-import { findObjectiveById, STATUS_CONFIG, QUARTERS, OKR_DATA } from '../data/mock-okrs.js'
+import { findObjectiveById, STATUS_CONFIG, QUARTERS, OKR_DATA } from '../constants/mock-okrs.js'
 
 var nav = inject('moduleNav', null)
 var params = inject('routeParams', null)

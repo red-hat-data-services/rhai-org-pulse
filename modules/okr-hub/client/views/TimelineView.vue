@@ -98,7 +98,7 @@
 
 <script setup>
 import { reactive, inject } from 'vue'
-import { OKR_DATA, STATUS_CONFIG, QUARTERS } from '../data/mock-okrs.js'
+import { OKR_DATA, STATUS_CONFIG, QUARTERS } from '../constants/mock-okrs.js'
 
 var nav = inject('moduleNav', null)
 
