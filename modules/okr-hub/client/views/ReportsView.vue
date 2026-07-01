@@ -52,6 +52,7 @@
     <PostReleaseDefectsReport v-if="activeReport === 'post-release-defects'" />
     <CommitmentTrackingReport v-if="activeReport === 'commitment-tracking'" />
     <TechVisibilityReport v-if="activeReport === 'tech-visibility'" />
+    <SupportCaseReport v-if="activeReport === 'support-cases'" />
   </div>
 </template>
 
@@ -62,6 +63,7 @@ import CveSlaReport from '../components/CveSlaReport.vue'
 import PostReleaseDefectsReport from '../components/post-release-defects/PostReleaseDefectsReport.vue'
 import CommitmentTrackingReport from '../components/commitment-tracking/CommitmentTrackingReport.vue'
 import TechVisibilityReport from '../components/TechVisibilityReport.vue'
+import SupportCaseReport from '../components/SupportCaseReport.vue'
 
 var activeReport = ref(null)
 
@@ -72,8 +74,8 @@ var reports = [
     description: 'Did we hit the planned GA date? Tracks all point and major RHAI releases GA\'d after April 1, 2026.',
     icon: '🚀',
     iconBg: 'bg-blue-50 dark:bg-blue-900/30',
-    measure: '100%',
-    measureColor: 'text-emerald-600 dark:text-emerald-400'
+    measure: 'Number of Releases On Time - 100%',
+    measureColor: 'text-gray-600 dark:text-gray-300'
   },
   {
     id: 'cve-sla',
@@ -81,8 +83,8 @@ var reports = [
     description: 'Number of escalations & on-time responses. Tracks CVE met vs missed across all products per quarter.',
     icon: '🛡️',
     iconBg: 'bg-purple-50 dark:bg-purple-900/30',
-    measure: '100%',
-    measureColor: 'text-emerald-600 dark:text-emerald-400'
+    measure: 'Number of Escalations and On Time Response - 100%',
+    measureColor: 'text-gray-600 dark:text-gray-300'
   },
   {
     id: 'post-release-defects',
@@ -90,8 +92,8 @@ var reports = [
     description: 'Cumulative bug trends across releases. Compare defect rates by version, product, and component.',
     icon: '🐛',
     iconBg: 'bg-red-50 dark:bg-red-900/30',
-    measure: null,
-    measureColor: ''
+    measure: '90% reduction in bugs (Functional, UX, Regressions) discovered post-release by the field',
+    measureColor: 'text-gray-600 dark:text-gray-300'
   },
   {
     id: 'commitment-tracking',
@@ -99,8 +101,8 @@ var reports = [
     description: 'Track committed vs. delivered features per release phase. Monitor >90% delivery OKR.',
     icon: '🎯',
     iconBg: 'bg-emerald-50 dark:bg-emerald-900/30',
-    measure: '>90%',
-    measureColor: 'text-emerald-600 dark:text-emerald-400'
+    measure: '>90% of planned features for a release are delivered in the target release',
+    measureColor: 'text-gray-600 dark:text-gray-300'
   },
   {
     id: 'tech-visibility',
@@ -108,8 +110,17 @@ var reports = [
     description: 'Red Hat AI technical visibility across internal and external sources. Tracks weekly article output.',
     icon: '📝',
     iconBg: 'bg-amber-50 dark:bg-amber-900/30',
-    measure: '>5 posts/week',
-    measureColor: 'text-emerald-600 dark:text-emerald-400'
+    measure: 'KR1: >5 posts/week | KR2: 1 piece of content from each AI Eng associate',
+    measureColor: 'text-gray-600 dark:text-gray-300'
+  },
+  {
+    id: 'support-cases',
+    title: 'Support Case Time To Resolution',
+    description: 'Track defect rates and resolution times across products. Monitor support case closure efficiency per quarter.',
+    icon: '🔧',
+    iconBg: 'bg-orange-50 dark:bg-orange-900/30',
+    measure: 'Defect Rate for Product: 10% | Time to Resolution Target: 10-14 days',
+    measureColor: 'text-gray-600 dark:text-gray-300'
   }
 ]
 

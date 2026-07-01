@@ -8,6 +8,15 @@ module.exports = async function okrHubExport(addFile, storage) {
     })
   }
 
+  var supportCases = storage.readFromStorage('okr-hub/support-case-data.json')
+  if (supportCases) {
+    addFile('okr-hub/support-case-data.json', {
+      year: supportCases.year || 2026,
+      products: (supportCases.products || []).map(function() { return 'Product' }),
+      quarters: {}
+    })
+  }
+
   var overrides = storage.readFromStorage('okr-hub/on-time-overrides.json')
   if (overrides) {
     addFile('okr-hub/on-time-overrides.json', {

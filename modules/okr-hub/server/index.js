@@ -600,6 +600,53 @@ module.exports = function registerRoutes(router, context) {
       return { label: tabName.trim(), teams: teams, total: { associates: totalRow.associates, completed: totalRow.completed, pct: totalRow.pct, endQPct: totalRow.endQPct }, targetDate: '12/31/2026' }
   }
 
+  /**
+   * @openapi
+   * /api/modules/okr-hub/reports/support-cases:
+   *   get:
+   *     tags: [OKR Hub]
+   *     summary: Support case time to resolution data
+   *     responses:
+   *       200:
+   *         description: Support case data by quarter and product
+   */
+  router.get('/reports/support-cases', requireScope('okr-hub:read'), function(req, res) {
+    var saved = storage.readFromStorage('okr-hub/support-case-data.json')
+    if (saved && saved.products && saved.quarters) {
+      return res.json(saved)
+    }
+    res.json(getDefaultSupportCaseData())
+  })
+
+  /**
+   * @openapi
+   * /api/modules/okr-hub/reports/support-cases:
+   *   put:
+   *     tags: [OKR Hub]
+   *     summary: Save support case data
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema: { type: object }
+   *     responses:
+   *       200:
+   *         description: Saved
+   */
+  router.put('/reports/support-cases', requireScope('okr-hub:write'), function(req, res) {
+    try {
+      var body = req.body
+      if (!body || !Array.isArray(body.products) || !body.quarters) {
+        return res.status(400).json({ error: 'Invalid payload: requires products array and quarters object' })
+      }
+      storage.writeToStorage('okr-hub/support-case-data.json', body)
+      res.json({ ok: true })
+    } catch (err) {
+      console.error('[okr-hub] support-cases save error:', err)
+      res.status(500).json({ error: err.message })
+    }
+  })
+
   context.registerDiagnostics(async function() {
     return { status: 'ok' }
   })
@@ -765,4 +812,20 @@ function getSampleTechVisData() {
     source: '(sample data)',
     fetchedAt: new Date().toISOString()
   }
+}
+
+function getDefaultSupportCaseData() {
+  var emptyProduct = { totalCases: null, defects: null, casesClosed: null, bugsEng: null, rfe: null, supportEx: null, other: null, avgResolutionDays: null, medianResolutionDays: null }
+  var products = ['RHOAI', 'RHEL-AI', 'RHAII']
+  var quarters = {}
+  var qNames = ['Q1', 'Q2', 'Q3', 'Q4']
+  for (var qi = 0; qi < qNames.length; qi++) {
+    quarters[qNames[qi]] = {}
+    for (var pi = 0; pi < products.length; pi++) {
+      quarters[qNames[qi]][products[pi]] = Object.assign({}, emptyProduct)
+    }
+  }
+  quarters.Q1.RHOAI = { totalCases: 107, defects: 36, casesClosed: 25, bugsEng: 0, rfe: 0, supportEx: 0, other: 0, avgResolutionDays: 45.2, medianResolutionDays: 32.9 }
+  quarters.Q2.RHOAI = { totalCases: 120, defects: 37, casesClosed: 14, bugsEng: 0, rfe: 0, supportEx: 0, other: 0, avgResolutionDays: 17.6, medianResolutionDays: 15.3 }
+  return { year: 2026, products: products, quarters: quarters }
 }
