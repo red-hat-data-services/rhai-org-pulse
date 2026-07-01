@@ -28,6 +28,7 @@
         <div class="ml-auto flex items-center gap-3">
           <span class="text-xs text-gray-400 dark:text-gray-500">Releases with planned GA after {{ data.since }}</span>
           <button
+            v-if="canEdit"
             @click="showSettings = !showSettings"
             class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             title="Manage releases"
@@ -153,7 +154,9 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useOkrPermissions } from '../composables/useOkrPermissions.js'
 
+var { canEdit } = useOkrPermissions()
 var loading = ref(true)
 var error = ref(null)
 var data = ref(null)

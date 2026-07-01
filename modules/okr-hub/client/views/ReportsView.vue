@@ -57,7 +57,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import OnTimeReleasesReport from '../components/OnTimeReleasesReport.vue'
 import CveSlaReport from '../components/CveSlaReport.vue'
 import PostReleaseDefectsReport from '../components/post-release-defects/PostReleaseDefectsReport.vue'
@@ -66,6 +66,20 @@ import TechVisibilityReport from '../components/TechVisibilityReport.vue'
 import SupportCaseReport from '../components/SupportCaseReport.vue'
 
 var activeReport = ref(null)
+
+onMounted(function() {
+  var hash = window.location.hash || ''
+  var qIdx = hash.indexOf('?')
+  if (qIdx === -1) return
+  var qs = hash.substring(qIdx + 1)
+  var params = new URLSearchParams(qs)
+  var reportId = params.get('report')
+  if (reportId) {
+    for (var i = 0; i < reports.length; i++) {
+      if (reports[i].id === reportId) { activeReport.value = reportId; break }
+    }
+  }
+})
 
 var reports = [
   {
