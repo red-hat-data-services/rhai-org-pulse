@@ -13,6 +13,42 @@
  * @module shared/server/refresh-registry
  */
 
+/**
+ * Signal that a handler chose to skip execution.
+ * Returning a RefreshSkip from a handler preserves the previous
+ * lastSuccessfulRun (cadence is NOT consumed), unlike a normal return
+ * which advances lastSuccessfulRun to now.
+ */
+class RefreshSkip {
+  constructor(reason) {
+    this.reason = reason || 'Handler skipped'
+  }
+}
+
+/**
+ * Detect whether a handler result represents a skip.
+ * @param {*} result
+ * @returns {boolean}
+ */
+function isSkipResult(result) {
+  if (result instanceof RefreshSkip) return true
+  // Legacy compatibility bridge: existing handlers (ai-catalyst:sync-boards,
+  // releases:delivery) return { status: 'skipped', reason/message: '...' }.
+  // Recognizing this shape lets them benefit from cadence-preservation without
+  // code changes. They can migrate to RefreshSkip in follow-up PRs.
+  return result != null && typeof result === 'object' && result.status === 'skipped'
+}
+
+/**
+ * Extract the skip reason from a skip result.
+ * @param {*} result - Must be a skip result (checked via isSkipResult first)
+ * @returns {string}
+ */
+function getSkipReason(result) {
+  if (result instanceof RefreshSkip) return result.reason
+  return result.reason || result.message || 'Handler skipped'
+}
+
 const DEFAULT_ORDER = 100
 const DEFAULT_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes
 const DEFAULT_CADENCE = '24h'
@@ -91,7 +127,9 @@ function createRefreshRegistry(storage) {
             error: h.error,
             lastSuccessfulRun: h.lastSuccessfulRun,
             cadence: h.cadence,
-            skippedAt: h.skippedAt
+            skippedAt: h.skippedAt,
+            skippedBy: h.skippedBy,
+            reason: h.reason
           }
         }
         storage.writeToStorage(STORAGE_KEY, persistable)
@@ -220,6 +258,22 @@ function createRefreshRegistry(storage) {
     ]).then(function (result) {
       clearTimeout(timer)
       var now = Date.now()
+
+      if (isSkipResult(result)) {
+        var reason = getSkipReason(result)
+        console.log('[refresh-registry] "' + id + '" skipped by handler: ' + reason)
+        progress[id] = {
+          state: 'skipped',
+          skippedBy: 'handler',
+          order: config.order,
+          completedAt: now,
+          reason: reason,
+          lastSuccessfulRun: getLastSuccessfulRun(id),
+          cadence: config.cadence || DEFAULT_CADENCE
+        }
+        return { id, success: true, skipped: true, reason: reason }
+      }
+
       progress[id] = {
         state: 'completed',
         order: config.order,
@@ -283,7 +337,9 @@ function createRefreshRegistry(storage) {
       for (const outcome of settled) {
         const val = outcome.value
         results[val.id] = val.success
-          ? { success: true, result: val.result }
+          ? (val.skipped
+              ? { success: true, skipped: true, reason: val.reason }
+              : { success: true, result: val.result })
           : { success: false, error: val.error }
       }
     }
@@ -310,6 +366,7 @@ function createRefreshRegistry(storage) {
         var { cadenceStr } = getEffectiveCadence(skip.id, skipConfig)
         progress[skip.id] = {
           state: 'skipped',
+          skippedBy: 'cadence',
           reason: 'cadence',
           order: skipConfig.order,
           cadence: cadenceStr,
@@ -552,4 +609,4 @@ function createRefreshRegistry(storage) {
   }
 }
 
-module.exports = { createRefreshRegistry, parseCadence }
+module.exports = { createRefreshRegistry, parseCadence, RefreshSkip }

@@ -42,6 +42,7 @@ function getConfig(readFromStorage) {
 module.exports = function registerRoutes(router, context) {
   const { storage, requireAdmin } = context;
   const { readFromStorage, writeToStorage } = storage;
+  const { RefreshSkip } = require('../../../shared/server/refresh-registry');
 
   // --- Config routes (admin) ---
 
@@ -681,12 +682,16 @@ module.exports = function registerRoutes(router, context) {
       timeout: 600000,
       cadence: '24h',
       handler: async function() {
-        if (DEMO_MODE) return;
+        if (DEMO_MODE) return new RefreshSkip('Demo mode');
         const now = new Date();
-        if (now.getUTCHours() < 6) return;
+        if (now.getUTCHours() < 6) {
+          return new RefreshSkip('Before 6am UTC');
+        }
         const today = now.toISOString().slice(0, 10);
         const existing = readFromStorage(`${PKG_STORAGE_PREFIX}/${today}.json`);
-        if (existing) return;
+        if (existing) {
+          return new RefreshSkip('Report already exists for ' + today);
+        }
         await generatePackageReport(today);
       },
     });

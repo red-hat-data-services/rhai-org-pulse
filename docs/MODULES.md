@@ -222,6 +222,7 @@ The authoritative typedef for the context object is in `shared/server/module-con
 | `secrets` | object | Frozen object containing resolved secret values declared by this module |
 | `resolveSecret(name)` | function | Read a dynamic secret from `process.env` at call time |
 | `registerSecretValidator(key, fn)` | function | Register a connectivity validator for a secret key |
+| `RefreshSkip` | class | Constructor: `new RefreshSkip(reason)` — return from a refresh handler to skip without consuming cadence |
 
 ### Testing
 
@@ -582,6 +583,34 @@ context.registerRefresh('my-data', { ...config, cadence: newIntervalHours + 'h' 
 ```
 
 Re-registration replaces the handler entry. In-flight runs are unaffected (the registry snapshots entries at the start of each run).
+
+### Skipping a Refresh
+
+When a handler decides it has no work to do (e.g., time-of-day guard, report already exists, demo mode), return a `RefreshSkip` instance instead of returning `undefined` or a plain value. This preserves the previous `lastSuccessfulRun` so the handler's cadence is **not** consumed — it remains due on the next tick.
+
+```javascript
+context.registerRefresh('package-analysis', {
+  cadence: '24h',
+  handler: async function() {
+    if (DEMO_MODE) return new context.RefreshSkip('Demo mode')
+    const now = new Date()
+    if (now.getUTCHours() < 6) {
+      return new context.RefreshSkip('Before 6am UTC')
+    }
+    // ... do real work
+  }
+})
+```
+
+Without `RefreshSkip`, a bare `return` counts as a success — `lastSuccessfulRun` advances to now and the 24h cadence starts over, meaning the handler won't run again until the next day even though it never produced data.
+
+`RefreshSkip` is available as `context.RefreshSkip` or via direct import:
+
+```javascript
+const { RefreshSkip } = require('../../shared/server/refresh-registry')
+```
+
+Existing handlers that return `{ status: 'skipped', reason: '...' }` are also recognized as skips automatically via a legacy compatibility bridge.
 
 ## Secrets Declaration
 

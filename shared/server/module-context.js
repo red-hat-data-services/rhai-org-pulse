@@ -52,6 +52,7 @@
  * @property {object} secrets - Frozen object of resolved secret values for this module
  * @property {Function} resolveSecret - Dynamic secret lookup: resolveSecret(envVarName) => string|undefined. Warning: v1 does not enforce module isolation — any module can resolve any env var. Logs a warning for undeclared access.
  * @property {Function} registerSecretValidator - Register an async validator for a secret key
+ * @property {Function} RefreshSkip - Constructor: new RefreshSkip(reason) — return from a refresh handler to signal a skip without consuming cadence
  */
 
 /**
@@ -78,6 +79,7 @@ function buildModuleContext(coreServices, slug, registries = {}) {
   const scopeRegistry = coreServices.scopeRegistry || null
   const secretRegistry = coreServices.secretRegistry || null
   const githubAppToken = require('./github-app-token')
+  const { RefreshSkip } = require('./refresh-registry')
 
   const ctx = {
     storage: coreServices.storage,
@@ -160,7 +162,9 @@ function buildModuleContext(coreServices, slug, registries = {}) {
       ? function (key, fn) { secretRegistry.registerValidator(key, fn) }
       : function () {},
 
-    allocationStrategy: coreServices.allocationStrategy || null
+    allocationStrategy: coreServices.allocationStrategy || null,
+
+    RefreshSkip
   }
 
   return Object.freeze(ctx)

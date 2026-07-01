@@ -95,8 +95,18 @@ const globalStatusText = computed(() => {
   }
   if (statusData.value.completedAt) {
     const handlers = statusData.value.handlers || {}
-    const allCompleted = Object.values(handlers).every(h => h.state === 'completed' || h.state === 'skipped')
-    const suffix = allCompleted ? 'all handlers completed' : 'some handlers failed'
+    const anyFailed = Object.values(handlers).some(h => h.state === 'failed')
+    const handlerSkips = Object.values(handlers).filter(
+      h => h.state === 'skipped' && h.skippedBy === 'handler'
+    ).length
+    let suffix
+    if (anyFailed) {
+      suffix = 'some handlers failed'
+    } else if (handlerSkips > 0) {
+      suffix = handlerSkips + ' skipped by handler'
+    } else {
+      suffix = 'all data refreshed'
+    }
     return 'Last run: ' + relativeTime(statusData.value.completedAt) + ' \u2014 ' + suffix
   }
   return 'No refresh has been run yet'
@@ -306,8 +316,23 @@ onUnmounted(() => {
         <div class="flex-1 min-w-0">Handler</div>
         <div class="w-28 text-center flex-shrink-0">Cadence</div>
         <div class="w-20 text-center flex-shrink-0">Next Run</div>
-        <div class="w-20 text-center flex-shrink-0">Status</div>
-        <div class="w-16 text-right flex-shrink-0">Last Run</div>
+        <div class="w-20 text-center flex-shrink-0 relative group/status">Status
+          <svg class="inline h-3 w-3 text-gray-400 dark:text-gray-500 cursor-help hover:text-gray-600 dark:hover:text-gray-300 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="absolute left-1/2 -translate-x-1/2 top-full mt-1.5 px-2.5 py-1.5 text-xs font-normal normal-case tracking-normal text-white bg-gray-900 dark:bg-gray-700 rounded shadow-lg whitespace-normal w-48 opacity-0 invisible group-hover/status:opacity-100 group-hover/status:visible transition-opacity z-10 pointer-events-none">
+            Result of the most recent run attempt: Completed, Failed, Skipped, or Running.
+          </span>
+        </div>
+        <div class="w-24 text-center flex-shrink-0 relative group/fresh whitespace-nowrap">Freshness
+          <svg class="inline h-3 w-3 text-gray-400 dark:text-gray-500 cursor-help hover:text-gray-600 dark:hover:text-gray-300 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="absolute left-1/2 -translate-x-1/2 top-full mt-1.5 px-2.5 py-1.5 text-xs font-normal normal-case tracking-normal text-white bg-gray-900 dark:bg-gray-700 rounded shadow-lg whitespace-normal w-48 opacity-0 invisible group-hover/fresh:opacity-100 group-hover/fresh:visible transition-opacity z-10 pointer-events-none">
+            Time since data was last successfully refreshed. Shows "Never" if the handler has not yet completed successfully.
+          </span>
+        </div>
+        <div class="w-24 text-right flex-shrink-0">Last Run</div>
         <div class="w-8 flex-shrink-0"></div>
       </div>
 
@@ -400,8 +425,16 @@ onUnmounted(() => {
             </span>
           </div>
 
+          <!-- Data freshness -->
+          <div class="w-24 text-center flex-shrink-0">
+            <span v-if="handler.lastSuccessfulRun" class="text-xs tabular-nums text-gray-500 dark:text-gray-400">
+              {{ relativeTime(handler.lastSuccessfulRun) }}
+            </span>
+            <span v-else class="text-xs text-amber-500 dark:text-amber-400">Never</span>
+          </div>
+
           <!-- Last run time -->
-          <span class="text-xs text-gray-400 dark:text-gray-500 w-16 text-right flex-shrink-0 tabular-nums">
+          <span class="text-xs text-gray-400 dark:text-gray-500 w-24 text-right flex-shrink-0 tabular-nums">
             {{ getHandlerTime(handler) || '' }}
           </span>
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 
-const { createRefreshRegistry, parseCadence } = require('../refresh-registry')
+const { createRefreshRegistry, parseCadence, RefreshSkip } = require('../refresh-registry')
 
 describe('refresh-registry', () => {
   it('registers and retrieves a handler', () => {
@@ -961,5 +961,215 @@ describe('refresh-registry', () => {
     const status = await registry.getStatus()
     expect(status.handlers['a'].description).toBe('Fetches metrics')
     expect(status.handlers['b'].description).toBeNull()
+  })
+
+  // --- Handler skip (RefreshSkip) ---
+
+  describe('handler skip (RefreshSkip)', () => {
+    it('handler returning RefreshSkip gets state skipped with skippedBy handler', async () => {
+      const registry = createRefreshRegistry()
+      registry.register('a', {
+        handler: async () => new RefreshSkip('Before 6am UTC'),
+        order: 10
+      })
+
+      const result = await registry.runAll({ force: true })
+      if (result.execution) await result.execution
+
+      const status = await registry.getStatus()
+      expect(status.handlers['a'].state).toBe('skipped')
+      expect(status.handlers['a'].skippedBy).toBe('handler')
+    })
+
+    it('handler-skipped does NOT advance lastSuccessfulRun', async () => {
+      const oldTimestamp = Date.now() - 100000
+      const mockStorage = {
+        readFromStorage: vi.fn((key) => {
+          if (key === 'refresh-registry-state.json') return {
+            completedAt: oldTimestamp,
+            progress: {
+              'a': {
+                state: 'completed',
+                order: 10,
+                completedAt: oldTimestamp,
+                lastSuccessfulRun: oldTimestamp,
+                cadence: '24h'
+              }
+            }
+          }
+          return null
+        }),
+        writeToStorage: vi.fn()
+      }
+      const registry = createRefreshRegistry(mockStorage)
+      registry.register('a', {
+        handler: async () => new RefreshSkip('Not ready'),
+        order: 10
+      })
+
+      const result = await registry.runAll({ force: true })
+      if (result.execution) await result.execution
+
+      const status = await registry.getStatus()
+      expect(status.handlers['a'].lastSuccessfulRun).toBe(oldTimestamp)
+    })
+
+    it('handler-skipped handler is still due on next cadence check', async () => {
+      const oldTimestamp = Date.now() - 25 * 60 * 60 * 1000 // 25h ago
+      const mockStorage = {
+        readFromStorage: vi.fn((key) => {
+          if (key === 'refresh-registry-state.json') return {
+            completedAt: oldTimestamp,
+            progress: {
+              'a': {
+                state: 'completed',
+                order: 10,
+                completedAt: oldTimestamp,
+                lastSuccessfulRun: oldTimestamp,
+                cadence: '24h'
+              }
+            }
+          }
+          return null
+        }),
+        writeToStorage: vi.fn()
+      }
+      const registry = createRefreshRegistry(mockStorage)
+      let callCount = 0
+      registry.register('a', {
+        handler: async () => { callCount++; return new RefreshSkip('Not ready') },
+        order: 10,
+        cadence: '24h'
+      })
+
+      // First run — due because lastSuccessfulRun is old
+      const r1 = await registry.runAll()
+      if (r1.execution) await r1.execution
+      expect(r1.counts.due).toBe(1)
+      expect(callCount).toBe(1)
+
+      // Second run — still due because lastSuccessfulRun was preserved (old)
+      const r2 = await registry.runAll()
+      if (r2.execution) await r2.execution
+      expect(r2.counts.due).toBe(1)
+      expect(callCount).toBe(2)
+    })
+
+    it('handler returning RefreshSkip preserves reason', async () => {
+      const registry = createRefreshRegistry()
+      registry.register('a', {
+        handler: async () => new RefreshSkip('Report already exists for 2026-07-01')
+      })
+
+      const result = await registry.runAll({ force: true })
+      if (result.execution) await result.execution
+
+      const status = await registry.getStatus()
+      expect(status.handlers['a'].reason).toBe('Report already exists for 2026-07-01')
+    })
+
+    it('handler returning plain value is still treated as success', async () => {
+      const registry = createRefreshRegistry()
+      registry.register('a', { handler: async () => 'ok' })
+      registry.register('b', { handler: async () => undefined })
+      registry.register('c', { handler: async () => 42 })
+      registry.register('d', { handler: async () => ({ data: 'foo' }) })
+
+      const result = await registry.runAll({ force: true })
+      if (result.execution) await result.execution
+
+      const status = await registry.getStatus()
+      expect(status.handlers['a'].state).toBe('completed')
+      expect(status.handlers['b'].state).toBe('completed')
+      expect(status.handlers['c'].state).toBe('completed')
+      expect(status.handlers['d'].state).toBe('completed')
+    })
+
+    it('legacy skip convention { status: skipped } is recognized', async () => {
+      const registry = createRefreshRegistry()
+      registry.register('a', {
+        handler: async () => ({ status: 'skipped', reason: 'No boards configured' })
+      })
+      registry.register('b', {
+        handler: async () => ({ status: 'skipped', message: 'Nothing to deliver' })
+      })
+
+      const result = await registry.runAll({ force: true })
+      if (result.execution) await result.execution
+
+      const status = await registry.getStatus()
+      expect(status.handlers['a'].state).toBe('skipped')
+      expect(status.handlers['a'].skippedBy).toBe('handler')
+      expect(status.handlers['a'].reason).toBe('No boards configured')
+      expect(status.handlers['b'].reason).toBe('Nothing to deliver')
+    })
+
+    it('reason and skippedBy are persisted to storage', async () => {
+      const mockStorage = {
+        readFromStorage: vi.fn().mockReturnValue(null),
+        writeToStorage: vi.fn()
+      }
+      const registry = createRefreshRegistry(mockStorage)
+      registry.register('a', {
+        handler: async () => new RefreshSkip('Before 6am UTC')
+      })
+
+      const result = await registry.runAll({ force: true })
+      if (result.execution) await result.execution
+
+      const persisted = mockStorage.writeToStorage.mock.calls.find(
+        c => c[0] === 'refresh-registry-state.json'
+      )
+      expect(persisted).toBeTruthy()
+      expect(persisted[1].progress['a'].reason).toBe('Before 6am UTC')
+      expect(persisted[1].progress['a'].skippedBy).toBe('handler')
+    })
+
+    it('getStatus includes reason and skippedBy for handler-skipped', async () => {
+      const mockStorage = {
+        readFromStorage: vi.fn().mockReturnValue(null),
+        writeToStorage: vi.fn()
+      }
+      const registry = createRefreshRegistry(mockStorage)
+      registry.register('a', {
+        handler: async () => new RefreshSkip('Demo mode')
+      })
+
+      const result = await registry.runAll({ force: true })
+      if (result.execution) await result.execution
+
+      const status = await registry.getStatus()
+      expect(status.handlers['a'].reason).toBe('Demo mode')
+      expect(status.handlers['a'].skippedBy).toBe('handler')
+    })
+
+    it('runEntries result propagation includes skipped and reason', async () => {
+      const registry = createRefreshRegistry()
+      registry.register('mod:a', {
+        handler: async () => new RefreshSkip('Not ready'),
+        order: 10
+      })
+
+      const results = await registry.runOne('mod:a')
+      expect(results['mod:a'].success).toBe(true)
+      expect(results['mod:a'].skipped).toBe(true)
+      expect(results['mod:a'].reason).toBe('Not ready')
+      expect(results['mod:a'].result).toBeUndefined()
+    })
+
+    it('non-skip objects are not misidentified as skips', async () => {
+      const registry = createRefreshRegistry()
+      registry.register('a', { handler: async () => ({ data: 'foo' }) })
+      registry.register('b', { handler: async () => ({ skipped: false }) })
+      registry.register('c', { handler: async () => ({ status: 'active' }) })
+
+      const result = await registry.runAll({ force: true })
+      if (result.execution) await result.execution
+
+      const status = await registry.getStatus()
+      expect(status.handlers['a'].state).toBe('completed')
+      expect(status.handlers['b'].state).toBe('completed')
+      expect(status.handlers['c'].state).toBe('completed')
+    })
   })
 })
