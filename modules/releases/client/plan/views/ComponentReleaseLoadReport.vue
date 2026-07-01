@@ -6,6 +6,9 @@
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Track component workload distribution across releases.
         </p>
+        <p v-if="formattedFetchedAt" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5" :title="'Data fetched from Jira at ' + fetchedAt">
+          Data from {{ formattedFetchedAt }}
+        </p>
       </div>
       <div class="flex items-center gap-2">
         <button
@@ -248,7 +251,7 @@
     </div>
 
     <!-- Summary cards -->
-    <div v-if="groups.length > 0 && !loadingData" class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+    <div v-if="groups.length > 0 && !loadingData" class="grid grid-cols-2 sm:grid-cols-6 gap-3">
       <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5 cursor-pointer transition-all" :class="filterType.includes('requested') ? 'ring-2 ring-blue-300 dark:ring-blue-700' : 'hover:shadow-md'" @click="toggleFilter('filterType', 'requested')" title="Filter by Requested">
         <div class="absolute top-0 left-0 w-1 h-full bg-blue-500 rounded-l-xl" />
         <div class="flex items-center gap-2 mb-1.5">
@@ -283,11 +286,21 @@
         <div class="absolute top-0 left-0 w-1 h-full bg-amber-500 rounded-l-xl" />
         <div class="flex items-center gap-2 mb-1.5">
           <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-amber-100 dark:bg-amber-900/40">
-            <svg class="w-3 h-3 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+            <svg class="w-3 h-3 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          </span>
+          <span class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">At Risk</span>
+        </div>
+        <div class="text-2xl font-bold ml-7" :class="totalAtRisk > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-gray-100'">{{ totalAtRisk }}</div>
+      </div>
+      <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5">
+        <div class="absolute top-0 left-0 w-1 h-full bg-violet-500 rounded-l-xl" />
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-violet-100 dark:bg-violet-900/40">
+            <svg class="w-3 h-3 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
           </span>
           <span class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Avg Features Delivered</span>
         </div>
-        <div class="text-2xl font-bold text-amber-600 dark:text-amber-400 ml-7">{{ velocity ? velocity.avgPerRelease : '—' }}<span v-if="velocity && velocity.hasPartialYear" class="text-sm font-normal text-gray-400 dark:text-gray-500 ml-0.5" title="Includes components with less than a year of data">*</span></div>
+        <div class="text-2xl font-bold text-violet-600 dark:text-violet-400 ml-7">{{ velocity ? velocity.avgPerRelease : '—' }}<span v-if="velocity && velocity.hasPartialYear" class="text-sm font-normal text-gray-400 dark:text-gray-500 ml-0.5" title="Includes components with less than a year of data">*</span></div>
       </div>
       <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5">
         <div class="absolute top-0 left-0 w-1 h-full bg-gray-400 rounded-l-xl" />
@@ -386,6 +399,7 @@ var loadingData = ref(false)
 var dataError = ref(null)
 var hasFetched = ref(false)
 var tableRef = ref(null)
+var fetchedAt = ref(null)
 
 var filterProduct = ref([])
 var filterType = ref([])
@@ -663,7 +677,8 @@ var clientFilteredGroups = computed(function() {
         committedFeatures: newCom,
         requestedCount: newReq.length,
         committedCount: newCom.length,
-        blockedCount: filtered.filter(function(ff) { return ff.isBlocked }).length
+        blockedCount: filtered.filter(function(ff) { return ff.isBlocked }).length,
+        atRiskCount: filtered.filter(function(ff) { return ff.riskLevel === 'high' || ff.riskLevel === 'medium' }).length
       })
     }).filter(function(comp) {
       return (comp.requestedFeatures.length + comp.committedFeatures.length) > 0
@@ -845,7 +860,38 @@ var blockedPercent = computed(function() {
   return Math.round((totalBlocked.value / total) * 100)
 })
 
+var totalAtRisk = computed(function() {
+  var source = clientFilteredGroups.value
+  var seen = {}
+  var count = 0
+  for (var gi = 0; gi < source.length; gi++) {
+    var comps = source[gi].components || []
+    for (var ci = 0; ci < comps.length; ci++) {
+      var lists = [comps[ci].requestedFeatures || [], comps[ci].committedFeatures || []]
+      for (var li = 0; li < lists.length; li++) {
+        for (var fi = 0; fi < lists[li].length; fi++) {
+          var f = lists[li][fi]
+          if (!seen[f.key] && (f.riskLevel === 'high' || f.riskLevel === 'medium')) {
+            seen[f.key] = true
+            count++
+          }
+        }
+      }
+    }
+  }
+  return count
+})
+
 var velocity = ref(null)
+
+var formattedFetchedAt = computed(function() {
+  if (!fetchedAt.value) return null
+  try {
+    var d = new Date(fetchedAt.value)
+    if (isNaN(d.getTime())) return null
+    return d.toLocaleString()
+  } catch { return null }
+})
 
 function togglePillar(name) {
   var idx = selectedPillars.value.indexOf(name)
@@ -966,10 +1012,12 @@ async function loadData() {
     var data = await response.json()
     groups.value = data.groups || []
     velocity.value = data.velocity || null
+    fetchedAt.value = data.fetchedAt || null
   } catch (err) {
     dataError.value = err.message
     groups.value = []
     velocity.value = null
+    fetchedAt.value = null
   } finally {
     loadingData.value = false
   }

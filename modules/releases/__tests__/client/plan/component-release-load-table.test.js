@@ -145,10 +145,12 @@ function buildComponentGroups(groups) {
     var reqCount = 0
     var comCount = 0
     var blkCount = 0
+    var riskCount = 0
     for (var fli = 0; fli < featureList.length; fli++) {
       if (featureList[fli].isRequested) reqCount++
       if (featureList[fli].isCommitted) comCount++
       if (featureList[fli].isBlocked) blkCount++
+      if (featureList[fli].riskLevel === 'high' || featureList[fli].riskLevel === 'medium') riskCount++
     }
 
     result.push({
@@ -156,7 +158,8 @@ function buildComponentGroups(groups) {
       features: featureList,
       requestedCount: reqCount,
       committedCount: comCount,
-      blockedCount: blkCount
+      blockedCount: blkCount,
+      atRiskCount: riskCount
     })
   }
 
