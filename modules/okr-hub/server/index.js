@@ -11,6 +11,11 @@ var TECH_VIS_CACHE_TTL = 15 * 60 * 1000
 var TECH_VIS_SHEET_ID = '1gUAxe2LtmTjzcN8Wt3LfaXswSfK9emM40OtwmSsxMaU'
 var TECH_VIS_TARGET = 5
 
+var contentCache = null
+var contentCacheAt = 0
+var CONTENT_CACHE_TTL = 15 * 60 * 1000
+var CONTENT_SHEET_ID = '1LePie38Eg1gUEIO6qu5zifgnCe9ASj8QHE8n_sgsrVk'
+
 /**
  * @param {import('express').Router} router
  * @param {import('@shared/server/module-context').ModuleContext} context
@@ -353,6 +358,157 @@ module.exports = function registerRoutes(router, context) {
     }
   })
 
+  /**
+   * @openapi
+   * /api/modules/okr-hub/reports/content-contributions:
+   *   get:
+   *     tags: [OKR Hub]
+   *     summary: Associate content contributions - per-team completion tracking from Google Sheets
+   *     responses:
+   *       200:
+   *         description: Per-quarter breakdown of team content contributions
+   */
+  router.get('/reports/content-contributions', requireScope('okr-hub:read'), async function(req, res) {
+    try {
+      var now = Date.now()
+      if (contentCache && (now - contentCacheAt) < CONTENT_CACHE_TTL) {
+        return res.json(contentCache)
+      }
+
+      var sheetsClient = createGoogleSheetsClient()
+      var tabNames
+      try {
+        tabNames = await sheetsClient.discoverSheetNames(CONTENT_SHEET_ID)
+      } catch (authErr) {
+        console.warn('[okr-hub] Google Sheets unavailable for content contributions, using sample data:', authErr.message)
+        var sample = getSampleContentData()
+        contentCache = sample
+        contentCacheAt = now
+        return res.json(sample)
+      }
+
+      if (!tabNames || tabNames.length === 0) {
+        return res.json({ error: 'No tabs found in spreadsheet', quarters: [], overall: { associates: 0, completed: 0, pct: 0 }, fetchedAt: new Date().toISOString() })
+      }
+
+      var quarters = []
+      for (var ti = 0; ti < tabNames.length; ti++) {
+        var tabName = tabNames[ti]
+        var qMatch = tabName.match(/Q(\d)\s*(\d{4})?/i)
+        if (!qMatch) continue
+
+        var raw = await sheetsClient.fetchRawSheet(CONTENT_SHEET_ID, tabName)
+        if (!raw || !raw.headers || raw.headers.length === 0) continue
+
+        var teamCol = findColumnIndex(raw.headers, ['team name', 'team'])
+        var assocCol = findColumnIndex(raw.headers, ['number of associates', 'associates', '# associates'])
+        var completedCol = findColumnIndex(raw.headers, ['associates completed', 'completed content', 'completed'])
+        var pctCol = findColumnIndex(raw.headers, ['percentage completed', '% completed', 'percentage', '%'])
+        var statusCol = findColumnIndex(raw.headers, ['status'])
+        var perfCol = findColumnIndex(raw.headers, ['performance vs', 'performance'])
+        var endQCol = findColumnIndex(raw.headers, ['end of q', 'end of quarter', 'q1 status', 'q2 status', 'q3 status', 'q4 status'])
+
+        if (teamCol === -1 || assocCol === -1) continue
+
+        var teams = []
+        var totalRow = null
+        for (var ri = 0; ri < raw.rows.length; ri++) {
+          var row = raw.rows[ri]
+          var name = String(row[teamCol] || '').trim()
+          if (!name) continue
+
+          var associates = parseNum(row[assocCol])
+          var completed = completedCol !== -1 ? parseNum(row[completedCol]) : 0
+          var pct = pctCol !== -1 ? parsePct(row[pctCol]) : (associates > 0 ? Math.round((completed / associates) * 100) : 0)
+          var status = statusCol !== -1 ? String(row[statusCol] || '').trim() : ''
+          var perf = perfCol !== -1 ? String(row[perfCol] || '').trim() : ''
+          var endQ = endQCol !== -1 ? parsePct(row[endQCol]) : null
+
+          var entry = { name: name, associates: associates, completed: completed, pct: pct, status: status, performance: perf, endQPct: endQ }
+
+          if (name.toLowerCase() === 'total') {
+            totalRow = entry
+          } else {
+            teams.push(entry)
+          }
+        }
+
+        if (teams.length === 0) continue
+
+        if (!totalRow) {
+          var tAssoc = 0
+          var tComp = 0
+          for (var tmi = 0; tmi < teams.length; tmi++) { tAssoc += teams[tmi].associates; tComp += teams[tmi].completed }
+          totalRow = { name: 'TOTAL', associates: tAssoc, completed: tComp, pct: tAssoc > 0 ? Math.round((tComp / tAssoc) * 100) : 0, status: '', performance: '', endQPct: null }
+        }
+
+        var qLabel = tabName.trim()
+        quarters.push({
+          label: qLabel,
+          teams: teams,
+          total: { associates: totalRow.associates, completed: totalRow.completed, pct: totalRow.pct, endQPct: totalRow.endQPct },
+          targetDate: '12/31/2026'
+        })
+      }
+
+      if (quarters.length === 0) {
+        var raw0 = await sheetsClient.fetchRawSheet(CONTENT_SHEET_ID, tabNames[0])
+        if (raw0 && raw0.headers) {
+          var parsed = parseContentTab(raw0, tabNames[0])
+          if (parsed) quarters.push(parsed)
+        }
+      }
+
+      var latestQ = quarters.length > 0 ? quarters[quarters.length - 1] : null
+      var result = {
+        quarters: quarters,
+        overall: latestQ ? { associates: latestQ.total.associates, completed: latestQ.total.completed, pct: latestQ.total.pct } : { associates: 0, completed: 0, pct: 0 },
+        target: '1 piece of content per associate',
+        fetchedAt: new Date().toISOString()
+      }
+
+      contentCache = result
+      contentCacheAt = now
+      res.json(result)
+    } catch (err) {
+      console.error('[okr-hub] content-contributions error:', err)
+      res.status(500).json({ error: err.message })
+    }
+  })
+
+  function parseContentTab(raw, tabName) {
+    if (!raw || !raw.headers || raw.headers.length === 0) return null
+
+    var teamCol = findColumnIndex(raw.headers, ['team name', 'team'])
+    var assocCol = findColumnIndex(raw.headers, ['number of associates', 'associates', '# associates'])
+    var completedCol = findColumnIndex(raw.headers, ['associates completed', 'completed content', 'completed'])
+    var pctCol = findColumnIndex(raw.headers, ['percentage completed', '% completed', 'percentage', '%'])
+    var statusCol = findColumnIndex(raw.headers, ['status'])
+
+    if (teamCol === -1 || assocCol === -1) return null
+
+    var teams = []
+    var totalRow = null
+    for (var ri = 0; ri < raw.rows.length; ri++) {
+      var row = raw.rows[ri]
+      var name = String(row[teamCol] || '').trim()
+      if (!name) continue
+      var associates = parseNum(row[assocCol])
+      var completed = completedCol !== -1 ? parseNum(row[completedCol]) : 0
+      var pct = pctCol !== -1 ? parsePct(row[pctCol]) : (associates > 0 ? Math.round((completed / associates) * 100) : 0)
+      var status = statusCol !== -1 ? String(row[statusCol] || '').trim() : ''
+      var entry = { name: name, associates: associates, completed: completed, pct: pct, status: status, performance: '', endQPct: null }
+      if (name.toLowerCase() === 'total') { totalRow = entry } else { teams.push(entry) }
+    }
+    if (teams.length === 0) return null
+    if (!totalRow) {
+      var tA = 0; var tC = 0
+      for (var i = 0; i < teams.length; i++) { tA += teams[i].associates; tC += teams[i].completed }
+      totalRow = { name: 'TOTAL', associates: tA, completed: tC, pct: tA > 0 ? Math.round((tC / tA) * 100) : 0 }
+    }
+      return { label: tabName.trim(), teams: teams, total: { associates: totalRow.associates, completed: totalRow.completed, pct: totalRow.pct, endQPct: totalRow.endQPct }, targetDate: '12/31/2026' }
+  }
+
   context.registerDiagnostics(async function() {
     return { status: 'ok' }
   })
@@ -443,6 +599,47 @@ function getDefaultCveSlaData() {
       nov: {},
       dec: {}
     }
+  }
+}
+
+function parseNum(val) {
+  if (val == null || val === '') return 0
+  if (typeof val === 'number') return val
+  var n = parseInt(String(val).replace(/,/g, ''), 10)
+  return isNaN(n) ? 0 : n
+}
+
+function parsePct(val) {
+  if (val == null || val === '') return null
+  if (typeof val === 'number') return Math.round(val * (val < 1 ? 100 : 1))
+  var s = String(val).replace('%', '').trim()
+  var n = parseFloat(s)
+  if (isNaN(n)) return null
+  return Math.round(n < 1 && n > 0 ? n * 100 : n)
+}
+
+function getSampleContentData() {
+  var teams = [
+    { name: "Steven's Directs", associates: 14, completed: 1, pct: 7, status: 'Started', performance: 'Behind (43% to go)', endQPct: 7 },
+    { name: 'Cat Agentics & AI Eng Tooling', associates: 58, completed: 18, pct: 31, status: 'Started', performance: 'Behind (19% to go)', endQPct: 6 },
+    { name: 'Sherard AI Platform', associates: 192, completed: 34, pct: 18, status: 'Started', performance: 'Behind (32% to go)', endQPct: 6 },
+    { name: 'Taneem Inf Engineering', associates: 59, completed: 21, pct: 36, status: 'Started', performance: 'Behind (14% to go)', endQPct: 7 },
+    { name: 'Kai AI Innovation', associates: 13, completed: 2, pct: 15, status: 'Started', performance: 'Behind (35% to go)', endQPct: 0 },
+    { name: 'Tom AIPCC', associates: 147, completed: 19, pct: 13, status: 'Started', performance: 'Behind (37% to go)', endQPct: 6 },
+    { name: 'Monica watsonx', associates: 48, completed: 18, pct: 38, status: 'Started', performance: 'Behind (13% to go)', endQPct: 10 }
+  ]
+  return {
+    quarters: [
+      {
+        label: 'Q1 2026',
+        teams: teams,
+        total: { associates: 531, completed: 113, pct: 21, endQPct: 7 },
+        targetDate: '12/31/2026'
+      }
+    ],
+    overall: { associates: 531, completed: 113, pct: 21 },
+    target: '1 piece of content per associate',
+    fetchedAt: new Date().toISOString()
   }
 }
 
