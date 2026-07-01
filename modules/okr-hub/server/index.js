@@ -23,6 +23,8 @@ var CONTENT_SHEET_ID = '1LePie38Eg1gUEIO6qu5zifgnCe9ASj8QHE8n_sgsrVk'
 module.exports = function registerRoutes(router, context) {
   const { storage, requireScope, secrets } = context
 
+  var googleKeyFile = context.resolveSecret('GOOGLE_SERVICE_ACCOUNT_KEY_FILE') || '/etc/secrets/google-sa-key.json'
+
   var jira = createJiraClient({
     email: (secrets && secrets.JIRA_EMAIL) || '',
     token: (secrets && secrets.JIRA_TOKEN) || '',
@@ -344,7 +346,7 @@ module.exports = function registerRoutes(router, context) {
         return res.json(techVisCache)
       }
 
-      var sheetsClient = createGoogleSheetsClient()
+      var sheetsClient = createGoogleSheetsClient({ keyFile: googleKeyFile })
       var tabNames
       try {
         tabNames = await sheetsClient.discoverSheetNames(TECH_VIS_SHEET_ID)
@@ -466,7 +468,7 @@ module.exports = function registerRoutes(router, context) {
         return res.json(contentCache)
       }
 
-      var sheetsClient = createGoogleSheetsClient()
+      var sheetsClient = createGoogleSheetsClient({ keyFile: googleKeyFile })
       var tabNames
       try {
         tabNames = await sheetsClient.discoverSheetNames(CONTENT_SHEET_ID)
