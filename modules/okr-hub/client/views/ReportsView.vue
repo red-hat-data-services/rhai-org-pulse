@@ -50,6 +50,7 @@
     <OnTimeReleasesReport v-if="activeReport === 'on-time-releases'" />
     <CveSlaReport v-if="activeReport === 'cve-sla'" />
     <PostReleaseDefectsReport v-if="activeReport === 'post-release-defects'" />
+    <CommitmentTrackingReport v-if="activeReport === 'commitment-tracking'" />
   </div>
 </template>
 
@@ -58,6 +59,7 @@ import { ref, computed } from 'vue'
 import OnTimeReleasesReport from '../components/OnTimeReleasesReport.vue'
 import CveSlaReport from '../components/CveSlaReport.vue'
 import PostReleaseDefectsReport from '../components/post-release-defects/PostReleaseDefectsReport.vue'
+import CommitmentTrackingReport from '../components/commitment-tracking/CommitmentTrackingReport.vue'
 
 var activeReport = ref(null)
 
@@ -88,6 +90,15 @@ var reports = [
     iconBg: 'bg-red-50 dark:bg-red-900/30',
     measure: null,
     measureColor: ''
+  },
+  {
+    id: 'commitment-tracking',
+    title: 'Commitment Tracking',
+    description: 'Track committed vs. delivered features per release phase. Monitor >90% delivery OKR.',
+    icon: '🎯',
+    iconBg: 'bg-emerald-50 dark:bg-emerald-900/30',
+    measure: '>90%',
+    measureColor: 'text-emerald-600 dark:text-emerald-400'
   }
 ]
 
