@@ -862,10 +862,22 @@ var blockedPercent = computed(function() {
 
 var totalAtRisk = computed(function() {
   var source = clientFilteredGroups.value
+  var seen = {}
   var count = 0
-  for (var i = 0; i < source.length; i++) {
-    var comps = source[i].components || []
-    for (var ci = 0; ci < comps.length; ci++) count += comps[ci].atRiskCount || 0
+  for (var gi = 0; gi < source.length; gi++) {
+    var comps = source[gi].components || []
+    for (var ci = 0; ci < comps.length; ci++) {
+      var lists = [comps[ci].requestedFeatures || [], comps[ci].committedFeatures || []]
+      for (var li = 0; li < lists.length; li++) {
+        for (var fi = 0; fi < lists[li].length; fi++) {
+          var f = lists[li][fi]
+          if (!seen[f.key] && (f.riskLevel === 'high' || f.riskLevel === 'medium')) {
+            seen[f.key] = true
+            count++
+          }
+        }
+      }
+    }
   }
   return count
 })
