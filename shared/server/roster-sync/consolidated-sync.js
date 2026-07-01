@@ -66,17 +66,27 @@ async function runConsolidatedSync(storage, credentials) {
 
     var excludedTitles = config.excludedTitles?.length ? config.excludedTitles : DEFAULT_EXCLUDED_TITLES;
 
+    var extraAttrs = [];
+    if (config.ldapFields && Array.isArray(config.ldapFields.enabled)) {
+      for (var ea = 0; ea < config.ldapFields.enabled.length; ea++) {
+        var attr = config.ldapFields.enabled[ea].attribute;
+        if (attr && ipaClient.LDAP_ATTRS.indexOf(attr) === -1) {
+          extraAttrs.push(attr);
+        }
+      }
+    }
+
     try {
       await ipaClient.bindClient(conn.client, conn.config.bindDn, conn.config.bindPassword);
 
       for (var i = 0; i < config.orgRoots.length; i++) {
         var root = config.orgRoots[i];
         try {
-          var result = await ipaClient.traverseOrg(conn.client, conn.config.baseDn, root.uid, excludedTitles);
+          var result = await ipaClient.traverseOrg(conn.client, conn.config.baseDn, root.uid, excludedTitles, extraAttrs);
 
           // VP lookup from first org root's leader's manager
           if (i === 0 && result.leader.managerUid && !vpInfo) {
-            var vp = await ipaClient.lookupPerson(conn.client, conn.config.baseDn, result.leader.managerUid);
+            var vp = await ipaClient.lookupPerson(conn.client, conn.config.baseDn, result.leader.managerUid, extraAttrs);
             if (vp) vpInfo = { uid: vp.uid, name: vp.name };
           }
 
