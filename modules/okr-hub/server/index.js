@@ -484,78 +484,105 @@ module.exports = function registerRoutes(router, context) {
         return res.json({ error: 'No tabs found in spreadsheet', quarters: [], overall: { associates: 0, completed: 0, pct: 0 }, fetchedAt: new Date().toISOString() })
       }
 
-      var quarters = []
-      for (var ti = 0; ti < tabNames.length; ti++) {
-        var tabName = tabNames[ti]
-        var qMatch = tabName.match(/Q(\d)\s*(\d{4})?/i)
-        if (!qMatch) continue
+      var raw = await sheetsClient.fetchRawSheet(CONTENT_SHEET_ID, tabNames[0])
+      if (!raw || !raw.headers || raw.headers.length === 0) {
+        return res.json({ error: 'No data in spreadsheet', quarters: [], overall: { associates: 0, completed: 0, pct: 0 }, fetchedAt: new Date().toISOString() })
+      }
 
-        var raw = await sheetsClient.fetchRawSheet(CONTENT_SHEET_ID, tabName)
-        if (!raw || !raw.headers || raw.headers.length === 0) continue
+      var teamCol = findColumnIndex(raw.headers, ['team name', 'team'])
+      var assocCol = findColumnIndex(raw.headers, ['number of associates', 'associates', '# associates'])
+      var completedCol = findColumnIndex(raw.headers, ['associates completed', 'completed content', 'completed'])
+      var pctCol = findColumnIndex(raw.headers, ['percentage completed', '% completed', 'percentage', '%'])
+      var statusCol = findColumnIndex(raw.headers, ['status'])
+      var perfCol = findColumnIndex(raw.headers, ['performance vs', 'performance'])
 
-        var teamCol = findColumnIndex(raw.headers, ['team name', 'team'])
-        var assocCol = findColumnIndex(raw.headers, ['number of associates', 'associates', '# associates'])
-        var completedCol = findColumnIndex(raw.headers, ['associates completed', 'completed content', 'completed'])
-        var pctCol = findColumnIndex(raw.headers, ['percentage completed', '% completed', 'percentage', '%'])
-        var statusCol = findColumnIndex(raw.headers, ['status'])
-        var perfCol = findColumnIndex(raw.headers, ['performance vs', 'performance'])
-        var endQCol = findColumnIndex(raw.headers, ['end of q', 'end of quarter', 'q1 status', 'q2 status', 'q3 status', 'q4 status'])
+      var endQCols = {}
+      for (var hi = 0; hi < raw.headers.length; hi++) {
+        var hdr = String(raw.headers[hi] || '').toLowerCase().trim()
+        var eqMatch = hdr.match(/end of q(\d)/)
+        if (eqMatch) endQCols['Q' + eqMatch[1]] = hi
+      }
 
-        if (teamCol === -1 || assocCol === -1) continue
+      if (teamCol === -1 || assocCol === -1) {
+        return res.json({ error: 'Required columns not found', quarters: [], overall: { associates: 0, completed: 0, pct: 0 }, fetchedAt: new Date().toISOString() })
+      }
 
-        var teams = []
-        var totalRow = null
-        for (var ri = 0; ri < raw.rows.length; ri++) {
-          var row = raw.rows[ri]
-          var name = String(row[teamCol] || '').trim()
-          if (!name) continue
+      var teams = []
+      var totalRow = null
+      for (var ri = 0; ri < raw.rows.length; ri++) {
+        var row = raw.rows[ri]
+        var name = String(row[teamCol] || '').trim()
+        if (!name) continue
 
-          var associates = parseNum(row[assocCol])
-          var completed = completedCol !== -1 ? parseNum(row[completedCol]) : 0
-          var pct = pctCol !== -1 ? parsePct(row[pctCol]) : (associates > 0 ? Math.round((completed / associates) * 100) : 0)
-          var status = statusCol !== -1 ? String(row[statusCol] || '').trim() : ''
-          var perf = perfCol !== -1 ? String(row[perfCol] || '').trim() : ''
-          var endQ = endQCol !== -1 ? parsePct(row[endQCol]) : null
+        var associates = parseNum(row[assocCol])
+        var completed = completedCol !== -1 ? parseNum(row[completedCol]) : 0
+        var pct = pctCol !== -1 ? parsePct(row[pctCol]) : (associates > 0 ? Math.round((completed / associates) * 100) : 0)
+        var status = statusCol !== -1 ? String(row[statusCol] || '').trim() : ''
+        var perf = perfCol !== -1 ? String(row[perfCol] || '').trim() : ''
 
-          var entry = { name: name, associates: associates, completed: completed, pct: pct, status: status, performance: perf, endQPct: endQ }
+        var qPcts = {}
+        var qKeys = Object.keys(endQCols)
+        for (var qki = 0; qki < qKeys.length; qki++) {
+          var qk = qKeys[qki]
+          var val = row[endQCols[qk]]
+          qPcts[qk] = val != null ? parsePct(val) : null
+        }
 
-          if (name.toLowerCase() === 'total') {
-            totalRow = entry
-          } else {
-            teams.push(entry)
+        var entry = { name: name, associates: associates, completed: completed, pct: pct, status: status, performance: perf, qPcts: qPcts }
+
+        if (name.toLowerCase() === 'total') {
+          totalRow = entry
+        } else {
+          teams.push(entry)
+        }
+      }
+
+      if (teams.length === 0) {
+        return res.json({ error: 'No team data found', quarters: [], overall: { associates: 0, completed: 0, pct: 0 }, fetchedAt: new Date().toISOString() })
+      }
+
+      if (!totalRow) {
+        var tAssoc = 0; var tComp = 0
+        for (var tmi = 0; tmi < teams.length; tmi++) { tAssoc += teams[tmi].associates; tComp += teams[tmi].completed }
+        var tQPcts = {}
+        var allQKeys = Object.keys(endQCols)
+        for (var aqi = 0; aqi < allQKeys.length; aqi++) {
+          var aqk = allQKeys[aqi]
+          var sum = 0; var cnt = 0
+          for (var si = 0; si < teams.length; si++) {
+            if (teams[si].qPcts[aqk] != null) { sum += teams[si].qPcts[aqk] * teams[si].associates; cnt += teams[si].associates }
           }
+          tQPcts[aqk] = cnt > 0 ? Math.round(sum / cnt) : null
         }
+        totalRow = { name: 'TOTAL', associates: tAssoc, completed: tComp, pct: tAssoc > 0 ? Math.round((tComp / tAssoc) * 100) : 0, status: '', performance: '', qPcts: tQPcts }
+      }
 
-        if (teams.length === 0) continue
-
-        if (!totalRow) {
-          var tAssoc = 0
-          var tComp = 0
-          for (var tmi = 0; tmi < teams.length; tmi++) { tAssoc += teams[tmi].associates; tComp += teams[tmi].completed }
-          totalRow = { name: 'TOTAL', associates: tAssoc, completed: tComp, pct: tAssoc > 0 ? Math.round((tComp / tAssoc) * 100) : 0, status: '', performance: '', endQPct: null }
+      var quarters = []
+      var sortedQKeys = Object.keys(endQCols).sort()
+      for (var sqi = 0; sqi < sortedQKeys.length; sqi++) {
+        var sqk = sortedQKeys[sqi]
+        var qTeams = []
+        for (var ti = 0; ti < teams.length; ti++) {
+          var t = teams[ti]
+          var teamQPct = t.qPcts[sqk] != null ? t.qPcts[sqk] : 0
+          var teamQCompleted = t.associates > 0 ? Math.round(t.associates * teamQPct / 100) : 0
+          qTeams.push({ name: t.name, associates: t.associates, completed: teamQCompleted, pct: teamQPct, status: t.status, performance: t.performance, endQPct: teamQPct })
         }
-
-        var qLabel = tabName.trim()
+        var totalQPct = totalRow.qPcts[sqk] != null ? totalRow.qPcts[sqk] : 0
+        var totalQCompleted = totalRow.associates > 0 ? Math.round(totalRow.associates * totalQPct / 100) : 0
+        var qNum = sqk.replace('Q', '')
+        var endMonths = { '1': '03/31', '2': '06/30', '3': '09/30', '4': '12/31' }
         quarters.push({
-          label: qLabel,
-          teams: teams,
-          total: { associates: totalRow.associates, completed: totalRow.completed, pct: totalRow.pct, endQPct: totalRow.endQPct },
-          targetDate: '12/31/2026'
+          label: sqk + ' 2026',
+          teams: qTeams,
+          total: { associates: totalRow.associates, completed: totalQCompleted, pct: totalQPct, endQPct: totalQPct },
+          targetDate: (endMonths[qNum] || '12/31') + '/2026'
         })
       }
 
-      if (quarters.length === 0) {
-        var raw0 = await sheetsClient.fetchRawSheet(CONTENT_SHEET_ID, tabNames[0])
-        if (raw0 && raw0.headers) {
-          var parsed = parseContentTab(raw0, tabNames[0])
-          if (parsed) quarters.push(parsed)
-        }
-      }
-
-      var latestQ = quarters.length > 0 ? quarters[quarters.length - 1] : null
       var result = {
         quarters: quarters,
-        overall: latestQ ? { associates: latestQ.total.associates, completed: latestQ.total.completed, pct: latestQ.total.pct } : { associates: 0, completed: 0, pct: 0 },
+        overall: { associates: totalRow.associates, completed: totalRow.completed, pct: totalRow.pct },
         target: '1 piece of content per associate',
         fetchedAt: new Date().toISOString()
       }
@@ -568,39 +595,6 @@ module.exports = function registerRoutes(router, context) {
       res.status(500).json({ error: err.message })
     }
   })
-
-  function parseContentTab(raw, tabName) {
-    if (!raw || !raw.headers || raw.headers.length === 0) return null
-
-    var teamCol = findColumnIndex(raw.headers, ['team name', 'team'])
-    var assocCol = findColumnIndex(raw.headers, ['number of associates', 'associates', '# associates'])
-    var completedCol = findColumnIndex(raw.headers, ['associates completed', 'completed content', 'completed'])
-    var pctCol = findColumnIndex(raw.headers, ['percentage completed', '% completed', 'percentage', '%'])
-    var statusCol = findColumnIndex(raw.headers, ['status'])
-
-    if (teamCol === -1 || assocCol === -1) return null
-
-    var teams = []
-    var totalRow = null
-    for (var ri = 0; ri < raw.rows.length; ri++) {
-      var row = raw.rows[ri]
-      var name = String(row[teamCol] || '').trim()
-      if (!name) continue
-      var associates = parseNum(row[assocCol])
-      var completed = completedCol !== -1 ? parseNum(row[completedCol]) : 0
-      var pct = pctCol !== -1 ? parsePct(row[pctCol]) : (associates > 0 ? Math.round((completed / associates) * 100) : 0)
-      var status = statusCol !== -1 ? String(row[statusCol] || '').trim() : ''
-      var entry = { name: name, associates: associates, completed: completed, pct: pct, status: status, performance: '', endQPct: null }
-      if (name.toLowerCase() === 'total') { totalRow = entry } else { teams.push(entry) }
-    }
-    if (teams.length === 0) return null
-    if (!totalRow) {
-      var tA = 0; var tC = 0
-      for (var i = 0; i < teams.length; i++) { tA += teams[i].associates; tC += teams[i].completed }
-      totalRow = { name: 'TOTAL', associates: tA, completed: tC, pct: tA > 0 ? Math.round((tC / tA) * 100) : 0 }
-    }
-      return { label: tabName.trim(), teams: teams, total: { associates: totalRow.associates, completed: totalRow.completed, pct: totalRow.pct, endQPct: totalRow.endQPct }, targetDate: '12/31/2026' }
-  }
 
   /**
    * @openapi
@@ -763,57 +757,76 @@ function parsePct(val) {
 }
 
 function getSampleContentData() {
-  var teams = [
-    { name: "Steven's Directs", associates: 14, completed: 1, pct: 7, status: 'Started', performance: 'Behind (43% to go)', endQPct: 7 },
-    { name: 'Cat Agentics & AI Eng Tooling', associates: 58, completed: 18, pct: 31, status: 'Started', performance: 'Behind (19% to go)', endQPct: 6 },
-    { name: 'Sherard AI Platform', associates: 192, completed: 34, pct: 18, status: 'Started', performance: 'Behind (32% to go)', endQPct: 6 },
-    { name: 'Taneem Inf Engineering', associates: 59, completed: 21, pct: 36, status: 'Started', performance: 'Behind (14% to go)', endQPct: 7 },
-    { name: 'Kai AI Innovation', associates: 13, completed: 2, pct: 15, status: 'Started', performance: 'Behind (35% to go)', endQPct: 0 },
-    { name: 'Tom AIPCC', associates: 147, completed: 19, pct: 13, status: 'Started', performance: 'Behind (37% to go)', endQPct: 6 },
-    { name: 'Monica watsonx', associates: 48, completed: 18, pct: 38, status: 'Started', performance: 'Behind (13% to go)', endQPct: 10 }
+  var teamData = [
+    { name: "Steven's Directs", associates: 14, completed: 1, pct: 7, status: 'Started', performance: 'Behind (43% to go)', q1: 7, q2: 7 },
+    { name: 'Cat Agentics & AI Eng Tooling', associates: 58, completed: 19, pct: 33, status: 'Started', performance: 'Behind (17% to go)', q1: 6, q2: 31 },
+    { name: 'Sherard AI Platform', associates: 192, completed: 34, pct: 18, status: 'Started', performance: 'Behind (32% to go)', q1: 6, q2: 18 },
+    { name: 'Taneem Inf Engineering', associates: 59, completed: 21, pct: 36, status: 'Started', performance: 'Behind (14% to go)', q1: 7, q2: 36 },
+    { name: 'Kai AI Innovation', associates: 13, completed: 2, pct: 15, status: 'Started', performance: 'Behind (35% to go)', q1: 0, q2: 15 },
+    { name: 'Tom AIPCC', associates: 147, completed: 19, pct: 13, status: 'Started', performance: 'Behind (37% to go)', q1: 6, q2: 13 },
+    { name: 'Monica watsonx', associates: 48, completed: 18, pct: 38, status: 'Started', performance: 'Behind (13% to go)', q1: 10, q2: 38 }
   ]
+
+  function buildQuarter(qKey, qNum) {
+    var teams = []
+    for (var i = 0; i < teamData.length; i++) {
+      var t = teamData[i]
+      var qPct = t[qKey] != null ? t[qKey] : 0
+      var qCompleted = Math.round(t.associates * qPct / 100)
+      teams.push({ name: t.name, associates: t.associates, completed: qCompleted, pct: qPct, status: t.status, performance: t.performance, endQPct: qPct })
+    }
+    var tA = 0; var tC = 0
+    for (var j = 0; j < teams.length; j++) { tA += teams[j].associates; tC += teams[j].completed }
+    var tPct = tA > 0 ? Math.round((tC / tA) * 100) : 0
+    var endMonths = { 1: '03/31', 2: '06/30', 3: '09/30', 4: '12/31' }
+    return { label: 'Q' + qNum + ' 2026', teams: teams, total: { associates: tA, completed: tC, pct: tPct, endQPct: tPct }, targetDate: endMonths[qNum] + '/2026' }
+  }
+
+  var quarters = [buildQuarter('q1', 1), buildQuarter('q2', 2)]
+
+  var tA = 0; var tC = 0
+  for (var i = 0; i < teamData.length; i++) { tA += teamData[i].associates; tC += teamData[i].completed }
+
   return {
-    quarters: [
-      {
-        label: 'Q1 2026',
-        teams: teams,
-        total: { associates: 531, completed: 113, pct: 21, endQPct: 7 },
-        targetDate: '12/31/2026'
-      }
-    ],
-    overall: { associates: 531, completed: 113, pct: 21 },
+    quarters: quarters,
+    overall: { associates: tA, completed: tC, pct: tA > 0 ? Math.round((tC / tA) * 100) : 0 },
     target: '1 piece of content per associate',
     fetchedAt: new Date().toISOString()
   }
 }
 
 function getSampleTechVisData() {
-  var q2Weeks = [
-    { weekOf: '2026-04-06', count: 7, met: true },
-    { weekOf: '2026-04-13', count: 5, met: true },
-    { weekOf: '2026-04-20', count: 3, met: false },
-    { weekOf: '2026-04-27', count: 6, met: true },
-    { weekOf: '2026-05-04', count: 8, met: true },
-    { weekOf: '2026-05-11', count: 4, met: false },
-    { weekOf: '2026-05-18', count: 5, met: true },
-    { weekOf: '2026-05-25', count: 9, met: true },
-    { weekOf: '2026-06-01', count: 6, met: true },
-    { weekOf: '2026-06-08', count: 2, met: false },
-    { weekOf: '2026-06-15', count: 7, met: true },
-    { weekOf: '2026-06-22', count: 5, met: true },
-    { weekOf: '2026-06-29', count: 4, met: false }
+  var q1Weeks = [
+    { weekOf: '2026-01-09', count: 4, met: false }, { weekOf: '2026-01-16', count: 2, met: false },
+    { weekOf: '2026-01-23', count: 2, met: false }, { weekOf: '2026-01-30', count: 4, met: false },
+    { weekOf: '2026-02-06', count: 5, met: true },  { weekOf: '2026-02-13', count: 4, met: false },
+    { weekOf: '2026-02-20', count: 3, met: false }, { weekOf: '2026-02-27', count: 3, met: false },
+    { weekOf: '2026-03-06', count: 2, met: false }, { weekOf: '2026-03-13', count: 6, met: true },
+    { weekOf: '2026-03-20', count: 7, met: true },  { weekOf: '2026-03-27', count: 3, met: false }
   ]
-  var met = 0
-  for (var i = 0; i < q2Weeks.length; i++) { if (q2Weeks[i].met) met++ }
+  var q2Weeks = [
+    { weekOf: '2026-04-03', count: 4, met: false }, { weekOf: '2026-04-10', count: 1, met: false },
+    { weekOf: '2026-04-17', count: 4, met: false }, { weekOf: '2026-04-23', count: 11, met: true },
+    { weekOf: '2026-04-30', count: 7, met: true },  { weekOf: '2026-05-07', count: 2, met: false },
+    { weekOf: '2026-05-14', count: 2, met: false }, { weekOf: '2026-05-21', count: 1, met: false },
+    { weekOf: '2026-05-28', count: 3, met: false }, { weekOf: '2026-06-04', count: 5, met: true },
+    { weekOf: '2026-06-11', count: 2, met: false }, { weekOf: '2026-06-18', count: 5, met: true },
+    { weekOf: '2026-06-25', count: 3, met: false }
+  ]
+
+  function buildQ(weeks, label) {
+    var m = 0
+    for (var i = 0; i < weeks.length; i++) { if (weeks[i].met) m++ }
+    return { label: label, weeks: weeks, weeksMet: m, totalWeeks: weeks.length, pct: Math.round((m / weeks.length) * 100) }
+  }
+
+  var allQ = [buildQ(q1Weeks, 'Q1 2026'), buildQ(q2Weeks, 'Q2 2026')]
+  var totalMet = 0; var totalWeeks = 0
+  for (var i = 0; i < allQ.length; i++) { totalMet += allQ[i].weeksMet; totalWeeks += allQ[i].totalWeeks }
+
   return {
-    quarters: [{
-      label: 'Q2 2026',
-      weeks: q2Weeks,
-      weeksMet: met,
-      totalWeeks: q2Weeks.length,
-      pct: Math.round((met / q2Weeks.length) * 100)
-    }],
-    overall: { weeksMet: met, totalWeeks: q2Weeks.length, pct: Math.round((met / q2Weeks.length) * 100) },
+    quarters: allQ,
+    overall: { weeksMet: totalMet, totalWeeks: totalWeeks, pct: totalWeeks > 0 ? Math.round((totalMet / totalWeeks) * 100) : 0 },
     target: TECH_VIS_TARGET,
     source: '(sample data)',
     fetchedAt: new Date().toISOString()

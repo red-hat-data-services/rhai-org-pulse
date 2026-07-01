@@ -78,6 +78,7 @@ export var OKR_DATA = {
           id: 'associate-well-being',
           name: 'Associate Well Being',
           measure: 'Implement programs that supports employee balance & engagement.',
+          editable: true,
           quarters: { Q1: emptyQuarter(), Q2: emptyQuarter(), Q3: emptyQuarter(), Q4: emptyQuarter() },
           keyResults: [
             { id: 'kr-awb-1', label: 'KR1', description: 'Associate satisfaction and well-being targets', status: 'not-started' }
