@@ -79,6 +79,7 @@ modules/your-module/
 | `label` | string | Yes | Sidebar display text |
 | `icon` | string | Yes | Lucide icon name |
 | `default` | boolean | No | If `true`, this is the module's landing view |
+| `hidden` | boolean | No | If `true`, item is not shown in the sidebar (used for default views reachable via the section header click) |
 | `disabled` | boolean | No | If `true`, item is visible but non-clickable (greyed out) |
 | `requireRole` | string | No | Only show item to users with this role (e.g., `"manager"`, `"team-admin"`, `"planning-manager"`) |
 | `requireCondition` | string | No | Only show when condition is met (e.g., `"in-app-mode"` — hides when roster is sheet-based) |
