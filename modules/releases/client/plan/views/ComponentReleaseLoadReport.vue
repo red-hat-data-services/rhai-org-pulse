@@ -206,6 +206,18 @@
           {{ filterBlocked === true ? 'Blocked' : filterBlocked === false ? 'Not Blocked' : 'Blocked' }}
         </button>
 
+        <!-- Docs Required -->
+        <div class="inline-flex items-center rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 overflow-hidden">
+          <button
+            v-for="dv in ['Yes', 'No', 'Not set']"
+            :key="dv"
+            type="button"
+            @click="toggleFilter('filterDocs', dv)"
+            class="px-2.5 py-1 text-[11px] font-medium transition-colors"
+            :class="filterDocs.includes(dv) ? 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'"
+          >{{ dv === 'Not set' ? 'Docs ?' : 'Docs ' + dv }}</button>
+        </div>
+
         <!-- Delivery Owner -->
         <div class="relative" ref="delOwnerDropdownRef">
           <button
@@ -408,6 +420,7 @@ var filterStatus = ref([])
 var filterBlocked = ref(null)
 var filterDelOwner = ref([])
 var filterPmOwner = ref([])
+var filterDocs = ref([])
 
 var productDropdownOpen = ref(false)
 var productDropdownRef = ref(null)
@@ -439,6 +452,7 @@ function saveFilters() {
       blocked: filterBlocked.value,
       delOwner: filterDelOwner.value,
       pmOwner: filterPmOwner.value,
+      docs: filterDocs.value,
       sort: savedSort.value
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
@@ -460,6 +474,7 @@ function restoreFilters() {
     if (state.blocked !== undefined) filterBlocked.value = state.blocked
     if (state.delOwner && Array.isArray(state.delOwner)) filterDelOwner.value = state.delOwner
     if (state.pmOwner && Array.isArray(state.pmOwner)) filterPmOwner.value = state.pmOwner
+    if (state.docs && Array.isArray(state.docs)) filterDocs.value = state.docs
     if (state.sort && typeof state.sort === 'object') savedSort.value = state.sort
     return true
   } catch { return false }
@@ -483,7 +498,8 @@ var filterRefs = {
   filterReleaseType: filterReleaseType,
   filterStatus: filterStatus,
   filterDelOwner: filterDelOwner,
-  filterPmOwner: filterPmOwner
+  filterPmOwner: filterPmOwner,
+  filterDocs: filterDocs
 }
 
 function toggleFilter(filterName, value) {
@@ -503,7 +519,7 @@ function toggleInArray(arrRef, value) {
 var activeFilterCount = computed(function() {
   var count = selectedPillars.value.length + selectedComponents.value.length + selectedVersions.value.length
   count += filterProduct.value.length + filterType.value.length + filterReleaseType.value.length
-  count += filterStatus.value.length + filterDelOwner.value.length + filterPmOwner.value.length
+  count += filterStatus.value.length + filterDelOwner.value.length + filterPmOwner.value.length + filterDocs.value.length
   if (filterBlocked.value !== null) count++
   return count
 })
@@ -522,6 +538,7 @@ function clearAllFilters() {
   filterBlocked.value = null
   filterDelOwner.value = []
   filterPmOwner.value = []
+  filterDocs.value = []
   savedSort.value = { column: null, direction: 'asc' }
   try { localStorage.removeItem(STORAGE_KEY) } catch (e) { void e }
 }
@@ -603,7 +620,7 @@ var filteredPmOwners = computed(function() {
 })
 
 var hasClientFilters = computed(function() {
-  return filterProduct.value.length > 0 || filterType.value.length > 0 || filterReleaseType.value.length > 0 || filterStatus.value.length > 0 || filterBlocked.value !== null || filterDelOwner.value.length > 0 || filterPmOwner.value.length > 0
+  return filterProduct.value.length > 0 || filterType.value.length > 0 || filterReleaseType.value.length > 0 || filterStatus.value.length > 0 || filterBlocked.value !== null || filterDelOwner.value.length > 0 || filterPmOwner.value.length > 0 || filterDocs.value.length > 0
 })
 
 var clientFilteredGroups = computed(function() {
@@ -661,6 +678,16 @@ var clientFilteredGroups = computed(function() {
         if (filterBlocked.value === false && f.isBlocked) return false
         if (filterDelOwner.value.length > 0 && filterDelOwner.value.indexOf(f.assignee || '') === -1) return false
         if (filterPmOwner.value.length > 0 && filterPmOwner.value.indexOf(f.pmOwner || '') === -1) return false
+        if (filterDocs.value.length > 0) {
+          var docVal = f.docsRequired || ''
+          var docsMatch = false
+          for (var di = 0; di < filterDocs.value.length; di++) {
+            if (filterDocs.value[di] === 'Yes' && docVal === 'Yes') docsMatch = true
+            if (filterDocs.value[di] === 'No' && docVal === 'No') docsMatch = true
+            if (filterDocs.value[di] === 'Not set' && !docVal) docsMatch = true
+          }
+          if (!docsMatch) return false
+        }
         return true
       })
 
@@ -1042,7 +1069,7 @@ watch([selectedComponents, selectedVersions, selectedPillars], function() {
 
 // Save filters to localStorage on any filter change
 watch(
-  [selectedPillars, selectedComponents, selectedVersions, filterProduct, filterType, filterReleaseType, filterStatus, filterBlocked, filterDelOwner, filterPmOwner],
+  [selectedPillars, selectedComponents, selectedVersions, filterProduct, filterType, filterReleaseType, filterStatus, filterBlocked, filterDelOwner, filterPmOwner, filterDocs],
   saveFilters,
   { deep: true }
 )

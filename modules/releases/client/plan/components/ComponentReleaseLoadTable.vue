@@ -30,7 +30,7 @@ var expandedComponents = reactive({})
 
 // ═══ SORT STATE ═══
 
-var SORT_COLUMNS = ['key', 'summary', 'priority', 'releaseType', 'status', 'colorStatus', 'fixVersion', 'targetVersion', 'blocked', 'riskLevel', 'assignee', 'pmOwner']
+var SORT_COLUMNS = ['key', 'summary', 'priority', 'releaseType', 'status', 'colorStatus', 'fixVersion', 'targetVersion', 'blocked', 'riskLevel', 'assignee', 'pmOwner', 'docs']
 
 var PRIORITY_ORDER = { 'Blocker': 0, 'Critical': 1, 'Major': 2, 'Normal': 3 }
 var COLOR_STATUS_ORDER = { 'red': 0, 'yellow': 1, 'green': 2 }
@@ -83,6 +83,7 @@ function getSortValue(feature, column) {
   }
   if (column === 'assignee') return (feature.assignee || '').toLowerCase()
   if (column === 'pmOwner') return (feature.pmOwner || '').toLowerCase()
+  if (column === 'docs') return feature.docsRequired === 'Yes' ? 0 : 1
   return ''
 }
 
@@ -220,6 +221,7 @@ var componentGroups = computed(function() {
             targetVersions: feat.targetVersions || [],
             assignee: feat.assignee,
             pmOwner: feat.pmOwner,
+            docsRequired: feat.docsRequired || null,
             products: [],
             versions: [],
             isRequested: false,
@@ -308,7 +310,7 @@ defineExpose({ expandAll, collapseAll })
             :class="COMP_STYLE.border"
             @click="toggleComponent(comp.component)"
           >
-            <td colspan="12" class="px-4 py-3">
+            <td colspan="13" class="px-4 py-3">
               <div class="flex items-center gap-3">
                 <svg
                   class="w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 flex-shrink-0"
@@ -406,6 +408,9 @@ defineExpose({ expandAll, collapseAll })
             </th>
             <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('pmOwner')">
               <span class="inline-flex items-center gap-1">PM Owner<SortArrow :direction="sortIcon('pmOwner')" /></span>
+            </th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('docs')">
+              <span class="inline-flex items-center gap-1 justify-center">Docs<SortArrow :direction="sortIcon('docs')" /></span>
             </th>
           </tr>
 
@@ -514,12 +519,22 @@ defineExpose({ expandAll, collapseAll })
               <td class="px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
                 {{ feature.pmOwner || '--' }}
               </td>
+              <td class="px-3 py-2.5 text-center">
+                <span
+                  v-if="feature.docsRequired === 'Yes'"
+                  class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
+                >Yes</span>
+                <span
+                  v-else
+                  class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 dark:bg-gray-700/60 text-gray-400 dark:text-gray-500"
+                >{{ feature.docsRequired || '—' }}</span>
+              </td>
             </tr>
           </template>
 
           <!-- Empty state -->
           <tr v-if="isComponentExpanded(comp.component) && comp.features.length === 0">
-            <td colspan="12" class="px-8 py-6 text-sm text-gray-400 dark:text-gray-500 italic text-center">
+            <td colspan="13" class="px-8 py-6 text-sm text-gray-400 dark:text-gray-500 italic text-center">
               No features found for {{ comp.component }}
             </td>
           </tr>
@@ -527,7 +542,7 @@ defineExpose({ expandAll, collapseAll })
 
         <!-- No results -->
         <tr v-if="componentGroups.length === 0">
-          <td colspan="12" class="px-8 py-10 text-sm text-gray-400 dark:text-gray-500 italic text-center">
+          <td colspan="13" class="px-8 py-10 text-sm text-gray-400 dark:text-gray-500 italic text-center">
             No features match the current filters.
           </td>
         </tr>

@@ -374,7 +374,8 @@ const FIELDS_TO_FETCH = [
   CUSTOM_FIELDS.releaseType,
   CUSTOM_FIELDS.statusSummary,
   CUSTOM_FIELDS.colorStatus,
-  CUSTOM_FIELDS.productManager
+  CUSTOM_FIELDS.productManager,
+  CUSTOM_FIELDS.docsRequired
 ].join(',')
 
 function computeRiskLevel(f, targetVersions) {
@@ -406,7 +407,8 @@ function buildFeatureObj(f, targetVersions) {
     targetVersions: tv,
     riskLevel: computeRiskLevel(f, tv),
     assignee: f.assignee || null,
-    pmOwner: f.pmOwner || null
+    pmOwner: f.pmOwner || null,
+    docsRequired: f.docsRequired || null
   }
 }
 
