@@ -490,10 +490,10 @@ module.exports = function registerPlanningRoutes(router, context) {
    * @openapi
    * /api/modules/releases/planning/bu-feedback:
    *   get:
-   *     summary: List BU non-feature-ask issues from Jira
+   *     summary: List field and BU feedback issues from Jira
    *     tags: [releases-planning]
    *     security: [{ bearerAuth: [] }]
-   *     description: Queries Jira for issues labeled AIBU_Feedback, ordered by creation date descending.
+   *     description: Queries Jira for issues labeled AIBU_Feedback or AISSA_Feedback, deduplicated, ordered by creation date descending.
    *     responses:
    *       200:
    *         description: Array of BU feedback issues
@@ -505,15 +505,22 @@ module.exports = function registerPlanningRoutes(router, context) {
       return res.json({ issues: [], fetchedAt: new Date().toISOString(), warning: 'Jira not configured' })
     }
 
-    try {
-      var jql = 'labels = "AIBU_Feedback" ORDER BY createdDate DESC'
-      var fields = 'summary,status,issuetype,assignee,reporter,priority,resolution,created,updated,duedate,components,fixVersions,labels'
-      var rawIssues = await jiraClient.fetchAllJqlResults(jql, fields, { maxResults: 100 })
+    var FEEDBACK_LABELS = ['AIBU_Feedback', 'AISSA_Feedback']
 
+    try {
+      var jql = 'labels IN ("AIBU_Feedback", "AISSA_Feedback") ORDER BY createdDate DESC'
+      var fields = 'summary,status,issuetype,assignee,reporter,priority,resolution,created,updated,duedate,components,fixVersions,labels'
+      var rawIssues = await jiraClient.fetchAllJqlResults(jql, fields, { maxResults: 200 })
+
+      var seen = {}
       var issues = []
       for (var i = 0; i < rawIssues.length; i++) {
         var raw = rawIssues[i]
+        if (seen[raw.key]) continue
+        seen[raw.key] = true
         var f = raw.fields || {}
+        var allLabels = f.labels || []
+        var feedbackLabels = allLabels.filter(function(l) { return FEEDBACK_LABELS.indexOf(l) !== -1 })
         issues.push({
           key: raw.key,
           summary: f.summary || '',
@@ -529,7 +536,8 @@ module.exports = function registerPlanningRoutes(router, context) {
           dueDate: f.duedate || null,
           components: (f.components || []).map(function(c) { return c.name }),
           fixVersions: (f.fixVersions || []).map(function(v) { return v.name }),
-          labels: f.labels || [],
+          labels: allLabels,
+          feedbackLabels: feedbackLabels,
           url: 'https://issues.redhat.com/browse/' + raw.key
         })
       }
