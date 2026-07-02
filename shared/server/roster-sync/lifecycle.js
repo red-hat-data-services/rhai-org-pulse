@@ -18,32 +18,36 @@ const TRACKED_FIELDS = ['name', 'email', 'title', 'city', 'country', 'geo',
  */
 function mergePerson(existing, fresh, orgRootUid, now) {
   if (!existing) {
+    var newPerson = {
+      uid: fresh.uid,
+      name: fresh.name,
+      email: fresh.email,
+      title: fresh.title,
+      city: fresh.city,
+      country: fresh.country,
+      geo: fresh.geo,
+      location: fresh.location,
+      officeLocation: fresh.officeLocation,
+      costCenter: fresh.costCenter,
+      managerUid: fresh.managerUid,
+      orgRoot: orgRootUid,
+      orgType: 'engineering',
+      github: fresh.githubUsername
+        ? { username: fresh.githubUsername, source: 'ldap' }
+        : null,
+      gitlab: fresh.gitlabUsername
+        ? { username: fresh.gitlabUsername, source: 'ldap' }
+        : null,
+      status: 'active',
+      firstSeenAt: now,
+      lastSeenAt: now,
+      inactiveSince: null
+    };
+    if (fresh.ldapExtra) {
+      newPerson.ldapExtra = fresh.ldapExtra;
+    }
     return {
-      person: {
-        uid: fresh.uid,
-        name: fresh.name,
-        email: fresh.email,
-        title: fresh.title,
-        city: fresh.city,
-        country: fresh.country,
-        geo: fresh.geo,
-        location: fresh.location,
-        officeLocation: fresh.officeLocation,
-        costCenter: fresh.costCenter,
-        managerUid: fresh.managerUid,
-        orgRoot: orgRootUid,
-        orgType: 'engineering',
-        github: fresh.githubUsername
-          ? { username: fresh.githubUsername, source: 'ldap' }
-          : null,
-        gitlab: fresh.gitlabUsername
-          ? { username: fresh.gitlabUsername, source: 'ldap' }
-          : null,
-        status: 'active',
-        firstSeenAt: now,
-        lastSeenAt: now,
-        inactiveSince: null
-      },
+      person: newPerson,
       changes: [],
       isNew: true
     };
@@ -95,6 +99,24 @@ function mergePerson(existing, fresh, orgRootUid, now) {
       changes.push({ uid: fresh.uid, field: 'gitlab', from: existing.gitlab.username, to: '' });
       merged.gitlab = null;
     }
+  }
+
+  var oldExtra = existing.ldapExtra || {};
+  var newExtra = fresh.ldapExtra || {};
+  var allExtraKeys = new Set(Object.keys(oldExtra).concat(Object.keys(newExtra)));
+  allExtraKeys.forEach(function(xk) {
+    var oldXVal = oldExtra[xk];
+    var newXVal = newExtra[xk];
+    var oldStr = oldXVal == null ? '' : (Array.isArray(oldXVal) ? oldXVal.join(', ') : String(oldXVal));
+    var newStr = newXVal == null ? '' : (Array.isArray(newXVal) ? newXVal.join(', ') : String(newXVal));
+    if (oldStr !== newStr) {
+      changes.push({ uid: fresh.uid, field: 'ldapExtra.' + xk, from: oldStr, to: newStr });
+    }
+  });
+  if (Object.keys(newExtra).length > 0) {
+    merged.ldapExtra = newExtra;
+  } else {
+    delete merged.ldapExtra;
   }
 
   return { person: merged, changes: changes, isNew: false };

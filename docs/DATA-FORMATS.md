@@ -219,6 +219,13 @@ Stores the consolidated configuration for automated roster building (merged from
   "lastSyncAt": "2026-03-27T06:00:00.000Z",
   "lastSyncStatus": "success",
   "lastSyncError": null,
+  "ldapFields": {
+    "discovered": ["rhatRnDComponent", "rhatSubproduct", "rhatJobRole"],
+    "discoveredAt": "2026-06-18T12:00:00.000Z",
+    "enabled": [
+      { "attribute": "rhatRnDComponent", "label": "Business Unit" }
+    ]
+  },
   "_migratedFrom": "roster-sync-config.json"
 }
 ```
@@ -233,6 +240,7 @@ Stores the consolidated configuration for automated roster building (merged from
 - `autoSync` controls the automatic sync scheduler (default disabled).
 - `lastSyncAt`, `lastSyncStatus`, `lastSyncError` are auto-populated during sync runs.
 - `teamDataSource` controls where team structure data lives: `"sheets"` (default, Google Sheets enrichment) or `"in-app"` (managed via the Team Structure Management UI). When `"in-app"`, Sheets Phase 2 enrichment is skipped during sync.
+- `ldapFields` configures admin-managed LDAP attribute discovery and sync. `discovered` is the cached list of all available LDAP attributes from the last schema query (populated via `POST /api/admin/roster-sync/ldap-discover`). `enabled` is the admin-selected subset with display labels (max 20). Attributes already in the hardcoded base set (`LDAP_ATTRS`) are rejected. Empty or missing `ldapFields` means no extra LDAP attributes are synced (backward compatible).
 - `_migratedFrom` is set to `"roster-sync-config.json"` after one-time migration from the legacy config file. The old file is never deleted (rollback safety net).
 
 ## Sync Log — `data/team-data/sync-log.json`
@@ -351,7 +359,8 @@ The single source of truth for all people data. Built by the consolidated sync p
       "jiraTeam": "Platform",
       "specialty": "backend",
       "teamIds": ["team_a1b2c3"],
-      "_appFields": { "field_x1y2z3": "backend" }
+      "_appFields": { "field_x1y2z3": "backend" },
+      "ldapExtra": { "rhatRnDComponent": "Enablement", "rhatSubproduct": "Red Hat OpenShift AI" }
     }
   }
 }
@@ -367,6 +376,7 @@ The single source of truth for all people data. Built by the consolidated sync p
 - Enrichment fields from Google Sheets (`_teamGrouping`, `specialty`, `jiraTeam`, etc.) are stored as top-level fields on person records.
 - `teamIds` is an array of team IDs (e.g., `["team_a1b2c3"]`) linking the person to in-app managed teams. Defaults to `[]`. Only used when `teamDataSource` is `"in-app"`.
 - `_appFields` is an object mapping field definition IDs to values. Values are strings for single-value fields, or arrays of strings for multi-value fields (e.g., `{ "field_x1y2z3": "backend", "field_mv0001": ["Python", "Go"] }`). Stores person-level custom field values managed in-app. The `_` prefix ensures it is not overwritten by Sheets enrichment during sync.
+- `ldapExtra` is an optional object containing admin-enabled LDAP attributes beyond the hardcoded base set. Keys are LDAP attribute names (e.g., `rhatRnDComponent`), values are strings or arrays for multi-value attributes. Only present when admin has enabled extra LDAP fields via Settings > LDAP Fields. Populated during roster sync; cleared when all extra fields are disabled.
 
 **Derived roster API response (`GET /api/roster`):**
 - When multiple org roots share the same explicitly-configured `displayName` in config, `deriveRoster()` merges them into a single org entry.
