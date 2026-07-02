@@ -122,7 +122,8 @@ function mapToCandidate(item, bigRockName, sourcePass) {
     rfeStatus: '',
     source: item.key.startsWith('RHAIRFE-') ? 'rfe' : 'jira',
     sourcePass: sourcePass,
-    jiraUrl: JIRA_BROWSE_URL + '/' + item.key
+    jiraUrl: JIRA_BROWSE_URL + '/' + item.key,
+    parentKey: item.parentKey || (item._indexEntry && item._indexEntry.parentKey) || ''
   }
 }
 

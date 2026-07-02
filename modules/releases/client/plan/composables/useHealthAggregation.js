@@ -197,7 +197,8 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
           targetRelease: h ? (h.targetRelease || '') : '',
           versionStatus: h ? (h.versionStatus || 'none') : 'none',
           completionPct: h ? (h.completionPct || 0) : 0,
-          planningChecks: h && h.planningChecks ? h.planningChecks : null
+          planningChecks: h && h.planningChecks ? h.planningChecks : null,
+          parentKey: f.parentKey || ''
         })
       }
     }
