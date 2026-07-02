@@ -24,7 +24,8 @@
     "files": [
       { "path": "okr-hub/cve-sla-data.json", "notes": "CVE SLA compliance data (products x months)" },
       { "path": "okr-hub/on-time-overrides.json", "notes": "Custom release overrides for on-time report" },
-      { "path": "okr-hub/support-case-data.json", "notes": "Support case resolution data by quarter and product" }
+      { "path": "okr-hub/support-case-data.json", "notes": "Support case resolution data by quarter and product" },
+      { "path": "okr-hub/90day-tracking-config.json", "notes": "90-day post-release tracking version configuration" }
     ]
   }
 }

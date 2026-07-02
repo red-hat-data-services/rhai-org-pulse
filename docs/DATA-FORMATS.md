@@ -919,6 +919,62 @@ The API response format:
 
 ---
 
+## Releases — Quality 90-Day Summary (API Response)
+
+**Note:** Computed dynamically by the `GET /api/modules/releases/delivery/quality/90day-summary` endpoint from stored versions and bug files. No stored file — data is derived at request time.
+
+The API response format:
+
+```json
+{
+  "releases": [
+    {
+      "version": "3.4",
+      "products": [
+        {
+          "name": "rhoai-3.4",
+          "bugCount": 12,
+          "daysElapsed": 54,
+          "isComplete": false,
+          "releaseDate": "2026-05-08"
+        },
+        {
+          "name": "rhelai-3.4",
+          "bugCount": 5,
+          "daysElapsed": 54,
+          "isComplete": false,
+          "releaseDate": "2026-05-08"
+        },
+        {
+          "name": "rhaii-3.4",
+          "bugCount": 3,
+          "daysElapsed": 54,
+          "isComplete": false,
+          "releaseDate": "2026-05-08"
+        }
+      ],
+      "total": 20
+    }
+  ]
+}
+```
+
+**Fields (release):**
+- `version` (string): Release family number (e.g., "3.4")
+- `products` (array): Product-level breakdown
+- `total` (number): Total bugs across all products in this release family
+
+**Fields (product):**
+- `name` (string): Full version name (e.g., "rhoai-3.4")
+- `bugCount` (number): Bugs created within 90 days of GA
+- `daysElapsed` (number): Days since GA, capped at 90
+- `isComplete` (boolean): Whether the 90-day tracking window has closed
+- `releaseDate` (string): ISO date (YYYY-MM-DD) of the GA release
+
+Releases are sorted descending by version number (newest first). Only major versions (X.X) are included; z-stream versions (e.g., 3.3.1) are excluded.
+
+---
+
 ## API Tokens — `data/api-tokens.json`
 
 Stores hashed API tokens for bearer-token authentication. Created on first token creation.

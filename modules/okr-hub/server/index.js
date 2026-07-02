@@ -643,6 +643,53 @@ module.exports = function registerRoutes(router, context) {
     }
   })
 
+  /**
+   * @openapi
+   * /api/modules/okr-hub/reports/90day-tracking-config:
+   *   get:
+   *     tags: [OKR Hub]
+   *     summary: Get 90-day post-release tracking version configuration
+   *     responses:
+   *       200:
+   *         description: Version configuration per release family
+   */
+  router.get('/reports/90day-tracking-config', requireScope('okr-hub:read'), function(req, res) {
+    var saved = storage.readFromStorage('okr-hub/90day-tracking-config.json')
+    if (saved && Array.isArray(saved.releases)) {
+      return res.json(saved)
+    }
+    res.json({ releases: [] })
+  })
+
+  /**
+   * @openapi
+   * /api/modules/okr-hub/reports/90day-tracking-config:
+   *   put:
+   *     tags: [OKR Hub]
+   *     summary: Save 90-day post-release tracking version configuration
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema: { type: object }
+   *     responses:
+   *       200:
+   *         description: Saved
+   */
+  router.put('/reports/90day-tracking-config', requireScope('okr-hub:write'), function(req, res) {
+    try {
+      var body = req.body
+      if (!body || !Array.isArray(body.releases)) {
+        return res.status(400).json({ error: 'Invalid payload: requires releases array' })
+      }
+      storage.writeToStorage('okr-hub/90day-tracking-config.json', body)
+      res.json({ ok: true })
+    } catch (err) {
+      console.error('[okr-hub] 90day-tracking-config save error:', err)
+      res.status(500).json({ error: err.message })
+    }
+  })
+
   context.registerDiagnostics(async function() {
     return { status: 'ok' }
   })

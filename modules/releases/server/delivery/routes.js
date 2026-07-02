@@ -2006,6 +2006,186 @@ module.exports = function registerRoutes(router, context) {
     }
   })
 
+  // Normalize product prefix: rhaiis/RHAIIS -> rhaii, preserve rhoai/rhelai/rhaii
+  function normalizeProduct(versionName) {
+    const lower = versionName.toLowerCase()
+    if (lower.startsWith('rhaiis-')) return 'rhaii'
+    const dashIdx = lower.indexOf('-')
+    return dashIdx > 0 ? lower.substring(0, dashIdx) : lower
+  }
+
+  function compute90DaySummary(configReleases, allBugs, storedVersions) {
+    const now = Date.now()
+    const MS_PER_DAY = 86400000
+    const TRACKING_DAYS = 90
+
+    // Build affected-version index for fast lookups
+    const bugsByVersion = {}
+    for (const bug of allBugs) {
+      if (!bug.affectedVersions) continue
+      for (const av of bug.affectedVersions) {
+        if (!bugsByVersion[av]) bugsByVersion[av] = []
+        bugsByVersion[av].push(bug)
+      }
+    }
+
+    if (configReleases && configReleases.length > 0) {
+      // Config-driven mode: use exact version names and GA dates from config
+      const releases = []
+      for (const rel of configReleases) {
+        const products = []
+        var familyTotal = 0
+        for (const p of (rel.products || [])) {
+          if (!p.name || !p.gaDate) continue
+          const relDate = new Date(p.gaDate + 'T00:00:00Z')
+          const daysSince = Math.floor((now - relDate.getTime()) / MS_PER_DAY)
+          const daysElapsed = Math.min(TRACKING_DAYS, Math.max(0, daysSince))
+          const isComplete = daysSince >= TRACKING_DAYS
+          const cutoff = new Date(relDate.getTime() + TRACKING_DAYS * MS_PER_DAY)
+
+          const vBugs = bugsByVersion[p.name] || []
+          var bugCount = 0
+          for (const bug of vBugs) {
+            const created = new Date(bug.created)
+            if (created >= relDate && created <= cutoff) bugCount++
+          }
+
+          familyTotal += bugCount
+          products.push({
+            name: p.name,
+            bugCount: bugCount,
+            daysElapsed: daysElapsed,
+            isComplete: isComplete,
+            releaseDate: p.gaDate
+          })
+        }
+        releases.push({ version: rel.version, products: products, total: familyTotal })
+      }
+      return releases
+    }
+
+    // Auto-detect mode: group from stored versions.json
+    const familyMap = {}
+    for (const v of storedVersions) {
+      if (!v.releaseDate) continue
+      const match = v.name.match(/-(\d+\.\d+)$/)
+      if (!match) continue
+      const familyNum = match[1]
+      if (parseFloat(familyNum) < 3.0) continue
+      const product = normalizeProduct(v.name)
+      const key = product + '-' + familyNum
+      if (!familyMap[familyNum]) familyMap[familyNum] = {}
+      if (!familyMap[familyNum][key]) {
+        familyMap[familyNum][key] = { product: product, familyNum: familyNum, rawVersions: [] }
+      }
+      familyMap[familyNum][key].rawVersions.push(v)
+    }
+
+    const releases = []
+    const familyKeys = Object.keys(familyMap).sort(function(a, b) {
+      return parseFloat(b) - parseFloat(a)
+    })
+
+    for (const familyNum of familyKeys) {
+      const productEntries = familyMap[familyNum]
+      const products = []
+      let familyTotal = 0
+
+      for (const key of Object.keys(productEntries)) {
+        const entry = productEntries[key]
+        let earliestDate = null
+        for (const v of entry.rawVersions) {
+          const d = new Date(v.releaseDate + 'T00:00:00Z')
+          if (!earliestDate || d < earliestDate) earliestDate = d
+        }
+
+        const daysSince = Math.floor((now - earliestDate.getTime()) / MS_PER_DAY)
+        const daysElapsed = Math.min(TRACKING_DAYS, Math.max(0, daysSince))
+        const isComplete = daysSince >= TRACKING_DAYS
+        const cutoff = new Date(earliestDate.getTime() + TRACKING_DAYS * MS_PER_DAY)
+
+        const seen = new Set()
+        let bugCount = 0
+        for (const v of entry.rawVersions) {
+          const vBugs = bugsByVersion[v.name] || []
+          for (const bug of vBugs) {
+            if (seen.has(bug.key)) continue
+            seen.add(bug.key)
+            const created = new Date(bug.created)
+            if (created >= earliestDate && created <= cutoff) bugCount++
+          }
+        }
+
+        familyTotal += bugCount
+        const displayName = entry.product + '-' + familyNum
+        products.push({
+          name: displayName,
+          bugCount: bugCount,
+          daysElapsed: daysElapsed,
+          isComplete: isComplete,
+          releaseDate: earliestDate.toISOString().split('T')[0]
+        })
+      }
+
+      products.sort(function(a, b) { return a.name.localeCompare(b.name) })
+      releases.push({ version: familyNum, products: products, total: familyTotal })
+    }
+
+    return releases
+  }
+
+  /**
+   * @openapi
+   * /api/modules/releases/delivery/quality/90day-summary:
+   *   get:
+   *     tags: ['Releases: Quality']
+   *     summary: 90-day post-release bug summary grouped by release family (auto-detected)
+   *     responses:
+   *       200:
+   *         description: Bug counts per product within 90 days of GA for each major release
+   */
+  router.get('/quality/90day-summary', requireAuth, requireScope('releases:read'), function(req, res) {
+    try {
+      const config = getConfig(readFromStorage)
+      const versions = readFromStorage('releases/delivery/quality/versions.json') || []
+      const allBugs = loadAllBugs(config.projectKeys)
+      const releases = compute90DaySummary(null, allBugs, versions)
+      res.json({ releases: releases })
+    } catch (error) {
+      console.error('[releases/quality] 90day-summary error:', error)
+      res.status(500).json({ error: error.message })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/modules/releases/delivery/quality/90day-summary:
+   *   post:
+   *     tags: ['Releases: Quality']
+   *     summary: 90-day post-release bug summary with custom version overrides
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema: { type: object }
+   *     responses:
+   *       200:
+   *         description: Bug counts per product within 90 days of GA using provided config
+   */
+  router.post('/quality/90day-summary', requireAuth, requireScope('releases:read'), function(req, res) {
+    try {
+      const config = getConfig(readFromStorage)
+      const versions = readFromStorage('releases/delivery/quality/versions.json') || []
+      const allBugs = loadAllBugs(config.projectKeys)
+      const configReleases = req.body && req.body.releases ? req.body.releases : null
+      const releases = compute90DaySummary(configReleases, allBugs, versions)
+      res.json({ releases: releases })
+    } catch (error) {
+      console.error('[releases/quality] 90day-summary error:', error)
+      res.status(500).json({ error: error.message })
+    }
+  })
+
   /**
    * @openapi
    * /api/modules/releases/delivery/discover-releases:

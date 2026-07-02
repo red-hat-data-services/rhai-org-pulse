@@ -25,4 +25,18 @@ module.exports = async function okrHubExport(addFile, storage) {
       })
     })
   }
+
+  var trackingConfig = storage.readFromStorage('okr-hub/90day-tracking-config.json')
+  if (trackingConfig) {
+    addFile('okr-hub/90day-tracking-config.json', {
+      releases: (trackingConfig.releases || []).map(function(r) {
+        return {
+          version: r.version,
+          products: (r.products || []).map(function(p) {
+            return { name: 'version-name', gaDate: p.gaDate }
+          })
+        }
+      })
+    })
+  }
 }
