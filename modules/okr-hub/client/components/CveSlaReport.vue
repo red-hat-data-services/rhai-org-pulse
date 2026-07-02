@@ -172,19 +172,20 @@ import { ref, computed, onMounted } from 'vue'
 var MONTH_KEYS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
 var MONTH_LABELS = { jan: 'Jan', feb: 'Feb', mar: 'Mar', apr: 'Apr', may: 'May', jun: 'Jun', jul: 'Jul', aug: 'Aug', sep: 'Sep', oct: 'Oct', nov: 'Nov', dec: 'Dec' }
 
-var quarters = [
+var ALL_QUARTERS = [
   { label: 'Q1', months: ['jan', 'feb', 'mar'] },
   { label: 'Q2', months: ['apr', 'may', 'jun'] },
   { label: 'Q3', months: ['jul', 'aug', 'sep'] },
   { label: 'Q4', months: ['oct', 'nov', 'dec'] }
 ]
+var quarters = ref(ALL_QUARTERS)
 
 var loading = ref(true)
 var error = ref(null)
 var data = ref(null)
 var dirty = ref(false)
 var saving = ref(false)
-var openQuarters = ref({ Q1: true, Q2: true, Q3: false, Q4: false })
+var openQuarters = ref({})
 var showAddProduct = ref(false)
 var newProductName = ref('')
 var addProductInput = ref(null)
@@ -330,6 +331,30 @@ async function save() {
   }
 }
 
+function quarterHasData(q) {
+  if (!data.value || !data.value.months) return false
+  for (var mi = 0; mi < q.months.length; mi++) {
+    var m = data.value.months[q.months[mi]]
+    if (!m) continue
+    for (var pi = 0; pi < (data.value.products || []).length; pi++) {
+      var prod = data.value.products[pi]
+      if (m[prod] && (m[prod].met != null || m[prod].missed != null)) return true
+    }
+  }
+  return false
+}
+
+function reorderQuarters() {
+  var withData = []
+  var withoutData = []
+  for (var i = 0; i < ALL_QUARTERS.length; i++) {
+    if (quarterHasData(ALL_QUARTERS[i])) withData.push(ALL_QUARTERS[i])
+    else withoutData.push(ALL_QUARTERS[i])
+  }
+  withData.reverse()
+  quarters.value = withData.concat(withoutData)
+}
+
 onMounted(async function() {
   try {
     var res = await fetch('/api/modules/okr-hub/reports/cve-sla')
@@ -338,6 +363,11 @@ onMounted(async function() {
     if (!data.value.months) data.value.months = {}
     for (var i = 0; i < MONTH_KEYS.length; i++) {
       if (!data.value.months[MONTH_KEYS[i]]) data.value.months[MONTH_KEYS[i]] = {}
+    }
+
+    reorderQuarters()
+    if (quarters.value.length > 0) {
+      openQuarters.value[quarters.value[0].label] = true
     }
   } catch (err) {
     error.value = err.message

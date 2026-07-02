@@ -188,7 +188,7 @@ var quarters = computed(function() {
     map[label].releases.push(rel)
   }
   var result = Object.keys(map).map(function(k) { return map[k] })
-  result.sort(function(a, b) { return a.sortKey - b.sortKey })
+  result.sort(function(a, b) { return b.sortKey - a.sortKey })
   for (var qi = 0; qi < result.length; qi++) {
     var q = result[qi]
     var released = 0

@@ -165,7 +165,8 @@ var showSettings = ref(false)
 var saving = ref(false)
 var editQuarter = ref('Q1')
 var editData = ref(null)
-var quarterKeys = ['Q1', 'Q2', 'Q3', 'Q4']
+var ALL_QUARTER_KEYS = ['Q1', 'Q2', 'Q3', 'Q4']
+var quarterKeys = ref(ALL_QUARTER_KEYS)
 var editFields = ['totalCases', 'defects', 'casesClosed', 'bugsEng', 'rfe', 'supportEx', 'other', 'avgResolutionDays', 'medianResolutionDays']
 
 function getNum(qKey, product, field) {
@@ -233,9 +234,9 @@ var overallDefectRate = computed(function() {
   if (!data.value) return '—'
   var totalCases = 0
   var totalDefects = 0
-  for (var qi = 0; qi < quarterKeys.length; qi++) {
-    var t = quarterTotal(quarterKeys[qi], 'totalCases')
-    var d = quarterTotal(quarterKeys[qi], 'defects')
+  for (var qi = 0; qi < ALL_QUARTER_KEYS.length; qi++) {
+    var t = quarterTotal(ALL_QUARTER_KEYS[qi], 'totalCases')
+    var d = quarterTotal(ALL_QUARTER_KEYS[qi], 'defects')
     if (typeof t === 'number') totalCases += t
     if (typeof d === 'number') totalDefects += d
   }
@@ -252,8 +253,8 @@ var overallDefectRateClass = computed(function() {
 var overallTotalCases = computed(function() {
   if (!data.value) return 0
   var total = 0
-  for (var qi = 0; qi < quarterKeys.length; qi++) {
-    var t = quarterTotal(quarterKeys[qi], 'totalCases')
+  for (var qi = 0; qi < ALL_QUARTER_KEYS.length; qi++) {
+    var t = quarterTotal(ALL_QUARTER_KEYS[qi], 'totalCases')
     if (typeof t === 'number') total += t
   }
   return total
@@ -283,8 +284,8 @@ function computeOverallAvg(field) {
   if (!data.value) return '—'
   var sum = 0
   var count = 0
-  for (var qi = 0; qi < quarterKeys.length; qi++) {
-    var avg = quarterAvg(quarterKeys[qi], field)
+  for (var qi = 0; qi < ALL_QUARTER_KEYS.length; qi++) {
+    var avg = quarterAvg(ALL_QUARTER_KEYS[qi], field)
     if (avg != null) { sum += avg; count++ }
   }
   return count > 0 ? (sum / count).toFixed(1) : '—'
@@ -354,15 +355,36 @@ async function saveSettings() {
   }
 }
 
+function quarterHasData(qKey) {
+  if (!data.value || !data.value.quarters || !data.value.quarters[qKey]) return false
+  for (var i = 0; i < data.value.products.length; i++) {
+    var p = data.value.products[i]
+    if (data.value.quarters[qKey][p] && data.value.quarters[qKey][p].totalCases != null) return true
+  }
+  return false
+}
+
+function reorderQuarters() {
+  var withData = []
+  var withoutData = []
+  for (var i = 0; i < ALL_QUARTER_KEYS.length; i++) {
+    if (quarterHasData(ALL_QUARTER_KEYS[i])) withData.push(ALL_QUARTER_KEYS[i])
+    else withoutData.push(ALL_QUARTER_KEYS[i])
+  }
+  withData.reverse()
+  quarterKeys.value = withData.concat(withoutData)
+}
+
 onMounted(async function() {
   try {
     var res = await fetch('/api/modules/okr-hub/reports/support-cases')
     if (!res.ok) throw new Error('Failed to load report: ' + res.status)
     data.value = await res.json()
 
-    var now = new Date()
-    var currentQ = 'Q' + (Math.floor(now.getMonth() / 3) + 1)
-    openQuarters.value[currentQ] = true
+    reorderQuarters()
+    if (quarterKeys.value.length > 0) {
+      openQuarters.value[quarterKeys.value[0]] = true
+    }
   } catch (err) {
     error.value = err.message
   } finally {

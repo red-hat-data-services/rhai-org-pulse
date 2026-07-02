@@ -278,9 +278,12 @@ async function fetchKr1() {
     if (result.error) {
       kr1Error.value = result.error
     } else {
+      if (result.quarters && result.quarters.length > 0) {
+        result.quarters.reverse()
+      }
       kr1Data.value = result
       if (result.quarters && result.quarters.length > 0) {
-        openSections.value['kr1-' + result.quarters[result.quarters.length - 1].label] = true
+        openSections.value['kr1-' + result.quarters[0].label] = true
       }
     }
   } catch (err) {
@@ -298,9 +301,12 @@ async function fetchKr2() {
     if (result.error) {
       kr2Error.value = result.error
     } else {
+      if (result.quarters && result.quarters.length > 0) {
+        result.quarters.reverse()
+      }
       kr2Data.value = result
       if (result.quarters && result.quarters.length > 0) {
-        openSections.value['kr2-' + result.quarters[result.quarters.length - 1].label] = true
+        openSections.value['kr2-' + result.quarters[0].label] = true
       }
     }
   } catch (err) {
