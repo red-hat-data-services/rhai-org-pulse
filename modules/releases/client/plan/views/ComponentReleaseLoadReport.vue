@@ -6,8 +6,10 @@
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Track component workload distribution across releases.
         </p>
-        <p v-if="formattedFetchedAt" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5" :title="'Data fetched from Jira at ' + fetchedAt">
+        <p v-if="formattedFetchedAt" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5" :title="'Live data — fetched from Jira each time you load or refresh. Last fetched: ' + fetchedAt">
           Data from {{ formattedFetchedAt }}
+          <span class="text-gray-300 dark:text-gray-600 mx-0.5">&middot;</span>
+          <span class="text-[10px]">auto-refreshes every 5 min</span>
         </p>
       </div>
       <div class="flex items-center gap-2">
@@ -31,6 +33,22 @@
           @click="handleCollapseAll"
           class="px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
         >Collapse All</button>
+        <button
+          v-if="hasFetched"
+          @click="loadData()"
+          :disabled="loadingData"
+          class="px-2.5 py-1.5 text-xs font-medium rounded-md transition-colors"
+          :class="loadingData
+            ? 'text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cursor-not-allowed'
+            : 'text-white bg-primary-600 hover:bg-primary-700 border border-primary-600 hover:border-primary-700'"
+          title="Re-fetch data from Jira"
+        >
+          <span v-if="loadingData" class="inline-flex items-center gap-1">
+            <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" /><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+            Refreshing…
+          </span>
+          <span v-else>Refresh</span>
+        </button>
       </div>
     </div>
 
@@ -367,6 +385,7 @@ import PillarConfigPanel from '../components/PillarConfigPanel.vue'
 
 const API_BASE = '/modules/releases/pm-hub'
 var STORAGE_KEY = 'pm-hub-filters'
+var AUTO_REFRESH_MS = 5 * 60 * 1000
 
 var selectedPillars = ref([])
 var selectedComponents = ref([])
@@ -400,6 +419,7 @@ var dataError = ref(null)
 var hasFetched = ref(false)
 var tableRef = ref(null)
 var fetchedAt = ref(null)
+var autoRefreshTimer = ref(null)
 
 var filterProduct = ref([])
 var filterType = ref([])
@@ -990,6 +1010,22 @@ function getEffectiveComponents() {
   return []
 }
 
+function stopAutoRefresh() {
+  if (autoRefreshTimer.value) {
+    clearInterval(autoRefreshTimer.value)
+    autoRefreshTimer.value = null
+  }
+}
+
+function startAutoRefresh() {
+  stopAutoRefresh()
+  autoRefreshTimer.value = setInterval(function() {
+    if (!hasFetched.value || loadingData.value) return
+    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
+    loadData()
+  }, AUTO_REFRESH_MS)
+}
+
 async function loadData() {
   var effectiveComponents = getEffectiveComponents()
   if (effectiveComponents.length === 0 && selectedVersions.value.length === 0) return
@@ -1020,6 +1056,7 @@ async function loadData() {
     fetchedAt.value = null
   } finally {
     loadingData.value = false
+    if (hasFetched.value && !autoRefreshTimer.value) startAutoRefresh()
   }
 }
 
@@ -1056,5 +1093,6 @@ onMounted(function() {
 
 onBeforeUnmount(function() {
   document.removeEventListener('mousedown', handleClickOutside)
+  stopAutoRefresh()
 })
 </script>
