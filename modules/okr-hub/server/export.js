@@ -39,4 +39,18 @@ module.exports = async function okrHubExport(addFile, storage) {
       })
     })
   }
+
+  var featureConfig = storage.readFromStorage('okr-hub/feature-delivery-config.json')
+  if (featureConfig) {
+    addFile('okr-hub/feature-delivery-config.json', {
+      releases: (featureConfig.releases || []).map(function(r) {
+        return {
+          name: 'Release',
+          products: (r.products || []).map(function() {
+            return { version: 'version-name', freezeDate: '2026-01-01', releaseDate: '2026-06-01' }
+          })
+        }
+      })
+    })
+  }
 }

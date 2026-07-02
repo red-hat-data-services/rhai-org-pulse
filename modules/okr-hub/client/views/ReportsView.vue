@@ -53,6 +53,7 @@
     <CommitmentTrackingReport v-if="activeReport === 'commitment-tracking'" />
     <TechVisibilityReport v-if="activeReport === 'tech-visibility'" />
     <SupportCaseReport v-if="activeReport === 'support-cases'" />
+    <FeatureDeliveryReport v-if="activeReport === 'feature-delivery'" />
   </div>
 </template>
 
@@ -64,6 +65,7 @@ import PostReleaseDefectsReport from '../components/post-release-defects/PostRel
 import CommitmentTrackingReport from '../components/commitment-tracking/CommitmentTrackingReport.vue'
 import TechVisibilityReport from '../components/TechVisibilityReport.vue'
 import SupportCaseReport from '../components/SupportCaseReport.vue'
+import FeatureDeliveryReport from '../components/FeatureDeliveryReport.vue'
 
 var activeReport = ref(null)
 
@@ -134,6 +136,15 @@ var reports = [
     icon: '🔧',
     iconBg: 'bg-orange-50 dark:bg-orange-900/30',
     measure: 'Defect Rate for Product: 10% | Time to Resolution Target: 10-14 days',
+    measureColor: 'text-gray-600 dark:text-gray-300'
+  },
+  {
+    id: 'feature-delivery',
+    title: 'Feature Delivery Accuracy',
+    description: 'Committed vs delivered features per release. Compares Target Version (before freeze) to Fix Version at release.',
+    icon: '📊',
+    iconBg: 'bg-indigo-50 dark:bg-indigo-900/30',
+    measure: '>90% of committed features delivered per release',
     measureColor: 'text-gray-600 dark:text-gray-300'
   }
 ]

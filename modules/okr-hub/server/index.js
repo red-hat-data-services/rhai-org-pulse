@@ -16,6 +16,9 @@ var contentCacheAt = 0
 var CONTENT_CACHE_TTL = 15 * 60 * 1000
 var CONTENT_SHEET_ID = '1LePie38Eg1gUEIO6qu5zifgnCe9ASj8QHE8n_sgsrVk'
 
+var featureDeliveryCache = {}
+var FEATURE_DELIVERY_CACHE_TTL = 10 * 60 * 1000
+
 /**
  * @param {import('express').Router} router
  * @param {import('@shared/server/module-context').ModuleContext} context
@@ -686,6 +689,161 @@ module.exports = function registerRoutes(router, context) {
       res.json({ ok: true })
     } catch (err) {
       console.error('[okr-hub] 90day-tracking-config save error:', err)
+      res.status(500).json({ error: err.message })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/modules/okr-hub/reports/feature-delivery-config:
+   *   get:
+   *     tags: [OKR Hub]
+   *     summary: Get feature delivery accuracy configuration
+   *     responses:
+   *       200:
+   *         description: Release configuration with product versions and dates
+   */
+  router.get('/reports/feature-delivery-config', requireScope('okr-hub:read'), function(req, res) {
+    var saved = storage.readFromStorage('okr-hub/feature-delivery-config.json')
+    if (saved && Array.isArray(saved.releases)) {
+      return res.json(saved)
+    }
+    res.json({ releases: [] })
+  })
+
+  /**
+   * @openapi
+   * /api/modules/okr-hub/reports/feature-delivery-config:
+   *   put:
+   *     tags: [OKR Hub]
+   *     summary: Save feature delivery accuracy configuration
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema: { type: object }
+   *     responses:
+   *       200:
+   *         description: Saved
+   */
+  router.put('/reports/feature-delivery-config', requireScope('okr-hub:write'), function(req, res) {
+    try {
+      var body = req.body
+      if (!body || !Array.isArray(body.releases)) {
+        return res.status(400).json({ error: 'Invalid payload: requires releases array' })
+      }
+      storage.writeToStorage('okr-hub/feature-delivery-config.json', body)
+      featureDeliveryCache = {}
+      res.json({ ok: true })
+    } catch (err) {
+      console.error('[okr-hub] feature-delivery-config save error:', err)
+      res.status(500).json({ error: err.message })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/modules/okr-hub/reports/feature-delivery:
+   *   get:
+   *     tags: [OKR Hub]
+   *     summary: Compute feature delivery accuracy from Jira
+   *     responses:
+   *       200:
+   *         description: Per-release committed vs delivered feature counts
+   */
+  router.get('/reports/feature-delivery', requireScope('okr-hub:read'), async function(req, res) {
+    try {
+      var config = storage.readFromStorage('okr-hub/feature-delivery-config.json')
+      if (!config || !Array.isArray(config.releases) || config.releases.length === 0) {
+        return res.json({ releases: [], summary: { committed: 0, delivered: 0, accuracy: 0 } })
+      }
+
+      var now = Date.now()
+      var totalCommitted = 0
+      var totalDelivered = 0
+      var releases = []
+
+      for (var ri = 0; ri < config.releases.length; ri++) {
+        var rel = config.releases[ri]
+        var products = []
+        var relCommitted = 0
+        var relDelivered = 0
+
+        for (var pi = 0; pi < (rel.products || []).length; pi++) {
+          var p = rel.products[pi]
+          if (!p.version) continue
+
+          var cacheKey = p.version + '|' + (p.freezeDate || '') + '|' + (p.releaseDate || '')
+          var cached = featureDeliveryCache[cacheKey]
+
+          if (cached && (now - cached.at) < FEATURE_DELIVERY_CACHE_TTL) {
+            products.push(cached.data)
+            relCommitted += cached.data.committed
+            relDelivered += cached.data.delivered
+            continue
+          }
+
+          var committed = 0
+          var delivered = 0
+
+          try {
+            if (p.freezeDate) {
+              var committedJql = 'issuetype = Feature AND cf[10855] = "' + p.version + '" AND created <= "' + p.freezeDate + '"'
+              var committedResults = await jira.fetchAllJqlResults(committedJql, 'summary')
+              committed = committedResults.length
+            } else {
+              var tvJql = 'issuetype = Feature AND cf[10855] = "' + p.version + '"'
+              var tvResults = await jira.fetchAllJqlResults(tvJql, 'summary')
+              committed = tvResults.length
+            }
+          } catch (jiraErr) {
+            console.warn('[okr-hub] feature-delivery committed query failed for ' + p.version + ':', jiraErr.message)
+          }
+
+          try {
+            var deliveredJql = 'issuetype = Feature AND fixVersion = "' + p.version + '"'
+            var deliveredResults = await jira.fetchAllJqlResults(deliveredJql, 'summary')
+            delivered = deliveredResults.length
+          } catch (jiraErr) {
+            console.warn('[okr-hub] feature-delivery delivered query failed for ' + p.version + ':', jiraErr.message)
+          }
+
+          var accuracy = committed > 0 ? Math.round((delivered / committed) * 100) : 0
+          var productData = {
+            version: p.version,
+            freezeDate: p.freezeDate || null,
+            releaseDate: p.releaseDate || null,
+            committed: committed,
+            delivered: delivered,
+            accuracy: accuracy
+          }
+
+          featureDeliveryCache[cacheKey] = { data: productData, at: now }
+          products.push(productData)
+          relCommitted += committed
+          relDelivered += delivered
+        }
+
+        var relAccuracy = relCommitted > 0 ? Math.round((relDelivered / relCommitted) * 100) : 0
+        releases.push({
+          name: rel.name,
+          products: products,
+          committed: relCommitted,
+          delivered: relDelivered,
+          accuracy: relAccuracy
+        })
+      }
+
+      totalCommitted = releases.reduce(function(s, r) { return s + r.committed }, 0)
+      totalDelivered = releases.reduce(function(s, r) { return s + r.delivered }, 0)
+      var overallAccuracy = totalCommitted > 0 ? Math.round((totalDelivered / totalCommitted) * 100) : 0
+
+      res.json({
+        releases: releases,
+        summary: { committed: totalCommitted, delivered: totalDelivered, accuracy: overallAccuracy }
+      })
+    } catch (err) {
+      console.error('[okr-hub] feature-delivery compute error:', err)
       res.status(500).json({ error: err.message })
     }
   })

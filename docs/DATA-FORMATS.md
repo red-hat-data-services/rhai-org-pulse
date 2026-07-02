@@ -1631,6 +1631,62 @@ Synced from a Google Sheet via the ai-catalyst module (showcase feature). Contai
 
 ---
 
+## OKR Hub — Feature Delivery Accuracy
+
+### Config: `okr-hub/feature-delivery-config.json`
+
+```json
+{
+  "releases": [
+    {
+      "name": "Release 3.4",
+      "products": [
+        { "version": "rhoai-3.4", "freezeDate": "2026-03-01", "releaseDate": "2026-05-14" },
+        { "version": "rhelai-3.4", "freezeDate": "2026-02-15", "releaseDate": "2026-03-19" },
+        { "version": "rhaii-3.4", "freezeDate": "2026-02-15", "releaseDate": "2026-03-19" }
+      ]
+    }
+  ]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `releases[].name` | string | Display name for the release group |
+| `releases[].products[].version` | string | Jira version name used in Target Version and Fix Version queries |
+| `releases[].products[].freezeDate` | ISO date string | Planning freeze cutoff date for committed feature count |
+| `releases[].products[].releaseDate` | ISO date string | GA date for the product version |
+
+### Response: `GET /api/modules/okr-hub/reports/feature-delivery`
+
+```json
+{
+  "releases": [
+    {
+      "name": "Release 3.4",
+      "products": [
+        { "version": "rhoai-3.4", "freezeDate": "2026-03-01", "releaseDate": "2026-05-14", "committed": 42, "delivered": 38, "accuracy": 90 }
+      ],
+      "committed": 42,
+      "delivered": 38,
+      "accuracy": 90
+    }
+  ],
+  "summary": { "committed": 42, "delivered": 38, "accuracy": 90 }
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `releases[].products[].committed` | number | Feature count with Target Version set before freeze date |
+| `releases[].products[].delivered` | number | Feature count with Fix Version set to this version |
+| `releases[].products[].accuracy` | number | `round(delivered / committed * 100)`, 0 if committed is 0 |
+| `summary.committed` | number | Total committed across all releases |
+| `summary.delivered` | number | Total delivered across all releases |
+| `summary.accuracy` | number | Overall accuracy percentage |
+
+---
+
 ## Fixture Rules
 
 The `fixtures/` directory provides read-only demo data used when `DEMO_MODE=true`. These rules prevent data format drift:
