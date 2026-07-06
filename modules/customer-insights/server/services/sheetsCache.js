@@ -1,6 +1,6 @@
 // Simple in-memory cache with TTL
 const cache = new Map()
- 
+
 const TTL = parseInt(process.env.SHEETS_CACHE_TTL_MS || '30000', 10) // 30 seconds default
 
 function getCached(key) {

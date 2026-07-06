@@ -20,9 +20,8 @@ module.exports = function registerGoogleDriveAuthRoutes(router, context) {
   function getOAuthClient() {
     const clientId = secrets.GOOGLE_OAUTH_CLIENT_ID
     const clientSecret = secrets.GOOGLE_OAUTH_CLIENT_SECRET
-     
+
     const callbackUrl = process.env.GOOGLE_OAUTH_CALLBACK_URL ||
-     
                        `${process.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/modules/customer-insights/auth/google/callback`
 
     if (!clientId || !clientSecret) {

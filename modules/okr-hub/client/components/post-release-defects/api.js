@@ -1,6 +1,5 @@
 import { apiRequest } from '@shared/client';
 
- 
 const BASE = '/modules/releases/delivery/quality';
 const OKR_BASE = '/modules/okr-hub/reports';
 

@@ -12,11 +12,9 @@ export function useAIReview() {
     aiReview.value = null
 
     try {
-       
       aiReview.value = await apiRequest(
         `/modules/ai-impact/features/${encodeURIComponent(featureKey)}`
       )
-       
     } catch (e) {
       // 404 = no AI Impact data for this feature (expected).
       // Also handles the case where the AI Impact module is disabled —

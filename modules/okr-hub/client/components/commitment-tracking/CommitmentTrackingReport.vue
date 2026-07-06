@@ -271,7 +271,6 @@ async function createSnapshot() {
   creatingSnapshot.value = true
   snapshotError.value = null
   try {
-     
     const response = await fetch(`/api/modules/releases/delivery/commitment/snapshot/${selectedVersion.value}/${selectedPhase.value}`, {
       method: 'POST'
     })
