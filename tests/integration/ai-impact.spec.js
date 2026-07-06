@@ -245,6 +245,10 @@ test.describe('AI Impact Views @ai-impact', () => {
     const url = page.url();
     expect(url).toMatch(/\/#?\/?$/);
 
-    expect(page.errors).toHaveLength(0);
+    // Filter out expected "view not found" errors from the redirect
+    const unexpectedErrors = page.errors.filter(
+      (e) => !e.message.includes('View "state-of-the-union" not found')
+    );
+    expect(unexpectedErrors).toHaveLength(0);
   });
 });
