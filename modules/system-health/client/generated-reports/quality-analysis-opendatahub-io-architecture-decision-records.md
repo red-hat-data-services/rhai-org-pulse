@@ -1,6 +1,6 @@
 ---
 repository: "opendatahub-io/architecture-decision-records"
-overall_score: 1.8
+overall_score: 3.4
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
@@ -19,121 +19,164 @@ scorecard:
     status: "N/A - No code coverage applicable"
   - dimension: "CI/CD Automation"
     score: 2.0
-    status: "Only stale-bot workflow; no markdown linting, link checking, or ADR validation"
+    status: "Only a stale-bot workflow; no link checking, linting, or template validation"
   - dimension: "Agent Rules"
     score: 5.0
-    status: "Has .claude/skills/odh-adr-create skill; no rules directory or test guidance"
+    status: "Basic ADR creation skill exists but no validation or review rules"
+  - dimension: "Documentation Governance"
+    score: 4.0
+    status: "Template exists but inconsistent adherence; duplicate ADR numbers; broken links"
+  - dimension: "Content Quality"
+    score: 5.0
+    status: "Active repo with 38 ADRs; good template but uneven compliance"
+  - dimension: "Contributor Experience"
+    score: 3.0
+    status: "CODEOWNERS present but no PR template, CONTRIBUTING guide, or issue templates"
 critical_gaps:
-  - title: "No markdown linting or link validation in CI"
-    impact: "Broken links, inconsistent formatting, and stale references go undetected"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No ADR template compliance validation"
-    impact: "ADRs may be merged with missing required sections (What, Why, Goals, Alternatives, etc.)"
+  - title: "No CI/CD validation for documentation quality"
+    impact: "Broken links, formatting issues, and template non-compliance go undetected until manual review"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No CODEOWNERS enforcement via branch protection"
-    impact: "CODEOWNERS file exists but without required reviews, ADRs can be merged without architect approval"
+  - title: "Duplicate ADR numbers in operator directory"
+    impact: "Three pairs of duplicated numbers (0007, 0009, 0011) create confusion and violate the ADR numbering contract"
+    severity: "HIGH"
+    effort: "1-2 hours"
+  - title: "No PR template or contributor guide"
+    impact: "New contributors have no guidance on ADR submission process, review expectations, or quality standards"
     severity: "MEDIUM"
-    effort: "1 hour"
-  - title: "Missing ADR status tracking and lifecycle automation"
-    impact: "No way to track which ADRs are Draft, Approved, or Superseded without reading each file"
+    effort: "2-3 hours"
+  - title: "Broken internal links in arch-overview.md"
+    impact: "20+ broken image references in the main architecture overview document"
+    severity: "MEDIUM"
+    effort: "1-2 hours"
+  - title: "Inconsistent ADR template adherence"
+    impact: "Some ADRs missing required sections (Alternatives, Stakeholder Impacts); one uses bold headings instead of ## sections"
     severity: "MEDIUM"
     effort: "4-8 hours"
 quick_wins:
-  - title: "Add markdownlint CI workflow"
+  - title: "Add markdown linting CI workflow"
     effort: "1-2 hours"
-    impact: "Enforces consistent markdown formatting across all ADRs and documentation"
-  - title: "Add link checker workflow (lychee or markdown-link-check)"
-    effort: "1-2 hours"
-    impact: "Catches broken links to external docs, images, and cross-references"
-  - title: "Add PR template for new ADRs"
+    impact: "Automated detection of formatting issues, broken links, and style inconsistencies"
+  - title: "Add PR template for ADR submissions"
     effort: "30 minutes"
-    impact: "Guides contributors to include required sections and metadata"
-  - title: "Add .claude/rules/ directory with ADR review guidelines"
-    effort: "2-3 hours"
-    impact: "Enables AI-assisted ADR review for completeness and quality"
+    impact: "Standardized PR process with checklist for required sections, reviewer assignment, and status"
+  - title: "Fix duplicate ADR numbers"
+    effort: "1-2 hours"
+    impact: "Resolve three pairs of duplicated operator ADR numbers to restore numbering integrity"
+  - title: "Add internal link checker workflow"
+    effort: "1-2 hours"
+    impact: "Catch broken links before merge, especially for image references"
 recommendations:
   priority_0:
-    - "Add markdown linting workflow (markdownlint-cli2) to enforce formatting standards on PRs"
-    - "Add link validation workflow to catch broken internal and external links"
+    - "Add CI workflow for markdown linting (markdownlint) and link validation to catch quality issues pre-merge"
+    - "Fix the three pairs of duplicate ADR numbers in the operator directory (0007, 0009, 0011)"
   priority_1:
-    - "Create ADR template validation script that checks all required sections are present"
-    - "Add PR template with checklist for ADR submissions"
-    - "Create .claude/rules/ with ADR review guidelines for AI-assisted quality checks"
+    - "Create CONTRIBUTING.md with ADR submission guidelines, review process, and template checklist"
+    - "Add a PR template with ADR quality checklist (required sections, numbering, status field)"
+    - "Create an ADR validation skill that checks template compliance and numbering conflicts"
+    - "Fix the 20+ broken image links in documentation/arch-overview.md"
   priority_2:
-    - "Build ADR index generator that creates a status dashboard from ADR metadata"
-    - "Add spell-checker workflow (cspell) for technical documentation quality"
-    - "Create a CONTRIBUTING.md with the ADR authoring workflow"
+    - "Add issue templates for proposing new ADRs"
+    - "Add an ADR status dashboard or index page with filtering by status and component"
+    - "Create a CI check that validates ADR YAML metadata tables for consistency"
+    - "Add spell-checking and writing style linting (vale) to CI"
 ---
 
 # Quality Analysis: architecture-decision-records
 
 ## Executive Summary
 
-- **Overall Score: 1.8/10**
-- **Repository Type**: Documentation-only (Architecture Decision Records + Architecture Documentation)
-- **Primary Content**: 38 ADR markdown files, 18 architecture documentation files, ~50 diagram images
-- **Languages/Frameworks**: Markdown, Drawio diagrams, PNG images
-- **Key Strengths**: Well-structured ADR template, good CODEOWNERS configuration, has a Claude skill for ADR creation
-- **Critical Gaps**: Zero CI/CD quality gates for documentation; no linting, link checking, or template validation
-- **Agent Rules Status**: Partial — has `.claude/skills/odh-adr-create` but no `.claude/rules/` directory
+- **Overall Score: 3.4/10** (adjusted for documentation-only repository)
+- **Repository Type**: Documentation-only (Architecture Decision Records + architecture docs)
+- **Primary Language**: Markdown (60 .md files, ~9,400 lines)
+- **Activity**: Very active — 254 commits in 2025, 382 total, 50+ contributors
+- **Agent Rules Status**: Partial — one ADR creation skill exists, but no validation or review rules
 
-### Context
+This repository stores Architecture Decision Records (ADRs) and architecture documentation for Open Data Hub / OpenShift AI. As a documentation-only repo with no source code, traditional software quality dimensions (unit tests, integration tests, container images, coverage) do not apply. The scoring focuses on **documentation governance**, **CI/CD for docs**, **content quality**, and **contributor experience**.
 
-This is **not a source code repository**. It contains Architecture Decision Records and architecture documentation for the Open Data Hub (ODH) / Red Hat OpenShift AI (RHOAI) platform. Traditional software quality metrics (unit tests, coverage, container images) do not apply. Instead, this analysis focuses on **documentation quality practices** — the equivalent of "code quality" for a docs-only repo.
+**Key Strengths:**
+- Well-defined ADR template with clear structure
+- Active community with 50+ contributors and regular updates
+- CODEOWNERS file with component-level ownership
+- Existing Claude Code skill for ADR creation
+
+**Critical Gaps:**
+- No CI/CD validation (only a stale-bot workflow)
+- Duplicate ADR numbers (3 pairs in operator directory)
+- 20+ broken internal links in the main architecture document
+- No PR template, CONTRIBUTING guide, or issue templates
+- Inconsistent template adherence across ADRs
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0/10 | N/A — Documentation-only repository |
-| Integration/E2E | 0/10 | N/A — No executable code |
-| Build Integration | 0/10 | N/A — No build artifacts |
-| Image Testing | 0/10 | N/A — No container images |
-| Coverage Tracking | 0/10 | N/A — No code coverage applicable |
-| CI/CD Automation | 2/10 | Only stale-bot; no doc quality automation |
-| Agent Rules | 5/10 | ADR creation skill exists; no review rules |
+| Unit Tests | N/A | Documentation-only repository |
+| Integration/E2E | N/A | No executable code |
+| Build Integration | N/A | No build artifacts |
+| Image Testing | N/A | No container images |
+| Coverage Tracking | N/A | No code coverage applicable |
+| CI/CD Automation | 2/10 | Only stale-bot; no linting, link checking, or validation |
+| Agent Rules | 5/10 | ADR creation skill exists; no validation or review rules |
+| **Documentation Governance** | **4/10** | **Template exists but inconsistent compliance** |
+| **Content Quality** | **5/10** | **38 ADRs, good depth but uneven quality** |
+| **Contributor Experience** | **3/10** | **CODEOWNERS only; no PR template or contributor guide** |
 
-**Note**: The 0/10 scores for code-related dimensions reflect the absence of source code, not a quality failure. The meaningful scores for this repository type are CI/CD Automation and Agent Rules.
+> **Note**: Standard software quality dimensions (Unit Tests through Coverage Tracking) are scored N/A because this is a pure documentation repository. The overall score reflects the documentation-specific dimensions.
 
 ## Critical Gaps
 
-### 1. No Markdown Linting or Formatting Enforcement
-- **Impact**: Inconsistent formatting across 56 markdown files; no enforcement of heading levels, list styles, or line lengths
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Evidence**: The ADR template itself has minor formatting issues (e.g., line 32 has a stray `*` in Non-Goals)
-- **Fix**: Add `markdownlint-cli2` GitHub Actions workflow triggered on PRs
-
-### 2. No Link Validation
-- **Impact**: Documentation links to external Google Docs, GitHub repos, and internal cross-references can break silently. Many links use `[*text*](url)` format (italic inside link text) which is unusual and may cause rendering issues.
-- **Severity**: HIGH
-- **Effort**: 1-2 hours
-- **Evidence**: Multiple links to Google Docs throughout `documentation/arch-overview.md` that may require authentication and could go stale
-- **Fix**: Add `lychee` or `markdown-link-check` workflow
-
-### 3. No ADR Template Compliance Validation
-- **Impact**: ADRs can be merged missing required sections (What, Why, Goals, Non-Goals, How, Alternatives, Stakeholder Impacts, Reviews). No automated check ensures the metadata table is complete.
+### 1. No CI/CD Validation for Documentation Quality
+- **Impact**: Broken links, formatting issues, template non-compliance, and numbering conflicts go undetected until manual review
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Evidence**: Template defines required sections but nothing enforces their presence in PRs
-- **Fix**: Create a validation script (bash or Python) that parses ADR markdown and checks for required headings
+- **Details**: The only workflow is `.github/workflows/stale.yml` which marks stale PRs. There is no:
+  - Markdown linting (markdownlint, remark-lint)
+  - Internal/external link checking
+  - Template compliance validation
+  - Spell checking
+  - ADR numbering conflict detection
 
-### 4. No ADR Lifecycle Tracking
-- **Impact**: No centralized index shows ADR status (Draft/Approved/Superseded). Contributors must open each file to check status. ADR numbering conflicts are possible (e.g., `ODH-ADR-Operator-0007` appears twice with different titles: `auth-crd` and `components-version-mapping`; `ODH-ADR-Operator-0009` also appears twice: `connection-api` and `observability-tracing-strategy`; `ODH-ADR-Operator-0011` appears twice: `observability-metrics-autoscaling` and `Perses-dashboard-guidelines`)
-- **Severity**: MEDIUM
-- **Effort**: 4-8 hours
-- **Fix**: Build an automated index generator that scans ADR files and produces a status table
+### 2. Duplicate ADR Numbers in Operator Directory
+- **Impact**: Three pairs of duplicated numbers violate the ADR contract ("Numbers will not be reused")
+- **Severity**: HIGH
+- **Effort**: 1-2 hours
+- **Duplicates found**:
+  - `ODH-ADR-Operator-0007-auth-crd.md` + `ODH-ADR-Operator-0007-components-version-mapping.md`
+  - `ODH-ADR-Operator-0009-connection-api.md` + `ODH-ADR-Operator-0009-observability-tracing-strategy.md`
+  - `ODH-ADR-Operator-0011-observability-metrics-autoscaling.md` + `ODH-ADR-Operator-0011-Perses-dashboard-guidelines.md`
 
-### 5. Missing Branch Protection / Required Reviews
-- **Impact**: CODEOWNERS assigns `@opendatahub-io/architects` as default reviewers, but without branch protection rules requiring review approval, ADRs could theoretically be merged without architect sign-off
+### 3. No PR Template or Contributor Guide
+- **Impact**: New contributors have no guidance on the ADR submission process, review expectations, or quality standards
 - **Severity**: MEDIUM
-- **Effort**: 1 hour (GitHub settings change)
+- **Effort**: 2-3 hours
+- **Missing artifacts**:
+  - No `CONTRIBUTING.md`
+  - No `.github/PULL_REQUEST_TEMPLATE.md`
+  - No `.github/ISSUE_TEMPLATE/` directory
+
+### 4. Broken Internal Links in Architecture Overview
+- **Impact**: The main architecture document (`documentation/arch-overview.md`) has 20+ broken image references
+- **Severity**: MEDIUM
+- **Effort**: 1-2 hours
+- **Root cause**: URL-encoded paths (`%20`) don't resolve correctly as relative file paths. Images with spaces in filenames exist but the markdown references use mixed encoding.
+
+### 5. Inconsistent Template Adherence
+- **Impact**: Readers cannot rely on a consistent structure across ADRs; some miss critical sections
+- **Severity**: MEDIUM
+- **Effort**: 4-8 hours (retroactive fix across all ADRs)
+- **Examples**:
+  - `ODH-ADR-DSP-0001`: Missing Alternatives and Stakeholder Impacts sections
+  - `ODH-ADR-EH-0003`: Uses `## **Bold**` headings instead of standard `##` (breaks automated parsing)
+  - `ODH-ADR-0001-automl` and `ODH-ADR-0001-autorag`: Missing Stakeholder Impacts section
+  - Multiple ADRs use inconsistent Status values: Draft, Proposed, Accepted, Approved, Review, TBD, Refinement completed
 
 ## Quick Wins
 
-### 1. Add Markdownlint Workflow (1-2 hours)
+### 1. Add Markdown Linting CI Workflow
+- **Effort**: 1-2 hours
+- **Impact**: Automated detection of formatting issues and style inconsistencies
+- **Implementation**:
 ```yaml
 # .github/workflows/lint.yml
 name: Lint Markdown
@@ -143,192 +186,183 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: DavidAnson/markdownlint-cli2-action@v16
+      - uses: DavidAnson/markdownlint-cli2-action@v19
         with:
           globs: '**/*.md'
 ```
 
-### 2. Add Link Checker Workflow (1-2 hours)
+### 2. Add Internal Link Checker
+- **Effort**: 1-2 hours
+- **Impact**: Catch broken links before merge
+- **Implementation**:
 ```yaml
 # .github/workflows/links.yml
 name: Check Links
-on:
-  pull_request:
-  schedule:
-    - cron: '0 9 * * 1'  # Weekly on Monday
+on: [pull_request]
 jobs:
-  links:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: lycheeverse/lychee-action@v2
         with:
-          args: --verbose --no-progress './**/*.md'
-          fail: true
+          args: --no-progress --exclude-mail '**/*.md'
 ```
 
-### 3. Add PR Template (30 minutes)
+### 3. Add PR Template
+- **Effort**: 30 minutes
+- **Impact**: Standardized PR process with quality checklist
+- **Implementation**:
 ```markdown
-<!-- .github/pull_request_template.md -->
+<!-- .github/PULL_REQUEST_TEMPLATE.md -->
 ## ADR Checklist
-
-- [ ] Follows the ODH ADR template (ODH-ADR-0000-template.md)
-- [ ] Unique ADR number (no conflicts with existing ADRs)
-- [ ] All required sections present: What, Why, Goals, Non-Goals, How, Alternatives
-- [ ] Metadata table complete (Date, Scope, Status, Authors)
-- [ ] Stakeholder Impacts table populated
-- [ ] Diagrams/images included where helpful
-- [ ] Cross-references to related ADRs included
+- [ ] ADR number is unique (no conflicts with existing ADRs)
+- [ ] All required sections present: What, Why, Goals, Non-Goals, How, Alternatives, Stakeholder Impacts, Reviews
+- [ ] Metadata table is complete (Date, Scope, Status, Authors)
+- [ ] Status is set to "Approved" (will be approved upon merge)
+- [ ] Internal links are valid
+- [ ] Component CODEOWNERS are added as reviewers
 ```
 
-### 4. Add ADR Review Agent Rules (2-3 hours)
-Create `.claude/rules/adr-review.md` to enable AI-assisted review of ADR quality and completeness.
+### 4. Fix Duplicate ADR Numbers
+- **Effort**: 1-2 hours
+- **Impact**: Restore ADR numbering integrity
+- **Action**: Renumber the later-created ADR in each duplicate pair to the next available number (0013, 0014, 0015 for operator)
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Current State**: Minimal — only a stale-bot workflow exists.
-
+**Workflows Found**: 1
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `stale.yml` | Daily cron (`00 03 * * *`) | Marks PRs as stale after 21 days, closes after 7 more days |
+| `stale.yml` | `schedule` (daily 03:00 UTC) + `workflow_dispatch` | Mark stale PRs after 21 days, close after 28 |
 
-**Missing**:
-- No markdown linting on PRs
+**Missing CI/CD**:
+- No markdown linting
 - No link validation
-- No spell-checking
-- No ADR template compliance checking
-- No automated ADR index generation
-- No image optimization or size checking
+- No template compliance checks
+- No ADR numbering conflict detection
+- No spell checking
+- No image reference validation
 
 ### Test Coverage
 
-**N/A** — This is a documentation-only repository. There are no source code files, no test files, and no executable content.
-
-- 0 test files
-- 0 source code files
-- 152 total files (56 markdown, ~50 images, CODEOWNERS, LICENSE, skill files)
+Not applicable — this is a documentation-only repository with no source code.
 
 ### Code Quality
 
-**Documentation Quality Assessment**:
+**Markdown Consistency Issues**:
+- One ADR uses `## **Bold**` headings instead of `##` (EH-0003)
+- Files with spaces in names (13 image files in `documentation/images/`)
+- Inconsistent metadata table formatting across ADRs
+- ADR statuses are not standardized — found: Draft, Proposed, Accepted, Approved, Review, TBD, "Refinement completed. TP in 3.4"
 
-| Aspect | Status |
-|--------|--------|
-| ADR Template | Well-structured with required sections and metadata table |
-| Naming Convention | Consistent `ODH-ADR-{Scope}-{NNNN}-{description}.md` pattern |
-| CODEOWNERS | Comprehensive per-component ownership mapping |
-| Formatting Consistency | Variable — no automated enforcement |
-| Link Quality | Unknown — no automated checking |
-| ADR Numbering | **Has conflicts** — duplicate numbers in operator/ subdirectory |
-
-**ADR Numbering Conflicts Found**:
-- `ODH-ADR-Operator-0007` → both `auth-crd.md` and `components-version-mapping.md`
-- `ODH-ADR-Operator-0009` → both `connection-api.md` and `observability-tracing-strategy.md`
-- `ODH-ADR-Operator-0011` → both `observability-metrics-autoscaling.md` and `Perses-dashboard-guidelines.md`
-
-These conflicts suggest the numbering process lacks automated uniqueness validation.
+**CODEOWNERS**: Well-structured with component-level ownership covering 11 component teams under `@opendatahub-io/architects`.
 
 ### Container Images
 
-**N/A** — No container images are built from this repository.
+Not applicable — no container images in this repository.
 
 ### Security
 
-**N/A** — No source code, dependencies, or container images to scan. However:
-- Some documentation links to internal Google Docs may expose internal URLs publicly
-- No `.gitignore` present (minor — mostly images and markdown)
+- **No SECURITY.md**: No vulnerability reporting process documented
+- No secret scanning configuration
+- No signed commits requirement
+- Repository is public — appropriate for architecture documentation
 
 ### Agent Rules (Agentic Flow Quality)
 
 **Status**: Partial
+- **`.claude/` directory**: Present
+- **`.claude/skills/odh-adr-create/SKILL.md`**: Comprehensive ADR creation skill with:
+  - Automatic numbering detection across global and component-scoped ADRs
+  - Template-adherent draft generation
+  - Interview-based workflow
+  - Component abbreviation table
+  - Iterative refinement support
+- **Missing**:
+  - No ADR review/validation skill
+  - No `.claude/rules/` directory for documentation standards
+  - No quality gate rules for template compliance checking
+  - No automated numbering conflict detection rule
 
-**What exists**:
-- `.claude/skills/odh-adr-create/SKILL.md` — A well-crafted Claude skill for creating new ADRs
-  - Handles auto-numbering, component scoping, template compliance
-  - Includes detailed interview workflow and writing style guidance
-  - References ecosystem context for cross-component impact analysis
-  - 200 lines of comprehensive instructions
+**Assessment**: The existing `odh-adr-create` skill is well-crafted and comprehensive. The gap is on the validation side — there's no skill or rule for reviewing ADRs against template compliance, checking numbering, or validating links.
 
-**What's missing**:
-- No `.claude/rules/` directory
-- No `CLAUDE.md` or `AGENTS.md` in repository root
-- No ADR review skill (only creation)
-- No documentation quality rules for AI agents
-- No spell-checking or style guide rules
+## ADR Content Analysis
 
-**Recommendation**: Create `.claude/rules/` with:
-- `adr-review.md` — Rules for reviewing ADR completeness and quality
-- `doc-style.md` — Documentation style guidelines
-- Consider creating an `odh-adr-review` skill (the `SKILL.md` references it in a path but it doesn't exist)
+### Coverage by Component
+| Component | ADR Count | Latest Activity |
+|-----------|-----------|----------------|
+| Operator | 15 | Active (12 ADRs) |
+| Eval Hub | 4 | Very active |
+| Model Serving | 3 | Active |
+| MLflow | 2 | Recent |
+| Global (root) | 6 | Mixed |
+| Others (7 components) | 8 | 1 each |
+
+### Template Compliance Summary
+| Required Section | Present | Missing |
+|-----------------|---------|---------|
+| What | 37/38 (97%) | 1 (bold formatting issue) |
+| Why | 37/38 (97%) | 1 |
+| Goals | 36/38 (95%) | 2 |
+| How | 37/38 (97%) | 1 |
+| Alternatives | 31/38 (82%) | 7 |
+| Stakeholder Impacts | 29/38 (76%) | 9 |
+| Reviews | 36/38 (95%) | 2 |
+
+### Status Distribution
+| Status | Count |
+|--------|-------|
+| Approved/Accepted | 12 |
+| Draft | 12 |
+| Proposed | 4 |
+| Review | 2 |
+| Other (TBD, Refinement) | 2 |
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-
-1. **Add markdown linting workflow** — Enforce consistent formatting across all ADRs and documentation. Use `markdownlint-cli2` with a `.markdownlint.yaml` config tailored to ADR structure.
-
-2. **Add link validation workflow** — Catch broken links to external docs, GitHub repos, and internal cross-references. Run on PRs and weekly schedule.
-
-3. **Fix ADR numbering conflicts** — Resolve the 3 pairs of duplicate numbers in `architecture-decision-records/operator/` to prevent confusion about which ADR is canonical.
+1. **Add CI workflow for markdown linting and link validation** — Catch quality issues pre-merge. Use markdownlint + lychee.
+2. **Fix the three pairs of duplicate ADR numbers** in the operator directory (0007, 0009, 0011) to restore numbering integrity.
+3. **Fix broken image links** in `documentation/arch-overview.md` — 20+ broken references.
 
 ### Priority 1 (High Value)
-
-4. **Create ADR template validation script** — A simple script that checks each ADR for required sections (What, Why, Goals, Non-Goals, How, Alternatives, Stakeholder Impacts) and complete metadata. Run as a PR check.
-
-5. **Add PR template** — Guide ADR authors through a submission checklist to catch missing sections before review.
-
-6. **Create `.claude/rules/` directory** — Enable AI-assisted ADR review with rules for completeness, style, and cross-component impact analysis. This would complement the existing `odh-adr-create` skill.
-
-7. **Create `odh-adr-review` skill** — The existing `odh-adr-create` skill references an `odh-adr-review` context file path but the review skill doesn't exist. Building this would enable AI-assisted review of ADR quality.
+1. **Create `CONTRIBUTING.md`** with ADR submission guidelines, review process, and template compliance checklist.
+2. **Add a PR template** with ADR quality checklist (required sections, numbering, status field).
+3. **Create an ADR validation agent skill** that checks template compliance, numbering conflicts, and link validity.
+4. **Standardize ADR status values** to a defined set: Draft, Proposed, Approved, Superseded.
 
 ### Priority 2 (Nice-to-Have)
-
-8. **Add spell-checker workflow** — Use `cspell` with a custom dictionary for ODH/RHOAI terminology to catch typos in architectural documentation.
-
-9. **Build automated ADR index** — Generate a status dashboard/table from ADR metadata (Date, Status, Scope) as part of CI. This would replace manual tracking.
-
-10. **Create CONTRIBUTING.md** — Document the ADR authoring workflow, numbering conventions, and review process for new contributors.
-
-11. **Add image optimization check** — Several PNG images in the repo could be large; an optimization check would keep the repo size manageable.
+1. **Add issue templates** for proposing new ADRs.
+2. **Create an ADR index/dashboard** page with filtering by status and component.
+3. **Add spell checking and writing style linting** (vale) to CI.
+4. **Add a CI check for ADR numbering** that prevents duplicate numbers.
+5. **Rename image files** to remove spaces (use kebab-case).
 
 ## Comparison to Gold Standards
 
-| Practice | This Repo | odh-dashboard | notebooks | Best Practice |
-|----------|-----------|---------------|-----------|---------------|
-| CI/CD Workflows | 1 (stale-bot) | 15+ workflows | 10+ workflows | Multiple quality gates |
-| Markdown Linting | None | ESLint for code | N/A | markdownlint on PRs |
-| Link Checking | None | N/A | N/A | lychee/markdown-link-check |
-| Template Compliance | Manual review | Automated tests | N/A | Automated validation |
-| CODEOWNERS | Yes, per-component | Yes | Yes | Required reviews |
-| PR Template | None | Yes | Yes | Checklist-based |
-| Agent Rules | 1 skill (create) | Comprehensive rules | Basic rules | Rules + skills |
-| Branch Protection | Unknown | Yes | Yes | Required reviews + status checks |
-
-## Repository Statistics
-
-| Metric | Value |
-|--------|-------|
-| Total Files | 152 |
-| Markdown Files | 56 |
-| ADR Files | 38 |
-| Architecture Doc Files | 18 |
-| Image Files | ~50 |
-| CI Workflows | 1 |
-| Test Files | 0 |
-| Source Code Files | 0 |
-| Agent Skills | 1 |
-| Agent Rules | 0 |
+| Feature | architecture-decision-records | odh-dashboard | notebooks | Gold Standard |
+|---------|------------------------------|--------------|-----------|---------------|
+| CI Workflows | 1 (stale only) | 15+ | 10+ | 5+ for docs repos |
+| Markdown Linting | None | ESLint | N/A | markdownlint + vale |
+| Link Checking | None | Automated | N/A | lychee or markdown-link-check |
+| Template Validation | None | N/A | N/A | Custom CI check |
+| PR Template | None | Yes | Yes | Yes |
+| CONTRIBUTING Guide | None | Yes | Yes | Yes |
+| CODEOWNERS | Yes (comprehensive) | Yes | Yes | Yes |
+| Agent Rules | 1 skill (creation) | Comprehensive | None | Creation + validation + review |
+| Issue Templates | None | Yes | Yes | Yes |
 
 ## File Paths Reference
 
 | File | Purpose |
 |------|---------|
 | `.github/workflows/stale.yml` | Stale PR/issue management |
-| `.github/CODEOWNERS` | Per-component review ownership |
-| `.claude/skills/odh-adr-create/SKILL.md` | ADR creation Claude skill |
+| `.github/CODEOWNERS` | Component-level ownership |
 | `architecture-decision-records/ODH-ADR-0000-template.md` | ADR template |
-| `architecture-decision-records/README.md` | ADR governance and process |
-| `documentation/arch-overview.md` | RHOAI architecture overview |
-| `LICENSE` | Apache 2.0 |
+| `architecture-decision-records/README.md` | ADR governance rules |
+| `.claude/skills/odh-adr-create/SKILL.md` | Claude Code ADR creation skill |
+| `documentation/arch-overview.md` | Main architecture overview (with broken links) |
+| `README.md` | Repository root README |

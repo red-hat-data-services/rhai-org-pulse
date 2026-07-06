@@ -1,367 +1,391 @@
 ---
 repository: "opendatahub-io/dsp-dev-tools"
-overall_score: 1.2
+overall_score: 1.0
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No test files found anywhere in the repository"
+    status: "No test files of any kind exist in the repository"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E test infrastructure"
+    status: "No integration or E2E tests; scripts interact with live clusters without validation"
   - dimension: "Build Integration"
     score: 1.0
-    status: "Two Dockerfiles present but no CI build validation"
+    status: "Two Dockerfiles exist but no CI build process or validation"
   - dimension: "Image Testing"
-    score: 0.5
-    status: "Dockerfiles exist but no image testing, scanning, or validation"
+    score: 1.0
+    status: "Dockerfiles present but no runtime validation, scanning, or multi-arch support"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling or tracking configured"
+    status: "No coverage tooling or tracking of any kind"
   - dimension: "CI/CD Automation"
     score: 0.0
-    status: "No CI/CD pipeline (no GitHub Actions, GitLab CI, or Jenkins)"
+    status: "No CI/CD pipeline — no GitHub Actions, Makefile, Jenkinsfile, or GitLab CI"
   - dimension: "Agent Rules"
     score: 0.0
     status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
-  - title: "No CI/CD pipeline of any kind"
-    impact: "Changes are merged without any automated validation — no linting, no tests, no build checks"
+  - title: "No CI/CD pipeline at all"
+    impact: "Changes merge without any automated validation — broken scripts, invalid manifests, and syntax errors go undetected"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "Zero test coverage across all dimensions"
-    impact: "Shell scripts and Python utilities are untested; broken scripts discovered only during manual use"
+  - title: "Zero test coverage"
+    impact: "Shell scripts that manipulate OpenShift cluster state have no tests; errors only found at runtime by developers"
     severity: "HIGH"
-    effort: "8-16 hours"
-  - title: "No security scanning on container images"
-    impact: "Dockerfiles install packages via curl without verification; no vulnerability scanning"
+    effort: "12-20 hours"
+  - title: "No YAML/manifest validation"
+    impact: "Kustomize overlays and Kubernetes manifests are never validated; broken manifests waste developer time"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No code quality tooling"
-    impact: "No linting (shellcheck, pylint/ruff), no formatting, no static analysis"
+  - title: "Committed __pycache__ and binary artifacts"
+    impact: "Repository hygiene issues; .pyc files and compiled artifacts tracked in git"
+    severity: "MEDIUM"
+    effort: "0.5 hours"
+  - title: "No container image scanning"
+    impact: "Toolbox and ngrok-curl Dockerfiles install packages from the internet without vulnerability scanning"
+    severity: "MEDIUM"
+    effort: "2-3 hours"
+  - title: "Hardcoded image references with no pinning strategy"
+    impact: "Manifests reference specific image tags (e.g., quay.io/hukhan/...) that may break or become unavailable"
     severity: "MEDIUM"
     effort: "2-4 hours"
-  - title: "Single contributor, minimal git history"
-    impact: "Bus factor of 1; only 1 commit on main branch suggests squash-and-force-push workflow or limited collaboration"
-    severity: "MEDIUM"
-    effort: "N/A (organizational)"
 quick_wins:
-  - title: "Add ShellCheck linting via GitHub Actions"
+  - title: "Add a GitHub Actions workflow for YAML/manifest linting"
     effort: "1-2 hours"
-    impact: "Catches common shell scripting errors in 13 .sh files automatically on PRs"
-  - title: "Add Trivy scanning for Dockerfiles"
+    impact: "Catch invalid YAML and Kubernetes manifests before merge — use yamllint + kustomize build validation"
+  - title: "Add ShellCheck linting for shell scripts"
     effort: "1-2 hours"
-    impact: "Detects vulnerabilities in base images (fedora-toolbox:40, ngrok:3.6.0-debian)"
-  - title: "Add basic YAML validation workflow"
+    impact: "Catch common shell scripting errors (unquoted variables, missing error handling) across 13 .sh files"
+  - title: "Update .gitignore to exclude __pycache__ and .pyc files"
+    effort: "0.5 hours"
+    impact: "Clean up repository hygiene; remove tracked compiled Python files"
+  - title: "Add a comprehensive README with usage instructions"
+    effort: "2-3 hours"
+    impact: "Root README is just the title — developers have no onboarding guide for the tooling collection"
+  - title: "Add pre-commit hooks for YAML and shell validation"
     effort: "1-2 hours"
-    impact: "Validates 102 YAML/Kustomize files that form the core of this repo"
-  - title: "Add a CLAUDE.md with project context"
-    effort: "1 hour"
-    impact: "Enables AI-assisted development with proper context about the dev tooling purpose"
+    impact: "Shift-left validation catches errors before they reach the repository"
 recommendations:
   priority_0:
-    - "Create a basic GitHub Actions CI workflow with ShellCheck, yamllint, and Dockerfile linting (hadolint)"
-    - "Add Trivy or Snyk scanning for the two Dockerfiles to catch base image vulnerabilities"
+    - "Implement a basic GitHub Actions CI pipeline with YAML linting, ShellCheck, and kustomize build validation"
+    - "Add manifest validation for all kustomize overlays to catch broken references and invalid resources"
   priority_1:
-    - "Add integration tests for the dev-setup/main.sh script (at minimum, input validation and template generation)"
-    - "Add kustomize build validation for all overlay directories to catch manifest errors before deployment"
-    - "Pin curl-downloaded binaries in Dockerfiles to SHA256 checksums for supply chain security"
+    - "Add integration tests for dev-setup scripts using a test cluster or mocked oc/kubectl"
+    - "Add Dockerfile linting (hadolint) and basic image build validation"
+    - "Pin all image references in manifests and Dockerfiles to specific digests or tags"
   priority_2:
-    - "Create CLAUDE.md and agent rules for contributing patterns"
-    - "Add pre-commit hooks for shell and YAML linting"
-    - "Consider adding Python type checking (mypy/ruff) for the 14 Python files"
+    - "Create agent rules (.claude/rules/) for consistent script and manifest creation"
+    - "Add Trivy scanning for the toolbox and ngrok-curl Dockerfiles"
+    - "Add documentation validation (markdownlint) and link checking"
 ---
 
 # Quality Analysis: dsp-dev-tools
 
 ## Executive Summary
-
-- **Overall Score: 1.2/10**
-- **Repository Type**: Developer tooling / utilities collection (shell scripts, Kubernetes manifests, Python pipeline examples)
+- **Overall Score: 1.0/10**
+- **Repository Type**: Developer tooling & utilities (shell scripts, Kubernetes manifests, example pipelines)
 - **Primary Languages**: YAML (102 files), Python (14 files), Shell (13 files)
-- **Key Strengths**: Clear per-directory README documentation; practical developer-facing tooling for DSP/DSPO local development
-- **Critical Gaps**: No CI/CD pipeline, zero test coverage, no code quality tooling, no security scanning, no agent rules
-- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
-
-This repository is a collection of developer utilities for the Data Science Pipelines (DSP) ecosystem. It provides local development setup scripts, external connection configuration, Kubernetes manifests, and example pipelines. The repo has **no automated quality practices** — no CI/CD, no tests, no linting, and no security scanning. With only 1 contributor and 1 commit on the main branch, this appears to be a low-activity internal tooling repo.
+- **Key Strengths**: Well-organized kustomize overlays with base/overlay pattern; `.gitignore` excludes sensitive credentials; shell scripts use `set -e` error handling
+- **Critical Gaps**: No CI/CD, no tests, no linting, no image scanning, minimal documentation
+- **Agent Rules Status**: Missing
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0/10 | No test files found anywhere in the repository |
-| Integration/E2E | 0/10 | No integration or E2E test infrastructure |
-| **Build Integration** | **1/10** | **Two Dockerfiles present but no CI build validation** |
-| Image Testing | 0.5/10 | Dockerfiles exist but no image testing, scanning, or validation |
-| Coverage Tracking | 0/10 | No coverage tooling or tracking configured |
-| CI/CD Automation | 0/10 | No CI/CD pipeline (no GitHub Actions, GitLab CI, or Jenkins) |
-| Agent Rules | 0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory |
+| Unit Tests | 0/10 | No test files of any kind |
+| Integration/E2E | 0/10 | No integration or E2E tests |
+| **Build Integration** | **1/10** | **Dockerfiles exist but no CI build** |
+| Image Testing | 1/10 | No runtime validation or scanning |
+| Coverage Tracking | 0/10 | No coverage tooling |
+| CI/CD Automation | 0/10 | No CI/CD pipeline at all |
+| Agent Rules | 0/10 | No agent rules or test automation guidance |
 
 ## Critical Gaps
 
 ### 1. No CI/CD Pipeline
-- **Impact**: Changes are merged without any automated validation — no linting, no tests, no build checks
+- **Impact**: Changes merge without any automated validation. Broken scripts, invalid YAML manifests, and syntax errors go undetected until developers try to use the tools
 - **Severity**: HIGH
 - **Effort**: 4-8 hours
-- **Details**: No `.github/workflows/`, no `.gitlab-ci.yml`, no `Jenkinsfile`, no `Makefile` with test targets. PRs (if any are used) get zero automated feedback.
+- **Details**: No `.github/workflows/`, no `Makefile`, no `Jenkinsfile`, no `.gitlab-ci.yml`. This is the most fundamental gap — every other quality dimension depends on having CI
 
 ### 2. Zero Test Coverage
-- **Impact**: Shell scripts and Python utilities are untested; broken scripts discovered only during manual use
-- **Severity**: HIGH
-- **Effort**: 8-16 hours
-- **Details**: No `*_test.*`, `*.spec.*`, `*.test.*`, or `test_*` files exist. No test directories, no test frameworks configured. The `dev-setup/main.sh` script (153 lines) manipulates cluster credentials and configuration without any validation tests.
+- **Impact**: Shell scripts in `dev-setup/` and `external-connection-setup/` interact directly with OpenShift clusters (manipulating secrets, creating routes, copying SA tokens). Errors are only discovered at runtime
+- **Severity**: HIGH  
+- **Effort**: 12-20 hours
+- **Details**: No `*_test.go`, `*_test.py`, `*.spec.ts`, or `test_*.py` files exist. Not a single test in the entire repository
 
-### 3. No Security Scanning
-- **Impact**: Dockerfiles install packages via curl without checksum verification; no vulnerability scanning on base images
+### 3. No YAML/Manifest Validation
+- **Impact**: The repository contains ~102 YAML files (Kubernetes manifests, kustomize overlays, deployment configs). None are validated in CI
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**:
-  - `toolbox/Dockerfile` downloads yq, oc, kustomize, and mc via curl without SHA verification
-  - `external-connection-setup/tools/ngrok-curl/Dockerfile` based on `ngrok/ngrok:3.6.0-debian`
-  - No Trivy, Snyk, or CodeQL configured
-  - No `.gitleaks.toml` or secret detection despite scripts handling credentials/tokens
+- **Details**: Kustomize overlays reference base resources and patches. A broken reference or invalid patch would silently produce incorrect manifests
 
-### 4. No Code Quality Tooling
-- **Impact**: No automated detection of common scripting errors, YAML syntax issues, or Python bugs
+### 4. Committed __pycache__ Files
+- **Impact**: Binary `.pyc` files are tracked in git under `example-pipelines/fraud-detection/__pycache__/`
+- **Severity**: MEDIUM
+- **Effort**: 0.5 hours
+- **Details**: `.gitignore` excludes `credentials.json` and output directories but misses `__pycache__/`, `*.pyc`, and other common Python artifacts
+
+### 5. No Container Image Scanning
+- **Impact**: `toolbox/Dockerfile` installs packages via `dnf`, `pip`, and downloads binaries from the internet. `external-connection-setup/tools/ngrok-curl/Dockerfile` installs curl via apt
+- **Severity**: MEDIUM
+- **Effort**: 2-3 hours
+- **Details**: No Trivy, Snyk, or any vulnerability scanning. No SBOM generation. No image signing
+
+### 6. Hardcoded Image References
+- **Impact**: Multiple manifests reference specific image tags like `quay.io/hukhan/kfp-launcher:pr-10625-ui-3` and `quay.io/argoproj/argoexec:v3.4.16` that may become unavailable
 - **Severity**: MEDIUM
 - **Effort**: 2-4 hours
-- **Details**: No ShellCheck, hadolint, yamllint, pylint/ruff, mypy, or any linting configuration. No `.pre-commit-config.yaml`. No formatters.
-
-### 5. Single Contributor, Minimal History
-- **Impact**: Bus factor of 1; project knowledge concentrated in one person
-- **Severity**: MEDIUM
-- **Effort**: N/A (organizational)
-- **Details**: Only 1 contributor (Humair Khan). Only 1 commit on main branch (suggests squash-and-force-push workflow or initial dump). Last commit was April 2025.
 
 ## Quick Wins
 
-### 1. Add ShellCheck Linting via GitHub Actions (1-2 hours)
-Catches common shell scripting errors in 13 `.sh` files automatically on PRs.
-
+### 1. Add YAML + ShellCheck Linting (1-2 hours)
+Create `.github/workflows/lint.yml`:
 ```yaml
-# .github/workflows/lint.yml
 name: Lint
 on: [pull_request]
 jobs:
-  shellcheck:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ludeeus/action-shellcheck@master
+      - name: YAML Lint
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: .
+          config_data: |
+            extends: relaxed
+            rules:
+              line-length: disable
+      - name: ShellCheck
+        uses: ludeeus/action-shellcheck@master
         with:
           scandir: '.'
 ```
 
-### 2. Add Trivy Scanning for Dockerfiles (1-2 hours)
-Detects vulnerabilities in base images.
-
+### 2. Add Kustomize Build Validation (1-2 hours)
 ```yaml
-# .github/workflows/security.yml
-name: Security Scan
-on: [pull_request]
-jobs:
-  trivy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'config'
-          scan-ref: '.'
+      - name: Validate Kustomize Overlays
+        run: |
+          for dir in $(find . -name kustomization.yaml -exec dirname {} \;); do
+            echo "Validating $dir..."
+            kustomize build "$dir" > /dev/null || exit 1
+          done
 ```
 
-### 3. Add YAML Validation (1-2 hours)
-Validates the 102 YAML/Kustomize files that form the core of this repo.
-
-```yaml
-  yamllint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ibiqlik/action-yamllint@v3
+### 3. Clean Up .gitignore (0.5 hours)
+Add to `.gitignore`:
+```
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
 ```
 
-### 4. Add CLAUDE.md (1 hour)
-Enables AI-assisted development with proper project context.
+### 4. Add Pre-commit Hooks (1-2 hours)
+Create `.pre-commit-config.yaml`:
+```yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-merge-conflict
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.9.0
+    hooks:
+      - id: shellcheck
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.33.0
+    hooks:
+      - id: yamllint
+```
+
+### 5. Write a Proper README (2-3 hours)
+The root `README.md` contains only `# dsp-dev-tools` — one line. It should describe:
+- What the repository contains
+- How to use each tool/directory
+- Prerequisites (oc, yq, kustomize, etc.)
+- Quick start guide
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
+**Status: Non-existent**
 
-**Status**: Non-existent
+There is no CI/CD configuration in any form:
+- No `.github/workflows/` directory
+- No `Makefile` with test/lint targets
+- No `Jenkinsfile`
+- No `.gitlab-ci.yml`
 
-No CI/CD configuration found:
-- ❌ No `.github/workflows/` directory
-- ❌ No `.gitlab-ci.yml`
-- ❌ No `Jenkinsfile`
-- ❌ No `Makefile` with automation targets
-- ❌ No build or test scripts in CI context
+This means:
+- PRs merge without validation
+- Broken manifests are not caught
+- Shell script errors go undetected
+- No automated quality gates
 
 ### Test Coverage
+**Status: Zero tests**
 
-**Status**: Zero coverage
+Files analyzed:
+- 13 shell scripts (`.sh`) — none tested
+- 14 Python files (`.py`) — none tested
+- 102 YAML manifests — none validated
+- 0 test files found across the entire repository
 
-| Test Type | Files Found | Framework | Status |
-|-----------|-------------|-----------|--------|
-| Unit Tests | 0 | None | ❌ Not present |
-| Integration Tests | 0 | None | ❌ Not present |
-| E2E Tests | 0 | None | ❌ Not present |
-| Contract Tests | 0 | None | ❌ Not present |
-
-Key untested components:
-- `dev-setup/main.sh` (153 lines) — Sets up local DSP dev environment, manipulates credentials
-- `external-connection-setup/devenv.sh` (300+ lines) — Deploys MariaDB/Minio, handles TLS, ngrok tunneling
-- `dev-setup/converter.py` — Environment variable conversion utility
-- 14 Python files in `example-pipelines/fraud-detection/` — Pipeline components
+The shell scripts in `dev-setup/` are particularly risky — they run `oc` commands to create routes, copy certificates, and manipulate service account tokens. A bug in these scripts could:
+- Overwrite production secrets
+- Deploy incorrect manifests
+- Leave cluster state inconsistent
 
 ### Code Quality
+**Status: No tooling**
 
-**Status**: No tooling configured
+- No linting configuration (no `.golangci.yaml`, `.eslintrc`, `ruff.toml`, `.flake8`)
+- No pre-commit hooks
+- No static analysis (no CodeQL, gosec, Semgrep)
+- No code formatters configured
+- No EditorConfig
 
-- ❌ No ShellCheck configuration
-- ❌ No hadolint for Dockerfiles
-- ❌ No yamllint for YAML files
-- ❌ No Python linting (ruff, pylint, flake8)
-- ❌ No `.pre-commit-config.yaml`
-- ❌ No `.editorconfig`
-- ❌ No code formatting enforcement
+**Positive note**: Shell scripts do use `set -eE -o functrace` with error traps in the main scripts, which is a good practice for catching errors at runtime.
 
 ### Container Images
+**Status: Minimal**
 
-**Status**: Minimal — two Dockerfiles, no validation
+Two Dockerfiles exist:
 
-| File | Base Image | Purpose | Issues |
-|------|-----------|---------|--------|
-| `toolbox/Dockerfile` | `fedora-toolbox:40` | Dev toolbox with oc, yq, kustomize, mc | Downloads binaries via curl without SHA verification |
-| `external-connection-setup/tools/ngrok-curl/Dockerfile` | `ngrok/ngrok:3.6.0-debian` | ngrok with curl | Minimal, but no scanning |
+1. **`toolbox/Dockerfile`** — Fedora-based dev toolbox
+   - Installs: `yq`, `oc`, `kustomize`, `mc` (MinIO client), `huggingface-cli`
+   - Downloads binaries from GitHub releases — no checksum verification
+   - No multi-stage build
+   - No health check
+   - Runs as root
 
-Security concerns:
-- Binaries downloaded via curl without checksum verification in `toolbox/Dockerfile`
-- No multi-stage builds
-- No `.dockerignore` in subdirectories
-- No image scanning configured
-- No SBOM generation
-- No image signing
+2. **`external-connection-setup/tools/ngrok-curl/Dockerfile`** — ngrok with curl
+   - Based on `ngrok/ngrok:3.6.0-debian`
+   - Runs `apt update && apt upgrade` — good practice but no pinning
+   - Switches to `ngrok` user — good practice
+
+Neither Dockerfile has:
+- Vulnerability scanning
+- Build automation
+- Multi-architecture support
+- SBOM generation
+- Image signing
 
 ### Security
+**Status: Minimal**
 
-**Status**: No security practices
+**Positive**:
+- `.gitignore` excludes `credentials.json`, `details.json`, and `token.pickle`
+- External connection setup generates secrets dynamically rather than hardcoding them
 
-- ❌ No SAST/CodeQL
-- ❌ No dependency scanning
-- ❌ No secret detection (despite scripts handling OC tokens, DB passwords, and Minio credentials)
-- ❌ No Trivy/Snyk integration
-- ❌ No `.gitleaks.toml`
-- ⚠️ `.gitignore` excludes `credentials.json`, `details.json`, `token.pickle` — indicates awareness of secrets but no automated enforcement
-- ⚠️ Scripts manipulate `accesskey`, `secretkey`, `dbpsw` variables without secret management patterns
+**Gaps**:
+- No secret detection (Gitleaks, TruffleHog)
+- No vulnerability scanning
+- No SAST tooling
+- Shell scripts handle sensitive data (tokens, passwords) — `dev-setup/main.sh` reads secrets from OpenShift and writes them to local files
+- The `tester/role.yaml` grants wildcard permissions (`* * *`) which is overly permissive
 
 ### Agent Rules (Agentic Flow Quality)
+**Status: Missing**
 
-**Status**: Missing
+- No `CLAUDE.md` or `AGENTS.md` in root
+- No `.claude/` directory
+- No `.claude/rules/` for test creation rules
+- No `.claude/skills/` for custom skills
+- No testing documentation
 
-- ❌ No `CLAUDE.md` or `AGENTS.md` in repository root
-- ❌ No `.claude/` directory
-- ❌ No `.claude/rules/` test creation rules
-- ❌ No `.claude/skills/` custom skills
-- ❌ No testing documentation in `docs/`
-- **Recommendation**: Generate rules with `/test-rules-generator` once basic testing is established
-
-### Repository Structure
-
-```
-dsp-dev-tools/
-├── cloudbeaver/          # Kustomize manifests for CloudBeaver deployment
-├── datasets/             # Sample data (iris.csv)
-├── dev-setup/            # Local DSP dev environment setup (main.sh, converter.py)
-├── example-pipelines/    # Fraud detection pipeline example (Python/KFP)
-├── external-connection-setup/  # External MariaDB/Minio dev setup (devenv.sh)
-├── manifests/            # Argo Server + KFP OpenShift deployment manifests
-├── meeting-calendar/     # Google Calendar script (Python)
-├── toolbox/              # Developer toolbox container (Dockerfile)
-├── .gitignore
-├── LICENSE
-└── README.md
-```
-
-**File Distribution**: 102 YAML, 14 Python, 13 Shell, 9 Markdown, 2 Dockerfiles
+**Recommendation**: Generate missing rules with `/test-rules-generator`. For this repository, rules should cover:
+- Shell script creation patterns
+- Kubernetes manifest validation
+- Kustomize overlay structure
+- Example pipeline development
 
 ## Recommendations
 
 ### Priority 0 (Critical)
+1. **Implement a basic GitHub Actions CI pipeline** with:
+   - YAML linting (`yamllint`)
+   - Shell script linting (`shellcheck`)
+   - Kustomize build validation
+   - Estimated effort: 4-8 hours
 
-1. **Create a basic GitHub Actions CI workflow** with ShellCheck, yamllint, and hadolint
-   - Covers the 3 primary file types: shell scripts, YAML manifests, Dockerfiles
-   - Effort: 4-6 hours
-   - Immediate value: catches broken scripts and invalid manifests before merge
-
-2. **Add Trivy container scanning** for the two Dockerfiles
-   - `toolbox/Dockerfile` downloads unsigned binaries from the internet
-   - Effort: 2-3 hours
-   - Critical for supply chain security
-
-3. **Pin binary downloads to SHA256 checksums** in `toolbox/Dockerfile`
-   - Currently downloads yq, oc, kustomize, mc via curl without verification
-   - Effort: 1-2 hours
+2. **Add manifest validation for all kustomize overlays** to catch:
+   - Broken resource references
+   - Invalid patches
+   - Missing bases
+   - Estimated effort: 2-4 hours
 
 ### Priority 1 (High Value)
-
-4. **Add kustomize build validation** for all overlay directories
-   - 102 YAML files with kustomize overlays should be validated with `kustomize build`
-   - Effort: 2-4 hours
-
-5. **Add basic tests for dev-setup/main.sh**
-   - Input validation tests (wrong number of args, missing directories)
-   - Template generation verification
-   - Effort: 4-8 hours
-
-6. **Add secret detection** with gitleaks
-   - Scripts handle OC tokens, DB passwords, Minio keys
-   - Effort: 1-2 hours
+1. **Add integration tests for dev-setup scripts** — at minimum, validate argument handling and template generation without requiring a live cluster
+2. **Add Dockerfile linting (hadolint)** and basic image build validation
+3. **Pin all image references** in manifests and Dockerfiles to specific digests or semantic version tags
+4. **Add pre-commit hooks** for local validation before commits
+5. **Clean up repository hygiene** — remove committed `__pycache__/`, update `.gitignore`
 
 ### Priority 2 (Nice-to-Have)
-
-7. **Create CLAUDE.md** with project context and contribution guidelines
-   - Effort: 1-2 hours
-
-8. **Add Python linting** (ruff) for the 14 Python files
-   - Effort: 1-2 hours
-
-9. **Add pre-commit hooks** for automated local checks
-   - Effort: 1-2 hours
-
-10. **Consider consolidating** the meeting-calendar utility elsewhere
-    - It appears unrelated to DSP development tooling
-    - Effort: 1 hour
+1. **Create agent rules** (`.claude/rules/`) for consistent script and manifest creation
+2. **Add Trivy scanning** for the toolbox and ngrok-curl Dockerfiles
+3. **Add documentation validation** (markdownlint) and link checking
+4. **Write comprehensive README** with usage guides for each tool directory
+5. **Add binary checksum verification** in `toolbox/Dockerfile` for downloaded tools
 
 ## Comparison to Gold Standards
 
-| Practice | odh-dashboard | notebooks | dsp-dev-tools | Gap |
-|----------|:---:|:---:|:---:|-----|
-| CI/CD Pipeline | ✅ Multi-workflow | ✅ Comprehensive | ❌ None | Total |
-| Unit Tests | ✅ Jest + coverage | ✅ Python tests | ❌ None | Total |
-| Integration Tests | ✅ Cypress + API | ✅ Image validation | ❌ None | Total |
-| E2E Tests | ✅ Automated | ✅ Multi-arch | ❌ None | Total |
-| Coverage Tracking | ✅ Codecov enforced | ✅ Coverage reports | ❌ None | Total |
-| Container Scanning | ✅ Trivy + Snyk | ✅ Multi-layer | ❌ None | Total |
-| Linting | ✅ ESLint + strict | ✅ Configured | ❌ None | Total |
-| Pre-commit Hooks | ✅ Configured | ✅ Configured | ❌ None | Total |
-| Agent Rules | ✅ Comprehensive | ⚠️ Partial | ❌ None | Total |
-| Secret Detection | ✅ Gitleaks | ✅ Configured | ❌ None | Total |
+| Dimension | dsp-dev-tools | odh-dashboard | notebooks | kserve |
+|-----------|:---:|:---:|:---:|:---:|
+| CI/CD Pipeline | None | Comprehensive | Multi-layer | Extensive |
+| Unit Tests | None | Jest + Cypress | Shell-based | Go testing |
+| Integration Tests | None | Contract tests | Image validation | envtest |
+| E2E Tests | None | Full E2E suite | 5-layer validation | Multi-version |
+| Coverage Tracking | None | Codecov | Custom | Codecov |
+| Image Scanning | None | Trivy | Trivy | Trivy |
+| Pre-commit Hooks | None | ESLint + Prettier | ShellCheck | golangci-lint |
+| Agent Rules | None | Comprehensive | Basic | None |
+| Documentation | Minimal | Extensive | Good | Extensive |
 
-**Note**: dsp-dev-tools is a fundamentally different type of repository (developer utilities/scripts) compared to the gold standards (full applications/operators). The gap analysis should be interpreted in context — not every practice needs the same depth, but *some* automation is essential even for tooling repos.
+**Gap Summary**: `dsp-dev-tools` lacks every quality practice that the gold standard repositories implement. As a developer tooling repository, it has lower stakes than production services, but the shell scripts directly manipulate cluster state which makes testing valuable.
 
 ## File Paths Reference
 
-| Category | Path | Description |
-|----------|------|-------------|
-| Container | `toolbox/Dockerfile` | Developer toolbox image |
-| Container | `external-connection-setup/tools/ngrok-curl/Dockerfile` | ngrok + curl image |
-| Shell | `dev-setup/main.sh` | Main dev environment setup script (153 lines) |
-| Shell | `external-connection-setup/devenv.sh` | External connection setup (~300 lines) |
-| Python | `dev-setup/converter.py` | Environment variable converter |
-| Python | `example-pipelines/fraud-detection/*.py` | KFP pipeline components (8 files) |
-| Manifests | `cloudbeaver/` | CloudBeaver Kustomize overlays |
-| Manifests | `manifests/deploy-kfp/` | KFP OpenShift deployment manifests |
-| Manifests | `manifests/deploy-argo-server/` | Argo Server deployment manifests |
-| Manifests | `external-connection-setup/manifests/` | MariaDB/Minio deployment manifests |
-| Data | `datasets/iris.csv` | Sample dataset |
-| Misc | `meeting-calendar/script.py` | Google Calendar utility |
+### Repository Structure
+```
+dsp-dev-tools/
+├── cloudbeaver/           # CloudBeaver deployment (kustomize)
+├── datasets/              # Sample data (iris.csv)
+├── dev-setup/             # Local dev environment setup scripts
+│   ├── main.sh            # Main setup script (oc interactions)
+│   ├── post-config-run.sh # Post-config script (copies certs)
+│   ├── converter.py       # Artifact converter
+│   ├── driver-launcher-debug/ # Debug utilities
+│   ├── manifests/         # Minio route
+│   └── templates/         # Port-forward and config templates
+├── example-pipelines/     # Example KFP pipelines
+│   └── fraud-detection/   # Fraud detection ML pipeline
+├── external-connection-setup/ # External DB/MinIO connection tools
+│   ├── devenv.sh          # Deploy/cleanup external connections
+│   ├── manifests/         # MariaDB and MinIO manifests
+│   └── tools/             # ngrok-curl Dockerfile
+├── manifests/             # Kubernetes deployment manifests
+│   ├── deploy-argo-server/ # Argo Workflows UI
+│   └── deploy-kfp/        # Kubeflow Pipelines on OpenShift
+├── meeting-calendar/      # Meeting facilitator calendar script
+├── toolbox/               # Dev toolbox container
+├── .gitignore
+├── LICENSE
+└── README.md              # "# dsp-dev-tools" (1 line)
+```
+
+### Key Files Analyzed
+- `toolbox/Dockerfile` — Fedora-based dev toolbox with yq, oc, kustomize, mc
+- `external-connection-setup/tools/ngrok-curl/Dockerfile` — ngrok + curl
+- `dev-setup/main.sh` — Main dev setup script (96 lines, interacts with oc)
+- `dev-setup/post-config-run.sh` — Post-config script (copies SA tokens)
+- `external-connection-setup/devenv.sh` — External connection deploy/cleanup
+- `manifests/deploy-kfp/openshift/` — KFP deployment with auth/base overlays
+- `cloudbeaver/` — CloudBeaver deployment with kustomize overlays
+- `example-pipelines/fraud-detection/` — KFP fraud detection example (7 Python files)

@@ -1,438 +1,398 @@
 ---
 repository: "red-hat-data-services/codeflare-operator"
-overall_score: 6.5
+overall_score: 6.3
 scorecard:
   - dimension: "Unit Tests"
     score: 7.0
-    status: "Good envtest-based unit tests with Ginkgo/Gomega covering controller and webhook logic"
+    status: "Ginkgo/Gomega + envtest for controller and webhook tests; coverprofile generated but not uploaded"
   - dimension: "Integration/E2E"
     score: 8.0
-    status: "Strong E2E suite with KinD, GPU testing, OLM upgrade tests, and multi-workload coverage"
+    status: "GPU-accelerated E2E on KinD, multi-accelerator support (CPU/CUDA/ROCm), OLM upgrade tests, component tests"
   - dimension: "Build Integration"
-    score: 5.0
-    status: "Konflux PR pipeline exists but only builds image; no PR-time operator deployment or functional validation"
+    score: 7.0
+    status: "Tekton/Konflux PR pipeline with multi-arch hermetic builds; no PR-time image startup validation"
   - dimension: "Image Testing"
-    score: 5.0
-    status: "Multi-stage Dockerfile with UBI base and Konflux hermetic builds, but no runtime validation or startup checks"
+    score: 4.0
+    status: "Multi-stage UBI9 builds, non-root user, but no vulnerability scanning, no runtime validation, no SBOM"
   - dimension: "Coverage Tracking"
     score: 3.0
-    status: "Coverage file generated (cover.out) but no codecov integration, no thresholds, no PR reporting"
+    status: "coverprofile generated locally but no codecov/coveralls integration, no enforcement, no PR reporting"
   - dimension: "CI/CD Automation"
     score: 8.0
-    status: "Well-organized 13 workflows with concurrency control, caching, Slack notifications, and Konflux integration"
+    status: "13 well-organized workflows, concurrency control, caching, Slack failure notifications, release automation"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules for test automation guidance"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory present"
 critical_gaps:
   - title: "No coverage tracking or enforcement"
-    impact: "Coverage regressions go undetected; no visibility into test health trends"
+    impact: "Coverage can silently regress; no PR-level coverage diff reporting"
     severity: "HIGH"
     effort: "2-4 hours"
+  - title: "No container vulnerability scanning"
+    impact: "CVEs in base images or dependencies not detected until downstream Konflux scans"
+    severity: "HIGH"
+    effort: "2-3 hours"
+  - title: "No SAST/security scanning in CI"
+    impact: "Security issues (injection, misconfigurations) not caught before merge"
+    severity: "HIGH"
+    effort: "3-4 hours"
   - title: "No agent rules for AI-assisted development"
-    impact: "AI agents generate inconsistent tests without project-specific guidance"
-    severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No container runtime validation"
-    impact: "Image startup failures not caught until deployment to staging/production"
-    severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "Missing unit tests for AppWrapper controller and webhook"
-    impact: "AppWrapper controller (41 LOC) and webhook (25 LOC) have zero test coverage"
-    severity: "MEDIUM"
-    effort: "4-8 hours"
-  - title: "No security scanning in GitHub Actions CI"
-    impact: "Vulnerabilities only caught in Konflux push pipeline, not during PR review"
+    impact: "AI-generated tests and code lack project-specific patterns and standards"
     severity: "MEDIUM"
     effort: "2-3 hours"
 quick_wins:
-  - title: "Add codecov integration to unit test workflow"
+  - title: "Add Codecov integration to unit test workflow"
     effort: "1-2 hours"
-    impact: "Immediate visibility into coverage trends and PR-level coverage diffs"
-  - title: "Add Trivy scanning to PR workflow"
+    impact: "PR-level coverage reporting and regression detection"
+  - title: "Add Trivy container scanning step to PR workflow"
     effort: "1-2 hours"
-    impact: "Catch container vulnerabilities before merge, not just in Konflux push pipeline"
-  - title: "Create basic CLAUDE.md with test conventions"
+    impact: "Early detection of CVEs in base images and dependencies"
+  - title: "Add CodeQL/gosec workflow for SAST"
     effort: "2-3 hours"
-    impact: "Enable AI agents to follow project testing patterns (envtest, Ginkgo, codeflare-common)"
-  - title: "Add image startup validation to E2E workflow"
+    impact: "Automated security vulnerability detection on PRs"
+  - title: "Create basic .claude/rules/ for test patterns"
     effort: "2-3 hours"
-    impact: "Catch binary startup crashes and missing dependencies before deployment"
+    impact: "Consistent AI-generated tests following project conventions"
 recommendations:
   priority_0:
-    - "Add codecov.yml and integrate with unit_tests.yml to track and enforce coverage thresholds"
-    - "Add container runtime validation (startup check, health endpoint) to E2E workflow"
-    - "Add unit tests for AppWrapper controller and webhook (currently zero coverage)"
+    - "Add Codecov integration with coverage thresholds to prevent regression"
+    - "Add container vulnerability scanning (Trivy) to PR and push workflows"
+    - "Add SAST scanning (CodeQL or gosec) as a PR check"
   priority_1:
-    - "Create .claude/rules/ with test automation guidance for unit, component, and E2E tests"
-    - "Add Trivy or Snyk scanning to PR-triggered workflows for early vulnerability detection"
-    - "Add Konflux build simulation to PR workflow to catch build failures before merge"
+    - "Add image startup/runtime validation in PR workflow (build image + verify it starts)"
+    - "Create comprehensive agent rules (.claude/rules/) for unit, e2e, and webhook test patterns"
+    - "Add golangci-lint linters: gocritic, gocyclo, misspell, revive for broader coverage"
   priority_2:
-    - "Add CodeQL/SAST scanning workflow for Go source code"
-    - "Expand golangci-lint configuration to enable more linters (gocritic, revive, gocyclo, etc.)"
-    - "Add contract tests for API boundaries with KubeRay and AppWrapper upstream dependencies"
+    - "Add SBOM generation to container build process"
+    - "Add Gitleaks secret scanning to pre-commit and CI"
+    - "Consider adding fuzz testing for webhook validation logic"
 ---
 
 # Quality Analysis: codeflare-operator
 
 ## Executive Summary
 
-- **Overall Score: 6.5/10**
-- **Repository Type**: Kubernetes Operator (Go)
-- **Primary Language**: Go 1.23
-- **Framework**: operator-sdk / controller-runtime with Ginkgo/Gomega testing
-- **Key Strengths**: Strong E2E test suite with GPU testing on KinD, comprehensive OLM upgrade testing, well-organized CI/CD with 13 workflows, Konflux integration with multi-arch builds and extensive security scanning (Clair, Snyk, Coverity, ClamAV)
-- **Critical Gaps**: No coverage tracking/enforcement, no agent rules, no container runtime validation, missing tests for AppWrapper controller
-- **Agent Rules Status**: Missing - No CLAUDE.md, no .claude/ directory
+- **Overall Score: 6.3/10**
+- **Repository**: [red-hat-data-services/codeflare-operator](https://github.com/red-hat-data-services/codeflare-operator)
+- **Type**: Kubernetes Operator (Go, controller-runtime)
+- **Primary Function**: Manages the CodeFlare stack lifecycle (AppWrapper, RayCluster, Kueue integration)
+
+### Key Strengths
+- Excellent test-to-code ratio (1.12:1) with comprehensive E2E tests
+- GPU-accelerated E2E testing with multi-accelerator support (CPU, CUDA, ROCm)
+- Well-organized CI/CD with 13 workflows including OLM upgrade testing
+- Tekton/Konflux pipeline with multi-arch hermetic builds
+- Strong pre-commit hook configuration with secret detection
+
+### Critical Gaps
+- No coverage tracking or enforcement (coverprofile generated but never uploaded)
+- No container vulnerability scanning in CI
+- No SAST/CodeQL security scanning
+- No agent rules for AI-assisted development
+
+### Agent Rules Status: **Missing**
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 7.0/10 | Good envtest-based tests for controller and webhook with Ginkgo/Gomega |
-| Integration/E2E | 8.0/10 | Strong E2E with KinD, GPU testing, OLM upgrade, and multi-workload coverage |
-| **Build Integration** | **5.0/10** | **Konflux PR pipeline builds image but no PR-time operator deployment/validation** |
-| Image Testing | 5.0/10 | Multi-stage Dockerfile with UBI base; no runtime validation |
-| Coverage Tracking | 3.0/10 | cover.out generated but no codecov, thresholds, or PR reporting |
-| CI/CD Automation | 8.0/10 | 13 well-organized workflows with caching, concurrency control, Slack alerts |
-| Agent Rules | 0.0/10 | No CLAUDE.md, .claude/, or test automation guidance |
+| Unit Tests | 7/10 | Ginkgo/Gomega + envtest for controller and webhook tests |
+| Integration/E2E | 8/10 | GPU E2E on KinD, multi-accelerator, OLM upgrade, component tests |
+| **Build Integration** | **7/10** | **Tekton/Konflux multi-arch hermetic builds; no PR-time startup validation** |
+| Image Testing | 4/10 | Multi-stage UBI9, non-root; no vuln scanning, no runtime validation |
+| Coverage Tracking | 3/10 | coverprofile exists locally; no upload, no enforcement, no PR reporting |
+| CI/CD Automation | 8/10 | 13 workflows, concurrency control, caching, Slack notifications |
+| Agent Rules | 0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory |
 
 ## Critical Gaps
 
 ### 1. No Coverage Tracking or Enforcement
-- **Impact**: Coverage regressions go completely undetected across PRs
+- **Impact**: Coverage can silently regress with no visibility on PRs
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: Unit test Makefile target generates `cover.out` but there is no codecov/coveralls integration, no coverage thresholds, and no PR-level coverage reporting. Developers have no visibility into whether a PR improves or degrades test coverage.
+- **Details**: `make test-unit` generates `cover.out` via `-coverprofile` but this file is never uploaded to Codecov/Coveralls. No coverage thresholds or PR diff reporting exist.
+- **Fix**:
+  ```yaml
+  # Add to .github/workflows/unit_tests.yml after test step
+  - name: Upload coverage to Codecov
+    uses: codecov/codecov-action@v4
+    with:
+      file: cover.out
+      flags: unittests
+      token: ${{ secrets.CODECOV_TOKEN }}
+  ```
 
-### 2. No Agent Rules for AI-Assisted Development
-- **Impact**: AI agents generate tests inconsistent with project patterns
+### 2. No Container Vulnerability Scanning
+- **Impact**: CVEs in base images (UBI9) or Go dependencies not detected until downstream Konflux scans
 - **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: No `CLAUDE.md`, no `.claude/` directory, no `.claude/rules/` for test creation guidance. The project uses specific patterns (envtest with Ginkgo/Gomega for unit tests, `codeflare-common/support` helpers for E2E, specific test timeouts) that AI agents cannot discover without explicit rules.
+- **Effort**: 2-3 hours
+- **Details**: Neither the Dockerfile nor any CI workflow includes Trivy, Snyk, or Grype scanning. The Konflux pipeline handles some scanning downstream, but issues are caught too late.
 
-### 3. No Container Runtime Validation
-- **Impact**: Image startup failures not caught until deployment
+### 3. No SAST/Security Scanning
+- **Impact**: Security vulnerabilities (SQL injection, command injection, misconfigurations) not caught before merge
 - **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: While the E2E workflow does build and load the image into KinD, there is no explicit startup validation or health check. The Konflux push pipeline includes Clair scanning and deprecated base image checks, but no runtime smoke tests.
+- **Effort**: 3-4 hours
+- **Details**: No CodeQL, gosec, or Semgrep integration. The pre-commit hooks include `detect-private-key` but that's insufficient for comprehensive security scanning.
 
-### 4. Missing Unit Tests for AppWrapper Controller
-- **Impact**: AppWrapper controller logic has zero test coverage
-- **Severity**: MEDIUM
-- **Effort**: 4-8 hours
-- **Details**: `appwrapper_controller.go` (41 LOC) and `appwrapper_webhook.go` (25 LOC) have no corresponding test files. Only `raycluster_controller_test.go` and `raycluster_webhook_test.go` exist. The `support.go` (221 LOC) helper file also lacks direct tests.
-
-### 5. No Security Scanning in GitHub Actions CI
-- **Impact**: Vulnerabilities only caught in Konflux push pipeline (post-merge)
+### 4. No Agent Rules for AI-Assisted Development
+- **Impact**: AI agents lack project-specific patterns for test creation, webhook testing, and operator conventions
 - **Severity**: MEDIUM
 - **Effort**: 2-3 hours
-- **Details**: The Konflux push pipeline has excellent security scanning (Clair, Snyk, Coverity, ClamAV, RPM signature scan, ecosystem cert preflight), but none of these run on PRs in GitHub Actions. The Konflux PR pipeline only builds the image and is triggered by label/comment, not automatically.
+- **Details**: No `.claude/` directory, `CLAUDE.md`, or `AGENTS.md` exist. Recommendation: use `/test-rules-generator` to bootstrap rules.
 
 ## Quick Wins
 
 ### 1. Add Codecov Integration (1-2 hours)
-- **Impact**: Immediate visibility into coverage trends
-- **Implementation**: Add codecov upload step to `unit_tests.yml`:
-```yaml
-- name: Upload coverage
-  uses: codecov/codecov-action@v4
-  with:
-    file: cover.out
-    token: ${{ secrets.CODECOV_TOKEN }}
-```
-Add `.codecov.yml` with threshold enforcement:
-```yaml
-coverage:
-  status:
-    project:
-      default:
-        target: auto
-        threshold: 2%
-    patch:
-      default:
-        target: 80%
-```
+- **Impact**: PR-level coverage reporting and regression detection
+- **Implementation**: Add `codecov/codecov-action@v4` step to `unit_tests.yml`
+- Coverage file already generated (`cover.out`), just needs upload
 
-### 2. Add Trivy Scanning to PR Workflow (1-2 hours)
-- **Impact**: Catch vulnerabilities at PR time, not just post-merge in Konflux
-- **Implementation**: Add a new job or step to the E2E workflow:
-```yaml
-- name: Run Trivy vulnerability scanner
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: 'localhost/codeflare-operator:test'
-    format: 'sarif'
-    exit-code: '1'
-    severity: 'CRITICAL,HIGH'
-```
+### 2. Add Trivy Container Scanning (1-2 hours)
+- **Impact**: Early detection of CVEs in base images and dependencies
+- **Implementation**:
+  ```yaml
+  - name: Run Trivy vulnerability scanner
+    uses: aquasecurity/trivy-action@master
+    with:
+      image-ref: 'localhost/codeflare-operator:test'
+      format: 'table'
+      exit-code: '1'
+      severity: 'CRITICAL,HIGH'
+  ```
 
-### 3. Create Basic CLAUDE.md (2-3 hours)
-- **Impact**: Enable consistent AI-assisted test generation
-- **Implementation**: Create `CLAUDE.md` documenting:
-  - Test framework conventions (Ginkgo/Gomega for component tests, standard Go testing with Gomega for webhook tests)
-  - envtest setup patterns
-  - `codeflare-common/support` helper usage
-  - E2E test structure and timeout conventions
+### 3. Add CodeQL/gosec Workflow (2-3 hours)
+- **Impact**: Automated security vulnerability detection
+- **Implementation**: Add `.github/workflows/codeql.yml` with Go analysis
 
-### 4. Add Image Startup Validation (2-3 hours)
-- **Impact**: Catch binary crashes before KinD deployment
-- **Implementation**: After `make image-build`, add:
-```yaml
-- name: Validate image startup
-  run: |
-    podman run --rm --entrypoint /manager ${IMG} --help || true
-    podman run --rm -d --name cfo-test ${IMG}
-    sleep 5
-    podman logs cfo-test
-    podman stop cfo-test
-```
+### 4. Create Basic Agent Rules (2-3 hours)
+- **Impact**: Consistent AI-generated tests following project conventions
+- **Implementation**: Run `/test-rules-generator` to generate `.claude/rules/` from existing test patterns
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows Inventory (13 total)**:
+**Workflows (13 total)**:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `unit_tests.yml` | push, PR, dispatch | Unit tests with envtest |
-| `component_tests.yaml` | PR, push (main/release) | Component tests with Ginkgo |
-| `e2e_tests.yaml` | PR, push (main/release) | E2E on KinD with GPU support |
+| `unit_tests.yml` | PR + push | Unit tests with envtest |
+| `e2e_tests.yaml` | PR + push (main/release) | GPU E2E on KinD with full stack |
+| `component_tests.yaml` | PR + push (main/release) | Component-level tests |
 | `olm_tests.yaml` | PR (main/release) | OLM install and upgrade validation |
-| `precommit.yml` | push, PR, dispatch | Pre-commit hook checks |
-| `verify_generated_files.yml` | push, PR (Go/config changes) | Import and manifest verification |
-| `build-and-push.yaml` | push (main, config change) | Build and push to Quay |
-| `operator-image.yml` | push (main) | Dev image to project-codeflare Quay |
-| `odh-release.yml` | dispatch | Release compilation and GitHub release |
-| `tag-and-build.yml` | dispatch | Tag and build release |
-| `project-codeflare-release.yml` | dispatch | Upstream release process |
-| `auto-merge-sync.yaml` | dispatch | Upstream/downstream sync automation |
-| `update-release-matrix-to-confluence.yml` | dispatch | Release matrix Confluence update |
+| `precommit.yml` | PR + push | Pre-commit hook execution |
+| `verify_generated_files.yml` | PR + push (Go/config changes) | Import and manifest verification |
+| `operator-image.yml` | Push to main | Dev image build and push |
+| `build-and-push.yaml` | Push to main (params.env) | ODH image build |
+| `tag-and-build.yml` | Manual dispatch | Release process |
+| `auto-merge-sync.yaml` | Manual dispatch | Upstream/downstream sync |
+| `odh-release.yml` | - | ODH release process |
+| `project-codeflare-release.yml` | - | Project release process |
+| `update-release-matrix-to-confluence.yml` | Manual dispatch | Confluence matrix update |
 
 **Strengths**:
-- Concurrency control with `cancel-in-progress: true` on E2E, component, and OLM workflows
-- Smart caching strategy using composite key from `go.sum` and `.pre-commit-config.yaml`
-- Container image for pre-commit toolchain (`quay.io/opendatahub/pre-commit-go-toolchain:v0.2`)
-- Slack notifications on push failures
-- Artifact upload for logs with 10-day retention
-- Automated Confluence release matrix updates
+- Concurrency control on E2E, component, and OLM tests (`cancel-in-progress: true`)
+- Go module and pre-commit caching (`actions/cache@v4`)
+- Slack failure notifications for push-triggered E2E
+- Paths-ignore for docs/markdown (avoids unnecessary test runs)
+- Dedicated GPU runner (`gpu-t4-4-core`) for E2E tests
 
 **Gaps**:
-- No CodeQL/SAST workflow in GitHub Actions
-- No dependabot auto-merge configuration
-- Build-and-push only triggers on `config/manager/params.env` changes, potentially missing other build-affecting changes
+- No security scanning workflows (CodeQL, gosec, Trivy)
+- No coverage upload step
+- No automated dependency update PR testing
 
 ### Test Coverage
 
-**Unit Tests (7.0/10)**:
-- Framework: Go testing + Ginkgo/Gomega + envtest (controller-runtime)
-- 3 test files, 1313 total lines of test code
-- Test-to-source ratio: 1313 LOC tests / 2805 LOC source = 0.47 (47% ratio, adequate)
-- Tests cover: RayCluster controller reconciliation, OAuth proxy injection, webhook validation (create/update), owner references, finalizers, image pull secrets, CRB cleanup
-- Coverage file generated (`cover.out`) but not tracked
+**Unit Tests (3 files, ~880 lines)**:
+- `suite_test.go`: Ginkgo test suite with envtest bootstrapping, downloads CRDs from upstream
+- `raycluster_controller_test.go`: Tests OAuth resource creation, owner references, finalizers, CRB cleanup, image pull secret handling
+- `raycluster_webhook_test.go`: Comprehensive webhook validation (Default, ValidateCreate, ValidateUpdate) with positive and negative test cases
 
-**Component Tests (included in unit score)**:
-- Run via Ginkgo with envtest
-- Same test suite as unit tests but run separately in CI
-- Both `test-unit` and `test-component` Makefile targets exist
+**E2E Tests (4 files, ~560 lines)**:
+- `mnist_rayjob_raycluster_test.go`: MNIST training via RayJob on RayCluster with Kueue, AppWrapper variant, image pull secret testing. Multi-accelerator: CPU, CUDA GPU, ROCm GPU
+- `mnist_pytorch_appwrapper_test.go`: PyTorch MNIST training via batch Job in AppWrapper
+- `deployment_appwrapper_test.go`: Deployment + Service AppWrapper lifecycle
+- `job_appwrapper_test.go`: Batch Job AppWrapper lifecycle with completion assertion
 
-**E2E Tests (8.0/10)**:
-- Framework: Go testing + Gomega + `codeflare-common/support`
-- 4 E2E test files, 1075 total lines
-- Tests: MNIST RayJob with RayCluster (CPU/GPU), MNIST PyTorch AppWrapper, Job AppWrapper, Deployment AppWrapper
-- Infrastructure: KinD cluster with NVIDIA GPU support
-- Deploys full CodeFlare stack (Kueue, KubeRay, CodeFlare operator)
-- GPU testing with T4 GPU runners
-- Configurable timeouts (short/medium/long/GPU provisioning)
-- gotestfmt for human-readable output
+**Component Tests**: Separate test target (`make test-component`) referenced in workflow but test files use Ginkgo envtest
 
-**OLM Tests (bonus)**:
-- OLM install and upgrade validation on KinD
-- Builds operator, bundle, and catalog images
-- Tests upgrade path from latest released version
-- CSV version verification post-upgrade
+**Test-to-Code Ratio**: 2388 test SLOC / 2142 source SLOC = **1.12:1** (excellent)
 
-**Missing Coverage**:
-- No tests for `appwrapper_controller.go` or `appwrapper_webhook.go`
-- No tests for `support.go` helper functions
-- No negative path testing in E2E (failure recovery, error handling)
+**Test Frameworks**:
+- Ginkgo/Gomega for BDD-style unit tests (envtest)
+- Standard Go `testing` package + Gomega for webhook tests
+- `codeflare-common/support` library for shared E2E utilities
+
+**Coverage**: `make test-unit` runs `go test -coverprofile cover.out` but no upload/enforcement
 
 ### Code Quality
 
-**Linting (6.0/10)**:
-- golangci-lint configured (`.golangci.yaml`) with 10-minute timeout
-- Only 7 linters enabled: errcheck, gosimple, govet, ineffassign, staticcheck, typecheck, unused
-- Missing many valuable linters: gocritic, revive, gocyclo, bodyclose, noctx, gosec, prealloc, exportloopref
+**Linting** (`.golangci.yaml`):
+- 7 linters enabled: errcheck, gosimple, govet, ineffassign, staticcheck, typecheck, unused
+- 10-minute timeout
+- **Gap**: Missing gocritic, gocyclo, misspell, revive, exhaustive for broader coverage
 
-**Pre-commit Hooks (8.0/10)**:
-- Well-configured `.pre-commit-config.yaml` with 3 repo sources
-- Checks: trailing whitespace, merge conflict markers, end-of-file fixer, large files, case conflicts, JSON validation, symlinks, private key detection
-- YAML linting with yamllint (strict mode)
-- Go-specific: go-fmt, golangci-lint, go-mod-tidy
-- CI workflow runs pre-commit checks on all pushes and PRs
+**Pre-commit Hooks** (`.pre-commit-config.yaml` - 12 hooks):
+- `trailing-whitespace`, `check-merge-conflict`, `end-of-file-fixer`
+- `check-added-large-files`, `check-case-conflict`, `check-json`, `check-symlinks`
+- `detect-private-key` (basic secret detection)
+- `yamllint` with strict mode
+- `go-fmt`, `golangci-lint`, `go-mod-tidy`
 
-**Static Analysis (3.0/10 in GitHub Actions, 8.0/10 in Konflux)**:
-- GitHub Actions: No CodeQL, no gosec, no SAST
-- Konflux push pipeline: Comprehensive - Clair scan, Snyk SAST, Coverity SAST, ClamAV, shell check, unicode check, RPM signature scan, deprecated image check, ecosystem cert preflight
-- Gap: None of the Konflux security checks run on PRs automatically
+**Import Organization**: Dedicated workflow (`verify_generated_files.yml`) verifies imports and generated manifests
 
-**Import Organization**:
-- openshift-goimports used for consistent import ordering
-- Dedicated CI workflow (`verify_generated_files.yml`) verifies imports and generated manifests
+**Dependency Management**: Both Dependabot (weekly gomod) and Renovate configured
 
 ### Container Images
 
-**Dockerfile (standard)**:
-- Multi-stage build: Go toolset (UBI9 1.23) -> UBI9 minimal
-- FIPS-compliant build with `strictfipsruntime` tag
+**Dockerfile** (standard):
+- Multi-stage build: UBI9/go-toolset:1.23 builder -> UBI9/ubi-minimal runtime
 - Non-root user (65532:65532)
-- Clean separation of build and runtime stages
+- CGO_ENABLED=1
+- No vulnerability scanning, no SBOM
 
-**Dockerfile.konflux (production)**:
-- Pinned base images with SHA digests for reproducibility
-- FIPS-compliant with `GOEXPERIMENT=strictfipsruntime`
-- Comprehensive labels (component, description, license)
-- Hermetic build support with Cachi2 dependency prefetch
+**Dockerfile.konflux** (production):
+- Pinned base image digests (reproducible builds)
+- FIPS-compliant build (`GOEXPERIMENT=strictfipsruntime`)
+- Red Hat labels for compliance
+- Multi-arch support via Tekton pipeline (x86_64, arm64, ppc64le)
 
-**Tekton/Konflux Pipeline (PR)**:
-- Multi-architecture: x86_64, arm64, ppc64le
-- Hermetic builds with gomod prefetch
-- Image expiration (5 days for PRs)
+**Tekton Pipeline** (`.tekton/odh-codeflare-operator-pull-request.yaml`):
+- Triggered on PR via comment (`/build-konflux`) or label (`kfbuild-all`, `kfbuild-codeflare-operator`)
+- Hermetic build with gomod prefetch
 - Source image build enabled
-- Label/comment triggered (`/build-konflux`)
-
-**Tekton/Konflux Pipeline (Push)**:
-- Full security scanning suite
-- SBOM generation
-- Source image build
-- Slack failure notifications
-- Deprecated base image checking
-
-**Gaps**:
-- No runtime validation (startup test, health check)
-- No vulnerability threshold enforcement in GitHub Actions
-- PR Konflux pipeline only builds, doesn't run any scans
+- Multi-arch: linux/x86_64, linux-m2xlarge/arm64, linux/ppc64le
+- Image expires after 5 days
+- Cancel-in-progress enabled
 
 ### Security
 
-**Dependency Management**:
-- Dependabot configured for weekly Go module updates
-- Renovate configured extending `konflux-central` defaults
-- Private key detection in pre-commit hooks
-
-**Security Scanning (Konflux push only)**:
-- Clair vulnerability scanning
-- Snyk SAST
-- Coverity SAST
-- ClamAV malware scanning
-- Shell script checking
-- Unicode attack detection
-- RPM signature verification
-- Ecosystem cert preflight checks
-
-**Gaps**:
-- No security scanning on PRs in GitHub Actions
-- No Gitleaks or TruffleHog for secret scanning
-- No Go-specific security linter (gosec) in golangci-lint config
-- No signed images or SBOM in GitHub Actions pipeline
+| Practice | Status |
+|----------|--------|
+| SAST (CodeQL/gosec) | Not configured |
+| Container scanning (Trivy/Snyk) | Not configured |
+| Secret detection | Basic (pre-commit `detect-private-key` only) |
+| Dependency scanning | Dependabot + Renovate |
+| SBOM generation | Not configured |
+| Image signing/attestation | Not configured (may be handled by Konflux) |
+| FIPS compliance | Yes (Dockerfile.konflux) |
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: None - No `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
+- **Coverage**: No test types have rules
 - **Quality**: N/A
-- **Gaps**:
-  - No test automation guidance for AI agents
-  - No framework-specific patterns documented (envtest, Ginkgo/Gomega conventions)
-  - No guidance on using `codeflare-common/support` helpers
-  - No E2E test patterns documented (timeout conventions, GPU test skipping)
-  - No webhook test patterns documented (validate create/update structure)
-- **Recommendation**: Generate agent rules with `/test-rules-generator` covering:
-  - Unit test patterns with envtest and Ginkgo
-  - Webhook validation test patterns
-  - E2E test patterns with `codeflare-common/support`
-  - Component test conventions
+- **Gaps**: No `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
+- **Recommendation**: Generate rules with `/test-rules-generator` covering:
+  - Unit tests (envtest + Ginkgo patterns)
+  - Webhook validation tests (ValidateCreate/ValidateUpdate patterns)
+  - E2E tests (KinD + Kueue + AppWrapper patterns)
+  - Controller reconciliation tests
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add codecov integration** - Upload `cover.out` from `unit_tests.yml`, add `.codecov.yml` with thresholds. Track coverage trends and enforce minimum on PRs. (2-4 hours)
+1. **Add Codecov integration with coverage thresholds**
+   - Upload `cover.out` from unit test workflow
+   - Set minimum coverage threshold (e.g., 70%)
+   - Enable PR coverage diff reporting
+   - Effort: 2-4 hours
 
-2. **Add container runtime validation** - After building image in E2E workflow, verify the binary starts and responds before proceeding to full E2E tests. (4-6 hours)
+2. **Add container vulnerability scanning (Trivy)**
+   - Scan built images in E2E workflow (image already built there)
+   - Fail on CRITICAL/HIGH vulnerabilities
+   - Effort: 2-3 hours
 
-3. **Add tests for AppWrapper controller** - `appwrapper_controller.go` and `appwrapper_webhook.go` have zero test coverage. Write envtest-based tests following existing RayCluster test patterns. (4-8 hours)
+3. **Add SAST scanning (CodeQL or gosec)**
+   - CodeQL for Go analysis on PRs
+   - Or add gosec to golangci-lint linters
+   - Effort: 3-4 hours
 
 ### Priority 1 (High Value)
 
-4. **Create `.claude/rules/` with test automation guidance** - Document testing conventions, frameworks, helper libraries, and patterns used across the project so AI agents generate consistent, project-appropriate tests. (4-6 hours)
+4. **Add image startup validation in PR workflow**
+   - After building the operator image, verify it starts and responds to health checks
+   - Prevents runtime startup failures from reaching Konflux
+   - Effort: 3-4 hours
 
-5. **Add security scanning to PR workflows** - Add Trivy or gosec to GitHub Actions PR workflow. Currently all security scanning only runs post-merge in Konflux. (2-3 hours)
+5. **Create comprehensive agent rules (.claude/rules/)**
+   - Unit test patterns (envtest, Ginkgo, Gomega matchers)
+   - Webhook test patterns (positive/negative ValidateCreate/ValidateUpdate)
+   - E2E test patterns (KinD setup, Kueue resources, AppWrapper lifecycle)
+   - Effort: 2-3 hours (or use `/test-rules-generator`)
 
-6. **Enable Konflux PR pipeline for automatic scanning** - The PR Tekton pipeline currently only triggers on labels/comments. Consider enabling automatic scans on PRs. (2-3 hours)
+6. **Expand golangci-lint linters**
+   - Add: gocritic, gocyclo, misspell, revive, exhaustive
+   - Current 7 linters is minimal for an operator project
+   - Effort: 1-2 hours
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Expand golangci-lint configuration** - Enable additional linters: gocritic, revive, gocyclo, gosec, bodyclose, noctx, prealloc. Currently only 7 basic linters enabled. (2-4 hours)
+7. **Add SBOM generation to container builds**
+   - Use Syft or Trivy SBOM mode
+   - Attach to releases
+   - Effort: 2-3 hours
 
-8. **Add CodeQL workflow** - Create `.github/workflows/codeql.yml` for GitHub-native SAST scanning on Go code. (1-2 hours)
+8. **Add Gitleaks secret scanning**
+   - Replace basic `detect-private-key` with comprehensive Gitleaks scanning
+   - Add as CI workflow and pre-commit hook
+   - Effort: 1-2 hours
 
-9. **Add contract tests** - Test API boundaries with KubeRay and AppWrapper upstream dependencies to catch breaking changes early. (8-12 hours)
-
-10. **Add negative path E2E tests** - Current E2E tests only cover happy paths. Add tests for error scenarios, recovery, and edge cases. (8-12 hours)
+9. **Add fuzz testing for webhook validation**
+   - Webhook validation logic handles user-supplied RayCluster specs
+   - Fuzz testing can find edge cases in validation
+   - Effort: 4-6 hours
 
 ## Comparison to Gold Standards
 
 | Dimension | codeflare-operator | odh-dashboard | notebooks | kserve |
-|-----------|--------------------|---------------|-----------|--------|
-| Unit Tests | 7.0 - Good envtest | 9.0 - Comprehensive Jest | 6.0 - Image-focused | 9.0 - Extensive |
-| Integration/E2E | 8.0 - KinD + GPU | 9.0 - Cypress + contract | 8.0 - Multi-arch | 9.0 - Multi-version |
-| Build Integration | 5.0 - Konflux builds only | 8.0 - Full PR validation | 7.0 - Image pipeline | 7.0 - PR builds |
-| Image Testing | 5.0 - No runtime checks | 7.0 - Build validation | 9.0 - 5-layer validation | 6.0 - Basic |
-| Coverage Tracking | 3.0 - No integration | 9.0 - Codecov enforced | 5.0 - Limited | 8.0 - Enforced |
-| CI/CD Automation | 8.0 - 13 workflows | 9.0 - Comprehensive | 8.0 - Well-organized | 9.0 - Mature |
-| Agent Rules | 0.0 - Missing | 8.0 - Comprehensive | 2.0 - Minimal | 3.0 - Basic |
+|-----------|-------------------|---------------|-----------|--------|
+| Unit Tests | 7/10 | 9/10 | 7/10 | 9/10 |
+| Integration/E2E | 8/10 | 9/10 | 8/10 | 9/10 |
+| Build Integration | 7/10 | 8/10 | 7/10 | 8/10 |
+| Image Testing | 4/10 | 7/10 | 9/10 | 7/10 |
+| Coverage Tracking | 3/10 | 8/10 | 5/10 | 9/10 |
+| CI/CD Automation | 8/10 | 9/10 | 8/10 | 9/10 |
+| Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
+
+**Key Differentiators**:
+- codeflare-operator excels at E2E testing with real GPU hardware and multi-accelerator support
+- OLM upgrade testing is above average for operator projects
+- Main gaps are in coverage tracking (no upload), security scanning (none), and agent rules (none)
+- Test-to-code ratio of 1.12:1 is among the best in the ecosystem
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/unit_tests.yml` - Unit test workflow
-- `.github/workflows/component_tests.yaml` - Component test workflow
-- `.github/workflows/e2e_tests.yaml` - E2E test workflow with GPU
-- `.github/workflows/olm_tests.yaml` - OLM install/upgrade tests
+- `.github/workflows/unit_tests.yml` - Unit test pipeline
+- `.github/workflows/e2e_tests.yaml` - E2E test pipeline (GPU)
+- `.github/workflows/component_tests.yaml` - Component test pipeline
+- `.github/workflows/olm_tests.yaml` - OLM upgrade test pipeline
 - `.github/workflows/precommit.yml` - Pre-commit checks
-- `.github/workflows/verify_generated_files.yml` - Import and manifest verification
-- `.github/workflows/build-and-push.yaml` - Image build and push
-- `.github/workflows/operator-image.yml` - Dev image push
+- `.github/workflows/verify_generated_files.yml` - Import/manifest verification
 - `.tekton/odh-codeflare-operator-pull-request.yaml` - Konflux PR pipeline
-- `.tekton/odh-codeflare-operator-push.yaml` - Konflux push pipeline with security scanning
 
 ### Testing
-- `pkg/controllers/raycluster_controller_test.go` - Controller unit tests (286 LOC)
-- `pkg/controllers/raycluster_webhook_test.go` - Webhook validation tests (880 LOC)
-- `pkg/controllers/suite_test.go` - Test suite setup with envtest (147 LOC)
-- `test/e2e/mnist_rayjob_raycluster_test.go` - MNIST RayJob E2E (559 LOC)
-- `test/e2e/mnist_pytorch_appwrapper_test.go` - PyTorch AppWrapper E2E (208 LOC)
-- `test/e2e/job_appwrapper_test.go` - Job AppWrapper E2E (143 LOC)
-- `test/e2e/deployment_appwrapper_test.go` - Deployment AppWrapper E2E (165 LOC)
-- `test/e2e/support.go` - E2E test helpers
-- `test/e2e/kind.sh` - KinD cluster setup
-- `test/e2e/setup.sh` - E2E environment setup
+- `pkg/controllers/suite_test.go` - Ginkgo test suite (envtest)
+- `pkg/controllers/raycluster_controller_test.go` - Controller reconciliation tests
+- `pkg/controllers/raycluster_webhook_test.go` - Webhook validation tests
+- `test/e2e/mnist_rayjob_raycluster_test.go` - MNIST RayJob E2E
+- `test/e2e/deployment_appwrapper_test.go` - Deployment AppWrapper E2E
+- `test/e2e/job_appwrapper_test.go` - Job AppWrapper E2E
+- `test/e2e/mnist_pytorch_appwrapper_test.go` - PyTorch MNIST E2E
 
 ### Code Quality
 - `.golangci.yaml` - golangci-lint config (7 linters)
-- `.pre-commit-config.yaml` - Pre-commit hooks (3 repos)
-- `.yamllint.yaml` - YAML linting configuration
-- `hack/verify-imports.sh` - Import verification script
+- `.pre-commit-config.yaml` - Pre-commit hooks (12 hooks)
+- `.yamllint.yaml` - YAML linting config
 
-### Container Images
-- `Dockerfile` - Standard multi-stage build
-- `Dockerfile.konflux` - Production Konflux build with pinned digests
-- `.dockerignore` - Docker build exclusions
+### Container
+- `Dockerfile` - Standard operator image
+- `Dockerfile.konflux` - FIPS-compliant production image
+- `.dockerignore` - Build context filter
 
-### Configuration
-- `Makefile` - Build, test, deploy targets
-- `go.mod` / `go.sum` - Go module dependencies
-- `.github/dependabot.yml` - Dependabot config
-- `.github/renovate.json` - Renovate config
-- `config/component_metadata.yaml` - Component metadata
+### Dependencies
+- `.github/dependabot.yml` - Weekly gomod updates
+- `.github/renovate.json` - Renovate config (extends konflux-central)

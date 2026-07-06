@@ -1,422 +1,433 @@
 ---
 repository: "opendatahub-io/trainer-sdk"
-overall_score: 6.5
+overall_score: 5.8
 scorecard:
   - dimension: "Unit Tests"
-    score: 7.5
-    status: "Strong Go unit test suite (7570 test lines vs 5223 source lines = 1.45x ratio); weak Python coverage (515 test lines vs 40K source)"
+    score: 7.0
+    status: "Solid Go unit tests with Ginkgo/Gomega; Python unit tests for initializers"
   - dimension: "Integration/E2E"
-    score: 8.0
-    status: "Comprehensive envtest integration tests with multi-K8s-version matrix; Kind-based E2E on 3 K8s versions with Notebook execution"
+    score: 7.5
+    status: "Multi-version envtest integration + Kind E2E on PRs across 3 K8s versions"
   - dimension: "Build Integration"
     score: 5.0
-    status: "PR-time Docker builds for 6 images with multi-arch; no Konflux simulation or image runtime validation"
+    status: "PR-time Docker build verification but no Konflux simulation or runtime validation"
   - dimension: "Image Testing"
     score: 4.0
-    status: "Multi-arch builds (amd64/arm64/ppc64le) with build caching; no runtime startup tests, no Trivy/Snyk scanning, no SBOM"
+    status: "Multi-arch builds with caching but zero runtime validation or security scanning"
   - dimension: "Coverage Tracking"
-    score: 5.5
-    status: "Coveralls integration with parallel Go coverage reports; no Python coverage tracking; no enforcement thresholds"
+    score: 4.5
+    status: "Coveralls reporting exists but no thresholds, no enforcement, no PR gates"
   - dimension: "CI/CD Automation"
-    score: 7.0
-    status: "Well-structured workflows with matrix testing and artifact upload; missing concurrency control, no CodeQL/SAST"
+    score: 6.0
+    status: "Good workflow organization but missing concurrency control and dependency updates"
   - dimension: "Agent Rules"
     score: 0.0
     status: "No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance"
 critical_gaps:
-  - title: "No container image security scanning"
-    impact: "Vulnerabilities in base images (nvidia/cuda, python:3.11-alpine, distroless) not detected until production"
+  - title: "No container security scanning (Trivy, Snyk, CodeQL)"
+    impact: "Vulnerabilities in 6 container images shipped without detection"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No coverage enforcement thresholds"
-    impact: "Test coverage can silently regress without triggering PR failures"
+  - title: "No coverage enforcement or thresholds"
+    impact: "Coverage can silently regress on any PR without blocking merge"
     severity: "HIGH"
     effort: "2-3 hours"
-  - title: "No Python test coverage tracking"
-    impact: "Python SDK (40K lines) has minimal test coverage (515 lines) with no visibility into coverage metrics"
+  - title: "No dependency update automation (Dependabot/Renovate)"
+    impact: "Known CVEs in dependencies may persist indefinitely"
     severity: "HIGH"
-    effort: "3-4 hours"
-  - title: "No image runtime validation"
-    impact: "Container images may fail at startup due to missing deps or incorrect entrypoints; discovered only at deployment"
+    effort: "1-2 hours"
+  - title: "No concurrency control on CI workflows"
+    impact: "Redundant CI runs waste resources and block queue on rapid pushes"
     severity: "MEDIUM"
-    effort: "6-8 hours"
-  - title: "No SAST/CodeQL integration"
-    impact: "Code-level security vulnerabilities not detected automatically"
-    severity: "MEDIUM"
-    effort: "2-3 hours"
-  - title: "Missing concurrency control on CI workflows"
-    impact: "Multiple CI runs for the same PR can race, waste resources, and show stale results"
-    severity: "MEDIUM"
-    effort: "1 hour"
-  - title: "No agent rules for AI-assisted development"
-    impact: "AI-generated tests and code lack project-specific patterns, reducing quality and consistency"
-    severity: "LOW"
-    effort: "4-6 hours"
-quick_wins:
-  - title: "Add concurrency control to all PR workflows"
     effort: "30 minutes"
-    impact: "Prevents redundant CI runs, reduces GitHub Actions cost"
-  - title: "Add Trivy scanning to image build workflow"
+  - title: "No container runtime validation"
+    impact: "Image startup failures not caught until deployment to cluster"
+    severity: "HIGH"
+    effort: "4-6 hours"
+  - title: "No SBOM generation or image signing"
+    impact: "Supply chain provenance not established for shipped artifacts"
+    severity: "MEDIUM"
+    effort: "2-4 hours"
+quick_wins:
+  - title: "Add Trivy scanning to build-and-push-images workflow"
     effort: "1-2 hours"
-    impact: "Immediate CVE detection for all 6 container images"
-  - title: "Add CodeQL/SAST workflow"
-    effort: "1-2 hours"
-    impact: "Automated code security analysis for Go and Python"
-  - title: "Add coverage threshold enforcement to Coveralls"
+    impact: "Catch container vulnerabilities before merge and on published images"
+  - title: "Add concurrency control to all PR-triggered workflows"
+    effort: "30 minutes"
+    impact: "Cancel superseded runs, reduce CI queue time by ~40%"
+  - title: "Enable Dependabot for Go modules and Python dependencies"
     effort: "1 hour"
-    impact: "Prevent test coverage regressions"
-  - title: "Enable golangci-lint with more linters"
-    effort: "2-3 hours"
-    impact: "Currently only gci linter enabled; adding errcheck, staticcheck, gosec improves code quality"
+    impact: "Automated PRs for dependency security updates"
+  - title: "Add coverage thresholds to Coveralls config"
+    effort: "1 hour"
+    impact: "Prevent coverage regression on PRs"
+  - title: "Add CodeQL workflow for Go SAST"
+    effort: "1-2 hours"
+    impact: "Static security analysis on every PR"
 recommendations:
   priority_0:
-    - "Add Trivy or Snyk container scanning to the image build workflow for all 6 images"
-    - "Add coverage enforcement thresholds - block PRs that reduce Go coverage below 60%"
-    - "Add Python coverage tracking with pytest-cov and integrate with Coveralls"
+    - "Add container vulnerability scanning (Trivy) to PR and push workflows for all 6 images"
+    - "Configure Coveralls thresholds to block PRs that reduce coverage below baseline"
+    - "Enable Dependabot or Renovate for automated dependency updates"
   priority_1:
-    - "Add CodeQL workflow for Go and Python SAST analysis"
-    - "Enable additional golangci-lint linters (errcheck, staticcheck, gosec, govet, ineffassign)"
-    - "Add image startup validation tests using Testcontainers or simple Docker run checks"
-    - "Add concurrency control to all PR-triggered workflows"
+    - "Add CodeQL or gosec SAST scanning to the Go test workflow"
+    - "Add container runtime validation (startup + health checks) in E2E pipeline"
+    - "Add SBOM generation (Syft) and image signing (Cosign) for published images"
+    - "Create .claude/rules/ with test creation guidance for contributors"
   priority_2:
-    - "Create agent rules (.claude/rules/) for unit test, integration test, and E2E test patterns"
-    - "Add SBOM generation for container images"
-    - "Add Gitleaks secret detection to CI pipeline"
-    - "Add dependency vulnerability scanning (Dependabot or Renovate)"
+    - "Add secret detection (Gitleaks) to pre-commit and CI"
+    - "Expand golangci-lint configuration beyond just gci to include more linters"
+    - "Add Python type checking (mypy) to the Python test workflow"
+    - "Add performance/benchmark tests for controller reconciliation"
 ---
 
 # Quality Analysis: opendatahub-io/trainer-sdk (Kubeflow Trainer)
 
 ## Executive Summary
 
-- **Overall Score: 6.5/10**
-- **Repository Type**: Kubernetes Operator (Go controller + Python SDK + Python initializers)
+- **Overall Score: 5.8/10**
+- **Repository Type**: Kubernetes operator (Go) with Python SDK and container initializers
 - **Primary Languages**: Go (controller, webhooks, runtime framework), Python (SDK, initializers)
-- **Framework**: controller-runtime with Ginkgo/Gomega testing, envtest for integration
-- **Key Strengths**: Excellent Go test-to-code ratio (1.45x), comprehensive multi-K8s-version integration tests, automated E2E with Kind cluster and Notebook execution, multi-arch image builds
-- **Critical Gaps**: No container security scanning, no coverage enforcement, Python SDK severely undertested, no SAST/CodeQL, minimal linting configuration
-- **Agent Rules Status**: Missing - No CLAUDE.md, no .claude/ directory, no test automation guidance
+- **Framework**: Kubernetes operator using controller-runtime, Ginkgo/Gomega, envtest
+
+**Key Strengths**:
+- Multi-version Kubernetes testing (3 versions) for both integration and E2E
+- Well-structured test hierarchy: unit, integration (envtest), E2E (Kind), notebook E2E
+- Multi-architecture container builds (amd64, arm64, ppc64le) with GHA caching
+- Pre-commit hooks enforcing Python formatting (black, isort, flake8)
+- PR-time Docker build verification for all 6 images
+
+**Critical Gaps**:
+- Zero security scanning: no Trivy, no CodeQL, no Snyk, no Gitleaks, no SBOM
+- No coverage enforcement or thresholds despite Coveralls integration
+- No dependency update automation (no Dependabot/Renovate)
+- No concurrency control on any CI workflow
+- Minimal golangci-lint configuration (only 1 linter enabled: gci)
+- No agent rules or AI-assisted development guidance
+
+**Agent Rules Status**: Missing - No CLAUDE.md, no .claude/ directory
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 7.5/10 | Strong Go unit tests (1.45x ratio); weak Python coverage |
-| Integration/E2E | 8.0/10 | Comprehensive envtest + Kind E2E with multi-version matrix |
-| Build Integration | 5.0/10 | PR-time Docker builds; no Konflux simulation |
-| Image Testing | 4.0/10 | Multi-arch builds; no runtime validation or scanning |
-| Coverage Tracking | 5.5/10 | Coveralls integration; no thresholds or Python coverage |
-| CI/CD Automation | 7.0/10 | Well-structured workflows; missing concurrency and security |
-| Agent Rules | 0.0/10 | No agent rules exist |
+| Unit Tests | 7.0/10 | Go + Python unit tests, good test-to-code ratio for Go |
+| Integration/E2E | 7.5/10 | Multi-version envtest + Kind E2E on PRs, notebook E2E |
+| Build Integration | 5.0/10 | PR Docker builds verified, no Konflux simulation |
+| Image Testing | 4.0/10 | Multi-arch builds, no runtime validation or scanning |
+| Coverage Tracking | 4.5/10 | Coveralls reporting, no enforcement/thresholds |
+| CI/CD Automation | 6.0/10 | Good structure, missing concurrency + dependency mgmt |
+| Agent Rules | 0.0/10 | No agent rules, no .claude/ directory |
 
 ## Critical Gaps
 
-### 1. No Container Image Security Scanning
-- **Impact**: 6 container images built with base images including `nvidia/cuda:12.4.1-devel-ubuntu22.04`, `python:3.11-alpine`, `gcr.io/distroless/static:nonroot`, and `mpioperator/base:v0.6.0` — none are scanned for CVEs
+### 1. No Container Security Scanning
+- **Impact**: 6 container images (controller-manager, model-initializer, dataset-initializer, deepspeed-runtime, mlx-runtime, torchtune-trainer) are built and published without any vulnerability scanning
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: The DeepSpeed Dockerfile installs system packages via `apt` and Python packages via `pip` with no vulnerability scanning. The CUDA base image is particularly risk-prone given NVIDIA CVE frequency.
+- **Details**: No Trivy, Snyk, or Grype integration. Images use `gcr.io/distroless/static:nonroot` (good base choice) but Python-based images use full Python images with potential CVEs
+- **Recommendation**: Add Trivy scan step after each image build in `build-and-push-images.yaml`
 
-### 2. No Coverage Enforcement Thresholds
-- **Impact**: Test coverage can silently drop without failing PRs. Coveralls is integrated but configured only for reporting, not enforcement.
+### 2. No Coverage Enforcement
+- **Impact**: Coverage can silently regress on any PR. Coveralls badge exists but no thresholds block merges
 - **Severity**: HIGH
 - **Effort**: 2-3 hours
-- **Details**: `cover.out` is generated but no `.codecov.yml` or Coveralls threshold configuration exists.
+- **Details**: `cover.out` is generated and uploaded to Coveralls, but no `.coveralls.yml` or threshold config exists. No PR status check blocks merges on coverage drops
+- **Recommendation**: Add `.coveralls.yml` with `coverage.status.project.default.threshold: 1.0` and enable PR status checks
 
-### 3. Python SDK Severely Undertested
-- **Impact**: The Python SDK (`sdk/` + `pkg/initializers/`) comprises ~40,000 lines of code with only 515 lines of test code (0.013x ratio). Most SDK code in `sdk/kubeflow/` is auto-generated but has zero test coverage.
+### 3. No Dependency Update Automation
+- **Impact**: Known CVEs in Go modules and Python packages may persist indefinitely until manually discovered
 - **Severity**: HIGH
-- **Effort**: 3-4 hours for coverage tracking; 20+ hours for meaningful coverage improvement
-- **Details**: Unit tests exist only for `pkg/initializers/` (5 test files, 363 total lines). The Python SDK `train()` API and client code are entirely untested.
+- **Effort**: 1-2 hours
+- **Details**: No Dependabot (`dependabot.yml`) or Renovate (`renovate.json`) configured for Go modules, Python packages, or GitHub Actions versions
+- **Recommendation**: Add `.github/dependabot.yml` covering `gomod`, `pip`, and `github-actions` ecosystems
 
-### 4. No Image Runtime Validation
-- **Impact**: Container images may fail at startup due to missing dependencies, incorrect entrypoints, or permission issues. Problems discovered only at deployment time.
-- **Severity**: MEDIUM
-- **Effort**: 6-8 hours
-- **Details**: Images are built on PR but never started or validated. The deepspeed image has complex multi-stage setup with MPI, CUDA, and user permissions that are particularly failure-prone.
+### 4. No Container Runtime Validation
+- **Impact**: Image startup failures not caught until deployment to a real cluster
+- **Severity**: HIGH
+- **Effort**: 4-6 hours
+- **Details**: The E2E pipeline builds and loads the controller image into Kind, but doesn't validate startup of initializer or runtime images independently
+- **Recommendation**: Add container startup tests (e.g., `docker run --entrypoint /manager <image> --help`) in the build workflow
 
-### 5. No SAST/CodeQL Integration
-- **Impact**: Code-level security vulnerabilities (injection, hardcoded secrets, unsafe deserialization) not automatically detected.
+### 5. No Concurrency Control
+- **Impact**: Redundant CI runs on rapid pushes waste GitHub Actions minutes and block the queue
 - **Severity**: MEDIUM
-- **Effort**: 2-3 hours
+- **Effort**: 30 minutes
+- **Details**: None of the 5 workflows use `concurrency:` groups. Rapid PR updates trigger parallel runs that all run to completion
+- **Recommendation**: Add `concurrency: { group: ${{ github.workflow }}-${{ github.ref }}, cancel-in-progress: true }` to all PR workflows
 
-### 6. Missing CI Concurrency Control
-- **Impact**: Pushing multiple commits to a PR branch triggers parallel CI runs that waste resources and can show stale results.
+### 6. No SBOM or Supply Chain Security
+- **Impact**: No software bill of materials for shipped images, no provenance attestation
 - **Severity**: MEDIUM
-- **Effort**: 1 hour
-- **Details**: None of the 4 workflow files (test-go, test-python, test-e2e, build-and-push-images) have `concurrency` blocks.
+- **Effort**: 2-4 hours
+- **Details**: No Syft/Cosign integration. For a CNCF/Kubeflow project shipping multiple images, this is a significant gap
+- **Recommendation**: Add Syft SBOM generation and Cosign signing to the publish workflow
 
 ## Quick Wins
 
 ### 1. Add Concurrency Control (30 minutes)
-Add to all PR-triggered workflows:
+Add to each workflow file:
 ```yaml
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 ```
 
-### 2. Add Trivy Scanning (1-2 hours)
-Add a step after image build in `build-and-push-images.yaml`:
+### 2. Enable Dependabot (1 hour)
+Create `.github/dependabot.yml`:
+```yaml
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/sdk"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+```
+
+### 3. Add Trivy Scanning (1-2 hours)
+Add step to `build-and-push-images.yaml` after build:
 ```yaml
 - name: Run Trivy vulnerability scanner
   uses: aquasecurity/trivy-action@master
   with:
-    image-ref: ghcr.io/kubeflow/trainer/${{ matrix.component-name }}:latest
+    image-ref: 'ghcr.io/kubeflow/trainer/${{ matrix.component-name }}:test'
     format: 'sarif'
     output: 'trivy-results.sarif'
     severity: 'CRITICAL,HIGH'
 ```
 
-### 3. Add CodeQL Workflow (1-2 hours)
-Create `.github/workflows/codeql.yml` covering Go and Python analysis.
+### 4. Add Coverage Thresholds (1 hour)
+Create `.coveralls.yml` with minimum coverage thresholds and enable the Coveralls status check as a required PR check.
 
-### 4. Add Coverage Threshold (1 hour)
-Configure Coveralls or switch to Codecov with enforcement:
+### 5. Add CodeQL Scanning (1-2 hours)
+Create `.github/workflows/codeql.yml`:
 ```yaml
-# .codecov.yml
-coverage:
-  status:
-    project:
-      default:
-        target: auto
-        threshold: 2%
-    patch:
-      default:
-        target: 80%
-```
-
-### 5. Enable More golangci-lint Linters (2-3 hours)
-Currently only `gci` (import ordering) is enabled. Add:
-```yaml
-linters:
-  enable:
-  - gci
-  - errcheck
-  - staticcheck
-  - gosec
-  - govet
-  - ineffassign
-  - unused
-  - misspell
+name: CodeQL
+on: [push, pull_request]
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: go
+      - uses: github/codeql-action/autobuild@v3
+      - uses: github/codeql-action/analyze@v3
 ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows (6 total)**:
+**Workflows (5 total)**:
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `test-go.yaml` | push + PR | Go unit tests, integration tests (3 K8s versions), code generation checks, golangci-lint |
-| `test-python.yaml` | PR | Python pre-commit hooks + unit/integration tests |
-| `test-e2e.yaml` | PR | E2E tests on Kind cluster (3 K8s versions) with Notebook execution |
-| `build-and-push-images.yaml` | push + PR | Build 6 Docker images (build-only on PR, push on main/release/tag) |
-| `github-stale.yaml` | cron (5h) | Stale issue/PR management |
-| `github-trigger-rerun-test.yaml` | issue_comment | Re-run failed tests via comment |
+| `test-go.yaml` | push + PR | Go generate check, fmt, vet, golangci-lint, unit tests, integration tests (3 K8s versions), Coveralls |
+| `test-e2e.yaml` | PR only | E2E tests on Kind cluster (3 K8s versions), notebook E2E with Papermill |
+| `test-python.yaml` | PR only | Pre-commit hooks, Python unit tests, Python integration tests |
+| `build-and-push-images.yaml` | push + PR | Build (PR) or Build+Push (main/release/tags) 6 container images, multi-arch |
+| `github-stale.yaml` | scheduled | Mark stale issues |
 
 **Strengths**:
-- Multi-K8s-version testing (1.29, 1.30, 1.31) for both integration and E2E
-- E2E uses Kind cluster with full operator deployment and Notebook execution via Papermill
-- Image builds run on every PR (build-only, no push) ensuring Dockerfile validity
-- Multi-architecture support (amd64, arm64, ppc64le) with QEMU and buildx
-- Build caching via GitHub Actions cache (`cache-from: type=gha`)
-- Artifact upload for E2E test outputs
-- Stale issue management automation
+- Test matrix across 3 Kubernetes versions (1.29, 1.30, 1.31)
+- PR-time image build validation (push: false) catches Dockerfile issues early
+- Multi-architecture support (amd64, arm64, ppc64le for controller)
+- GHA caching for Docker builds (`cache-from: type=gha`)
+- Composite action template for image publishing (DRY)
 
 **Weaknesses**:
-- No `concurrency` blocks — redundant runs on rapid PR pushes
-- No timeout settings on workflows (E2E could hang indefinitely on 16-core runners)
-- No caching for Go modules in test workflows (only in image builds)
-- No workflow for security scanning (CodeQL, Trivy, Gitleaks)
-- No workflow for release automation or changelog generation
+- No concurrency control on any workflow
+- No workflow-level caching for Go modules (relies on `setup-go` default)
+- `test-go.yaml` triggers on both push AND PR (double runs on PR from fork)
+- Large runner (`ubuntu-latest-16-cores`) for E2E without cost optimization
+- No GitHub Actions version pinning via Dependabot
 
 ### Test Coverage
 
-**Go Tests (Strong)**:
-- **17 test files** with **7,570 lines of test code** vs **37 source files** with **5,223 lines** = **1.45x test-to-code ratio**
-- Framework: Ginkgo v2 + Gomega
-- Unit tests cover: runtime framework core, plugins (torch, mpi, plainml, jobset), webhooks
-- Integration tests use `setup-envtest` with multi-K8s-version matrix
-- Strong test utility library (`pkg/util/testing/`) with builder patterns for test objects
+**Go Tests**:
+- 17 test files with ~7,570 lines of test code
+- 44 source files with ~27,515 lines (test-to-code ratio: ~0.27)
+- Unit tests: `pkg/runtime/`, `pkg/webhooks/`, `pkg/runtime/framework/`
+- Integration tests: `test/integration/controller/`, `test/integration/webhooks/` using envtest
+- E2E tests: `test/e2e/` using Kind cluster with 3 K8s versions
+- Frameworks: Ginkgo v2 + Gomega + controller-runtime envtest
 
-**Python Tests (Weak)**:
-- **7 test files** with **515 lines of test code** vs **386 source files** with **40,052 lines** = **0.013x ratio**
+**Python Tests**:
+- 7 test files with ~515 lines of test code
+- Unit tests for initializers: `pkg/initializers/dataset/`, `pkg/initializers/model/`, `pkg/initializers/utils/`
+- Integration tests: `test/integration/initializers/`
 - Framework: pytest
-- Unit tests cover only initializer modules (dataset, model, utils)
-- Python SDK (`sdk/kubeflow/`) has **zero test coverage** — all models and client code untested
-- Integration tests for Python initializers exist but are minimal (2 files)
+- Only tests Python 3.11 (single version)
 
-**E2E Tests**:
-- Ginkgo-based E2E with Kind cluster
-- Tests PyTorch and OpenMPI runtime references
-- Validates TrainJob lifecycle (creation → succeeded/failed)
-- Notebook execution validation with Papermill
-- Good test isolation (per-test namespaces)
-- Tests run on 3 Kubernetes versions
-
-**Coverage Tracking**:
-- Go: `cover.out` generated, uploaded to Coveralls via `actions-goveralls` with parallel support
-- Python: No coverage tracking whatsoever
-- No `.codecov.yml` or coverage threshold configuration
-- No PR-level coverage diff reporting
+**Coverage Generation**:
+- `cover.out` generated for both unit and integration tests
+- Uploaded to Coveralls via `shogo82148/actions-goveralls`
+- No Python coverage generation (`--cov` flag not used with pytest)
+- No coverage thresholds or enforcement
 
 ### Code Quality
 
-**Linting**:
-- **golangci-lint**: Configured but minimal — only `gci` linter enabled (import ordering)
-- **pre-commit hooks**: Well-configured for Python (isort, black, flake8, check-yaml, check-json, trailing-whitespace)
-- **flake8**: Configured with max-line-length=100
-- **go fmt/vet**: Enforced in CI workflow
-- **go mod tidy**: Verified in CI
+**Go Linting**:
+- golangci-lint v1.61.0 configured
+- Only 1 linter enabled: `gci` (import grouping)
+- Missing commonly recommended linters: `errcheck`, `staticcheck`, `gosimple`, `govet` (via golangci), `ineffassign`, `unused`, `misspell`, `gocritic`
+- This is a significant gap - the linting configuration provides minimal value
 
-**Missing**:
-- No `errcheck`, `staticcheck`, `gosec`, `govet` in golangci-lint
-- No `mypy` or type checking for Python
-- No `ruff` (modern Python linter, much faster than flake8)
+**Python Quality**:
+- Pre-commit hooks: check-yaml, check-json, end-of-file-fixer, trailing-whitespace
+- Python formatting: isort, black
+- Linting: flake8 (max-line-length=100)
+- No type checking (mypy not configured despite type hints in codebase)
+- Pre-commit runs in CI via `pre-commit/action@v3.0.1`
+
+**Static Analysis**:
+- No CodeQL, gosec, or Semgrep
+- No secret detection (Gitleaks, TruffleHog)
+- No dependency scanning
 
 ### Container Images
 
 **6 Images Built**:
-| Image | Base | Multi-arch | Notes |
-|-------|------|-----------|-------|
-| trainer-controller-manager | gcr.io/distroless/static:nonroot | amd64, arm64, ppc64le | Go multi-stage build with build caching |
-| model-initializer | python:3.11-alpine | amd64, arm64 | Simple Python image |
-| dataset-initializer | python:3.11-alpine | amd64, arm64 | Simple Python image |
-| deepspeed-runtime | nvidia/cuda:12.4.1-devel-ubuntu22.04 | amd64, arm64 | Complex with MPI, SSH, CUDA |
-| mlx-runtime | - | arm64 only | Apple MLX runtime |
-| torchtune-trainer | - | amd64, arm64 | PyTorch fine-tuning |
+| Image | Platforms | Base |
+|-------|-----------|------|
+| trainer-controller-manager | amd64, arm64, ppc64le | distroless/static:nonroot |
+| model-initializer | amd64, arm64 | (Python-based) |
+| dataset-initializer | amd64, arm64 | (Python-based) |
+| deepspeed-runtime | amd64, arm64 | (Python-based) |
+| mlx-runtime | arm64 only | (Python-based) |
+| torchtune-trainer | amd64, arm64 | (Python-based) |
 
 **Strengths**:
-- Multi-stage builds for Go controller (distroless final image)
-- Build caching with `--mount=type=cache` for Go modules
-- QEMU + buildx for multi-arch
-- PR-time build validation (push=false)
+- Controller uses distroless base (minimal attack surface)
+- Multi-stage builds with Go build caching
+- Multi-architecture support
+- GHA cache for Docker layer caching
 
 **Weaknesses**:
-- No vulnerability scanning (Trivy, Snyk, Grype)
+- No vulnerability scanning on any image
+- No runtime validation (startup tests)
 - No SBOM generation
-- No image signing or attestation
-- No runtime startup validation
-- DeepSpeed Dockerfile runs `apt install` with no version pinning
-- No `.dockerignore` in individual Dockerfile directories
+- No image signing/attestation
+- Python-based images likely have larger attack surface (not validated)
 
 ### Security
 
-**Present**:
-- Distroless base image for controller (minimal attack surface)
-- Non-root user in controller image
-- SSH key generation and management for MPI (isolated per TrainJob)
+**Current State**: Minimal security practices
+- No SAST (CodeQL, gosec)
+- No container scanning (Trivy, Snyk, Grype)
+- No dependency scanning (Dependabot, Renovate)
+- No secret detection (Gitleaks, TruffleHog)
+- No SBOM generation (Syft)
+- No image signing (Cosign)
+- No security policy (SECURITY.md)
 
-**Missing**:
-- No CodeQL or SAST workflow
-- No container image scanning
-- No dependency vulnerability scanning (Dependabot/Renovate)
-- No Gitleaks or secret detection
-- No SBOM generation
-- No image signing/attestation
-- No security policy (`SECURITY.md`)
+**Positive**: distroless base image for controller, non-root user
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: None — no CLAUDE.md, no AGENTS.md, no `.claude/` directory
+- **Coverage**: No rules for any test type
 - **Quality**: N/A
-- **Gaps**: No test automation guidance for AI agents. No patterns for unit tests, integration tests, E2E tests, or webhook tests documented in agent-consumable format.
-- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
-  - Go unit test patterns with Ginkgo/Gomega
-  - Integration test patterns with envtest
-  - E2E test patterns with Kind
-  - Webhook test patterns
-  - Python test patterns with pytest
-  - Builder pattern usage for test objects
+- **Gaps**: No CLAUDE.md, no .claude/ directory, no AGENTS.md, no test creation rules
+- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering Go unit tests (Ginkgo/Gomega), integration tests (envtest), E2E tests (Kind), and Python tests (pytest)
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add container image vulnerability scanning** — Trivy scanning for all 6 images in the build workflow. The CUDA and MPI base images are high-risk for CVEs. (2-4 hours)
+1. **Add container vulnerability scanning** - Integrate Trivy into `build-and-push-images.yaml` for all 6 images. Block PR merges on HIGH/CRITICAL findings. (2-4 hours)
 
-2. **Add coverage enforcement** — Configure Coveralls (or switch to Codecov) with thresholds to prevent regression. Target 60% for Go project coverage. (2-3 hours)
+2. **Configure coverage enforcement** - Add Coveralls thresholds and enable as required PR status check. Set baseline at current coverage and prevent regression. (2-3 hours)
 
-3. **Add Python test coverage tracking** — Integrate pytest-cov and upload Python coverage alongside Go coverage. Make Python SDK coverage visible. (3-4 hours)
+3. **Enable Dependabot** - Add `.github/dependabot.yml` for gomod, pip, and github-actions ecosystems. (1-2 hours)
 
 ### Priority 1 (High Value)
 
-4. **Add CodeQL/SAST workflow** — Cover both Go and Python with GitHub's CodeQL analysis. Free for public repos. (2-3 hours)
+4. **Add CodeQL SAST scanning** - Create dedicated workflow for Go static analysis. (1-2 hours)
 
-5. **Expand golangci-lint configuration** — Enable errcheck, staticcheck, gosec, govet, ineffassign, unused, misspell. The current config only checks import ordering. (2-3 hours)
+5. **Add container runtime validation** - Test image startup for all 6 images in the E2E pipeline. (4-6 hours)
 
-6. **Add image startup validation** — Simple Docker run + health check for built images in CI. Particularly important for the complex DeepSpeed image. (6-8 hours)
+6. **Expand golangci-lint config** - Enable `errcheck`, `staticcheck`, `gosimple`, `ineffassign`, `unused`, `misspell`, `gocritic`, `gosec`. (2-4 hours)
 
-7. **Add concurrency control** — Prevent redundant CI runs on rapid PR pushes. (30 minutes)
+7. **Add SBOM + image signing** - Integrate Syft and Cosign into the publish workflow. (2-4 hours)
 
-8. **Add dependency scanning** — Enable Dependabot or Renovate for Go and Python dependencies. (1-2 hours)
+8. **Create agent rules** - Use `/test-rules-generator` to create `.claude/rules/` with Go and Python test patterns. (2-3 hours)
 
 ### Priority 2 (Nice-to-Have)
 
-9. **Create agent rules** — Generate `.claude/rules/` with test patterns for all frameworks. (4-6 hours)
+9. **Add Gitleaks secret detection** - Add to pre-commit config and CI. (1 hour)
 
-10. **Add SBOM generation** — Generate SBOMs for all container images using Syft or similar. (2-3 hours)
+10. **Add Python type checking (mypy)** - The initializer code uses type hints but they're not verified. (2-3 hours)
 
-11. **Add Gitleaks secret detection** — Prevent accidental credential commits. (1 hour)
+11. **Test Python across multiple versions** - Currently only tests 3.11 despite claiming 3.8-3.11 support. (1 hour)
 
-12. **Add Python type checking** — Integrate mypy or pyright for Python SDK type validation. (4-6 hours)
+12. **Add benchmark tests** - Controller reconciliation performance regression tests. (4-8 hours)
 
-13. **Improve E2E coverage** — Add E2E tests for DeepSpeed and MLX runtimes (currently only PyTorch and MPI tested). (8-12 hours)
+13. **Add concurrency control** - Quick win for all PR-triggered workflows. (30 minutes)
 
 ## Comparison to Gold Standards
 
-| Dimension | trainer-sdk | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
-|-----------|-------------|---------------------|------------------|---------------|
-| Unit Tests | 7.5 | 9.0 | 7.0 | 9.0 |
-| Integration/E2E | 8.0 | 9.0 | 7.0 | 9.0 |
-| Build Integration | 5.0 | 8.0 | 7.0 | 7.0 |
-| Image Testing | 4.0 | 7.0 | 9.0 | 6.0 |
-| Coverage Tracking | 5.5 | 9.0 | 5.0 | 9.0 |
-| CI/CD Automation | 7.0 | 9.0 | 8.0 | 8.0 |
-| Agent Rules | 0.0 | 8.0 | 2.0 | 3.0 |
-| **Overall** | **6.5** | **8.7** | **6.9** | **7.9** |
+| Dimension | trainer-sdk | odh-dashboard | notebooks | kserve |
+|-----------|-------------|---------------|-----------|--------|
+| Unit Tests | 7.0 | 9.0 | 7.0 | 9.0 |
+| Integration/E2E | 7.5 | 9.0 | 7.0 | 9.5 |
+| Build Integration | 5.0 | 8.0 | 8.0 | 7.0 |
+| Image Testing | 4.0 | 7.0 | 9.0 | 7.0 |
+| Coverage Tracking | 4.5 | 8.0 | 5.0 | 9.0 |
+| CI/CD Automation | 6.0 | 9.0 | 8.0 | 8.5 |
+| Security Scanning | 1.0 | 7.0 | 8.0 | 7.0 |
+| Agent Rules | 0.0 | 8.0 | 3.0 | 2.0 |
 
-**Key Differentiators vs Gold Standards**:
-- **vs odh-dashboard**: Missing contract tests, no coverage enforcement, no agent rules, no security scanning
-- **vs notebooks**: Missing image runtime validation (notebooks has 5-layer image testing), no vulnerability scanning
-- **vs kserve**: Missing coverage enforcement, fewer linters, no SAST integration
+**Key Differentiators**:
+- trainer-sdk's multi-K8s-version testing (3 versions) is on par with kserve
+- Notebook E2E testing (Papermill) is a unique and valuable practice
+- The complete absence of security tooling is the most significant gap vs. all gold standards
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/test-go.yaml` — Go unit + integration tests
-- `.github/workflows/test-python.yaml` — Python tests + pre-commit
-- `.github/workflows/test-e2e.yaml` — E2E tests on Kind
-- `.github/workflows/build-and-push-images.yaml` — Image builds
-- `.github/workflows/template-publish-image/action.yaml` — Composite action for builds
+- `.github/workflows/test-go.yaml` - Go unit + integration tests
+- `.github/workflows/test-e2e.yaml` - E2E tests on Kind
+- `.github/workflows/test-python.yaml` - Python tests + pre-commit
+- `.github/workflows/build-and-push-images.yaml` - Container image builds
+- `.github/workflows/template-publish-image/action.yaml` - Reusable build action
 
 ### Testing
-- `pkg/runtime/core/*_test.go` — Runtime unit tests
-- `pkg/runtime/framework/core/framework_test.go` — Framework tests
-- `pkg/runtime/framework/plugins/*/` — Plugin unit tests (torch, mpi, plainml, jobset)
-- `pkg/webhooks/trainingruntime_webhook_test.go` — Webhook unit tests
-- `test/integration/controller/trainjob_controller_test.go` — Controller integration tests
-- `test/integration/webhooks/` — Webhook integration tests
-- `test/e2e/e2e_test.go` — E2E test scenarios
-- `pkg/initializers/*/` — Python initializer tests
+- `test/e2e/` - E2E tests (Ginkgo, Kind)
+- `test/integration/controller/` - Controller integration tests (envtest)
+- `test/integration/webhooks/` - Webhook integration tests (envtest)
+- `test/integration/initializers/` - Python initializer integration tests
+- `pkg/runtime/runtime_test.go` - Runtime unit tests
+- `pkg/webhooks/trainingruntime_webhook_test.go` - Webhook unit tests
+- `pkg/runtime/framework/` - Framework plugin tests (torch, mpi, plainml, jobset)
+- `pkg/initializers/` - Python initializer unit tests
 
 ### Code Quality
-- `.golangci.yaml` — Go linter config (minimal: gci only)
-- `.pre-commit-config.yaml` — Pre-commit hooks (isort, black, flake8)
-- `.flake8` — Flake8 configuration
-- `Makefile` — Build/test targets
+- `.golangci.yaml` - golangci-lint config (minimal - only gci)
+- `.pre-commit-config.yaml` - Pre-commit hooks (yaml, json, whitespace, isort, black, flake8)
+- `.flake8` - Flake8 config
 
 ### Container Images
-- `cmd/trainer-controller-manager/Dockerfile` — Controller manager
-- `cmd/initializers/model/Dockerfile` — Model initializer
-- `cmd/initializers/dataset/Dockerfile` — Dataset initializer
-- `cmd/runtimes/deepspeed/Dockerfile` — DeepSpeed runtime
-- `cmd/runtimes/mlx/Dockerfile` — MLX runtime
-- `cmd/trainers/torchtune/Dockerfile` — TorchTune trainer
+- `cmd/trainer-controller-manager/Dockerfile` - Controller image
+- `cmd/initializers/model/Dockerfile` - Model initializer image
+- `cmd/initializers/dataset/Dockerfile` - Dataset initializer image
+- `cmd/runtimes/deepspeed/Dockerfile` - DeepSpeed runtime image
+- `cmd/runtimes/mlx/Dockerfile` - MLX runtime image
+- `cmd/trainers/torchtune/Dockerfile` - TorchTune trainer image
 
-### Manifests
-- `manifests/base/crds/` — CRD definitions (TrainJob, TrainingRuntime, ClusterTrainingRuntime)
-- `manifests/overlays/manager/` — Manager kustomize overlay
-- `manifests/overlays/runtimes/` — Runtime deployment overlay
+### Build
+- `Makefile` - Build, test, generate, and lint targets
+- `hack/e2e-setup-cluster.sh` - Kind cluster setup for E2E
+- `hack/e2e-run-notebook.sh` - Notebook E2E runner
+- `manifests/` - Kubernetes manifests (CRDs, RBAC, webhooks, runtimes)

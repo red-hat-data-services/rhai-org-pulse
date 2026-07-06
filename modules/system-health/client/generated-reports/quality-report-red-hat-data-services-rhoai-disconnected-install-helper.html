@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 12:13 PM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 05:27 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/rhoai-disconnected-install-helper</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="497.62785599999995"
+                                stroke-dashoffset="520.247304"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">1.2</div>
+                        <div class="score-value">0.8</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,7 +365,7 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No test files exist — zero unit tests for any shell functions</div>
+                            <div class="scorecard-status">No test files exist anywhere in the repository</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
@@ -380,22 +380,22 @@
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No image build, scanning, or runtime validation in CI</div>
+                            <div class="scorecard-status">Containerfile present but no image build, scanning, or runtime testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tooling, thresholds, or reporting</div>
+                            <div class="scorecard-status">No coverage tooling, no codecov, no thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Two workflows run scripts on schedule/dispatch but include zero test steps</div>
+                            <div class="scorecard-status">Daily scheduled run and manual dispatch, but zero PR-time validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
+                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,51 +411,51 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Zero test coverage for all shell scripts</div>
-                            <p>Any logic change (version parsing, image filtering, clone behavior) can silently break disconnected installs for customers</p>
+                            <div class="item-description">Zero test coverage across all dimensions</div>
+                            <p>Script regressions ship silently — broken image lists go undetected until customers fail to install in disconnected environments</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-16 hours</span>
+                                <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Massive code duplication between y-stream and z-stream scripts</div>
-                            <p>rhoai-dih.sh (624 lines) and rhoai-z-dih.sh (546 lines) are ~85% identical — bugs fixed in one are routinely missed in the other</p>
+                            <div class="item-description">No PR-triggered CI workflows</div>
+                            <p>Code changes merge without any automated validation — syntax errors, logic bugs, and regressions are only caught in production</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Containerfile never built or validated in CI</div>
-                            <p>Container may be broken at any point without detection — uses outdated yq v4.9.6 and unpinned &#x27;latest&#x27; tags</p>
+                            <div class="item-description">Massive code duplication between rhoai-dih.sh and rhoai-z-dih.sh</div>
+                            <p>Bug fixes must be applied in two places; divergence between y-stream and z-stream logic creates subtle inconsistencies</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No container image build or security scanning</div>
+                            <p>Containerfile ships with outdated base image (UBI8) and pinned yq v4.9.6; vulnerabilities go undetected</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No shellcheck or linting</div>
+                            <p>Shell scripting anti-patterns and bugs (quoting issues, unhandled failures) accumulate unchecked</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No shellcheck or linting in CI</div>
-                            <p>Shell scripting bugs (unquoted variables, incorrect conditionals) go undetected until runtime failure</p>
+                            <div class="item-description">Potential command injection in GitHub Actions workflow</div>
+                            <p>User-supplied branch_name input is used in shell commands without proper sanitization in workflow steps</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Outdated GitHub Actions versions</div>
-                            <p>actions/checkout@v3 is deprecated; actions-js/push@master is a community action pinned to a branch, not a SHA</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1 hour</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No security scanning or secret detection</div>
-                            <p>Vulnerabilities in the container image or accidental credential leaks would go undetected</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -472,35 +472,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add shellcheck to CI workflow</div>
-                            <p>Catches common bash bugs (unquoted vars, incorrect test operators) before they reach production</p>
+                            <div class="item-description">Add ShellCheck linting to a PR workflow</div>
+                            <p>Catches quoting bugs, undefined variables, and shell anti-patterns on every PR</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Upgrade actions/checkout to v4 and pin push action to a SHA</div>
-                            <p>Security best practice — prevents supply chain attacks via mutable action references</p>
+                            <div class="item-description">Add a basic PR-triggered CI workflow with syntax validation</div>
+                            <p>Prevents broken scripts from merging — bash -n syntax check + shellcheck</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Pin GitHub Actions to SHA instead of branch/tag</div>
+                            <p>Prevents supply chain attacks via mutable action references (actions/checkout@v3, actions-js/push@master)</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add a Containerfile build step to CI</div>
-                            <p>Ensures the container image actually builds — catches broken Dockerfile changes immediately</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Pin tool versions in Containerfile</div>
-                            <p>Reproducible builds — prevents surprise breakage from upstream &#x27;latest&#x27; changes</p>
+                            <div class="item-description">Update Containerfile to UBI9 and latest yq</div>
+                            <p>Removes known vulnerabilities from outdated base image and tools</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Consolidate duplicate code between rhoai-dih.sh and rhoai-z-dih.sh</div>
+                            <p>Eliminates ~90% code duplication, reduces maintenance burden, prevents drift between y-stream and z-stream</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +525,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add unit tests for critical functions (version parsing, image filtering, branch validation) using bats-core or shunit2</li><li>Eliminate code duplication by extracting shared logic into a single sourced library</li><li>Add shellcheck linting to both CI workflows</li></ul>
+                            <ul><li>Add PR-triggered CI workflow with shellcheck linting and bash syntax validation</li><li>Write unit tests for core functions (version comparison, image filtering, input validation) using bats-core</li><li>Fix potential command injection in workflow by using environment variables instead of inline expressions</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Build and validate the Containerfile in CI on every PR</li><li>Add integration tests that verify generated markdown output against known-good fixtures</li><li>Upgrade all GitHub Actions to current versions and pin to commit SHAs</li></ul>
+                            <ul><li>Consolidate rhoai-dih.sh and rhoai-z-dih.sh into a shared library to eliminate ~500 lines of duplication</li><li>Add container image build and Trivy scanning to CI</li><li>Add integration tests that verify generated markdown output against expected format</li><li>Update Containerfile base image from UBI8 to UBI9 and pin yq to latest version</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add Trivy scanning for the container image</li><li>Create agent rules (.claude/rules/) for shell script quality patterns</li><li>Add pre-commit hooks with shellcheck and yamllint</li></ul>
+                            <ul><li>Add pre-commit hooks with shellcheck and YAML validation</li><li>Create CLAUDE.md and agent rules for test automation guidance</li><li>Add codecov integration once tests exist</li><li>Implement release workflow with semantic versioning</li></ul>
                         </div>
                     </div>
                 </div>

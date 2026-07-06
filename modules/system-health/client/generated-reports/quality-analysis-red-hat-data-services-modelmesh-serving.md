@@ -4,70 +4,77 @@ overall_score: 6.4
 scorecard:
   - dimension: "Unit Tests"
     score: 7.0
-    status: "Good test-to-code ratio (59%) with envtest integration, but no coverage enforcement"
+    status: "Good controller and pkg unit test coverage using envtest and Ginkgo/Gomega; 4,174 test lines across 23 files"
   - dimension: "Integration/E2E"
     score: 7.5
-    status: "Comprehensive FVT suite with 66 scenarios across predictor, scale-to-zero, storage, and HPA"
+    status: "Comprehensive FVT suite with Minikube, both cluster-scope and namespace-scope modes; 2,357 FVT test lines"
   - dimension: "Build Integration"
     score: 5.0
-    status: "Konflux PR pipeline builds image but no unit/integration tests run in Konflux; GitHub workflows handle testing"
+    status: "PR builds controller image on Minikube for FVTs; Konflux PR builds are manual trigger only (/build-konflux comment)"
   - dimension: "Image Testing"
     score: 5.5
-    status: "Multi-arch builds (amd64/arm64/ppc64le/s390x) but no runtime validation or vulnerability scanning in CI"
+    status: "Multi-arch builds (amd64/arm64/ppc64le/s390x) with multi-stage Dockerfiles; no vulnerability scanning or SBOM"
   - dimension: "Coverage Tracking"
     score: 3.0
-    status: "Coverprofile generated locally but no codecov integration, no thresholds, no PR reporting"
+    status: "cover.out generated but no codecov/coveralls integration, no coverage thresholds or PR reporting"
   - dimension: "CI/CD Automation"
     score: 7.0
-    status: "Well-structured GitHub Actions + Tekton/Konflux pipelines with build caching and concurrency"
+    status: "Well-organized GH Actions with separate lint/test/build/FVT workflows; lacking concurrency control and caching on test workflows"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude directory, no agent rules for test automation"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory; zero AI agent test automation guidance"
 critical_gaps:
   - title: "No coverage tracking or enforcement"
-    impact: "Coverage regressions go undetected; no visibility into test health over time"
-    severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No container vulnerability scanning in CI"
-    impact: "Security vulnerabilities in base images and dependencies not caught before merge"
+    impact: "Coverage regressions go undetected; no visibility into test coverage trends"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "FVT branch mismatch between workflows"
-    impact: "FVT workflows target different branches (master vs main) causing potential test gaps"
+  - title: "No container vulnerability scanning"
+    impact: "CVEs in base images or dependencies are not detected before merge or release"
     severity: "HIGH"
-    effort: "1-2 hours"
-  - title: "No agent rules for AI-assisted development"
-    impact: "AI agents lack guidance on test patterns, coding standards, and repo conventions"
-    severity: "MEDIUM"
-    effort: "4-8 hours"
-quick_wins:
-  - title: "Add Codecov integration with PR comments"
-    effort: "2-4 hours"
-    impact: "Immediate visibility into coverage changes per PR"
-  - title: "Add Trivy container scanning to build workflow"
-    effort: "1-2 hours"
-    impact: "Catch CVEs in base images and dependencies before merge"
-  - title: "Fix FVT workflow branch targeting consistency"
-    effort: "30 minutes"
-    impact: "Ensure FVTs run consistently on all PRs"
-  - title: "Add basic CLAUDE.md with test patterns"
     effort: "2-3 hours"
-    impact: "Enable AI agents to write consistent, framework-aligned tests"
+  - title: "Konflux PR builds require manual trigger"
+    impact: "Konflux build failures not caught automatically on PRs; discovered only after merge"
+    severity: "HIGH"
+    effort: "1-2 hours"
+  - title: "No secret detection or dependency scanning"
+    impact: "Leaked secrets or vulnerable dependencies may go unnoticed"
+    severity: "MEDIUM"
+    effort: "2-3 hours"
+  - title: "No agent rules for AI-assisted test generation"
+    impact: "AI agents lack project-specific guidance, leading to inconsistent or incorrect test patterns"
+    severity: "MEDIUM"
+    effort: "3-4 hours"
+quick_wins:
+  - title: "Add codecov integration with coverage thresholds"
+    effort: "2-4 hours"
+    impact: "Immediate visibility into coverage trends; prevent regressions with PR checks"
+  - title: "Add Trivy container scanning to PR workflow"
+    effort: "1-2 hours"
+    impact: "Catch CVEs in base images before merge"
+  - title: "Enable automatic Konflux PR builds (remove comment trigger)"
+    effort: "1 hour"
+    impact: "Catch Konflux build failures automatically on every PR"
+  - title: "Add concurrency control to CI workflows"
+    effort: "30 minutes"
+    impact: "Cancel redundant CI runs on force-pushes, save CI resources"
+  - title: "Generate basic CLAUDE.md with test patterns"
+    effort: "2-3 hours"
+    impact: "AI agents produce consistent, project-aligned tests"
 recommendations:
   priority_0:
-    - "Integrate Codecov/Coveralls with coverage thresholds and PR reporting"
-    - "Add Trivy or Snyk container scanning to CI pipeline"
-    - "Fix branch mismatch: fvt-base.yml targets master, fvt-cs/ns.yml target main"
+    - "Add codecov/coveralls integration with minimum coverage thresholds and PR reporting"
+    - "Add Trivy or Snyk container scanning to the build workflow"
+    - "Make Konflux PR builds automatic (remove /build-konflux comment trigger requirement)"
   priority_1:
-    - "Add coverage enforcement with minimum thresholds (e.g., 60% overall)"
-    - "Create comprehensive CLAUDE.md/agent rules for test automation patterns"
-    - "Add secret detection (gitleaks) to CI pipeline"
-    - "Enable gosec and additional security-focused linters in golangci-lint"
+    - "Add Gitleaks or TruffleHog for secret detection in CI"
+    - "Add Dependabot or Renovate for automated dependency updates and vulnerability alerts"
+    - "Create comprehensive agent rules (.claude/rules/) for unit, integration, and FVT test patterns"
+    - "Add concurrency groups to all PR-triggered workflows"
   priority_2:
-    - "Add performance regression testing for inference endpoints"
-    - "Implement contract tests between modelmesh-serving and runtime adapters"
-    - "Add load testing for multi-model serving scenarios"
-    - "Consider adding SBOM generation for container images"
+    - "Add performance/load testing for inference endpoints"
+    - "Add contract tests between modelmesh-serving and runtime adapters"
+    - "Add SBOM generation to container build pipeline"
+    - "Enable gosec linter in golangci-lint configuration"
 ---
 
 # Quality Analysis: modelmesh-serving
@@ -75,338 +82,351 @@ recommendations:
 ## Executive Summary
 
 - **Overall Score: 6.4/10**
-- **Repository Type**: Kubernetes operator (Go) for ModelMesh Serving
-- **Primary Language**: Go 1.22+
-- **Framework**: Kubebuilder with controller-runtime, Ginkgo/Gomega testing
-- **Key Strengths**: Strong FVT test suite with real Minikube deployments, good test-to-code ratio, multi-arch container builds, solid pre-commit hooks with golangci-lint
-- **Critical Gaps**: No coverage tracking/enforcement, no container vulnerability scanning, branch inconsistencies in CI workflows, zero agent rules
-- **Agent Rules Status**: Missing - No CLAUDE.md, no `.claude/` directory
+- **Repository**: [red-hat-data-services/modelmesh-serving](https://github.com/red-hat-data-services/modelmesh-serving)
+- **Type**: Kubernetes Operator (Go, controller-runtime/kubebuilder)
+- **Primary Language**: Go 1.23
+- **Framework**: Kubernetes controller-runtime with ModelMesh inference serving
+
+### Key Strengths
+- Solid unit test foundation with envtest-based controller tests (4,174 lines across 23 unit test files)
+- Comprehensive FVT (Functional Verification Test) suite with Minikube covering predictor, scale-to-zero, storage, and HPA scenarios (2,357 test lines)
+- Dual-scope FVT execution (cluster-scope and namespace-scope modes)
+- Multi-architecture container builds (amd64, arm64, ppc64le, s390x)
+- CodeQL SAST scanning on push and PRs
+- Pre-commit hooks with golangci-lint and prettier
+- Separate Dockerfile.konflux for RHOAI production builds
+
+### Critical Gaps
+- **No coverage tracking**: `cover.out` is generated but never uploaded or enforced
+- **No container vulnerability scanning**: No Trivy, Snyk, or Grype in CI
+- **Manual Konflux PR builds**: Require `/build-konflux` comment trigger instead of automatic
+- **No secret detection**: No Gitleaks or TruffleHog integration
+- **No agent rules**: Zero AI agent guidance for test creation
+
+### Agent Rules Status: **Missing**
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 7.0/10 | Good coverage ratio with envtest, but no enforcement |
-| Integration/E2E | 7.5/10 | Comprehensive FVT suite, 66 test scenarios with Minikube |
-| **Build Integration** | **5.0/10** | **Konflux builds image but doesn't run tests; GitHub handles testing** |
-| Image Testing | 5.5/10 | Multi-arch builds but no runtime validation or scanning |
-| Coverage Tracking | 3.0/10 | Coverprofile generated locally, no CI integration |
-| CI/CD Automation | 7.0/10 | Well-structured dual pipeline (GitHub Actions + Konflux) |
-| Agent Rules | 0.0/10 | No agent rules, no CLAUDE.md, no test automation guidance |
+| Unit Tests | 7.0/10 | Good envtest coverage with Ginkgo/Gomega; 23 test files covering controllers, pkg, and APIs |
+| Integration/E2E | 7.5/10 | Strong FVT suite on Minikube with dual-scope testing; multi-runtime coverage |
+| **Build Integration** | **5.0/10** | **PR builds image for FVTs but Konflux builds need manual trigger** |
+| Image Testing | 5.5/10 | Multi-arch builds, multi-stage Dockerfiles, but no vulnerability scanning |
+| Coverage Tracking | 3.0/10 | Coverage file generated but not uploaded, tracked, or enforced |
+| CI/CD Automation | 7.0/10 | Well-organized workflows but missing concurrency control and test caching |
+| Agent Rules | 0.0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory present |
 
 ## Critical Gaps
 
 ### 1. No Coverage Tracking or Enforcement
-- **Impact**: Coverage regressions go undetected; no visibility into test health over time
-- **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: The Makefile generates `cover.out` via `go test -coverprofile`, but there is no Codecov/Coveralls integration, no coverage thresholds, and no PR-level coverage reporting. Developers have no visibility into whether their changes reduce test coverage.
-
-### 2. No Container Vulnerability Scanning in CI
-- **Impact**: Security vulnerabilities in base images (UBI 9) and Go dependencies not caught before merge
+- **Impact**: Coverage regressions go completely undetected. No visibility into which packages lack testing. No PR-level coverage diff reporting.
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: While CodeQL runs for Go and Python SAST analysis, there is no container image scanning (Trivy, Snyk, or Grype). The Dockerfile uses `registry.access.redhat.com/ubi9/ubi-minimal:9.5` and `registry.access.redhat.com/ubi9/go-toolset:1.23` as base images. No `.trivyignore` or vulnerability policy exists.
+- **Details**: The `Makefile` generates `cover.out` via `go test -coverprofile`, but there is no `.codecov.yml`, no coverage upload step in any workflow, and no minimum threshold enforcement.
+- **Fix**: Add codecov GitHub Action step to the `test.yml` workflow and create a `.codecov.yml` with project-level thresholds.
 
-### 3. FVT Workflow Branch Mismatch
-- **Impact**: FVT tests may not run on PRs depending on which branch convention is used
+### 2. No Container Vulnerability Scanning
+- **Impact**: CVEs in base images (UBI9) or Go module dependencies are not detected until production scanning. No shift-left security for containers.
+- **Severity**: HIGH
+- **Effort**: 2-3 hours
+- **Details**: No Trivy, Snyk, or Grype integration in any CI workflow. The Konflux pipeline may run its own scanning, but GitHub-side PRs have zero container security checks.
+- **Fix**: Add Trivy scanning step to `build.yml` after the image build step.
+
+### 3. Konflux PR Builds Require Manual Trigger
+- **Impact**: Build failures in the Konflux pipeline (e.g., FIPS compliance issues, UBI base image problems) are not caught automatically on PRs. They are only discovered after merge or when someone manually comments `/build-konflux`.
 - **Severity**: HIGH
 - **Effort**: 1-2 hours
-- **Details**: `fvt-base.yml` triggers on PRs to `master` branch, while `fvt-cs.yml` and `fvt-ns.yml` trigger on PRs to `main` and `release-*` branches. The `build.yml` and `test.yml` also target `master`. This inconsistency means FVTs may not run when expected, depending on the repository's default branch configuration.
+- **Details**: The `.tekton/odh-modelmesh-serving-controller-pull-request.yaml` uses `on-comment: "^/build-konflux"` and `on-label: "[kfbuild-all, kfbuild-modelmesh-serving]"` triggers, not automatic PR triggers.
+- **Fix**: Change Tekton PipelineRun annotations to trigger on all PRs to the main branch, not just on comment/label.
 
-### 4. No Agent Rules for AI-Assisted Development
-- **Impact**: AI agents cannot follow repo-specific patterns, test frameworks, or coding conventions
+### 4. No Secret Detection
+- **Impact**: Leaked API keys, tokens, or credentials in code or configuration could go unnoticed.
 - **Severity**: MEDIUM
-- **Effort**: 4-8 hours
-- **Details**: No `CLAUDE.md`, no `.claude/` directory, no `AGENTS.md`. AI tools have no guidance on using Ginkgo/Gomega for FVT, envtest for controller tests, or following the project's specific patterns for predictors, serving runtimes, and inference services.
+- **Effort**: 2-3 hours
+- **Details**: No Gitleaks, TruffleHog, or similar tool configured in CI or pre-commit hooks.
+
+### 5. No Agent Rules for AI-Assisted Development
+- **Impact**: AI coding agents produce tests that don't follow project conventions (Ginkgo/Gomega for FVTs, envtest for controllers, specific assertion patterns).
+- **Severity**: MEDIUM
+- **Effort**: 3-4 hours
+- **Details**: No `CLAUDE.md`, `AGENTS.md`, or `.claude/` directory. No documentation of test patterns for AI consumption.
 
 ## Quick Wins
 
 ### 1. Add Codecov Integration (2-4 hours)
-- **Impact**: Immediate visibility into coverage changes per PR
-- **Implementation**: Add `.codecov.yml` and upload coverage in the test workflow:
+Add coverage upload to `test.yml`:
 ```yaml
 - name: Upload coverage
   uses: codecov/codecov-action@v4
   with:
     files: cover.out
-    fail_ci_if_error: true
+    flags: unittests
     token: ${{ secrets.CODECOV_TOKEN }}
+```
+Create `.codecov.yml`:
+```yaml
+coverage:
+  status:
+    project:
+      default:
+        target: 40%
+        threshold: 2%
+    patch:
+      default:
+        target: 60%
 ```
 
 ### 2. Add Trivy Container Scanning (1-2 hours)
-- **Impact**: Catch CVEs in base images and dependencies before merge
-- **Implementation**: Add to `build.yml` after image build:
+Add to `build.yml` after image build:
 ```yaml
 - name: Run Trivy vulnerability scanner
   uses: aquasecurity/trivy-action@master
   with:
-    image-ref: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+    image-ref: 'localhost:5000/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}'
     format: 'sarif'
     output: 'trivy-results.sarif'
     severity: 'CRITICAL,HIGH'
+- name: Upload Trivy scan results
+  uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: 'trivy-results.sarif'
 ```
 
-### 3. Fix FVT Branch Targeting (30 minutes)
-- **Impact**: Ensure FVTs run consistently across all PRs
-- **Implementation**: Update `fvt-base.yml` to match `fvt-cs.yml`/`fvt-ns.yml`:
+### 3. Enable Automatic Konflux PR Builds (1 hour)
+Change the Tekton PipelineRun annotation from comment-based to automatic:
 ```yaml
-on:
-  pull_request:
-    branches:
-      - main
-      - master
-      - 'release-[0-9].[0-9]+'
+# Remove: pipelinesascode.tekton.dev/on-comment: "^/build-konflux"
+# Change to automatic trigger:
+pipelinesascode.tekton.dev/on-event: "[pull_request]"
 ```
 
-### 4. Add Basic CLAUDE.md (2-3 hours)
-- **Impact**: Enable AI agents to write consistent, framework-aligned tests
-- **Implementation**: Create `CLAUDE.md` documenting Ginkgo/Gomega patterns, envtest setup, FVT test structure, and controller testing conventions.
+### 4. Add Concurrency Control (30 minutes)
+Add to each PR-triggered workflow:
+```yaml
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+```
+
+### 5. Create Basic Agent Rules (2-3 hours)
+Use `/test-rules-generator` to create `.claude/rules/` with rules for:
+- Unit tests (envtest, Ginkgo/Gomega patterns)
+- FVT tests (Minikube deployment, predictor testing patterns)
+- Controller tests (reconciler testing conventions)
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**GitHub Actions Workflows (9 total):**
+**Workflows Inventory (9 total)**:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `build.yml` | PR to `master`, push to `master`, tags | Build dev image, run lint/unit tests, build multi-arch controller image |
-| `test.yml` | PR to `master` | Build dev image and run unit tests (redundant with build.yml) |
-| `lint.yml` | PR to `master` | Build dev image and run lint (redundant with build.yml) |
-| `fvt-base.yml` | PR to `master`, dispatch | Full FVT suite on Minikube (reusable workflow) |
-| `fvt-cs.yml` | PR to `main`/`release-*`, dispatch | FVT in cluster-scope mode (calls fvt-base) |
-| `fvt-ns.yml` | PR to `main`/`release-*`, dispatch | FVT in namespace-scope mode (calls fvt-base) |
-| `codeql.yml` | PR to `main`, push to `main`, daily schedule | CodeQL SAST for Go and Python |
-| `create-release.yml` | Manual dispatch | Create release tag, update params.env, generate changelog |
-| `auto-add-issues.yaml` | Issue opened | Auto-add issues to GitHub Projects |
+| `build.yml` | PR + push to master | Build dev image, run lint + unit tests, build multi-arch controller image |
+| `test.yml` | PR to master | Build dev image, run unit tests (standalone) |
+| `lint.yml` | PR to master | Build dev image, run linting |
+| `fvt-base.yml` | Reusable workflow | Full FVT: Minikube setup, image build, deploy, run FVTs |
+| `fvt-cs.yml` | PR to main/release-* | FVT in cluster-scope mode |
+| `fvt-ns.yml` | PR to main/release-* | FVT in namespace-scope mode |
+| `codeql.yml` | Push + PR to main, daily schedule | CodeQL SAST for Go and Python |
+| `create-release.yml` | Manual dispatch | Tag release, update params.env, generate changelog |
+| `auto-add-issues.yml` | Issue opened | Add issues to tracking project boards |
 
-**Strengths:**
-- Multi-arch container builds (amd64, arm64, ppc64le, s390x)
-- Docker layer caching via `cache-from: type=gha`
-- Developer image caching (hash-based tag to avoid rebuilds)
-- FVT workflow reuse pattern (fvt-base as reusable workflow)
-- Minikube-based FVT with real Kubernetes cluster
-- CodeQL with scheduled daily scans
-
-**Weaknesses:**
-- Redundant workflows: `build.yml`, `test.yml`, and `lint.yml` all do overlapping work (build dev image, run lint/tests)
-- Branch targeting inconsistency: `master` vs `main` across workflows
-- No concurrency control on most workflows (only Tekton PR has `cancel-in-progress`)
-- No dependency caching for Go modules in FVT workflow
-- No workflow status badges in README
-
-**Tekton/Konflux Integration:**
-- PR pipeline: Builds image with `Dockerfile.konflux`, hermetic build, multi-arch (x86_64/arm64), but no tests
-- Push pipeline: Builds and pushes to `quay.io/opendatahub/modelmesh-controller`
-- Konflux pipelines managed centrally via `konflux-central` repository
-- Renovate configured for dependency updates (extends `konflux-central` config)
+**Observations**:
+- **Duplicated work**: `build.yml` runs both lint and unit tests on PRs, while `test.yml` and `lint.yml` also run independently on PRs. This is redundant.
+- **Branch mismatch**: `build.yml` and `test.yml` trigger on `master` branch, while FVT workflows trigger on `main` and `release-*`. This suggests a branch rename may be incomplete.
+- **No concurrency control**: None of the workflows use concurrency groups, so multiple runs for the same PR can stack up.
+- **Build caching**: Good use of `cache-from: type=gha` and `cache-to: type=gha,mode=max` in `build.yml`, but `test.yml` and `lint.yml` don't cache the develop image.
+- **FVT is comprehensive**: Minikube-based FVTs test real deployment with actual runtime images (Triton, MLServer, OpenVINO).
 
 ### Test Coverage
 
-**Unit Tests (31 test files, 6,531 lines):**
-- Test-to-code ratio: 59% (6,531 test lines / 11,049 source lines)
-- Controller tests: 2,129 lines across 12 test files
-  - `suite_test.go`: Envtest setup with controller-runtime
-  - `servingruntime_validator_test.go`: 331 lines of webhook validation tests
-  - `servingruntime_controller_test.go`: 239 lines of controller reconciliation tests
-  - `modelmesh/runtime_test.go`: 586 lines (largest unit test file)
-- Package tests: `pkg/config`, `pkg/mmesh`, `pkg/predictor_source`
-- API tests: predictor types, webhook validation
-- **Coverage generation**: `go test -coverprofile cover.out` (Makefile)
-- **Coverage enforcement**: None
+**Unit Tests (23 files, ~4,174 lines)**:
+- Controllers: 2,518 lines across 15 test files covering predictor controller, serving runtime controller, webhook validation, HPA reconciler, config overlays, autoscaler
+- Pkg: 1,502 lines across 6 test files covering predictor source, gRPC resolver, etcd watcher, config
+- APIs: 154 lines across 2 test files covering webhook validation and predictor types
+- **Framework**: Ginkgo/Gomega with envtest (kubebuilder) for controller tests, standard Go testing for pkg
+- **Test-to-code ratio**: 4,174 test lines / 8,805 source lines = **0.47** (moderate)
 
-**FVT Tests (9,300 lines, 66 test scenarios):**
-- Framework: Ginkgo v2 + Gomega
-- Infrastructure: Minikube v1.35.0, Kubernetes v1.32.0
-- Test suites:
-  - `predictor/`: 49 test scenarios covering create, update, invalid, TLS, inference (Triton, MLServer, OVMS, TorchServe, etc.)
-  - `scaleToZero/`: 5 scenarios for runtime deployment scaling
-  - `storage/`: 7 scenarios for HTTPS storage, PVC testing
-  - `hpa/`: 5 scenarios for HPA autoscaler behavior
-- Execution: `ginkgo -v -procs=2 --fail-fast --timeout=50m`
-- Dual scope testing: cluster-scope and namespace-scope modes
-- Test data: Dedicated `fvt/testdata/` directory with predictor/ISVC configs
+**FVT Tests (8 files, ~2,357 lines)**:
+- Predictor tests: Multi-runtime (TensorFlow, Keras, ONNX, PyTorch, sklearn, XGBoost, LightGBM, OpenVINO)
+- Scale-to-zero tests: Validates autoscaling behavior
+- Storage tests: Tests storage backend integration
+- HPA tests: Tests horizontal pod autoscaler integration
+- **Framework**: Ginkgo v2 with parallel execution (`-procs=2`)
+- **Infrastructure**: Minikube with real runtime images, 50-minute timeout
 
-**Additional Tests:**
-- `tests/` directory: Shell-based integration tests with Dockerfile for containerized test execution
-- `tests/basictests/modelmesh.sh`: Basic smoke tests
-- `tests/scripts/installandtest.sh`: Installation validation
+**Additional E2E Tests (tests/ directory)**:
+- Shell-based integration tests (`modelmesh.sh`)
+- OpenShift-specific deployment tests
+- Install/upgrade testing scripts
+- These appear to be legacy tests alongside the newer Go-based FVTs
 
-**Missing:**
-- No contract tests between modelmesh-serving and runtime adapters
-- No performance/load testing
-- No chaos engineering tests
-- No API compatibility tests
+**Coverage Generation**:
+- `go test -coverprofile cover.out` in Makefile
+- No coverage upload, tracking, or threshold enforcement
+- No `.codecov.yml` or equivalent
 
 ### Code Quality
 
-**Linting:**
-- `.golangci.yaml`: Comprehensive configuration (312 lines)
-  - 10 linters enabled: errcheck, gosimple, govet, ineffassign, staticcheck, typecheck, unused, goconst, gofmt, goimports
-  - Notable absences: gosec (security), misspell, unconvert, unparam, gocyclo
-  - Shadow variable checking enabled
-  - Test file exclusions for gocyclo, errcheck, dupl, gosec
-  - 5-minute timeout
-- `.pre-commit-config.yaml`: 2 hooks configured
-  - `golangci-lint` (v1.60.3)
-  - `prettier` (v2.4.1) for YAML/JSON formatting
-- `scripts/fmt.sh`: Wraps pre-commit with helpful error messages
+**Linting**:
+- **golangci-lint** configured with 10 linters enabled (`.golangci.yaml`):
+  - errcheck, gosimple, govet, ineffassign, staticcheck, typecheck, unused, goconst, gofmt, goimports
+- Notable disabled linters: `gosec` (security), `dupl` (duplication), `gocritic`, `misspell`, `stylecheck`
+- Shadow checking enabled for govet
+- Test files excluded from some linters (gocyclo, errcheck, dupl, gosec)
+- 5-minute timeout configured
 
-**Strengths:**
-- Pre-commit hooks enforce formatting
-- golangci-lint well-configured with reasonable defaults
-- CI runs lint via developer container for consistency
+**Pre-commit Hooks** (`.pre-commit-config.yaml`):
+- golangci-lint v1.60.3
+- prettier v2.4.1 (for YAML/JSON formatting)
+- Generated code excluded from linting
 
-**Weaknesses:**
-- No gosec linter (security issues in Go code)
-- No misspell checker
-- Only 10/50+ available linters enabled
-- No `.editorconfig` for cross-editor consistency
+**Static Analysis**:
+- CodeQL scanning for Go and Python (push, PR, daily schedule)
+- No gosec (Go security scanner) in golangci-lint
+- No additional SAST tools
 
 ### Container Images
 
-**Dockerfiles:**
-| File | Purpose | Base Image |
-|------|---------|------------|
-| `Dockerfile` | Production build | UBI 9 minimal 9.5 (runtime), dev image (build) |
-| `Dockerfile.konflux` | Konflux/RHOAI build | UBI 9 go-toolset:1.23 (build), UBI 9 minimal (runtime) |
-| `Dockerfile.develop` | Developer image | Not analyzed (used for CI) |
-| `Dockerfile.develop.ci` | CI developer image | Not analyzed |
-| `tests/Dockerfile` | Test execution | Not analyzed |
+**Dockerfiles (6 total)**:
+- `Dockerfile`: Multi-stage, multi-arch (amd64/arm64/ppc64le/s390x) production build
+- `Dockerfile.develop`: Development/test environment with Go toolchain
+- `Dockerfile.develop.ci`: CI-specific development image
+- `Dockerfile.konflux`: RHOAI/Konflux production build with UBI9, FIPS-compliant (`strictfipsruntime`)
+- `tests/Dockerfile`: Test environment container
+- `docs/examples/python-custom-runtime/custom-model/Dockerfile`: Example custom runtime
 
-**Strengths:**
-- Multi-stage builds (build + runtime)
-- UBI 9 minimal base for small runtime image
-- Non-root user (USER 2000)
-- Pinned base image digests in Dockerfile.konflux (supply chain security)
-- Multi-arch support: amd64, arm64, ppc64le, s390x
-- FIPS compliance in Konflux build (`CGO_ENABLED=1`, `strictfipsruntime`)
-- Proper labels (com.redhat.component, io.openshift.*, io.k8s.*)
+**Multi-arch Support**: Excellent - builds for 4 architectures via Docker Buildx QEMU. Konflux pipeline builds for x86_64 and arm64.
 
-**Weaknesses:**
-- No HEALTHCHECK in Dockerfiles
-- No Trivy/Snyk scanning in CI
+**Container Security**:
+- No Trivy/Snyk/Grype scanning in any workflow
+- No `.trivyignore` or vulnerability ignore files
 - No SBOM generation
-- No image signing/attestation in GitHub Actions
-- `.dockerignore` exists but not analyzed for completeness
+- No image signing or attestation
+- UBI9 base images used (Red Hat's secure base)
 
 ### Security
 
-**Existing:**
-- CodeQL: SAST scanning for Go and Python (daily + PR-triggered)
-- Renovate: Automated dependency updates via konflux-central
-- Konflux: Hermetic builds with prefetch for supply chain security
-- Pinned base image digests in Dockerfile.konflux
-- FIPS-compliant build configuration
+**Strengths**:
+- CodeQL SAST scanning with daily schedule
+- UBI9 base images (regularly patched by Red Hat)
+- FIPS-compliant builds in Konflux (`strictfipsruntime`)
+- Non-root user in Dockerfile (`USER 2000`)
 
-**Missing:**
-- No container image vulnerability scanning (Trivy, Snyk, Grype)
-- No secret detection (gitleaks, truffleHog)
-- No dependency vulnerability scanning (govulncheck)
-- No SBOM generation
-- No image signing (cosign/sigstore)
-- gosec linter not enabled in golangci-lint
-- No `.trivyignore` or vulnerability policy
-- No SECURITY.md or vulnerability disclosure policy
+**Gaps**:
+- No container vulnerability scanning
+- No secret detection (Gitleaks/TruffleHog)
+- No dependency scanning (Dependabot/Renovate)
+- gosec disabled in golangci-lint
+- No security scanning in pre-commit hooks
+
+### Build Integration
+
+**PR Build Validation**:
+- `build.yml` builds the controller image on PRs (multi-arch, local registry)
+- FVT workflows build and deploy to Minikube on PRs (cluster-scope + namespace-scope)
+- Developer image caching with content-addressable tag
+
+**Konflux Integration**:
+- `Dockerfile.konflux` with UBI9, FIPS-compliant Go build
+- Tekton PipelineRun for PR builds exists but requires manual trigger (`/build-konflux` comment or label)
+- Hermetic builds with gomod prefetch
+- Multi-arch (x86_64, arm64)
+- Push pipeline referenced but not present in repo (likely centralized)
+
+**Gap**: Konflux builds are not automatic on PRs, meaning FIPS compliance issues or UBI base image problems could be missed.
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: None - No `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
+- **Coverage**: None - no `.claude/`, `CLAUDE.md`, or `AGENTS.md`
 - **Quality**: N/A
 - **Gaps**:
-  - No guidance for unit test patterns (envtest, Ginkgo/Gomega)
-  - No FVT test creation rules
-  - No controller reconciliation test patterns
-  - No webhook validation test patterns
-  - No coding conventions documentation for AI agents
-- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
-  - Go unit test patterns with envtest
-  - Ginkgo/Gomega FVT test structure
-  - Controller reconciliation test patterns
-  - Webhook validation test patterns
-  - Predictor/InferenceService test fixtures
+  - No unit test creation rules (envtest patterns, Ginkgo/Gomega conventions)
+  - No FVT test creation rules (Minikube deployment, predictor testing patterns)
+  - No controller test patterns (reconciler conventions, mocking strategies)
+  - No documentation of test naming conventions or file organization
+- **Recommendation**: Generate comprehensive rules with `/test-rules-generator` covering:
+  - Unit tests: envtest setup, Ginkgo suites, Gomega matchers
+  - FVT tests: Predictor lifecycle, runtime-specific assertions
+  - Controller tests: Reconciler testing, webhook validation
+  - Package tests: Standard Go testing for utility packages
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Integrate coverage tracking** - Add Codecov with `.codecov.yml`, upload `cover.out` from test workflow, set minimum threshold (60%), enable PR comments
-2. **Add container vulnerability scanning** - Integrate Trivy or Snyk into `build.yml` to scan built images before push, set severity thresholds for CRITICAL/HIGH
-3. **Fix branch mismatch across workflows** - Standardize all workflows to target `main` (or both `main` and `master`), ensuring FVTs run on every PR
+1. **Add codecov/coveralls integration** with minimum coverage thresholds and PR reporting. The `cover.out` file is already generated but wasted.
+2. **Add Trivy container scanning** to the `build.yml` workflow. Upload results as SARIF to GitHub Security tab.
+3. **Make Konflux PR builds automatic** by removing the `/build-konflux` comment trigger. This ensures FIPS and UBI compliance issues are caught before merge.
 
 ### Priority 1 (High Value)
 
-4. **Enable gosec and security linters** - Add `gosec`, `misspell`, `unconvert` to golangci-lint configuration
-5. **Create comprehensive agent rules** - Generate `.claude/rules/` with unit-tests.md, fvt-tests.md, controller-tests.md, webhook-tests.md via `/test-rules-generator`
-6. **Add secret detection** - Integrate gitleaks into CI pipeline for detecting accidentally committed secrets
-7. **Consolidate redundant workflows** - Merge `test.yml` and `lint.yml` into `build.yml` since build.yml already runs both lint and unit tests
-8. **Add govulncheck** - Run Go vulnerability database checks against dependencies
+4. **Add Gitleaks** for secret detection in CI and pre-commit hooks.
+5. **Enable Dependabot/Renovate** for automated Go module updates and vulnerability alerts.
+6. **Create comprehensive agent rules** in `.claude/rules/` with patterns for all test types.
+7. **Add concurrency groups** to all PR-triggered workflows to cancel redundant runs.
+8. **Deduplicate CI workflows**: `build.yml` already runs lint and tests, making `test.yml` and `lint.yml` redundant for PRs. Consider removing standalone workflows or making `build.yml` use reusable workflows.
+9. **Enable gosec** in golangci-lint configuration for Go security checks.
 
 ### Priority 2 (Nice-to-Have)
 
-9. **Add performance regression testing** - Benchmark inference latency for key model types (sklearn, ONNX, TF)
-10. **Implement contract tests** - Test API boundaries between modelmesh-serving and runtime-adapter, modelmesh
-11. **Add SBOM generation** - Generate Software Bill of Materials for container images
-12. **Add image signing** - Use cosign/sigstore for image attestation
-13. **Add load testing** - Multi-model serving scenarios with concurrent inference requests
-14. **Add chaos engineering** - Test resilience under pod failures, network partitions
+10. **Add performance/load testing** for inference endpoints (gRPC and REST).
+11. **Add contract tests** between modelmesh-serving controller and runtime adapters (modelmesh, rest-proxy).
+12. **Add SBOM generation** to container builds (Syft or similar).
+13. **Add image signing** with cosign for supply chain security.
+14. **Resolve branch naming inconsistency**: `master` vs `main` across workflows.
+15. **Add caching** to standalone `test.yml` and `lint.yml` workflows for the develop image.
 
 ## Comparison to Gold Standards
 
-| Dimension | modelmesh-serving | odh-dashboard | notebooks | kserve |
-|-----------|------------------|---------------|-----------|--------|
-| Unit Tests | 7.0 - Good ratio, envtest | 9.0 - Extensive Jest, RTL | 6.0 - Python tests | 9.0 - Comprehensive |
-| Integration/E2E | 7.5 - 66 FVT scenarios | 9.0 - Cypress + contract | 8.0 - Multi-layer | 9.0 - Multi-version |
-| Build Integration | 5.0 - Konflux builds only | 7.0 - Multi-mode builds | 8.0 - Image pipeline | 7.0 - Matrix builds |
-| Image Testing | 5.5 - Multi-arch, no scan | 6.0 - Build validation | 9.0 - 5-layer testing | 7.0 - Multi-platform |
-| Coverage | 3.0 - Local only | 9.0 - Codecov enforced | 5.0 - Basic | 8.0 - Enforced |
-| CI/CD | 7.0 - Dual pipeline | 9.0 - Comprehensive | 8.0 - Matrix builds | 9.0 - Well-organized |
-| Agent Rules | 0.0 - None | 8.0 - Comprehensive | 3.0 - Minimal | 2.0 - Minimal |
-| **Overall** | **6.4** | **8.5** | **7.0** | **7.5** |
+| Feature | modelmesh-serving | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
+|---------|-------------------|---------------------|-------------------|---------------|
+| Unit Tests | Ginkgo/envtest (7/10) | Jest + RTL (9/10) | N/A | Ginkgo/envtest (9/10) |
+| Integration/E2E | Minikube FVTs (7.5/10) | Cypress E2E (9/10) | N/A | Kind E2E (9/10) |
+| Coverage Tracking | Generated only (3/10) | Codecov enforced (9/10) | N/A | Codecov (8/10) |
+| Container Scanning | None (0/10) | Trivy (8/10) | Trivy + SBOM (9/10) | None (0/10) |
+| Multi-arch | 4 architectures (9/10) | N/A | Multi-arch (8/10) | Multi-arch (8/10) |
+| SAST | CodeQL (6/10) | CodeQL + ESLint (8/10) | N/A | CodeQL (6/10) |
+| Secret Detection | None (0/10) | Gitleaks (7/10) | None (0/10) | None (0/10) |
+| Agent Rules | None (0/10) | Comprehensive (9/10) | None (0/10) | None (0/10) |
+| Pre-commit Hooks | golangci-lint + prettier (7/10) | ESLint + prettier (8/10) | N/A | golangci-lint (7/10) |
+| Build Integration | Konflux manual (5/10) | N/A | N/A | N/A |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/build.yml` - Main build + test + lint workflow
-- `.github/workflows/test.yml` - Unit test workflow (redundant)
-- `.github/workflows/lint.yml` - Lint workflow (redundant)
-- `.github/workflows/fvt-base.yml` - FVT reusable workflow (Minikube)
-- `.github/workflows/fvt-cs.yml` - FVT cluster-scope caller
-- `.github/workflows/fvt-ns.yml` - FVT namespace-scope caller
+- `.github/workflows/build.yml` - Main build workflow (lint + test + image build)
+- `.github/workflows/test.yml` - Standalone unit test workflow
+- `.github/workflows/lint.yml` - Standalone lint workflow
+- `.github/workflows/fvt-base.yml` - Reusable FVT workflow (Minikube)
+- `.github/workflows/fvt-cs.yml` - FVT cluster-scope trigger
+- `.github/workflows/fvt-ns.yml` - FVT namespace-scope trigger
 - `.github/workflows/codeql.yml` - CodeQL SAST scanning
 - `.github/workflows/create-release.yml` - Release automation
-- `.tekton/` - Konflux/Tekton pipeline definitions
+- `.tekton/odh-modelmesh-serving-controller-pull-request.yaml` - Konflux PR pipeline
 
 ### Testing
 - `controllers/*_test.go` - Controller unit tests (envtest)
-- `controllers/modelmesh/*_test.go` - ModelMesh component tests
-- `apis/serving/v1alpha1/*_test.go` - API type and webhook tests
-- `pkg/config/config_test.go` - Configuration tests
-- `pkg/mmesh/*_test.go` - ModelMesh gRPC tests
-- `pkg/predictor_source/*_test.go` - Predictor source tests
-- `fvt/` - Full Verification Tests (Ginkgo/Gomega)
-- `fvt/predictor/` - Predictor CRUD and inference FVTs
-- `fvt/scaleToZero/` - Scale-to-zero FVTs
-- `fvt/storage/` - Storage backend FVTs
-- `fvt/hpa/` - HPA autoscaler FVTs
-- `tests/` - Shell-based integration tests
+- `pkg/*_test.go` - Package unit tests
+- `apis/*_test.go` - API type tests
+- `fvt/` - Functional Verification Tests (Ginkgo, Minikube)
+- `tests/` - Legacy shell-based integration tests
 
 ### Code Quality
 - `.golangci.yaml` - golangci-lint configuration (10 linters)
-- `.pre-commit-config.yaml` - Pre-commit hooks (golangci-lint + prettier)
-- `scripts/fmt.sh` - Lint/format wrapper script
+- `.pre-commit-config.yaml` - Pre-commit hooks (golangci-lint, prettier)
+- `Makefile` - Build, test, and deployment targets
 
 ### Container Images
-- `Dockerfile` - Production multi-stage build
-- `Dockerfile.konflux` - RHOAI/Konflux build (FIPS-compliant)
-- `Dockerfile.develop` - Developer image
-- `Dockerfile.develop.ci` - CI developer image
-- `.dockerignore` - Docker build exclusions
+- `Dockerfile` - Multi-arch production image
+- `Dockerfile.develop` - Development/test image
+- `Dockerfile.develop.ci` - CI development image
+- `Dockerfile.konflux` - RHOAI/Konflux production image (FIPS-compliant)
 
 ### Configuration
-- `Makefile` - Build, test, deploy targets
-- `go.mod` / `go.sum` - Go module dependencies
-- `.github/renovate.json` - Automated dependency updates
-- `config/` - Kubernetes manifests (CRDs, RBAC, runtimes)
+- `go.mod` - Go module dependencies (Go 1.23)
+- `config/` - Kubernetes manifests, kustomize overlays
+- `opendatahub/` - ODH-specific manifests and scripts

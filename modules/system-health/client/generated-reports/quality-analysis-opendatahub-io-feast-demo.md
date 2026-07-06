@@ -4,277 +4,212 @@ overall_score: 0.5
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No source code or tests present — documentation-only repository"
+    status: "No source code or tests present - documentation-only repository"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests — no testable code exists"
+    status: "No integration or E2E tests - repository contains no executable code"
   - dimension: "Build Integration"
     score: 0.0
-    status: "No build system, Makefile, or container build configuration"
+    status: "No build system, Dockerfile, or build configuration present"
   - dimension: "Image Testing"
     score: 0.0
     status: "No container images built or tested"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tracking — no code to measure"
+    status: "No code to cover - no coverage tracking applicable"
   - dimension: "CI/CD Automation"
-    score: 1.0
-    status: "No CI/CD workflows configured at all"
+    score: 0.0
+    status: "No CI/CD workflows configured (.github/workflows/ does not exist)"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
+    status: "No CLAUDE.md, .claude/ directory, or agent configuration present"
 critical_gaps:
-  - title: "Repository is documentation-only with no testable code"
-    impact: "No software quality practices can be applied to a README-only repo"
+  - title: "Repository is documentation-only with no source code"
+    impact: "No testable, buildable, or deployable artifacts exist in this repository"
     severity: "HIGH"
-    effort: "N/A — requires fundamental scope change"
-  - title: "No CI/CD pipelines configured"
-    impact: "No automated validation of any kind — even link checking or markdown linting"
+    effort: "N/A - architectural decision"
+  - title: "No CI/CD pipeline of any kind"
+    impact: "No automated validation of even the README links or YAML snippets"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No security scanning or dependency management"
-    impact: "YAML manifests embedded in README are not validated or scanned"
+  - title: "No linting or validation for embedded YAML/shell snippets"
+    impact: "Users may copy broken YAML or shell commands from README without warning"
     severity: "MEDIUM"
     effort: "2-3 hours"
-  - title: "Demo instructions reference external repos without pinned versions"
-    impact: "Demo can break silently when upstream repositories change"
+  - title: "No link checking for external URLs"
+    impact: "External links (feast-dev/feast, accorvin/feast-credit-score-local-tutorial) may rot without detection"
     severity: "MEDIUM"
     effort: "1-2 hours"
 quick_wins:
-  - title: "Add markdown linting CI workflow"
+  - title: "Add a GitHub Actions workflow for link checking"
+    effort: "1 hour"
+    impact: "Catch broken links to external repositories and documentation automatically"
+  - title: "Add YAML linting for embedded code blocks"
     effort: "1-2 hours"
-    impact: "Catch broken links, formatting issues, and typos automatically"
-  - title: "Add CODEOWNERS file"
-    effort: "30 minutes"
-    impact: "Ensure PR reviews are routed to the right people"
-  - title: "Pin external resource references to specific commits or tags"
-    effort: "1 hour"
-    impact: "Prevent demo breakage from upstream changes"
-  - title: "Add a link-checker GitHub Action"
-    effort: "1 hour"
-    impact: "Detect broken URLs in README before they reach users"
+    impact: "Validate that YAML snippets in README are syntactically correct"
+  - title: "Add a CODEOWNERS file"
+    effort: "15 minutes"
+    impact: "Ensure PRs are reviewed by the right team members"
 recommendations:
   priority_0:
-    - "Decide if this repo should contain demo code (scripts, notebooks, Dockerfiles) or remain doc-only"
-    - "If doc-only: add markdown linting, link checking, and spell-check CI"
-    - "If code-bearing: migrate demo commands into executable scripts with tests"
+    - "Decide whether this repo should contain executable demo code or remain documentation-only"
+    - "If documentation-only: add link-checking CI and YAML validation for embedded snippets"
   priority_1:
-    - "Add a GitHub Actions workflow for at minimum markdown linting and link validation"
-    - "Pin all external raw.githubusercontent.com references to specific commits or tags"
-    - "Add a CODEOWNERS file for review routing"
+    - "Add a CI workflow to validate README links and embedded YAML/shell syntax"
+    - "Consider adding a Makefile or script that automates the demo setup steps"
   priority_2:
-    - "Add a CLAUDE.md or AGENTS.md with contribution and testing guidelines"
-    - "Consider adding a Makefile or script to automate the demo setup steps"
-    - "Add a CONTRIBUTING.md describing how to update the demo"
+    - "Add agent rules (CLAUDE.md) to guide contributors on documentation standards"
+    - "Consider adding a Containerfile to package the demo as a reproducible environment"
 ---
 
 # Quality Analysis: feast-demo
 
 ## Executive Summary
-
-- **Overall Score: 0.5 / 10**
-- **Repository Type**: Documentation-only demo walkthrough
-- **Primary Language**: None (Markdown + embedded YAML/shell snippets)
-- **Key Strengths**: Clear, well-structured demo documentation with screenshots
-- **Critical Gaps**: No source code, no tests, no CI/CD, no security scanning — this is a README with images, not a software project
+- **Overall Score: 0.5/10**
+- **Repository Type**: Documentation / Demo walkthrough (no source code)
+- **Primary Language**: Markdown (documentation only)
+- **Key Strengths**: Clear step-by-step demo instructions with screenshots
+- **Critical Gaps**: No source code, no tests, no CI/CD, no build system — this is a pure documentation repository
 - **Agent Rules Status**: Missing
 
-This repository (`opendatahub-io/feast-demo`) is a **documentation-only** repository containing a single `README.md` file and three screenshot images. It serves as a walkthrough guide for demonstrating Feast (feature store) on OpenShift AI. There is no source code, no test infrastructure, no CI/CD pipelines, and no build configuration.
+### Repository Contents
 
-The demo instructions reference the external repository [feast-credit-score-local-tutorial](https://github.com/feast-dev/feast-credit-score-local-tutorial) for actual code execution, and the [Feast operator](https://github.com/feast-dev/feast) for deployment.
+This repository consists of:
+- `README.md` — A walkthrough guide for demoing Feast on OpenShift AI
+- `images/` — 3 screenshots used in the README
+- 1 total commit on 1 branch (`main`)
+
+There is **no source code, no tests, no CI/CD configuration, no Dockerfile, no Makefile, and no package manifests** of any kind. The repository serves as a documentation guide that references external repositories ([feast-dev/feast](https://github.com/feast-dev/feast) and [accorvin/feast-credit-score-local-tutorial](https://github.com/accorvin/feast-credit-score-local-tutorial)).
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
 | Unit Tests | 0/10 | No source code or tests present |
-| Integration/E2E | 0/10 | No integration or E2E tests |
-| **Build Integration** | **0/10** | **No build system or container configuration** |
-| Image Testing | 0/10 | No container images built or tested |
-| Coverage Tracking | 0/10 | No coverage tracking — no code to measure |
-| CI/CD Automation | 1/10 | No CI/CD workflows at all |
-| Agent Rules | 0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory |
+| Integration/E2E | 0/10 | No executable code to test |
+| **Build Integration** | **0/10** | **No build system or Dockerfile** |
+| Image Testing | 0/10 | No container images |
+| Coverage Tracking | 0/10 | No code to cover |
+| CI/CD Automation | 0/10 | No workflows configured |
+| Agent Rules | 0/10 | No agent configuration |
 
-## Repository Contents
-
-The entire repository consists of:
-
-```
-feast-demo/
-├── README.md              # Demo walkthrough (320 lines)
-└── images/
-    ├── feast-ui.png        # Screenshot of Feast UI
-    ├── open-workbench.png  # Screenshot of OpenShift AI workbench
-    └── workbench-after-clone.png  # Screenshot of workbench after cloning
-```
-
-**Total files**: 4 (1 markdown, 3 images)
-**Source code files**: 0
-**Test files**: 0
-**CI/CD workflows**: 0
-**Dockerfiles**: 0
+**Weighted Overall: 0.5/10** (0.5 points awarded for having a functional, well-structured README)
 
 ## Critical Gaps
 
-### 1. Repository is documentation-only with no testable code
+### 1. Repository Contains No Source Code
+- **Impact**: All quality dimensions score 0 because there is nothing to test, build, scan, or automate
 - **Severity**: HIGH
-- **Impact**: No software quality practices can be applied to a repo that contains only a README
-- **Detail**: All executable commands are embedded as copy-paste shell snippets in the README. There are no scripts, notebooks, or automation that could be tested.
-- **Effort**: N/A — requires fundamental scope change
+- **Context**: This appears to be an intentional design choice — the repo is a demo walkthrough, not a software project. The actual demo code lives in [feast-credit-score-local-tutorial](https://github.com/accorvin/feast-credit-score-local-tutorial)
 
-### 2. No CI/CD pipelines configured
+### 2. No CI/CD Pipeline
+- **Impact**: No automated validation of any kind — broken links, invalid YAML, or incorrect shell commands won't be caught
 - **Severity**: HIGH
-- **Impact**: No automated validation of any kind — not even markdown linting or link checking
-- **Detail**: The `.github/workflows/` directory does not exist. PRs can merge with broken links, formatting issues, or invalid YAML without any automated checks.
-- **Effort**: 2-4 hours to add basic markdown/link CI
+- **Effort**: 2-4 hours to add basic documentation CI
 
-### 3. No security scanning or dependency management
+### 3. No Validation of Embedded YAML and Shell Snippets
+- **Impact**: The README contains multiple YAML manifests (DataScienceCluster CR, Namespace, Secret, FeatureStore CR) and shell commands that could become invalid as upstream APIs change
 - **Severity**: MEDIUM
-- **Impact**: YAML manifests and shell commands embedded in the README are not validated
-- **Detail**: The README contains Kubernetes YAML manifests and `oc apply -f` commands that reference external URLs. These are not scanned for security issues, and the external resources are not pinned.
 - **Effort**: 2-3 hours
 
-### 4. External references are not pinned to stable versions
+### 4. No Link Checking
+- **Impact**: The README references 6+ external URLs including specific branches (`0.47-branch`) that will become stale
 - **Severity**: MEDIUM
-- **Impact**: Demo can break silently when upstream repositories change
-- **Detail**: The README references `raw.githubusercontent.com` URLs from a `0.47-branch` branch, which could be force-pushed or deleted. The `feast-credit-score-local-tutorial` repo's `demo` branch is also not pinned.
-- **Effort**: 1-2 hours to pin to specific commit SHAs
+- **Effort**: 1-2 hours
 
 ## Quick Wins
 
-### 1. Add markdown linting CI workflow
-- **Effort**: 1-2 hours
-- **Impact**: Catch broken links, formatting issues, and typos automatically
-- **Implementation**:
-```yaml
-# .github/workflows/lint.yml
-name: Lint
-on: [pull_request]
-jobs:
-  markdown:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: DavidAnson/markdownlint-cli2-action@v19
-```
+### 1. Add Link Checking CI (1 hour)
+Validate all URLs in README remain valid.
 
-### 2. Add link-checker GitHub Action
-- **Effort**: 1 hour
-- **Impact**: Detect broken URLs in README before they reach users
-- **Implementation**:
 ```yaml
 # .github/workflows/links.yml
 name: Check Links
 on:
   pull_request:
   schedule:
-    - cron: '0 9 * * 1'
+    - cron: '0 8 * * 1'  # Weekly Monday check
 jobs:
-  check:
+  links:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: lycheeverse/lychee-action@v2
         with:
+          args: --verbose --no-progress '*.md'
           fail: true
 ```
 
-### 3. Add CODEOWNERS file
-- **Effort**: 30 minutes
-- **Impact**: Ensure PR reviews are routed to the right people
-- **Implementation**:
+### 2. Add YAML Lint for Embedded Snippets (1-2 hours)
+Extract YAML blocks from README and validate syntax.
+
+### 3. Add CODEOWNERS (15 minutes)
 ```
-# .github/CODEOWNERS
+# CODEOWNERS
 * @opendatahub-io/feast-maintainers
 ```
-
-### 4. Pin external references
-- **Effort**: 1 hour
-- **Impact**: Prevent demo breakage from upstream changes
-- **Detail**: Replace branch references like `refs/heads/0.47-branch` with specific commit SHAs
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
-**Score: 1/10**
-
-No CI/CD configuration exists. There are no GitHub Actions workflows, no GitLab CI, no Jenkinsfile, and no Makefile. The repository has had only a single commit (a revert), indicating minimal development activity.
-
-Given that this is a documentation repository, appropriate CI would include:
-- Markdown linting (markdownlint)
-- Link checking (lychee)
-- Spell checking (cspell)
-- YAML validation for embedded manifests
+- **Workflows**: None
+- **`.github/workflows/`**: Does not exist
+- **Makefile**: Does not exist
+- **Any CI configuration**: None found
 
 ### Test Coverage
-**Score: 0/10**
-
-There is no source code to test. All executable logic lives as copy-paste shell commands within the README. There are no:
-- Python scripts or notebooks
-- Go source files
-- Test files of any kind
-- Test frameworks configured
+- **Unit Tests**: None (no source code)
+- **Integration Tests**: None
+- **E2E Tests**: None
+- **Test-to-Code Ratio**: N/A
+- **Coverage Tools**: None
 
 ### Code Quality
-**Score: 0/10**
-
-No code quality tooling exists:
-- No linting configuration (no `.markdownlint.json`, `.editorconfig`, etc.)
-- No pre-commit hooks (`.pre-commit-config.yaml` is absent)
-- No static analysis
-- No formatters configured
+- **Linting**: None configured
+- **Pre-commit Hooks**: None (`.pre-commit-config.yaml` does not exist)
+- **Static Analysis**: None
+- **Formatters**: None
 
 ### Container Images
-**Score: 0/10**
-
-No container images are built from this repository. The demo references pre-built images from upstream Feast repositories but does not build or test any images itself.
+- **Dockerfile/Containerfile**: None
+- **Image Builds**: None
+- **Security Scanning**: None
+- **SBOM Generation**: None
 
 ### Security
-**Score: 0/10**
-
-No security practices are implemented:
-- No container scanning (Trivy, Snyk)
-- No SAST/CodeQL integration
-- No dependency scanning
-- No secret detection
-- The README contains hardcoded credentials: `POSTGRES_USER=feast`, `POSTGRES_PASSWORD=feast` — while these are demo values, there's no warning about production usage
+- **Container Scanning**: None
+- **SAST/CodeQL**: None
+- **Dependency Scanning**: None (no dependencies)
+- **Secret Detection**: None
+- **Note**: The README does contain hardcoded credentials (`feast`/`feast` for PostgreSQL) but explicitly notes these are demo values
 
 ### Agent Rules (Agentic Flow Quality)
-**Score: 0/10**
-
 - **Status**: Missing
-- **Coverage**: No agent rules exist
-- **Quality**: N/A
-- **Gaps**: No `CLAUDE.md`, `AGENTS.md`, `.claude/` directory, or `.claude/rules/` directory
-- **Recommendation**: If the repo evolves to contain code, generate rules with `/test-rules-generator`
+- **CLAUDE.md**: Not present
+- **`.claude/` directory**: Not present
+- **`.claude/rules/`**: Not present
+- **Coverage**: No test types have rules
+- **Recommendation**: For a documentation-only repo, agent rules would primarily guide documentation standards, YAML formatting, and link validation
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-
-1. **Decide the repository's purpose**: Is this meant to be a documentation-only walkthrough, or should it evolve to contain executable demo code (scripts, notebooks, Dockerfiles)?
-   - **If doc-only**: Add markdown linting, link checking, and spell-check CI
-   - **If code-bearing**: Migrate shell snippets into executable scripts, add a Makefile, add tests
-
-2. **Add basic CI/CD**: Even a documentation repo benefits from automated link checking and markdown linting to prevent broken demos
+1. **Decide the repo's scope**: Should this remain documentation-only, or should it contain runnable demo code? If documentation-only, add documentation-specific CI
+2. **Add basic CI**: At minimum, a link-checking workflow to catch URL rot
 
 ### Priority 1 (High Value)
-
-3. **Pin external references**: All `raw.githubusercontent.com` URLs should reference specific commit SHAs rather than branch names to prevent silent breakage
-
-4. **Add CODEOWNERS**: Route review to appropriate maintainers
-
-5. **Add YAML validation**: The embedded Kubernetes manifests should be validated, either via CI or by extracting them to separate files that can be linted with `kubeval` or `kubeconform`
+1. **Add a GitHub Actions workflow** with:
+   - Link checking (lychee-action)
+   - YAML validation for embedded manifests
+   - Markdown linting (markdownlint)
+2. **Consider extracting YAML manifests** into standalone files (`manifests/`) for easier validation and reuse
+3. **Add a `setup.sh` script** that automates the prerequisite steps, reducing manual error
 
 ### Priority 2 (Nice-to-Have)
-
-6. **Extract embedded manifests**: Move the YAML snippets from the README into separate files under a `manifests/` directory. This makes them testable and reusable.
-
-7. **Add a setup script**: Automate the demo setup steps into a single script (e.g., `setup.sh`) that can be tested in CI
-
-8. **Add contribution guidelines**: A `CONTRIBUTING.md` would help others update the demo
-
-9. **Add agent rules**: If the repo grows to contain code, add `.claude/rules/` with testing guidelines
+1. **Add CLAUDE.md** with documentation contribution guidelines
+2. **Add a Containerfile** that packages the demo as a reproducible environment
+3. **Pin external references** to specific commits/tags instead of branches (`0.47-branch`) to prevent breakage
+4. **Add a CONTRIBUTING.md** with guidelines for updating the demo
 
 ## Comparison to Gold Standards
 
@@ -282,14 +217,14 @@ No security practices are implemented:
 |-----------|-----------|---------------|-----------|--------|
 | Unit Tests | 0/10 | 9/10 | 7/10 | 9/10 |
 | Integration/E2E | 0/10 | 9/10 | 8/10 | 9/10 |
-| Build Integration | 0/10 | 8/10 | 9/10 | 7/10 |
-| Image Testing | 0/10 | 7/10 | 10/10 | 8/10 |
-| Coverage Tracking | 0/10 | 8/10 | 5/10 | 9/10 |
-| CI/CD Automation | 1/10 | 9/10 | 9/10 | 9/10 |
+| Build Integration | 0/10 | 8/10 | 8/10 | 7/10 |
+| Image Testing | 0/10 | 7/10 | 9/10 | 7/10 |
+| Coverage | 0/10 | 8/10 | 5/10 | 8/10 |
+| CI/CD | 0/10 | 9/10 | 8/10 | 9/10 |
 | Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
-| **Overall** | **0.5/10** | **8.5/10** | **7.5/10** | **8.0/10** |
+| **Overall** | **0.5/10** | **8.5/10** | **7.0/10** | **7.5/10** |
 
-**Note**: Direct comparison to gold standards is somewhat unfair — feast-demo is a documentation walkthrough, not a software project. The scores reflect the current state of the repository, not its intended purpose.
+**Note**: This comparison is inherently unfair — feast-demo is a documentation repository, not a software project. The scores reflect the absence of quality infrastructure, but the appropriate quality bar for a pure-documentation repo is significantly lower than for a codebase. A realistic target for this repo would be 3-4/10 (link checking, YAML validation, markdown linting).
 
 ## File Paths Reference
 
@@ -297,9 +232,9 @@ No security practices are implemented:
 |------|---------|
 | `README.md` | Complete demo walkthrough (only substantive file) |
 | `images/feast-ui.png` | Feast UI screenshot |
-| `images/open-workbench.png` | OpenShift AI workbench screenshot |
-| `images/workbench-after-clone.png` | Workbench after Git clone screenshot |
+| `images/open-workbench.png` | Workbench opening screenshot |
+| `images/workbench-after-clone.png` | Post-clone workbench screenshot |
 
 ## Summary
 
-The `feast-demo` repository is a **documentation-only** demo guide with no software engineering practices to assess. It scores **0.5/10** overall — the only partial credit comes from having a well-structured README. The most impactful immediate action would be to add basic CI (markdown linting + link checking) to prevent the demo from breaking silently. The more fundamental question is whether this repository should evolve to contain executable demo code and automation, which would then warrant a full quality engineering investment.
+`opendatahub-io/feast-demo` is a **documentation-only repository** containing a step-by-step guide for demonstrating Feast on OpenShift AI. It has no source code, tests, CI/CD, or build infrastructure. The README is well-structured with clear instructions and screenshots, but lacks any automated validation. The most impactful improvement would be adding a simple CI workflow for link checking and YAML validation of the embedded manifests, which could be done in 2-3 hours.

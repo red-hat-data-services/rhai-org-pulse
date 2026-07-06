@@ -1,471 +1,460 @@
 ---
 repository: "foundation-model-stack/fms-hf-tuning"
-overall_score: 5.4
+overall_score: 5.9
 scorecard:
   - dimension: "Unit Tests"
     score: 7.5
-    status: "Strong unit test suite with 234 tests across 21 files, 1.05:1 test-to-source LOC ratio"
+    status: "Strong unit test suite with pytest, good test-to-code ratio (1.09:1 by lines), covers core modules"
   - dimension: "Integration/E2E"
     score: 3.0
-    status: "No integration or E2E tests; GPU-dependent tests only via manual tox envs (gpu, accel)"
+    status: "No integration or E2E test infrastructure; GPU-dependent tests exist but no automated E2E pipeline"
   - dimension: "Build Integration"
-    score: 3.0
-    status: "No PR-time image build or Konflux simulation; image builds only on main push"
-  - dimension: "Image Testing"
     score: 3.5
-    status: "Basic 'which accelerate' sanity check on main push; no PR-time image validation"
+    status: "No PR-time image build; /build comment-triggered only; no Konflux simulation"
+  - dimension: "Image Testing"
+    score: 4.0
+    status: "Basic sanity check on main-branch image (accelerate binary); no runtime validation on PR"
   - dimension: "Coverage Tracking"
-    score: 4.5
-    status: "Coverage runs on PRs via tox but no codecov upload, no thresholds, no PR reporting"
+    score: 5.0
+    status: "Coverage tox env exists with coverage.py and badge generation, but no codecov integration or PR enforcement"
   - dimension: "CI/CD Automation"
     score: 6.5
-    status: "Multi-Python matrix testing on PRs; format/lint on PRs; but no caching, no concurrency control"
+    status: "Multi-Python matrix testing, format/lint on PR, but no caching, no concurrency control, no E2E"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules for test automation"
+    status: "No CLAUDE.md, no .claude/ directory, no agent rules or AI-assisted test guidance"
 critical_gaps:
-  - title: "No coverage threshold enforcement"
-    impact: "Coverage can silently decrease without any PR gate; regressions go undetected"
+  - title: "No PR-time container image build or validation"
+    impact: "Image build failures discovered only after merge on main branch; broken images can ship to Quay"
+    severity: "HIGH"
+    effort: "6-8 hours"
+  - title: "No integration or E2E test automation"
+    impact: "Training workflows, multi-GPU scenarios, and acceleration framework integration untested in CI"
+    severity: "HIGH"
+    effort: "16-24 hours"
+  - title: "No security scanning (Trivy, CodeQL, Snyk, or Gitleaks)"
+    impact: "Vulnerabilities in dependencies and container images go undetected; no SBOM generation"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No PR-time image build validation"
-    impact: "Dockerfile changes merged without build testing; failures discovered only post-merge on main"
-    severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No security scanning (Trivy, CodeQL, SAST)"
-    impact: "Vulnerabilities in dependencies and container images undetected; no CVE protection"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No integration or E2E test automation in CI"
-    impact: "GPU-dependent training workflows not validated; regressions caught only by manual testing"
-    severity: "HIGH"
-    effort: "8-16 hours"
-  - title: "No codecov/coveralls PR reporting"
-    impact: "Reviewers cannot see coverage impact of changes during review"
+  - title: "No coverage enforcement or PR reporting"
+    impact: "Coverage regressions go unnoticed; no minimum threshold enforced"
     severity: "MEDIUM"
-    effort: "1-2 hours"
-  - title: "No agent rules for test automation"
-    impact: "AI-assisted development produces inconsistent test patterns"
+    effort: "2-3 hours"
+  - title: "No concurrency control on CI workflows"
+    impact: "Multiple CI runs for same PR waste resources and can produce conflicting results"
     severity: "MEDIUM"
-    effort: "2-4 hours"
-quick_wins:
-  - title: "Add codecov integration with coverage upload"
-    effort: "1-2 hours"
-    impact: "Immediate PR-level coverage visibility and trend tracking"
-  - title: "Add Trivy container scanning to image workflow"
-    effort: "1-2 hours"
-    impact: "Catch CVEs in container images before deployment"
-  - title: "Add concurrency control to PR workflows"
-    effort: "30 minutes"
-    impact: "Cancel stale CI runs, save compute, speed up feedback"
-  - title: "Add pip dependency caching to test workflow"
-    effort: "30 minutes"
-    impact: "Faster CI runs by caching pip downloads"
-  - title: "Add coverage failure threshold (e.g., 70%)"
     effort: "1 hour"
-    impact: "Prevent silent coverage regressions"
+  - title: "Outdated pre-commit hook versions"
+    impact: "Black 22.3.0 and isort 5.11.5 are significantly behind current releases; potential formatting inconsistencies"
+    severity: "LOW"
+    effort: "1 hour"
+quick_wins:
+  - title: "Add Trivy container scanning to PR workflow"
+    effort: "1-2 hours"
+    impact: "Immediate vulnerability detection in base images and dependencies"
+  - title: "Add codecov integration with PR comments"
+    effort: "2-3 hours"
+    impact: "Coverage visibility on every PR; enforce minimum thresholds"
+  - title: "Add concurrency control to all workflows"
+    effort: "30 minutes"
+    impact: "Cancel stale runs, reduce CI costs and queue times"
+  - title: "Add CodeQL or Semgrep SAST scanning"
+    effort: "1-2 hours"
+    impact: "Catch security issues in Python source code before merge"
+  - title: "Update pre-commit hook versions"
+    effort: "30 minutes"
+    impact: "Modern formatting rules, better compatibility"
+  - title: "Add dependency caching to CI workflows"
+    effort: "1 hour"
+    impact: "Faster CI runs by caching pip downloads"
 recommendations:
   priority_0:
-    - "Add codecov integration with PR reporting and coverage threshold enforcement"
-    - "Add Trivy scanning for container images and Dependabot security alerts for Python dependencies"
-    - "Add PR-time Docker image build validation for both Dockerfile and nvcr.Dockerfile"
+    - "Add PR-time Docker image build workflow to catch build failures before merge"
+    - "Integrate Trivy scanning for container images and CodeQL for Python source"
+    - "Add codecov integration with minimum coverage threshold (e.g., 70%) and PR gating"
   priority_1:
-    - "Create a GPU-enabled CI runner for integration tests or use mocked GPU training paths"
-    - "Add CodeQL or Semgrep SAST scanning workflow"
-    - "Add concurrency control and pip caching to all PR workflows"
-    - "Create agent rules (.claude/rules/) for unit test patterns and conventions"
+    - "Create integration test suite for training workflows (single-GPU mock or CPU-based)"
+    - "Add E2E smoke tests that validate actual fine-tuning runs on small models"
+    - "Create agent rules (.claude/rules/) for unit test, integration test, and mock patterns"
+    - "Add SBOM generation to container image builds"
   priority_2:
     - "Add multi-architecture image builds (amd64/arm64)"
-    - "Add image signing and SBOM generation"
-    - "Add pre-commit hooks enforcement in CI beyond black/isort"
-    - "Add performance regression testing for training throughput"
+    - "Implement performance regression testing for training throughput"
+    - "Add Gitleaks secret detection to PR workflow"
+    - "Create contract tests for the acceleration framework plugin interface"
 ---
 
 # Quality Analysis: fms-hf-tuning
 
 ## Executive Summary
 
-- **Overall Score: 5.4/10**
-- **Repository Type**: Python library for fine-tuning large language models using HuggingFace Transformers
-- **Primary Language**: Python (3.9-3.12)
-- **Key Frameworks**: PyTorch, Transformers, TRL, PEFT, Accelerate
-
-### Key Strengths
-- Strong unit test suite with 234 test functions and excellent test-to-source ratio (1.05:1)
-- Multi-Python-version matrix testing (3.9, 3.10, 3.11, 3.12) on PRs
-- Pre-commit hooks for formatting (Black, isort) enforced in CI
-- Pylint linting with detailed configuration
-- Dependabot configured for daily pip dependency updates
-- Well-structured Dockerfiles with multi-stage builds (UBI9 + NVCR variants)
-- Tox-based test orchestration with clear environment separation
-
-### Critical Gaps
-- **No coverage enforcement**: Coverage runs but has no thresholds or codecov upload
-- **No security scanning**: Zero Trivy, CodeQL, Semgrep, or Gitleaks integration
-- **No PR-time image builds**: Images only built on main push, not on PRs
-- **No integration/E2E automation**: GPU tests require manual tox invocation
-- **No agent rules**: No CLAUDE.md or .claude/ directory for AI-assisted development
-
-### Agent Rules Status: **Missing**
-
----
+- **Overall Score: 5.9/10**
+- **Repository Type**: Python library for fine-tuning LLMs using Hugging Face Transformers
+- **Primary Language**: Python (105 .py files)
+- **Framework**: Hugging Face Transformers + TRL + Accelerate + PEFT
+- **Key Strengths**: Good unit test suite with 1.09:1 test-to-code line ratio, multi-Python-version CI matrix, pylint + black + isort formatting enforcement, well-structured architecture decision records
+- **Critical Gaps**: No PR-time image builds, no security scanning whatsoever, no integration/E2E tests in CI, no coverage enforcement, no agent rules
+- **Agent Rules Status**: Missing -- no CLAUDE.md, no .claude/ directory
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 7.5/10 | Strong test suite with 234 tests, 1.05:1 LOC ratio |
-| Integration/E2E | 3.0/10 | No automated integration tests; GPU tests manual only |
-| **Build Integration** | **3.0/10** | **No PR-time image builds or Konflux simulation** |
-| Image Testing | 3.5/10 | Minimal sanity check (`which accelerate`) on main only |
-| Coverage Tracking | 4.5/10 | Runs on PRs but no upload, no threshold, no reporting |
-| CI/CD Automation | 6.5/10 | Multi-version matrix, lint/format on PRs; no caching |
+| Unit Tests | 7.5/10 | Strong pytest suite, 9,854 test lines covering core modules |
+| Integration/E2E | 3.0/10 | No integration/E2E infrastructure; GPU tests exist but not automated |
+| **Build Integration** | **3.5/10** | **No PR-time image build; /build is comment-triggered only** |
+| Image Testing | 4.0/10 | Basic sanity check (accelerate binary) on main-branch push only |
+| Coverage Tracking | 5.0/10 | coverage.py + badge generation exists but no codecov or PR enforcement |
+| CI/CD Automation | 6.5/10 | Multi-Python matrix, format/lint on PR, but no caching/concurrency |
 | Agent Rules | 0.0/10 | No agent rules, no CLAUDE.md, no .claude/ directory |
-
----
 
 ## Critical Gaps
 
-### 1. No Coverage Threshold Enforcement
-- **Impact**: Coverage can silently decrease without any PR gate; regressions go undetected
+### 1. No PR-time Container Image Build or Validation
+- **Impact**: Image build failures are only discovered after merge to main or release branches. The `/build` command exists but is comment-triggered (manual), not automatic.
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: The `coverage.yaml` workflow runs `tox -e coverage` which generates a coverage report and badge, but there is no `--fail-under` threshold configured, no codecov/coveralls upload, and no PR comment with coverage diff. The tox coverage config omits `_version.py` and `launch_training.py` but doesn't set a minimum.
-- **Fix**: Add `coverage report --fail-under=70` to tox coverage env, add codecov upload step
+- **Effort**: 6-8 hours
+- **Details**: The `image.yaml` workflow runs on push to `main` only. The `release-image.yaml` runs on push/PR to `release`. No automatic image build on PRs to `main`.
 
-### 2. No PR-Time Image Build Validation
-- **Impact**: Dockerfile changes merged without build testing; failures discovered only post-merge
+### 2. No Integration or E2E Test Automation
+- **Impact**: The actual fine-tuning workflow (loading model, preprocessing data, training, saving checkpoints) is never tested end-to-end in CI. GPU-dependent tests (`tox -e accel`, `tox -e gpu`) exist but are not wired into any CI workflow.
 - **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: The `image.yaml` workflow only runs on `push` to `main`, not on PRs. The `release-image.yaml` builds on PRs to `release` branch but not `main`. There is a `/build` PR command workflow, but it requires manual invocation via a comment — it is not automatic. Changes to Dockerfiles, dependencies, or build scripts are not validated before merge.
-- **Fix**: Add Docker build step to PR workflow (build only, no push)
+- **Effort**: 16-24 hours
+- **Details**: While the unit tests mock many components, there's no lightweight integration test that runs an actual training loop on a tiny model to verify the full pipeline works.
 
 ### 3. No Security Scanning
-- **Impact**: Vulnerabilities in container images and Python dependencies go undetected
+- **Impact**: No vulnerability detection in dependencies, container images, or source code. No SBOM generation.
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: No Trivy, Snyk, CodeQL, Semgrep, Gitleaks, or any SAST/DAST tool configured. Dependabot handles dependency version bumps but does not scan for vulnerabilities in built images. Given this is an ML training library that runs in GPU clusters with access to models and data, security scanning is critical.
-- **Fix**: Add Trivy image scanning workflow, enable CodeQL for Python
+- **Details**: No Trivy, Snyk, CodeQL, Semgrep, or Gitleaks configuration found. The container images are built from `ubi9` and `nvcr.io/nvidia/pytorch` bases without any scanning.
 
-### 4. No Integration/E2E Test Automation in CI
-- **Impact**: GPU-dependent training workflows not validated in CI; regressions caught only by manual testing
-- **Severity**: HIGH
-- **Effort**: 8-16 hours
-- **Details**: The tox config has `gpu` and `accel` environments for GPU tests, but these are not automated in any CI workflow. The unit tests run without GPU on standard runners, but actual training execution paths (the core purpose of this library) are not continuously tested. There is no Kind/Minikube deployment testing.
-- **Fix**: Set up GPU-enabled CI runners (e.g., GitHub GPU runners) or create mocked integration tests
-
-### 5. No Codecov/Coveralls PR Reporting
-- **Impact**: Reviewers cannot see coverage impact of changes during review
+### 4. No Coverage Enforcement or PR Reporting
+- **Impact**: Coverage regressions can merge without anyone noticing. The `coverage.yaml` workflow runs `tox -e coverage` but doesn't upload to codecov or enforce thresholds.
 - **Severity**: MEDIUM
-- **Effort**: 1-2 hours
-- **Details**: Coverage workflow generates `coverage.xml` and a badge but does not upload to codecov or post a PR comment with the diff.
-- **Fix**: Add codecov GitHub Action with token to coverage workflow
+- **Effort**: 2-3 hours
+- **Details**: The tox coverage env generates XML and badge but the data isn't used for PR gating. No `.codecov.yml` configuration exists.
 
-### 6. No Agent Rules for Test Automation
-- **Impact**: AI-assisted development produces inconsistent test patterns and may miss project conventions
+### 5. No Concurrency Control on CI Workflows
+- **Impact**: Rapid pushes to a PR branch trigger multiple overlapping CI runs, wasting resources.
 - **Severity**: MEDIUM
-- **Effort**: 2-4 hours
-- **Details**: No `CLAUDE.md`, `AGENTS.md`, or `.claude/` directory exists. There are no documented test creation patterns, naming conventions, or quality checklists for AI agents to follow.
-- **Fix**: Use `/test-rules-generator` to create rules based on existing test patterns
+- **Effort**: 1 hour
 
----
+### 6. Outdated Pre-commit Hooks
+- **Impact**: Black 22.3.0 (March 2022) and isort 5.11.5 are significantly behind current releases.
+- **Severity**: LOW
+- **Effort**: 1 hour
 
 ## Quick Wins
 
-### 1. Add Codecov Integration (1-2 hours)
-Add codecov upload to `coverage.yaml`:
+### 1. Add Trivy Scanning to PR Workflow (1-2 hours)
 ```yaml
+# Add to .github/workflows/security.yaml
+name: Security Scan
+on:
+  pull_request:
+    branches: [main, release]
+  push:
+    branches: [main]
+
+jobs:
+  trivy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+```
+
+### 2. Add Codecov Integration (2-3 hours)
+```yaml
+# Add to coverage.yaml after tox -e coverage
 - name: Upload coverage to Codecov
   uses: codecov/codecov-action@v4
   with:
     file: coverage.xml
-    token: ${{ secrets.CODECOV_TOKEN }}
     fail_ci_if_error: true
-```
-
-### 2. Add Trivy Container Scanning (1-2 hours)
-Add to image build workflow:
-```yaml
-- name: Run Trivy vulnerability scanner
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: 'fms-hf-tuning:latest'
-    format: 'table'
-    exit-code: '1'
-    severity: 'CRITICAL,HIGH'
+    token: ${{ secrets.CODECOV_TOKEN }}
 ```
 
 ### 3. Add Concurrency Control (30 minutes)
-Add to all PR-triggered workflows:
 ```yaml
+# Add to all PR-triggered workflows
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 ```
 
-### 4. Add Pip Caching (30 minutes)
-Add to test workflow:
+### 4. Add pip Caching to CI (1 hour)
 ```yaml
-- uses: actions/setup-python@v4
+- uses: actions/setup-python@v5
   with:
     python-version: ${{ matrix.python-version.setup }}
     cache: 'pip'
 ```
 
-### 5. Add Coverage Threshold (1 hour)
-Update tox coverage command:
-```ini
-commands =
-    coverage run --source=tuning,build --module pytest tests/
-    coverage report -m --fail-under=70
+### 5. Update Pre-commit Hooks (30 minutes)
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/psf/black
+    rev: 24.10.0  # was 22.3.0
+    hooks:
+      - id: black
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2  # was 5.11.5
+    hooks:
+      - id: isort
 ```
-
----
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows (9 total)**:
+**Workflows Inventory** (10 workflows):
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `test.yaml` | PR + push (main, release) | Unit tests with Python 3.9-3.12 matrix |
-| `coverage.yaml` | PR + push (main) | Coverage report generation |
-| `format.yml` | PR + push (main, release) | Black/isort formatting + pylint |
-| `image.yaml` | push (main) | Build and push NVCR dev image |
-| `release-image.yaml` | PR + push (release) | Build UBI9 prod image |
-| `staging-image.yaml` | tags + release | Build staging NVCR image |
-| `build-and-publish.yaml` | release published | PyPI package publishing |
-| `labelpr.yaml` | PR events | Conventional commit label enforcement |
-| `pr-command.yaml` | issue_comment | `/build` and `/merge` PR commands |
+| `test.yaml` | push/PR to main, release | Unit tests (Python 3.9-3.12 matrix) |
+| `coverage.yaml` | push/PR to main | Coverage report generation |
+| `format.yml` | push/PR to main, release | Black formatting + pylint linting |
+| `image.yaml` | push to main | Build and push NVCR dev image to Quay |
+| `release-image.yaml` | push/PR to release | Build UBI9 prod image |
+| `staging-image.yaml` | tags/releases | Build and push staging NVCR image |
+| `build-and-publish.yaml` | release published | Build wheel and publish to PyPI |
+| `pr-command.yaml` | issue_comment | `/build` and `/merge` slash commands |
+| `labelpr.yaml` | PR opened/edited | Auto-label PRs by conventional commit type |
+| (free-up-disk-space) | composite action | Cleanup GH runner disk space |
 
 **Strengths**:
-- Multi-Python-version matrix (3.9-3.12) for unit tests
-- Shared `free-up-disk-space` composite action for disk management
-- Conventional commit enforcement via PR labels
-- `/build` command for on-demand image builds from PRs
+- Multi-Python version matrix (3.9, 3.10, 3.11, 3.12)
+- Conventional commit enforcement via PR labeling
+- `/build` command for on-demand image builds
+- Separate UBI9 (prod) and NVCR (dev) image tracks
 
 **Weaknesses**:
-- No concurrency control on any workflow — stale runs pile up
-- No pip caching — every run installs from scratch
-- No artifact uploads or test result summaries
-- Test workflow doesn't use `free-up-disk-space` action (other workflows do)
-- No required status checks documented
+- No concurrency control on any workflow
+- No pip/dependency caching
+- No E2E or integration test workflows
+- Test workflow doesn't install optional dependencies (mlflow, clearml, scanner-dev)
+- Image builds not triggered on PRs to main
 
 ### Test Coverage
 
 **Test Structure**:
-- 21 test files with 234 total test functions
-- 9,676 lines of test code vs 9,186 lines of source code (1.05:1 ratio)
-- Framework: pytest with tox orchestration
-- Test data: Rich artifact fixtures (tiny models, tokenizers, data configs)
+- **37 Python test files** across 7 subdirectories
+- **9,854 lines of test code** vs **8,997 lines of source code** (1.09:1 ratio)
+- **Framework**: pytest with fixtures, mocking (`unittest.mock.patch`)
+- **Largest test file**: `test_sft_trainer.py` (2,835 lines) -- the core trainer test
 
-**Test Distribution**:
-| Module | Test Count | Description |
-|--------|-----------|-------------|
-| `test_sft_trainer.py` | 67 | Core SFT training scenarios |
-| `test_data_preprocessing.py` | 38 | Data preprocessing pipelines |
-| `test_tuning_trainercontroller.py` | 22 | Trainer controller logic |
-| `test_acceleration_framework.py` | 17 | Acceleration framework |
-| `test_config_utils.py` | 16 | Configuration utilities |
-| `test_launch_script.py` | 13 | Build launch scripts |
-| `test_data_handlers.py` | 9 | Data handler logic |
-| `test_utils.py` (build) | 9 | Build utilities |
-| `test_tokenizer_data_utils.py` | 8 | Tokenizer utilities |
-| `test_embedding_resize.py` | 6 | Embedding resize logic |
-| Others (11 files) | 29 | Trackers, logging, misc utils |
+**Test Categories**:
+| Category | Files | Lines | Coverage Area |
+|----------|-------|-------|---------------|
+| Core SFT Trainer | 1 | 2,835 | Main training entry point |
+| Data Processing | 2 | 2,640 | Data handlers, preprocessing |
+| Acceleration | 2 | 1,040 | Framework, dataclasses |
+| Trainer Controller | 1 | 596 | Controller logic |
+| Build/Launch | 2 | 625 | Launch script, utils |
+| Trackers | 6 | 834 | MLflow, AIM, ClearML, file logging |
+| Utils | 7 | 1,284 | Config, tokenizer, evaluator, merge |
 
-**Test Quality Observations**:
-- Extensive parameterized tests for data formats (JSON, JSONL, Parquet, Arrow)
-- Good use of tiny model artifacts for fast testing without GPU
-- Tests cover multiple data configurations (single-turn, multi-turn, vision)
-- Tracker tests cover Aim, MLflow, ClearML, file logging, HF resource scanner
-- Missing: no mock/patch patterns for GPU operations in CPU-only CI
+**Coverage Tracking**:
+- `tox -e coverage` runs `coverage.py` with source targeting `tuning,build`
+- Omits `_version.py` and `launch_training.py`
+- Generates XML and badge via `genbadge[coverage]`
+- No codecov/coveralls integration
+- No minimum threshold enforcement
+
+**Gap**: GPU-dependent tests (`tox -e accel`, `tox -e gpu`) are defined but never run in CI. These require `CUDA_VISIBLE_DEVICES=0` and `flash-attn` which aren't available on GH Actions runners.
 
 ### Code Quality
 
-**Linting**:
-- **Pylint**: Comprehensive `.pylintrc` with `fail-under=10` (maximum strictness)
-- Many pylint rules disabled (no-member, too-many-arguments, cyclic-import, etc.)
-- Runs on `tuning`, `scripts/*.py`, `build/*.py`, and `tests`
-- **Black**: Code formatting via pre-commit (v22.3.0 — outdated, latest is 24.x)
-- **isort**: Import sorting with project-specific configuration
-- No type checking (no mypy, pyright, or type stubs)
-- No ruff (modern replacement for flake8 + isort + black)
+**Linting & Formatting**:
+- **pylint**: Extensive `.pylintrc` config (300+ lines), `fail-under=10` (strict)
+- **black**: Code formatter via pre-commit (version 22.3.0 -- outdated)
+- **isort**: Import sorting with `profile=black` compatibility
+- **Pre-commit hooks**: `black` + `isort` (minimal but functional)
 
-**Pre-commit Hooks**:
-- `.pre-commit-config.yaml` with Black and isort
-- Enforced in CI via `tox -e fmt` which runs `scripts/fmt.sh`
-- Missing: pylint, security checks, type checking in pre-commit
+**Static Analysis**:
+- pylint runs in CI (`tox -e lint`)
+- No SAST tools (CodeQL, Semgrep, gosec)
+- No secret detection (Gitleaks, TruffleHog)
+- No dependency vulnerability scanning
+
+**Architecture Decision Records**:
+- 4 ADRs documenting key design decisions:
+  - Trainer Controller Framework
+  - Acceleration Framework
+  - Generic Tracker Framework
+  - Data Preprocessor
+- ADR template provided for contributors
 
 ### Container Images
 
-**Two Dockerfiles**:
-1. `build/Dockerfile` — UBI9-based production image with CUDA 12.1
-   - Multi-stage build (base → cuda-base → cuda-devel → python-installations → release)
-   - Proper user creation (non-root)
-   - Build caching with `--mount=type=cache`
-   - Configurable extras via build args (AIM, MLflow, FMS acceleration, etc.)
-   - Final image strips Python/dnf to reduce attack surface
+**Two Dockerfile Variants**:
 
-2. `build/nvcr.Dockerfile` — NVCR PyTorch base for development
-   - Two-stage build (builder → runtime)
-   - Cleanup of caches and __pycache__ in build layer
-   - NVCR image version pinned (`25.02-py3`)
+1. **`build/Dockerfile`** (UBI9-based, production):
+   - Multi-stage build (base -> cuda-base -> cuda-devel -> python-installations -> release)
+   - UBI9 base image with CUDA 12.1
+   - Conditional optional extras (AIM, MLflow, ClearML, FMS Acceleration)
+   - Build cache mounts for pip
+   - Non-root user (`tuning`, UID 1000)
+   - Proper CVE mitigation (strips Python packages from release-base)
 
-**Runtime Testing**:
-- Only `which accelerate` check on NVCR image (main push only)
-- No startup validation, no import verification, no health checks
+2. **`build/nvcr.Dockerfile`** (NVIDIA PyTorch-based, dev):
+   - Multi-stage build (builder -> runtime)
+   - Based on `nvcr.io/nvidia/pytorch:25.02-py3`
+   - Cleanup of bloat from NVCR base (CUDA static libs, samples, docs)
+   - Conditional optional extras
+
+**Image Testing**:
+- `image.yaml`: Builds NVCR image on push to main, runs basic sanity check (`which accelerate`)
+- `release-image.yaml`: Builds UBI9 image on push/PR to release branch
+- `/build` command: Manual trigger to build PR image
+
+**Weaknesses**:
+- No Trivy/Snyk scanning of built images
+- Sanity check only verifies binary presence, not functional correctness
 - No multi-architecture support (x86_64 only)
-- No SBOM generation or image signing
+- No SBOM generation
+- No image signing or attestation
+- PR to main doesn't build any image automatically
 
 ### Security
 
-**Current State**: Minimal
-- Dependabot configured for daily pip updates (version bumps only)
-- CODEOWNERS file for review enforcement
-- Proper secrets handling in workflows (QUAY_USERNAME, QUAY_ROBOT_TOKEN)
-- Non-root user in UBI9 Dockerfile
-- Removal of CVE-prone packages (perl-Net-SSLeay key) in Dockerfile
+**Current State**: No security tooling configured.
 
-**Missing**:
-- No container image scanning (Trivy, Snyk, Grype)
-- No SAST/CodeQL scanning
-- No secret detection (Gitleaks, TruffleHog)
-- No dependency vulnerability scanning (beyond Dependabot version bumps)
-- No SBOM generation
-- No image signing/attestation
-- No `.trivyignore` or vulnerability exception list
+| Tool | Status |
+|------|--------|
+| Trivy/Snyk | Not configured |
+| CodeQL/Semgrep | Not configured |
+| Gitleaks/TruffleHog | Not configured |
+| Dependabot | Not configured |
+| SBOM generation | Not configured |
+| Image signing | Not configured |
+
+**Risk**: This is an ML training library that ships container images to Quay.io. Without security scanning, vulnerabilities in the CUDA stack, Python dependencies, or base images go undetected.
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: No test type rules exist
-- **Quality**: N/A — no rules to evaluate
-- **Gaps**: Everything — no CLAUDE.md, no AGENTS.md, no `.claude/` directory
-- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
-  - Unit test patterns (pytest conventions, fixture usage, tiny model artifacts)
-  - Data test patterns (parameterized data format testing)
-  - Tracker test patterns (plugin-style tracker testing)
-  - Build script test patterns
-  - Naming conventions and file organization
-
----
+- **CLAUDE.md**: Not present
+- **AGENTS.md**: Not present
+- **.claude/ directory**: Not present
+- **Coverage**: No test types have agent rules
+- **Quality**: N/A
+- **Gaps**: All test type rules are missing -- unit tests, integration tests, mock patterns, data preprocessing tests, tracker tests, acceleration framework tests
+- **Recommendation**: Generate comprehensive agent rules using `/test-rules-generator` to establish patterns for:
+  - Unit test creation with pytest fixtures
+  - Mocking HuggingFace Transformers components
+  - Testing data preprocessing pipelines
+  - Testing tracker integrations (MLflow, AIM, ClearML)
+  - Testing the acceleration framework plugin system
+  - Testing the trainer controller framework
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add codecov integration with threshold enforcement**
-   - Upload coverage.xml to codecov in coverage workflow
-   - Set `--fail-under=70` (or appropriate baseline)
-   - Enable PR comments showing coverage diff
-   - Effort: 2-4 hours
+1. **Add PR-time Docker image build workflow**
+   - Build both UBI9 and NVCR images on PRs to main
+   - Include basic runtime validation (import test, version check)
+   - Fail the PR if the image doesn't build
 
-2. **Add security scanning**
-   - Trivy for container images (both Dockerfile and nvcr.Dockerfile)
-   - CodeQL or Semgrep for Python SAST
-   - Enable Dependabot security alerts (not just version updates)
-   - Effort: 2-4 hours
+2. **Integrate security scanning**
+   - Trivy for container image and filesystem scanning
+   - CodeQL for Python SAST
+   - Gitleaks for secret detection in commits
 
-3. **Add PR-time image build validation**
-   - Build (no push) both Dockerfile and nvcr.Dockerfile on PRs to main
-   - Run basic sanity checks (import tuning, which accelerate)
-   - Effort: 4-6 hours
+3. **Add codecov integration with minimum threshold**
+   - Upload coverage XML to codecov
+   - Set minimum threshold (e.g., 70%)
+   - Require coverage comments on PRs
 
 ### Priority 1 (High Value)
 
-4. **Automate GPU/integration tests**
-   - Set up GPU-enabled runners or use mocked training paths
-   - Create integration tests that validate training end-to-end
-   - Effort: 8-16 hours
+4. **Create CPU-based integration test suite**
+   - Small model (TinyLlama-style) end-to-end training test
+   - Validate data loading -> preprocessing -> training -> checkpoint save
+   - Test multiple training configurations (LoRA, QLoRA paths without GPU)
 
-5. **Add CI optimizations**
-   - Concurrency control on all PR workflows
-   - Pip caching in test and coverage workflows
-   - Add `free-up-disk-space` to test workflow
-   - Effort: 1-2 hours
+5. **Add E2E smoke tests**
+   - Full fine-tuning run on tiny model with CPU/mock GPU
+   - Validate output model can be loaded and generates text
+   - Test accelerate launch script end-to-end
 
-6. **Create agent rules**
-   - Generate `.claude/rules/` with test patterns from existing codebase
-   - Document pytest conventions, fixture patterns, tiny model usage
-   - Effort: 2-4 hours
+6. **Create agent rules for test automation**
+   - `.claude/rules/unit-tests.md` -- pytest patterns, fixture usage, mocking
+   - `.claude/rules/data-tests.md` -- data preprocessing test patterns
+   - `.claude/rules/tracker-tests.md` -- tracker integration test patterns
 
-7. **Upgrade tooling**
-   - Update Black from 22.3.0 to latest
-   - Consider migrating from pylint to ruff (faster, more rules)
-   - Add mypy or pyright for type checking
-   - Effort: 4-8 hours
+7. **Add SBOM generation to image builds**
+   - Use Syft or Trivy to generate SBOMs
+   - Attach to container image as attestation
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Multi-architecture image builds** — Add ARM64 support
-9. **Image signing and SBOM** — sigstore/cosign + syft
-10. **Performance regression testing** — Track training throughput across commits
-11. **Pre-commit hook expansion** — Add pylint, security checks to pre-commit
-12. **Test result reporting** — JUnit XML upload for GitHub test summaries
-
----
+8. **Add multi-architecture image builds** (amd64/arm64)
+9. **Implement training throughput regression tests**
+10. **Add Gitleaks to PR workflow for secret detection**
+11. **Create contract tests for the acceleration framework plugin interface**
+12. **Add Dependabot for automated dependency updates**
 
 ## Comparison to Gold Standards
 
 | Dimension | fms-hf-tuning | odh-dashboard | notebooks | kserve |
-|-----------|:---:|:---:|:---:|:---:|
-| Unit Tests | 7.5 | 9.0 | 7.0 | 9.0 |
-| Integration/E2E | 3.0 | 9.0 | 8.0 | 9.0 |
-| Build Integration | 3.0 | 8.0 | 7.0 | 8.0 |
-| Image Testing | 3.5 | 7.0 | 9.0 | 7.0 |
-| Coverage Tracking | 4.5 | 9.0 | 5.0 | 9.0 |
-| CI/CD Automation | 6.5 | 9.0 | 8.0 | 9.0 |
-| Agent Rules | 0.0 | 8.0 | 3.0 | 2.0 |
-| **Overall** | **5.4** | **8.7** | **7.0** | **8.2** |
-
-### Key Differences from Gold Standards
-- **odh-dashboard**: Has contract tests, multi-layer testing, comprehensive CI/CD with coverage enforcement, and well-maintained agent rules — fms-hf-tuning lacks all of these
-- **notebooks**: Excels at image testing with 5-layer validation and multi-arch support — fms-hf-tuning has minimal image validation
-- **kserve**: Strong coverage enforcement, multi-version testing, comprehensive E2E — fms-hf-tuning has no coverage gates
-
----
+|-----------|---------------|---------------|-----------|--------|
+| Unit Tests | 7.5 -- Good pytest suite | 9.0 -- Multi-layer | 7.0 -- Image-focused | 8.5 -- Comprehensive |
+| Integration/E2E | 3.0 -- None in CI | 9.0 -- Cypress E2E | 8.0 -- Image validation | 9.0 -- Multi-version |
+| Build Integration | 3.5 -- Manual only | 8.0 -- PR builds | 9.0 -- Matrix builds | 7.0 -- Manifest validation |
+| Image Testing | 4.0 -- Binary check only | 7.0 -- Startup tests | 9.0 -- 5-layer validation | 6.0 -- Basic |
+| Coverage Tracking | 5.0 -- Exists, not enforced | 8.5 -- Codecov + gates | 6.0 -- Basic | 8.0 -- Enforced |
+| CI/CD Automation | 6.5 -- Multi-Python, no cache | 9.0 -- Full pipeline | 8.0 -- Matrix + caching | 9.0 -- Comprehensive |
+| Agent Rules | 0.0 -- None | 8.0 -- Comprehensive | 3.0 -- Basic | 2.0 -- Minimal |
 
 ## File Paths Reference
 
-### CI/CD
-- `.github/workflows/test.yaml` — Unit tests (PR-triggered, multi-Python matrix)
-- `.github/workflows/coverage.yaml` — Coverage generation (PR-triggered)
-- `.github/workflows/format.yml` — Formatting and linting (PR-triggered)
-- `.github/workflows/image.yaml` — NVCR dev image build (main push only)
-- `.github/workflows/release-image.yaml` — UBI9 prod image (release branch)
-- `.github/workflows/staging-image.yaml` — Staging image (tags/releases)
-- `.github/workflows/pr-command.yaml` — /build and /merge PR commands
-- `.github/workflows/build-and-publish.yaml` — PyPI publishing
-- `.github/actions/free-up-disk-space/action.yml` — Shared disk cleanup action
+### CI/CD Configuration
+- `.github/workflows/test.yaml` -- Unit test matrix (Python 3.9-3.12)
+- `.github/workflows/coverage.yaml` -- Coverage generation
+- `.github/workflows/format.yml` -- Black + pylint
+- `.github/workflows/image.yaml` -- NVCR dev image build (main only)
+- `.github/workflows/release-image.yaml` -- UBI9 prod image (release branch)
+- `.github/workflows/staging-image.yaml` -- Staging NVCR image (tags/releases)
+- `.github/workflows/build-and-publish.yaml` -- PyPI publishing
+- `.github/workflows/pr-command.yaml` -- /build and /merge commands
+- `.github/workflows/labelpr.yaml` -- PR auto-labeling
+- `.github/actions/free-up-disk-space/action.yml` -- Disk cleanup composite action
 
 ### Testing
-- `tests/test_sft_trainer.py` — Core SFT trainer tests (67 tests)
-- `tests/data/` — Data preprocessing and handler tests
-- `tests/trackers/` — Tracker plugin tests (Aim, MLflow, ClearML, etc.)
-- `tests/trainercontroller/` — Trainer controller tests
-- `tests/acceleration/` — Acceleration framework tests
-- `tests/build/` — Build script tests
-- `tests/utils/` — Utility function tests
-- `tests/artifacts/` — Test fixtures (tiny models, tokenizers, data configs)
+- `tests/test_sft_trainer.py` -- Core trainer tests (2,835 lines)
+- `tests/data/` -- Data preprocessing and handler tests
+- `tests/acceleration/` -- Acceleration framework tests
+- `tests/trainercontroller/` -- Trainer controller tests
+- `tests/trackers/` -- Tracker integration tests (MLflow, AIM, ClearML, file logging)
+- `tests/utils/` -- Utility function tests
+- `tests/build/` -- Build script tests
 
 ### Code Quality
-- `.pylintrc` — Detailed pylint configuration (fail-under=10)
-- `.pre-commit-config.yaml` — Black (22.3.0) + isort hooks
-- `.isort.cfg` — Import sorting configuration
-- `tox.ini` — Test orchestration (py, fmt, lint, coverage, gpu, accel)
-- `pytest.ini` — Pytest configuration
+- `.pylintrc` -- Pylint configuration (strict, fail-under=10)
+- `.pre-commit-config.yaml` -- Black + isort hooks
+- `.isort.cfg` -- Import sorting configuration
+- `tox.ini` -- Test environments (py, fmt, lint, coverage, accel, gpu, build, twinecheck)
+- `pytest.ini` -- Pytest configuration
 
 ### Container Images
-- `build/Dockerfile` — UBI9 production image (multi-stage, CUDA 12.1)
-- `build/nvcr.Dockerfile` — NVCR development image (PyTorch base)
-- `build/accelerate_launch.py` — Container entrypoint
-- `build/utils.py` — Build utilities
+- `build/Dockerfile` -- UBI9 production image (multi-stage, CUDA 12.1)
+- `build/nvcr.Dockerfile` -- NVIDIA PyTorch dev image
+- `build/accelerate_launch.py` -- Container entrypoint script
+- `build/utils.py` -- Build utilities
 
-### Project Config
-- `pyproject.toml` — Package metadata and dependencies
-- `Makefile` — Developer shortcuts (test, fmt, lint)
-- `.github/dependabot.yml` — Daily pip dependency updates
-- `CODEOWNERS` — Review enforcement
+### Project Documentation
+- `README.md` -- Project overview
+- `CONTRIBUTING.md` -- Detailed contribution guide
+- `CODEOWNERS` -- Repository ownership
+- `architecture_records/` -- 4 ADRs for key design decisions
+- `pyproject.toml` -- Package metadata and dependencies

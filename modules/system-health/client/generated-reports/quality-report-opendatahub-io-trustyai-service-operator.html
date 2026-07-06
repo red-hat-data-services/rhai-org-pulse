@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:11 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:38 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/trustyai-service-operator</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#fd7e14"
+                                stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="271.43337599999995"
+                                stroke-dashoffset="135.71668799999998"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">5.2</div>
+                        <div class="score-value">7.6</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Strong test-to-code ratio (1.04:1) with Ginkgo v2 + envtest, but 5 packages have zero tests</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Excellent test-to-code ratio (1:1) with envtest-backed controller tests across all 6 services</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Kind-based smoke test validates operator deployment, but limited scope and outdated K8s version</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">Kind-based smoke tests on PRs with operator deployment, CR creation, and resource validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Kustomize validation scripts exist but no PR-time Konflux simulation or multi-mode build testing</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">PR-time Docker build + Kind deploy + smoke, but no Konflux simulation or multi-arch PR validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Multi-stage Dockerfiles with non-root user, but no container image scanning or SBOM generation</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Smoke tests validate image startup but no Trivy image scan, SBOM, or multi-arch testing on PRs</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">Cover profile generated locally but never uploaded, enforced, or tracked over time</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Cover.out generated locally via make test but no Codecov/Coveralls integration or PR enforcement</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Tiered workflow structure with security scanning, but no caching, concurrency control, or parallelization</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">11 workflows with tiered naming, OPA policy checks, chaos testing, security scans, and branch sync</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">CLAUDE.md exists with build/architecture docs, but no .claude/rules/ for test creation guidance</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Comprehensive CLAUDE.md with architecture, build, test, and deployment guidance but no .claude/rules/</div>
                         </div>
                     </div>
                 </div>
@@ -411,51 +411,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No coverage tracking or enforcement</div>
-                            <p>Test coverage can silently regress with no visibility into overall or per-PR coverage changes</p>
+                            <div class="item-description">No coverage tracking or PR enforcement</div>
+                            <p>Coverage regressions can land without detection; no visibility into coverage trends</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No golangci-lint configuration</div>
-                            <p>Only go vet runs; missing detection of common Go bugs, style issues, and code smells</p>
+                            <div class="item-description">No container image vulnerability scanning</div>
+                            <p>Built images are not scanned for CVEs; Trivy scans source only, not container images</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">No container image vulnerability scanning</div>
-                            <p>Trivy scans filesystem only; built container images are never scanned for CVEs before deployment</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">3-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">5 packages have zero test coverage</div>
-                            <p>constants, job_mgr, metrics, utils, and api packages have no tests; bugs in shared code go undetected</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-16 hours</span>
-                            </div>
-                        </li>
                         <li class="item-card medium">
                             <div class="item-description">No PR-time Konflux build simulation</div>
-                            <p>Build configuration issues are discovered only post-merge in Konflux pipeline</p>
+                            <p>Konflux build failures discovered only after merge; multi-stage build issues not caught early</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Outdated Kind node version (v1.24.17) in smoke tests</div>
-                            <p>Smoke tests run against K8s 1.24 while envtest uses 1.29; compatibility gaps go unnoticed</p>
+                            <div class="item-description">Gosec runs with -no-fail flag</div>
+                            <p>Security findings are uploaded to SARIF but never block PRs, reducing enforcement value</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -473,39 +457,39 @@
                         
                         <li class="item-card ">
                             <div class="item-description">Add Codecov integration to controller-tests workflow</div>
-                            <p>Immediate visibility into coverage trends and per-PR coverage diffs</p>
+                            <p>PR-level coverage reporting, trend tracking, and regression gating</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add golangci-lint with standard operator linters</div>
-                            <p>Catch common Go bugs and enforce consistent code style across all controllers</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add concurrency control and caching to CI workflows</div>
-                            <p>Reduce redundant CI runs and speed up Go module downloads</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Update Kind node image to v1.29.x in smoke workflow</div>
-                            <p>Align smoke test K8s version with envtest version (1.29.0)</p>
+                            <div class="item-description">Remove -no-fail from gosec to enforce security findings</div>
+                            <p>Gosec findings will block PRs, forcing security issues to be addressed before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add container image scanning step to smoke workflow</div>
-                            <p>Catch CVEs in the built operator image before merge</p>
+                            <div class="item-description">Add container image Trivy scan to smoke workflow</div>
+                            <p>Catch CVEs in built container images before merge, not just in source dependencies</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create .claude/rules/ for test creation patterns</div>
+                            <p>Standardize AI-generated tests across envtest, Ginkgo/Gomega patterns for all controllers</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Pin all GitHub Actions to SHA digests</div>
+                            <p>Prevent supply chain attacks via tag mutation; some workflows already pinned, others not</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
@@ -525,15 +509,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add Codecov integration with coverage thresholds (e.g., 60% minimum, no regression on PR)</li><li>Add golangci-lint workflow with standard Go operator linters (errcheck, gosimple, govet, staticcheck)</li><li>Add Trivy container image scanning to the smoke test workflow after image build</li></ul>
+                            <ul><li>Add Codecov integration with coverage thresholds to enforce PR-level coverage</li><li>Add container image scanning (Trivy) to the smoke workflow after image build</li><li>Remove gosec -no-fail flag to make security findings blocking</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add unit tests for untested packages: utils, job_mgr, metrics, constants, api</li><li>Create .claude/rules/ directory with test creation rules for each test type</li><li>Update Kind node version to v1.29.x and add multi-version K8s testing matrix</li><li>Add concurrency groups and Go module caching to all CI workflows</li></ul>
+                            <ul><li>Add Konflux build simulation to PR workflow for early detection of production build issues</li><li>Create .claude/rules/ with envtest patterns, Ginkgo conventions, and test guidelines</li><li>Add multi-architecture image build validation on PRs (currently only single-arch)</li><li>Add golangci-lint workflow for comprehensive static analysis beyond go vet</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SBOM generation with Syft or Trivy to image build process</li><li>Add pre-commit hooks (go fmt, go vet, yamllint)</li><li>Expand smoke tests to cover all 6 service types, not just TAS</li><li>Add CodeQL analysis for deeper static analysis</li></ul>
+                            <ul><li>Add pre-commit hooks for fmt/vet/lint enforcement locally</li><li>Add SBOM generation to container image builds</li><li>Add integration tests for webhook conversion (v1alpha1 to v1)</li><li>Add performance/load testing for controller reconciliation under scale</li></ul>
                         </div>
                     </div>
                 </div>

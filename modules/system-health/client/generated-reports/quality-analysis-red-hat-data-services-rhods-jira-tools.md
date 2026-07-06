@@ -1,96 +1,92 @@
 ---
 repository: "red-hat-data-services/rhods-jira-tools"
-overall_score: 1.0
+overall_score: 1.2
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No tests exist — zero test files, no test framework, no test-to-code ratio"
+    status: "No tests exist — zero test files found in the repository"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests; scripts interact with live Jira API with no test isolation"
+    status: "No integration or end-to-end tests of any kind"
   - dimension: "Build Integration"
     score: 0.0
-    status: "No CI/CD pipeline; no PR-time validation of any kind"
+    status: "No build system, no Makefile, no CI/CD pipeline"
   - dimension: "Image Testing"
     score: 0.0
-    status: "No container image; scripts run directly via Python/Pipenv"
+    status: "No container images — scripts run directly via Pipenv"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling, no codecov, no .coveragerc"
+    status: "No coverage tooling or enforcement"
   - dimension: "CI/CD Automation"
-    score: 0.0
-    status: "No GitHub Actions, no Makefile, no CI configuration of any kind"
+    score: 1.0
+    status: "No CI/CD workflows — manual execution only"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules"
+    status: "No CLAUDE.md, .claude/ directory, or agent configuration"
 critical_gaps:
-  - title: "Zero test coverage"
-    impact: "Any change to Jira API interaction logic is completely unvalidated; regressions go undetected"
+  - title: "No tests whatsoever"
+    impact: "Any change can silently break all three Jira automation scripts — regressions are invisible"
     severity: "HIGH"
     effort: "4-8 hours"
   - title: "No CI/CD pipeline"
-    impact: "No automated linting, testing, or validation on PRs or pushes; broken code can be merged freely"
+    impact: "No automated checks on PRs — broken code can be merged freely"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "Hardcoded Jira custom field IDs and transition IDs"
-    impact: "Scripts will silently break if Jira project configuration changes; no validation or error handling"
+  - title: "Hardcoded Jira instance URL and custom field IDs"
+    impact: "Scripts are tightly coupled to issues.redhat.com internals; any Jira field change breaks all scripts silently"
     severity: "HIGH"
     effort: "2-3 hours"
-  - title: "No dependency pinning beyond Pipfile.lock"
-    impact: "No vulnerability scanning, no dependency update automation"
+  - title: "No input validation or error handling"
+    impact: "Scripts use bare assert for file existence; unhandled exceptions on network errors, invalid issue keys, or expired tokens"
     severity: "MEDIUM"
-    effort: "1-2 hours"
-  - title: "No code quality tooling"
-    impact: "No linting, no type checking, no formatting enforcement"
-    severity: "MEDIUM"
-    effort: "1-2 hours"
-  - title: "Security: token handled without guardrails"
-    impact: "Token read from file with assert-based validation; no secret detection in repo"
+    effort: "2-4 hours"
+  - title: "Potential JQL injection in get_release_issues.py"
+    impact: "Release name is interpolated directly into JQL string via .format() — unsanitized input could alter query semantics"
     severity: "MEDIUM"
     effort: "1-2 hours"
 quick_wins:
-  - title: "Add a basic GitHub Actions CI workflow with flake8/ruff linting"
+  - title: "Add a basic GitHub Actions CI workflow with linting"
     effort: "1-2 hours"
-    impact: "Catch syntax errors, style issues, and basic code quality problems on every PR"
-  - title: "Add unit tests for argument parsing and status-checking logic"
+    impact: "Catches syntax errors, style issues, and type problems before merge"
+  - title: "Add unit tests with mocked JIRA client"
     effort: "3-4 hours"
-    impact: "Validate core logic without requiring a live Jira instance by mocking the JIRA client"
-  - title: "Add mypy type checking"
-    effort: "1 hour"
-    impact: "Catch type errors in Jira API field access (e.g., raw['fields'] lookups)"
-  - title: "Replace assert with proper error handling"
+    impact: "Validates business logic (status checks, transition guards, ack detection) without live Jira access"
+  - title: "Pin dependency versions in Pipfile"
     effort: "30 minutes"
-    impact: "Assertions are stripped in optimized mode; proper errors give clear user feedback"
+    impact: "Prevents unexpected breakage from upstream dependency updates"
+  - title: "Add ruff or flake8 linting configuration"
+    effort: "30 minutes"
+    impact: "Enforces consistent code style and catches common Python pitfalls"
 recommendations:
   priority_0:
-    - "Add unit tests with mocked Jira client for all three scripts"
-    - "Create a minimal GitHub Actions CI workflow (lint + test on PRs)"
+    - "Add unit tests for all three scripts using pytest + unittest.mock to mock the JIRA client"
+    - "Create a GitHub Actions CI workflow that runs linting and tests on every PR"
+    - "Fix JQL injection vulnerability in get_release_issues.py by using parameterized queries"
   priority_1:
-    - "Add type hints and mypy checking"
-    - "Add ruff or flake8 linting configuration"
-    - "Replace assert-based file validation with proper error handling"
-    - "Externalize hardcoded Jira field IDs into configuration"
+    - "Extract shared JIRA connection logic into a common module to reduce duplication"
+    - "Add proper error handling (try/except) for network failures, authentication errors, and invalid issue keys"
+    - "Replace bare assert with proper validation and user-friendly error messages"
+    - "Add type hints to all functions for better maintainability"
   priority_2:
-    - "Add Dependabot for dependency updates"
-    - "Add pre-commit hooks (ruff, mypy)"
-    - "Create CLAUDE.md with contributor and test guidelines"
-    - "Consider containerizing the tools for consistent runtime"
+    - "Add a pyproject.toml with project metadata, ruff config, and pytest config"
+    - "Create agent rules (.claude/rules/) for test patterns and code standards"
+    - "Consider containerizing the tools for consistent execution environments"
+    - "Add integration tests that run against a Jira sandbox or test instance"
 ---
 
 # Quality Analysis: rhods-jira-tools
 
 ## Executive Summary
 
-- **Overall Score: 1.0/10**
-- **Repository Type**: Python CLI utility scripts (3 scripts, 139 lines total)
+- **Overall Score: 1.2/10**
+- **Repository Type**: Python CLI utility scripts (3 scripts, 139 total lines)
 - **Primary Language**: Python 3
-- **Dependencies**: `jira`, `requests-kerberos` (via Pipenv)
-- **Last Activity**: February 2022 (appears dormant — single merge commit)
-- **Key Strengths**: Functional scripts that solve a real workflow problem (Jira issue transitions for RHODS releases)
-- **Critical Gaps**: Zero tests, zero CI/CD, zero quality tooling, zero security scanning, zero agent rules
-- **Agent Rules Status**: Missing
+- **Purpose**: Jira automation tools for RHODS release management (issue transitions, release queries, ack checks)
+- **Key Strengths**: Simple, focused scripts that solve specific workflow problems; README documents usage clearly
+- **Critical Gaps**: No tests, no CI/CD, no linting, no error handling, potential JQL injection vulnerability
+- **Agent Rules Status**: Missing — no CLAUDE.md, .claude/ directory, or test creation guidance
 
-This is a very small, dormant utility repository with 3 Python scripts totaling 139 lines. It has **no quality infrastructure whatsoever** — no tests, no CI/CD, no linting, no type checking, no container images, no security scanning, and no agent rules. The scripts are functional but fragile, relying on hardcoded Jira custom field IDs and transition IDs with minimal error handling.
+This is a small utility repository with **zero quality infrastructure**. The scripts are functional but fragile — there are no automated checks of any kind, no tests, and several security/reliability concerns. The repository's small size makes it an excellent candidate for rapid quality improvement.
 
 ## Quality Scorecard
 
@@ -98,65 +94,47 @@ This is a very small, dormant utility repository with 3 Python scripts totaling 
 |-----------|-------|--------|
 | Unit Tests | 0/10 | No tests exist |
 | Integration/E2E | 0/10 | No integration or E2E tests |
-| **Build Integration** | **0/10** | **No CI/CD pipeline at all** |
-| Image Testing | 0/10 | No container image |
+| **Build Integration** | **0/10** | **No build system or CI/CD** |
+| Image Testing | 0/10 | No container images (N/A for this repo type) |
 | Coverage Tracking | 0/10 | No coverage tooling |
-| CI/CD Automation | 0/10 | No GitHub Actions, Makefile, or CI config |
-| Agent Rules | 0/10 | No CLAUDE.md, no .claude/ directory |
+| CI/CD Automation | 1/10 | No CI workflows — 1 point for having a Pipfile |
+| Agent Rules | 0/10 | No agent configuration |
 
 ## Critical Gaps
 
-### 1. Zero Test Coverage
-- **Impact**: Any change to Jira API interaction logic is completely unvalidated; regressions go undetected
+### 1. No Tests Whatsoever
+- **Impact**: Any change can silently break all three Jira automation scripts — regressions are invisible until someone runs the script against live Jira and encounters failures
 - **Severity**: HIGH
 - **Effort**: 4-8 hours
-- **Details**: All three scripts (`move_to_qa.py`, `get_release_issues.py`, `ack_checker.py`) interact with a live Jira API. There are no unit tests, no mocked tests, no integration tests. The argument parsing, status-checking logic, and transition logic are all untested.
+- **Details**: Zero test files (`*_test.py`, `test_*.py`, `*.spec.*`) — no unit tests, no integration tests, no mocks. The scripts contain testable business logic: status validation in `move_to_qa.py`, ack field checking in `ack_checker.py`, and JQL query construction in `get_release_issues.py`.
 
 ### 2. No CI/CD Pipeline
-- **Impact**: No automated checks on PRs or pushes; broken code can be merged freely
+- **Impact**: No automated checks on PRs — broken code, syntax errors, or security issues can be merged freely with no gates
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: No `.github/workflows/` directory exists. There is no Makefile, no tox.ini, no CI configuration of any kind. Code is merged without any automated validation.
+- **Details**: No `.github/workflows/`, `.gitlab-ci.yml`, `Jenkinsfile`, or `Makefile`. The repository has no automated quality gates of any kind.
 
 ### 3. Hardcoded Jira Configuration
-- **Impact**: Scripts will silently break if Jira project configuration changes
+- **Impact**: All three scripts hardcode `https://issues.redhat.com` and custom field IDs (`customfield_12318450`, `customfield_12311241`). Any Jira instance migration or field reconfiguration silently breaks the tools.
 - **Severity**: HIGH
 - **Effort**: 2-3 hours
-- **Details**:
-  - `QA_HANDOVER_TRANSITION_ID = '791'` — hardcoded transition ID in `move_to_qa.py`
-  - `FIXED_IN_BUILD_FIELD = 'customfield_12318450'` — hardcoded custom field
-  - `CDW_RELEASE_FIELD = 'customfield_12311241'` — hardcoded custom field in `ack_checker.py`
-  - `JIRA_PROJECT = 'RHODS'` — hardcoded project key
-  - `ISSUE_STATUS_FILTER = 'Resolved'` — hardcoded status
-  - Jira URL `https://issues.redhat.com` is hardcoded in all scripts
+- **Details**: Custom field IDs are opaque numeric identifiers with no documentation of what they represent. The transition ID `791` is hardcoded with no validation.
 
-### 4. No Dependency Management Hygiene
-- **Impact**: No vulnerability scanning, no automated dependency updates
+### 4. No Input Validation or Error Handling
+- **Impact**: Scripts use `assert os.path.exists(args.token_file)` for file validation — asserts are stripped in optimized Python (`python -O`). No exception handling for network errors, authentication failures, rate limiting, or invalid issue keys.
+- **Severity**: MEDIUM
+- **Effort**: 2-4 hours
+
+### 5. Potential JQL Injection
+- **Impact**: `get_release_issues.py` line 28-29 uses `.format()` to interpolate user-provided release name directly into a JQL query string without sanitization. While exploitability depends on Jira's JQL parser, this is a code quality concern.
 - **Severity**: MEDIUM
 - **Effort**: 1-2 hours
-- **Details**: Uses Pipenv with `Pipfile` and `Pipfile.lock`, but has no Dependabot configuration, no dependency scanning, and the `jira` package is pinned to `"*"` (any version).
-
-### 5. No Code Quality Tooling
-- **Impact**: No enforcement of code style, no type safety, no static analysis
-- **Severity**: MEDIUM
-- **Effort**: 1-2 hours
-- **Details**: No linting (no ruff, flake8, pylint), no type checking (no mypy), no formatting (no black, autopep8), no pre-commit hooks.
-
-### 6. Security Concerns
-- **Impact**: Token handling uses assert-based validation which can be bypassed
-- **Severity**: MEDIUM
-- **Effort**: 1-2 hours
-- **Details**:
-  - `assert os.path.exists(args.token_file)` — used in all three scripts; assertions are stripped when Python runs with `-O` flag
-  - No `.gitleaks.toml` or secret detection
-  - No Trivy/Snyk scanning
-  - JQL query construction in `get_release_issues.py` uses `.format()` string interpolation (potential injection vector if inputs are ever user-controlled beyond CLI args)
 
 ## Quick Wins
 
-### 1. Add a Basic GitHub Actions CI Workflow (1-2 hours)
+### 1. Add GitHub Actions CI with Linting (1-2 hours)
+Create `.github/workflows/ci.yml`:
 ```yaml
-# .github/workflows/ci.yml
 name: CI
 on: [push, pull_request]
 jobs:
@@ -166,150 +144,164 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.x'
       - run: pip install ruff
       - run: ruff check .
+      - run: ruff format --check .
 ```
 
-### 2. Add Unit Tests with Mocked Jira Client (3-4 hours)
+### 2. Add Unit Tests with Mocked JIRA Client (3-4 hours)
 ```python
-# test_ack_checker.py
+# test_move_to_qa.py
 from unittest.mock import MagicMock, patch
-import ack_checker
+from move_to_qa import main
 
-def test_fully_acked_issue():
-    mock_jira = MagicMock()
+def test_skip_already_in_qa():
+    """Issues already in Ready for QA should be skipped."""
     mock_issue = MagicMock()
-    mock_issue.raw = {'fields': {'customfield_12311241': '+'}}
-    mock_jira.issue.return_value = mock_issue
-    
-    with patch('ack_checker.JIRA', return_value=mock_jira):
-        # Test that fully acked issue is detected
-        pass
+    mock_issue.fields.status = "Ready for QA"
+    # ... assert no transition called
 ```
 
-### 3. Add mypy Type Checking (1 hour)
-```bash
-pip install mypy types-requests
-mypy --strict *.py
+### 3. Pin Dependency Versions (30 minutes)
+Update `Pipfile` to pin versions instead of using `"*"`:
+```
+[packages]
+jira = ">=3.5,<4.0"
+requests-kerberos = ">=0.14,<1.0"
 ```
 
-### 4. Replace assert with Proper Error Handling (30 minutes)
-```python
-# Before (all three scripts):
-assert os.path.exists(args.token_file)
-
-# After:
-if not os.path.exists(args.token_file):
-    print(f"Error: Token file not found: {args.token_file}", file=sys.stderr)
-    sys.exit(1)
-```
+### 4. Add ruff Configuration (30 minutes)
+Create `pyproject.toml` with basic ruff config for consistent linting.
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
-- **Status**: Non-existent
+**Score: 1/10**
+
+No CI/CD infrastructure exists. The repository has:
 - No `.github/workflows/` directory
+- No `.gitlab-ci.yml`
+- No `Jenkinsfile`
 - No `Makefile` with test/lint targets
-- No `tox.ini` for test matrix
-- No CI configuration of any kind
-- **Impact**: Code changes are entirely unvalidated before merge
+- A `Pipfile` exists for dependency management (the sole infrastructure artifact)
+- A `Pipfile.lock` is committed, which is good practice
+
+The only way to validate these scripts is to run them manually against a live Jira instance with a personal access token.
 
 ### Test Coverage
-- **Status**: Non-existent
-- Zero test files across the entire repository
-- No test framework in `Pipfile` (no pytest, no unittest usage beyond stdlib)
-- No `test/` or `tests/` directory
-- No `.coveragerc` or `codecov.yml`
-- **Test-to-code ratio**: 0:139 (0%)
-- **Impact**: All script logic is untested; regressions are invisible
+**Score: 0/10**
+
+Zero tests of any kind:
+- No `test_*.py` or `*_test.py` files
+- No `tests/` or `test/` directory
+- No `pytest.ini`, `setup.cfg`, or `pyproject.toml` with test configuration
+- No `[dev-packages]` in Pipfile (the section exists but is empty)
+- No mock/fixture infrastructure
+
+**Testable business logic exists** in all three scripts:
+1. `move_to_qa.py`: Status validation logic (lines 39-51), transition guard checks, field construction
+2. `ack_checker.py`: Ack field evaluation (line 33), fully_acked boolean logic
+3. `get_release_issues.py`: JQL query construction (lines 27-29)
 
 ### Code Quality
-- **Status**: Non-existent
-- No linting configuration (no ruff, flake8, pylint)
-- No type checking (no mypy, no type hints in code)
-- No formatting enforcement (no black, autopep8)
-- No pre-commit hooks
-- No static analysis
-- **Observations**: Code is reasonably clean for its size but lacks modern Python practices (no type hints, no docstrings, uses `assert` for validation)
+**Score: 1/10**
+
+- **Linting**: No ruff, flake8, pylint, or mypy configuration
+- **Formatting**: No black, autopep8, or ruff format configuration
+- **Type Hints**: None used anywhere — all functions are untyped
+- **Pre-commit Hooks**: No `.pre-commit-config.yaml`
+- **Static Analysis**: No CodeQL, bandit, or semgrep
+- **Code Duplication**: Significant duplication across scripts — all three contain identical token file reading logic (parse args → assert file exists → read token → create JIRA client)
 
 ### Container Images
-- **Status**: Not applicable
-- No Dockerfile or Containerfile
-- Scripts are intended to run directly via `pipenv run python`
-- No image build, test, or scan pipeline
-- **Note**: For a utility script repo this is acceptable, but containerization could improve reproducibility
+**Score: N/A (0/10)**
+
+No container images — these are standalone Python scripts run via Pipenv. For a CLI utility of this size, containerization is optional but could improve reproducibility.
 
 ### Security
-- **Status**: Minimal
-- Token read from file (good — not hardcoded)
-- But validation uses `assert` (bad — can be bypassed with `-O`)
-- No secret detection (`.gitleaks.toml`)
-- No dependency vulnerability scanning
-- No SAST/CodeQL
-- JQL uses string formatting (low risk for CLI tool, but not best practice)
+**Score: 1/10**
+
+- **Token Handling**: Tokens are read from files (reasonable) but no validation of file permissions
+- **JQL Injection**: `get_release_issues.py` interpolates user input directly into JQL (line 28-29)
+- **No Secret Detection**: No gitleaks or similar tooling
+- **No Dependency Scanning**: No Snyk, Dependabot, or safety checks
+- **Bare Asserts**: `assert os.path.exists()` is not a security control — it's stripped in `-O` mode
 
 ### Agent Rules (Agentic Flow Quality)
+**Score: 0/10**
+
 - **Status**: Missing
-- No `CLAUDE.md` in repository root
-- No `AGENTS.md`
-- No `.claude/` directory
-- No `.claude/rules/` with test creation rules
-- No `.claude/skills/` with custom skills
-- **Gap**: Any AI agent contributing to this repo would have no guidance on testing patterns, code style, or project conventions
-- **Recommendation**: Generate missing rules with `/test-rules-generator`
+- **Coverage**: No test types have rules
+- **Quality**: N/A
+- **Gaps**: No `CLAUDE.md`, no `.claude/` directory, no `.claude/rules/`, no test patterns documentation
+- **Recommendation**: Generate test creation rules with `/test-rules-generator` after adding initial tests
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Add unit tests** with mocked Jira client for all three scripts — focus on argument parsing, status checking logic, and transition flow
-2. **Create a minimal GitHub Actions CI workflow** — at minimum lint + test on PRs
+
+1. **Add unit tests using pytest + unittest.mock** — Mock the `jira.JIRA` client to test:
+   - Status transition logic in `move_to_qa.py` (skip if already QA, reject if not Resolved, handle unavailable transitions)
+   - Ack field checking in `ack_checker.py` (fully acked vs not)
+   - JQL query construction in `get_release_issues.py`
+   - Estimated effort: 4-8 hours
+
+2. **Create a GitHub Actions CI workflow** — At minimum: Python setup, dependency install, ruff lint, pytest run
+   - Estimated effort: 2-4 hours
+
+3. **Fix JQL query construction** — Use the JIRA library's parameterized query support or properly escape the release name input
+   - Estimated effort: 1-2 hours
 
 ### Priority 1 (High Value)
-1. **Add type hints and mypy** — catches field access errors at analysis time
-2. **Add ruff linting** — modern, fast Python linter with auto-fix
-3. **Replace assert with proper error handling** — `assert` statements are stripped with `-O` flag
-4. **Externalize hardcoded Jira field IDs** — move to a config file or environment variables
-5. **Add `pytest` to dev dependencies** in Pipfile
+
+4. **Extract shared JIRA connection logic** — All three scripts duplicate token reading + JIRA client creation. Extract to a `common.py` module:
+   ```python
+   def get_jira_client(token_file: str) -> JIRA:
+       if not os.path.exists(token_file):
+           raise FileNotFoundError(f"Token file not found: {token_file}")
+       with open(token_file) as f:
+           token = f.read().strip()
+       return JIRA('https://issues.redhat.com', token_auth=token)
+   ```
+
+5. **Add proper error handling** — Replace `assert` with `if/raise`, add try/except for network errors, auth failures, and invalid issue keys
+
+6. **Add type hints** — All functions should have type annotations for better IDE support and static analysis
+
+7. **Make configuration external** — Move hardcoded values (Jira URL, custom field IDs, transition IDs) to a config file or environment variables
 
 ### Priority 2 (Nice-to-Have)
-1. **Add Dependabot** for dependency update PRs
-2. **Add pre-commit hooks** (ruff, mypy, trailing whitespace)
-3. **Create CLAUDE.md** with contributor and test guidelines
-4. **Consider containerizing** for reproducible runtime
-5. **Add a `Makefile`** with standard targets (lint, test, format)
-6. **Migrate from Pipenv to Poetry or uv** for modern dependency management
+
+8. **Add `pyproject.toml`** — Modern Python project metadata, ruff config, pytest config in one file
+
+9. **Create agent rules** — Add `.claude/rules/` with test patterns after initial test infrastructure is in place
+
+10. **Add Dependabot or Renovate** — Auto-update dependencies in Pipfile
+
+11. **Consider migrating from Pipfile to pyproject.toml** — Modern Python packaging standard, better tooling support
 
 ## Comparison to Gold Standards
 
-| Practice | rhods-jira-tools | odh-dashboard | notebooks | kserve |
-|----------|-----------------|---------------|-----------|--------|
-| Unit Tests | None | Comprehensive (Jest) | Per-notebook | Go testing + coverage |
-| Integration Tests | None | Contract tests | Image validation | Multi-version e2e |
-| CI/CD | None | Multi-workflow | Periodic + PR | Comprehensive |
-| Coverage Tracking | None | Codecov enforced | N/A | Codecov enforced |
-| Linting | None | ESLint + Prettier | Linting checks | golangci-lint |
-| Security Scanning | None | Trivy + SAST | Image scanning | CodeQL + Trivy |
-| Container Testing | N/A | Build + startup | 5-layer validation | Multi-arch builds |
-| Agent Rules | None | Comprehensive | Basic | None |
-| Pre-commit Hooks | None | Configured | None | Configured |
+| Dimension | rhods-jira-tools | odh-dashboard | notebooks | kserve |
+|-----------|-----------------|---------------|-----------|--------|
+| Unit Tests | 0/10 — None | 9/10 — Comprehensive Jest | 7/10 — Image validation | 9/10 — Go tests with coverage |
+| Integration/E2E | 0/10 — None | 9/10 — Cypress E2E | 8/10 — Multi-layer | 9/10 — envtest + E2E |
+| Build Integration | 0/10 — None | 7/10 — PR builds | 8/10 — Image pipelines | 7/10 — PR validation |
+| Image Testing | N/A | 8/10 — Multi-stage | 9/10 — 5-layer | 7/10 — Runtime tests |
+| Coverage | 0/10 — None | 8/10 — Codecov | 6/10 — Partial | 9/10 — Enforced thresholds |
+| CI/CD | 1/10 — Pipfile only | 9/10 — Full pipeline | 8/10 — Comprehensive | 9/10 — Multi-workflow |
+| Agent Rules | 0/10 — None | 8/10 — Comprehensive | 3/10 — Basic | 2/10 — Minimal |
+
+**Gap Assessment**: This repository is at the lowest end of quality maturity. However, its small size (139 lines, 3 files) means that reaching a 6-7/10 score is achievable in 2-3 days of focused effort.
 
 ## File Paths Reference
 
-| File | Purpose |
-|------|---------|
-| `move_to_qa.py` | Transitions Jira issues to "Ready for QA" state |
-| `get_release_issues.py` | Lists all resolved issues in a given release |
-| `ack_checker.py` | Checks if issues are fully acknowledged (CDW Release field) |
-| `Pipfile` | Python dependency specification (jira, requests-kerberos) |
-| `Pipfile.lock` | Locked dependency versions |
-| `README.md` | Usage documentation |
-
-## Repository Assessment Summary
-
-This repository is a **minimal utility toolset** — 3 standalone Python scripts totaling 139 lines, last updated in February 2022. It appears dormant with only 2 commits (initial + one merge). The scripts serve a valid purpose (automating Jira issue transitions for RHODS releases) but have **zero quality infrastructure**.
-
-Given the repo's size and apparent dormancy, the most impactful improvements would be:
-1. **If actively used**: Add basic CI (ruff lint) + unit tests with mocked Jira client (half-day effort)
-2. **If reviving**: Consider rewriting as a proper Python package with CLI entry points, config files, and full test coverage (1-2 day effort)
-3. **If replacing**: The functionality could likely be replicated with Jira automation rules or a modern tool like the Atlassian MCP server
+| File | Purpose | Lines |
+|------|---------|-------|
+| `move_to_qa.py` | Transitions Jira issues to "Ready for QA" state | 63 |
+| `get_release_issues.py` | Queries all resolved issues in a release | 35 |
+| `ack_checker.py` | Checks CDW Release ack status on issues | 41 |
+| `Pipfile` | Python dependency specification (jira, requests-kerberos) | 12 |
+| `Pipfile.lock` | Locked dependency versions | — |
+| `README.md` | Usage documentation for all three scripts | 68 |

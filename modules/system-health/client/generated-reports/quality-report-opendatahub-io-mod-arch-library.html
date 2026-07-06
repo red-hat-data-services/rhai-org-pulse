@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:41 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:12 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/mod-arch-library</h2>
         </header>
 
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">21 test files across 4 packages but only 1 of 43 shared components tested; no tests in kubeflow package</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Decent unit tests for core/shared packages; kubeflow package has zero tests; Go BFF well-tested</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">Cypress skeleton exists in mod-arch-starter only; no integration or E2E tests for the library packages</div>
+                            <div class="scorecard-status">Cypress scaffolding exists in mod-arch-starter but no CI-automated E2E or integration suites</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">PR workflow builds all packages and runs tests; verify-dist.mjs validates output; no image build on PR</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">No PR-time Docker build, no Konflux simulation, no image validation in CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">Dockerfile exists in mod-arch-starter only; no image build in CI; no runtime validation</div>
+                            <div class="scorecard-status">Dockerfile exists in mod-arch-starter only; no image build/test in any workflow</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Jest coverage configured in CI for core and shared; no codecov integration, no thresholds, no PR gating</div>
+                            <div class="scorecard-status">Coverage runs in CI but no codecov/coveralls integration, no thresholds, no PR reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Semantic-release with OIDC publishing; lint-staged + husky pre-commit; matrix testing per package; npm caching</div>
+                            <div class="scorecard-status">Good PR workflows with lint/test/build matrix; semantic-release; npm caching; lint-staged</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">AGENTS.md with detailed monorepo guidance; .claude/rules for Jira; .claude/skills for release and review; no test-creation rules</div>
+                            <div class="scorecard-status">Comprehensive AGENTS.md, CLAUDE.md, .claude/rules and skills; missing test-specific agent rules</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Very low component test coverage in mod-arch-shared</div>
-                            <p>Only 1 of 43 shared UI components has a test — regressions ship undetected to all downstream consumers</p>
+                            <div class="item-description">No coverage enforcement or reporting</div>
+                            <p>Coverage runs but results are discarded — no codecov integration, no thresholds, no PR comments showing delta</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No E2E or integration tests in CI</div>
+                            <p>Cross-package integration and user flows are untested; regressions slip through to consumers</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Zero tests in mod-arch-kubeflow</div>
-                            <p>Theme provider, hooks, and MUI-to-PatternFly mapping logic entirely untested</p>
+                            <div class="item-description">No container image build/test in CI</div>
+                            <p>Dockerfile in mod-arch-starter is never built or validated on PRs; build failures surface only downstream</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No coverage enforcement or reporting</div>
-                            <p>Coverage runs in CI but results are not uploaded, gated, or visible on PRs — regressions in coverage go unnoticed</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No security scanning (SAST, dependency, container)</div>
-                            <p>Vulnerabilities in dependencies or source code not detected until downstream consumers scan</p>
+                            <div class="item-description">No security scanning (SAST, container, dependency)</div>
+                            <p>Vulnerabilities in dependencies or container images are not detected until downstream consumers run their own scans</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No integration/E2E tests for library packages</div>
-                            <p>Cross-package interactions (core → shared → kubeflow) not validated; breakage discovered only by downstream consumers</p>
+                            <div class="item-description">mod-arch-kubeflow has zero test files</div>
+                            <p>Theme context provider, hooks, and utilities are completely untested</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">12-20 hours</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,32 +464,40 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Codecov integration to PR workflow</div>
-                            <p>Immediate visibility into coverage trends; PR-level coverage diff reporting; enable threshold enforcement</p>
+                            <div class="item-description">Add Codecov integration to test-coverage workflow</div>
+                            <p>PR-level coverage reporting with thresholds; prevents coverage regression</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add GitHub Dependabot or Renovate</div>
-                            <p>Automated dependency update PRs; security advisory tracking; reduce manual npm audit burden</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1 hour</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add CodeQL or Trivy scanning workflow</div>
-                            <p>Automated SAST and dependency vulnerability detection on every PR</p>
+                            <div class="item-description">Add Trivy or Snyk dependency scanning workflow</div>
+                            <p>Automatic vulnerability detection on every PR</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add test-creation agent rules to .claude/rules/</div>
-                            <p>Improve AI-generated test quality; enforce testing patterns for React components, hooks, and utilities</p>
+                            <div class="item-description">Add CodeQL or Semgrep SAST workflow</div>
+                            <p>Static analysis catches security issues and code quality problems</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add test creation agent rules (.claude/rules/testing.md)</div>
+                            <p>AI agents produce consistent, high-quality tests following repo patterns</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add Docker image build step to PR workflow</div>
+                            <p>Catches Dockerfile and build issues before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -509,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add unit tests for all shared UI components (43 components, only 1 tested)</li><li>Add unit tests for mod-arch-kubeflow (ThemeProvider, hooks, MUI mappings)</li><li>Add Codecov/Coveralls integration with coverage thresholds (e.g., 60% minimum, no decrease on PR)</li><li>Add security scanning workflow (CodeQL for SAST + npm audit or Trivy for dependencies)</li></ul>
+                            <ul><li>Add Codecov integration with coverage thresholds (e.g., 60% minimum, no regression on PR)</li><li>Add dependency vulnerability scanning (Trivy, Snyk, or Dependabot alerts)</li><li>Add SAST scanning (CodeQL for TypeScript/Go)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add integration tests validating cross-package imports and build output</li><li>Add Dependabot/Renovate for automated dependency updates</li><li>Create .claude/rules/ test-creation rules for React component tests, hook tests, and utility tests</li><li>Add concurrency control to CI workflows to cancel stale PR runs</li></ul>
+                            <ul><li>Write unit tests for mod-arch-kubeflow (ThemeContext, hooks, utilities)</li><li>Add E2E test framework (Cypress or Playwright) with CI integration</li><li>Add Docker image build validation to PR workflow for mod-arch-starter</li><li>Create test-specific agent rules (.claude/rules/testing.md)</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add visual regression testing for shared components (Chromatic or similar)</li><li>Add accessibility testing automation (axe-core integration in Jest)</li><li>Add bundle size tracking to prevent regressions in published package sizes</li><li>Add Storybook with automated visual snapshot tests for component library</li></ul>
+                            <ul><li>Add cross-package integration tests validating module exports and compatibility</li><li>Add pre-commit hooks beyond lint-staged (type-check, test affected)</li><li>Add Go test coverage tracking for BFF package</li><li>Add performance regression testing for build output size</li></ul>
                         </div>
                     </div>
                 </div>

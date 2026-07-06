@@ -1,83 +1,80 @@
 ---
 repository: "red-hat-data-services/ilab-on-ocp"
-overall_score: 1.9
+overall_score: 3.1
 scorecard:
   - dimension: "Unit Tests"
-    score: 0.0
-    status: "No Python unit tests exist for ~2,600 lines of pipeline component code"
+    score: 0.5
+    status: "No unit tests for 3,258 lines of Python pipeline code"
   - dimension: "Integration/E2E"
     score: 3.0
-    status: "Single Go-based E2E test exists but is manual, not CI-integrated, and environment-gated"
+    status: "Single Go-based E2E test exists but requires live cluster with GPUs and is env-gated"
   - dimension: "Build Integration"
     score: 4.0
-    status: "Konflux PR builds available but label/comment-gated, no automatic PR image validation"
+    status: "Konflux PR build via Tekton; no PR-time GitHub workflow build validation"
   - dimension: "Image Testing"
-    score: 1.0
-    status: "No runtime validation, no vulnerability scanning, no SBOM generation"
+    score: 2.0
+    status: "Dockerfiles present but no runtime validation, startup testing, or image scanning"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage generation, no codecov/coveralls integration, no thresholds"
+    status: "No coverage tooling, no codecov integration, no coverage thresholds"
   - dimension: "CI/CD Automation"
-    score: 5.0
-    status: "Pre-commit on PRs with caching, pipeline.yaml freshness check, Renovate for deps"
+    score: 4.5
+    status: "Pre-commit linting on PRs and main-branch image build; no test execution in CI"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules for test automation"
+    status: "No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance"
 critical_gaps:
-  - title: "Zero Python unit tests"
-    impact: "~2,600 lines of pipeline component code (SDG, training, eval, utils) have no unit test coverage. Bugs in pipeline parameter handling, component logic, and API interactions go undetected until runtime on expensive GPU clusters."
+  - title: "Zero unit tests for Python pipeline code"
+    impact: "3,258 lines of KFP pipeline logic, SDG components, training components, and eval code have no unit test coverage — regressions are invisible until pipeline execution on a live cluster"
     severity: "HIGH"
     effort: "16-24 hours"
   - title: "No coverage tracking or enforcement"
-    impact: "No visibility into what code is tested. PRs can merge with zero test coverage. No baseline to measure improvement against."
+    impact: "No visibility into what code is tested; no ability to enforce coverage thresholds on PRs"
     severity: "HIGH"
     effort: "2-4 hours"
   - title: "No container image security scanning"
-    impact: "Images shipped to production without vulnerability assessment. Base images (UBI8/UBI9) and pip-installed dependencies not scanned for CVEs."
+    impact: "Images built from UBI base with pip-installed dependencies have no vulnerability scanning in CI or Konflux"
     severity: "HIGH"
-    effort: "2-3 hours"
-  - title: "E2E test not automated in CI"
-    impact: "The single E2E test requires manual execution with specific environment setup. Pipeline regressions not caught before merge."
+    effort: "2-4 hours"
+  - title: "No PR-time test execution"
+    impact: "PRs are merged with only linting checks; no automated tests validate code correctness before merge"
     severity: "HIGH"
     effort: "8-12 hours"
-  - title: "No SAST or dependency scanning"
-    impact: "No static analysis beyond ruff linting. No CodeQL, Semgrep, or Bandit. Dependency vulnerabilities not tracked."
+  - title: "E2E test is not automated in CI"
+    impact: "E2E test exists but requires manual setup with a live RHOAI cluster and GPU nodes; never runs in CI"
     severity: "MEDIUM"
-    effort: "3-4 hours"
-  - title: "No image runtime validation"
-    impact: "Built images are not tested for startup, import availability, or basic functionality before deployment."
-    severity: "MEDIUM"
-    effort: "4-6 hours"
+    effort: "40+ hours (infrastructure)"
 quick_wins:
-  - title: "Add pytest infrastructure and initial unit tests for utils/consts.py and pipeline parameter validation"
-    effort: "2-4 hours"
-    impact: "Establish test infrastructure and begin covering critical pipeline parameters"
+  - title: "Add unit tests for pipeline.py utility functions"
+    effort: "4-6 hours"
+    impact: "Cover the most critical pipeline compilation logic and parameter validation"
   - title: "Add Trivy scanning to PR workflow"
     effort: "1-2 hours"
-    impact: "Immediate vulnerability visibility for container images on every PR"
-  - title: "Add codecov integration with baseline coverage"
+    impact: "Catch known vulnerabilities in base images and pip dependencies before merge"
+  - title: "Add codecov integration"
     effort: "2-3 hours"
-    impact: "Track and enforce coverage improvement over time"
-  - title: "Add CodeQL or Bandit for Python SAST"
-    effort: "1-2 hours"
-    impact: "Catch security anti-patterns in Python code automatically"
-  - title: "Create basic CLAUDE.md with testing guidelines"
-    effort: "1-2 hours"
-    impact: "Guide AI-assisted development to produce tested code"
+    impact: "Establish baseline coverage visibility and enable PR coverage gates"
+  - title: "Add pytest configuration to pyproject.toml"
+    effort: "1 hour"
+    impact: "Enable pytest discovery and establish test infrastructure foundation"
+  - title: "Create basic agent rules for test patterns"
+    effort: "2-3 hours"
+    impact: "Enable AI-assisted test generation following project conventions"
 recommendations:
   priority_0:
-    - "Add Python unit tests for pipeline components (sdg, training, eval, utils modules)"
-    - "Integrate codecov with PR-level coverage enforcement (start with 0% floor, ratchet up)"
-    - "Add Trivy container scanning to GitHub Actions PR workflow"
+    - "Add unit tests for all Python modules — pipeline.py, sdg/components.py, training/components.py, utils/components.py, eval/*.py"
+    - "Add codecov or coveralls integration with PR coverage reporting and minimum threshold enforcement"
+    - "Add container image vulnerability scanning (Trivy) to PR and main-branch workflows"
+    - "Add PR-time pytest execution in GitHub Actions workflow"
   priority_1:
-    - "Automate E2E test execution in CI with a periodic or nightly schedule"
-    - "Add image runtime validation (import checks, basic health verification)"
-    - "Add CodeQL or Bandit SAST scanning to PR workflow"
-    - "Create comprehensive CLAUDE.md with testing and development guidelines"
+    - "Add type checking with mypy or pyright and enforce in CI"
+    - "Create comprehensive agent rules (.claude/rules/) for test creation patterns"
+    - "Add pipeline compilation validation test (compile pipeline and verify output YAML structure)"
+    - "Add Dockerfile build validation in PR workflow (build image without push)"
   priority_2:
-    - "Add Gitleaks for secret detection in PRs"
-    - "Add type checking with mypy for pipeline components"
-    - "Add contract tests for KFP component interfaces"
+    - "Add integration tests using KFP test infrastructure (mock pipeline server)"
+    - "Add SAST tooling (CodeQL, Semgrep, or Bandit) for Python security analysis"
+    - "Add secret detection (Gitleaks) to pre-commit hooks"
     - "Add SBOM generation for container images"
 ---
 
@@ -85,133 +82,114 @@ recommendations:
 
 ## Executive Summary
 
-- **Overall Score: 1.9/10**
-- **Repository Type**: Python KFP (Kubeflow Pipelines) pipeline project for InstructLab on RHOAI
-- **Primary Language**: Python (~2,600 lines across 13 files), Go (E2E test only)
-- **Key Strengths**: Well-configured pre-commit hooks with ruff linting/formatting, Konflux multi-arch builds, pipeline.yaml freshness validation, Renovate for automated dependency updates
-- **Critical Gaps**: Zero unit tests, no coverage tracking, no security scanning, E2E test not CI-integrated
-- **Agent Rules Status**: Missing - No CLAUDE.md, no `.claude/` directory
+- **Overall Score: 3.1/10**
+- **Repository Type**: Python KFP (Kubeflow Pipelines) pipeline for InstructLab on Red Hat OpenShift AI
+- **Primary Language**: Python (3,258 lines) with Go E2E tests (230 lines)
+- **Key Strengths**: Pre-commit hooks with ruff linting, Konflux build integration, Renovate dependency management, well-documented README
+- **Critical Gaps**: Zero unit tests for all Python code, no coverage tracking, no security scanning, no PR-time test execution
+- **Agent Rules Status**: Missing — no CLAUDE.md, no .claude/ directory
+
+This repository contains the InstructLab distributed training pipeline for RHOAI, including SDG (Synthetic Data Generation), training, evaluation, and model output components. Despite being a critical production pipeline handling LLM fine-tuning workflows, it has virtually no automated test coverage.
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0/10 | No Python unit tests for ~2,600 LOC of pipeline components |
-| Integration/E2E | 3/10 | Single Go E2E test, manual execution only, env-gated |
-| **Build Integration** | **4/10** | **Konflux PR builds (label-gated), no image validation** |
-| Image Testing | 1/10 | No runtime validation, no scanning, no SBOM |
-| Coverage Tracking | 0/10 | No coverage generation or enforcement |
-| CI/CD Automation | 5/10 | Pre-commit on PRs, pipeline validation, Renovate |
-| Agent Rules | 0/10 | No agent rules exist |
+| Unit Tests | 0.5/10 | No unit tests for 3,258 lines of Python pipeline code |
+| Integration/E2E | 3.0/10 | Single Go E2E test exists but requires live cluster, env-gated |
+| **Build Integration** | **4.0/10** | **Konflux PR build via Tekton PipelineRun; no GitHub Actions build** |
+| Image Testing | 2.0/10 | Dockerfiles present but no runtime validation or scanning |
+| Coverage Tracking | 0.0/10 | No coverage tooling of any kind |
+| CI/CD Automation | 4.5/10 | Pre-commit linting + main-branch image build; no test execution |
+| Agent Rules | 0.0/10 | No agent rules or test automation guidance |
 
 ## Critical Gaps
 
-### 1. Zero Python Unit Tests
-- **Impact**: ~2,600 lines of pipeline component code across `sdg/`, `training/`, `eval/`, `utils/` have zero test coverage. This code handles complex operations including SDG data generation, training job configuration, model evaluation benchmarks, and Kubernetes resource management. Bugs in parameter handling, component assembly, or API interactions are only discovered at runtime on expensive GPU clusters.
+### 1. Zero Unit Tests for Python Pipeline Code
+- **Impact**: The entire pipeline codebase (3,258 lines across 13 Python files) has zero unit tests. This includes complex KFP component definitions in `sdg/components.py` (494 lines), `training/components.py` (392 lines), `utils/components.py` (681 lines), and evaluation logic in `eval/final.py` (555 lines) and `eval/mt_bench.py` (259 lines).
 - **Severity**: HIGH
-- **Effort**: 16-24 hours for initial test suite
-- **Files needing tests**:
-  - `sdg/components.py` (494 lines) - SDG pipeline operations
-  - `training/components.py` (392 lines) - Training job orchestration
-  - `eval/final.py` (555 lines) - Final evaluation logic
-  - `eval/mt_bench.py` (259 lines) - MT-Bench evaluation
-  - `utils/components.py` (681 lines) - Utility components
-  - `pipeline.py` (628 lines) - Pipeline assembly
+- **Effort**: 16-24 hours for initial coverage
+- **Risk**: Regressions in pipeline parameter handling, component wiring, PVC management, or evaluation logic are only discoverable at runtime on a live RHOAI cluster with GPU nodes — potentially hours into execution.
 
 ### 2. No Coverage Tracking or Enforcement
-- **Impact**: Without coverage tracking, there is no visibility into what code is tested, no ability to set improvement targets, and no gate to prevent coverage regression on PRs.
+- **Impact**: No `pytest` configuration in `pyproject.toml`, no `.coveragerc`, no `codecov.yml`, no coverage gates on PRs. There is zero visibility into what code is tested.
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Implementation**:
-  ```yaml
-  # .github/workflows/pre_commit.yaml - add step
-  - name: Run tests with coverage
-    run: |
-      uv run pytest --cov=. --cov-report=xml
-  - name: Upload coverage
-    uses: codecov/codecov-action@v4
-    with:
-      files: coverage.xml
-      token: ${{ secrets.CODECOV_TOKEN }}
-  ```
+- **Risk**: Even if tests are added, there's no mechanism to prevent coverage regression.
 
 ### 3. No Container Image Security Scanning
-- **Impact**: Container images built from `Dockerfile` and `Dockerfile.konflux` use UBI base images and pip-install numerous dependencies from `requirements.txt` (78KB of pinned dependencies). None of these are scanned for known vulnerabilities before deployment.
+- **Impact**: Two Dockerfiles (`Dockerfile` using UBI8, `Dockerfile.konflux` using UBI9) install packages via `pip install --no-cache-dir -r requirements.txt` (1,067 lines of pinned dependencies with hashes) and `dnf install skopeo`. No Trivy, Snyk, or other vulnerability scanning exists.
 - **Severity**: HIGH
-- **Effort**: 2-3 hours
-- **Implementation**:
-  ```yaml
-  # Add to PR workflow
-  - name: Build image for scanning
-    run: podman build -t ilab-on-ocp:scan .
-  - name: Run Trivy scan
-    uses: aquasecurity/trivy-action@master
-    with:
-      image-ref: 'ilab-on-ocp:scan'
-      format: 'sarif'
-      severity: 'CRITICAL,HIGH'
-  ```
+- **Effort**: 2-4 hours
+- **Risk**: Known CVEs in Python dependencies or base images ship to production undetected.
 
-### 4. E2E Test Not Automated in CI
-- **Impact**: The Go-based E2E test (`tests/pipeline/e2e/ilab_rhoai_pipeline_runs_test.go`) validates the full pipeline run but requires manual execution with specific env vars (`ENABLE_ILAB_PIPELINE_TEST`, `PIPELINE_SERVER_URL`, `BEARER_TOKEN`). Pipeline regressions are not caught automatically.
+### 4. No PR-Time Test Execution
+- **Impact**: The only PR workflow (`pre_commit.yaml`) runs pre-commit hooks (ruff lint/format, yamllint, trailing whitespace) and validates that `pipeline.yaml` is up-to-date. No tests of any kind execute on PRs.
 - **Severity**: HIGH
-- **Effort**: 8-12 hours (requires cluster access, secrets management)
+- **Effort**: 8-12 hours (including writing initial tests)
+- **Risk**: Code changes are merged based solely on linting — logical correctness is never validated before merge.
 
-### 5. No SAST or Dependency Scanning
-- **Impact**: Beyond ruff's linting (focused on style/imports), no static analysis tool checks for security issues like command injection, unsafe deserialization, or insecure API usage. No dependency vulnerability tracking beyond Renovate's version updates.
+### 5. E2E Test Not Automated in CI
+- **Impact**: A Go-based E2E test (`tests/pipeline/e2e/ilab_rhoai_pipeline_runs_test.go`) exists that triggers a pipeline run via the KFP REST API and waits for completion. However, it requires `ENABLE_ILAB_PIPELINE_TEST=true`, `PIPELINE_SERVER_URL`, `BEARER_TOKEN`, and `PIPELINE_DISPLAY_NAME` environment variables, and a live RHOAI cluster with GPUs. It never runs in CI.
 - **Severity**: MEDIUM
-- **Effort**: 3-4 hours
-
-### 6. No Image Runtime Validation
-- **Impact**: Built images are pushed to registries without verifying they can start, import required Python modules, or respond to basic health checks.
-- **Severity**: MEDIUM
-- **Effort**: 4-6 hours
+- **Effort**: 40+ hours (infrastructure setup for automated E2E environment)
 
 ## Quick Wins
 
-### 1. Add pytest Infrastructure (2-4 hours)
+### 1. Add pytest Configuration and Initial Unit Tests (4-6 hours)
+Add pytest to `pyproject.toml` and write tests for `pipeline.py` compilation:
 ```toml
-# pyproject.toml - add test dependency group
 [dependency-groups]
+lint = [...]
 test = [
     "pytest>=8.0",
     "pytest-cov>=5.0",
 ]
 ```
-```python
-# tests/test_consts.py - basic test to establish infrastructure
-from utils.consts import RHELAI_IMAGE, RUNTIME_GENERIC_IMAGE
 
-def test_image_constants_defined():
-    assert RHELAI_IMAGE is not None
-    assert RUNTIME_GENERIC_IMAGE is not None
-    assert "registry" in RHELAI_IMAGE
+```python
+# tests/test_pipeline_compilation.py
+from kfp import compiler
+from pipeline import ilab_pipeline, import_base_model_pipeline
+
+def test_ilab_pipeline_compiles():
+    """Verify pipeline compiles without errors."""
+    compiler.Compiler().compile(ilab_pipeline, "/tmp/test_pipeline.yaml")
+
+def test_importer_pipeline_compiles():
+    """Verify importer pipeline compiles without errors."""
+    compiler.Compiler().compile(import_base_model_pipeline, "/tmp/test_importer.yaml")
 ```
 
-### 2. Add Trivy Scanning (1-2 hours)
-Add a new workflow or step to `pre_commit.yaml` that builds the Docker image and scans it with Trivy on every PR.
+### 2. Add Trivy Scanning to PR Workflow (1-2 hours)
+```yaml
+- name: Run Trivy vulnerability scanner
+  uses: aquasecurity/trivy-action@0.28.0
+  with:
+    scan-type: 'fs'
+    scan-ref: '.'
+    severity: 'CRITICAL,HIGH'
+    exit-code: '1'
+```
 
 ### 3. Add Codecov Integration (2-3 hours)
-Add `pytest-cov` to test dependencies, generate coverage XML in CI, and upload to Codecov. Set an initial threshold of 0% and ratchet up as tests are added.
-
-### 4. Add CodeQL for Python (1-2 hours)
 ```yaml
-# .github/workflows/codeql.yml
-name: CodeQL
-on: [push, pull_request]
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: python
-      - uses: github/codeql-action/analyze@v3
+- name: Run tests with coverage
+  run: uv run pytest --cov=. --cov-report=xml
+- name: Upload coverage
+  uses: codecov/codecov-action@v4
+  with:
+    file: coverage.xml
 ```
 
-### 5. Create CLAUDE.md (1-2 hours)
-Add basic development and testing guidelines so AI-assisted contributions include tests.
+### 4. Add Dockerfile Build Validation in PR (1-2 hours)
+```yaml
+- name: Build Docker image (no push)
+  run: podman build -t test-image -f Dockerfile .
+```
+
+### 5. Create Basic Agent Rules (2-3 hours)
+Generate `.claude/rules/` with test patterns using `/test-rules-generator`.
 
 ## Detailed Findings
 
@@ -221,229 +199,222 @@ Add basic development and testing guidelines so AI-assisted contributions includ
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `build-main.yml` | Push to main | Build & push image to quay.io |
-| `pre_commit.yaml` | PR + push to main | Pre-commit hooks, pipeline freshness, requirements validation |
-
-**Tekton/Konflux:**
-- `odh-ml-pipelines-runtime-generic-pull-request.yaml` - Builds multi-arch (x86_64, arm64, ppc64le) container images via Konflux on PRs
-- Triggered by labels (`kfbuild-all`, `kfbuild-ilab-on-ocp`) or comment (`/build-konflux`)
-- Hermetic build with prefetch for RPMs and pip packages
-- Uses centralized `konflux-central` pipeline definition
+| `pre_commit.yaml` | push to main, PRs to main | Ruff lint/format, yamllint, pipeline.yaml freshness, requirements.txt validation |
+| `build-main.yml` | push to main | Build and push container image to quay.io/opendatahub |
+| `renovate.json` | Scheduled | Dependency updates for Dockerfiles, Tekton, RPMs |
 
 **Strengths:**
-- Concurrency control on main build (cancel-in-progress)
-- Pipeline.yaml freshness check in PR workflow (ensures `make pipeline` was run)
-- Requirements.txt consistency validation against pyproject.toml
-- Renovate configured for Dockerfile digest, Tekton, and RPM updates with automerge
-- Pre-commit caching for performance
+- Pre-commit workflow has good caching (`~/.cache/pre-commit` with hash key)
+- Pipeline YAML freshness check ensures `make pipeline` was run before merge
+- Requirements.txt validation catches dependency drift from pyproject.toml
+- Concurrency control on build workflow (`cancel-in-progress: true`)
 
-**Gaps:**
-- No PR-triggered tests (only linting/formatting)
-- Image build on main only (not on PRs) via GitHub Actions
-- Konflux PR builds are label/comment-gated, not automatic
-- No test stage in any workflow
-- No nightly or periodic test runs
-- No deployment validation
+**Weaknesses:**
+- No test execution in any workflow
+- No PR-time Docker build validation
+- No security scanning
+- Build workflow uses `actions/checkout@v3` (outdated, should be v4)
+- No artifact upload or build caching beyond pre-commit cache
+
+### Tekton/Konflux Integration
+
+The `.tekton/` directory contains a Konflux PipelineRun for PR builds:
+- Triggered by `/build-konflux` comment or `kfbuild-all`/`kfbuild-ilab-on-ocp` labels
+- Builds multi-arch images (x86_64, arm64, ppc64le)
+- Uses hermetic builds with RPM and pip prefetch
+- Builds source images
+- Images expire after 5 days for PR builds
+- Managed centrally via `konflux-central` repository
+
+This is a solid build integration setup, but it only validates that the image builds — no runtime or functional testing.
 
 ### Test Coverage
 
-**Unit Tests: NONE**
-- Zero Python test files across the entire repository
-- No `pytest.ini`, `conftest.py`, or test configuration
-- No test dependency group in `pyproject.toml` (only `lint` group exists)
-- No test targets in `Makefile`
-- The `.gitignore` includes pytest/coverage patterns suggesting tests were once planned but never created
+**Python Tests: NONE**
+- 0 test files for 13 Python source files
+- No pytest configuration in pyproject.toml
+- No test dependency group
+- No conftest.py
+- Critical untested areas:
+  - `pipeline.py` (628 lines) — pipeline compilation, parameter validation, DAG wiring
+  - `sdg/components.py` (494 lines) — SDG component definitions
+  - `training/components.py` (392 lines) — PyTorch training job configuration
+  - `utils/components.py` (681 lines) — utility components, model upload, PVC operations
+  - `eval/final.py` (555 lines) — final evaluation logic
+  - `eval/mt_bench.py` (259 lines) — MT-Bench evaluation
 
-**E2E Tests: Minimal**
-- Single Go test file: `tests/pipeline/e2e/ilab_rhoai_pipeline_runs_test.go`
-- Uses testify/require for assertions
-- Uses spf13/viper for parameter configuration
-- REST utility (`tests/pipeline/e2e/util/rest.go`) for KFP API interaction
-- Test flow: Retrieve pipeline ID → Load parameters → Trigger run → Wait for success (2h10m timeout)
-- **Gate**: Requires `ENABLE_ILAB_PIPELINE_TEST=true` env var
-- **Requirements**: Live cluster with pipeline server, bearer token authentication
-- **Not CI-integrated**: Manual execution only per README
+**Go E2E Test:**
+- 1 test file: `tests/pipeline/e2e/ilab_rhoai_pipeline_runs_test.go` (75 lines)
+- Uses `testify/require` for assertions
+- Tests pipeline run via KFP REST API with 2h10m timeout
+- Env-gated: requires `ENABLE_ILAB_PIPELINE_TEST=true`
+- Requires live cluster credentials (PIPELINE_SERVER_URL, BEARER_TOKEN)
+- Pipeline parameters loaded from `tests/pipeline/e2e/resources/pipeline_params.yaml`
+- Utility code in `tests/pipeline/e2e/util/rest.go` (155 lines) for HTTP operations
 
-**Test-to-Code Ratio**: ~0.03 (76 lines of test code / ~2,600 lines of Python source)
+**Test-to-Code Ratio**: ~0.07 (230 Go test lines / 3,258 Python lines — and they test different things)
 
 ### Code Quality
 
-**Pre-commit Hooks (Good):**
-- `trailing-whitespace` - Whitespace cleanup
-- `end-of-file-fixer` - Ensure files end with newline
-- `check-yaml` - YAML syntax validation (allows multiple documents)
-- `check-merge-conflict` - Detect merge conflict markers
-- `detect-private-key` - Prevent committing private keys
-- `ruff` - Python linting with import sorting (`--fix --select I`)
-- `ruff-format` - Python code formatting check
-- `yamllint` - YAML linting with strict mode
+**Pre-commit Hooks (`.pre-commit-config.yaml`):**
+- `pre-commit-hooks` v4.6.0: trailing-whitespace, end-of-file-fixer, check-yaml, check-merge-conflict, detect-private-key
+- `ruff-pre-commit` v0.6.8: linting with import sorting (`--fix --select I`), format checking
+- `yamllint` v1.35.1: strict YAML validation
 
-**Missing:**
-- No type checking (mypy, pyright)
-- No complexity checks (radon, mccabe)
-- No dead code detection (vulture)
+**Strengths:**
+- Good baseline linting with ruff (modern, fast Python linter)
+- YAML validation catches manifest issues
+- Private key detection is a good security baseline
+- Import sorting enforcement
+
+**Weaknesses:**
+- No type checking (mypy/pyright) — Python code uses `# type: ignore` on pipeline.py line 1
+- No ruff configuration in pyproject.toml — using minimal defaults
+- Ruff only does import sorting (`--select I`) and format checking — not enabling broader lint rules
+- No Bandit or security-focused linting
 - No docstring enforcement
-- No Gitleaks for comprehensive secret detection
 
 ### Container Images
 
-**Dockerfiles:**
-1. `Dockerfile` - Standard build from `ubi8/python-312:1`, installs skopeo + pip requirements
-2. `Dockerfile.konflux` - Konflux build from `ubi9/python-312:1` with pinned digest, similar structure
-3. `manifests/model_downloader/container_file/Containerfile` - Model download utility from `ubi9/ubi`
+**Dockerfile (community/upstream):**
+- Base: `registry.access.redhat.com/ubi8/python-312:1`
+- Installs: skopeo via dnf, Python deps via pip
+- Sets proper permissions (`chgrp -R 0`, `chmod -R g=u`)
+- Runs as non-root (`USER default`)
+- No multi-stage build
+- No HEALTHCHECK
 
-**Analysis:**
-- Single-stage builds (no multi-stage optimization)
-- UBI base images (good for Red Hat ecosystem)
-- `requirements.txt` with hashes (good for supply chain security)
-- Root user operations properly scoped and dropped back to `default`
-- Skopeo installed for image operations
-- `.dockerignore` present but minimal (only `.git`, `.github`, `.venv`, `Dockerfile`)
+**Dockerfile.konflux (production):**
+- Base: `registry.access.redhat.com/ubi9/python-312:1` (pinned by digest)
+- Identical build steps to Dockerfile
+- Adds `com.redhat.component` label for product tracking
+- Multi-arch build support (x86_64, arm64, ppc64le) via Tekton
 
-**Gaps:**
-- No image startup validation after build
-- No vulnerability scanning
+**Weaknesses:**
+- No vulnerability scanning (Trivy, Snyk, Grype)
+- No runtime validation (image startup test)
+- No HEALTHCHECK instruction
 - No SBOM generation
-- No image signing or attestation
-- No health check configuration in Dockerfile
-- No image size optimization (single-stage build)
+- No image signing/attestation
+- Inconsistent base images between Dockerfiles (UBI8 vs UBI9)
+- No multi-stage build optimization
 
-### Security
+### Security Practices
 
-**Present:**
-- `detect-private-key` in pre-commit hooks
+| Practice | Status |
+|----------|--------|
+| Container scanning (Trivy/Snyk) | Missing |
+| SAST (CodeQL/Semgrep/Bandit) | Missing |
+| Dependency scanning | Partial (Renovate updates, but no vulnerability alerts) |
+| Secret detection | Partial (detect-private-key in pre-commit, no Gitleaks) |
+| SBOM generation | Missing |
+| Image signing | Missing |
+| Supply chain attestation | Missing |
+
+**Positive:**
+- `detect-private-key` pre-commit hook
+- Renovate bot for dependency updates with automerge
+- Requirements pinned with hashes (`--generate-hashes`)
 - Hermetic Konflux builds with prefetch
-- Requirements pinned with hashes for supply chain security
-- Renovate for automated dependency updates
-
-**Missing:**
-- No SAST (CodeQL, Bandit, Semgrep)
-- No container scanning (Trivy, Snyk, Grype)
-- No dependency vulnerability scanning (pip-audit, safety)
-- No secret detection (Gitleaks, TruffleHog)
-- No SBOM generation
-- No image signing
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: No test type rules exist
+- **CLAUDE.md**: Not present
+- **AGENTS.md**: Not present
+- **`.claude/` directory**: Not present
+- **Coverage**: No test type rules of any kind
 - **Quality**: N/A
-- **Gaps**: 
-  - No `CLAUDE.md` or `AGENTS.md` in repository root
-  - No `.claude/` directory
-  - No `.claude/rules/` for test creation guidance
-  - No `.claude/skills/` for custom automation
-- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator`. At minimum, create `CLAUDE.md` with:
-  - Project overview and architecture
-  - Testing requirements and patterns
-  - KFP component testing guidelines
-  - Pre-commit and CI requirements
+- **Gaps**: Everything — no unit test rules, no E2E test rules, no pipeline test patterns, no component testing guidance
+- **Recommendation**: Generate comprehensive rules with `/test-rules-generator` covering Python KFP component testing, pipeline compilation testing, and Go E2E test patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add Python unit test infrastructure and initial tests**
-   - Add `pytest`, `pytest-cov` to `pyproject.toml` dependency groups
-   - Create `conftest.py` with common fixtures
-   - Write initial tests for `utils/consts.py`, `utils/kfp_client.py`
-   - Add `pytest` step to `pre_commit.yaml` workflow
-   - Target: 30% coverage within first sprint
+1. **Add unit tests for all Python modules** — Start with pipeline compilation tests, then component-level tests for each module. Use pytest with KFP compiler to validate pipeline DAG structure.
 
-2. **Integrate codecov with coverage enforcement**
-   - Generate coverage XML in CI
-   - Upload to Codecov
-   - Set initial floor at 0%, configure ratchet (no coverage decrease on PRs)
-   - Add coverage badge to README
+2. **Add codecov integration with PR coverage gates** — Set up `.codecov.yml` with a minimum coverage threshold (start at 20%, gradually increase). Add `pytest-cov` and upload coverage in PR workflow.
 
-3. **Add Trivy container scanning to PR workflow**
-   - Build image in PR workflow
-   - Scan with Trivy for CRITICAL and HIGH vulnerabilities
-   - Fail PR if critical vulnerabilities found
-   - Upload SARIF results for GitHub Security tab integration
+3. **Add container vulnerability scanning** — Add Trivy filesystem scan in PR workflow and image scan in build workflow. Set `exit-code: 1` for CRITICAL/HIGH severity.
+
+4. **Add PR-time test execution** — Add a `test` job to `pre_commit.yaml` that runs `uv run pytest` with coverage reporting.
 
 ### Priority 1 (High Value)
 
-4. **Automate E2E test execution**
-   - Create nightly/periodic workflow with cluster credentials
-   - Integrate with RHOAI test infrastructure
-   - Report results and failures via Slack/email
+5. **Add type checking with mypy** — The codebase uses type hints already (`Optional[str]`, `Optional[list]`). Remove `# type: ignore` from pipeline.py and fix type issues.
 
-5. **Add image runtime validation**
-   - After image build, verify: container starts, Python imports work, pipeline.yaml is present
-   - Add basic smoke test: `podman run --rm image python -c "import kfp; import sdg; import training; import eval"`
+6. **Create agent rules for test patterns** — Define `.claude/rules/` with patterns for KFP component testing, pipeline parameter validation, and Go E2E test writing.
 
-6. **Add SAST scanning**
-   - CodeQL for Python (free for public repos)
-   - Or Bandit for Python-specific security checks
-   - Run on PRs and pushes to main
+7. **Add pipeline compilation validation in CI** — Ensure `make pipeline` produces deterministic output and the pipeline YAML is valid KFP IR.
 
-7. **Create CLAUDE.md and agent rules**
-   - Document project architecture and pipeline structure
-   - Add testing requirements for all contributions
-   - Specify KFP component testing patterns
-   - Include pre-commit requirements
+8. **Add Dockerfile build validation on PRs** — Build both Dockerfiles in CI without pushing to catch build breakage before merge.
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add Gitleaks for secret detection**
-9. **Add mypy type checking for pipeline components**
-10. **Add contract tests for KFP component interfaces**
-11. **Add SBOM generation for container images**
-12. **Optimize Dockerfiles with multi-stage builds**
-13. **Add image signing with cosign**
+9. **Add integration tests with mock KFP server** — Use KFP's test infrastructure to validate component interactions without a live cluster.
+
+10. **Add SAST tooling** — Bandit for Python security analysis, run in CI.
+
+11. **Add Gitleaks to pre-commit** — Complement `detect-private-key` with comprehensive secret scanning.
+
+12. **Add SBOM generation** — Syft or similar for container image transparency.
+
+13. **Standardize Dockerfiles** — Both should use UBI9 base. Consider multi-stage builds for smaller images.
 
 ## Comparison to Gold Standards
 
-| Capability | ilab-on-ocp | odh-dashboard | notebooks | kserve |
-|------------|-------------|---------------|-----------|--------|
-| Unit Tests | None | Comprehensive (Jest) | Present | Extensive (Go) |
-| Integration Tests | None | Contract tests | Image validation | envtest |
-| E2E Tests | 1 manual Go test | Cypress + API | Multi-layer | Multi-version |
-| Coverage Tracking | None | Codecov enforced | Present | Enforced (90%+) |
-| Coverage Threshold | None | Yes | Yes | Yes |
-| PR Test Automation | None | Full suite | Full suite | Full suite |
-| Container Scanning | None | Trivy | Trivy | Trivy |
-| SAST | None | CodeQL | N/A | CodeQL |
-| Secret Detection | Basic (pre-commit) | Gitleaks | N/A | Gitleaks |
-| Pre-commit Hooks | Good (ruff, yamllint) | Comprehensive | Present | Present |
-| Image Runtime Tests | None | Deployment tests | 5-layer validation | Startup tests |
-| Agent Rules | None | Comprehensive | None | None |
-| Renovate/Dependabot | Renovate (good) | Dependabot | N/A | Dependabot |
-| Multi-arch Builds | Konflux (3 archs) | N/A | Yes | Yes |
+| Dimension | ilab-on-ocp | odh-dashboard | notebooks | kserve |
+|-----------|-------------|---------------|-----------|--------|
+| Unit Tests | 0.5/10 | 9/10 | 7/10 | 9/10 |
+| Integration/E2E | 3.0/10 | 9/10 | 8/10 | 9/10 |
+| Build Integration | 4.0/10 | 7/10 | 8/10 | 7/10 |
+| Image Testing | 2.0/10 | 6/10 | 9/10 | 7/10 |
+| Coverage Tracking | 0.0/10 | 8/10 | 6/10 | 9/10 |
+| CI/CD Automation | 4.5/10 | 9/10 | 8/10 | 9/10 |
+| Agent Rules | 0.0/10 | 8/10 | 3/10 | 2/10 |
+| **Overall** | **3.1/10** | **8.5/10** | **7.5/10** | **8.0/10** |
+
+The most significant gap compared to gold standards is the complete absence of unit tests and coverage tracking. Even the simplest gold-standard repository has comprehensive unit test suites and coverage enforcement.
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/build-main.yml` - Main branch image build
-- `.github/workflows/pre_commit.yaml` - PR pre-commit checks
-- `.github/workflows/renovate.json` - Renovate configuration
-- `.tekton/odh-ml-pipelines-runtime-generic-pull-request.yaml` - Konflux PR build
-- `Makefile` - Pipeline compilation target
+- `.github/workflows/build-main.yml` — Main branch image build and push
+- `.github/workflows/pre_commit.yaml` — PR linting and validation
+- `.github/workflows/renovate.json` — Renovate dependency management config
+- `.tekton/odh-ml-pipelines-runtime-generic-pull-request.yaml` — Konflux PR build
+- `Makefile` — Pipeline compilation target
 
 ### Source Code
-- `pipeline.py` (628 lines) - Main pipeline assembly
-- `sdg/components.py` (494 lines) - SDG pipeline components
-- `training/components.py` (392 lines) - Training job components
-- `eval/final.py` (555 lines) - Final evaluation logic
-- `eval/mt_bench.py` (259 lines) - MT-Bench evaluation
-- `utils/components.py` (681 lines) - Utility components
-- `utils/kfp_client.py` (56 lines) - KFP client utilities
-- `utils/consts.py` (21 lines) - Image constants
+- `pipeline.py` — Main KFP pipeline definition (628 lines)
+- `sdg/components.py` — SDG component definitions (494 lines)
+- `training/components.py` — Training component definitions (392 lines)
+- `utils/components.py` — Utility components (681 lines)
+- `eval/final.py` — Final evaluation logic (555 lines)
+- `eval/mt_bench.py` — MT-Bench evaluation (259 lines)
+- `utils/consts.py` — Constants (21 lines)
+- `utils/kfp_client.py` — KFP client helper (56 lines)
 
 ### Tests
-- `tests/pipeline/e2e/ilab_rhoai_pipeline_runs_test.go` - E2E pipeline test
-- `tests/pipeline/e2e/util/rest.go` - REST API test utilities
-- `tests/pipeline/e2e/resources/pipeline_params.yaml` - Test parameters
+- `tests/pipeline/e2e/ilab_rhoai_pipeline_runs_test.go` — Go E2E test
+- `tests/pipeline/e2e/util/rest.go` — E2E test HTTP utilities
+- `tests/pipeline/e2e/resources/pipeline_params.yaml` — E2E test parameters
 
-### Container Images
-- `Dockerfile` - Standard image build
-- `Dockerfile.konflux` - Konflux hermetic build
-- `manifests/model_downloader/container_file/Containerfile` - Model downloader
+### Container
+- `Dockerfile` — Community image (UBI8/Python 3.12)
+- `Dockerfile.konflux` — Production image (UBI9/Python 3.12, pinned digest)
+- `.dockerignore` — Build context exclusions
 
 ### Code Quality
-- `.pre-commit-config.yaml` - Pre-commit hooks (ruff, yamllint, detect-private-key)
-- `.yamllint.yaml` - YAML lint configuration
-- `pyproject.toml` - Project metadata and dependencies
-- `.gitignore` - Git ignore patterns (includes pytest/coverage patterns)
+- `.pre-commit-config.yaml` — Pre-commit hooks (ruff, yamllint)
+- `.yamllint.yaml` — YAML lint configuration
+- `pyproject.toml` — Project config (no test or ruff settings)
+- `renovate.json` — Root Renovate config (extends konflux-central)
+
+### Documentation
+- `README.md` — Comprehensive setup and usage guide
+- `CONTRIBUTING.md` — Developer setup and contribution guide
+- `docs/base_model.md` — Base model configuration
+- `docs/disconnected_setup.md` — Disconnected environment setup
+- `docs/troubleshooting.md` — Troubleshooting guide

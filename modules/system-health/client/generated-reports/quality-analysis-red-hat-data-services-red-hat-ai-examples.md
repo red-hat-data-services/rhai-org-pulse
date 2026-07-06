@@ -1,385 +1,404 @@
 ---
 repository: "red-hat-data-services/red-hat-ai-examples"
-overall_score: 4.2
+overall_score: 4.0
 scorecard:
   - dimension: "Unit Tests"
     score: 6.0
-    status: "Good validation tests for notebook structure/syntax; limited code-level unit tests for Python utilities"
+    status: "94 test functions with strong validation framework, but only 1 of 9 examples has smoke tests"
   - dimension: "Integration/E2E"
     score: 3.0
-    status: "Structural validation only; no notebook execution or runtime integration testing"
+    status: "No notebook execution tests, no runtime validation, no GPU/cluster testing"
   - dimension: "Build Integration"
-    score: 1.0
-    status: "No container images, no Konflux integration, no build-time validation"
+    score: 4.0
+    status: "Dependency dry-run validation exists in tests, but no notebook execution in CI"
   - dimension: "Image Testing"
-    score: 1.0
-    status: "No Dockerfiles or container image testing; examples are not containerized"
+    score: 2.0
+    status: "No container artifacts (expected for examples repo), but no notebook execution validation"
   - dimension: "Coverage Tracking"
     score: 3.0
-    status: "pytest-cov configured locally but no CI enforcement, no codecov integration, no thresholds"
+    status: "pytest-cov configured in pyproject.toml but not running in CI, no codecov integration"
   - dimension: "CI/CD Automation"
-    score: 7.0
-    status: "Solid code quality workflows with Ruff, markdown linting, and triple secret scanning; lacks coverage enforcement and concurrency control"
+    score: 6.0
+    status: "Two well-structured workflows with pip caching, JUnit results, but no concurrency control or SAST"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules for test automation"
+    status: "No .claude/ directory, no CLAUDE.md, no agent rules or test automation guidance"
 critical_gaps:
-  - title: "No notebook execution testing"
-    impact: "Notebooks may have broken code, missing imports, or runtime errors undetected until manual execution"
+  - title: "No notebook execution tests in CI"
+    impact: "Notebooks may have runtime errors, broken imports, or stale API calls that are never caught before merge"
+    severity: "HIGH"
+    effort: "8-12 hours"
+  - title: "Only 1 of 9 examples has smoke tests"
+    impact: "8 example directories have zero example-specific testing; regressions in fine-tuning, ray, automl, etc. go undetected"
     severity: "HIGH"
     effort: "16-24 hours"
-  - title: "No coverage enforcement in CI"
-    impact: "Test coverage cannot regress without detection; no PR coverage gates"
+  - title: "Coverage tracking not enforced in CI"
+    impact: "pytest-cov is configured but never runs in the CI workflow; no coverage gates prevent regression"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "Missing example.yaml in 8 of 9 examples"
-    impact: "Metadata validation tests skip for most examples; structured discovery is incomplete"
-    severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "No SAST/CodeQL integration"
-    impact: "Python code vulnerabilities not detected at PR time; only secret scanning exists"
+  - title: "No SAST or dependency vulnerability scanning"
+    impact: "Python dependency vulnerabilities and code security issues not detected; pip-audit or CodeQL absent"
     severity: "MEDIUM"
-    effort: "2-3 hours"
-  - title: "No container image testing"
-    impact: "Examples cannot be validated in containerized environments matching RHOAI deployment"
+    effort: "2-4 hours"
+  - title: "No agent rules for AI-assisted development"
+    impact: "AI coding agents have no guidance on testing patterns, code style, or notebook conventions"
     severity: "MEDIUM"
-    effort: "16-24 hours"
+    effort: "4-6 hours"
 quick_wins:
-  - title: "Add codecov integration with coverage thresholds"
-    effort: "2-3 hours"
-    impact: "Enforce minimum coverage and prevent regressions on every PR"
+  - title: "Enable pytest-cov in CI workflow"
+    effort: "1-2 hours"
+    impact: "Immediate coverage visibility; add --cov flag to pytest invocations in notebook-tests.yml"
+  - title: "Add pip-audit to code-quality workflow"
+    effort: "1-2 hours"
+    impact: "Catch known vulnerabilities in Python dependencies before merge"
   - title: "Add concurrency control to CI workflows"
     effort: "30 minutes"
-    impact: "Cancel stale workflow runs on new pushes to save CI resources"
-  - title: "Create example.yaml for all 8 missing examples"
-    effort: "4-6 hours"
-    impact: "Enable metadata validation for all examples; improve discoverability"
-  - title: "Add CodeQL/Semgrep workflow for Python SAST"
-    effort: "1-2 hours"
-    impact: "Catch security vulnerabilities in Python code at PR time"
-  - title: "Create basic CLAUDE.md with testing guidance"
+    impact: "Prevent redundant CI runs on rapid pushes, save CI resources"
+  - title: "Create CLAUDE.md with basic testing guidance"
     effort: "2-3 hours"
-    impact: "Guide AI agents to follow project testing patterns and conventions"
+    impact: "Improve AI-generated test quality and consistency"
+  - title: "Add codecov integration with GitHub App"
+    effort: "2-3 hours"
+    impact: "PR-level coverage reports and enforcement thresholds"
 recommendations:
   priority_0:
-    - "Add notebook execution smoke tests using papermill or nbconvert to validate notebooks run without errors"
-    - "Enforce coverage thresholds in CI with codecov integration and PR status checks"
-    - "Create example.yaml metadata files for all 8 examples missing them"
+    - "Add pytest-cov to CI workflow and establish coverage baseline"
+    - "Create smoke tests for remaining 8 example directories (model-serve-flow, fine-tuning, ray, automl, autorag, llmcompressor, trainer, domain_customization_kfp_pipeline)"
+    - "Add pip-audit dependency scanning to code-quality workflow"
   priority_1:
-    - "Add CodeQL or Semgrep SAST scanning for Python security vulnerabilities"
-    - "Create agent rules (.claude/rules/) for test creation patterns and notebook standards"
-    - "Add smoke tests for more examples beyond knowledge-tuning (model-serve-flow, fine-tuning, ray)"
+    - "Implement notebook execution validation (papermill or nbconvert --execute) for at least setup/import cells"
+    - "Add codecov integration with coverage thresholds and PR reporting"
+    - "Create comprehensive agent rules (.claude/rules/) for test creation patterns"
+    - "Add concurrency control to both CI workflows"
   priority_2:
-    - "Create containerized testing environment matching RHOAI workbench images"
-    - "Add dependency vulnerability scanning (Dependabot or Renovate)"
-    - "Add notebook output regression testing for examples with keep_output cells"
+    - "Add CodeQL or Semgrep SAST workflow"
+    - "Implement example.yaml metadata validation tests (schema already documented but no examples have the file)"
+    - "Add cross-example dependency consistency checks"
+    - "Create integration tests that validate notebook dependencies resolve correctly across Python versions"
 ---
 
 # Quality Analysis: red-hat-ai-examples
 
 ## Executive Summary
 
-- **Overall Score: 4.2/10**
-- **Repository Type**: Python/Jupyter notebook examples repository for AI/ML on Red Hat platforms
-- **Primary Languages**: Python (38 files), Jupyter Notebooks (39 files)
-- **Testing Framework**: pytest with pytest-cov, pytest-xdist
-- **Key Strengths**: Excellent pre-commit hooks with triple secret scanning, well-configured Ruff linting, thorough notebook structure validation, strong contributing documentation
-- **Critical Gaps**: No notebook execution testing, no coverage enforcement in CI, most examples missing metadata files, no container testing, no agent rules
-- **Agent Rules Status**: Missing
+- **Overall Score: 4.0/10**
+- **Repository Type**: Python/Jupyter notebook examples collection for Red Hat AI/ML platforms
+- **Primary Languages**: Python (38 .py files), Jupyter notebooks (41 .ipynb files)
+- **Key Strengths**: Excellent secret scanning (triple-layer), well-structured validation test framework, comprehensive documentation (CONTRIBUTING.md, TESTING.md, style guides)
+- **Critical Gaps**: Only 1 of 9 examples has smoke tests, no notebook execution validation, coverage tracking configured but not running in CI, no agent rules
+- **Agent Rules Status**: Missing - No .claude/ directory, no CLAUDE.md, no test automation guidance
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 6.0/10 | Good structural validation; limited code-level unit tests |
-| Integration/E2E | 3.0/10 | Structure-only; no runtime execution testing |
-| **Build Integration** | **1.0/10** | **No containers, no build validation** |
-| Image Testing | 1.0/10 | No Dockerfiles or container testing |
-| Coverage Tracking | 3.0/10 | Configured locally, not enforced in CI |
-| CI/CD Automation | 7.0/10 | Strong quality/security, lacks coverage gates |
-| Agent Rules | 0.0/10 | No agent rules exist |
+| Unit Tests | 6.0/10 | 94 test functions with strong validation framework, but only 1 of 9 examples has smoke tests |
+| Integration/E2E | 3.0/10 | No notebook execution tests, no runtime validation, no GPU/cluster testing |
+| Build Integration | 4.0/10 | Dependency dry-run validation exists in tests, but no notebook execution in CI |
+| Image Testing | 2.0/10 | No container artifacts (expected for examples repo), no notebook execution validation |
+| Coverage Tracking | 3.0/10 | pytest-cov configured in pyproject.toml but not running in CI, no codecov integration |
+| CI/CD Automation | 6.0/10 | Two well-structured workflows with pip caching, JUnit results, but no concurrency control or SAST |
+| Agent Rules | 0.0/10 | No .claude/ directory, no CLAUDE.md, no agent rules or test automation guidance |
 
 ## Critical Gaps
 
-### 1. No Notebook Execution Testing
-- **Impact**: Notebooks may have broken code, missing imports, or runtime errors that go undetected until manual execution. For an examples repository, this is the most critical gap — broken examples damage credibility.
+### 1. No Notebook Execution Tests in CI
+- **Impact**: Notebooks may have runtime errors, broken imports, or stale API calls that are never caught before merge
+- **Severity**: HIGH
+- **Effort**: 8-12 hours
+- **Details**: The CI validates notebook structure, syntax, and metadata but never actually executes any notebook cells. A notebook could pass all validation tests while containing code that fails at runtime (e.g., API endpoint changes, deprecated library calls, missing environment setup). Consider using `papermill` or `nbconvert --execute` for at least import/setup cells.
+
+### 2. Only 1 of 9 Examples Has Smoke Tests
+- **Impact**: 8 example directories (fine-tuning, ray, automl, autorag, model-serve-flow, llmcompressor, trainer, domain_customization_kfp_pipeline) have zero example-specific testing
 - **Severity**: HIGH
 - **Effort**: 16-24 hours
-- **Current State**: Tests validate notebook JSON structure, cell types, and Python syntax via AST parsing, but never actually execute any notebook cells.
-- **Fix**: Use `papermill` or `nbconvert --execute` to run notebooks in CI with mocked/minimal environments. Start with a subset of lightweight notebooks that don't require GPU/cluster access.
+- **Details**: The knowledge-tuning example has excellent smoke tests (structure, utils, mocks), but this pattern hasn't been replicated. TESTING.md documents how to add smoke tests, but adoption is 11%. The `model-serve-flow` example (with 5 step directories and pyproject.toml files) is the most at risk.
 
-### 2. No Coverage Enforcement in CI
-- **Impact**: Test coverage can silently regress. No PR gates prevent merging uncovered code.
+### 3. Coverage Tracking Not Enforced in CI
+- **Impact**: pytest-cov is configured in `pyproject.toml` (`[tool.coverage.run]` and `[tool.coverage.report]`) but the CI workflow never passes `--cov` to pytest. No coverage gates exist.
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Current State**: `pytest-cov` is in test dependencies and `[tool.coverage.*]` is configured in `pyproject.toml`, but CI workflows don't run coverage or upload results.
-- **Fix**: Add `--cov` flags to pytest commands in `notebook-tests.yml`, upload to codecov, and set minimum threshold.
+- **Details**: Adding `--cov=tests --cov-report=xml` to the pytest invocations in `notebook-tests.yml` and integrating with codecov would provide immediate visibility.
 
-### 3. Missing example.yaml in 8 of 9 Examples
-- **Impact**: The metadata validation tests (`test_example_metadata.py`) skip for most examples. The structured example discovery and schema validation system is ineffective.
-- **Severity**: HIGH
+### 4. No SAST or Dependency Vulnerability Scanning
+- **Impact**: Python dependency vulnerabilities (e.g., torch, transformers, polars) not detected
+- **Severity**: MEDIUM
+- **Effort**: 2-4 hours
+- **Details**: While secret scanning is excellent (Gitleaks + Talisman + detect-secrets), there is no `pip-audit`, `safety`, CodeQL, or Semgrep integration to catch known CVEs in dependencies.
+
+### 5. example.yaml Metadata Not Yet Adopted
+- **Impact**: The METADATA_SCHEMA.md documents a comprehensive example.yaml schema, but no examples actually contain this file yet. Validation tests exist (`test_example_metadata.py`, `test_example_structure.py`) but likely have nothing to validate.
+- **Severity**: MEDIUM
 - **Effort**: 4-8 hours
-- **Current State**: Only `examples/ray/data/rag/ray-data-pipeline/example.yaml` exists. Missing from: `automl`, `autorag`, `domain_customization_kfp_pipeline`, `fine-tuning`, `knowledge-tuning`, `llmcompressor`, `model-serve-flow`, `trainer`.
-- **Fix**: Create `example.yaml` for each example directory following the schema in `docs/METADATA_SCHEMA.md`.
-
-### 4. No SAST/CodeQL Integration
-- **Impact**: Python code security vulnerabilities not caught at PR time. Only secret scanning (Gitleaks/Talisman/detect-secrets) exists.
-- **Severity**: MEDIUM
-- **Effort**: 2-3 hours
-- **Fix**: Add a CodeQL or Semgrep workflow targeting Python.
-
-### 5. No Container/Image Testing
-- **Impact**: Examples cannot be validated in environments matching RHOAI workbench images. Dependency compatibility issues may only surface during actual deployment.
-- **Severity**: MEDIUM
-- **Effort**: 16-24 hours
-- **Fix**: Create a minimal container image based on RHOAI workbench base image and run notebook validation inside it.
 
 ## Quick Wins
 
-### 1. Add Codecov Integration (2-3 hours)
-Add coverage collection and reporting to the notebook-tests workflow:
+### 1. Enable pytest-cov in CI Workflow (1-2 hours)
+Add `--cov` flag to pytest invocations in `notebook-tests.yml`:
 ```yaml
 - name: Run validation tests
   run: |
-    pytest tests/validation/ -v --tb=short \
-      --cov=tests --cov-report=xml \
-      --junit-xml=validation-results.xml
-
-- name: Upload coverage
-  uses: codecov/codecov-action@v4
-  with:
-    file: coverage.xml
-    fail_ci_if_error: true
+    pytest tests/validation/ -v --tb=short --cov=tests --cov-report=xml --junit-xml=validation-results.xml
 ```
 
-### 2. Add Concurrency Control (30 minutes)
-Add to both workflows to cancel stale runs:
+### 2. Add pip-audit to Code Quality Workflow (1-2 hours)
+```yaml
+dependency-scanning:
+  name: Dependency Scanning
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - run: |
+        pip install pip-audit
+        pip install -e ".[test]"
+        pip-audit --progress-spinner=off
+```
+
+### 3. Add Concurrency Control (30 minutes)
+Add to both workflow files:
 ```yaml
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 ```
 
-### 3. Create Missing example.yaml Files (4-6 hours)
-Use the existing `examples/ray/data/rag/ray-data-pipeline/example.yaml` as a template. Each example needs at minimum: `title`, `description`, `status`, and `components.rhoai`.
+### 4. Create CLAUDE.md (2-3 hours)
+Create basic agent rules covering:
+- Notebook conventions (cell ordering, metadata)
+- Test creation patterns (validation vs. smoke tests)
+- Pre-commit hook requirements
+- Dependency pinning standards
 
-### 4. Add CodeQL Python Scanning (1-2 hours)
+### 5. Add Codecov Integration (2-3 hours)
 ```yaml
-name: CodeQL
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: python
-      - uses: github/codeql-action/analyze@v3
+- name: Upload coverage to Codecov
+  uses: codecov/codecov-action@v4
+  with:
+    file: ./coverage.xml
+    fail_ci_if_error: false
 ```
-
-### 5. Create Basic CLAUDE.md (2-3 hours)
-Add agent rules for test creation patterns, notebook standards, and pre-commit requirements.
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows Inventory**:
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `code-quality.yml` | PR + push to main + dispatch | Ruff linting/formatting, markdownlint, Gitleaks, Talisman |
-| `notebook-tests.yml` | PR + push to main + dispatch | Validation tests + smoke tests with JUnit XML + step summary |
+**Workflows**: 2 GitHub Actions workflows
+
+| Workflow | Trigger | Jobs | Status |
+|----------|---------|------|--------|
+| `code-quality.yml` | push/PR to main, dispatch | Linting, Secret Scanning | Good |
+| `notebook-tests.yml` | push/PR to main, dispatch | Validation & Tests | Moderate |
 
 **Strengths**:
-- Both workflows trigger on PRs, push to main, and manual dispatch
-- Ruff version pinned (`0.14.4`) for consistency with pre-commit
-- Test results uploaded as artifacts with 7-day retention
-- GitHub step summary generated for test results
-- Python pip caching enabled in notebook-tests workflow
+- Both workflows run on PRs and push to main
+- `pip` caching enabled in test workflow
+- JUnit XML results generated and uploaded as artifacts
+- GitHub Step Summary generated for test results
+- Manual dispatch available
 
-**Gaps**:
-- No concurrency control — stale runs waste resources
-- No coverage collection or reporting in CI
-- `continue-on-error: true` on test steps means failures may not block PRs effectively (though "Check test results" step partially addresses this)
-- No matrix testing for multiple Python versions
-- No dependency caching in code-quality workflow
+**Weaknesses**:
+- No concurrency control on either workflow
+- `continue-on-error: true` on test steps with fragile grep-based failure detection
+- No matrix testing across Python versions
+- No parallel test execution (`pytest-xdist` is a dependency but not used in CI)
+- No coverage generation in CI
 
 ### Test Coverage
 
-**Test Infrastructure** (2,139 lines across 9 test files):
+**Framework**: pytest with 94 test functions across 17 files
 
-| Test Category | Files | Lines | What It Validates |
-|--------------|-------|-------|-------------------|
-| Notebook Structure | `test_notebook_structure.py` | 108 | JSON validity, nbformat schema, cell types, error detection |
-| Notebook Content | `test_notebook_content.py` | 94 | Cleared execution counts, no stored outputs, no empty cells |
-| Notebook Syntax | `test_notebook_syntax.py` | 185 | Import parseability, Python AST validity, shell command handling |
-| Notebook Metadata | `test_notebook_metadata.py` | 171 | Kernelspec consistency, no env-specific metadata, required sections |
-| Example Structure | `test_example_structure.py` | 344 | Required files, naming conventions, env var documentation |
-| Example Metadata | `test_example_metadata.py` | 310 | YAML validity, required fields, schema validation, predefined values |
-| PyProject Validation | `test_pyproject_toml.py` | 215 | TOML validity, required sections, dependency versions, venv build |
-| Smoke Tests | `test_smoke.py` | 301 | Knowledge-tuning structure, imports, env vars, documentation |
-| Utility Tests | `test_knowledge_utils.py` | 265 | Unit tests for knowledge_utils.py with mocked transformers |
+**Validation Tests** (`tests/validation/` - 6 test files, ~1540 lines):
+- `test_notebook_structure.py`: JSON validity, nbformat schema, cell validation, metadata, error detection
+- `test_notebook_content.py`: No execution counts, no stored outputs, no empty cells
+- `test_notebook_syntax.py`: Import parseability, code validity, shell command handling
+- `test_notebook_metadata.py`: Kernelspec consistency, no environment metadata, standardized schema
+- `test_pyproject_toml.py`: Valid TOML, required sections, dependency format, **venv build validation via pip --dry-run**
+- `test_example_metadata.py`: Example metadata validation (for future example.yaml files)
+- `test_example_structure.py`: Example directory structure validation
 
-**Strengths**:
-- Parameterized discovery — validation tests auto-discover all notebooks and examples
-- Well-structured conftest with session-scoped fixtures
-- Test markers defined (`smoke`, `validation`, `slow`, `integration`)
-- Mock strategy for heavy dependencies (transformers)
-- Data contract validation in utility tests
-- Comprehensive notebook structure/content/syntax checks
+**Smoke Tests** (`tests/examples/` - knowledge-tuning only):
+- `test_smoke.py`: Directory structure, required files, notebook structure, imports, env variables
+- `test_knowledge_utils.py`: 265 lines of utility function tests with mocked transformers/torch
+- Custom mocks in `mocks/transformers_mock.py`
 
-**Gaps**:
-- Only 1 of 9 examples has smoke tests (knowledge-tuning)
-- No notebook execution tests — validates syntax but never runs code
-- No test-to-code ratio tracking
-- Coverage configured in `pyproject.toml` but not used in CI
-- `continue-on-error: true` weakens test gate enforcement
+**Test-to-Code Ratio**: 94 test functions for 38 Python source files = 2.5 tests per file (moderate)
+
+**Coverage Configuration** (in pyproject.toml but NOT used in CI):
+```toml
+[tool.coverage.run]
+source = ["examples"]
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "def __repr__", ...]
+```
 
 ### Code Quality
 
-**Linting**: Ruff (v0.14.4) with rules: `E` (pycodestyle), `F` (pyflakes), `I` (isort), `B` (bugbear), `W` (warnings), `UP` (pyupgrade). Well-configured with sensible ignores and unfixable rules.
+**Linting** (Strong):
+- Ruff v0.14.4 with rules: E, F, I, B, W, UP (pycodestyle, pyflakes, isort, bugbear, warnings, pyupgrade)
+- Sensible ignores: E203, E501 (Black-compatible), UP006/007/035/045 (typing compatibility)
+- Line length: 88 (Black standard)
+- Runs in both pre-commit and CI
 
-**Formatting**: Ruff format with Black-compatible settings (double quotes, 88-char lines, preview mode).
+**Markdown Linting**:
+- markdownlint-cli with custom `.markdownlint.json` configuration
+- Runs in both pre-commit and CI
 
-**Markdown**: markdownlint-cli with custom config (`.markdownlint.json`) — sensible rule adjustments.
-
-**Pre-commit Hooks** (11+ hooks across 7 repos):
-| Hook | Purpose |
-|------|---------|
-| `nbstripout` | Strip notebook outputs before commit |
-| `ruff` (linter) | Python linting with auto-fix |
-| `ruff-format` | Python formatting |
-| `markdownlint` | Markdown quality |
-| `gitleaks` | Secret scanning |
-| `talisman-commit` | Secret scanning (additional) |
-| `detect-secrets` | Secret scanning (with baseline) |
-| `trailing-whitespace` | File hygiene |
-| `end-of-file-fixer` | File hygiene |
-| `check-yaml` | YAML validity |
-| `check-added-large-files` | Prevent large files (>1MB) |
-| `check-merge-conflict` | Prevent conflict markers |
-| `detect-private-key` | Key detection |
-
-**Assessment**: 9/10 — Exceptional pre-commit setup. Triple-layer secret scanning (Gitleaks + Talisman + detect-secrets) is gold-standard. nbstripout prevents notebook output pollution. Only missing static type checking (mypy/pyright).
+**Pre-commit Hooks** (Excellent - 7 hooks):
+1. `nbstripout` - Strip notebook outputs (with `keep_output` tag support)
+2. `ruff` - Python linting with autofix
+3. `ruff-format` - Python formatting
+4. `markdownlint` - Markdown linting
+5. `gitleaks` - Secret scanning
+6. `talisman` - Secret scanning (Thoughtworks)
+7. `detect-secrets` - Secret baseline scanning (Yelp)
+8. `pre-commit-hooks` - trailing whitespace, EOF, YAML check, large files, merge conflicts, case conflicts, line endings, private key detection
 
 ### Container Images
 
-- No Dockerfiles or Containerfiles exist in the repository
-- No container build process
-- No multi-architecture support
-- No vulnerability scanning for container images
-- No SBOM generation
-
-**Context**: As an examples repository, containerization is less critical than for production services. However, testing examples inside RHOAI workbench-compatible containers would significantly improve confidence that examples work in the target environment.
+**Not Applicable**: This is a notebook/examples repository with no container artifacts. No Dockerfiles, Containerfiles, or container build processes exist. This is appropriate for the repository type.
 
 ### Security
 
-**Strengths**:
-- Triple secret scanning: Gitleaks (v8.29.0), Talisman (v1.37.0), detect-secrets (v1.5.0)
-- `.gitleaks.toml` with sensible allowlist for base64 image data and hashes
-- `.talismanrc` with per-file checksum allowlist
-- `.secrets.baseline` for detect-secrets audit trail
+**Secret Scanning** (Excellent - 9/10):
+- **Triple-layer scanning**: Gitleaks + Talisman + detect-secrets
+- `.gitleaks.toml` with custom allowlists for legitimate patterns (base64 images, hashes)
+- `.talismanrc` with checksums for known false positives
+- `.secrets.baseline` (399 lines) maintained for detect-secrets
 - `detect-private-key` pre-commit hook
-- `check-added-large-files` (1MB max) prevents accidental binary commits
+- `check-added-large-files` (1000KB threshold)
 
-**Gaps**:
-- No SAST (CodeQL, Semgrep, Bandit)
-- No dependency vulnerability scanning (Dependabot, Renovate, Safety)
-- No Trivy/Snyk for package audit
-- Talisman runs with `continue-on-error: true` in CI — failures are not blocking
+**Dependency Scanning** (Missing):
+- No pip-audit, safety, or Dependabot
+- No CodeQL or Semgrep SAST
+- No automated CVE detection for Python packages
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: None — no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
+- **Coverage**: No test types have agent rules
 - **Quality**: N/A
-- **Gaps**: All test types lack agent rules. No guidance for AI-generated tests, notebook standards, or pre-commit requirements.
-- **Recommendation**: Generate rules with `/test-rules-generator` covering:
-  - Validation test patterns (parameterized notebook discovery)
-  - Smoke test patterns (per-example structure validation)
-  - Utility function test patterns (with mocking strategies)
-  - Notebook content standards (nbstripout compatibility, metadata requirements)
+- **Gaps**:
+  - No `.claude/` directory
+  - No `CLAUDE.md` or `AGENTS.md`
+  - No test creation rules
+  - No notebook development guidelines for AI agents
+  - No automated quality gate guidance
+- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator`. The repo has well-documented testing patterns in TESTING.md and CONTRIBUTING.md that could be converted to actionable agent rules.
+
+### Documentation (Strength)
+
+The repository has excellent documentation:
+- **CONTRIBUTING.md**: Comprehensive development setup, pre-commit hooks, manual checks, notebook conventions, example contribution checklist
+- **TESTING.md**: Detailed test infrastructure guide with examples, coverage instructions, test types explained
+- **METADATA_SCHEMA.md**: Full example.yaml schema documentation
+- **EXAMPLE_STYLE_GUIDE.md**: Style guide for contributing examples
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add notebook execution smoke tests** — Use `papermill` or `nbconvert --execute` to validate that notebooks run without errors in a minimal environment. Start with notebooks that don't require GPU/cluster:
-   ```bash
-   pip install papermill
-   papermill notebook.ipynb output.ipynb --no-progress-bar
-   ```
+1. **Enable coverage tracking in CI** (2-4 hours)
+   - Add `--cov=tests --cov-report=xml` to pytest invocations in `notebook-tests.yml`
+   - Integrate codecov for PR-level reporting
+   - Set minimum coverage threshold (suggest 60% initially)
 
-2. **Enforce coverage in CI** — Add `--cov` to pytest commands, upload to codecov, set minimum threshold (e.g., 60% for test code).
+2. **Create smoke tests for remaining 8 examples** (16-24 hours)
+   - Use `tests/examples/knowledge_tuning/` as the template
+   - Priority order: `model-serve-flow` (most complex, 5 steps), `fine-tuning` (3 variants), `ray/rag`, `trainer` (5 sub-examples)
+   - Each needs: structure validation, required files check, notebook import verification
 
-3. **Create example.yaml for all examples** — Only 1 of 9 examples has metadata. This undermines the metadata validation system.
+3. **Add pip-audit for dependency scanning** (2-4 hours)
+   - Add as a new job in `code-quality.yml`
+   - Scan all `pyproject.toml` dependency trees for known CVEs
 
 ### Priority 1 (High Value)
 
-4. **Add SAST scanning** — CodeQL or Semgrep workflow for Python security analysis.
+4. **Implement notebook execution validation** (8-12 hours)
+   - Use `papermill` or `nbconvert --execute` for lightweight cell execution
+   - Start with import cells only to catch broken dependencies
+   - Add as optional CI step (can be slow, run on nightly schedule)
 
-5. **Create agent rules** — `.claude/rules/` with patterns for validation tests, smoke tests, and utility function tests. Include mock patterns for heavy ML dependencies.
+5. **Create comprehensive agent rules** (4-6 hours)
+   - Create `.claude/rules/` with test creation patterns
+   - Document notebook conventions, validation test patterns, smoke test patterns
+   - Include examples from existing knowledge-tuning tests
 
-6. **Expand smoke tests** — Add `tests/examples/` directories for `model-serve-flow`, `fine-tuning`, and `ray` examples following the knowledge-tuning pattern.
+6. **Add concurrency control to CI workflows** (30 minutes)
+   - Prevents redundant CI runs on rapid-fire commits
 
-7. **Fix continue-on-error weaknesses** — Talisman runs with `continue-on-error: true` in CI; consider making it blocking or adding a summary gate.
+7. **Adopt example.yaml metadata across all examples** (4-8 hours)
+   - Schema and validation tests already exist
+   - Need to create the metadata files for each example
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Containerized testing** — Test notebooks inside RHOAI-compatible container images.
+8. **Add CodeQL or Semgrep SAST workflow** (2-4 hours)
+   - Python-specific security analysis
+   - Catches injection, path traversal, and other code-level issues
 
-9. **Dependency vulnerability scanning** — Dependabot or Renovate for automated dependency updates and security alerts.
+9. **Enable pytest-xdist parallel execution in CI** (1 hour)
+   - `pytest-xdist` is already a test dependency
+   - Add `-n auto` to pytest invocations for faster CI
 
-10. **Add mypy/pyright** — Static type checking for Python utility code.
+10. **Add Python version matrix testing** (2-3 hours)
+    - Currently tests only on 3.12; notebooks target >=3.11
+    - Matrix test on 3.11 and 3.12
 
-11. **Matrix testing** — Test against Python 3.11 and 3.12 in CI.
-
-12. **Notebook output regression testing** — For cells marked with `keep_output`, validate output doesn't regress.
+11. **Fix fragile test result checking** (1-2 hours)
+    - Replace grep-based failure detection with proper pytest exit codes
+    - Remove `continue-on-error: true` from test steps
 
 ## Comparison to Gold Standards
 
 | Dimension | red-hat-ai-examples | odh-dashboard | notebooks | Best Practice |
 |-----------|-------------------|---------------|-----------|---------------|
-| Unit Tests | Validation + 1 smoke suite | Multi-layer with contracts | Image-level validation | Per-component unit + integration |
-| Integration/E2E | None (structural only) | Cypress E2E | Multi-image E2E | Automated E2E on PR |
-| Coverage | Configured, not enforced | Codecov with thresholds | Per-image tracking | Enforced with PR gates |
-| Secret Scanning | Triple-layer (excellent) | Basic | Basic | Multi-tool (matching) |
-| Pre-commit | 11+ hooks (excellent) | Standard set | Minimal | Comprehensive (matching) |
-| Agent Rules | None | Comprehensive | Basic | Full test type coverage |
-| SAST | None | CodeQL | None | CodeQL + language-specific |
-| Container Testing | None | N/A (web app) | 5-layer validation | Runtime + security scan |
+| Unit Tests | 94 functions, 1 example | Multi-layer, all components | Per-notebook | All examples covered |
+| Integration/E2E | None | Cypress E2E, contract tests | Image execution | Notebook execution tests |
+| Coverage Tracking | Configured, not in CI | Codecov with enforcement | Per-image | Codecov + thresholds |
+| CI/CD | 2 workflows, basic | Comprehensive, matrix | Multi-arch builds | Matrix + concurrency |
+| Secret Scanning | Excellent (3 tools) | Gitleaks | Basic | Triple-layer (matched) |
+| Agent Rules | None | Comprehensive .claude/rules | None | Full test guidance |
+| Pre-commit | Excellent (8 hooks) | Good | Basic | Comprehensive (matched) |
+| Documentation | Excellent | Good | Good | Detailed guides (matched) |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/code-quality.yml` — Linting, formatting, secret scanning
-- `.github/workflows/notebook-tests.yml` — Validation and smoke tests
+- `.github/workflows/code-quality.yml` - Linting and secret scanning
+- `.github/workflows/notebook-tests.yml` - Test execution
 
 ### Testing
-- `tests/conftest.py` — Shared fixtures (repo_root, all_notebooks, all_pyproject_files)
-- `tests/validation/` — 7 validation test files (structure, content, syntax, metadata, examples)
-- `tests/examples/knowledge_tuning/` — Smoke tests + utility tests with mocks
-- `pyproject.toml` — pytest config, markers, coverage settings
+- `tests/conftest.py` - Shared fixtures
+- `tests/validation/` - 6 validation test files (structure, content, syntax, metadata, pyproject)
+- `tests/examples/knowledge_tuning/` - Smoke tests with mocks
+- `pyproject.toml` - Test dependencies and pytest configuration
 
 ### Code Quality
-- `.pre-commit-config.yaml` — 11+ hooks across 7 repos
-- `ruff.toml` — Ruff linter/formatter configuration
-- `.markdownlint.json` — Markdown linting rules
+- `ruff.toml` - Python linting/formatting configuration
+- `.markdownlint.json` - Markdown linting rules
+- `.pre-commit-config.yaml` - 8 pre-commit hooks
 
 ### Security
-- `.gitleaks.toml` — Gitleaks secret scanning config
-- `.talismanrc` — Talisman secret scanning config
-- `.secrets.baseline` — detect-secrets baseline
+- `.gitleaks.toml` - Gitleaks configuration with allowlists
+- `.talismanrc` - Talisman false positive management
+- `.secrets.baseline` - detect-secrets baseline (399 lines)
 
 ### Documentation
-- `TESTING.md` — Comprehensive testing documentation
-- `CONTRIBUTING.md` — Development setup and quality standards
-- `docs/METADATA_SCHEMA.md` — example.yaml schema specification
-- `docs/EXAMPLE_STYLE_GUIDE.md` — File naming and structure standards
+- `CONTRIBUTING.md` - Development setup and contribution guide
+- `TESTING.md` - Test infrastructure documentation
+- `docs/METADATA_SCHEMA.md` - Example metadata schema
+- `docs/EXAMPLE_STYLE_GUIDE.md` - Example style guide
+
+### Examples (9 directories)
+- `examples/knowledge-tuning/` - Most mature, 7 step directories, smoke tests
+- `examples/model-serve-flow/` - 5 step directories, no smoke tests
+- `examples/fine-tuning/` - 3 variants (lora, osft, sft), no tests
+- `examples/ray/rag/` - RAG pipeline, no tests
+- `examples/trainer/` - 5 sub-examples, no tests
+- `examples/automl/` - AutoML with serving, no tests
+- `examples/autorag/` - Auto RAG, no tests
+- `examples/llmcompressor/` - LLM compression, no tests
+- `examples/domain_customization_kfp_pipeline/` - KFP pipeline, no tests

@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:25 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:48 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/devops-runner-images</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#fd7e14"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="305.362548"
+                                stroke-dashoffset="248.813928"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">4.6</div>
+                        <div class="score-value">5.6</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,42 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No test files exist — zero unit tests for Python scripts or Containerfile logic</div>
+                            <div class="scorecard-status">No test files exist — zero unit, integration, or functional tests anywhere in the repo</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E tests — no runtime validation of built images</div>
+                            <div class="scorecard-status">No integration or E2E tests; no validation that built images actually work</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Konflux Tekton pipelines with CEL-based path filtering and multi-arch builds</div>
+                            <div class="scorecard-status">Tekton/Konflux pipelines build multi-arch images on PR; skip-checks=true on PR builds disables security scans</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Multi-arch builds present but no image startup, runtime, or functional tests</div>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">Images build but are never validated at runtime — no startup, tool-presence, or smoke tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tracking — no codecov, no coverage thresholds, no reporting</div>
+                            <div class="scorecard-status">No coverage tooling — no code to cover and no container-level validation metrics</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Well-templated Tekton pipelines with Renovate for dependency updates</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Well-designed Tekton pipelines with CEL path-filtering, Jinja2 templating, multi-arch support, Renovate automation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Security Scanning</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Clair, Snyk, Coverity, ClamAV, RPM signature scans in pipeline — but skip-checks=true on PR builds</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Clair, Snyk, Coverity, ClamAV, RPM signature scans on push; all disabled on PRs via skip-checks=true</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Onboarding skill exists but no CLAUDE.md, no test rules, no quality guidelines</div>
+                            <div class="scorecard-status">Onboarding skill exists but no CLAUDE.md, no test rules, no code quality rules</div>
                         </div>
                     </div>
                 </div>
@@ -416,16 +416,16 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Zero test coverage — no tests of any kind</div>
-                            <p>Python generation scripts and Containerfile correctness are entirely unvalidated; regressions go undetected</p>
+                            <div class="item-description">Zero tests of any kind</div>
+                            <p>Broken images (wrong tool version, missing binary, incompatible base) discovered only when downstream CI jobs fail</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Security checks skipped on PR builds (skip-checks: true)</div>
-                            <p>Clair, Snyk, Coverity, ClamAV, RPM scans only run post-merge — vulnerabilities merge uncaught</p>
+                            <div class="item-description">PR builds skip all security checks (skip-checks=true)</div>
+                            <p>CVEs, deprecated base images, and unsigned RPMs are invisible until after merge to main</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
@@ -433,18 +433,18 @@
                         </li>
                         <li class="item-card high">
                             <div class="item-description">No image runtime validation</div>
-                            <p>Built images are never tested for startup, tool availability, or functional correctness</p>
+                            <p>A Containerfile change could produce an image where oc, kubectl, or yq are missing or broken — no automated detection</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No linting or static analysis for Python scripts</div>
-                            <p>Code quality of generation scripts is not enforced — no ruff, mypy, or pre-commit hooks</p>
+                            <div class="item-description">No linting or static analysis on Python scripts</div>
+                            <p>The two generator scripts have no lint checks; a syntax error would only surface when someone runs uv run manually</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -461,35 +461,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Enable security checks on PR builds</div>
-                            <p>Surface vulnerabilities before merge — change skip-checks from true to false in PR templates</p>
+                            <div class="item-description">Enable security scans on PR builds</div>
+                            <p>Catch CVEs and deprecated base images before merge by changing skip-checks from true to false in the PR template</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add container smoke tests to PR pipeline</div>
+                            <p>Validate that each image starts and its key binaries are present (oc --version, yq --version, etc.)</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
                             <div class="item-description">Add ruff linting for Python scripts</div>
-                            <p>Catch Python errors and enforce style in the two generation scripts</p>
+                            <p>Catch syntax and style issues in generate-pipelines.py and generate-pds.py</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Containerfile linting with hadolint</div>
-                            <p>Catch Dockerfile best-practice violations and security issues in all four Containerfiles</p>
+                            <div class="item-description">Add CLAUDE.md with project conventions</div>
+                            <p>Guide AI agents and new contributors on repo structure, naming, and how to add images</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add image smoke tests that verify tool availability</div>
-                            <p>Validate that yq, skopeo, oc, kubectl, opm are present and executable in built images</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -506,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Enable security scanning on PR builds (set skip-checks: false in pull-request template)</li><li>Add image startup and tool-availability smoke tests for all four images</li><li>Add unit tests for generate-pipelines.py and generate-pds.py</li></ul>
+                            <ul><li>Enable security scans on PR builds (set skip-checks=false in pull-request.yaml.j2)</li><li>Add container smoke tests — a Tekton task that runs the built image and verifies key binaries are present and functional</li><li>Add Containerfile linting (hadolint) to catch Dockerfile anti-patterns before build</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add Python linting (ruff) and Containerfile linting (hadolint)</li><li>Add pre-commit hooks for YAML validation and Python formatting</li><li>Create CLAUDE.md with project conventions and quality standards</li><li>Add .claude/rules/ for test automation guidance</li></ul>
+                            <ul><li>Add Python linting (ruff) for the generator scripts</li><li>Create CLAUDE.md with repo conventions, Containerfile standards, and onboarding pointers</li><li>Add pre-commit hooks for YAML validation and Python formatting</li><li>Pin tool download URLs in Containerfiles to specific versions instead of &#x27;latest/stable&#x27; for reproducibility</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add Jinja2 template validation tests</li><li>Add YAML schema validation for generated Tekton PipelineRun files</li><li>Add SBOM generation to the pipeline</li><li>Consider image signing/attestation with cosign</li></ul>
+                            <ul><li>Add image size tracking/budgets to detect unexpected bloat</li><li>Add SBOM generation for built images</li><li>Consider Testcontainers-based integration tests for complex images (tracer, slack-notifier)</li><li>Add comprehensive .claude/rules/ for Containerfile best practices</li></ul>
                         </div>
                     </div>
                 </div>

@@ -1,159 +1,177 @@
 ---
 repository: "opendatahub-io/rag"
-overall_score: 2.1
+overall_score: 1.3
 scorecard:
   - dimension: "Unit Tests"
-    score: 0.5
-    status: "Virtually no unit tests — 1 Go test file in entire repo, 0 Python unit tests"
+    score: 1.0
+    status: "Virtually no unit tests; 1 Go integration test requiring live WhatsApp, 0 Python tests across ~4700 LOC"
   - dimension: "Integration/E2E"
     score: 1.0
-    status: "No automated integration or E2E tests; manual deployment verification only"
+    status: "No integration or E2E test suites; 1 manual shell script that checks dependencies"
   - dimension: "Build Integration"
-    score: 0.5
-    status: "No PR-time build validation; Dockerfiles exist but are never built in CI"
+    score: 1.0
+    status: "No PR-time build validation for any Dockerfile or Kustomize overlay"
   - dimension: "Image Testing"
-    score: 0.5
-    status: "4 Dockerfiles present but zero image build, scan, or runtime validation in CI"
+    score: 1.0
+    status: "4 Dockerfiles with no image scanning, runtime validation, or multi-arch support"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tools, no codecov integration, no thresholds"
+    status: "No coverage tooling, no codecov integration, no coverage thresholds"
   - dimension: "CI/CD Automation"
-    score: 4.0
+    score: 3.0
     status: "Single pre-commit workflow with good linting; no test, build, or deploy workflows"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules of any kind"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
-  - title: "Zero automated test suite"
-    impact: "No automated validation of any code path — regressions go undetected until manual testing"
+  - title: "Zero automated test execution in CI"
+    impact: "Code changes are never validated by automated tests; regressions go undetected"
     severity: "HIGH"
-    effort: "20-40 hours"
-  - title: "No CI build validation for Docker images"
-    impact: "4 Dockerfiles are never built in CI; broken images discovered only at deploy time"
+    effort: "8-16 hours"
+  - title: "No Python unit tests for ~4700 lines of application code"
+    impact: "Core demo logic (pipelines, MCP server, API server, UI) has zero test coverage"
+    severity: "HIGH"
+    effort: "16-24 hours"
+  - title: "No container image build validation on PRs"
+    impact: "Broken Dockerfiles and Kustomize overlays discovered only after merge or manual deploy"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "No coverage tracking"
-    impact: "Cannot measure or enforce code quality; impossible to set quality gates"
-    severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No security scanning"
-    impact: "Container images and dependencies not scanned for vulnerabilities"
+  - title: "No security scanning (SAST, container, dependency)"
+    impact: "Vulnerabilities in Python/Go dependencies and container images go undetected"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No agent rules for test automation"
-    impact: "AI-assisted contributions have no test quality guidance"
+  - title: "No coverage tracking or enforcement"
+    impact: "Cannot measure or improve test coverage over time"
     severity: "MEDIUM"
-    effort: "4-6 hours"
-quick_wins:
-  - title: "Add Trivy container scanning to CI"
+    effort: "2-4 hours"
+  - title: "No Go linting (golangci-lint) for ~3900 lines of Go code"
+    impact: "Go code quality issues not caught; only Python linting via ruff"
+    severity: "MEDIUM"
     effort: "1-2 hours"
-    impact: "Detect vulnerabilities in all 4 Docker images before merge"
-  - title: "Add Docker build validation workflow"
+quick_wins:
+  - title: "Add Trivy container scanning to pre-commit workflow"
+    effort: "1-2 hours"
+    impact: "Catch known vulnerabilities in container base images and dependencies"
+  - title: "Add Dockerfile build validation workflow"
     effort: "2-3 hours"
-    impact: "Catch broken Dockerfiles at PR time instead of deploy time"
-  - title: "Add pytest for Python utility modules"
+    impact: "Verify all 4 Dockerfiles build successfully on every PR"
+  - title: "Add golangci-lint for Go code"
+    effort: "1-2 hours"
+    impact: "Catch Go code quality issues in the whatsapp-bot component"
+  - title: "Add pytest for MCP server and voice API"
     effort: "4-6 hours"
-    impact: "Cover evaluation_utilities.py (900 LOC) and benchmarks with basic unit tests"
-  - title: "Add ruff type checking to pre-commit"
-    effort: "1 hour"
-    impact: "Catch type errors in 25 Python files at lint time"
+    impact: "Cover critical demo code with basic unit tests"
+  - title: "Add Kustomize build validation"
+    effort: "1-2 hours"
+    impact: "Verify kustomize overlays render correctly before merge"
 recommendations:
   priority_0:
-    - "Create a comprehensive test suite for evaluation_utilities.py and beir_benchmarks.py — these are the most complex and critical code paths"
-    - "Add Docker image build-and-smoke-test workflow to CI for all 4 Dockerfiles"
-    - "Add Trivy or Snyk vulnerability scanning for container images and Python dependencies"
+    - "Add GitHub Actions workflow to run pytest on Python code (MCP server, voice API, pipelines)"
+    - "Add Dockerfile build validation workflow for all 4 container images"
+    - "Add Trivy or Snyk scanning for container images and Python/Go dependencies"
   priority_1:
-    - "Add Go unit tests for the whatsapp-bot handlers and utilities"
-    - "Implement codecov integration with minimum coverage thresholds"
-    - "Add Kustomize build validation (kustomize build stack/base/) to CI"
-    - "Create CLAUDE.md and .claude/rules/ for test automation guidance"
+    - "Write unit tests for MCP server (database_manager.py, mcp_server.py, logger.py)"
+    - "Write unit tests for voice API server (routers, services)"
+    - "Add Go test CI workflow and golangci-lint for whatsapp-bot"
+    - "Add Kustomize overlay validation (kustomize build) in CI"
+    - "Set up codecov with minimum coverage thresholds"
   priority_2:
-    - "Add integration tests using Testcontainers for the voice-api-server FastAPI application"
-    - "Add notebook execution validation (papermill) for Jupyter notebooks"
-    - "Implement SBOM generation for container images"
-    - "Add CodeQL or Semgrep SAST scanning"
+    - "Create agent rules (.claude/rules/) for test creation patterns"
+    - "Add notebook validation (papermill or nbval) for Jupyter notebooks"
+    - "Add integration tests that deploy to Kind/Minikube"
+    - "Add SBOM generation for container images"
+    - "Implement CodeQL or Semgrep for SAST"
 ---
 
 # Quality Analysis: opendatahub-io/rag
 
 ## Executive Summary
 
-- **Overall Score: 2.1/10**
-- **Repository Type**: Demo/reference architecture repository — RAG Stack deployment guides, benchmarks, evaluation notebooks, and demo applications on Kubernetes/OpenShift
-- **Primary Languages**: Python (25 files, ~4,700 LOC), Go (12 files, ~3,900 LOC)
-- **Key Strengths**: Well-configured pre-commit hooks with Ruff linting, license enforcement, and YAML validation; good contributing guidelines and deployment documentation
-- **Critical Gaps**: Virtually zero automated tests, no CI beyond linting, no coverage tracking, no security scanning, no image validation, no agent rules
-- **Agent Rules Status**: Missing — no CLAUDE.md, no .claude/ directory
+- **Overall Score: 1.3/10**
+- **Repository Type**: Demo/reference repository — RAG demonstrations, benchmarks, and Kubernetes/OpenShift deployment configurations
+- **Primary Languages**: Python (~4,700 LOC), Go (~3,900 LOC), Shell scripts, Jupyter notebooks
+- **Total Files**: ~210 files across demos, benchmarks, stack deployment configs, and notebooks
 
-This repository is a demo and reference architecture project, not a production application, which partially explains the minimal test infrastructure. However, it contains substantial application code (voice-api-server, whatsapp-bot, MCP server, benchmarking framework, evaluation utilities) that would benefit significantly from automated testing and CI validation.
+### Key Strengths
+- Well-configured pre-commit hooks with ruff linter/formatter, license enforcement, and standard checks
+- Proper concurrency control and caching in the pre-commit CI workflow
+- Good repository organization with CONTRIBUTING.md, OWNERS, and clear folder structure
+- UBI9-based container images following Red Hat/OpenShift best practices (non-root users, group 0 permissions)
+
+### Critical Gaps
+- **Zero automated tests in CI** — the only workflow is pre-commit linting
+- **No Python tests** for ~4,700 lines of application code across pipelines, MCP server, voice API, and UI
+- **No container image validation** — 4 Dockerfiles are never built or scanned in CI
+- **No security scanning** — no SAST, no container scanning, no dependency auditing
+- **No coverage tracking** — no codecov, no coverage thresholds, no coverage reports
+
+### Agent Rules Status: **Missing**
+- No `CLAUDE.md`, `AGENTS.md`, or `.claude/` directory
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0.5/10 | 1 Go test file, 0 Python test files |
-| Integration/E2E | 1.0/10 | No automated integration or E2E tests |
-| **Build Integration** | **0.5/10** | **4 Dockerfiles never built in CI** |
-| Image Testing | 0.5/10 | No image build, scan, or runtime validation |
-| Coverage Tracking | 0.0/10 | No coverage tools whatsoever |
-| CI/CD Automation | 4.0/10 | Good pre-commit; no test/build/deploy automation |
-| Agent Rules | 0.0/10 | No CLAUDE.md, no .claude/ directory |
+| Unit Tests | 1/10 | 1 Go test requiring live WhatsApp; 0 Python tests |
+| Integration/E2E | 1/10 | No integration or E2E suites |
+| **Build Integration** | **1/10** | **No PR-time build validation** |
+| Image Testing | 1/10 | 4 Dockerfiles, no scanning or runtime validation |
+| Coverage Tracking | 0/10 | No coverage tooling whatsoever |
+| CI/CD Automation | 3/10 | Pre-commit only; no test/build/deploy workflows |
+| Agent Rules | 0/10 | No agent rules or test automation guidance |
 
 ## Critical Gaps
 
-### 1. Zero Automated Test Suite
-- **Impact**: No automated validation of any code path — regressions in evaluation utilities, benchmarks, API servers, or bot logic go entirely undetected until manual testing or production failure
+### 1. Zero Automated Test Execution in CI
+- **Impact**: Code changes are never validated by automated tests; regressions go completely undetected
 - **Severity**: HIGH
-- **Effort**: 20-40 hours
-- **Details**: The repo has ~8,600 LOC across Python and Go. There is exactly 1 test file (`test_audio_send_test.go`) which is a manual integration test requiring a live WhatsApp connection — not a CI-runnable test. There are 0 Python test files despite 25 Python source files including complex evaluation logic.
+- **Effort**: 8-16 hours
+- **Details**: The only CI workflow (`.github/workflows/pre-commit.yaml`) runs linting and formatting checks. No workflow exists to run `pytest`, `go test`, or any test suite.
 
-### 2. No CI Build Validation for Docker Images
-- **Impact**: 4 Dockerfiles (`voice-api-server`, `chat-ui`, `whatsapp-bot`, `mcp-server`) are never built in CI. Broken images are only discovered at deploy time.
+### 2. No Python Unit Tests (~4,700 LOC Untested)
+- **Impact**: Core application logic has zero test coverage — MCP server, voice API server, Kubeflow pipelines, evaluation utilities, and UI code
+- **Severity**: HIGH
+- **Effort**: 16-24 hours
+- **Files needing tests**:
+  - `demos/redbank-demo/mcp-server/redbank-mcp/mcp_server.py` — MCP server logic
+  - `demos/redbank-demo/mcp-server/redbank-mcp/database_manager.py` — Database operations
+  - `demos/redbank-demo/chat-bot/voice-api-server/app/` — Voice API (routers, services)
+  - `demos/kubeflow-pipelines/*/` — Pipeline definitions
+  - `notebooks/evaluation/evaluation_utilities.py` — Evaluation helpers
+  - `benchmarks/beir-benchmarks/beir_benchmarks.py` — Benchmarking scripts
+
+### 3. No Container Image Build Validation
+- **Impact**: Broken Dockerfiles discovered only during manual deployment
 - **Severity**: HIGH
 - **Effort**: 4-8 hours
-- **Details**: The Dockerfiles use proper multi-stage builds, UBI9 base images, and non-root users — good practices that deserve CI validation to prevent regression.
-
-### 3. No Coverage Tracking
-- **Impact**: Cannot measure, enforce, or trend code coverage; no quality gates possible
-- **Severity**: HIGH
-- **Effort**: 4-6 hours (after tests exist)
+- **Details**: 4 Dockerfiles exist:
+  - `demos/redbank-demo/mcp-server/Dockerfile`
+  - `demos/redbank-demo/chat-bot/whatsapp-bot/Dockerfile`
+  - `demos/redbank-demo/chat-bot/voice-api-server/Dockerfile`
+  - `demos/redbank-demo/chat-bot/ui/Dockerfile`
+  - None are built or validated in CI
 
 ### 4. No Security Scanning
-- **Impact**: Dependencies and container images not scanned for vulnerabilities. Multiple requirements.txt files pin specific versions that may have known CVEs.
+- **Impact**: Vulnerabilities in base images, Python packages, and Go modules go undetected
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
+- **Details**: No Trivy, Snyk, CodeQL, Semgrep, or dependency scanning. The `detect-private-key` pre-commit hook is the only security check.
 
-### 5. No Agent Rules
-- **Impact**: AI-assisted code contributions have no test quality guidance, no testing standards, no framework-specific patterns
+### 5. No Coverage Tracking
+- **Impact**: Cannot measure, enforce, or improve test coverage
 - **Severity**: MEDIUM
-- **Effort**: 4-6 hours
+- **Effort**: 2-4 hours
+
+### 6. No Go Linting
+- **Impact**: ~3,900 lines of Go code (whatsapp-bot) have no static analysis
+- **Severity**: MEDIUM
+- **Effort**: 1-2 hours
+- **Details**: Ruff handles Python linting, but there is no `golangci-lint` configuration or CI step for Go.
 
 ## Quick Wins
 
-### 1. Add Docker Build Validation Workflow (2-3 hours)
-- **Impact**: Catch broken Dockerfiles at PR time
-- **Implementation**:
-```yaml
-name: Build Images
-on: [pull_request]
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        context:
-          - demos/redbank-demo/chat-bot/voice-api-server
-          - demos/redbank-demo/chat-bot/ui
-          - demos/redbank-demo/chat-bot/whatsapp-bot
-          - demos/redbank-demo/mcp-server
-    steps:
-      - uses: actions/checkout@v4
-      - run: docker build -t test-${{ matrix.context }} ${{ matrix.context }}
-```
-
-### 2. Add Trivy Scanning (1-2 hours)
-- **Impact**: Detect vulnerabilities in container images and Python dependencies
-- **Implementation**:
+### 1. Add Trivy Container Scanning (1-2 hours)
+Add to PR workflow:
 ```yaml
 - name: Run Trivy vulnerability scanner
   uses: aquasecurity/trivy-action@master
@@ -163,226 +181,235 @@ jobs:
     severity: 'CRITICAL,HIGH'
 ```
 
-### 3. Add Pytest for Evaluation Utilities (4-6 hours)
-- **Impact**: Cover the most complex code — `evaluation_utilities.py` (900 LOC) includes JSON parsing, LLM prompt construction, Excel output, and statistical significance testing — all highly testable without external dependencies
-- **Implementation**: Create `notebooks/evaluation/test_evaluation_utilities.py` with tests for `parse_llm_relevance_response`, `clean_label_for_excel`, `load_rag_progress`, `save_rag_progress`, etc.
+### 2. Add Dockerfile Build Validation (2-3 hours)
+Create a workflow that runs `docker build` for each Dockerfile on PR:
+```yaml
+name: Build Images
+on: [pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        context:
+          - demos/redbank-demo/mcp-server
+          - demos/redbank-demo/chat-bot/voice-api-server
+          - demos/redbank-demo/chat-bot/ui
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t test-${{ matrix.context }} ${{ matrix.context }}
+```
 
-### 4. Add Kustomize Validation (1 hour)
-- **Impact**: Catch manifest errors before merge
-- **Implementation**: Add `kustomize build stack/base/` and `kustomize build stack/overlays/*` to CI
+### 3. Add golangci-lint (1-2 hours)
+Create `.golangci.yml` and add to CI:
+```yaml
+- name: golangci-lint
+  uses: golangci/golangci-lint-action@v6
+  with:
+    working-directory: demos/redbank-demo/chat-bot/whatsapp-bot
+```
+
+### 4. Add Basic pytest for MCP Server (4-6 hours)
+Install pytest, create `tests/` directories, and write basic tests for `database_manager.py` and `mcp_server.py`.
+
+### 5. Add Kustomize Build Validation (1-2 hours)
+```yaml
+- name: Validate Kustomize overlays
+  run: |
+    for dir in stack/base stack/overlays/*/; do
+      kustomize build "$dir" > /dev/null
+    done
+```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows Found**: 1 (`.github/workflows/pre-commit.yaml`)
+**Workflow Inventory**: 1 workflow total
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `pre-commit.yaml` | PR + push to main | Run pre-commit hooks (ruff, formatting, license, YAML) |
 
-The sole CI workflow runs pre-commit checks on PRs and pushes to main:
-- **Triggers**: Pull requests and pushes to main branch
-- **Concurrency**: Properly configured with `cancel-in-progress: true`
-- **Caching**: Python pip cache enabled using requirements.txt and pre-commit config as cache keys
-- **Post-check**: Verifies no uncommitted changes or new files after pre-commit
+**Strengths**:
+- Pinned action SHAs (security best practice)
+- Concurrency control with `cancel-in-progress: true`
+- pip caching via `cache-dependency-path`
+- Verifies no uncommitted changes/new files after pre-commit
 
-**What's Missing**:
+**Gaps**:
 - No test execution workflow
-- No Docker image build workflow
-- No Kustomize validation workflow
-- No security scanning workflow
-- No periodic/scheduled jobs
+- No build validation workflow
+- No periodic/scheduled workflows
 - No deployment validation
 
 ### Test Coverage
 
-**Python Tests**: 0 test files out of 25 Python source files
-- `evaluation_utilities.py` (900 LOC) — complex evaluation, RAG processing, statistical analysis — zero tests
-- `beir_benchmarks.py` (520 LOC) — benchmarking framework — zero tests
-- `voice-api-server/` (7 Python files) — FastAPI application — zero tests
-- `mcp-server/` (3 Python files) — MCP server — zero tests
+**Python Tests**: **0 test files** across 25 Python source files (~4,700 LOC)
+- No `pytest.ini`, `conftest.py`, or `tests/` directories
+- No testing dependencies in any `requirements.txt`
+- No test framework configured
 
-**Go Tests**: 1 test file out of 12 Go source files
-- `test_audio_send_test.go` — manual integration test requiring live WhatsApp connection; not CI-runnable
-- `handlers/`, `models/`, `utils/`, `config/` packages — zero tests
+**Go Tests**: **1 test file** — `demos/redbank-demo/chat-bot/whatsapp-bot/test_audio_send_test.go`
+- This is an integration test requiring a live WhatsApp connection and local database
+- Hardcoded recipient phone number — not suitable for CI
+- No mocking or test isolation
+- No other Go test files for ~3,900 LOC
 
-**Notebooks**: 16 Jupyter notebooks — no automated execution or validation
+**Shell Tests**: **1 shell script** — `test_voice_processing.sh`
+- Manual dependency checker, not an automated test
+- Requires a running server
+- Does not assert results
 
-**Test-to-Code Ratio**: ~0% (effectively no automated tests)
+**Test-to-Code Ratio**: Effectively **0:1** — near-zero test coverage
 
-### Code Quality Tools
+### Code Quality
 
-**Pre-commit Configuration** (`.pre-commit-config.yaml`) — **Well Done**:
-- `check-merge-conflict`, `trailing-whitespace`, `check-added-large-files` (1MB limit)
-- `end-of-file-fixer`, `no-commit-to-branch`, `check-yaml`, `detect-private-key`
-- `requirements-txt-fixer`, `mixed-line-ending`, `check-executables-have-shebangs`
-- `check-json`, `check-shebang-scripts-are-executable`
-- **License enforcement**: `insert-license` for `.py` and `.sh` files
-- **Ruff**: Linting with `--fix` and formatting
-- **blacken-docs**: Code formatting in documentation
-- **pre-commit.ci**: Auto-fix and auto-update configured
+**Pre-commit Configuration** (`.pre-commit-config.yaml`):
+| Hook | Purpose |
+|------|---------|
+| check-merge-conflict | Prevent merge conflict markers |
+| trailing-whitespace | Whitespace cleanup (excludes .py) |
+| check-added-large-files | Block files >1MB |
+| end-of-file-fixer | Consistent EOF |
+| no-commit-to-branch | Prevent direct commits to main |
+| check-yaml | YAML syntax validation |
+| detect-private-key | Basic secret detection |
+| requirements-txt-fixer | Sort requirements |
+| mixed-line-ending | LF enforcement |
+| check-executables-have-shebangs | Script validation |
+| check-json | JSON syntax validation |
+| check-shebang-scripts-are-executable | Permission check |
+| insert-license | Apache 2.0 license headers |
+| ruff | Python linting |
+| ruff-format | Python formatting |
+| blacken-docs | Format code in docs |
 
-**What's Missing**:
-- No Go linting (`golangci-lint`)
-- No type checking (mypy, pyright)
-- No static analysis (CodeQL, Semgrep, gosec)
-- No dependency scanning
-- No secret detection beyond `detect-private-key`
+This is a **strong** pre-commit setup — one of the few bright spots.
+
+**Missing**:
+- No golangci-lint for Go
+- No mypy/pyright for Python type checking
+- No shellcheck for shell scripts
 
 ### Container Images
 
-**4 Dockerfiles found**:
+**Dockerfiles**: 4 total, all in `demos/redbank-demo/chat-bot/`
 
-1. **voice-api-server** (`demos/redbank-demo/chat-bot/voice-api-server/Dockerfile`)
-   - Base: `registry.access.redhat.com/ubi9/python-312:latest`
-   - Non-root user (1001), group 0 permissions for OpenShift compatibility
-   - Single-stage build
+| Dockerfile | Base Image | Strengths | Gaps |
+|------------|-----------|-----------|------|
+| mcp-server | UBI9/python-312 | Simple, clean | No multi-stage, no healthcheck |
+| whatsapp-bot | UBI9/go-toolset (multi-stage) | Multi-stage build, non-root user | Uses `registry.redhat.io` (auth required) |
+| voice-api-server | UBI9/python-312 | Non-root user, OpenShift-compatible | No healthcheck |
+| ui | UBI9/python-312 | Non-root user | `pip install -e .` in container (unusual) |
 
-2. **chat-ui** (`demos/redbank-demo/chat-bot/ui/Dockerfile`)
-   - Base: `registry.access.redhat.com/ubi9/python-312:latest`
-   - Non-root user (1001), proper permissions
+**Strengths**:
+- All use Red Hat UBI9 base images
+- Non-root user configurations
+- OpenShift-compatible (group 0 permissions)
+- Multi-stage build for Go binary
 
-3. **whatsapp-bot** (`demos/redbank-demo/chat-bot/whatsapp-bot/Dockerfile`)
-   - Multi-stage build (Go builder + UBI9 minimal runtime)
-   - CGO enabled for SQLite, static ffmpeg binaries
-   - Non-root user, proper directory structure
-
-4. **mcp-server** (`demos/redbank-demo/mcp-server/Dockerfile`)
-   - Base: `registry.access.redhat.com/ubi9/python-312:latest`
-   - Single-stage, minimal configuration
-
-**Strengths**: All use Red Hat UBI9 base images, all configure non-root users
-**Gaps**: No image scanning, no SBOM generation, no multi-arch support, no image signing, no CI build validation
+**Gaps**:
+- No image scanning (Trivy, Snyk)
+- No SBOM generation
+- No image signing/attestation
+- No healthcheck instructions
+- No multi-architecture support
+- No runtime validation tests
+- No `.dockerignore` in individual demo directories
 
 ### Security Practices
 
-- **detect-private-key**: Pre-commit hook for basic key detection
-- **No container scanning** (Trivy, Snyk)
-- **No SAST** (CodeQL, Semgrep)
-- **No dependency scanning** (Dependabot, Renovate)
-- **No secret detection** (Gitleaks, TruffleHog)
-- **Hardcoded recipient in test**: `test_audio_send_test.go` contains a hardcoded WhatsApp JID
+| Practice | Status |
+|----------|--------|
+| Secret detection | Partial — `detect-private-key` pre-commit hook only |
+| SAST/CodeQL | Missing |
+| Container scanning | Missing |
+| Dependency scanning | Missing |
+| SBOM generation | Missing |
+| Image signing | Missing |
+| Gitleaks | Missing |
+| Pinned action SHAs | Present |
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **CLAUDE.md**: Not present
-- **AGENTS.md**: Not present
-- **.claude/ directory**: Not present
 - **Coverage**: No test type rules exist
 - **Quality**: N/A
-- **Gaps**: Everything — no test automation guidance, no testing standards, no framework-specific patterns
-- **Recommendation**: Generate rules with `/test-rules-generator` covering Python pytest patterns, Go testing patterns, notebook validation, and Kustomize validation
+- **Gaps**: No `CLAUDE.md`, `AGENTS.md`, or `.claude/` directory at all
+- **Recommendation**: Generate test creation rules with `/test-rules-generator` covering:
+  - Python pytest patterns for the various demo components
+  - Go testing patterns for the whatsapp-bot
+  - Notebook validation patterns
+  - Integration test patterns with mock external services
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Create pytest test suite for evaluation utilities**
-   - `parse_llm_relevance_response()` — pure function, trivially testable
-   - `clean_label_for_excel()` — pure function, edge cases matter
-   - `load_rag_progress()` / `save_rag_progress()` — file I/O with crash recovery logic
-   - `run_rag_with_progress()` — mock the processor function, test progress/resume flow
-   - Estimated effort: 8-12 hours for good coverage
-
-2. **Add Docker image build workflow**
-   - Build all 4 images on every PR
-   - Fail fast on broken Dockerfiles
-   - Estimated effort: 2-3 hours
-
-3. **Add security scanning**
-   - Trivy for container images and filesystem
-   - Dependabot or Renovate for dependency updates
-   - Estimated effort: 2-4 hours
+1. **Add GitHub Actions test workflow** — Create a workflow to run `pytest` for Python code and `go test` for Go code on every PR
+2. **Add Dockerfile build validation** — Verify all 4 Dockerfiles build successfully on every PR
+3. **Add container/dependency scanning** — Integrate Trivy for filesystem and image scanning
 
 ### Priority 1 (High Value)
 
-4. **Add Go unit tests for whatsapp-bot**
-   - `utils/validation.go`, `utils/file.go` — utility functions
-   - `config/config.go` — configuration parsing
-   - `handlers/` — HTTP handler tests with httptest
-   - Estimated effort: 8-12 hours
-
-5. **Add Kustomize validation to CI**
-   - `kustomize build stack/base/`
-   - `kustomize build` for each overlay
-   - Estimated effort: 1-2 hours
-
-6. **Add codecov integration**
-   - After test suites exist, add coverage reporting
-   - Set minimum thresholds (start at 30%, increase over time)
-   - Estimated effort: 2-3 hours (after tests exist)
-
-7. **Create CLAUDE.md and agent rules**
-   - Testing standards for Python (pytest) and Go
-   - Notebook validation guidelines
-   - Kustomize manifest validation
-   - Estimated effort: 4-6 hours
+4. **Write Python unit tests** — Start with MCP server (`database_manager.py`, `mcp_server.py`) and voice API server (routers, services)
+5. **Write Go unit tests** — Add tests for whatsapp-bot handlers, utils, and config
+6. **Add golangci-lint** — Configure Go linting for the whatsapp-bot component
+7. **Add Kustomize validation** — Verify `stack/base/` and all overlays build correctly in CI
+8. **Set up codecov** — Track coverage with minimum thresholds (start at 20%, increase over time)
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add notebook execution validation**
-   - Use papermill to run notebooks in CI (with mocked/lightweight backends)
-   - Catch import errors and cell execution failures
-   - Estimated effort: 8-12 hours
-
-9. **Add integration tests for FastAPI server**
-   - Use TestClient for voice-api-server endpoint testing
-   - Mock external services (LlamaStack, Whisper)
-   - Estimated effort: 6-8 hours
-
-10. **Add golangci-lint for Go code**
-    - Configure `.golangci.yml` with standard linters
-    - Add to pre-commit or separate CI workflow
-    - Estimated effort: 1-2 hours
-
-11. **Add SBOM generation**
-    - Generate SBOMs for container images
-    - Estimated effort: 2-3 hours
+9. **Create agent rules** — Add `.claude/rules/` with test creation patterns for Python and Go
+10. **Add notebook validation** — Use papermill or nbval to validate Jupyter notebooks execute without errors
+11. **Add integration tests** — Deploy to Kind/Minikube and run smoke tests
+12. **Add SBOM generation** — Use syft or cdxgen for software bill of materials
+13. **Implement CodeQL** — Enable GitHub's built-in SAST for Python and Go
+14. **Add shellcheck** — Lint the 10 shell scripts in the repository
 
 ## Comparison to Gold Standards
 
-| Practice | rag | odh-dashboard | notebooks | kserve |
-|----------|-----|---------------|-----------|--------|
-| Unit Test Files | 1 (non-CI) | 500+ | 50+ | 200+ |
-| Integration Tests | None | Contract tests | Image tests | envtest |
-| E2E Tests | None | Cypress suite | 5-layer validation | Multi-version |
-| CI Workflows | 1 (lint only) | 15+ | 10+ | 20+ |
-| Coverage Tracking | None | Codecov + thresholds | N/A | Codecov |
-| Security Scanning | detect-private-key | Trivy + CodeQL | Trivy | Trivy + gosec |
-| Image Testing | None | Build + smoke | Full 5-layer | Build + test |
-| Pre-commit | Excellent | Good | Basic | Good |
-| Agent Rules | None | Comprehensive | Basic | None |
+| Capability | rag | odh-dashboard | notebooks | kserve |
+|------------|-----|---------------|-----------|--------|
+| Unit Tests | None | Comprehensive Jest | N/A | Extensive Go tests |
+| Integration Tests | None | Contract tests | Image testing | Multi-version |
+| E2E Tests | None | Cypress suite | Notebook validation | KServe predictor tests |
+| Coverage Tracking | None | Codecov enforced | N/A | Codecov enforced |
+| CI Workflows | 1 (pre-commit) | 15+ workflows | 10+ workflows | 20+ workflows |
+| Container Scanning | None | Trivy | Trivy | Trivy |
+| Image Build CI | None | Multi-mode builds | Multi-arch | Multi-platform |
+| Pre-commit | Strong | Present | Present | Present |
+| Agent Rules | None | Comprehensive | None | None |
+| Kustomize Validation | None | Yes | N/A | Yes |
+| SAST | None | CodeQL | None | CodeQL |
 
 ## File Paths Reference
 
 ### CI/CD
 - `.github/workflows/pre-commit.yaml` — Only CI workflow
-- `.pre-commit-config.yaml` — Pre-commit configuration (comprehensive)
 
-### Source Code (Python)
-- `benchmarks/beir-benchmarks/beir_benchmarks.py` — Benchmark framework (520 LOC)
-- `notebooks/evaluation/evaluation_utilities.py` — Evaluation utilities (900 LOC)
-- `demos/redbank-demo/chat-bot/voice-api-server/app/` — FastAPI voice API (7 files)
-- `demos/redbank-demo/mcp-server/redbank-mcp/` — MCP server (3 files)
-- `demos/kubeflow-pipelines/*/` — Pipeline definitions (4 files)
-
-### Source Code (Go)
-- `demos/redbank-demo/chat-bot/whatsapp-bot/` — WhatsApp bot (12 files, ~3,900 LOC)
-
-### Tests
-- `demos/redbank-demo/chat-bot/whatsapp-bot/test_audio_send_test.go` — Only test file (manual, not CI-runnable)
+### Code Quality
+- `.pre-commit-config.yaml` — Pre-commit hooks (ruff, license, YAML, etc.)
 
 ### Container Images
+- `demos/redbank-demo/mcp-server/Dockerfile`
+- `demos/redbank-demo/chat-bot/whatsapp-bot/Dockerfile`
 - `demos/redbank-demo/chat-bot/voice-api-server/Dockerfile`
 - `demos/redbank-demo/chat-bot/ui/Dockerfile`
-- `demos/redbank-demo/chat-bot/whatsapp-bot/Dockerfile`
-- `demos/redbank-demo/mcp-server/Dockerfile`
+
+### Kustomize
+- `stack/base/kustomization.yaml`
+- `stack/overlays/*/kustomization.yaml`
 
 ### Deployment
-- `stack/base/` — Kustomize base (KServe + vLLM + LlamaStack)
-- `stack/overlays/` — Deployment variants (Granite, Llama, remote inference)
-- `demos/redbank-demo/Makefile` — Demo deployment automation
-- `DEPLOYMENT.md` — Comprehensive deployment guide
+- `stack/install.sh`
+- `demos/redbank-demo/Makefile`
 
-### Documentation
-- `README.md` — Project overview
-- `CONTRIBUTING.md` — Contributing guidelines with pre-commit instructions
-- `DEPLOYMENT.md` — Detailed deployment guide
+### Key Application Code (untested)
+- `demos/redbank-demo/mcp-server/redbank-mcp/` — MCP server (Python)
+- `demos/redbank-demo/chat-bot/voice-api-server/app/` — Voice API (Python/FastAPI)
+- `demos/redbank-demo/chat-bot/whatsapp-bot/` — WhatsApp bot (Go)
+- `demos/redbank-demo/chat-bot/ui/` — Chat UI (Python/Streamlit)
+- `demos/kubeflow-pipelines/` — Kubeflow pipeline definitions (Python)
+- `notebooks/evaluation/` — Evaluation notebooks and utilities
+- `benchmarks/beir-benchmarks/` — Embedding model benchmarks

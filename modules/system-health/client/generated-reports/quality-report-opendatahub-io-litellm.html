@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:30 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:06 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/litellm</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#28a745"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="107.44237800000002"
+                                stroke-dashoffset="90.47779199999995"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">8.1</div>
+                        <div class="score-value">8.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Exceptional coverage with 2,000+ test files across Python (pytest) and TypeScript (Vitest). Parallelized with pytest-xdist, flaky test reruns, and well-organized test directories.</div>
+                            <div class="scorecard-status">Exceptional test-to-code ratio (~1:1) with 1788 test files, parallelized pytest-xdist execution, flaky test reruns, and 22 conftest fixtures</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Strong integration test suites for LLM translation, proxy, MCP, and guardrails. E2E tests exist (multi_instance_e2e_tests) but require real provider API keys. No automated E2E in CI.</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">Docker-based server root path E2E tests, multi-instance E2E, LLM translation RC tests, and MCP integration tests; limited full-stack E2E automation on PRs</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">UI build check on PRs. No PR-time Docker image build validation. No Konflux/Tekton pipeline. Multiple Dockerfiles but none tested in CI on PRs.</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
+                            <div class="scorecard-status">UI build validation on PRs, Docker image build in server root path tests, Helm unit tests; no PR-time Konflux simulation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Multi-stage Dockerfile with Chainguard base (wolfi-base). Cosign key present for signing. No runtime validation, no Trivy/Snyk scanning in CI, no multi-arch builds.</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Multi-variant Dockerfiles (non_root, alpine, database), hardened compose for QA, server root path smoke tests; no Trivy/Snyk container scanning in CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Codecov integration with component-level coverage. Patch coverage threshold at 100%. Project coverage threshold allows max 1% drop. Coverage uploaded via OIDC.</div>
+                            <div class="scorecard-status">Codecov integration with per-component coverage, 1% project threshold, 0% patch threshold, OIDC-based upload, per-workflow coverage artifacts</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">46 GitHub Actions workflows. Comprehensive PR checks: unit tests, linting, code quality, security scanning, benchmarks. Reusable workflow pattern. Concurrency control and caching.</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
+                            <div class="scorecard-status">50+ workflows with concurrency control, reusable workflow templates, caching, security guards, performance benchmarks, and documentation validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Excellent CLAUDE.md and AGENTS.md with architecture, testing strategy, code patterns, common pitfalls, and development guidelines. No .claude/rules/ directory with per-test-type rules.</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Comprehensive CLAUDE.md (180 lines), AGENTS.md (276 lines), GEMINI.md with testing patterns, UI guidelines, architecture docs; missing .claude/rules/ directory</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +411,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No container image scanning in CI</div>
-                            <p>Vulnerabilities in base images and dependencies not caught before merge. Cosign key exists but no scanning pipeline.</p>
+                            <div class="item-description">No container vulnerability scanning in CI</div>
+                            <p>CVEs in base images or dependencies not caught before merge or release</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No PR-time Docker build validation</div>
-                            <p>Dockerfile changes can break production builds. Multiple Dockerfiles (8+) with no CI validation on PRs.</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">6-8 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No Konflux/Tekton pipeline (ODH fork)</div>
-                            <p>As an ODH fork, lacks the standard ODH build pipeline. No Tekton tasks or PipelineRuns configured.</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">16-24 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">E2E tests not automated in CI</div>
-                            <p>E2E test suites (multi_instance_e2e, proxy_e2e) exist but require manual execution with real API keys.</p>
+                            <div class="item-description">No pre-commit hook configuration</div>
+                            <p>Developers may push code without local linting/formatting checks, relying solely on CI</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No PR-time Konflux/production build simulation</div>
+                            <p>Build differences between PR CI and Konflux production builds may go undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
-                        <li class="item-card low">
-                            <div class="item-description">No pre-commit hooks</div>
-                            <p>Formatting and lint issues caught only in CI, not at commit time. Developers must remember to run black manually.</p>
+                        <li class="item-card medium">
+                            <div class="item-description">Security and DB tests only run on push, not on PRs</div>
+                            <p>Security regressions in external contributions not caught until post-merge</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -465,34 +457,34 @@
                         
                         <li class="item-card ">
                             <div class="item-description">Add Trivy container scanning to PR workflow</div>
-                            <p>Detect CVEs in the Chainguard base image and Python dependencies before merge</p>
+                            <p>Early detection of CVEs in container images before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add pre-commit hooks for Black, Ruff, and MyPy</div>
-                            <p>Catch formatting and lint issues before push, reducing CI failures</p>
+                            <div class="item-description">Add pre-commit hooks configuration</div>
+                            <p>Catch formatting and linting issues locally before push</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add PR-time Docker build smoke test</div>
-                            <p>Validate that the main Dockerfile builds successfully on every PR</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">3-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create .claude/rules/ directory with test-type-specific rules</div>
-                            <p>Structured agent guidance for unit, integration, and E2E test creation</p>
+                            <div class="item-description">Create .claude/rules/ directory with test pattern rules</div>
+                            <p>Structured, file-pattern-triggered test guidance for AI agents</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add SBOM generation to Docker build workflow</div>
+                            <p>Supply chain transparency and compliance readiness</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +501,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add container vulnerability scanning (Trivy) to PR and periodic workflows</li><li>Set up Konflux/Tekton build pipeline for ODH integration</li><li>Add PR-time Docker image build validation for the main Dockerfile</li></ul>
+                            <ul><li>Add container image vulnerability scanning (Trivy/Grype) to PR and release workflows</li><li>Enable security tests on PRs using service containers instead of external secrets</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Automate E2E proxy tests with mock/recorded API responses in CI</li><li>Add multi-architecture Docker build support (amd64/arm64)</li><li>Create .claude/rules/ with per-test-type rules (unit, integration, e2e)</li></ul>
+                            <ul><li>Add pre-commit hook configuration (.pre-commit-config.yaml) with Black, Ruff, MyPy, and secret scanning</li><li>Create .claude/rules/ directory with file-pattern-triggered test rules extracted from AGENTS.md</li><li>Add SBOM generation and image signing verification to CI</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add pre-commit hooks to enforce formatting locally</li><li>Implement contract testing for the proxy API</li><li>Add SBOM generation to container build pipeline</li></ul>
+                            <ul><li>Add PR-time Konflux build simulation to catch production build divergence</li><li>Add container runtime health check tests beyond server root path</li><li>Expand multi-instance E2E test coverage beyond team management</li></ul>
                         </div>
                     </div>
                 </div>

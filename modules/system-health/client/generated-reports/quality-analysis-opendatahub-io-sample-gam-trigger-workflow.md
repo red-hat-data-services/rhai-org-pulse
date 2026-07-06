@@ -1,273 +1,313 @@
 ---
 repository: "opendatahub-io/sample-gam-trigger-workflow"
-overall_score: 0.6
+overall_score: 1.2
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No tests exist — repository contains no application code"
+    status: "No source code or test files exist — repository contains only workflow YAML and a shell script"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests — no test infrastructure present"
+    status: "No integration or E2E tests — no test infrastructure of any kind"
   - dimension: "Build Integration"
-    score: 1.0
-    status: "No build process; workflows call external GAM workflow but no local validation"
+    score: 0.0
+    status: "No build process — no Dockerfile, Makefile, or build configuration"
   - dimension: "Image Testing"
     score: 0.0
-    status: "No container images — not applicable for this workflow-template repository"
+    status: "No container images built or tested"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tracking — no code to cover"
+    status: "No coverage tooling — nothing to cover"
   - dimension: "CI/CD Automation"
-    score: 3.0
-    status: "Three workflow examples demonstrating GAM integration patterns; all manual-dispatch only"
+    score: 6.0
+    status: "Three workflow variants for GAM triggering with proper GitHub App auth and artifact handling"
   - dimension: "Agent Rules"
     score: 0.0
     status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
-  - title: "README is essentially empty"
-    impact: "Users cannot understand what the repository does, how to use it, or how the three workflow patterns differ without reading each YAML file individually"
-    severity: "HIGH"
-    effort: "2-3 hours"
   - title: "No workflow validation or testing"
-    impact: "Workflow changes cannot be validated before merge; broken samples could mislead downstream consumers"
+    impact: "Workflow syntax errors, incorrect secret references, or broken shell scripts are only discovered at runtime"
     severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "Shell script uses placeholder random logic"
-    impact: "The custom_decider.sh is a RANDOM coin-flip placeholder — not a useful example for consumers"
+    effort: "2-4 hours"
+  - title: "Shell script has no validation or error handling"
+    impact: "custom_decider.sh uses random logic as placeholder — no actual decision criteria, no input validation, no error handling"
+    severity: "HIGH"
+    effort: "1-2 hours"
+  - title: "No linting for YAML workflows or shell scripts"
+    impact: "YAML syntax issues and shell anti-patterns go undetected until execution"
     severity: "MEDIUM"
     effort: "1-2 hours"
-  - title: "Outdated GitHub Action versions"
-    impact: "Uses actions/checkout@v3 (v4 is current); may miss security patches and features"
+  - title: "Hardcoded workflow ID and component name"
+    impact: "GAM_WORKFLOW_ID (136351503) will break if the upstream workflow file is renamed; COMPONENT is hardcoded in multiple places"
     severity: "MEDIUM"
-    effort: "30 minutes"
+    effort: "1-2 hours"
+  - title: "No security scanning of any kind"
+    impact: "No secret detection, no dependency scanning — GitHub App private key handling is not validated"
+    severity: "MEDIUM"
+    effort: "1-2 hours"
 quick_wins:
-  - title: "Write a comprehensive README with usage examples"
-    effort: "2-3 hours"
-    impact: "Makes the repository actually useful as a template/reference; explains when to use each pattern"
-  - title: "Add YAML linting workflow"
+  - title: "Add actionlint workflow validation"
+    effort: "1 hour"
+    impact: "Catches workflow syntax errors, expression mistakes, and deprecated action versions before merge"
+  - title: "Add shellcheck for custom_decider.sh"
     effort: "30 minutes"
-    impact: "Catches syntax errors in workflow files before merge"
-  - title: "Update actions/checkout to v4"
-    effort: "10 minutes"
-    impact: "Brings dependency to latest version with security fixes"
-  - title: "Add a LICENSE file"
-    effort: "5 minutes"
-    impact: "Clarifies usage rights for consumers of this sample"
+    impact: "Validates shell script correctness and flags common anti-patterns"
+  - title: "Add YAML linting with yamllint"
+    effort: "30 minutes"
+    impact: "Ensures consistent YAML formatting and catches syntax issues"
+  - title: "Replace hardcoded workflow ID with dynamic lookup"
+    effort: "1 hour"
+    impact: "Prevents breakage when upstream GAM workflow is renamed or recreated"
 recommendations:
   priority_0:
-    - "Write comprehensive README documenting all three GAM trigger patterns, when to use each, and setup requirements"
-    - "Add YAML linting (yamllint or actionlint) to validate workflow files on PR"
+    - "Add actionlint CI step to validate all workflow files on PRs"
+    - "Add shellcheck validation for all shell scripts in .github/scripts/"
+    - "Replace placeholder random decider with actual decision logic or document intended customization"
   priority_1:
-    - "Replace placeholder custom_decider.sh with a realistic example (e.g., check for label, PR count, or date-based logic)"
-    - "Add workflow testing with nektos/act or equivalent to validate workflows locally"
-    - "Update all GitHub Action versions to latest (checkout@v4, download-artifact@v4)"
+    - "Add Gitleaks or similar secret detection to prevent accidental secret exposure"
+    - "Make COMPONENT and GAM_WORKFLOW_ID configurable via workflow inputs instead of hardcoded env vars"
+    - "Add a CODEOWNERS file for workflow review requirements"
   priority_2:
-    - "Add CLAUDE.md or AGENTS.md with contribution guidelines"
-    - "Enable Dependabot for GitHub Actions version updates"
-    - "Add a CODEOWNERS file for review accountability"
+    - "Add comprehensive README documenting each workflow variant, when to use each, and required secrets"
+    - "Create CLAUDE.md or AGENTS.md with contribution guidelines"
+    - "Add workflow_dispatch inputs for component selection instead of editing YAML"
 ---
 
 # Quality Analysis: sample-gam-trigger-workflow
 
 ## Executive Summary
-- **Overall Score: 0.6/10**
-- **Repository Type**: Workflow template / sample repository (no application code)
-- **Primary Language**: YAML (GitHub Actions workflows) + Bash
-- **Key Strength**: Demonstrates three distinct GAM integration patterns (reusable workflow, gh CLI, custom decider)
-- **Critical Gap**: Minimal documentation, no testing, no quality tooling of any kind
-- **Agent Rules Status**: Missing
-
-> **Important Context**: This is a sample/template repository intended to demonstrate Gated Auto Merger (GAM) integration patterns for the `opendatahub-io` organization. It contains no application code — only workflow definitions and a helper shell script. The low scores reflect the absence of standard quality practices, though many dimensions (image testing, coverage) are not directly applicable to this type of repository.
+- **Overall Score: 1.2/10**
+- **Repository Type**: Sample/template — GitHub Actions workflow collection for triggering the Gated Auto Merger (GAM)
+- **Primary Language**: YAML (GitHub Actions) + Bash
+- **Key Strengths**: Clean workflow structure with three distinct triggering approaches (reusable workflow, GH CLI, custom decider); proper GitHub App authentication pattern
+- **Critical Gaps**: Zero test coverage, zero quality tooling, no linting, no security scanning — expected for a sample repo but still represents significant quality risk if forked and used in production
+- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0/10 | No tests exist — no application code to test |
-| Integration/E2E | 0/10 | No integration or E2E tests |
-| **Build Integration** | **1/10** | **No build process; workflows call external GAM but no local validation** |
-| Image Testing | 0/10 | N/A — no container images |
-| Coverage Tracking | 0/10 | No coverage tracking |
-| CI/CD Automation | 3/10 | Three workflow patterns; all manual-dispatch only |
-| Agent Rules | 0/10 | No agent rules or contribution guidance |
+| Unit Tests | 0/10 | No source code or test files exist |
+| Integration/E2E | 0/10 | No test infrastructure of any kind |
+| **Build Integration** | **0/10** | **No build process — no Dockerfile, Makefile, or build config** |
+| Image Testing | 0/10 | No container images built or tested |
+| Coverage Tracking | 0/10 | No coverage tooling |
+| CI/CD Automation | 6/10 | Three workflow variants with proper auth |
+| Agent Rules | 0/10 | No agent rules or documentation |
+
+## Repository Overview
+
+This is a **minimal sample/template repository** consisting of:
+
+- **1 file**: `README.md` (single line: "# sample-gam-trigger-workflow")
+- **3 GitHub Actions workflows**: Different approaches to trigger the Gated Auto Merger
+- **1 shell script**: `custom_decider.sh` (placeholder random decision logic)
+- **Total non-git files**: 5
+
+### Workflow Inventory
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `trigger-gam.yaml` | `workflow_dispatch` (schedule commented out) | Simplest approach — uses reusable workflow call directly |
+| `trigger-gam-with-gh-cli.yaml` | `workflow_dispatch` | Full-featured — uses GH CLI to trigger, monitor, and report GAM execution |
+| `trigger-gam-with-custom-decider.yaml` | `workflow_dispatch` (schedule commented out) | Conditional — runs custom shell script to decide whether to trigger GAM |
 
 ## Critical Gaps
 
-### 1. README is Essentially Empty
-- **Impact**: The README contains only `# sample-gam-trigger-workflow` — no description, no usage instructions, no explanation of the three workflow patterns
+### 1. No Workflow Validation or Testing
 - **Severity**: HIGH
-- **Effort**: 2-3 hours
-- **Why it matters**: As a *template repository*, documentation IS the product. Without it, consumers must reverse-engineer each YAML file to understand usage
+- **Impact**: Workflow syntax errors, incorrect secret references, or broken shell scripts are only discovered at runtime
+- **Effort**: 2-4 hours
+- **Details**: None of the three workflow files are validated by any CI process. An author could introduce a YAML syntax error, reference a non-existent secret, or use a deprecated action version with no automated detection.
 
-### 2. No Workflow Validation or Testing
-- **Impact**: No CI runs on PRs — workflow YAML changes are merged without any validation
+### 2. Shell Script Has No Validation or Error Handling
 - **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Why it matters**: Broken workflow syntax or logic in a *sample* repository could propagate errors to downstream consumers who copy these patterns
-
-### 3. Shell Script Uses Placeholder Random Logic
-- **Impact**: `custom_decider.sh` uses `RANDOM % 2` (a literal coin flip) as its decision logic — not instructive as an example
-- **Severity**: MEDIUM
+- **Impact**: `custom_decider.sh` uses `RANDOM % 2` as a placeholder — no actual decision criteria, no input validation, no `set -euo pipefail`
 - **Effort**: 1-2 hours
-- **Detail**: The script at `.github/scripts/custom_decider.sh` should demonstrate a realistic decision pattern (e.g., checking labels, PR counts, date-based gates)
+- **Details**: The script is clearly a placeholder, but it lacks basic shell best practices (`set -e`, error handling, logging) that should be present even in sample code since users will copy this pattern.
 
-### 4. Outdated GitHub Action Versions
-- **Impact**: `trigger-gam-with-custom-decider.yaml` uses `actions/checkout@v3` (v4 is current since October 2023)
+### 3. No Linting for YAML or Shell
 - **Severity**: MEDIUM
-- **Effort**: 30 minutes
+- **Impact**: YAML syntax issues, deprecated action versions, and shell anti-patterns go undetected
+- **Effort**: 1-2 hours
+- **Details**: No `actionlint`, `yamllint`, or `shellcheck` integration. Typos like "acceps" (line 17 of trigger-gam.yaml) persist unchecked.
+
+### 4. Hardcoded Configuration Values
+- **Severity**: MEDIUM
+- **Impact**: `GAM_WORKFLOW_ID: "136351503"` will break if the upstream workflow file is renamed; `COMPONENT: "Dashboard"` is hardcoded in multiple places
+- **Effort**: 1-2 hours
+- **Details**: The GH CLI workflow hardcodes a numeric workflow ID that is fragile. The component name is repeated across workflows without a single source of truth.
+
+### 5. No Security Scanning
+- **Severity**: MEDIUM
+- **Impact**: GitHub App private key handling is not validated; no secret detection to prevent accidental exposure
+- **Effort**: 1-2 hours
+- **Details**: The workflows reference `secrets.APP_ID` and `secrets.PRIVATE_KEY` for GitHub App authentication. No Gitleaks or similar tool validates that secrets aren't accidentally committed.
 
 ## Quick Wins
 
-### 1. Write a Comprehensive README (2-3 hours)
-Document the three GAM trigger patterns, their trade-offs, and setup requirements:
+### 1. Add actionlint Validation (1 hour)
+Catches workflow syntax errors, expression mistakes, and deprecated actions before merge.
 
-```markdown
-# Sample GAM Trigger Workflow
-
-Demonstrates three patterns for triggering the [Gated Auto Merger](https://github.com/red-hat-data-services/Gated-Auto-Merger):
-
-## Patterns
-
-### 1. Reusable Workflow (`trigger-gam.yaml`)
-Direct call to GAM as a reusable workflow. Simplest pattern.
-
-### 2. GH CLI (`trigger-gam-with-gh-cli.yaml`)
-Uses `gh workflow run` for more control over execution and monitoring.
-
-### 3. Custom Decider (`trigger-gam-with-custom-decider.yaml`)
-Adds a pre-check step to conditionally trigger GAM based on custom logic.
-
-## Prerequisites
-- GitHub App with appropriate permissions (APP_ID, PRIVATE_KEY secrets)
-- Access to the `red-hat-data-services/Gated-Auto-Merger` repository
-```
-
-### 2. Add YAML Linting Workflow (30 minutes)
 ```yaml
-name: Lint
+# .github/workflows/lint.yaml
+name: Lint Workflows
 on: [pull_request]
 jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rhysd/actionlint@v1
+```
+
+### 2. Add shellcheck for Shell Scripts (30 minutes)
+Validates shell script correctness.
+
+```yaml
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run shellcheck
+        run: shellcheck .github/scripts/*.sh
+```
+
+### 3. Add YAML Linting (30 minutes)
+Ensures consistent formatting and catches syntax issues.
+
+```yaml
   yamllint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ibiqlik/action-yamllint@v3
-        with:
-          file_or_dir: .github/
+      - run: pip install yamllint
+      - run: yamllint .github/workflows/
 ```
 
-### 3. Update Action Versions (10 minutes)
-- `actions/checkout@v3` → `actions/checkout@v4`
+### 4. Replace Hardcoded Workflow ID (1 hour)
+Use workflow filename instead of numeric ID for resilience:
 
-### 4. Add LICENSE File (5 minutes)
-Add Apache 2.0 or MIT license to clarify usage rights.
+```yaml
+- name: Trigger GAM
+  run: |
+    gh workflow run Gated-Auto-Merger.yaml \
+      --repo ${{ env.GAM_WORKFLOW_OWNER }}/${{ env.GAM_WORKFLOW_REPO }} \
+      --ref main \
+      --field component=${{ env.COMPONENT }}
+```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflow Inventory:**
+**Score: 6/10**
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `trigger-gam.yaml` | `workflow_dispatch` | Calls GAM as reusable workflow directly |
-| `trigger-gam-with-gh-cli.yaml` | `workflow_dispatch` | Triggers GAM via `gh workflow run` with monitoring |
-| `trigger-gam-with-custom-decider.yaml` | `workflow_dispatch` | Conditional GAM trigger with custom decision logic |
+**Strengths:**
+- Three well-structured workflow variants demonstrating different GAM triggering patterns
+- Proper use of GitHub App token creation via `actions/create-github-app-token@v1`
+- Artifact download for metadata files
+- Workflow monitoring with `gh run watch` and conclusion checking
+- Clean separation of concerns (trigger, monitor, report)
 
-**Observations:**
-- All three workflows are manual-dispatch only (`workflow_dispatch`)
-- Two workflows have commented-out cron schedules (`0 12 * * 5` — Fridays at noon UTC)
-- No PR-triggered workflows exist — there is zero CI on pull requests
-- No concurrency control configured on any workflow
-- GitHub App token usage is well-structured in `trigger-gam-with-gh-cli.yaml` (using `actions/create-github-app-token@v1`)
-- The GH CLI workflow demonstrates good practices: waiting for completion, checking conclusion, and printing metadata links
-
-**Security Note:** The `trigger-gam-with-gh-cli.yaml` workflow properly uses GitHub App tokens via `actions/create-github-app-token@v1` rather than PATs — this is a good practice for cross-repository access.
+**Weaknesses:**
+- No PR-triggered workflows at all — nothing validates changes before merge
+- Commented-out cron schedules suggest incomplete setup
+- `actions/checkout@v3` used instead of `@v4` in one workflow
+- No concurrency control
+- No caching (not needed for this repo, but good practice)
 
 ### Test Coverage
 
-**No tests exist.** The repository contains:
-- 0 test files of any kind
-- 0 testing frameworks
-- 0 test infrastructure
+**Score: 0/10**
 
-Since this is a workflow-template repo with no application code, the absence of unit/integration tests is somewhat expected. However, workflow validation (e.g., using `actionlint` or `nektos/act`) would be valuable even for YAML-only repositories.
+There is no source code to test. The repository contains only:
+- Workflow YAML files (not testable in the traditional sense)
+- A single shell script with placeholder logic
+
+Even for a workflow-only repository, some form of validation is expected:
+- Workflow syntax validation (actionlint)
+- Shell script linting (shellcheck)
+- Integration smoke tests (dry-run workflow validation)
 
 ### Code Quality
 
-- **Linting**: None — no YAML linter, no shellcheck for `custom_decider.sh`
-- **Pre-commit hooks**: None (no `.pre-commit-config.yaml`)
-- **Static analysis**: None
-- **Code formatters**: None
+**Score: 0/10**
 
-The shell script at `.github/scripts/custom_decider.sh` would benefit from `shellcheck` validation. Current issues a linter would catch:
-- No `set -euo pipefail` at the top
-- The RANDOM-based logic is a placeholder but has no comments explaining it's meant to be replaced
+- No linting configuration of any kind
+- No pre-commit hooks
+- No static analysis
+- No formatters
+- Typo "acceps" in workflow comment (line 17, trigger-gam.yaml)
 
 ### Container Images
 
-**Not applicable.** This repository contains no Dockerfiles, Containerfiles, or container build infrastructure. All workflows trigger external processes.
+**Score: 0/10 (N/A)**
+
+Not applicable — this repository does not build container images. No Dockerfile, Containerfile, or image-related configuration exists.
 
 ### Security
 
-- **Container scanning**: N/A
-- **SAST/CodeQL**: Not configured
-- **Dependency scanning**: Not configured (though there are essentially no dependencies)
-- **Secret detection**: Not configured
-- **Positive**: GitHub App tokens used correctly (not PATs) for cross-repo access
+**Score: 0/10**
+
+- No secret detection (Gitleaks, TruffleHog)
+- No dependency scanning
+- No CodeQL or SAST integration
+- GitHub App credentials (`APP_ID`, `PRIVATE_KEY`) are properly stored as secrets, which is the one positive note
+- `secrets: inherit` usage passes all org secrets to the reusable workflow — this is a broad permission grant that should be documented
 
 ### Agent Rules (Agentic Flow Quality)
 
+**Score: 0/10**
+
 - **Status**: Missing
-- **Coverage**: None — no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
-- **Quality**: N/A
-- **Gaps**: Everything — no contribution guidelines, no code review standards, no testing expectations
-- **Recommendation**: For a template repo, at minimum add a `CLAUDE.md` with:
-  - Repository purpose and structure explanation
-  - How to add new GAM trigger patterns
-  - Workflow YAML conventions to follow
+- **Coverage**: No rules exist
+- **Details**: No `CLAUDE.md`, `AGENTS.md`, or `.claude/` directory
+- **Impact**: AI agents have no guidance on how to contribute to or modify this repository
+- **Recommendation**: Given the repository's nature as a sample/template, basic contribution guidelines and workflow modification instructions would be valuable
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Write comprehensive README** documenting all three GAM trigger patterns, prerequisites, and usage instructions. This is the core deliverable of a template repository.
-2. **Add YAML linting workflow** (`actionlint` or `yamllint`) to validate workflow syntax on PRs.
+1. **Add actionlint CI step** to validate all workflow files on PRs — prevents broken workflow syntax from being merged
+2. **Add shellcheck validation** for all shell scripts in `.github/scripts/` — ensures shell best practices
+3. **Replace placeholder random decider** with actual decision logic or clearly document that it's meant to be customized
 
 ### Priority 1 (High Value)
-1. **Replace placeholder `custom_decider.sh`** with a realistic example demonstrating useful decision logic (e.g., checking for specific labels, PR count thresholds, or date-based gates).
-2. **Add workflow testing** with `nektos/act` to validate workflows locally before push.
-3. **Update all GitHub Action versions** to latest (`checkout@v4`).
-4. **Add `shellcheck` linting** for the bash script.
+1. **Add Gitleaks** or similar secret detection to prevent accidental credential exposure
+2. **Make COMPONENT and GAM_WORKFLOW_ID configurable** via `workflow_dispatch` inputs instead of hardcoded env vars
+3. **Add a CODEOWNERS file** to require workflow review before merge
+4. **Update `actions/checkout@v3` to `@v4`** across all workflows for consistency
 
 ### Priority 2 (Nice-to-Have)
-1. **Add `CLAUDE.md`** with contribution guidelines for this template repo.
-2. **Enable Dependabot** for GitHub Actions version updates.
-3. **Add `CODEOWNERS` file** for review accountability.
-4. **Un-comment and configure cron schedules** or document why they're disabled.
-5. **Add a `CONTRIBUTING.md`** explaining how to add new trigger patterns.
+1. **Expand README** to document each workflow variant, when to use each, required secrets setup, and expected behavior
+2. **Create CLAUDE.md** with contribution guidelines and workflow modification instructions
+3. **Add workflow_dispatch inputs** for component selection and other parameters to avoid editing YAML
+4. **Add shell script best practices** to `custom_decider.sh` (`set -euo pipefail`, logging, error handling)
 
 ## Comparison to Gold Standards
 
-| Practice | Gold Standard (odh-dashboard) | This Repository |
-|----------|-------------------------------|-----------------|
-| PR CI Workflows | Comprehensive (lint, test, build) | None |
-| Unit Tests | Jest + React Testing Library | None |
-| Integration Tests | Cypress E2E suite | None |
-| Coverage Tracking | Codecov with thresholds | None |
-| YAML Linting | actionlint on all workflows | None |
-| Security Scanning | Trivy, CodeQL | None |
-| Agent Rules | Comprehensive .claude/rules/ | None |
-| README | Detailed with contribution guide | 1-line title only |
-| License | Apache 2.0 | None |
-
-> **Note**: Direct comparison to gold-standard application repositories is not entirely fair for a workflow-template repo. However, even template/sample repositories benefit from documentation, linting, and basic CI validation.
+| Practice | sample-gam-trigger-workflow | odh-dashboard | notebooks | kserve |
+|----------|---------------------------|---------------|-----------|--------|
+| Unit Tests | None | Comprehensive Jest | Python tests | Go + Python |
+| Integration Tests | None | Cypress E2E | Multi-layer | envtest |
+| CI Linting | None | ESLint + Prettier | Various | golangci-lint |
+| Workflow Validation | None | actionlint | Yes | Yes |
+| Coverage Tracking | None | Codecov | Partial | Codecov |
+| Security Scanning | None | Snyk + CodeQL | Trivy | Trivy + CodeQL |
+| Image Testing | N/A | Build validation | 5-layer validation | Multi-version |
+| Agent Rules | None | Comprehensive | Partial | None |
+| Documentation | 1-line README | Extensive | Good | Extensive |
 
 ## File Paths Reference
 
 | File | Purpose |
 |------|---------|
-| `.github/workflows/trigger-gam.yaml` | GAM trigger via reusable workflow |
-| `.github/workflows/trigger-gam-with-gh-cli.yaml` | GAM trigger via gh CLI with monitoring |
-| `.github/workflows/trigger-gam-with-custom-decider.yaml` | Conditional GAM trigger with custom decider |
-| `.github/scripts/custom_decider.sh` | Placeholder decision script (RANDOM coin-flip) |
-| `README.md` | Single-line title only |
+| `.github/workflows/trigger-gam.yaml` | Simple reusable workflow trigger |
+| `.github/workflows/trigger-gam-with-gh-cli.yaml` | Full-featured GH CLI trigger with monitoring |
+| `.github/workflows/trigger-gam-with-custom-decider.yaml` | Conditional trigger with custom decision script |
+| `.github/scripts/custom_decider.sh` | Placeholder decision logic (random true/false) |
+| `README.md` | Single-line repository title |
+
+## Context Note
+
+This repository is explicitly a **sample/template** for demonstrating how to trigger the Gated Auto Merger (GAM) from other repositories. The low scores reflect the absence of quality practices, but some dimensions (unit tests, image testing, coverage) are less relevant given the repository's purpose. The most impactful improvements are **workflow validation** (actionlint), **shell linting** (shellcheck), and **documentation** — these directly serve the repository's mission of being a reliable reference for GAM integration.

@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:53 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:25 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/opendatahub-tests</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="135.71668799999998"
+                                stroke-dashoffset="147.026412"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.6</div>
+                        <div class="score-value">7.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">No unit tests — this is a pure integration/E2E test repository with no unit-level validation of its own utilities</div>
+                            <div class="scorecard-status">No unit tests — repo is entirely integration/E2E tests against live clusters</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
-                            <div class="scorecard-status">Exceptional — 224 test files, 33K+ LOC, tiered markers, upgrade tests, snapshot testing, parametrize-heavy, parallel xdist support</div>
+                            <div class="scorecard-status">275 test files, 40K+ LOC, 9 component suites, rich pytest infrastructure</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Container build verified on PR; no Konflux simulation or runtime validation of built image</div>
+                            <div class="scorecard-status">PR-time container build validation, but no runtime or startup testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Dockerfile builds validated on PR, image pushed on merge, but no runtime validation, no Trivy/Snyk scanning, no multi-arch</div>
+                            <div class="scorecard-status">Dockerfile builds on PR, but no image scanning, no SBOM, no startup validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No code coverage collection, no codecov/coveralls, no thresholds — N/A for E2E but utilities (8K+ LOC) have no coverage</div>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">No coverage tooling — no codecov, no .coveragerc, no coverage enforcement</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Good workflow suite — tox on PR, container build verification, labeling, stale issue cleanup, concurrency control; but no security scanning in CI</div>
+                            <div class="scorecard-status">Tox + container build on PRs, concurrency control, but no E2E in CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
-                            <div class="scorecard-status">Exemplary — comprehensive AGENTS.md, CONSTITUTION.md, STYLE_GUIDE.md, DEVELOPER_GUIDE.md; clear patterns and boundaries for AI-assisted development</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Mature AGENTS.md + CONSTITUTION.md with comprehensive patterns; missing .claude/rules/</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No security scanning in CI pipeline</div>
-                            <p>Semgrep rules and gitleaks config exist but are NOT run in CI — only as pre-commit hooks. Vulnerabilities in dependencies or code patterns may go undetected if developers bypass pre-commit</p>
+                            <div class="item-description">No test coverage tracking or enforcement</div>
+                            <p>Cannot measure what % of utility code is exercised; regressions go undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No code coverage tracking for utilities</div>
-                            <p>8,274 lines of shared utility code have no coverage measurement. Regressions in utilities can silently break tests across all components</p>
+                            <div class="item-description">No container image security scanning in CI</div>
+                            <p>Vulnerable base images or dependencies ship without detection</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container image security scanning</div>
-                            <p>Container image built from Fedora 43 base with many system packages — no Trivy/Snyk scan catches CVEs in the shipped test container</p>
+                            <div class="item-description">No E2E tests run in GitHub Actions CI</div>
+                            <p>All integration/E2E tests require external cluster; PRs merge with only lint+collect validation</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No unit tests for utilities</div>
-                            <p>65 utility files with 8K+ LOC (inference utils, DB helpers, K8s resource wrappers) have zero unit-level test coverage — bugs caught only at integration time</p>
+                            <div class="item-description">No image startup or runtime validation on PR</div>
+                            <p>Container may build successfully but fail at runtime (missing deps, bad entrypoint)</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">20-40 hours</span>
+                                <span class="meta-tag effort-tag">3-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No unit tests for utility code</div>
+                            <p>73 utility files with no isolated unit tests; bugs caught only at integration level</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">8-16 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +464,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Semgrep scanning workflow to CI</div>
-                            <p>semgrep.yaml already exists with comprehensive rules — just needs a CI workflow to run it on PRs</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to build workflow</div>
-                            <p>Catches CVEs in base image and installed packages before image is pushed to Quay</p>
+                            <div class="item-description">Add Trivy container scanning to PR workflow</div>
+                            <p>Catch CVEs in base image and pip dependencies before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add coverage measurement for utilities via tox</div>
-                            <p>Enables tracking regression risk in shared utility code</p>
+                            <div class="item-description">Add pytest-cov and coverage reporting to tox</div>
+                            <p>Visibility into utility code coverage; baseline for enforcement</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">3-4 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add pytest --collect-only validation for import errors</div>
-                            <p>Already partially done in tox; make it a hard gate that fails CI on import errors</p>
+                            <div class="item-description">Add container startup validation to verify_build_container workflow</div>
+                            <p>Catch missing dependencies or broken entrypoint at PR time</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create .claude/rules/ directory with test-type-specific rules</div>
+                            <p>AI-generated tests follow exact repo patterns; use /test-rules-generator</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Enable pytest-xdist parallel execution markers</div>
+                            <p>Faster test execution; 0 tests currently marked for parallel</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add Semgrep CI workflow — rules already exist in semgrep.yaml, just wire them into a PR-triggered GitHub Action</li><li>Add Trivy scanning to verify_build_container.yml — scan the built image before it reaches Quay</li><li>Add Dependabot/Renovate security alerts to block PRs with known vulnerable dependencies</li></ul>
+                            <ul><li>Add pytest-cov integration with coverage thresholds for utilities/ code</li><li>Integrate Trivy/Grype scanning into PR container build workflow</li><li>Add image startup validation (docker run --entrypoint health-check) to verify_build_container</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add pytest-cov for utility code coverage — measure coverage of utilities/ when running tox</li><li>Create unit tests for critical utility modules (inference_utils.py, database.py, infra.py)</li><li>Add container runtime validation — build image and run pytest --collect-only inside it in CI</li><li>Add multi-architecture build support for the test container (amd64 + arm64)</li></ul>
+                            <ul><li>Write unit tests for utilities/ modules (73 files, 0 unit tests)</li><li>Create .claude/rules/ with integration-test-specific rules from existing patterns</li><li>Add SBOM generation (syft/cosign) to container build pipeline</li><li>Enable pytest parallel markers and document xdist usage</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Run Semgrep rules as a pre-commit CI check (complement to local pre-commit)</li><li>Add SBOM generation for the test container image</li><li>Consider adding contract tests between this repo and the product repos it tests</li><li>Add GitHub Actions workflow testing with act or similar</li></ul>
+                            <ul><li>Add a lightweight Kind-based E2E smoke test to GitHub Actions</li><li>Add mutation testing (mutmut) for critical utility functions</li><li>Integrate CodeQL/Semgrep into GitHub Actions (currently only local semgrep.yaml)</li><li>Add Dependabot/Renovate vulnerability PR alerts to Slack/Teams</li></ul>
                         </div>
                     </div>
                 </div>

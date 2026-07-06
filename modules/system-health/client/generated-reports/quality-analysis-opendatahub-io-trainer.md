@@ -1,452 +1,415 @@
 ---
 repository: "opendatahub-io/trainer"
-overall_score: 7.2
+overall_score: 7.4
 scorecard:
   - dimension: "Unit Tests"
-    score: 8.5
-    status: "Strong Go/Python/Rust unit tests with good test-to-code ratio"
+    score: 8.0
+    status: "Strong Go unit tests with Ginkgo/Gomega; Python tests with pytest; Rust tests with cargo; 32 Go test files for 114 source files (28% test-to-code ratio)"
   - dimension: "Integration/E2E"
     score: 8.5
-    status: "Excellent multi-version E2E on Kind, GPU E2E, Ginkgo integration tests"
+    status: "Comprehensive E2E on Kind across 4 K8s versions (1.31-1.34); GPU E2E with NVIDIA Kind; Go integration with envtest; Python integration for initializers; RHAI progression E2E"
   - dimension: "Build Integration"
     score: 7.0
-    status: "PR-time image builds validated but no Konflux simulation"
+    status: "7 container images built on PR via matrix; Tekton/Konflux PR builds for ODH fork; operator-chaos CI for CRD breaking changes; Helm chart tests; no PR-time Konflux simulation on upstream"
   - dimension: "Image Testing"
     score: 5.5
-    status: "Multi-arch builds with distroless/UBI9 but no runtime validation or scanning"
+    status: "Multi-arch builds (amd64/arm64/ppc64le); 7 Dockerfiles including FIPS-enabled ODH variant; no runtime validation, no Trivy/vulnerability scanning, no SBOM generation"
   - dimension: "Coverage Tracking"
-    score: 6.5
-    status: "Coveralls integration for Go; no coverage for Python or Rust"
+    score: 5.0
+    status: "Coveralls/goveralls integration for Go; cover.out generated; no coverage thresholds enforced; no Python/Rust coverage tracking; no PR coverage reporting gate"
   - dimension: "CI/CD Automation"
-    score: 8.0
-    status: "Comprehensive PR workflows, semantic PR titles, multi-K8s-version matrix"
+    score: 8.5
+    status: "Well-organized workflows; semantic PR title enforcement; Mergify auto-merge for lake-gate; stale issue management; multi-K8s-version matrix; Tekton/Konflux for RHOAI builds"
   - dimension: "Agent Rules"
-    score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules"
+    score: 1.0
+    status: "No CLAUDE.md content, no .claude/ directory, no agent rules for test creation or contribution guidance"
 critical_gaps:
-  - title: "No container image security scanning (Trivy, Snyk, or CodeQL)"
-    impact: "Vulnerabilities in base images and dependencies go undetected until production"
+  - title: "No container vulnerability scanning (Trivy/Snyk/Grype)"
+    impact: "CVEs in base images and dependencies go undetected until downstream Konflux builds"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No agent rules for AI-assisted development"
-    impact: "AI agents produce inconsistent test patterns with no project-specific guidance"
+  - title: "No coverage enforcement threshold"
+    impact: "Coverage can silently regress on any PR without notification; no minimum coverage gate"
     severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No container runtime validation"
-    impact: "Image startup failures not caught until deployment; only build-time checks exist"
-    severity: "MEDIUM"
-    effort: "4-6 hours"
+    effort: "2-3 hours"
+  - title: "No SAST/CodeQL integration in CI"
+    impact: "Static security vulnerabilities not caught at PR time despite having semgrep rules file"
+    severity: "HIGH"
+    effort: "2-4 hours"
   - title: "No Python or Rust coverage tracking"
-    impact: "Coverage regressions in initializers and data_cache components go undetected"
+    impact: "Only Go coverage is tracked; Python initializers and Rust data cache have no coverage visibility"
     severity: "MEDIUM"
-    effort: "2-3 hours"
+    effort: "3-4 hours"
+  - title: "No container image runtime validation"
+    impact: "Image startup failures and entrypoint issues not caught until deployment"
+    severity: "MEDIUM"
+    effort: "4-6 hours"
+  - title: "No agent rules for AI-assisted development"
+    impact: "AI agents lack context on testing patterns, contribution standards, and quality expectations"
+    severity: "MEDIUM"
+    effort: "3-4 hours"
 quick_wins:
-  - title: "Add Trivy scanning to PR build workflow"
+  - title: "Add Trivy scanning to PR workflow"
     effort: "1-2 hours"
-    impact: "Detect CVEs in base images and dependencies before merge"
-  - title: "Add Python pytest-cov to test-python target"
+    impact: "Immediate CVE detection for all 7 container images before merge"
+  - title: "Add CodeQL or Semgrep CI workflow"
+    effort: "1-2 hours"
+    impact: "Leverage existing semgrep.yaml rules file; catch SAST issues at PR time"
+  - title: "Add coverage threshold to Coveralls"
     effort: "1 hour"
-    impact: "Track initializer coverage alongside Go coverage"
-  - title: "Create CLAUDE.md with testing guidelines"
-    effort: "2-3 hours"
-    impact: "Standardize AI-generated code quality across Go, Python, and Rust components"
-  - title: "Enable Rust tarpaulin coverage in CI"
+    impact: "Prevent coverage regression with a minimum gate (e.g., 70% for Go)"
+  - title: "Add pytest-cov for Python coverage"
     effort: "1-2 hours"
-    impact: "Track coverage for data_cache Rust component"
+    impact: "Visibility into Python initializer test coverage"
+  - title: "Generate agent rules with /test-rules-generator"
+    effort: "2-3 hours"
+    impact: "Enable consistent AI-assisted test creation across Go, Python, and Rust"
 recommendations:
   priority_0:
-    - "Add container image vulnerability scanning (Trivy) to build-and-push-images workflow"
-    - "Add SBOM generation for all published images"
+    - "Add container vulnerability scanning (Trivy) to the build-and-push-images workflow for all 7 images"
+    - "Enable CodeQL or integrate the existing semgrep.yaml into a CI workflow to catch security issues at PR time"
+    - "Add coverage threshold enforcement to Coveralls to prevent silent regression"
   priority_1:
+    - "Add Python coverage tracking (pytest-cov) and Rust coverage (cargo-tarpaulin) to CI"
+    - "Add container image runtime validation (startup probe, entrypoint test) for built images"
     - "Create comprehensive agent rules (.claude/rules/) for unit, integration, and E2E test patterns"
-    - "Add Python and Rust coverage tracking to CI with Coveralls or Codecov"
-    - "Add container runtime validation (startup probe testing) in PR builds"
+    - "Add SBOM generation for container images to support supply chain security"
   priority_2:
-    - "Add Semgrep to CI as a PR check (config already exists in repo)"
-    - "Add coverage enforcement thresholds to prevent regressions"
-    - "Consider Helm chart testing in PR workflow (currently only available via make)"
+    - "Add concurrency control to test-go.yaml and test-e2e.yaml workflows to prevent redundant runs"
+    - "Add Rust linting (clippy) to CI pipeline"
+    - "Consider adding contract tests for Python SDK/API boundary"
+    - "Add performance regression testing for controller reconciliation loops"
 ---
 
 # Quality Analysis: opendatahub-io/trainer
 
 ## Executive Summary
 
-- **Overall Score: 7.2/10**
-- **Repository Type**: Kubernetes Operator (Go controller) with Python initializers, Rust data cache, and Helm charts
-- **Primary Languages**: Go (controller), Python (model/dataset initializers), Rust (data cache)
+- **Overall Score: 7.4/10**
+- **Repository Type**: Kubernetes Operator (Kubeflow Trainer v2)
+- **Primary Languages**: Go (controller), Python (initializers), Rust (data cache)
 - **Framework**: controller-runtime, Ginkgo/Gomega, envtest, Kind
 
-**Key Strengths**:
-- Excellent multi-version E2E testing across 4 Kubernetes versions (1.31, 1.32, 1.33, 1.34) on Kind
-- GPU E2E testing with label-gated approval workflow
-- Strong Go test-to-code ratio (32 test files / 59 source files = 0.54)
-- PR-time image build validation for all 7 components
-- Comprehensive pre-commit hooks covering Go, Python, and Rust
-- Semgrep security rules already in repo (but not enforced in CI)
-- Gitleaks secret detection configuration
-- Helm chart unit tests (8 test files covering deployment, RBAC, webhook)
-- Coveralls integration for Go code coverage
-- RHOAI-specific ODH Dockerfile with FIPS-compliant build
-- Mergify integration for automated stream-to-lake gating
+**Key Strengths**: Excellent multi-version E2E testing across 4 Kubernetes versions; GPU E2E testing with NVIDIA Kind; operator-chaos CI for CRD breaking change detection; comprehensive pre-commit hooks covering Go, Python, and Rust; well-structured Tekton/Konflux pipeline integration for RHOAI downstream builds; strong RHAI-specific progression E2E tests.
 
-**Critical Gaps**:
-- No container vulnerability scanning (no Trivy, Snyk, or CodeQL)
-- No agent rules (no CLAUDE.md, no .claude/ directory)
-- No Python or Rust coverage tracking
-- Semgrep config exists but isn't enforced in CI
-- No container runtime validation testing
-- No SBOM generation or image signing
+**Critical Gaps**: No container vulnerability scanning despite 7 built images; existing semgrep.yaml rules not wired into CI; no coverage threshold enforcement; Python and Rust coverage not tracked; no agent rules for AI-assisted development.
 
-**Agent Rules Status**: Missing - No CLAUDE.md, AGENTS.md, or .claude/ directory exists
+**Agent Rules Status**: Missing - no CLAUDE.md content, no `.claude/` directory.
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 8.5/10 | Strong Go/Python/Rust unit tests with good coverage ratio |
-| Integration/E2E | 8.5/10 | Multi-version Kind E2E, GPU E2E, envtest integration |
-| Build Integration | 7.0/10 | PR image builds validated; no Konflux simulation |
-| Image Testing | 5.5/10 | Multi-arch builds; no runtime validation or scanning |
-| Coverage Tracking | 6.5/10 | Coveralls for Go; Python and Rust uncovered |
-| CI/CD Automation | 8.0/10 | Comprehensive workflows with matrix, caching, semantic PRs |
-| Agent Rules | 0.0/10 | No agent rules or AI-assisted development guidance |
+| Unit Tests | 8.0/10 | Strong Go test coverage with Ginkgo/Gomega; pytest for Python; cargo test for Rust |
+| Integration/E2E | 8.5/10 | Multi-K8s-version E2E with Kind; GPU E2E; envtest integration; RHAI progression tests |
+| **Build Integration** | **7.0/10** | **7 images built on PR; Tekton/Konflux for ODH; operator-chaos for CRD diffs; Helm chart tests** |
+| Image Testing | 5.5/10 | Multi-arch builds but no runtime validation, no vulnerability scanning, no SBOM |
+| Coverage Tracking | 5.0/10 | Coveralls for Go only; no thresholds; no Python/Rust coverage |
+| CI/CD Automation | 8.5/10 | Well-organized workflows; semantic PR titles; Mergify; stale management |
+| Agent Rules | 1.0/10 | No CLAUDE.md content, no .claude/ directory, no test automation guidance |
 
 ## Critical Gaps
 
-### 1. No Container Image Security Scanning
-- **Impact**: CVEs in base images (distroless, UBI9, Python, CUDA) and Go/Python dependencies remain undetected until post-deployment scanning
+### 1. No Container Vulnerability Scanning
+- **Impact**: CVEs in base images (golang:1.25, UBI9, distroless) and Go/Python/Rust dependencies go undetected until downstream Konflux builds
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: The `build-and-push-images.yaml` workflow builds 7 images across multiple platforms but has zero vulnerability scanning. No Trivy, Snyk, Grype, or CodeQL integration exists anywhere in CI.
+- **Details**: 7 container images are built (trainer-controller-manager, model-initializer, dataset-initializer, deepspeed-runtime, mlx-runtime, torchtune-trainer, data-cache) with no Trivy, Snyk, or Grype scanning
 
-### 2. No Agent Rules for AI-Assisted Development
-- **Impact**: AI agents (Claude, Copilot) have no project-specific guidance for creating tests, following patterns, or understanding the polyglot architecture
+### 2. No Coverage Enforcement Threshold
+- **Impact**: Coverage can silently regress on any PR; Coveralls reports but doesn't gate
 - **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: No `CLAUDE.md`, `AGENTS.md`, or `.claude/` directory exists. Given the polyglot nature (Go + Python + Rust), agent rules are especially important to guide correct test patterns for each language.
-
-### 3. No Container Runtime Validation
-- **Impact**: Images that build successfully may fail to start or exhibit runtime issues; only caught during E2E or deployment
-- **Severity**: MEDIUM
-- **Effort**: 4-6 hours
-- **Details**: The PR workflow builds images with `push: false` but does not validate that images start correctly, serve health endpoints, or function properly.
-
-### 4. Incomplete Coverage Tracking
-- **Impact**: Coverage regressions in Python initializers and Rust data cache go undetected
-- **Severity**: MEDIUM
 - **Effort**: 2-3 hours
-- **Details**: Go has Coveralls via `shogo82148/actions-goveralls@v1`. Python tests run via `pytest` without `--cov`. Rust tests run via `cargo test` without `tarpaulin` or `llvm-cov`.
+- **Details**: `cover.out` is generated and uploaded to Coveralls via goveralls, but no minimum threshold is enforced. PRs can merge with 0% coverage on new code.
+
+### 3. Semgrep Rules Exist But Not Wired Into CI
+- **Impact**: A comprehensive 64KB `semgrep.yaml` file exists with rules for Go, Python, TypeScript, YAML, and generic secret detection, but it is never run in CI
+- **Severity**: HIGH
+- **Effort**: 1-2 hours
+- **Details**: The file covers Kubernetes operator patterns, injection prevention, secret detection, and more. Adding a Semgrep CI step would immediately provide SAST coverage.
+
+### 4. No Python or Rust Coverage Tracking
+- **Impact**: 13 Python test files and Rust unit tests run without coverage measurement
+- **Severity**: MEDIUM
+- **Effort**: 3-4 hours
+
+### 5. No Container Image Runtime Validation
+- **Impact**: Image startup failures, missing entrypoints, or misconfigured base images not caught until deployment
+- **Severity**: MEDIUM
+- **Effort**: 4-6 hours
+
+### 6. No Agent Rules for AI-Assisted Development
+- **Impact**: AI agents cannot follow project-specific testing patterns, framework conventions, or quality standards
+- **Severity**: MEDIUM
+- **Effort**: 3-4 hours
 
 ## Quick Wins
 
-### 1. Add Trivy Scanning to Image Build Workflow (1-2 hours)
-```yaml
-- name: Scan image with Trivy
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: ghcr.io/kubeflow/trainer/${{ matrix.component-name }}:${{ github.sha }}
-    format: 'sarif'
-    output: 'trivy-results.sarif'
-    severity: 'CRITICAL,HIGH'
-```
+### 1. Wire Semgrep Into CI (1-2 hours)
+- **Impact**: Immediate SAST coverage leveraging the existing comprehensive `semgrep.yaml`
+- **Implementation**:
+  ```yaml
+  # Add to .github/workflows/test-go.yaml or create new workflow
+  - name: Run Semgrep
+    uses: returntocorp/semgrep-action@v1
+    with:
+      config: semgrep.yaml
+  ```
 
-### 2. Add Python Coverage Tracking (1 hour)
-```makefile
-test-python:
-	pip install pytest pytest-cov
-	pip install -r ./cmd/initializers/dataset/requirements.txt
-	PYTHONPATH=$(PROJECT_DIR) pytest --cov=pkg/initializers --cov-report=xml ./pkg/initializers/dataset
-	PYTHONPATH=$(PROJECT_DIR) pytest --cov=pkg/initializers --cov-report=xml --cov-append ./pkg/initializers/model
-	PYTHONPATH=$(PROJECT_DIR) pytest --cov=pkg/initializers --cov-report=xml --cov-append ./pkg/initializers/utils
-```
+### 2. Add Trivy Scanning (1-2 hours)
+- **Impact**: CVE detection for all 7 container images
+- **Implementation**:
+  ```yaml
+  - name: Trivy Scan
+    uses: aquasecurity/trivy-action@master
+    with:
+      image-ref: ${{ matrix.component-name }}:latest
+      format: 'sarif'
+      severity: 'CRITICAL,HIGH'
+  ```
 
-### 3. Create CLAUDE.md with Testing Guidelines (2-3 hours)
-A `CLAUDE.md` should document:
-- Go test patterns (table-driven tests, envtest for integration, Ginkgo for E2E)
-- Python test patterns (pytest fixtures, S3 mocking with moto)
-- Rust test patterns (cargo test conventions)
-- CRD validation testing requirements
-- Webhook test expectations
+### 3. Add Coverage Threshold (1 hour)
+- **Impact**: Prevent coverage regression with minimum gate
+- **Implementation**: Configure Coveralls/Codecov threshold or add to Makefile:
+  ```makefile
+  test-coverage-check:
+  	@go tool cover -func=cover.out | grep total | awk '{print $$3}' | \
+  	  awk -F'%' '{if ($$1 < 70) {print "Coverage below 70%: " $$1 "%"; exit 1}}'
+  ```
 
-### 4. Enforce Semgrep in CI (1 hour)
-The repository already has a comprehensive `semgrep.yaml` with Go, Python, YAML, Dockerfile, and shell rules. Adding a CI step:
-```yaml
-- name: Run Semgrep
-  uses: semgrep/semgrep-action@v1
-  with:
-    config: semgrep.yaml
-```
+### 4. Add pytest-cov for Python (1-2 hours)
+- **Impact**: Python initializer coverage visibility
+- **Implementation**: `pip install pytest-cov && pytest --cov=pkg/initializers --cov-report=xml`
+
+### 5. Generate Agent Rules (2-3 hours)
+- **Impact**: Consistent AI-assisted test creation
+- **Implementation**: Run `/test-rules-generator` against the repository
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows (12 total):**
+**Workflow Inventory** (11 workflows):
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `test-go.yaml` | push, PR | Go unit tests, integration tests, lint, vet, fmt, generate check |
-| `test-python.yaml` | PR | Python unit/integration tests, pre-commit hooks |
-| `test-rust.yaml` | PR | Rust unit tests with dependency caching |
-| `test-e2e.yaml` | PR | E2E on Kind with K8s 1.31-1.34 matrix + notebook tests |
-| `test-e2e-gpu.yaml` | PR (labeled) | GPU E2E on A10 GPU runner with label gating |
-| `build-and-push-images.yaml` | push, PR | Build 7 images across multiple architectures |
-| `check-pr-title.yaml` | PR target | Semantic PR title enforcement (conventional commits) |
-| `gh-workflow-approve.yaml` | PR target | Auto-approve workflows for org members |
-| `publish-helm-charts.yaml` | push to master/tags | Publish Helm charts to GHCR |
-| `sync-stream-to-lake.yml` | cron (4h) | Auto-sync main to stable with Mergify gating |
-| `github-stale.yaml` | scheduled | Stale issue/PR management |
+| `test-go.yaml` | push, PR | Go generate/fmt/vet/lint + unit + integration tests |
+| `test-python.yaml` | PR | Python pre-commit + unit + integration tests |
+| `test-rust.yaml` | PR | Rust unit tests with cargo |
+| `test-e2e.yaml` | PR | E2E tests on Kind (K8s 1.31, 1.32, 1.33, 1.34) |
+| `test-e2e-gpu.yaml` | PR (label-gated) | GPU E2E on NVIDIA Kind with oracle-vm GPU runner |
+| `build-and-push-images.yaml` | push, PR | Build (+ publish on push) 7 container images |
+| `operator-chaos.yml` | PR (path-filtered) | CRD breaking change detection + upgrade simulation |
+| `check-pr-title.yaml` | PR | Semantic PR title enforcement |
+| `gh-workflow-approve.yaml` | PR (label) | Auto-approve workflow runs for org members |
+| `github-stale.yaml` | schedule | Mark/close stale issues and PRs |
+| `publish-helm-charts.yaml` | push | Publish Helm charts to GHCR |
+| `sync-stream-to-lake.yml` | schedule (4h) | Sync main to stable branch via Mergify |
 
 **Strengths**:
-- E2E tests run on every PR across 4 K8s versions (1.31.0, 1.32.3, 1.33.1, 1.34.0)
-- GPU E2E with label-gated approval prevents accidental expensive runs
-- Semantic PR title enforcement via `amannn/action-semantic-pull-request@v5.5.3`
-- Concurrency control on workflow approval
-- Self-hosted runners (oracle-vm-16cpu-64gb-x86-64) for E2E
-- Notebook e2e tests using Papermill for Jupyter notebook validation
+- Multi-K8s-version matrix testing (4 versions: 1.31-1.34)
+- GPU E2E testing with dedicated oracle-vm GPU runner
+- operator-chaos for CRD diff analysis and upgrade simulation
+- Tekton/Konflux integration for RHOAI downstream builds (4 pipeline configs)
+- Semantic PR title enforcement with scope validation
+- Mergify auto-merge for lake-gate PRs with Konflux check requirements
+- Stale issue/PR management
 
-**Gaps**:
-- No concurrency control on `test-go.yaml` or `test-python.yaml` (redundant runs on rapid pushes)
-- No build caching in Go workflows (GOPATH custom setup, no `cache: true` on `actions/setup-go`)
-- Rust workflow has caching (`Swatinem/rust-cache@v2`) but Go does not
+**Weaknesses**:
+- No concurrency control on `test-go.yaml` or `test-e2e.yaml` (redundant runs on rapid pushes)
+- No caching in Go workflows (no `actions/cache` for Go modules)
+- E2E tests only on x86-64 (despite multi-arch image builds)
 
 ### Test Coverage
 
-**Go Unit Tests (32 files)**:
-- Controller tests: `trainingruntime_controller_test.go`, `clustertrainingruntime_controller_test.go`
-- Webhook tests: `trainjob_webhook_test.go`, `trainingruntime_webhook_test.go`, `clustertrainingruntime_webhook_test.go`
-- Plugin framework tests: volcano, torch, plainml, mpi, jobset, coscheduling
-- Runtime/indexer tests
-- Apply tests
-- Test-to-code ratio: 0.54 (32/59) - excellent
+**Go Tests** (32 test files / 18,525 LOC):
+- Unit tests: Controllers, webhooks, runtime framework, plugins (coscheduling, jobset, MPI, plainml, torch, volcano)
+- Integration tests: Controller lifecycle, webhook validation (envtest-based)
+- E2E tests: Full operator lifecycle on Kind cluster + Jupyter notebook execution
+- Test-to-code ratio: 28% (32 test files / 114 source files) - Good
+- LOC ratio: 50% (18,525 test LOC / 36,805 source LOC) - Strong
 
-**Go Integration Tests (envtest)**:
-- Controller integration: `trainjob_controller_test.go`, `trainingruntime_controller_test.go`, `clustertrainingruntime_controller_test.go`
-- Webhook integration: full webhook validation tests
-- Uses Ginkgo + envtest with external CRDs (JobSet, scheduler-plugins, Volcano)
+**Python Tests** (13 test files / 1,417 LOC):
+- Unit tests: Dataset initializer (HuggingFace, S3, cache), model initializer (HuggingFace, S3), utils (OpenDAL)
+- Integration tests: Dataset and model initializer integration
+- No coverage tracking
 
-**Python Unit Tests (11 files)**:
-- Model initializer: `huggingface_test.py`, `s3_test.py`, `main_test.py`
-- Dataset initializer: `huggingface_test.py`, `s3_test.py`, `main_test.py`, `cache_test.py`
-- Utils: `utils_test.py`, `opendal_test.py`
-- Integration: `model_test.py`, `dataset_test.py`
+**Rust Tests** (inline tests in source files):
+- Unit tests via `cargo test --lib --bins`
+- Data cache module (head, worker, config)
+- No coverage tracking
+- Rust dependency caching via `Swatinem/rust-cache@v2`
 
-**Rust Tests (17 files)**:
-- Data cache component with cargo test
-
-**E2E Tests (7 files)**:
-- Core E2E: `e2e_test.go` with Kind cluster setup
-- RHAI-specific E2E: `progression_e2e_test.go` with custom test resources
-- Notebook E2E: Papermill-based notebook validation (mnist, distilbert, local training)
-
-**Helm Chart Tests (8 files)**:
-- Deployment, ConfigMap, Service tests
-- ClusterRole, ClusterRoleBinding, ServiceAccount tests
-- ValidatingWebhookConfiguration, Secret tests
+**Helm Chart Tests** (8 test files / 638 LOC):
+- Manager: configmap, deployment, service
+- RBAC: clusterrole, clusterrolebinding, serviceaccount
+- Webhook: secret, validating webhook configuration
+- Uses `helm-unittest` plugin
 
 ### Code Quality
 
-**Linting**:
-- Go: `.golangci.yaml` with `gci` linter (import ordering). Only 1 linter enabled - minimal configuration
-- Python: pre-commit with `black`, `flake8`, `isort`
-- Rust: pre-commit with `cargo fmt`, `cargo check`
-- `.flake8` configuration present
+**Go Linting**:
+- golangci-lint v2.12.1 with custom config
+- Kube API Linter (KAL) with extensive Kubernetes convention checks (conditions, jsontags, integers, optionalfields, requiredfields, ssatags, nophase, etc.)
+- `go fmt`, `go vet` enforced in CI
+- `go mod tidy` check in CI
 
-**Pre-commit Hooks** (`.pre-commit-config.yaml`):
-- `check-yaml`, `check-json`, `end-of-file-fixer`, `trailing-whitespace`
-- `isort`, `black`, `flake8` for Python
-- `cargo fmt`, `cargo check` for Rust
-- Excludes generated code (charts, client, python API models)
+**Python Quality**:
+- pre-commit hooks: check-yaml, check-json, end-of-file-fixer, trailing-whitespace
+- isort (import sorting, black profile)
+- black (code formatting)
+- flake8 (max-line-length=100)
 
-**Security Config**:
-- `semgrep.yaml`: Comprehensive 1800+ line config covering Go, Python, TypeScript, YAML, Dockerfile, and shell security rules (NOT enforced in CI)
-- `.gitleaks.toml`: Secret detection with allowlists for test fixtures
-- `.gitleaksignore`: Exclusion file present
+**Rust Quality**:
+- cargo fmt via pre-commit
+- cargo check via pre-commit
+- No clippy linting in CI
+
+**Security Tools**:
+- Gitleaks configuration (.gitleaks.toml) with comprehensive path allowlists
+- Semgrep rules file (semgrep.yaml, 64KB) covering Go/Python/TS/YAML/generic secrets - **NOT wired into CI**
+- No CodeQL, no Trivy, no Snyk, no SBOM generation
+- SECURITY.md present with vulnerability reporting process
 
 ### Container Images
 
-**Images Built (7)**:
+**7 Images Built** (build-and-push-images.yaml matrix):
 
-| Component | Dockerfile | Platforms | Base Image |
-|-----------|-----------|-----------|------------|
-| trainer-controller-manager | `cmd/trainer-controller-manager/Dockerfile` | amd64, arm64, ppc64le | distroless/static:nonroot |
-| model-initializer | `cmd/initializers/model/Dockerfile` | amd64, arm64 | - |
-| dataset-initializer | `cmd/initializers/dataset/Dockerfile` | amd64, arm64 | - |
-| deepspeed-runtime | `cmd/runtimes/deepspeed/Dockerfile` | amd64, arm64 | - |
-| mlx-runtime | `cmd/runtimes/mlx/Dockerfile` | amd64 only | - |
-| torchtune-trainer | `cmd/trainers/torchtune/Dockerfile` | amd64, arm64 | - |
-| data-cache | `cmd/data_cache/Dockerfile` | amd64, arm64 | - |
+| Component | Platforms | Base Image |
+|-----------|-----------|------------|
+| trainer-controller-manager | amd64, arm64, ppc64le | distroless/static:nonroot |
+| model-initializer | amd64, arm64 | (Python-based) |
+| dataset-initializer | amd64, arm64 | (Python-based) |
+| deepspeed-runtime | amd64, arm64 | (Python/CUDA-based) |
+| mlx-runtime | amd64 only | (Python/MLX-based) |
+| torchtune-trainer | amd64, arm64 | (Python-based) |
+| data-cache | amd64, arm64 | (Rust-based) |
 
-**ODH/RHOAI Variant**: `Dockerfile.odh` uses `registry.access.redhat.com/ubi9/go-toolset:1.24` builder and `ubi9/ubi-minimal` runtime with FIPS-compliant build (`GOEXPERIMENT=strictfipsruntime`)
-
-**Strengths**:
-- Multi-architecture support (up to amd64, arm64, ppc64le)
-- Multi-stage builds with distroless for controller manager
-- Non-root user in distroless image
-- Build cache mounts for faster builds (`--mount=type=cache`)
-- PR-time builds verified (push=false)
+**ODH-Specific**:
+- `Dockerfile.odh` with UBI9 base and FIPS-enabled Go build (`CGO_ENABLED=1 GOEXPERIMENT=strictfipsruntime`)
+- Tekton/Konflux pipeline for ODH image builds
 
 **Gaps**:
-- No vulnerability scanning on any images
+- No vulnerability scanning on any image
+- No image startup/runtime validation
 - No SBOM generation
-- No image signing/attestation (cosign)
-- No runtime validation after build
-- No health check validation
+- No image signing/attestation
 
-### Security
+### Operator Chaos Testing (Notable Strength)
 
-**Present**:
-- Semgrep rules file (`semgrep.yaml`) - comprehensive but not in CI
-- Gitleaks config (`.gitleaks.toml`) - configured with allowlists
-- Gitleaks ignore file (`.gitleaksignore`)
-- distroless non-root images for controller
-- UBI9 minimal for RHOAI builds
-- Semantic PR title enforcement
-- Workflow approval gating for external contributors
+The repository integrates `opendatahub-io/operator-chaos` for:
+- **CRD breaking change detection**: Diffs CRD schemas between base and PR branches
+- **Upgrade simulation**: Simulates operator upgrades using a knowledge model (`chaos/knowledge/trainer.yaml`)
+- **Path-filtered**: Only runs when CRD, controller, runtime, or manifest files change
+- This is an advanced quality practice not commonly seen in operator repositories
 
-**Missing**:
-- No Trivy/Snyk/Grype vulnerability scanning in CI
-- No CodeQL / SAST in CI
-- No SBOM generation
-- No image signing (cosign)
-- Semgrep not enforced as CI check
-- No dependency scanning (Dependabot/Renovate not configured)
+### RHOAI-Specific Integration
+
+Strong downstream integration with Red Hat OpenShift AI:
+- Kustomize overlays for RHOAI deployment (`manifests/rhoai/`)
+- RHAI progression tracking with dedicated E2E tests
+- ImageStream management for training hub workbenches (CPU, CUDA, ROCm)
+- Makefile targets for RHOAI deploy/undeploy (`deploy-rhoai`, `undeploy-rhoai`)
+- Mergify auto-merge for lake-gate (stable branch management)
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: None - no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
+- **Coverage**: No test type rules exist
 - **Quality**: N/A
-- **Gaps**: All test types lack agent rules
-- **Recommendation**: Generate comprehensive rules with `/test-rules-generator` covering:
-  - Go controller unit tests (table-driven, envtest setup)
-  - Go webhook validation tests
-  - Python initializer tests (mocking S3, HuggingFace)
-  - Rust data cache tests
-  - Ginkgo E2E test patterns
-  - Helm chart test patterns
+- **Gaps**: No CLAUDE.md content (empty file exists), no `.claude/` directory, no rules for Go/Python/Rust test patterns, no contribution guidance for AI agents
+- **Recommendation**: Generate missing rules with `/test-rules-generator` to cover Go (Ginkgo/Gomega patterns), Python (pytest patterns), and Rust (cargo test patterns)
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add container vulnerability scanning to CI**
-   - Integrate Trivy into `build-and-push-images.yaml` for all 7 images
-   - Set severity thresholds (CRITICAL, HIGH) to fail builds
-   - Output SARIF format for GitHub Security tab integration
-   - Effort: 2-4 hours
-
-2. **Add SBOM generation for published images**
-   - Use `anchore/sbom-action` or `aquasecurity/trivy-action` with SBOM output
-   - Required for supply chain security compliance
-   - Effort: 1-2 hours
+1. **Add container vulnerability scanning (Trivy)** to the `build-and-push-images` workflow for all 7 images - CVEs in base images and dependencies must be caught before merge
+2. **Wire existing `semgrep.yaml` into CI** - A comprehensive 64KB rules file already exists but is never executed; add a Semgrep workflow to get immediate SAST coverage
+3. **Add coverage threshold enforcement** - Configure Coveralls to block PRs that drop below a minimum threshold (suggest 70% for Go)
 
 ### Priority 1 (High Value)
 
-3. **Create comprehensive agent rules**
-   - Add `CLAUDE.md` at repo root with architecture overview
-   - Add `.claude/rules/` with test patterns for Go, Python, Rust
-   - Document the polyglot build and test structure
-   - Effort: 4-6 hours
-
-4. **Add Python and Rust coverage to CI**
-   - Python: Add `pytest-cov` and upload to Coveralls alongside Go
-   - Rust: Add `cargo-tarpaulin` and upload coverage
-   - Effort: 2-3 hours
-
-5. **Enforce Semgrep in CI**
-   - The `semgrep.yaml` already exists with excellent rules
-   - Add `semgrep/semgrep-action@v1` to a PR workflow
-   - Effort: 1 hour
-
-6. **Add container runtime validation**
-   - After PR-time builds, test that images start and respond to health checks
-   - Critical for catching startup failures before merge
-   - Effort: 4-6 hours
+4. **Add Python coverage tracking** with pytest-cov and upload to Coveralls alongside Go coverage
+5. **Add Rust coverage tracking** with cargo-tarpaulin
+6. **Add container image runtime validation** - at minimum, test that each image starts and responds to health probes
+7. **Create comprehensive agent rules** (`.claude/rules/`) for Go, Python, and Rust test patterns using `/test-rules-generator`
+8. **Add SBOM generation** for container images (Syft or Trivy SBOM)
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Add concurrency control to test workflows**
-   - `test-go.yaml` and `test-python.yaml` lack concurrency groups
-   - Rapid pushes trigger redundant parallel runs
-   - Effort: 30 minutes
-
-8. **Enable Go build caching in CI**
-   - The Go workflows don't use `cache: true` on `actions/setup-go@v5`
-   - Would reduce CI time significantly
-   - Effort: 30 minutes
-
-9. **Add more golangci-lint linters**
-   - Currently only `gci` is enabled (import ordering)
-   - Consider: `errcheck`, `govet`, `staticcheck`, `gosec`, `ineffassign`, `unused`
-   - Effort: 1-2 hours
-
-10. **Add coverage enforcement thresholds**
-    - Set minimum coverage percentage in Coveralls config
-    - Prevent coverage regressions on PRs
-    - Effort: 1 hour
-
-11. **Add Dependabot or Renovate for dependency management**
-    - Auto-update Go, Python, and Rust dependencies
-    - Track known CVEs in dependencies
-    - Effort: 1 hour
+9. **Add concurrency control** to `test-go.yaml` and `test-e2e.yaml` to prevent redundant CI runs
+10. **Add Go module caching** to CI workflows for faster builds
+11. **Add Rust clippy** linting to CI
+12. **Consider contract tests** for the Python SDK/API boundary
+13. **Add performance regression testing** for controller reconciliation loops
 
 ## Comparison to Gold Standards
 
-| Dimension | trainer | odh-dashboard | notebooks | kserve |
-|-----------|---------|---------------|-----------|--------|
-| Unit Tests | 8.5 | 9.0 | 7.0 | 9.0 |
-| Integration/E2E | 8.5 | 9.0 | 8.0 | 9.5 |
-| Build Integration | 7.0 | 8.0 | 7.0 | 7.5 |
-| Image Testing | 5.5 | 7.0 | 9.5 | 7.0 |
-| Coverage Tracking | 6.5 | 9.0 | 6.0 | 9.5 |
-| CI/CD Automation | 8.0 | 9.0 | 8.5 | 9.0 |
-| Agent Rules | 0.0 | 8.0 | 3.0 | 2.0 |
-| **Overall** | **7.2** | **8.7** | **7.6** | **8.1** |
+| Practice | trainer | odh-dashboard | notebooks | kserve |
+|----------|---------|---------------|-----------|--------|
+| Multi-K8s-version E2E | 4 versions | 1 version | N/A | 2 versions |
+| GPU E2E testing | Yes (NVIDIA Kind) | No | No | No |
+| Coverage tracking | Coveralls (Go only) | Codecov (enforced) | No | Codecov (enforced) |
+| Coverage threshold | None | Yes | N/A | Yes |
+| Container scanning | None | Trivy | Trivy | Trivy |
+| SAST | None (rules exist) | CodeQL | None | CodeQL |
+| Pre-commit hooks | Yes (Go+Python+Rust) | Yes | No | Yes |
+| Agent rules | None | Comprehensive | None | None |
+| Operator chaos | Yes (CRD diffs) | N/A | N/A | No |
+| Helm chart tests | Yes (8 tests) | No | No | Yes |
+| Multi-arch builds | Yes (3 archs) | No | Yes | Yes |
+| Tekton/Konflux | Yes (4 pipelines) | Yes | Yes | No |
+| Secret detection | Gitleaks | Gitleaks | No | No |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/test-go.yaml` - Go unit/integration tests + linting
-- `.github/workflows/test-python.yaml` - Python unit/integration tests
+- `.github/workflows/test-go.yaml` - Go unit + integration tests
+- `.github/workflows/test-python.yaml` - Python tests + pre-commit
 - `.github/workflows/test-rust.yaml` - Rust unit tests
-- `.github/workflows/test-e2e.yaml` - E2E tests on Kind (4 K8s versions)
-- `.github/workflows/test-e2e-gpu.yaml` - GPU E2E tests (A10, label-gated)
-- `.github/workflows/build-and-push-images.yaml` - Multi-arch image builds (7 images)
-- `.github/workflows/check-pr-title.yaml` - Semantic PR title enforcement
-- `.github/workflows/publish-helm-charts.yaml` - Helm chart OCI publishing
-- `.github/workflows/sync-stream-to-lake.yml` - Automated stream-to-lake sync
-- `.mergify.yml` - Auto-merge rules for lake-gate PRs
+- `.github/workflows/test-e2e.yaml` - E2E tests on Kind
+- `.github/workflows/test-e2e-gpu.yaml` - GPU E2E tests
+- `.github/workflows/build-and-push-images.yaml` - Container image builds
+- `.github/workflows/operator-chaos.yml` - CRD breaking change detection
+- `.tekton/trainer-pull-request.yaml` - Konflux PR builds
+- `.tekton/trainer-push.yaml` - Konflux push builds
+- `.tekton/early-gate-ci-build.yaml` - Early gate CI build
+- `.tekton/early-gate-ci-test.yaml` - Early gate CI test
 
 ### Testing
-- `test/e2e/` - E2E tests with Kind cluster
-- `test/e2e/rhai/` - RHAI-specific E2E tests
-- `test/integration/controller/` - Controller integration tests (envtest)
-- `test/integration/webhooks/` - Webhook integration tests (envtest)
+- `test/e2e/` - Go E2E tests (Kind-based)
+- `test/e2e/rhai/` - RHAI progression E2E tests
+- `test/integration/controller/` - Go integration tests (envtest)
+- `test/integration/webhooks/` - Webhook integration tests
 - `test/integration/initializers/` - Python initializer integration tests
-- `pkg/*/..._test.go` - Go unit tests alongside source
-- `pkg/initializers/*/..._test.py` - Python initializer unit tests
-- `charts/kubeflow-trainer/tests/` - Helm chart unit tests (8 files)
+- `pkg/initializers/dataset/` - Python dataset initializer unit tests
+- `pkg/initializers/model/` - Python model initializer unit tests
+- `charts/kubeflow-trainer/tests/` - Helm chart unit tests
 
 ### Code Quality
-- `.golangci.yaml` - golangci-lint config (gci only)
-- `.golangci-kal.yml` - Kube API linter config (disabled)
+- `.golangci.yaml` - Go linter configuration
+- `.golangci-kal.yml` - Kube API Linter configuration
 - `.pre-commit-config.yaml` - Pre-commit hooks (Go, Python, Rust)
-- `.flake8` - Python flake8 config
-- `semgrep.yaml` - Comprehensive security rules (not in CI)
-- `.gitleaks.toml` - Secret detection config
-- `.gitleaksignore` - Secret detection exclusions
+- `.flake8` - Python flake8 configuration
+- `.gitleaks.toml` - Secret detection configuration
+- `semgrep.yaml` - SAST rules (NOT wired into CI)
 
 ### Container Images
-- `cmd/trainer-controller-manager/Dockerfile` - Controller (distroless)
-- `cmd/trainer-controller-manager/Dockerfile.odh` - Controller (UBI9, FIPS)
-- `cmd/initializers/model/Dockerfile` - Model initializer
-- `cmd/initializers/dataset/Dockerfile` - Dataset initializer
-- `cmd/runtimes/deepspeed/Dockerfile` - DeepSpeed runtime
-- `cmd/runtimes/mlx/Dockerfile` - MLX runtime
-- `cmd/trainers/torchtune/Dockerfile` - TorchTune trainer
-- `cmd/data_cache/Dockerfile` - Data cache
+- `cmd/trainer-controller-manager/Dockerfile` - Upstream controller image
+- `cmd/trainer-controller-manager/Dockerfile.odh` - ODH/RHOAI FIPS-enabled image
+- `cmd/initializers/dataset/Dockerfile` - Dataset initializer image
+- `cmd/initializers/model/Dockerfile` - Model initializer image
+- `cmd/runtimes/deepspeed/Dockerfile` - DeepSpeed runtime image
+- `cmd/runtimes/mlx/Dockerfile` - MLX runtime image
+- `cmd/trainers/torchtune/Dockerfile` - TorchTune trainer image
+- `cmd/data_cache/Dockerfile` - Data cache image (Rust)
 
-### Build
-- `Makefile` - Build automation (test, lint, deploy, helm targets)
-- `go.mod` - Go module (github.com/kubeflow/trainer/v2)
+### Operator Chaos
+- `chaos/knowledge/trainer.yaml` - Operator knowledge model for chaos testing
+- `.github/workflows/operator-chaos.yml` - CRD diff + upgrade simulation workflow
+
+### RHOAI
+- `manifests/rhoai/kustomization.yaml` - RHOAI Kustomize overlay
+- `manifests/rhoai/runtimes/` - Training hub runtime definitions
+- `manifests/rhoai/imagestreams/` - OpenShift ImageStreams

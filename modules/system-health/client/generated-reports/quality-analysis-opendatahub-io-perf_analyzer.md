@@ -1,377 +1,381 @@
 ---
 repository: "opendatahub-io/perf_analyzer"
-overall_score: 3.5
+overall_score: 5.4
 scorecard:
   - dimension: "Unit Tests"
-    score: 6.5
-    status: "Substantial C++ (doctest) and Python (pytest) test suites, but C++ tests not run in GitHub CI"
+    score: 7.0
+    status: "Strong genai-perf Python tests (449 functions, 65 files), but zero C++ unit tests for 51K-line core"
   - dimension: "Integration/E2E"
     score: 3.0
-    status: "Only 2 Python integration tests, no E2E tests against actual Triton server"
+    status: "Only 2 integration test files (255 lines); no E2E test infrastructure; external GitLab CI unclear"
   - dimension: "Build Integration"
     score: 2.0
-    status: "C++ build not validated in GitHub CI; relies on opaque external GitLab pipeline"
+    status: "No PR-time container build; no Konflux simulation; CMake C++ build not validated in GitHub CI"
   - dimension: "Image Testing"
     score: 1.0
-    status: "No Dockerfile, no container builds, no image validation or scanning"
+    status: "No Dockerfiles in repo; no image build or runtime validation; no container scanning"
   - dimension: "Coverage Tracking"
-    score: 2.0
-    status: "Coverage generated in CI but never uploaded or enforced; no thresholds"
+    score: 4.0
+    status: "Coverage generated locally (--cov flags) but not uploaded to Codecov/Coveralls; no thresholds or PR gates"
   - dimension: "CI/CD Automation"
-    score: 4.5
-    status: "Pre-commit hooks are strong; but no caching, single Python version, C++ CI externalized"
+    score: 5.0
+    status: "4 PR-triggered workflows (pytest, pre-commit, CodeQL, GitLab mirror); no caching or concurrency controls"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no AI agent test guidance"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory; no AI agent test guidance"
 critical_gaps:
-  - title: "C++ tests not executed in GitHub CI"
-    impact: "Contributors cannot see C++ test results on PRs; regressions discovered only after GitLab mirror pipeline runs"
+  - title: "Zero C++ unit tests for 51K-line core engine"
+    impact: "The perf_analyzer C++ binary (170 source files, 51K lines) has no unit test coverage in the GitHub repo; regressions in the core performance measurement engine go undetected"
     severity: "HIGH"
-    effort: "8-16 hours"
+    effort: "40-80 hours"
+  - title: "No container image build or testing"
+    impact: "No Dockerfiles, no image build CI, no runtime validation — container issues only found after downstream consumers build images"
+    severity: "HIGH"
+    effort: "16-24 hours"
   - title: "Coverage generated but never uploaded or enforced"
-    impact: "No visibility into coverage trends; PRs can silently reduce coverage with no gate"
+    impact: "pytest --cov generates reports locally but no Codecov/Coveralls integration; no coverage gates prevent regression"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No E2E tests in the repository"
-    impact: "Integration with Triton Inference Server is never validated before merge"
-    severity: "HIGH"
-    effort: "20-40 hours"
-  - title: "No container image testing or Dockerfile"
-    impact: "Downstream consumers (ODH, Triton SDK) discover build/packaging issues only at their level"
+  - title: "No concurrency controls or caching in CI"
+    impact: "Duplicate workflow runs on rapid pushes waste CI resources; no pip/CMake caching slows builds"
     severity: "MEDIUM"
-    effort: "8-16 hours"
-  - title: "External GitLab CI is opaque to contributors"
-    impact: "Open-source contributors cannot debug CI failures or understand what tests run"
-    severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "CodeQL scans Python only, not C++"
-    impact: "C++ code (the core analyzer) has no SAST coverage for memory safety, buffer overflows, etc."
-    severity: "HIGH"
-    effort: "2-4 hours"
-quick_wins:
-  - title: "Upload coverage to Codecov"
-    effort: "2-3 hours"
-    impact: "Instant visibility into coverage trends and PR-level coverage diffs"
-  - title: "Enable CodeQL for C++ alongside Python"
     effort: "1-2 hours"
-    impact: "Catch memory safety issues, buffer overflows, and security vulnerabilities in core C++ code"
-  - title: "Add Dependabot for dependency scanning"
-    effort: "1 hour"
-    impact: "Automated alerts for known vulnerabilities in Python and CMake dependencies"
-  - title: "Add concurrency control to workflows"
+  - title: "Minimal integration/E2E test coverage"
+    impact: "Only 2 integration tests (multiturn + telemetry); no end-to-end tests against actual inference servers"
+    severity: "HIGH"
+    effort: "24-40 hours"
+quick_wins:
+  - title: "Add Codecov integration to pytest workflow"
+    effort: "1-2 hours"
+    impact: "Immediate visibility into coverage trends and PR-level coverage diff reporting"
+  - title: "Add concurrency controls to all PR workflows"
     effort: "30 minutes"
-    impact: "Prevent duplicate CI runs on rapid push sequences"
-  - title: "Create basic CLAUDE.md with test patterns"
+    impact: "Prevent duplicate workflow runs, save CI minutes on rapid pushes"
+  - title: "Add pip dependency caching to Python CI"
+    effort: "30 minutes"
+    impact: "Reduce CI run time by 30-50% via cached pip downloads"
+  - title: "Upgrade outdated GitHub Actions versions"
+    effort: "1 hour"
+    impact: "actions/checkout@v3 and setup-python@v3 are outdated; upgrade to v4/v5 for security and features"
+  - title: "Create basic .claude/rules/ for test patterns"
     effort: "2-3 hours"
-    impact: "Improve AI-generated code quality and test consistency"
+    impact: "Enable AI agents to generate consistent, high-quality tests following project conventions"
 recommendations:
   priority_0:
-    - "Upload pytest coverage reports to Codecov and set minimum thresholds (e.g., 70%)"
-    - "Enable CodeQL for C++ in addition to Python to catch memory safety bugs"
-    - "Document what the external GitLab CI pipeline tests so contributors understand the full test matrix"
+    - "Add C++ unit testing framework (GoogleTest/doctest) and create initial test suite for core perf_analyzer engine"
+    - "Integrate Codecov with coverage thresholds (e.g., 70% minimum, no decrease on PRs)"
+    - "Add container image build and basic runtime validation to PR workflow"
   priority_1:
-    - "Add a lightweight CMake build step to GitHub CI (even without GPU) to validate C++ compilation"
-    - "Expand Python test matrix to include Python 3.11 and 3.12"
-    - "Create E2E test infrastructure using containerized Triton server for smoke tests"
-    - "Add Dependabot configuration for automated dependency vulnerability scanning"
+    - "Expand integration test coverage beyond the 2 existing test files"
+    - "Add Trivy or Snyk container scanning to CI pipeline"
+    - "Create E2E test infrastructure that validates against mock/real inference servers"
+    - "Add concurrency controls and dependency caching to all workflows"
   priority_2:
-    - "Create CLAUDE.md and .claude/rules/ for AI agent test automation guidance"
-    - "Add Trivy or Snyk scanning for dependency vulnerabilities"
-    - "Introduce performance regression testing to detect throughput/latency changes between versions"
-    - "Add secret detection (gitleaks) to pre-commit hooks and CI"
+    - "Create comprehensive .claude/rules/ for unit, integration, and E2E test patterns"
+    - "Add performance regression testing benchmarks"
+    - "Upgrade all GitHub Actions to latest stable versions"
+    - "Add SBOM generation for supply chain security"
 ---
 
 # Quality Analysis: opendatahub-io/perf_analyzer
 
 ## Executive Summary
 
-- **Overall Score: 3.5/10**
-- **Repository Type**: CLI tool — Triton Performance Analyzer (C++) + GenAI-Perf (Python)
-- **Primary Languages**: C++ (core analyzer), Python (genai-perf CLI wrapper)
-- **Build Systems**: CMake (C++), Hatchling/setuptools (Python)
-- **Key Strengths**: Comprehensive pre-commit hooks, decent unit test coverage for both C++ and Python, well-organized test structure
-- **Critical Gaps**: C++ tests invisible in GitHub CI, no coverage enforcement, no E2E tests, no container/image testing, external CI is opaque
-- **Agent Rules Status**: Missing — no CLAUDE.md, no .claude/ directory
+- **Overall Score: 5.4/10**
+- **Repository Type**: Performance benchmarking CLI tool (C++ core + Python GenAI-Perf wrapper)
+- **Primary Languages**: C++ (51K lines), Python (33K lines)
+- **Fork of**: `triton-inference-server/perf_analyzer` (NVIDIA upstream)
+- **Key Strengths**: Strong Python unit test suite for genai-perf (449 test functions), comprehensive pre-commit hook configuration (8 hooks including mypy, black, flake8, isort), CodeQL SAST scanning on PRs
+- **Critical Gaps**: Zero C++ unit tests for the 51K-line core engine, no container image build/testing, coverage generated but never uploaded or enforced, minimal integration/E2E coverage
+- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 6.5/10 | Substantial C++ (doctest/gmock) and Python (pytest) suites |
-| Integration/E2E | 3.0/10 | Only 2 Python integration tests, no E2E |
-| **Build Integration** | **2.0/10** | **C++ build not validated in GitHub CI** |
-| Image Testing | 1.0/10 | No Dockerfile, no container builds or scanning |
-| Coverage Tracking | 2.0/10 | Generated but never uploaded or enforced |
-| CI/CD Automation | 4.5/10 | Good pre-commit; weak CI matrix, opaque external pipeline |
-| Agent Rules | 0.0/10 | No AI agent guidance exists |
+| Unit Tests | 7.0/10 | Strong genai-perf Python tests (449 functions across 65 files), but zero C++ tests for 51K-line core |
+| Integration/E2E | 3.0/10 | Only 2 integration test files (255 lines); no E2E infrastructure |
+| **Build Integration** | **2.0/10** | **No PR-time container build; CMake C++ build not validated in GitHub CI** |
+| Image Testing | 1.0/10 | No Dockerfiles, no image builds, no container scanning |
+| Coverage Tracking | 4.0/10 | `--cov` flags generate reports but no upload to Codecov; no thresholds |
+| CI/CD Automation | 5.0/10 | 4 PR-triggered workflows; no caching or concurrency controls |
+| Agent Rules | 0.0/10 | No agent rules or AI test guidance present |
 
 ## Critical Gaps
 
-### 1. C++ Tests Not Executed in GitHub CI
-- **Impact**: Contributors cannot see C++ test results on PRs; regressions are only caught after the GitLab mirror pipeline runs
+### 1. Zero C++ Unit Tests for Core Engine
+- **Impact**: The perf_analyzer C++ binary (170 source files, ~51,600 lines of code) is the core performance measurement engine. It has **zero unit tests** in the GitHub repository. While the `doctest.h` header is listed in CMakeLists.txt, no test files using it exist. Regressions in request scheduling, metrics collection, and protocol handling go completely undetected.
 - **Severity**: HIGH
-- **Effort**: 8-16 hours
-- **Detail**: The C++ test suite (`perf_analyzer_unit_tests`) is built via CMake with doctest/Google Mock but requires Triton client libraries and potentially CUDA. Only the `trigger_ci.yml` workflow mirrors to GitLab and triggers an external pipeline — the results are not visible on the GitHub PR.
+- **Effort**: 40-80 hours (initial framework setup + critical path coverage)
+- **Note**: The external GitLab CI (triggered via `trigger_ci.yml`) may run C++ tests, but this is opaque to contributors and PR reviewers.
 
-### 2. Coverage Generated but Never Uploaded or Enforced
-- **Impact**: No visibility into coverage trends; PRs can silently reduce coverage with zero enforcement
+### 2. No Container Image Build or Testing
+- **Impact**: The repository contains no Dockerfiles or Containerfiles. There is no CI step that builds a container image, validates runtime behavior, or scans for vulnerabilities. Downstream consumers (like ODH) must build images independently, discovering issues late.
+- **Severity**: HIGH
+- **Effort**: 16-24 hours
+
+### 3. Coverage Generated but Never Enforced
+- **Impact**: The Python CI workflow runs `pytest --cov=genai_perf --cov-report=xml --cov-report=html`, generating coverage reports. However, these reports are **never uploaded** to Codecov, Coveralls, or any tracking service. No coverage thresholds are enforced — a PR could drop coverage to 0% and still pass.
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Detail**: `python-package-genai.yml` generates `--cov-report=xml` output but never uploads it to Codecov, Coveralls, or any service. No `.codecov.yml` exists. No coverage thresholds are configured.
 
-### 3. No E2E Tests Against Triton Server
-- **Impact**: The core functionality — profiling models on Triton Inference Server — is never validated end-to-end before merge
+### 4. Minimal Integration/E2E Coverage
+- **Impact**: Only 2 integration test files exist (`test_multiturn.py` at 89 lines, `test_telemetry.py` at 166 lines). No end-to-end tests validate the tool against actual or mock inference servers. The `test_models` directory is referenced in CI (`--ignore-glob=test_models`) but doesn't exist in the repo.
 - **Severity**: HIGH
-- **Effort**: 20-40 hours
-- **Detail**: For a performance benchmarking tool, the absence of E2E tests that actually connect to a Triton server instance (even a mock/minimal one) is a significant gap. The 2 "integration" tests in `genai-perf/tests/integration_tests/` are actually mock-based and don't require a running server.
+- **Effort**: 24-40 hours
 
-### 4. CodeQL Only Scans Python, Not C++
-- **Impact**: The core C++ code handling network I/O, memory management, and data parsing has no static analysis
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Detail**: `codeql.yml` explicitly sets `matrix.language: ['python']` with C++ commented out. For a C++ codebase that handles raw data, HTTP connections, and gRPC, this is a significant security gap.
-
-### 5. External GitLab CI is Opaque
-- **Impact**: Open-source contributors cannot see or debug CI results; NVIDIA-internal pipeline results are not surfaced on GitHub PRs
-- **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Detail**: `trigger_ci.yml` mirrors the repo to GitLab and triggers a pipeline via `curl`, but results are never posted back to the GitHub PR. Contributors must wait for NVIDIA maintainers to report pass/fail.
+### 5. No Concurrency Controls or Caching
+- **Impact**: None of the 4 workflows use `concurrency` groups. Rapid pushes to a PR trigger duplicate runs. No `actions/cache` is used for pip dependencies or CMake builds, resulting in slower CI.
+- **Severity**: MEDIUM
+- **Effort**: 1-2 hours
 
 ## Quick Wins
 
-### 1. Upload Coverage to Codecov (2-3 hours)
+### 1. Add Codecov Integration (1-2 hours)
+Add coverage upload to the existing pytest workflow:
 ```yaml
-# Add to python-package-genai.yml after pytest step:
-- name: Upload coverage to Codecov
-  uses: codecov/codecov-action@v4
-  with:
-    files: genai-perf/tests/coverage.xml
-    fail_ci_if_error: true
-    token: ${{ secrets.CODECOV_TOKEN }}
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: genai-perf/tests/coverage.xml
+        flags: genai-perf
+        fail_ci_if_error: true
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 ```
 
-### 2. Enable CodeQL for C++ (1-2 hours)
+### 2. Add Concurrency Controls (30 minutes)
+Add to each workflow:
 ```yaml
-# In codeql.yml, change:
-matrix:
-  language: ['python', 'cpp']
-```
-
-### 3. Add Dependabot (1 hour)
-```yaml
-# .github/dependabot.yml
-version: 2
-updates:
-  - package-ecosystem: "pip"
-    directory: "/genai-perf"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-```
-
-### 4. Add Concurrency Control (30 minutes)
-```yaml
-# Add to each workflow:
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 ```
+
+### 3. Add pip Dependency Caching (30 minutes)
+```yaml
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+```
+
+### 4. Upgrade GitHub Actions Versions (1 hour)
+Current outdated versions:
+- `actions/checkout@v3` → `@v4`
+- `actions/setup-python@v3` → `@v5`
+- `github/codeql-action/*@v2` → `@v3`
+
+### 5. Create Basic Agent Rules (2-3 hours)
+Create `.claude/rules/` with test patterns for pytest conventions used in the project.
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflow Inventory (4 workflows, all PR-triggered):**
+**Workflows (4 total, all PR-triggered):**
 
-| Workflow | Trigger | Purpose | Issues |
-|----------|---------|---------|--------|
-| `codeql.yml` | PR | SAST scanning (Python only) | Doesn't scan C++ |
-| `pre-commit.yml` | PR | Code formatting/linting | Good — runs on modified files only |
-| `python-package-genai.yml` | PR | Python tests + coverage | Single version (3.10), coverage not uploaded |
-| `trigger_ci.yml` | PR (non-docs) | Mirror to GitLab, trigger external CI | Results opaque to contributors |
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `python-package-genai.yml` | PR | Run pytest for genai-perf with coverage |
+| `pre-commit.yml` | PR | Run pre-commit hooks on changed files |
+| `codeql.yml` | PR | CodeQL SAST scanning for Python |
+| `trigger_ci.yml` | PR (non-docs) | Mirror to GitLab and trigger external CI pipeline |
 
-**Missing CI capabilities:**
-- No concurrency control on any workflow
-- No caching (pip, CMake builds)
-- No workflow status badges
-- No release automation
-- No nightly/periodic jobs
-- Python tests only on Ubuntu 22.04 with Python 3.10 (no matrix)
+**Strengths:**
+- All 4 workflows run on every PR
+- External GitLab CI pipeline likely runs additional C++ builds/tests (opaque)
+- Pre-commit runs only on changed files (efficient)
+
+**Weaknesses:**
+- No concurrency controls on any workflow
+- No dependency caching
+- No periodic/scheduled workflows (nightly builds, etc.)
+- Single Python version tested (3.10 only)
+- Single OS tested (ubuntu-22.04 only)
+- Outdated action versions (checkout@v3, setup-python@v3, codeql@v2)
+- C++ build is completely absent from GitHub CI
 
 ### Test Coverage
 
-**C++ Test Suite:**
-- **Framework**: doctest (lightweight) + Google Mock
-- **Test files**: 23 (12,409 lines of test code)
-- **Mock files**: 12 (well-structured mock objects)
-- **Source files**: 133 (18,938 lines)
-- **Test-to-code ratio**: 0.66 (decent)
-- **Key test areas**: Command line parser, concurrency manager, data loader, HTTP client, inference profiler, metrics manager, model parser, report writer, request rate manager, sequence manager
-- **Build**: Compiled as `perf_analyzer_unit_tests` via CMake with Google Test/Mock
-- **NOT run in GitHub CI** — only via external GitLab pipeline
+**Python (genai-perf):**
+- **65 test files** with **449 test functions** across 17,232 lines
+- Well-organized test directories by component:
+  - `test_converters/` (6 files) — protocol converter tests
+  - `test_data_parser/` (4 files) — data parsing tests
+  - `test_exporters/` (5 files) — export format tests
+  - `test_metrics/` (4 files) — metrics calculation tests
+  - `test_retrievers/` (6 files) — data retrieval tests
+  - `test_statistics/` (2 files) — statistical computation tests
+  - `test_collectors/` (4 files) — telemetry collector tests
+  - `integration_tests/` (2 files) — integration tests
+- **Test-to-code ratio**: 0.52 (17,232 test lines / 33,122 source lines) — moderate
+- **Mocking**: 40 test files use mocking (61% of test files)
+- **Parametrize**: 16 test files use `@pytest.mark.parametrize`
+- **Framework**: pytest with pytest-mock, pytest-timeout, pytest-cov, psutil
 
-**Python Test Suite (genai-perf):**
-- **Framework**: pytest with pytest-mock, pytest-cov
-- **Test files**: 65 (17,232 lines)
-- **Source files**: ~600 (33,400 lines)
-- **Test-to-code ratio**: 0.52 (moderate)
-- **Organization**: Well-structured subdirectories:
-  - `test_converters/` (11 files) — output format converters
-  - `test_data_parser/` (4 files) — profile data parsing
-  - `test_exporters/` (5 files) — data export formats
-  - `test_metrics/` (4 files) — telemetry metrics
-  - `test_retrievers/` (6 files) — data retrieval
-  - `test_statistics/` (2 files) — statistical analysis
-  - `test_collectors/` — data collectors
-  - `integration_tests/` (2 files) — mock-based integration
-- **Coverage**: Generated as XML and HTML in CI, but never uploaded
+**C++ (perf_analyzer core):**
+- **0 test files** for **170 source files** (51,626 lines)
+- `doctest.h` is listed in CMakeLists.txt but no tests use it
+- No `add_test()`, `enable_testing()`, or `ctest` configuration
+- **Test-to-code ratio**: 0.00 — critical gap
 
 **Integration Tests:**
-- Only 2 files: `test_multiturn.py` and `test_telemetry.py`
-- These use mocks (`unittest.mock`) and don't require a running Triton server
-- More accurately "component integration tests" than true integration tests
-
-**E2E Tests:** None
+- Only 2 files in `integration_tests/`:
+  - `test_multiturn.py` (89 lines) — multi-turn conversation testing
+  - `test_telemetry.py` (166 lines) — telemetry data collection testing
+- Both use unittest.mock, suggesting they're closer to unit tests with mocks than true integration tests
 
 ### Code Quality
 
-**Pre-commit Hooks (Strong — 8 hooks):**
+**Pre-commit Hooks (Excellent — 9 hooks):**
+- `isort` — import sorting
+- `black` — code formatting
+- `flake8` — linting (max-line-length=88)
+- `clang-format` — C/C++/CUDA formatting
+- `codespell` — spell checking
+- `mypy` — static type checking
+- `pre-commit-hooks` — trailing whitespace, merge conflicts, YAML/JSON validation
+- `add-license` — copyright header enforcement
 
-| Hook | Purpose | Status |
-|------|---------|--------|
-| isort | Python import sorting | Active |
-| black | Python code formatting | Active |
-| flake8 | Python linting | Active |
-| clang-format | C/C++ formatting | Active |
-| codespell | Spell checking | Active |
-| mypy | Python type checking | Active |
-| pre-commit-hooks | General checks (merge conflicts, trailing whitespace, etc.) | Active |
-| add-license | Custom copyright header checker | Active |
+**Static Analysis:**
+- CodeQL scanning on PRs (Python language)
+- mypy type checking via pre-commit
+- `.clang-format` configured (Google-based style)
+- No `ruff` (mentioned in pyproject.toml but not active as a hook)
 
-**Additional tooling:**
-- Ruff configured in `genai-perf/pyproject.toml` (minimal — line-length/indent-width only)
-- CodeQL for Python SAST (no C++ scanning)
-- No Dependabot or Renovate for dependency updates
-
-**Gaps:**
-- No golangci-lint equivalent for C++ beyond clang-format
-- No cppcheck, clang-tidy, or similar static analysis
-- No secret detection (gitleaks/trufflehog)
+**Weaknesses:**
+- No `pylint` or `ruff` as primary linter (using flake8 only)
+- No C++ static analysis (cppcheck, clang-tidy) in CI
+- mypy runs via pre-commit but not in CI separately
 
 ### Container Images
 
-- **No Dockerfile or Containerfile** in the repository
-- **DevContainer** provided for development with NVIDIA Triton base image (`gitlab-master.nvidia.com:5005/dl/dgx/tritonserver:master-py3-base`)
-- The C++ binary is built externally and packaged into Triton SDK containers
-- **No container scanning, SBOM generation, or image signing** at this level
+- **No Dockerfiles or Containerfiles** in the repository
+- **No image build in CI** — zero container build validation
+- **No runtime testing** — no Testcontainers or equivalent
+- **No vulnerability scanning** — no Trivy, Snyk, or Grype
+- **No SBOM generation** — no syft, cyclonedx, or spdx
+- **No image signing** — no cosign or Notary
+- This is a significant gap for a project consumed by ODH/RHOAI pipelines
 
 ### Security
 
-| Practice | Status | Detail |
-|----------|--------|--------|
-| CodeQL (SAST) | Partial | Python only, C++ excluded |
-| Dependency scanning | Missing | No Dependabot/Renovate/Snyk |
-| Secret detection | Missing | No gitleaks or TruffleHog |
-| Container scanning | N/A | No containers built in this repo |
-| SBOM generation | Missing | No SBOM tooling |
-| License compliance | Good | Pre-commit hook for copyright headers |
-| Outdated actions | Present | Uses `actions/checkout@v3` (latest is v4) and `codeql-action@v2` (latest is v3) |
+**Strengths:**
+- CodeQL SAST scanning on every PR (Python, with `security-and-quality` query pack)
+- `SECURITY.md` with vulnerability disclosure process (NVIDIA PSIRT)
+- Pre-commit hooks catch common issues (merge conflicts, executables, etc.)
+
+**Weaknesses:**
+- No dependency scanning (Dependabot, Renovate, or equivalent)
+- No secret detection (gitleaks, TruffleHog)
+- No container vulnerability scanning
+- CodeQL only scans Python, not C++ (despite C++ being the larger codebase)
+- No SBOM or software supply chain security
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: No test types have rules
+- **Coverage**: None — no `.claude/`, `CLAUDE.md`, or `AGENTS.md` present
 - **Quality**: N/A
-- **Gaps**:
-  - No `CLAUDE.md` or `AGENTS.md` in repository root
-  - No `.claude/` directory
-  - No `.claude/rules/` for test creation guidance
-  - No `.claude/skills/` for custom workflows
-  - No testing documentation for AI agents
-- **Recommendation**: Generate rules with `/test-rules-generator` covering:
-  - C++ unit test patterns (doctest + Google Mock)
-  - Python unit test patterns (pytest + pytest-mock)
-  - Integration test patterns for genai-perf
-  - CMake build and test configuration patterns
+- **Gaps**: Complete absence of AI agent guidance for test creation, code review, or contribution patterns
+- **Recommendation**: Generate test rules with `/test-rules-generator` covering:
+  - Python unit test patterns (pytest conventions, mock patterns)
+  - Converter/parser test structure
+  - Integration test patterns
+  - C++ test patterns (if/when C++ tests are added)
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Upload pytest coverage to Codecov** — Add codecov-action to `python-package-genai.yml` and set a minimum threshold (start at current level, ratchet up). This is a 2-3 hour fix with immediate ROI.
+1. **Add C++ unit testing framework and initial tests**
+   - Configure GoogleTest or doctest with CTest in CMakeLists.txt
+   - Write initial tests for critical paths: request scheduling, metrics collection, protocol handling
+   - Add C++ test execution to GitHub Actions CI
 
-2. **Enable CodeQL for C++** — Change the language matrix to include `cpp`. The C++ codebase handles network I/O, memory buffers, and data serialization — all high-risk areas for security bugs.
+2. **Integrate Codecov with coverage thresholds**
+   - Upload existing pytest coverage reports to Codecov
+   - Set minimum coverage threshold (start at current level, prevent regression)
+   - Add PR-level coverage diff reporting
 
-3. **Document the GitLab CI pipeline** — At minimum, add a `CONTRIBUTING.md` section explaining what the external pipeline tests and how to interpret results. Ideally, post pipeline status back to GitHub PRs via the GitHub commit status API.
+3. **Add container image build to PR workflow**
+   - Create a Dockerfile for perf_analyzer
+   - Add image build step to CI
+   - Validate the binary starts and responds to `--help`
 
 ### Priority 1 (High Value)
 
-4. **Add CMake build validation to GitHub CI** — Even without GPU/Triton libraries, a no-GPU build compilation check would catch syntax errors and missing includes before they hit the GitLab pipeline. Use a container with prebuilt Triton client libs.
+4. **Expand integration test coverage**
+   - Add integration tests for each converter type
+   - Add tests for CLI argument combinations
+   - Create mock server fixtures for testing against simulated inference endpoints
 
-5. **Expand Python test matrix** — Test against Python 3.10, 3.11, and 3.12. The current single-version testing misses compatibility issues.
+5. **Add container vulnerability scanning**
+   - Integrate Trivy or Snyk into CI pipeline
+   - Set vulnerability severity thresholds (CRITICAL/HIGH block PRs)
 
-6. **Create E2E test infrastructure** — Use a minimal Triton server container (CPU-only) to run smoke tests that validate the perf_analyzer CLI can connect, profile, and report results.
+6. **Add CI caching and concurrency controls**
+   - Add concurrency groups to all 4 workflows
+   - Add pip caching to Python workflows
+   - Consider matrix expansion (Python 3.10 + 3.12, Ubuntu 22.04 + 24.04)
 
-7. **Add Dependabot** — Enable automated dependency vulnerability scanning for both Python (pip) and GitHub Actions.
+7. **Upgrade GitHub Actions to current versions**
+   - `actions/checkout@v3` → `@v4`
+   - `actions/setup-python@v3` → `@v5`
+   - `github/codeql-action/*@v2` → `@v3`
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Create CLAUDE.md and agent rules** — Add `.claude/rules/` with test patterns for both C++ (doctest/gmock) and Python (pytest) to improve AI-generated code quality.
+8. **Create comprehensive agent rules** (`.claude/rules/`)
+   - Unit test patterns for genai-perf
+   - Integration test patterns
+   - C++ test conventions
 
-9. **Add static analysis for C++** — Integrate cppcheck or clang-tidy into the pre-commit hooks or CI pipeline.
+9. **Add performance regression benchmarks**
+   - Create benchmark suite for genai-perf CLI
+   - Track execution time trends
+   - Alert on significant regressions
 
-10. **Add secret detection** — Include gitleaks in pre-commit hooks to prevent accidental credential commits.
+10. **Enable C++ CodeQL scanning**
+    - Add `cpp` to the CodeQL language matrix
+    - Configure autobuild for CMake
 
-11. **Performance regression testing** — For a performance benchmarking tool, regression testing of the tool's own performance characteristics would be valuable.
-
-12. **Update GitHub Actions versions** — Migrate from `actions/checkout@v3` to `v4`, `codeql-action@v2` to `v3`, etc.
+11. **Add dependency update automation**
+    - Configure Dependabot or Renovate for Python and C++ dependencies
+    - Set update schedule and auto-merge for minor/patch updates
 
 ## Comparison to Gold Standards
 
 | Capability | perf_analyzer | odh-dashboard | notebooks | kserve |
-|------------|--------------|---------------|-----------|--------|
-| Unit tests | Moderate (C++ + Python) | Comprehensive (Jest + Cypress) | Moderate | Strong (Go) |
-| Integration tests | Minimal (2 mock-based) | Contract tests, API tests | Image startup tests | envtest-based |
-| E2E tests | None | Cypress E2E suite | Multi-image validation | Multi-version E2E |
-| Coverage tracking | Generated, not uploaded | Codecov enforced | Basic | Codecov enforced |
-| Coverage threshold | None | Yes (ratchet) | None | Yes |
-| Container testing | None | Build validation | 5-layer image testing | Build + deploy |
-| Security scanning | CodeQL (Python only) | CodeQL + Trivy | Trivy | CodeQL + Trivy |
-| Dependency scanning | None | Dependabot + Renovate | Dependabot | Dependabot |
-| Pre-commit hooks | Strong (8 hooks) | Moderate | Minimal | Moderate |
-| CI concurrency | None | Controlled | Controlled | Controlled |
-| Agent rules | None | Comprehensive | None | Partial |
-| Multi-version testing | None | Multi-browser | Multi-Python | Multi-K8s |
+|-----------|---------------|---------------|-----------|--------|
+| Unit Tests | Python: Strong (449 functions); C++: None | Comprehensive (Jest + React Testing Library) | Present | Strong (Go testing) |
+| Integration Tests | 2 files only | Contract tests + API mocks | Image lifecycle tests | Multi-version |
+| E2E Tests | None | Cypress + Playwright | 5-layer validation | Kind-based |
+| Coverage Tracking | Generated, not uploaded | Codecov with enforcement | N/A | Codecov with thresholds |
+| Container Scanning | None | Trivy in CI | Image validation suite | Trivy + Snyk |
+| Pre-commit Hooks | Excellent (9 hooks) | ESLint + Prettier | Basic | golangci-lint |
+| SAST | CodeQL (Python only) | CodeQL + ESLint security | N/A | CodeQL + gosec |
+| Agent Rules | None | Comprehensive .claude/ | None | None |
+| CI Caching | None | Yarn + Docker layer | Docker layer | Go modules |
+| Concurrency Control | None | Present | Present | Present |
 
 ## File Paths Reference
 
-### CI/CD Configuration
-- `.github/workflows/codeql.yml` — CodeQL SAST (Python only)
-- `.github/workflows/pre-commit.yml` — Pre-commit hook enforcement
-- `.github/workflows/python-package-genai.yml` — Python tests + coverage
-- `.github/workflows/trigger_ci.yml` — GitLab mirror + external CI trigger
-- `.github/workflows/mirror_repo.sh` — GitLab mirror sync script
-
-### Build Configuration
-- `CMakeLists.txt` — Root CMake config
-- `src/CMakeLists.txt` — Core C++ build + unit test target
-- `pyproject.toml` — Root Python package config (perf-analyzer)
-- `genai-perf/pyproject.toml` — GenAI-Perf Python package config
-
-### Test Files
-- `src/test_*.cc` — 23 C++ unit test files (doctest + gmock)
-- `src/mock_*.h` — 12 C++ mock objects
-- `src/perf_analyzer_unit_tests.cc` — C++ test runner entry point
-- `genai-perf/tests/` — 65 Python test files (pytest)
-- `genai-perf/tests/integration_tests/` — 2 integration test files
-- `genai-perf/pytest.ini` — Pytest configuration
-
-### Code Quality
-- `.pre-commit-config.yaml` — Pre-commit hooks (isort, black, flake8, clang-format, mypy, codespell)
-- `genai-perf/pyproject.toml` — Ruff config (minimal)
-
-### Development
-- `.devcontainer/devcontainer.json` — VS Code devcontainer with NVIDIA Triton base
+| Category | Path | Notes |
+|----------|------|-------|
+| CI Workflows | `.github/workflows/python-package-genai.yml` | pytest for genai-perf |
+| CI Workflows | `.github/workflows/pre-commit.yml` | Pre-commit hooks |
+| CI Workflows | `.github/workflows/codeql.yml` | SAST scanning |
+| CI Workflows | `.github/workflows/trigger_ci.yml` | GitLab CI trigger |
+| Pre-commit | `.pre-commit-config.yaml` | 9 hooks configured |
+| Python Config | `pyproject.toml` | Root project config |
+| Python Config | `genai-perf/pyproject.toml` | GenAI-Perf config |
+| Python Tests | `genai-perf/tests/` | 65 test files, 449 functions |
+| Integration Tests | `genai-perf/tests/integration_tests/` | 2 files |
+| C++ Source | `src/` | 170 files, 51K lines |
+| C++ Build | `CMakeLists.txt` | CMake build system |
+| Code Formatting | `.clang-format` | Google-based C++ style |
+| Pytest Config | `genai-perf/pytest.ini` | Test configuration |
+| Security | `SECURITY.md` | NVIDIA vulnerability disclosure |

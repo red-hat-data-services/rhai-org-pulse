@@ -1,313 +1,437 @@
 ---
 repository: "opendatahub-io/agent-ops"
-overall_score: 0.0
+overall_score: 2.2
 scorecard:
   - dimension: "Unit Tests"
-    score: 0.0
-    status: "Repository is empty - no code or tests exist"
+    score: 4.0
+    status: "Tests exist for 3 of 5 components; banking-agent, playground, and mcp-server lack unit tests entirely"
   - dimension: "Integration/E2E"
-    score: 0.0
-    status: "Repository is empty - no integration or E2E tests exist"
+    score: 4.0
+    status: "Testcontainers for pgvector DB tests; manual bash script for A2A agent tests; no automated E2E suite"
   - dimension: "Build Integration"
     score: 0.0
-    status: "Repository is empty - no build configuration exists"
+    status: "No CI/CD pipeline exists; Dockerfiles are never built or validated in automation"
   - dimension: "Image Testing"
-    score: 0.0
-    status: "Repository is empty - no container image testing exists"
+    score: 2.0
+    status: "UBI9 base images and some pinned digests; no scanning, no runtime validation, no multi-arch"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "Repository is empty - no coverage tracking configured"
+    status: "No codecov, coveralls, or any coverage reporting; no thresholds enforced"
   - dimension: "CI/CD Automation"
     score: 0.0
-    status: "Repository is empty - no CI/CD workflows exist"
+    status: "No GitHub Actions, GitLab CI, or any CI/CD configuration; all testing is manual"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "Repository is empty - no agent rules or AI guidance exist"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory; no AI-assisted test guidance"
 critical_gaps:
-  - title: "Repository has no content"
-    impact: "No code, tests, CI/CD, or documentation exist — the entire quality stack must be built from scratch"
+  - title: "No CI/CD pipeline of any kind"
+    impact: "All testing, building, and validation is entirely manual; regressions can merge undetected"
     severity: "HIGH"
-    effort: "Varies by project scope"
-  - title: "No CI/CD pipeline"
-    impact: "When code is added, there will be no automated quality gates without CI/CD setup"
-    severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "No testing framework"
-    impact: "No test infrastructure to validate correctness of future code"
+    effort: "8-16 hours"
+  - title: "No coverage tracking or enforcement"
+    impact: "Test coverage can silently decrease; no visibility into untested code paths"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No security scanning"
-    impact: "Vulnerabilities in dependencies or code will go undetected"
+  - title: "No container image security scanning"
+    impact: "Vulnerable dependencies and base image CVEs go undetected until production"
     severity: "HIGH"
     effort: "2-4 hours"
-quick_wins:
-  - title: "Initialize repository with README, LICENSE, and CODEOWNERS"
-    effort: "1 hour"
-    impact: "Establishes project identity, ownership, and contribution guidelines"
-  - title: "Add GitHub Actions CI workflow from day one"
-    effort: "2-3 hours"
-    impact: "Ensures quality gates are in place before any code is merged"
-  - title: "Create CLAUDE.md and .claude/rules/ for agent-assisted development"
-    effort: "2-3 hours"
-    impact: "Guides AI coding assistants to produce high-quality, consistent code and tests"
-  - title: "Add pre-commit hooks configuration"
+  - title: "Banking agent and MCP server have zero unit tests"
+    impact: "Core financial operations code (account updates, transactions) has no automated validation"
+    severity: "HIGH"
+    effort: "8-12 hours"
+  - title: "No linting or static analysis"
+    impact: "Code quality issues, type errors, and style inconsistencies accumulate over time"
+    severity: "MEDIUM"
+    effort: "2-4 hours"
+  - title: "No pre-commit hooks"
+    impact: "Developers can commit code without any local quality checks"
+    severity: "MEDIUM"
     effort: "1-2 hours"
-    impact: "Catches formatting, linting, and secret exposure issues before commits"
+quick_wins:
+  - title: "Add a basic GitHub Actions CI workflow with pytest"
+    effort: "2-4 hours"
+    impact: "Automated test execution on every PR; immediate regression detection"
+  - title: "Add ruff for linting and formatting"
+    effort: "1-2 hours"
+    impact: "Catches bugs, enforces style consistency, replaces multiple tools (flake8, isort, black)"
+  - title: "Add Trivy scanning to container builds"
+    effort: "1-2 hours"
+    impact: "Automated CVE detection for all 5 container images"
+  - title: "Add pytest-cov and codecov integration"
+    effort: "2-3 hours"
+    impact: "Visibility into coverage trends; foundation for coverage enforcement"
+  - title: "Add pre-commit hooks (ruff, mypy, gitleaks)"
+    effort: "1-2 hours"
+    impact: "Local quality gate before code reaches the repository"
+  - title: "Create CLAUDE.md with test patterns for AI-assisted development"
+    effort: "2-3 hours"
+    impact: "Consistent AI-generated test quality across all components"
 recommendations:
   priority_0:
-    - "Initialize the repository with a proper project structure, build system, and README"
-    - "Set up CI/CD pipeline (GitHub Actions) with linting, testing, and build steps from the first commit"
-    - "Add container image scanning (Trivy) and dependency scanning from day one"
+    - "Create GitHub Actions CI workflow: run pytest across all components on every PR"
+    - "Add unit tests for banking-agent (agent_executor.py, agent.py, __main__.py) and mcp-server (mcp_server.py, database_manager.py)"
+    - "Add container image vulnerability scanning (Trivy) for all 5 Dockerfiles"
+    - "Add coverage tracking with codecov and enforce minimum thresholds (start at 50%)"
   priority_1:
-    - "Establish test infrastructure (unit, integration, E2E) matching the chosen language/framework"
-    - "Configure coverage tracking (Codecov) with minimum thresholds before codebase grows"
-    - "Create comprehensive agent rules (.claude/rules/) for test automation guidance"
+    - "Add ruff linting/formatting and mypy type checking to CI pipeline"
+    - "Pin all Dockerfile base image digests (banking-agent, knowledge-agent, mcp-server currently use :latest)"
+    - "Create automated E2E test suite that can run in Kind/Minikube without a full OpenShift cluster"
+    - "Add pre-commit hooks with ruff, mypy, and gitleaks for local quality enforcement"
+    - "Create comprehensive CLAUDE.md and .claude/rules/ for AI-assisted test generation"
   priority_2:
-    - "Add pre-commit hooks for formatting, linting, and secret detection"
-    - "Set up CODEOWNERS for automated review routing"
-    - "Document architecture decisions and testing strategy in docs/"
+    - "Add SAST scanning (CodeQL or Semgrep) for security analysis"
+    - "Add Dockerfile linting with hadolint"
+    - "Add multi-architecture builds for container images"
+    - "Add Helm chart testing with chart-testing and helm-unittest"
+    - "Add API contract testing between agents (A2A protocol validation)"
+    - "Add load testing for the orchestrator agent routing"
 ---
 
-# Quality Analysis: agent-ops
+# Quality Analysis: opendatahub-io/agent-ops
 
 ## Executive Summary
+- Overall Score: 2.2/10
+- Key Strengths: Good application-level security design (RLS, JWT, AuthBridge), testcontainers-based DB tests, comprehensive testing documentation (TESTING.md), proper Helm chart security contexts
+- Critical Gaps: No CI/CD pipeline whatsoever, no coverage tracking, no security scanning, 2 of 5 components have zero tests, no linting or static analysis
+- Agent Rules Status: Missing
 
-- **Overall Score: 0.0 / 10**
-- **Repository Status: EMPTY** - The repository `opendatahub-io/agent-ops` exists as a public repository under the opendatahub-io GitHub organization but contains **zero commits, zero branches, and zero files**. It is a placeholder that has never been initialized.
-- **Key Strengths**: None (no content exists)
-- **Critical Gaps**: The entire quality stack must be built from scratch
-- **Agent Rules Status**: Missing
+## Repository Overview
 
-Because this is a greenfield repository, this analysis focuses on **recommendations for establishing quality practices from day one**, benchmarked against gold-standard repositories in the opendatahub-io organization.
+| Attribute | Value |
+|-----------|-------|
+| Repository | opendatahub-io/agent-ops |
+| Type | Demo / Reference Architecture |
+| Primary Language | Python (100%) |
+| Framework | LangGraph, LangChain, FastMCP, A2A SDK |
+| Source Lines | ~3,029 (application code) |
+| Test Lines | ~1,763 (test code) |
+| Test-to-Code Ratio | 0.58 (for components that have tests) |
+| Components | 5 services (MCP server, banking agent, knowledge agent, orchestrator, playground) |
+| Deployment | OpenShift via Helm charts and deploy scripts |
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0.0 / 10 | No code or tests exist |
-| Integration/E2E | 0.0 / 10 | No integration or E2E tests exist |
-| **Build Integration** | **0.0 / 10** | **No build configuration exists** |
-| Image Testing | 0.0 / 10 | No container image testing exists |
-| Coverage Tracking | 0.0 / 10 | No coverage tracking configured |
-| CI/CD Automation | 0.0 / 10 | No CI/CD workflows exist |
-| Agent Rules | 0.0 / 10 | No agent rules or AI guidance exist |
+| Unit Tests | 4.0/10 | Tests exist for 3 of 5 components; banking-agent, playground, and mcp-server lack unit tests |
+| Integration/E2E | 4.0/10 | Testcontainers for pgvector DB tests; manual bash script for agent tests; no automated E2E |
+| **Build Integration** | **0.0/10** | **No CI/CD pipeline; Dockerfiles never built or validated in automation** |
+| Image Testing | 2.0/10 | UBI9 base images and some pinned digests; no scanning, no runtime validation |
+| Coverage Tracking | 0.0/10 | No codecov, coveralls, or any coverage reporting |
+| CI/CD Automation | 0.0/10 | No GitHub Actions, GitLab CI, or any CI/CD configuration |
+| Agent Rules | 0.0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory |
 
 ## Critical Gaps
 
-### 1. Repository Has No Content
-- **Impact**: No code, tests, CI/CD, or documentation exist. The entire quality stack must be built from scratch.
-- **Severity**: HIGH
-- **Effort**: Varies by project scope
-- **Context**: The repository was created in the opendatahub-io org but never initialized. This is a unique opportunity to establish quality practices *before* any code debt accumulates.
+1. **No CI/CD pipeline of any kind**
+   - Impact: All testing, building, and validation is entirely manual; regressions can merge undetected
+   - Severity: HIGH
+   - Effort: 8-16 hours
+   - Detail: The repository has no `.github/workflows/`, no `.gitlab-ci.yml`, no Jenkinsfile, no Tekton pipelines. Every test run, every build, every validation step must be done manually by developers.
 
-### 2. No CI/CD Pipeline
-- **Impact**: When code is eventually added, there will be zero automated quality gates without explicit CI/CD setup.
-- **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Recommendation**: Set up GitHub Actions workflows covering lint, test, build, and security scanning before the first PR is merged.
+2. **No coverage tracking or enforcement**
+   - Impact: Test coverage can silently decrease with no visibility into untested code paths
+   - Severity: HIGH
+   - Effort: 2-4 hours
 
-### 3. No Testing Framework
-- **Impact**: No test infrastructure means no ability to validate code correctness.
-- **Severity**: HIGH
-- **Effort**: 2-4 hours (initial framework setup)
-- **Recommendation**: Choose and configure a testing framework appropriate to the project's language/stack from the first commit.
+3. **No container image security scanning**
+   - Impact: Vulnerable dependencies and base image CVEs go undetected until production
+   - Severity: HIGH
+   - Effort: 2-4 hours
 
-### 4. No Security Scanning
-- **Impact**: Dependencies and code vulnerabilities will go undetected.
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Recommendation**: Add Trivy for container scanning, CodeQL or Semgrep for SAST, and Gitleaks for secret detection from day one.
+4. **Banking agent and MCP server have zero unit tests**
+   - Impact: Core financial operations code (account updates, transactions, RLS enforcement) has no automated validation
+   - Severity: HIGH
+   - Effort: 8-12 hours
+   - Detail: The banking-agent handles write operations (`update_account`, `create_transaction`) and the MCP server enforces Row-Level Security — both are critical security surfaces with no test coverage.
+
+5. **No linting or static analysis**
+   - Impact: Code quality issues, type errors, and style inconsistencies accumulate
+   - Severity: MEDIUM
+   - Effort: 2-4 hours
+
+6. **No pre-commit hooks**
+   - Impact: Developers can commit code without any local quality checks
+   - Severity: MEDIUM
+   - Effort: 1-2 hours
 
 ## Quick Wins
 
-### 1. Initialize Repository with Proper Foundation (1 hour)
-- Add `README.md` with project purpose, architecture overview, and contribution guide
-- Add `LICENSE` (Apache 2.0, consistent with other opendatahub-io repos)
-- Add `CODEOWNERS` for automated review assignment
-- Add `.gitignore` for the chosen language
+1. **Add a basic GitHub Actions CI workflow with pytest**
+   - Effort: 2-4 hours
+   - Impact: Automated test execution on every PR
+   - Implementation:
+   ```yaml
+   # .github/workflows/ci.yml
+   name: CI
+   on: [pull_request]
+   jobs:
+     test:
+       runs-on: ubuntu-latest
+       strategy:
+         matrix:
+           component:
+             - demos/redbank-demo/knowledge-agent
+             - demos/redbank-demo/orchestrator-agent
+             - demos/redbank-demo/langchain-pgvector
+       steps:
+         - uses: actions/checkout@v4
+         - uses: astral-sh/setup-uv@v6
+         - run: |
+             cd ${{ matrix.component }}
+             uv pip install --system ".[dev]"
+             pytest tests/ -v --tb=short
+   ```
 
-### 2. Add GitHub Actions CI from Day One (2-3 hours)
-- Create `.github/workflows/pr.yml` with lint, test, and build steps
-- Add concurrency controls to prevent redundant CI runs
-- Configure caching for dependency downloads
+2. **Add ruff for linting and formatting**
+   - Effort: 1-2 hours
+   - Impact: Catches bugs, enforces style consistency
+   - Implementation: Add `[tool.ruff]` section to each `pyproject.toml`
 
-Example PR workflow template:
-```yaml
-name: PR Checks
-on:
-  pull_request:
-    branches: [main]
-concurrency:
-  group: pr-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
-jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      # Add language-specific linting
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      # Add language-specific testing with coverage
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      # Add container image build validation
-```
+3. **Add Trivy scanning to container builds**
+   - Effort: 1-2 hours
+   - Impact: Automated CVE detection for all 5 container images
+   - Implementation:
+   ```yaml
+   - name: Trivy scan
+     uses: aquasecurity/trivy-action@master
+     with:
+       image-ref: ${{ matrix.image }}
+       severity: CRITICAL,HIGH
+       exit-code: 1
+   ```
 
-### 3. Create Agent Rules for AI-Assisted Development (2-3 hours)
-- Create `CLAUDE.md` in repository root with project conventions
-- Create `.claude/rules/` directory with test creation guidance
-- Add rules for unit tests, integration tests, and E2E tests
-- Include framework-specific patterns and examples
+4. **Add pytest-cov and codecov integration**
+   - Effort: 2-3 hours
+   - Impact: Coverage visibility and trend tracking
 
-### 4. Add Pre-commit Hooks (1-2 hours)
-- Create `.pre-commit-config.yaml` with formatting, linting, and secret detection hooks
-- Ensures consistent code quality before commits reach CI
+5. **Add pre-commit hooks (ruff, mypy, gitleaks)**
+   - Effort: 1-2 hours
+   - Impact: Local quality gate before code reaches the repository
+
+6. **Create CLAUDE.md with test patterns**
+   - Effort: 2-3 hours
+   - Impact: Consistent AI-generated test quality across all components
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
-**Status**: Non-existent
 
-No `.github/workflows/` directory, no `Makefile`, no CI configuration of any kind. The repository has zero commits.
+**Status: Non-existent**
 
-**Recommendation**: Model CI/CD after gold-standard repos like `odh-dashboard` which uses multi-layer workflows:
-- PR-triggered lint/test/build
-- Periodic E2E test runs
-- Release automation
-- Security scanning
+The repository has absolutely no CI/CD configuration:
+- No `.github/workflows/` directory
+- No `.gitlab-ci.yml`
+- No `Jenkinsfile`
+- No Tekton pipelines
+- No automated triggers of any kind
+
+The `Makefile` provides local convenience targets (`test-pgvector`, `test-knowledge-agent`) but these are manual-only and require a running OpenShift cluster with port-forwarding.
+
+**What needs to happen:**
+- Create a GitHub Actions workflow for PR validation
+- Run unit tests for all components in a matrix strategy
+- Build Docker images to catch build failures
+- Run linting and type checking
+- Add integration tests with testcontainers (pgvector tests already use this)
 
 ### Test Coverage
-**Status**: Non-existent
 
-No test files, no test directories, no test configuration.
+**Unit Tests (4.0/10)**
 
-**Recommendation**: Based on the "agent-ops" name (suggesting an AI/agent operations project), the testing strategy should include:
-- **Unit tests** for core agent logic and utilities
-- **Integration tests** for agent-to-service communication
-- **E2E tests** for full agent workflow validation
-- **Contract tests** if the project exposes APIs consumed by other components
+Tests exist for 3 of 5 components:
+
+| Component | Test Files | Test Lines | Source Lines | Ratio | Status |
+|-----------|-----------|------------|-------------|-------|--------|
+| knowledge-agent | 3 | 250 | 377 | 0.66 | Good coverage of tool filtering, LLM setup, bearer token forwarding |
+| orchestrator-agent | 2 | 687 | 1,255 | 0.55 | Tests tools, K8s discovery, A2A client |
+| langchain-pgvector | 3 + conftest | 238 | ~400 | 0.60 | Excellent testcontainers usage for RLS, schema, search |
+| banking-agent | 0 | 0 | 384 | 0.00 | **No tests at all** |
+| mcp-server | 0 | 0 | 738 | 0.00 | **No unit tests** (integration test exists but requires cluster) |
+| playground | 0 | 0 | 275 | 0.00 | **No tests at all** |
+
+**Positive test patterns observed:**
+- Good use of `pytest-asyncio` for async code
+- Clean mock patterns with `unittest.mock.AsyncMock`
+- Testcontainers for database integration tests (pgvector)
+- Podman compatibility in test fixtures
+- Session-scoped fixtures for expensive resources
+
+**Gaps:**
+- Banking agent: Zero tests for `agent_executor.py` (the core agent logic), `agent.py` (tool creation, MCP client), and `__main__.py` (server startup)
+- MCP server: Zero unit tests for `mcp_server.py` (607 lines — the largest single file, handling all MCP tool implementations and RLS enforcement)
+- Playground: No tests for `server.py` (272 lines — HTTP routing, proxy logic)
+
+### Integration Tests (4.0/10)
+
+**Strengths:**
+- `langchain-pgvector/tests/conftest.py`: Excellent testcontainers setup — spins up a pgvector container, bootstraps schema from `init.sql`, creates session-scoped fixtures with proper Podman compatibility
+- `tests/test_mcp_rls.py`: Comprehensive 476-line integration test covering tool discovery, RLS scoping, admin/user roles, Keycloak token acquisition — but requires a running cluster
+- `scripts/test-knowledge-agent.sh`: Manual A2A test script with 6 scenarios covering admin/user access, RLS, and write tool blocking
+
+**Gaps:**
+- All integration tests require a running OpenShift cluster
+- No Kind/Minikube-based lightweight integration tests
+- No contract tests between agents (A2A protocol validation)
+- No automated E2E pipeline
 
 ### Code Quality
-**Status**: Non-existent
 
-No linting configuration, no static analysis, no formatting rules.
+**Status: No tooling configured**
 
-**Recommendation**: Set up language-appropriate tooling from the first commit:
-- **Python**: ruff (linting + formatting), mypy (type checking), bandit (security)
-- **Go**: golangci-lint with comprehensive linter set
-- **TypeScript**: ESLint with strict config, Prettier for formatting
+- No linting configuration: no `ruff.toml`, `.flake8`, `.pylintrc`
+- No type checking: no `mypy.ini`, no `[tool.mypy]` in pyproject.toml
+- No formatters: no `[tool.black]`, no `[tool.ruff.format]`
+- No pre-commit hooks: no `.pre-commit-config.yaml`
+- No static analysis tools of any kind
+
+**pyproject.toml quality:**
+- All 4 components have proper `pyproject.toml` files
+- Python version constraints are specified (`>=3.12`)
+- Dev dependencies are separated (`[project.optional-dependencies]`) in 2 of 4 components
+- pytest configuration exists in 2 of 4 components
 
 ### Container Images
-**Status**: Non-existent
 
-No Dockerfile, Containerfile, or container-related configuration.
+**Dockerfiles (2.0/10)**
 
-**Recommendation**: When container images are needed:
-- Use multi-stage builds for minimal image size
-- Add Trivy scanning in CI
-- Test image startup as part of CI
-- Generate SBOM with Syft
-- Support multi-architecture builds if applicable
+5 Dockerfiles found, all using Red Hat UBI9 Python 3.12 base image (good practice).
+
+| Component | Base Image | Digest Pinned | Multi-stage | Security Context |
+|-----------|-----------|---------------|-------------|------------------|
+| orchestrator-agent | ubi9/python-312 | Yes | No | USER 1001, group-writable |
+| playground | ubi9/python-312 | Yes | No | USER 1001, group-writable |
+| banking-agent | ubi9/python-312 | No (:latest) | No | Default (1001) |
+| knowledge-agent | ubi9/python-312 | No (:latest) | No | Default (1001) |
+| mcp-server | ubi9/python-312 | No (:latest) | No | Default (1001) |
+
+**Positive practices:**
+- UBI9 base images (Red Hat standard, regularly patched)
+- Non-root container execution
+- `uv` for fast dependency installation
+- OpenShift arbitrary UID support in orchestrator/playground
+
+**Gaps:**
+- 3 of 5 Dockerfiles use `:latest` tag (not reproducible builds)
+- No multi-stage builds (larger final images)
+- No SBOM generation
+- No image signing/attestation
+- No vulnerability scanning
+- No runtime validation tests
+- No `.dockerignore` for mcp-server, orchestrator-agent, playground
 
 ### Security
-**Status**: Non-existent
 
-No security scanning, no secret detection, no dependency auditing.
+**Application-Level Security (Strong)**
+- Row-Level Security (RLS) in PostgreSQL — excellent data isolation
+- JWT-based authentication with Keycloak
+- AuthBridge sidecar injection for network-level auth
+- Tool allow-listing in knowledge agent (blocks write operations)
+- Admin role enforcement in banking agent
+- Secrets managed via Kubernetes Secrets and Helm charts
+- Proper security contexts in Helm charts (runAsNonRoot, drop ALL capabilities, allowPrivilegeEscalation: false)
 
-**Recommendation**: Implement security practices from day one:
-- Add CodeQL or Semgrep for SAST
-- Add Trivy for container and dependency scanning
-- Add Gitleaks for secret detection
-- Configure Dependabot or Renovate for dependency updates
+**CI/CD Security (Non-existent)**
+- No container scanning (Trivy, Snyk)
+- No SAST/CodeQL
+- No dependency scanning
+- No secret detection (Gitleaks, TruffleHog)
+- No `.gitleaks.toml` or `.trivyignore`
+- No signed commits enforcement
 
 ### Agent Rules (Agentic Flow Quality)
-**Status**: Missing
 
-No `CLAUDE.md`, no `.claude/` directory, no agent rules or AI development guidance.
+**Status: Missing**
 
-**Recommendation**: This is a **unique opportunity** since the repo is empty. Establishing agent rules *before* code exists means AI-assisted development will be guided from the very first contribution. Create:
-- `.claude/rules/unit-tests.md` - Unit test patterns and conventions
-- `.claude/rules/integration-tests.md` - Integration test guidance
-- `.claude/rules/e2e-tests.md` - E2E test patterns
-- `.claude/rules/code-style.md` - Coding conventions and patterns
-- `CLAUDE.md` - Project overview and development workflow
+- No `CLAUDE.md` in repository root
+- No `AGENTS.md`
+- No `.claude/` directory
+- No `.claude/rules/` for test creation guidance
+- No `.claude/skills/` for custom skills
+
+**Impact:** AI-assisted development produces inconsistent test patterns. Without agent rules, every AI session starts from scratch — no knowledge of the project's pytest-asyncio patterns, testcontainers usage, mock conventions, or the A2A SDK testing patterns.
+
+**Recommendation:** Generate rules with `/test-rules-generator` covering:
+- Unit test patterns (pytest + asyncio + mock for agents)
+- Integration test patterns (testcontainers for pgvector)
+- A2A protocol testing conventions
+- MCP server tool testing patterns
 
 ## Recommendations
 
-### Priority 0 (Critical - Do Before First PR)
-1. **Initialize repository** with README, LICENSE, .gitignore, and CODEOWNERS
-2. **Set up CI/CD pipeline** with lint, test, and build steps in GitHub Actions
-3. **Add security scanning** (Trivy, CodeQL/Semgrep, Gitleaks) from day one
-4. **Choose and configure testing framework** appropriate to the project's language
+### Priority 0 (Critical)
 
-### Priority 1 (High Value - First Week)
-1. **Establish test infrastructure** with unit, integration, and E2E test directories and configuration
-2. **Configure coverage tracking** (Codecov) with minimum thresholds (e.g., 80%) before codebase grows
-3. **Create agent rules** (`.claude/rules/`) for AI-assisted development guidance
-4. **Add pre-commit hooks** for formatting, linting, and secret detection
+1. **Create GitHub Actions CI workflow** — Run pytest across all components on every PR. Use a matrix strategy for each component directory. This is the single highest-impact improvement.
 
-### Priority 2 (Nice-to-Have - First Month)
-1. **Add PR templates** with testing checklists
-2. **Set up branch protection rules** requiring CI passage and reviews
-3. **Document architecture** and testing strategy in `docs/`
-4. **Add Dependabot/Renovate** for automated dependency updates
-5. **Create contribution guide** with quality expectations
+2. **Add unit tests for banking-agent and mcp-server** — These handle financial operations and security enforcement (RLS). The mcp-server is 607 lines with zero unit tests covering tool dispatch, JWT parsing, and RLS context setting.
+
+3. **Add container image vulnerability scanning** — Trivy integration for all 5 Dockerfiles. Run on PR builds to catch CVEs before merge.
+
+4. **Add coverage tracking with codecov** — Start with visibility (no enforcement), then add thresholds once baseline is established.
+
+### Priority 1 (High Value)
+
+1. **Add ruff linting/formatting and mypy type checking** — Single tool replaces flake8, isort, black. Add `[tool.ruff]` and `[tool.mypy]` to each `pyproject.toml`.
+
+2. **Pin all Dockerfile base image digests** — banking-agent, knowledge-agent, and mcp-server currently use `:latest`, making builds non-reproducible.
+
+3. **Create automated E2E test suite** — Use Kind or Minikube for lightweight cluster tests that don't require a full OpenShift environment. Test agent-to-agent communication and MCP server integration.
+
+4. **Add pre-commit hooks** — ruff, mypy, gitleaks for local quality enforcement before code reaches the repository.
+
+5. **Create comprehensive CLAUDE.md and .claude/rules/** — Document test patterns, conventions, and AI-assisted development guidelines.
+
+### Priority 2 (Nice-to-Have)
+
+1. **Add SAST scanning** — CodeQL or Semgrep for security analysis of Python code.
+2. **Add Dockerfile linting** — hadolint for Dockerfile best practices.
+3. **Add multi-architecture builds** — Support arm64 in addition to amd64.
+4. **Add Helm chart testing** — chart-testing and helm-unittest for Helm chart validation.
+5. **Add API contract testing** — Validate A2A protocol compliance between agents.
+6. **Add load testing** — Test orchestrator agent routing under concurrent requests.
 
 ## Comparison to Gold Standards
 
-| Practice | agent-ops | odh-dashboard | notebooks | kserve |
-|----------|-----------|---------------|-----------|--------|
-| Unit Tests | None | Comprehensive Jest suite | Per-image validation | Go testing + coverage |
-| Integration Tests | None | Contract tests + API tests | Multi-layer image tests | envtest-based |
-| E2E Tests | None | Cypress + multi-browser | Deployment validation | Multi-version K8s |
-| Coverage Tracking | None | Codecov with enforcement | Build-time validation | Codecov + thresholds |
-| CI/CD | None | Multi-workflow, optimized | Matrix builds, caching | Comprehensive GHA |
-| Security Scanning | None | Trivy + CodeQL | Base image scanning | Trivy + Snyk |
-| Agent Rules | None | Comprehensive .claude/rules | Partial guidance | Minimal |
-| Image Testing | None | Build validation | 5-layer validation | Multi-arch builds |
-
-## Opportunity Assessment
-
-Being an empty repository is actually a **significant advantage** for quality. Unlike established repos that accumulate tech debt and must retrofit quality practices, `agent-ops` can:
-
-1. **Start with quality gates** - No legacy code to retroactively cover
-2. **Enforce coverage thresholds** from commit #1 - No "grandfather" exceptions needed
-3. **Adopt modern tooling** without migration concerns
-4. **Establish AI-assisted development patterns** before any human patterns calcify
-5. **Follow gold-standard practices** from the opendatahub-io organization without refactoring
-
-The key recommendation is: **Do not merge the first PR until CI/CD, testing, and security scanning are in place.** This is far easier than adding them later.
+| Dimension | agent-ops | odh-dashboard | notebooks | kserve |
+|-----------|-----------|---------------|-----------|--------|
+| CI/CD Automation | None | Multi-workflow, matrix | Periodic + PR | Comprehensive |
+| Unit Tests | 3/5 components | Comprehensive Jest | N/A | Go testing + coverage |
+| Integration Tests | Testcontainers (partial) | Contract tests | 5-layer validation | envtest |
+| E2E Tests | Manual bash script | Cypress + Playwright | Image startup tests | Multi-version |
+| Coverage Tracking | None | Codecov with enforcement | N/A | Codecov with thresholds |
+| Image Testing | None | Build validation | Runtime + vulnerability | Build + scan |
+| Security Scanning | None (app-level only) | Dependabot + CodeQL | Trivy + SBOM | Multiple scanners |
+| Linting | None | ESLint + Prettier | Linters per language | golangci-lint |
+| Agent Rules | None | Comprehensive | N/A | N/A |
 
 ## File Paths Reference
 
-No files exist in this repository. The following are recommended files to create:
+### Source Code
+- `demos/redbank-demo/banking-agent/src/banking_agent/` — Banking operations agent (384 lines)
+- `demos/redbank-demo/knowledge-agent/src/knowledge_agent/` — Knowledge/RAG agent (377 lines)
+- `demos/redbank-demo/orchestrator-agent/src/redbank_orchestrator/` — Multi-agent orchestrator (1,255 lines)
+- `demos/redbank-demo/mcp-server/redbank-mcp/` — MCP server with RLS (738 lines)
+- `demos/redbank-demo/playground/` — Chat UI (275 lines)
 
-```
-agent-ops/
-├── .github/
-│   ├── workflows/
-│   │   ├── pr.yml              # PR checks (lint, test, build)
-│   │   ├── release.yml         # Release automation
-│   │   └── security.yml        # Security scanning
-│   ├── CODEOWNERS
-│   └── pull_request_template.md
-├── .claude/
-│   └── rules/
-│       ├── unit-tests.md
-│       ├── integration-tests.md
-│       ├── e2e-tests.md
-│       └── code-style.md
-├── .pre-commit-config.yaml
-├── .gitignore
-├── CLAUDE.md
-├── LICENSE
-├── README.md
-└── docs/
-    ├── architecture.md
-    └── testing-strategy.md
-```
+### Test Files
+- `demos/redbank-demo/knowledge-agent/tests/` — 3 test files (250 lines)
+- `demos/redbank-demo/orchestrator-agent/tests/` — 2 test files (687 lines)
+- `demos/redbank-demo/langchain-pgvector/tests/` — 3 test files + conftest (238 lines)
+- `demos/redbank-demo/tests/test_mcp_rls.py` — Integration test (476 lines, requires cluster)
+
+### Build/Deploy
+- `demos/redbank-demo/*/Dockerfile` — 5 Dockerfiles
+- `demos/redbank-demo/orchestrator-agent/charts/` — Helm chart
+- `demos/redbank-demo/playground/charts/` — Helm chart
+- `demos/redbank-demo/Makefile` — Build and deployment targets
+
+### Configuration
+- `demos/redbank-demo/*/pyproject.toml` — 4 Python project configs
+- `demos/redbank-demo/TESTING.md` — Comprehensive testing documentation
+- `demos/redbank-demo/OWNERS` — Code ownership
+- `demos/redbank-demo/.env.example` — Environment variable template
+
+### Kubernetes Manifests
+- `demos/redbank-demo/postgres-db/` — PostgreSQL deployment + init.sql
+- `demos/redbank-demo/*/agentruntime.yaml` — Kagenti AgentRuntime CRs

@@ -1,171 +1,180 @@
 ---
 repository: "autogluon/autogluon"
-overall_score: 6.4
+overall_score: 6.5
 scorecard:
   - dimension: "Unit Tests"
     score: 7.5
-    status: "Strong test coverage across all modules with pytest, markers, and parallel execution"
+    status: "Solid pytest suite across all 6 modules with 191 test files, fixtures, and slow-test markers"
   - dimension: "Integration/E2E"
-    score: 6.0
-    status: "Multi-platform nightly tests, GPU/multi-GPU testing, but no explicit integration test suites"
+    score: 7.0
+    status: "AWS Batch-based integration pipeline with multi-GPU and cross-platform nightly tests"
   - dimension: "Build Integration"
-    score: 3.0
-    status: "No PR-time Docker image validation; image builds are nightly-only on AWS ECR"
+    score: 5.0
+    status: "Docker images built nightly but no PR-time build validation or image testing"
   - dimension: "Image Testing"
     score: 4.0
-    status: "Multiple Dockerfiles for CPU/GPU training/inference, but no runtime validation or scanning"
+    status: "4 Dockerfiles for training/inference (CPU/GPU) but no runtime validation or scanning in CI"
   - dimension: "Coverage Tracking"
-    score: 1.0
-    status: "No coverage tooling — no codecov, coveralls, .coveragerc, or --cov in any workflow"
+    score: 2.0
+    status: "No coverage measurement, no codecov/coveralls integration, no coverage thresholds"
   - dimension: "CI/CD Automation"
     score: 8.0
-    status: "Well-structured PR CI with concurrency control, path filters, and AWS Batch offloading"
+    status: "Comprehensive CI with concurrency control, path filters, multi-platform nightly testing, and benchmarks"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory — zero AI agent guidance"
+    status: "No CLAUDE.md, no .claude/ directory, no agent test automation guidance"
 critical_gaps:
-  - title: "Zero test coverage tracking or enforcement"
-    impact: "No visibility into which code is tested; regressions in coverage go undetected"
+  - title: "No test coverage tracking or enforcement"
+    impact: "No visibility into what code is tested; regressions in coverage go undetected"
     severity: "HIGH"
-    effort: "4-6 hours"
+    effort: "4-8 hours"
   - title: "No container image runtime validation"
-    impact: "Nightly Docker images pushed to ECR without startup or functional testing"
+    impact: "Nightly Docker builds may produce broken images that are only caught at deployment time"
     severity: "HIGH"
-    effort: "6-8 hours"
+    effort: "6-10 hours"
   - title: "No PR-time Docker build validation"
-    impact: "Image build regressions only discovered in nightly builds, not at PR review time"
+    impact: "Build failures in Dockerfiles are only caught after merge during nightly builds"
     severity: "HIGH"
     effort: "8-12 hours"
   - title: "No dependency vulnerability scanning in CI"
-    impact: "Security vulnerabilities in dependencies not caught until manual review"
-    severity: "MEDIUM"
+    impact: "Security vulnerabilities in dependencies go undetected until manual audit"
+    severity: "HIGH"
     effort: "2-4 hours"
-  - title: "Multimodal tests gated behind labels, not run by default"
-    impact: "PRs can merge with multimodal regressions if contributor forgets to add label"
+  - title: "CodeQL using outdated v2 actions"
+    impact: "Potential compatibility issues and missing newer security checks"
     severity: "MEDIUM"
-    effort: "2-4 hours"
+    effort: "1-2 hours"
 quick_wins:
   - title: "Add pytest-cov and codecov integration"
-    effort: "3-4 hours"
-    impact: "Immediate visibility into test coverage with PR-level reporting and threshold enforcement"
-  - title: "Add Dependabot or Renovate for dependency updates"
+    effort: "4-6 hours"
+    impact: "Immediate visibility into test coverage across all 6 modules with PR reporting"
+  - title: "Add Dependabot alerts to CI (documented in SECURITY.md but not configured in workflows)"
     effort: "1-2 hours"
-    impact: "Automated security patches and dependency freshness tracking"
-  - title: "Add Trivy container scanning to image build workflow"
-    effort: "1-2 hours"
-    impact: "Catch known CVEs in Docker images before they reach ECR"
+    impact: "Automated dependency vulnerability detection on every PR"
+  - title: "Upgrade CodeQL to v4 actions"
+    effort: "30 minutes"
+    impact: "Access to latest security analysis rules and Python-specific checks"
+  - title: "Add Trivy or Snyk scanning to Docker build workflow"
+    effort: "2-3 hours"
+    impact: "Catch CVEs in base images before pushing to ECR"
   - title: "Create basic CLAUDE.md with testing guidelines"
     effort: "2-3 hours"
-    impact: "Guide AI-assisted development to follow project testing patterns"
+    impact: "Enable AI-assisted test generation following project conventions"
 recommendations:
   priority_0:
-    - "Implement pytest-cov across all modules and integrate with codecov for PR-level coverage reporting"
-    - "Add container vulnerability scanning (Trivy/Snyk) to the nightly image build workflow"
-    - "Add runtime validation step after Docker image builds to verify images start correctly"
+    - "Implement pytest-cov coverage tracking with codecov.io integration and minimum threshold enforcement (e.g., 60%)"
+    - "Add container vulnerability scanning (Trivy/Snyk) to nightly Docker build workflow"
+    - "Add PR-time Docker build validation to catch Dockerfile issues before merge"
   priority_1:
-    - "Run multimodal tests by default on PRs (remove label gate) to prevent silent regressions"
-    - "Add Dependabot configuration for automated dependency security updates"
-    - "Create integration test suites that test cross-module interactions (tabular+multimodal, etc.)"
+    - "Add integration tests that validate Docker image startup and basic prediction workflows"
+    - "Upgrade all GitHub Actions to current versions (checkout@v4, codeql@v4, etc.)"
+    - "Add type checking enforcement (mypy or pyright) to CI - pyright config exists but is not enforced"
+    - "Create comprehensive agent rules (.claude/rules/) for test automation patterns"
   priority_2:
-    - "Add agent rules (.claude/rules/) for test creation patterns per module"
-    - "Implement performance regression benchmarks as part of CI (not just manual dispatch)"
-    - "Add SBOM generation and image signing for published Docker images"
+    - "Add secret detection (Gitleaks/TruffleHog) to CI pipeline"
+    - "Implement property-based testing for data transformation modules"
+    - "Add SBOM generation and image signing for Docker artifacts"
+    - "Add pre-commit enforcement in CI (currently only ruff format --diff, not blocking)"
 ---
 
-# Quality Analysis: autogluon/autogluon
+# Quality Analysis: AutoGluon
 
 ## Executive Summary
 
-- **Overall Score: 6.4/10**
-- **Repository Type**: Python ML library (monorepo with 7 sub-packages)
+- **Overall Score: 6.5/10**
+- **Repository Type**: Python ML library (monorepo with 6 packages)
 - **Primary Language**: Python (3.10-3.13)
-- **Framework**: AutoML — tabular, multimodal, time series, EDA
-- **Key Strengths**: Well-organized CI with AWS Batch offloading, strong per-module unit testing, multi-platform (Linux/macOS/Windows) nightly validation, active security tooling (CodeQL, CodeGuru, Bandit)
-- **Critical Gaps**: Zero test coverage tracking, no container image validation, no dependency scanning in CI, no agent rules
-- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or `.claude/` directory
+- **Framework**: AutoML (tabular, timeseries, multimodal prediction)
+- **Developed by**: AWS AI
+
+### Key Strengths
+- Well-organized monorepo with 6 distinct packages (common, core, features, tabular, multimodal, timeseries)
+- Comprehensive CI pipeline running tests on AWS Batch with GPU support
+- Excellent cross-platform nightly testing (macOS, Windows, Ubuntu x Python 3.10-3.13)
+- Automated benchmarking infrastructure against standard ML datasets
+- CodeQL and CodeGuru security scanning (though using outdated action versions)
+- Pre-commit hooks with automated weekly updates via PR
+
+### Critical Gaps
+- **Zero test coverage tracking** - no pytest-cov, no codecov, no coverage thresholds
+- **No container image validation** - Docker images built nightly but never tested
+- **No PR-time build validation** - Dockerfile changes only validated post-merge
+- **No dependency vulnerability scanning in CI** (SECURITY.md mentions Dependabot and Snyk but these are not configured in workflows)
+- **No agent rules** - no CLAUDE.md, no .claude/ directory
+
+### Agent Rules Status: Missing
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 7.5/10 | Strong test suite across all modules with pytest markers and parallel execution |
-| Integration/E2E | 6.0/10 | Multi-platform nightly tests and GPU testing, but no explicit integration suites |
-| **Build Integration** | **3.0/10** | **No PR-time Docker build; image builds are nightly-only** |
-| Image Testing | 4.0/10 | 8 Dockerfiles for CPU/GPU variants, but zero runtime validation or scanning |
-| Coverage Tracking | 1.0/10 | No coverage tooling whatsoever — no codecov, no .coveragerc, no --cov flags |
-| CI/CD Automation | 8.0/10 | Well-structured with concurrency control, path filters, AWS Batch offloading |
-| Agent Rules | 0.0/10 | No AI agent guidance — no CLAUDE.md, AGENTS.md, or .claude/ directory |
+| Unit Tests | 7.5/10 | Solid pytest suite: 191 test files across 6 modules |
+| Integration/E2E | 7.0/10 | AWS Batch CI with multi-GPU, cross-platform nightly |
+| **Build Integration** | **5.0/10** | **Docker builds are nightly-only, no PR-time validation** |
+| Image Testing | 4.0/10 | 4 Dockerfiles exist but no runtime validation |
+| Coverage Tracking | 2.0/10 | No coverage measurement at all |
+| CI/CD Automation | 8.0/10 | Comprehensive workflows with smart path filtering |
+| Agent Rules | 0.0/10 | No agent rules or test automation guidance |
 
 ## Critical Gaps
 
-### 1. Zero Test Coverage Tracking or Enforcement
-- **Impact**: No visibility into which code is actually tested; coverage regressions go completely undetected. Contributors have no way to know if their PR reduces coverage.
+### 1. No Test Coverage Tracking
+- **Impact**: No visibility into what percentage of code is tested; coverage regressions go completely undetected
 - **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: No `.coveragerc`, `codecov.yml`, or `--cov` flags anywhere in the repository. Test scripts use bare `pytest` without coverage collection. This is a significant gap for a project of this size (650+ source files, 280+ test files).
+- **Effort**: 4-8 hours
+- **Details**: No `pytest-cov`, no `.coveragerc`, no codecov/coveralls integration, no coverage thresholds. The `grep` for coverage-related configuration returned zero results across all config files. For a library of this size (486 source files across 6 modules), this is a significant blindspot.
+- **Implementation**: Add `--cov` flags to pytest invocations in `test_*.sh` scripts, configure `.coveragerc` for multi-package support, integrate with codecov.io
 
 ### 2. No Container Image Runtime Validation
-- **Impact**: Nightly Docker images (CPU/GPU training/inference) are pushed to AWS ECR without any verification that they start correctly, import AutoGluon successfully, or pass basic smoke tests.
+- **Impact**: Nightly Docker images pushed to ECR without any validation that they actually work
 - **Severity**: HIGH
-- **Effort**: 6-8 hours
-- **Details**: The `build_latest_image.yml` workflow builds 4 Docker images nightly but only runs `docker build` + `docker push`. No `docker run` or health check validation.
+- **Effort**: 6-10 hours
+- **Details**: Four Dockerfiles exist (`Dockerfile.cpu-training`, `Dockerfile.cpu-inference`, `Dockerfile.gpu-training`, `Dockerfile.gpu-inference`) and are built nightly via `build_latest_image.yml`. However, after building and pushing to ECR, there is zero validation - no startup test, no smoke test, no import verification.
 
 ### 3. No PR-Time Docker Build Validation
-- **Impact**: Dockerfile changes or dependency changes that break image builds are only discovered in nightly builds, not during PR review. This creates a delayed feedback loop.
+- **Impact**: Changes to Dockerfiles or dependencies that break container builds are only discovered after merge during nightly builds
 - **Severity**: HIGH
 - **Effort**: 8-12 hours
+- **Details**: The `build_latest_image.yml` workflow runs only on schedule (`cron: "59 8 * * *"`) and workflow_dispatch. PR changes that affect Dockerfiles are not validated until the next nightly run.
 
 ### 4. No Dependency Vulnerability Scanning in CI
-- **Impact**: While Dependabot is mentioned in SECURITY.md, no `dependabot.yml` configuration exists in `.github/`. No Trivy, Snyk, or other dependency scanning runs in CI.
-- **Severity**: MEDIUM
+- **Impact**: Security vulnerabilities in third-party dependencies (PyTorch, transformers, etc.) go undetected
+- **Severity**: HIGH
 - **Effort**: 2-4 hours
+- **Details**: `SECURITY.md` states the project uses Dependabot and Snyk, but there are no corresponding workflow files in `.github/workflows/`. CodeQL and CodeGuru are configured but focus on source code analysis, not dependency scanning. For an ML library with heavy dependencies (PyTorch, transformers, scikit-learn, etc.), dependency scanning is critical.
 
-### 5. Multimodal Tests Gated Behind Labels
-- **Impact**: Multimodal tests (`test_multimodal_predictor`, `test_multimodal_others`, `test_multimodal_others_2`) only run on PRs when the `run-multimodal` label is applied. PRs can merge with multimodal regressions if contributors forget to add the label.
+### 5. Outdated GitHub Actions Versions
+- **Impact**: Missing newer security analysis capabilities and potential deprecation warnings
 - **Severity**: MEDIUM
-- **Effort**: 2-4 hours
+- **Effort**: 1-2 hours
+- **Details**: Multiple workflows use outdated action versions:
+  - `actions/checkout@v2` (current: v4)
+  - `github/codeql-action/*@v2` (current: v4)
+  - `aws-actions/configure-aws-credentials@v1` (current: v4)
 
 ## Quick Wins
 
-### 1. Add pytest-cov and Codecov Integration (3-4 hours)
-Add `--cov` to pytest invocations and configure codecov:
+### 1. Add pytest-cov and Codecov Integration (4-6 hours)
+Add coverage tracking to all test scripts:
+```bash
+# In each test_*.sh script, add --cov flag:
+python -m pytest --junitxml=results.xml --cov=autogluon --cov-report=xml --runslow tests
+```
+
+Add `.codecov.yml`:
 ```yaml
-# .codecov.yml
 coverage:
   status:
     project:
       default:
-        target: auto
-        threshold: 1%
+        target: 60%
+        threshold: 2%
     patch:
       default:
-        target: 80%
-```
-```bash
-# In test scripts, add coverage collection:
-python -m pytest --cov=autogluon --cov-report=xml --junitxml=results.xml --runslow tests
+        target: 70%
 ```
 
-### 2. Add Dependabot Configuration (1-2 hours)
-```yaml
-# .github/dependabot.yml
-version: 2
-updates:
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "docker"
-    directory: "/CI/docker"
-    schedule:
-      interval: "weekly"
-```
-
-### 3. Add Trivy Scanning to Image Builds (1-2 hours)
+### 2. Add Trivy Scanning to Docker Build Workflow (2-3 hours)
 ```yaml
 - name: Scan image with Trivy
   uses: aquasecurity/trivy-action@master
@@ -174,228 +183,250 @@ updates:
     format: 'sarif'
     output: 'trivy-results.sarif'
     severity: 'CRITICAL,HIGH'
+- name: Upload Trivy scan results
+  uses: github/codeql-action/upload-sarif@v4
+  with:
+    sarif_file: 'trivy-results.sarif'
+```
+
+### 3. Upgrade CodeQL to v4 (30 minutes)
+```yaml
+# Replace:
+- uses: github/codeql-action/init@v2
+- uses: github/codeql-action/autobuild@v2
+- uses: github/codeql-action/analyze@v2
+# With:
+- uses: github/codeql-action/init@v4
+- uses: github/codeql-action/autobuild@v4
+- uses: github/codeql-action/analyze@v4
 ```
 
 ### 4. Create Basic CLAUDE.md (2-3 hours)
-Document testing patterns, module structure, and contribution guidelines for AI-assisted development.
+Create `CLAUDE.md` with testing conventions, pytest patterns, conftest usage, and module-specific testing instructions to enable consistent AI-assisted test generation.
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Strengths:**
-- **16 workflow files** covering CI, platform tests, benchmarking, image builds, and releases
-- **Concurrency control** (`cancel-in-progress: true`) prevents wasted resources on superseded PRs
-- **Path filtering** (via `dorny/paths-filter`) skips CI when only docs change
-- **AWS Batch offloading** for compute-intensive tests (GPU tests run on actual GPU instances)
-- **Multi-platform nightly testing** across macOS, Windows, Ubuntu with Python 3.10-3.13 matrix
-- **Automated pre-commit hook updates** via weekly cron workflow
-- **Benchmark infrastructure** with slash command dispatch for tabular/timeseries/multimodal
+**Workflow Inventory** (17 workflow files):
 
-**Weaknesses:**
-- **Outdated action versions**: Uses `actions/checkout@v2` throughout (current is v4), `aws-actions/configure-aws-credentials@v1` (current is v4)
-- **Commented-out workflows**: Multiple sections disabled (EDA tests, Pyodide tests, package_diff) — indicates abandoned or deferred features
-- **No caching**: No pip/conda caching in CI workflows (though AWS Batch may handle this internally)
-- **Label-gated tests**: Multimodal and multi-GPU tests require manual labels, creating a risk of missed regressions
-
-**Workflow Inventory:**
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `continuous_integration.yml` | push, PR | Main CI — lint + module tests |
+| `continuous_integration.yml` | push, PR | Main CI - lint + tests per module on AWS Batch |
 | `continuous_integration_multigpu.yaml` | PR (labeled) | Multi-GPU multimodal tests |
-| `platform_tests-command.yml` | schedule (daily), dispatch | Cross-platform matrix tests |
-| `benchmark-command.yml` | dispatch | Performance benchmarks |
-| `build_latest_image.yml` | schedule (daily), dispatch | Nightly Docker image builds |
-| `codeql.yml` | push, PR, schedule | CodeQL security analysis |
-| `codeguru-reviewer.yml` | push to master | AWS CodeGuru review |
-| `codespell.yml` | push/PR to master | Spelling checks |
-| `check_hf_model_list.yml` | PR (labeled) | HuggingFace model list validation |
-| `update-pre-commit.yml` | schedule (weekly) | Auto-update ruff hooks |
-| `pypi_release.yml` | dispatch | PyPI release workflow |
-| `pythonpublish.yml` / `pythonpublish_testpypi.yml` | dispatch | Package publishing |
-| `slash_command_dispatch.yml` | issue_comment | Slash command routing |
+| `platform_tests-command.yml` | schedule (daily), dispatch | Cross-platform (macOS/Win/Ubuntu x Py3.10-3.13) |
+| `benchmark_master.yml` | schedule (daily), dispatch | AMLB benchmarks for tabular/timeseries/multimodal |
+| `benchmark-command.yml` | dispatch | PR-triggered benchmark runs |
+| `codeql.yml` | push, PR, schedule (weekly) | CodeQL SAST scanning |
+| `codeguru-reviewer.yml` | push (master), dispatch | AWS CodeGuru code review |
+| `codespell.yml` | push, PR (master) | Spelling checks |
+| `check_hf_model_list.yml` | PR (labeled) | Verify HuggingFace model list updates |
+| `build_latest_image.yml` | schedule (daily), dispatch | Build 4 Docker images to ECR |
+| `slash_command_dispatch.yml` | issue_comment | `/platform_tests` and `/benchmark` slash commands |
+| `update-pre-commit.yml` | schedule (weekly) | Auto-update ruff pre-commit hooks |
+| `pypi_release.yml` | dispatch | PyPI release publishing |
+| `pythonpublish.yml` | dispatch | Python package publishing |
+| `pythonpublish_testpypi.yml` | dispatch | TestPyPI publishing |
+
+**Strengths**:
+- Concurrency control with `cancel-in-progress: true` on main CI
+- Smart path filtering (skip tests for docs-only changes, skip timeseries for tabular-only changes)
+- AWS Batch execution for GPU-intensive tests (not limited to GitHub runners)
+- Slash command support for on-demand platform tests and benchmarks
+- Tutorial documentation builds gated on test success
+
+**Weaknesses**:
+- No caching strategy visible (no pip cache, no conda cache in CI)
+- Tests run on AWS Batch which obscures execution time and logs from PR view
+- Multimodal tests require manual `run-multimodal` label (can be missed)
+- No test result summary or coverage annotation on PRs
 
 ### Test Coverage
 
-**280 test files across 7 modules** with a test-to-source ratio of **0.43:1** (280 tests / 650 sources):
+**Test Framework**: pytest (with conftest.py fixtures, markers, and `--runslow` support)
 
-| Module | Source Files | Test Files | Ratio | Notes |
-|--------|-------------|------------|-------|-------|
-| common | 48 | 24 | 0.50 | Good coverage |
-| core | 91 | 41 | 0.45 | Includes testing utilities |
-| features | 48 | 27 | 0.56 | Strong coverage |
-| tabular | 194 | 67 | 0.35 | Lower ratio, large module |
-| multimodal | 147 | 45 | 0.31 | Lowest ratio, most complex module |
-| timeseries | 93 | 50 | 0.54 | Strong coverage with deep model testing |
-| eda | 28 | 26 | 0.93 | Highest ratio but tests are disabled in CI |
+**Test Distribution**:
 
-**Testing Patterns:**
-- **Framework**: pytest with custom markers (`@pytest.mark.slow`, `@pytest.mark.gpu`, `@pytest.mark.regression`, `@pytest.mark.pyodide`, `@pytest.mark.multi_gpu`)
-- **Fixtures**: 12 `conftest.py` files across modules with shared fixtures
-- **Parametrization**: Extensive use of `@pytest.mark.parametrize` for model variants
-- **Parallel execution**: `pytest-xdist` used for timeseries tests (`--numprocesses 4`)
-- **Mocking**: ~991 mock/patch references — heavy mocking, especially in timeseries
-- **JUnit XML reporting**: All test scripts produce `results.xml`
+| Module | Test Files | Source Files | Ratio |
+|--------|-----------|-------------|-------|
+| common | 24 | 41 | 0.59 |
+| core | 42 | 69 | 0.61 |
+| features | 29 | 43 | 0.67 |
+| tabular | 67 | 134 | 0.50 |
+| multimodal | 45 | 128 | 0.35 |
+| timeseries | 50 | 71 | 0.70 |
+| **Total** | **257** | **486** | **0.53** |
 
-**Notable gaps:**
-- **EDA module tests are disabled** — commented out in CI workflows
-- **No explicit integration tests** — no cross-module test suites
-- **No coverage measurement** — tests run but coverage is never collected
+**Testing Patterns**:
+- Well-structured `unittests/` subdirectories within each module
+- Shared fixtures via `conftest.py` (11 conftest files across modules)
+- Custom markers (`@pytest.mark.slow`, `@pytest.mark.gpu`)
+- JUnit XML reporting (`--junitxml=results.xml`)
+- HuggingFace model dependency pre-caching in timeseries conftest
+
+**Gaps**:
+- No coverage measurement (`--cov` flag absent from all test scripts)
+- No codecov/coveralls integration
+- No coverage threshold enforcement
+- No mutation testing
+- Multimodal has lowest test-to-source ratio (0.35)
 
 ### Code Quality
 
-**Strengths:**
-- **Ruff** for formatting and linting (configured in `pyproject.toml`, enforced via pre-commit and CI)
-- **Bandit** security linter for the multimodal module (`bandit -r multimodal/src -ll`)
-- **Codespell** for spelling checks
-- **Pre-commit hooks** with auto-update via weekly cron job
-- **Pyright** type checking configured for timeseries module
-- **CodeGuru Reviewer** (AWS) on pushes to master
+**Linting**:
+- **Ruff**: Configured in `pyproject.toml` with `line-length = 119`, `target-version = "py310"`
+  - Import sorting (`isort`) enabled
+  - Per-file ignores for `__init__.py` (F401)
+  - Selective lint rules (E501, E731, E722 ignored)
+- **Bandit**: Security linter run on multimodal source (`bandit -r multimodal/src -ll`)
+- **Codespell**: Spelling checker configured with skip patterns
+- **Flake8**: Configured in `setup.cfg` with `max-line-length = 160`
 
-**Weaknesses:**
-- **Ruff linting is minimal** — only `--select I` (isort) in pre-commit; many categories disabled
-- **Ruff ignores broad rules**: `E501` (line length), `E731` (lambda assignment), `E722` (bare except) all ignored
-- **Pyright only covers timeseries** — other modules have no type checking
-- **No mypy** — no `mypy.ini` or mypy integration for type safety
-- **Bandit only covers multimodal** — other modules not scanned
+**Pre-commit Hooks**:
+- `.pre-commit-config.yaml` with ruff-format and ruff-lint (import sorting only)
+- Limited scope: only checks format diffs (`--diff`), not blocking
+- Automated weekly updates via `update-pre-commit.yml`
+
+**Type Checking**:
+- **Pyright**: Configured in `pyproject.toml` but only for `timeseries/src/`
+- **No mypy**: Not configured despite being referenced in common conftest
+- Not enforced in CI
+
+**Static Analysis**:
+- CodeQL: Weekly scheduled scan + push/PR triggers (but using v2 actions)
+- CodeGuru: AWS CodeGuru Reviewer on master pushes
+- Bandit: Security linting for multimodal module only
 
 ### Container Images
 
-**8 Dockerfiles** organized in `CI/docker/` and `CI/batch/docker/`:
+**Dockerfiles** (4 in `CI/docker/`):
+- `Dockerfile.cpu-training` - Based on PyTorch training image (2.5.1-cpu-py311)
+- `Dockerfile.cpu-inference` - Based on PyTorch inference image (2.5.1-cpu-py311)
+- `Dockerfile.gpu-training` - Based on PyTorch training image (2.5.1-gpu-py311-cu124)
+- `Dockerfile.gpu-inference` - Based on PyTorch inference image (2.5.1-gpu-py311-cu124)
 
-| Dockerfile | Base Image | Purpose |
-|------------|-----------|---------|
-| `Dockerfile.cpu-training` | PyTorch 2.5.1 CPU SageMaker | Nightly CPU training image |
-| `Dockerfile.cpu-inference` | PyTorch CPU SageMaker | Nightly CPU inference image |
-| `Dockerfile.gpu-training` | PyTorch 2.5.1 GPU CUDA 12.4 | Nightly GPU training image |
-| `Dockerfile.gpu-inference` | PyTorch GPU CUDA SageMaker | Nightly GPU inference image |
-| `Dockerfile.cpu` (batch) | AWS Batch CPU | CI batch compute |
-| `Dockerfile.gpu` (batch) | AWS Batch GPU | CI GPU batch compute |
-| `Dockerfile.pyodide` (batch) | Pyodide environment | WASM testing |
-| `Dockerfile` (hf_mirror) | HuggingFace mirror | Model caching |
+**Build Process**:
+- Built nightly via `build_latest_image.yml` (schedule + workflow_dispatch)
+- Pushed to AWS ECR (`369469875935.dkr.ecr.us-east-1.amazonaws.com`)
+- Uses SageMaker-maintained PyTorch base images
+- Includes `full_install_image.sh` for AutoGluon installation
 
-**Weaknesses:**
-- **No multi-stage builds** — single-stage Dockerfiles cloning from GitHub at build time
-- **No .dockerignore** — entire repo context sent to Docker daemon
-- **No health checks** — no HEALTHCHECK instruction in any Dockerfile
-- **No runtime validation** — images pushed without any `docker run` testing
-- **No vulnerability scanning** — no Trivy/Snyk integration
-- **No SBOM generation** — no software bill of materials
-- **No image signing** — no cosign/notation attestation
-- **Hardcoded AWS account IDs** in base image references
+**Gaps**:
+- No image runtime validation (no startup test, no smoke test)
+- No vulnerability scanning (Trivy/Snyk) despite SECURITY.md mentioning Snyk
+- No multi-architecture support
+- No SBOM generation
+- No image signing or attestation
+- No PR-time build testing
+- Hardcoded `setuptools<82` cap (workaround for mmcv issue)
 
 ### Security
 
-**Strengths:**
-- **CodeQL** analysis on push, PR, and weekly schedule
-- **AWS CodeGuru Reviewer** for AI-powered code review on master pushes
-- **Bandit** static analysis for the multimodal module
-- **SECURITY.md** with vulnerability reporting process
-- **Codespell** for catching accidental credential-like strings
+**Configured**:
+- CodeQL SAST scanning (weekly + push/PR) - but outdated v2 actions
+- AWS CodeGuru Reviewer on master
+- Bandit security linter (multimodal only)
+- `SECURITY.md` with vulnerability reporting process
+- Dependabot mentioned in SECURITY.md (likely configured at GitHub level, not in workflows)
 
-**Weaknesses:**
-- **No Dependabot configuration** — SECURITY.md claims Dependabot support but no `.github/dependabot.yml` exists
-- **No Snyk integration** — SECURITY.md mentions Docker scanning with Snyk but no evidence in CI
-- **No secret detection** — no Gitleaks, TruffleHog, or git-secrets
-- **No SAST beyond CodeQL/Bandit** — no Semgrep or SonarQube
-- **AWS credentials hardcoded in workflows** — IAM role ARNs and account IDs in plain text in YAML files
+**Missing**:
+- No container vulnerability scanning (Trivy/Snyk) in CI
+- No secret detection (Gitleaks/TruffleHog)
+- No dependency audit workflow
+- No SBOM generation
+- Bandit only covers multimodal module, not entire codebase
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: No test type rules whatsoever
-- **Quality**: N/A — no agent rules exist
-- **Gaps**: 
+- **Coverage**: No test type rules exist
+- **Quality**: N/A
+- **Gaps**:
   - No `CLAUDE.md` or `AGENTS.md` in repository root
   - No `.claude/` directory
-  - No `.claude/rules/` for test creation patterns
-  - No `.claude/skills/` for custom automation
-- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
-  - Per-module test patterns (tabular, multimodal, timeseries, etc.)
-  - pytest marker usage guidelines
-  - Fixture patterns and shared conftest conventions
-  - GPU test annotation requirements
-  - Mock/patch patterns for external service isolation
+  - No `.claude/rules/` for test creation rules
+  - No `.claude/skills/` for custom skills
+  - No testing documentation beyond inline conftest comments
+- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering pytest patterns, conftest conventions, GPU test markers, module-specific test patterns, and the AWS Batch execution model
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Implement coverage tracking** — Add `pytest-cov` and `codecov` integration. Collect coverage in CI test scripts, upload to codecov, and enforce minimum thresholds on PRs. This is the single highest-impact improvement.
+1. **Implement test coverage tracking with codecov.io** - Add `pytest-cov` to all test scripts, configure `.coveragerc` for multi-package monorepo, integrate with codecov.io for PR reporting, set minimum coverage threshold (start at 60%)
 
-2. **Add container vulnerability scanning** — Integrate Trivy into `build_latest_image.yml` to scan all 4 nightly images before pushing to ECR. Block pushes with CRITICAL/HIGH CVEs.
+2. **Add container vulnerability scanning** - Integrate Trivy or Snyk scanning into the nightly Docker build workflow to catch CVEs in base images and dependencies before pushing to ECR
 
-3. **Add image runtime validation** — After `docker build`, run `docker run --rm <image> python -c "import autogluon; print(autogluon.__version__)"` to verify images start correctly and AutoGluon is importable.
+3. **Add PR-time Docker build validation** - Add a CI job that builds Docker images on PRs that modify `CI/docker/`, `full_install.sh`, or dependency files, catching build failures before merge
 
 ### Priority 1 (High Value)
 
-4. **Remove multimodal test label gate** — Run multimodal tests by default on PRs (at least a subset) to prevent silent regressions. Use path filtering to limit to relevant changes instead of manual labels.
+4. **Upgrade all GitHub Actions to current versions** - Update `actions/checkout` to v4, `codeql-action` to v4, `aws-actions/configure-aws-credentials` to v4 for security and feature improvements
 
-5. **Add Dependabot configuration** — Create `.github/dependabot.yml` for pip, GitHub Actions, and Docker base image updates. This fulfills the claim in SECURITY.md.
+5. **Add Docker image runtime validation** - After nightly builds, run basic smoke tests (import autogluon, predict on sample data) to validate training and inference images actually work
 
-6. **Update GitHub Actions versions** — Migrate from `actions/checkout@v2` to `v4`, `aws-actions/configure-aws-credentials@v1` to `v4`, etc. Outdated actions miss security patches.
+6. **Enforce type checking in CI** - Expand pyright configuration from timeseries-only to all modules, or add mypy enforcement with a gradual rollout
 
-7. **Add cross-module integration tests** — Create test suites that exercise interactions between modules (e.g., tabular using multimodal features, time series with custom transformers).
+7. **Create comprehensive agent rules** - Add `CLAUDE.md` with testing guidelines, `.claude/rules/` with module-specific test patterns, and document the AWS Batch CI model for agent-generated tests
+
+8. **Extend Bandit to all modules** - Currently only scans `multimodal/src`; expand to cover all 6 module source directories
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add agent rules** — Create `.claude/rules/` with test patterns for each module, pytest marker conventions, and fixture guidelines.
+9. **Add secret detection** - Integrate Gitleaks or TruffleHog to catch accidentally committed secrets or API keys
 
-9. **Expand type checking** — Extend Pyright (or add mypy) beyond timeseries to all modules. Type safety reduces bugs significantly in a codebase of this complexity.
+10. **Implement pre-commit enforcement in CI** - Current pre-commit hooks only run `--diff` mode; add a CI check that fails on format violations
 
-10. **Add performance regression CI** — Make benchmark workflow run automatically on PRs that touch core prediction paths, not just manual dispatch.
+11. **Add SBOM generation and image signing** - Generate SBOMs for Docker artifacts and implement cosign/Sigstore image signing
 
-11. **Add SBOM generation** — Generate software bill of materials for Docker images for supply chain security compliance.
-
-12. **Implement secret detection** — Add Gitleaks or TruffleHog to prevent accidental credential commits.
+12. **Add property-based testing** - For data transformation modules (features, common), add hypothesis-based property tests to catch edge cases in data processing
 
 ## Comparison to Gold Standards
 
-| Capability | AutoGluon | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
-|-----------|-----------|---------------------|-----------------|---------------|
-| Unit Tests | pytest with markers | Jest + React Testing Library | pytest per notebook | Go testing + envtest |
-| Coverage Tracking | **None** | codecov with enforcement | Coverage per notebook | Codecov with 80%+ |
-| Integration Tests | Multi-platform nightly | Cypress E2E | Cross-notebook | Multi-version K8s |
-| Image Testing | Nightly build only | Build + validate + scan | 5-layer validation | Multi-arch build |
-| Image Scanning | **None in CI** | Trivy integration | Trivy + SBOM | Trivy + signing |
-| Pre-commit | ruff (format + isort) | ESLint + Prettier | flake8 + black | golangci-lint |
-| Security Scanning | CodeQL + CodeGuru | CodeQL + Snyk | Trivy | CodeQL + gosec |
-| Agent Rules | **None** | Comprehensive rules | Basic rules | None |
-| CI Caching | AWS Batch (opaque) | npm cache + Docker layer | pip cache | Go mod cache |
-| Coverage Enforcement | **None** | PR coverage gates | Per-notebook | Threshold enforcement |
+| Dimension | AutoGluon | odh-dashboard | notebooks | kserve |
+|-----------|-----------|---------------|-----------|--------|
+| Unit Tests | 7.5 | 9.0 | 7.0 | 9.0 |
+| Integration/E2E | 7.0 | 9.0 | 8.0 | 9.0 |
+| Build Integration | 5.0 | 8.0 | 7.0 | 8.0 |
+| Image Testing | 4.0 | 7.0 | 9.0 | 7.0 |
+| Coverage Tracking | 2.0 | 9.0 | 6.0 | 9.0 |
+| CI/CD Automation | 8.0 | 9.0 | 8.0 | 9.0 |
+| Agent Rules | 0.0 | 8.0 | 3.0 | 2.0 |
+| **Overall** | **6.5** | **8.7** | **7.2** | **8.1** |
+
+AutoGluon's strengths (cross-platform testing, GPU CI, benchmarking) are offset by critical gaps in coverage tracking, container validation, and security scanning. The lack of any coverage measurement is the most impactful gap for a library of this size.
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/continuous_integration.yml` — Main PR CI pipeline
-- `.github/workflows/continuous_integration_multigpu.yaml` — Multi-GPU CI
-- `.github/workflows/platform_tests-command.yml` — Cross-platform nightly tests
-- `.github/workflows/build_latest_image.yml` — Nightly Docker image builds
-- `.github/workflows/benchmark-command.yml` — Benchmark infrastructure
-- `.github/workflows/codeql.yml` — CodeQL security scanning
-- `.github/workflows/codeguru-reviewer.yml` — AWS CodeGuru review
-- `.github/workflows/codespell.yml` — Spelling checks
-- `.github/workflows/update-pre-commit.yml` — Auto-update pre-commit hooks
-- `.github/workflow_scripts/` — Shell scripts for test execution
+- `.github/workflows/continuous_integration.yml` - Main CI pipeline
+- `.github/workflows/continuous_integration_multigpu.yaml` - Multi-GPU tests
+- `.github/workflows/platform_tests-command.yml` - Cross-platform nightly tests
+- `.github/workflows/benchmark_master.yml` - Nightly benchmarks
+- `.github/workflows/codeql.yml` - CodeQL SAST
+- `.github/workflows/codeguru-reviewer.yml` - AWS CodeGuru
+- `.github/workflows/build_latest_image.yml` - Docker nightly builds
+- `.github/workflows/slash_command_dispatch.yml` - Slash command support
+- `.github/workflows/update-pre-commit.yml` - Pre-commit auto-update
+- `.github/workflow_scripts/lint_check.sh` - Lint orchestrator (ruff + bandit)
 
 ### Testing
-- `common/tests/`, `core/tests/`, `features/tests/` — CPU module tests
-- `tabular/tests/`, `multimodal/tests/` — GPU module tests
-- `timeseries/tests/` — Time series tests (parallel execution)
-- `eda/tests/` — EDA tests (disabled in CI)
-- `*/tests/conftest.py` — Shared fixtures and markers per module
+- `{module}/tests/` - Test directories for each module
+- `{module}/tests/conftest.py` - Pytest fixtures and configuration
+- `.github/workflow_scripts/test_*.sh` - Test execution scripts
 
 ### Code Quality
-- `pyproject.toml` — Ruff, codespell, pyright configuration
-- `.pre-commit-config.yaml` — Pre-commit hooks (ruff format + isort)
-- `setup.cfg` — pycodestyle/flake8 configuration
+- `pyproject.toml` - Ruff, codespell, pyright configuration
+- `setup.cfg` - Flake8 configuration
+- `.pre-commit-config.yaml` - Pre-commit hooks (ruff)
 
 ### Container Images
-- `CI/docker/Dockerfile.{cpu,gpu}-{training,inference}` — Nightly images
-- `CI/batch/docker/Dockerfile.{cpu,gpu,pyodide}` — CI batch images
-- `CI/hf_mirror/Dockerfile` — HuggingFace model mirror
+- `CI/docker/Dockerfile.cpu-training` - CPU training image
+- `CI/docker/Dockerfile.cpu-inference` - CPU inference image
+- `CI/docker/Dockerfile.gpu-training` - GPU training image
+- `CI/docker/Dockerfile.gpu-inference` - GPU inference image
 
 ### Security
-- `SECURITY.md` — Security policy and vulnerability reporting
-- `.github/workflows/codeql.yml` — CodeQL scanning
-- `.github/workflows/codeguru-reviewer.yml` — CodeGuru review
+- `SECURITY.md` - Security policy and reporting
+- `.github/workflows/codeql.yml` - CodeQL scanning
+- `.github/workflows/codeguru-reviewer.yml` - CodeGuru analysis

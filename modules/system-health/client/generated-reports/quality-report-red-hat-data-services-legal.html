@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:39 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:57 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/legal</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="537.2118899999999"
+                                stroke-dashoffset="565.4861999999999"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">0.5</div>
+                        <div class="score-value">0.0</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,22 +365,22 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No source code or tests exist — repository contains only EULA documents</div>
+                            <div class="scorecard-status">No source code or tests present — repository contains only EULA documents</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No source code or tests — documentation-only repository</div>
+                            <div class="scorecard-status">No integration or E2E tests — no executable code exists</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No build system — repository has no code to build</div>
+                            <div class="scorecard-status">No build system, Dockerfiles, or CI pipelines</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No container images — documentation-only repository</div>
+                            <div class="scorecard-status">No container images — repository is document-only</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
@@ -389,8 +389,8 @@
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No CI/CD pipelines — no workflows, Makefile, or automation of any kind</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No CI/CD workflows of any kind</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
@@ -410,25 +410,25 @@
                 <div class="section-content">
                     <ul class="items-list">
                         
-                        <li class="item-card low">
+                        <li class="item-card info">
                             <div class="item-description">Repository contains no source code</div>
-                            <p>This is a documentation-only repository holding EULA .docx files; software quality metrics do not apply</p>
+                            <p>Quality analysis dimensions are inapplicable — this is a legal document repository</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-low">LOW</span>
+                                <span class="meta-tag severity-info">INFO</span>
                                 <span class="meta-tag effort-tag">N/A</span>
                             </div>
                         </li>
                         <li class="item-card low">
-                            <div class="item-description">No CI/CD pipeline</div>
-                            <p>No automated validation of document integrity, link checking, or format enforcement</p>
+                            <div class="item-description">No CI/CD or automation of any kind</div>
+                            <p>No validation of document contents, formatting, or licensing compliance</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No branch protection or contribution guidelines</div>
-                            <p>No CODEOWNERS, no PR templates, no CONTRIBUTING.md — changes can be pushed directly</p>
+                            <div class="item-description">No branch protection or review workflows</div>
+                            <p>Document changes could be pushed without review</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1 hour</span>
@@ -449,26 +449,26 @@
                         
                         <li class="item-card ">
                             <div class="item-description">Add a README.md explaining the repository purpose</div>
-                            <p>Clarifies that this repo stores legal documents (EULA) consumed by other repos</p>
+                            <p>Clarify that this repo hosts EULA documents for red-hat-data-services projects</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CODEOWNERS for legal team review</div>
-                            <p>Ensures legal document changes go through appropriate review</p>
+                            <div class="item-description">Convert .docx files to plaintext or Markdown</div>
+                            <p>Enable diff-based review of EULA changes, improve transparency</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">15 minutes</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
                             <div class="item-description">Add branch protection rules</div>
-                            <p>Prevents accidental direct pushes to main</p>
+                            <p>Require review before EULA changes are merged</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">15 minutes</span>
+                                <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                     </ul>
@@ -485,15 +485,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add a README.md documenting the purpose of this repository and how other repos consume these files</li></ul>
+                            <ul><li>Determine if this repository is still actively used — single commit, last updated years ago</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add CODEOWNERS to require legal team approval for changes</li><li>Enable branch protection on main (require PR reviews)</li></ul>
+                            <ul><li>Add a README.md documenting the purpose and consumers of these EULA files</li><li>Convert EULA documents to Markdown for version-control-friendly diffs</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Consider converting .docx to markdown or plain text for better version control diff visibility</li><li>Add a CI workflow to validate document format or checksums on PR</li></ul>
+                            <ul><li>Add a simple CI check to validate document format or detect sensitive content changes</li><li>Add CODEOWNERS to require legal team review on document changes</li></ul>
                         </div>
                     </div>
                 </div>

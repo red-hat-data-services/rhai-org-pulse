@@ -1,449 +1,448 @@
 ---
 repository: "kubeflow/pipelines-components"
-overall_score: 7.1
+overall_score: 6.8
 scorecard:
   - dimension: "Unit Tests"
     score: 7.5
-    status: "Good test coverage for scripts (23 test files, ~7800 test LOC); component tests emerging but limited to 2 components"
+    status: "Strong script-level coverage with pytest; component tests emerging but sparse"
   - dimension: "Integration/E2E"
-    score: 5.5
-    status: "PR-triggered targeted tests for changed components with KFP LocalRunner; no cluster-based E2E"
-  - dimension: "Build Integration"
-    score: 7.0
-    status: "PR-time container builds with image artifact upload and component validation; no Konflux simulation"
-  - dimension: "Image Testing"
     score: 5.0
-    status: "Single example Containerfile with multi-arch support on push; no runtime validation or startup tests"
+    status: "LocalRunner tests for components exist; no cluster-level E2E or KFP integration tests"
+  - dimension: "Build Integration"
+    score: 6.5
+    status: "PR builds containers and validates components; no Konflux simulation or operator integration"
+  - dimension: "Image Testing"
+    score: 5.5
+    status: "Container build with multi-arch on merge; PR only builds amd64; no runtime validation"
   - dimension: "Coverage Tracking"
-    score: 4.0
-    status: "pytest-cov available via Makefile target but no CI enforcement, no codecov integration, no thresholds"
+    score: 3.0
+    status: "Makefile has test-coverage target but no Codecov/Coveralls integration or enforcement"
   - dimension: "CI/CD Automation"
-    score: 9.0
-    status: "16 well-organized workflows with concurrency control, path filtering, pinned actions, custom actions"
+    score: 8.5
+    status: "17 workflows with concurrency control, path filtering, multi-Python matrix, CI-passed gating"
   - dimension: "Agent Rules"
     score: 7.0
-    status: "Comprehensive AGENTS.md with 3 agent modes, validation tables, but no .claude/ rules directory"
+    status: "Comprehensive AGENTS.md with 3 modes; no .claude/rules/ or test-creation-specific rules"
 critical_gaps:
-  - title: "No security scanning (Trivy, Snyk, CodeQL, SBOM)"
-    impact: "Vulnerabilities in dependencies or container images not detected before merge or release"
+  - title: "No coverage enforcement or tracking integration"
+    impact: "Coverage regressions can merge unnoticed; no visibility into coverage trends over time"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No coverage enforcement in CI"
-    impact: "Test coverage can silently degrade; no PR gates prevent merging under-tested code"
+  - title: "No security scanning (Trivy, CodeQL, SAST)"
+    impact: "Container images and dependencies ship without vulnerability assessment"
     severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "No container runtime validation"
-    impact: "Built images may fail to start or have missing dependencies not caught until deployment"
-    severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "Only 2 of many components have tests"
-    impact: "Most components have zero unit test coverage; regressions can be introduced silently"
+    effort: "2-4 hours"
+  - title: "No cluster-level E2E or KFP integration tests"
+    impact: "Components only tested locally; pipeline-level failures caught only in production"
     severity: "HIGH"
     effort: "16-24 hours"
+  - title: "No container image runtime validation on PR"
+    impact: "Image startup issues and missing dependencies discovered only after merge and push"
+    severity: "MEDIUM"
+    effort: "4-8 hours"
 quick_wins:
-  - title: "Add Trivy scanning to container-build workflow"
+  - title: "Add Codecov integration with coverage thresholds"
+    effort: "2-4 hours"
+    impact: "Immediate visibility into coverage trends; prevent regressions on every PR"
+  - title: "Add Trivy container scanning to container-build workflow"
     effort: "1-2 hours"
-    impact: "Immediate vulnerability detection for all built container images"
-  - title: "Add codecov integration to scripts-tests workflow"
+    impact: "Catch CVEs in base images and dependencies before they reach GHCR"
+  - title: "Add CodeQL analysis workflow"
+    effort: "1-2 hours"
+    impact: "Automated SAST for Python code catching injection, logic, and data-flow issues"
+  - title: "Add container smoke test step to PR builds"
     effort: "2-3 hours"
-    impact: "Automated coverage tracking and PR reporting for the scripts codebase"
-  - title: "Add container startup smoke test after build"
-    effort: "2-3 hours"
-    impact: "Catches missing dependencies and startup failures before merge"
-  - title: "Create .claude/rules/ with test pattern guidance"
-    effort: "2-3 hours"
-    impact: "Improve AI-generated test quality; complements existing AGENTS.md"
+    impact: "Validate image starts and imports work before merge"
 recommendations:
   priority_0:
-    - "Add security scanning (Trivy for containers, CodeQL or Semgrep for SAST, Dependabot/Renovate for deps)"
-    - "Enforce test coverage in CI with codecov and minimum thresholds (e.g., 70%)"
-    - "Add container image runtime validation (startup test, import verification)"
+    - "Add Codecov integration with minimum coverage thresholds and PR coverage reporting"
+    - "Add Trivy vulnerability scanning for all container images built in CI"
+    - "Add CodeQL or Semgrep SAST workflow for Python security analysis"
   priority_1:
-    - "Expand component-level test coverage to all components (not just yoda_data_processor and sdg)"
-    - "Add .claude/rules/ directory with test creation patterns for unit, local, and integration tests"
-    - "Add secret detection (gitleaks) to pre-commit and CI"
+    - "Build a KFP integration test suite that deploys components to a real Kubeflow Pipelines cluster"
+    - "Add container runtime validation (smoke test) in PR builds"
+    - "Create .claude/rules/ directory with test-creation rules for unit, local, and integration tests"
   priority_2:
-    - "Add E2E tests with actual KFP cluster (Kind + KFP deployment)"
-    - "Add SBOM generation and image signing for release images"
-    - "Add performance benchmarks for component compilation"
+    - "Add SBOM generation for container images"
+    - "Implement image signing/attestation with cosign"
+    - "Add performance regression testing for component execution time"
+    - "Add contract tests for component interface stability"
 ---
 
 # Quality Analysis: kubeflow/pipelines-components
 
 ## Executive Summary
 
-- **Overall Score: 7.1/10**
-- **Repository Type**: Python library / Kubeflow Pipelines component catalog
-- **Primary Language**: Python (178 .py files, ~16,300 LOC)
-- **Framework**: Kubeflow Pipelines SDK (KFP v2)
-- **Key Strengths**: Excellent CI/CD automation (16 workflows), strong linting pipeline (Ruff + YAML + Markdown + import guard), comprehensive pre-commit hooks, well-organized repository structure with AGENTS.md
-- **Critical Gaps**: No security scanning, no coverage enforcement, limited component-level tests, no container runtime validation
-- **Agent Rules Status**: AGENTS.md present and comprehensive; no `.claude/` rules directory
+- **Overall Score: 6.8/10**
+- **Repository Type**: Python library / KFP component & pipeline catalog
+- **Primary Language**: Python (100%)
+- **Framework**: Kubeflow Pipelines (KFP SDK v2)
+- **Key Strengths**: Excellent CI/CD automation with 17 well-organized workflows, strong pre-commit hook coverage, comprehensive linting (Ruff + yamllint + markdownlint), good test-to-code ratio for scripts, multi-Python version testing (3.11 + 3.13), solid AGENTS.md for AI agent collaboration
+- **Critical Gaps**: No coverage tracking/enforcement, no security scanning, no cluster-level E2E tests, no container runtime validation
+- **Agent Rules Status**: AGENTS.md present and comprehensive; no `.claude/rules/` directory with test-creation guidance
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 7.5/10 | Good scripts test coverage (23 test files, ~7800 LOC); only 2 components tested |
-| Integration/E2E | 5.5/10 | KFP LocalRunner targeted tests on PR; no cluster-based E2E |
-| **Build Integration** | **7.0/10** | **PR-time container build + component validation; no Konflux sim** |
-| Image Testing | 5.0/10 | Single example Containerfile; multi-arch on push; no runtime validation |
-| Coverage Tracking | 4.0/10 | pytest-cov available locally but no CI enforcement or codecov |
-| CI/CD Automation | 9.0/10 | 16 well-organized workflows, concurrency, path-filtering, pinned actions |
-| Agent Rules | 7.0/10 | Comprehensive AGENTS.md with 3 modes; no .claude/rules/ directory |
+| Unit Tests | 7.5/10 | Strong script-level coverage with pytest; component tests emerging but sparse |
+| Integration/E2E | 5.0/10 | LocalRunner tests for components; no cluster-level E2E or KFP integration |
+| **Build Integration** | **6.5/10** | **PR builds containers and validates; no Konflux simulation** |
+| Image Testing | 5.5/10 | Container build with multi-arch on merge; PR only amd64; no runtime validation |
+| Coverage Tracking | 3.0/10 | Makefile has coverage target but no Codecov integration or enforcement |
+| CI/CD Automation | 8.5/10 | 17 workflows with concurrency control, path filtering, multi-Python matrix |
+| Agent Rules | 7.0/10 | Comprehensive AGENTS.md with 3 modes; no .claude/rules/ for test patterns |
 
 ## Critical Gaps
 
-### 1. No Security Scanning
-- **Impact**: Vulnerabilities in Python dependencies or container base images go undetected
+### 1. No Coverage Enforcement or Tracking Integration
+- **Impact**: Coverage regressions can merge unnoticed; no historical visibility into coverage trends
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: No Trivy, Snyk, CodeQL, Semgrep, or any SAST/container scanning found in any workflow. No `.trivyignore`, `.gitleaks.toml`, or security-related configuration exists. The single Containerfile uses `python:3.11-slim` base image with no vulnerability scanning.
+- **Details**: The Makefile has a `test-coverage` target that generates `--cov-report=term-missing`, but there is no `.codecov.yml`, no Codecov/Coveralls GitHub App integration, no coverage thresholds, and no PR-level coverage reporting. Test coverage is a best-effort local activity with no CI enforcement.
 
-### 2. No Coverage Enforcement in CI
-- **Impact**: Test coverage can silently degrade as new code is added without tests
+### 2. No Security Scanning (Trivy, CodeQL, SAST)
+- **Impact**: Container images and Python dependencies ship without any vulnerability assessment; no static analysis for injection or logic bugs
 - **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Details**: While `pytest-cov` is listed as a test dependency and `make test-coverage` target exists in the Makefile, coverage is not collected or reported in any CI workflow. No codecov/coveralls integration. No minimum coverage thresholds. The `scripts-tests.yml` workflow runs pytest without `--cov`.
+- **Effort**: 2-4 hours
+- **Details**: Despite building and pushing container images to GHCR, there is zero security scanning in the pipeline. No Trivy, no Snyk, no CodeQL, no Semgrep, no Gitleaks. Dependabot covers dependency updates for `uv` and `github-actions` but does not scan for CVEs in container base images or runtime dependencies.
 
-### 3. Only 2 Components Have Tests
-- **Impact**: The vast majority of components (under `components/`) have zero test coverage
+### 3. No Cluster-Level E2E or KFP Integration Tests
+- **Impact**: Components are only tested with KFP `LocalRunner`; actual pipeline execution on a real Kubeflow cluster is never validated in CI
 - **Severity**: HIGH
 - **Effort**: 16-24 hours
-- **Details**: Only `components/data_processing/yoda_data_processor/` and `components/data_processing/sdg/` have test files (`test_component_unit.py` and `test_component_local.py`). The skeleton generator (`make component`) creates test stubs, but existing components lack them. Test-to-code ratio for scripts is healthy (~48% test LOC), but component coverage is minimal.
+- **Details**: Component tests use `conftest.py` to set up `kfp.local.SubprocessRunner` for local execution, and there are `test_component_local.py` files for some components. However, there are no tests that deploy to a real KFP cluster, submit pipeline runs, or validate end-to-end pipeline execution. Issues like volume mount problems, RBAC failures, or KFP SDK compatibility problems would only surface in production.
 
-### 4. No Container Runtime Validation
-- **Impact**: Built images may fail at startup or have missing runtime dependencies
-- **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: The container-build workflow builds and saves images as artifacts on PRs, and the `validate-components` job checks compilation and base image tags, but there is no `docker run` or container startup verification. Images are pushed on merge to main without any runtime smoke test.
+### 4. No Container Image Runtime Validation on PR
+- **Impact**: Image startup issues and missing Python dependencies discovered only after merge and push to GHCR
+- **Severity**: MEDIUM
+- **Effort**: 4-8 hours
+- **Details**: The `container-build.yml` workflow builds images on PR and saves them as artifacts, but the `validate-components` job only checks base_image tags and component compilation — it does not start the containers, run `python -c "import ..."`, or execute health checks.
 
 ## Quick Wins
 
-### 1. Add Trivy Scanning to Container Build Workflow
-- **Effort**: 1-2 hours
-- **Impact**: Immediate vulnerability detection for all built container images
+### 1. Add Codecov Integration with Coverage Thresholds (2-4 hours)
+- **Impact**: Immediate coverage visibility on every PR; prevent regressions
 - **Implementation**:
-```yaml
-- name: Run Trivy vulnerability scanner
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: '${{ env.IMAGE_PREFIX }}-${{ matrix.name }}:${{ github.sha }}'
-    format: 'sarif'
-    output: 'trivy-results.sarif'
-    severity: 'CRITICAL,HIGH'
-```
+  ```yaml
+  # .codecov.yml
+  coverage:
+    status:
+      project:
+        default:
+          target: auto
+          threshold: 2%
+      patch:
+        default:
+          target: 80%
+  ```
+  Add `--cov-report=xml` to pytest invocations in `scripts-tests.yml` and upload with `codecov/codecov-action`.
 
-### 2. Add Codecov Integration to Scripts-Tests Workflow
-- **Effort**: 2-3 hours
-- **Impact**: Automated coverage tracking with PR comments and trend monitoring
+### 2. Add Trivy Container Scanning (1-2 hours)
+- **Impact**: Catch CVEs in base images and pip-installed dependencies before they reach GHCR
 - **Implementation**:
-```yaml
-- name: Run tests with coverage
-  run: |
-    uv run pytest */tests/ -v --tb=short --cov=. --cov-report=xml -m "not gh_api"
+  ```yaml
+  - name: Trivy scan
+    uses: aquasecurity/trivy-action@master
+    with:
+      image-ref: '${{ env.IMAGE_PREFIX }}-${{ matrix.name }}:${{ github.sha }}'
+      format: 'sarif'
+      output: 'trivy-results.sarif'
+      severity: 'CRITICAL,HIGH'
+  ```
 
-- name: Upload coverage to Codecov
-  uses: codecov/codecov-action@v4
-  with:
-    file: ./coverage.xml
-    fail_ci_if_error: false
-```
+### 3. Add CodeQL Analysis Workflow (1-2 hours)
+- **Impact**: Automated SAST for Python catching injection, data flow, and logic issues
+- **Implementation**: Use GitHub's standard `github/codeql-action` workflow template for Python.
 
-### 3. Add Container Startup Smoke Test
-- **Effort**: 2-3 hours
-- **Impact**: Catches missing dependencies and startup failures before merge
-- **Implementation**: Add to `container-build.yml` after image load:
-```yaml
-- name: Smoke test container
-  run: |
-    IMAGE_TAG="${{ env.IMAGE_PREFIX }}-${{ matrix.name }}:${GITHUB_SHA}"
-    docker run --rm "$IMAGE_TAG" python -c "print('Container started successfully')"
-```
-
-### 4. Create .claude/rules/ Directory
-- **Effort**: 2-3 hours
-- **Impact**: AI agents get structured test creation guidance beyond AGENTS.md
-- **Implementation**: Create rules for unit tests (`test_component_unit.py` pattern with KFP LocalRunner), local tests (`test_component_local.py` with SubprocessRunner), and script tests (pytest patterns matching existing conventions).
+### 4. Add Container Smoke Test (2-3 hours)
+- **Impact**: Validate image starts and required packages import correctly before merge
+- **Implementation**: After the build step in `container-build.yml`, add:
+  ```yaml
+  - name: Smoke test image
+    if: github.event_name == 'pull_request'
+    run: |
+      docker run --rm $IMAGE_TAG python -c "
+        import kfp
+        print('KFP version:', kfp.__version__)
+        print('Image healthy')
+      "
+  ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Score: 9.0/10** - Excellent
+**Score: 8.5/10** — One of the strongest dimensions.
 
-The repository has 16 well-organized GitHub Actions workflows covering comprehensive validation:
+**Workflow Inventory (17 workflows)**:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `ci-checks.yml` | PR (target) | Aggregated CI check gate |
-| `add-ci-passed-label.yml` | Workflow completion | Label management |
-| `python-lint.yml` | PR/Push | Ruff format + lint + import guard |
-| `markdown-lint.yml` | PR/Push | markdownlint |
-| `yaml-lint.yml` | PR/Push | yamllint |
-| `scripts-tests.yml` | PR/Push | Unit tests for scripts (matrix: Python 3.11, 3.13) |
-| `component-pipeline-tests.yml` | PR/Push | Targeted component/pipeline tests |
-| `compile-and-deps.yml` | PR | Component compilation validation |
-| `validate-metadata-schema.yml` | PR | metadata.yaml validation |
-| `base-image-check.yml` | PR/Push | Base image validation |
-| `package-entries-check.yml` | PR/Push | Package entries validation |
-| `readme-check.yml` | PR | README sync verification |
-| `container-build.yml` | PR/Push | Container image build + validation |
-| `container-build-matrix-check.yml` | PR | Build matrix completeness |
-| `build-packages.yml` | PR/Push | Python package build (matrix: 3.11, 3.13) |
-| `gh-workflow-approve.yml` | PR (target) | Workflow run approval for external contributors |
+| `add-ci-passed-label.yml` | workflow_run | Adds `ci-passed` label after all checks pass |
+| `base-image-check.yml` | push, PR | Validates base image allowlist compliance |
+| `build-packages.yml` | push, PR | Builds Python package, validates wheel contents, tests installation |
+| `ci-checks.yml` | PR (pull_request_target) | Aggregates CI check status, manages `ok-to-test` gating |
+| `compile-and-deps.yml` | PR, dispatch | Compiles KFP components and validates dependencies |
+| `component-pipeline-tests.yml` | push, PR | Runs targeted tests for changed components/pipelines |
+| `container-build-matrix-check.yml` | PR | Validates container build matrix covers all Containerfiles |
+| `container-build.yml` | push, PR | Builds container images, validates components, pushes on merge |
+| `gh-workflow-approve.yml` | PR (labeled, sync) | Auto-approves workflow runs for trusted contributors |
+| `markdown-lint.yml` | push, PR | Markdownlint on changed `.md` files |
+| `package-entries-check.yml` | push, PR | Validates pyproject.toml package entries match directory structure |
+| `python-lint.yml` | push, PR | Ruff linting + formatting + import checking |
+| `readme-check.yml` | PR | Validates generated READMEs are in sync |
+| `scripts-tests.yml` | push, PR | Runs pytest for scripts/ and .github/scripts/ |
+| `validate-metadata-schema.yml` | PR | Validates metadata.yaml schema for components/pipelines |
+| `yaml-lint.yml` | push, PR | yamllint on changed YAML files |
 
 **Strengths**:
-- Concurrency control with `cancel-in-progress: true` on most workflows
-- Path-based filtering (only runs on relevant file changes)
-- Pinned action versions with SHA hashes (e.g., `actions/checkout@de0fac2...`)
-- Custom composite actions (`setup-python-ci`, `detect-changed-assets`, `list-all-assets`)
-- Python version matrix testing (3.11, 3.13)
-- Changed-file detection to only run tests for modified components
+- Excellent concurrency control — nearly all PR-triggered workflows use `cancel-in-progress: true`
+- Smart path filtering — workflows only run when relevant files change
+- Multi-Python version testing (3.11 + 3.13) in scripts-tests and base-image-check
+- All action references use full SHA pins (not tags) for reproducibility
+- Custom composite actions (`.github/actions/setup-python-ci`, `detect-changed-assets`, `list-all-assets`) for DRY CI
+- CI aggregation workflow (`ci-checks.yml`) with `ok-to-test` label gating for external contributors
+- Targeted component testing — only tests changed components, not the entire suite
 
-**Minor gaps**:
-- No caching of uv/pip dependencies across workflow runs (composite action may handle this)
-- No workflow for periodic/scheduled runs (e.g., nightly integration tests)
+**Weaknesses**:
+- No scheduled/periodic workflows (no nightly builds, no periodic vulnerability scans)
+- No workflow for release automation
+- `markdown-lint.yml` uses `ubuntu-latest` instead of pinned `ubuntu-24.04` (inconsistent with others)
 
 ### Test Coverage
 
-**Score: 7.5/10 (Unit) / 5.5/10 (Integration/E2E)**
+**Score: 7.5/10 (Unit) / 5.0/10 (Integration/E2E)**
 
-**Test inventory**:
-- 23 test files (excluding test data fixtures)
-- ~7,800 lines of test code
-- Test-to-source ratio: ~48% (healthy for scripts)
+**Test Inventory**:
+- **27 test files** across scripts and components (excluding test_data fixtures)
+- **7,674 lines of test code** vs **8,310 lines of source code** → **0.92:1 test-to-code ratio** (excellent)
+- **Framework**: pytest with pytest-cov, pytest-timeout
+- **Test types**:
+  - `test_*.py` — unit tests (mock-heavy, isolated)
+  - `test_component_unit.py` — component-level unit tests with mocked KFP artifacts
+  - `test_component_local.py` — local runner tests using KFP `SubprocessRunner`
+  - `test_integration.py` — integration tests for script tools (generate_readme)
+  - `test_cli.py` — CLI interface tests for scripts
 
-**Scripts tests** (well-covered):
-- `scripts/lib/tests/` - 5 test files covering parsing, OCI, metadata, compilation, discovery
-- `scripts/validate_components/tests/` - component validation tests with fixtures
-- `scripts/validate_base_images/tests/` - base image validation tests
-- `scripts/generate_skeleton/tests/` - skeleton generation + CLI tests
-- `scripts/generate_readme/tests/` - integration + error condition + CLI tests
-- `scripts/override_base_images/tests/` - base image override tests
-- `scripts/sync_packages/tests/` - package sync tests
-- `scripts/validate_package_entries/tests/` - package entry validation tests
-- `scripts/compile_check/tests/` - compilation check tests
-- `scripts/check_base_image_tags/tests/` - base image tag tests
-- `scripts/check_component_freshness/` - freshness check test
-- `.github/scripts/` - CI script tests (ci_checks, check_imports, detect_changed_assets, container_build_matrix)
-
-**Component tests** (limited):
-- Only `components/data_processing/yoda_data_processor/tests/` (2 files: unit + local)
-- Only `components/data_processing/sdg/tests/` (2 files: unit + local)
-- All other components have NO tests
-
-**Test infrastructure**:
-- Root `conftest.py` with KFP LocalRunner fixtures (SubprocessRunner)
-- pytest with `pytest-cov` and `pytest-timeout` dependencies
-- Test data in `test_data/` directory with example components and pipelines
-- `scripts/tests/run_component_tests.py` for targeted test execution
+**Testing Patterns**:
+- Components follow a two-tier testing pattern: `test_component_unit.py` (mocked) + `test_component_local.py` (LocalRunner)
+- `conftest.py` at repo root provides `setup_and_teardown_subprocess_runner` fixture for LocalRunner tests
+- Scripts have their own test suites in `*/tests/` subdirectories
+- Good use of fixtures, parameterization, and mock patterns
 
 **Gaps**:
-- No E2E tests against a real KFP cluster
-- No multi-version Python testing for component tests (only scripts)
-- No integration tests verifying compiled pipeline YAML against KFP API
+- Only 2 components (`sdg`, `yoda_data_processor`) have tests; `deployment/component_valid` has none
+- No E2E tests that deploy to a real KFP cluster
+- No contract tests for component interfaces
+- No performance or load testing
+- pytest `testpaths` in `pyproject.toml` excludes `components` and `pipelines` from default test discovery (needs explicit `--` paths)
 
 ### Code Quality
 
-**Score: 8.5/10** - Strong
+**Score: 8.0/10**
 
-**Linting stack**:
-- **Ruff**: Configured in `pyproject.toml` with E, W, F, I, D (pycodestyle, pyflakes, isort, pydocstyle) rules. Google docstring convention. Line length 120.
-- **YAML lint**: `.yamllint.yml` with 120-char line length warning
-- **Markdown lint**: `.markdownlint.json` with 300-char line length, HTML allowed
-- **Import guard**: Custom `check_imports.py` enforcing import restrictions for components/pipelines
+**Linting & Formatting**:
+- **Ruff**: Comprehensive configuration with E, W, F, I, D (pydocstyle with Google convention) rule sets
+- Line length: 120 characters
+- Target version: Python 3.11
+- Pinned version: `ruff==0.15.2` for reproducibility
+- **yamllint**: Configured via `.yamllint.yml`
+- **markdownlint**: Configured via `.markdownlint.json` with `markdownlint-cli@0.39.0`
+- **Import guard**: Custom script checks that component/pipeline code doesn't import from disallowed locations
 
-**Pre-commit hooks** (10 hooks):
-1. `uv-lock-check` - Lockfile sync verification
-2. `ruff-format` - Python formatting
-3. `ruff-check` - Python linting with auto-fix
-4. `yamllint` - YAML linting
-5. `import-guard` - Custom import restrictions
-6. `validate-readme` - README sync check
-7. `markdownlint` - Markdown linting with fix
-8. `validate-metadata` - metadata.yaml validation
-9. `validate-base-images` - Base image policy enforcement
+**Pre-commit Hooks (9 hooks)**:
+1. `uv-lock-check` — Verifies `uv.lock` is in sync with `pyproject.toml`
+2. `ruff-format` — Auto-formats Python files
+3. `ruff-check` — Lints and auto-fixes Python issues
+4. `yamllint` — YAML linting
+5. `import-guard` — Custom import boundary enforcement
+6. `validate-readme` — Validates READMEs are in sync for changed components
+7. `markdownlint` — Markdown linting with auto-fix
+8. `validate-metadata` — Validates metadata.yaml schema
+9. `validate-base-images` — Validates base image allowlist
 
 **Strengths**:
-- All pre-commit hooks use `uv run` for consistent dependency management
-- Ruff with comprehensive rule set including docstring enforcement
-- Custom import guard prevents inappropriate dependencies in components
-- Pre-commit hooks mirror CI checks (shift-left approach)
+- Pre-commit hooks mirror CI checks — local and CI validation are aligned
+- Custom `import-guard` hook enforces module boundaries
+- `--force-exclude` used in pre-commit to respect pyproject.toml excludes
+- Comprehensive docstring enforcement with Google convention
 
-**Gaps**:
-- No type checking (mypy/pyright) configured
-- No complexity analysis (e.g., radon, mccabe)
+**Weaknesses**:
+- No type checking (mypy/pyright) — no type annotations enforced
+- No complexity/cognitive-complexity checks configured in Ruff
 
 ### Container Images
 
-**Score: 5.0/10** - Basic
+**Score: 5.5/10**
 
-**Build process**:
-- Single `docs/examples/Containerfile` demonstrating base image pattern
-- Uses `python:3.11-slim` base image
-- Multi-architecture support (`linux/amd64,linux/arm64`) on push to main/release branches
-- Build caching via GitHub Actions cache (`type=gha`)
-- Images pushed to `ghcr.io/kubeflow/pipelines-components-{name}`
+**Build Process**:
+- Uses `docker/build-push-action` with Buildx
+- GHA cache (`type=gha,mode=max`) for build caching
+- Multi-architecture support: `linux/amd64,linux/arm64` on merge; `linux/amd64` only on PR
+- QEMU emulation for cross-platform builds
+- Images pushed to GHCR (`ghcr.io/kubeflow/pipelines-components-*`)
+- Proper tagging: SHA for PRs, ref/tag for releases, `main` for main branch
 
-**PR validation**:
-- Images built and saved as artifacts on PRs
-- `validate-components` job loads artifacts, overrides base images, validates compilation
-- Base image tag consistency checks
+**Container Build Matrix Check**:
+- Separate workflow validates that the build matrix in `container-build.yml` covers all Containerfiles in the repo
+- Prevents orphaned Containerfiles from not being built
+
+**Validation on PR**:
+- Built images saved as artifacts and downloaded for validation
+- `validate-components` job overrides base_image references and recompiles components
+- Checks base_image tag consistency (main vs release branch)
 
 **Gaps**:
-- Only 1 example image in the build matrix
-- No runtime validation (no `docker run` smoke test)
-- No vulnerability scanning
+- Only 1 example Containerfile currently (in `docs/examples/`)
+- No Trivy/Snyk scanning of built images
+- No runtime validation (image startup, import checks)
 - No SBOM generation
-- No image signing/attestation (cosign/sigstore)
-- No `.dockerignore` file
+- No image signing or attestation
+- No `.dockerignore` in root (only the example has a Containerfile)
 
 ### Security
 
-**Score: 2.0/10** - Critical gaps
+**Score: 2.5/10** — The weakest dimension.
 
-**Findings**:
-- **No SAST**: No CodeQL, Semgrep, gosec, or any static analysis security tool
-- **No container scanning**: No Trivy, Snyk, or Grype integration
-- **No dependency scanning**: No Dependabot, Renovate, or `pip-audit` configuration
-- **No secret detection**: No gitleaks, TruffleHog, or similar tool
-- **No SBOM**: No CycloneDX, SPDX, or syft integration
-- **No image signing**: No cosign or sigstore attestation
+**What exists**:
+- Dependabot for `uv` and `github-actions` ecosystem updates (daily)
+- All GitHub Actions pinned to full SHAs (not tags) — excellent supply chain hygiene
+- `ok-to-test` label gating for external contributors
+- `pull_request_target` used appropriately for privileged operations
 
-**Mitigating factors**:
-- Action versions are pinned by SHA (reduces supply-chain risk)
-- `ok-to-test` label gating for external PRs (prevents unauthorized workflow execution)
-- `pull_request_target` used carefully with `ok-to-test` check
+**What's missing**:
+- No container image scanning (Trivy, Snyk, Grype)
+- No SAST/CodeQL analysis
+- No secret detection (Gitleaks, TruffleHog)
+- No dependency vulnerability scanning beyond Dependabot updates
+- No SBOM generation for packages or containers
+- No security policy (`SECURITY.md`)
+- No `.trivyignore` for known-acceptable vulnerabilities
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Score: 7.0/10** - Good foundation, room for improvement
+**Score: 7.0/10**
 
-**Status**: AGENTS.md present; No `.claude/` directory or rules
+**What exists**:
+- **AGENTS.md** (7,519 bytes) — Comprehensive AI agent context guide with:
+  - Three defined agent modes: Contributing, End User, Maintaining
+  - Quickstart section with make targets
+  - Detailed validation requirements table
+  - Links to source-of-truth documents (CONTRIBUTING.md, GOVERNANCE.md)
+  - Common task command table
 
-**AGENTS.md analysis**:
-- Well-structured document with 3 agent modes (contributing, end-user, maintaining)
-- Quickstart section with `make` targets for scaffolding
-- Comprehensive validation table covering all CI checks
-- Links to sources of truth (CONTRIBUTING.md, GOVERNANCE.md)
-- Testing guidance references
+**What's missing**:
+- No `.claude/` directory
+- No `.claude/rules/` with test-creation rules
+- No test pattern guidance for unit vs local vs integration tests
+- No component scaffolding rules for agents
+- AGENTS.md references docs but doesn't provide inline test examples
+- No quality gate checklists in AGENTS.md
 
-**Strengths**:
-- Mode-based guidance helps agents understand context
-- Make targets provide clear entry points
-- Validation table maps checks to configs and CI workflows
-- Sources-of-truth section for conflict resolution
-
-**Gaps**:
-- No `.claude/` directory or structured rules
-- No test creation rules (unit test patterns, local test patterns)
-- No framework-specific testing examples (KFP LocalRunner fixtures)
-- No quality gate checklists for PRs
-- AGENTS.md references docs but doesn't contain inline test patterns
-
-**Recommendation**: Generate `.claude/rules/` with `/test-rules-generator` covering:
-- Unit test patterns (`test_component_unit.py` with mock/patch)
-- Local runner tests (`test_component_local.py` with SubprocessRunner fixture)
-- Script tests (pytest patterns matching existing `scripts/*/tests/` structure)
+**Recommendation**: Generate `.claude/rules/` with test-creation rules using `/test-rules-generator`. Rules should cover:
+- Unit test patterns (mock KFP artifacts, pytest fixtures)
+- LocalRunner test patterns (SubprocessRunner setup)
+- Component validation patterns (metadata, base images, imports)
+- CI workflow patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add security scanning pipeline**
-   - Add Trivy to `container-build.yml` for image scanning
-   - Add CodeQL or Semgrep workflow for Python SAST
-   - Configure Dependabot or Renovate for dependency updates
-   - Add gitleaks for secret detection in pre-commit and CI
+1. **Add Codecov integration with minimum coverage thresholds and PR coverage reporting**
+   - Create `.codecov.yml` with project and patch coverage targets
+   - Add `--cov-report=xml` to pytest runs in `scripts-tests.yml` and `component-pipeline-tests.yml`
+   - Add `codecov/codecov-action` upload step
+   - Effort: 4-6 hours
 
-2. **Enforce test coverage in CI**
-   - Add `--cov` flags to `scripts-tests.yml` and `component-pipeline-tests.yml`
-   - Integrate codecov with minimum thresholds (start at 60%, target 80%)
-   - Add coverage reporting to PR comments
+2. **Add Trivy vulnerability scanning for all container images built in CI**
+   - Add `aquasecurity/trivy-action` step after image build in `container-build.yml`
+   - Configure severity thresholds (CRITICAL, HIGH)
+   - Upload SARIF results to GitHub Security tab
+   - Effort: 2-4 hours
 
-3. **Add container runtime validation**
-   - Add smoke test step to `container-build.yml` (run container, verify startup)
-   - Validate Python imports in container (`python -c "import kfp; ..."`)
+3. **Add CodeQL or Semgrep SAST workflow for Python security analysis**
+   - Create `.github/workflows/codeql.yml` using GitHub's standard template
+   - Configure for Python language
+   - Run on push and PR to main
+   - Effort: 1-2 hours
 
 ### Priority 1 (High Value)
 
-4. **Expand component test coverage**
-   - Add tests to all existing components (not just yoda_data_processor and sdg)
-   - Use `make tests TYPE=component CATEGORY=... NAME=...` to generate test stubs
-   - Ensure both `test_component_unit.py` and `test_component_local.py` exist per component
+4. **Build a KFP integration test suite that deploys components to a real Kubeflow Pipelines cluster**
+   - Set up a test KFP instance (Kind + KFP standalone)
+   - Create test pipelines that exercise component contracts
+   - Run on merge to main or nightly schedule
+   - Effort: 16-24 hours
 
-5. **Create .claude/rules/ for test patterns**
-   - Unit test rule with KFP component testing patterns
-   - Local runner test rule with SubprocessRunner fixture usage
-   - Script test rule matching existing pytest conventions
-   - Quality gate checklist for PR readiness
+5. **Add container runtime validation (smoke test) in PR builds**
+   - After building the image on PR, run `docker run --rm <image> python -c "import kfp; ..."`
+   - Validate required packages are importable
+   - Effort: 2-3 hours
 
-6. **Add type checking**
-   - Configure mypy or pyright in `pyproject.toml`
-   - Add type checking to CI pipeline and pre-commit
-   - Start with `--strict` on new code, gradual adoption for existing
+6. **Create `.claude/rules/` directory with test-creation rules**
+   - Unit test rules (fixtures, mocking KFP artifacts)
+   - LocalRunner test rules (conftest.py patterns)
+   - Script test rules (CLI testing patterns)
+   - Effort: 3-4 hours
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Add E2E tests with KFP cluster**
-   - Set up Kind cluster with KFP deployment for integration testing
-   - Run compiled pipelines against real KFP instance
-   - Consider periodic/nightly schedule to avoid PR latency
-
-8. **Add SBOM and image signing**
-   - Generate SBOM (CycloneDX/SPDX) for release images
-   - Sign images with cosign/sigstore for supply-chain integrity
-
-9. **Add performance benchmarks**
-   - Track component compilation time regressions
-   - Monitor test execution time trends
+7. **Add SBOM generation for container images** using `anchore/sbom-action` or `syft`
+8. **Implement image signing/attestation with cosign** for supply chain security
+9. **Add performance regression testing** for component execution time
+10. **Add contract tests** for component interface stability (input/output artifact types, parameter schemas)
+11. **Add type checking (mypy or pyright)** to enforce type annotations
+12. **Create a SECURITY.md** with vulnerability reporting instructions
+13. **Add Gitleaks** for secret detection in CI
 
 ## Comparison to Gold Standards
 
-| Practice | pipelines-components | odh-dashboard | notebooks | kserve |
-|----------|---------------------|---------------|-----------|--------|
-| Unit test coverage | Scripts: good, Components: minimal | Comprehensive | Good | Strong |
-| Integration/E2E | LocalRunner only | Multi-layer | 5-layer validation | Multi-version |
-| Coverage enforcement | None | Codecov enforced | N/A | Enforced |
-| Container scanning | None | Trivy | Trivy + policy | Trivy |
-| SAST | None | CodeQL | N/A | CodeQL |
-| Pre-commit hooks | 9 hooks (excellent) | Yes | Limited | Yes |
-| Linting | Ruff (comprehensive) | ESLint strict | Linters | golangci-lint |
-| CI workflow count | 16 (excellent) | ~20 | ~15 | ~12 |
-| Agent rules | AGENTS.md (good) | .claude/rules/ | None | None |
-| Image signing | None | N/A | N/A | cosign |
-| Secret detection | None | gitleaks | N/A | N/A |
+| Feature | pipelines-components | odh-dashboard | notebooks | kserve |
+|---------|---------------------|---------------|-----------|--------|
+| Unit Tests | pytest + fixtures | Jest + React Testing Library | pytest | Go testing + envtest |
+| Integration/E2E | LocalRunner only | Cypress E2E | Notebook validation | KFP E2E + multi-version |
+| Coverage Tracking | Local only (no CI) | Codecov with enforcement | Codecov | Codecov with thresholds |
+| Container Scanning | None | Trivy | Trivy + multi-layer | Trivy |
+| Pre-commit Hooks | 9 hooks (excellent) | Husky + lint-staged | Limited | golangci-lint |
+| CI Workflows | 17 (excellent) | 15+ | 10+ | 20+ |
+| Agent Rules | AGENTS.md (good) | CLAUDE.md + .claude/rules/ | None | None |
+| Security Scanning | Dependabot only | CodeQL + Gitleaks | Limited | CodeQL |
+| Multi-arch Images | amd64 + arm64 | amd64 | Multi-arch | Multi-arch |
+| Test-to-Code Ratio | 0.92:1 (excellent) | ~1.2:1 | Variable | ~0.8:1 |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/*.yml` (16 workflow files)
-- `.github/actions/setup-python-ci/` (composite action)
-- `.github/actions/detect-changed-assets/` (composite action)
-- `.github/actions/list-all-assets/` (composite action)
-- `.github/scripts/` (CI support scripts with tests)
+- `.github/workflows/` — 17 workflow files
+- `.github/actions/setup-python-ci/` — Reusable Python CI setup
+- `.github/actions/detect-changed-assets/` — Change detection for targeted CI
+- `.github/scripts/` — CI helper scripts (ci_checks, validate_wheel, check_imports, etc.)
+- `Makefile` — Developer-facing make targets (lint, format, test, component, pipeline)
 
 ### Testing
-- `conftest.py` (root - KFP LocalRunner fixtures)
-- `scripts/*/tests/` (script test directories)
-- `components/data_processing/*/tests/` (component tests)
-- `test_data/` (test fixtures for components/pipelines)
-- `scripts/tests/run_component_tests.py` (targeted test runner)
+- `conftest.py` — Root-level pytest config with LocalRunner fixture
+- `scripts/*/tests/` — Script-level test suites (12 test directories)
+- `components/*/tests/` — Component test suites (2 components with tests)
+- `.github/scripts/*/tests/` — CI script test suites (4 test directories)
+- `test_data/` — Test fixtures and sample components/pipelines
 
 ### Code Quality
-- `pyproject.toml` (Ruff configuration, pytest options)
-- `.pre-commit-config.yaml` (9 hooks)
-- `.yamllint.yml` (YAML lint config)
-- `.markdownlint.json` (Markdown lint config)
-- `.github/scripts/check_imports/` (import guard)
+- `pyproject.toml` — Ruff, pytest, and package configuration
+- `.pre-commit-config.yaml` — 9 pre-commit hooks
+- `.markdownlint.json` — Markdown lint rules
+- `.yamllint.yml` — YAML lint rules
+- `.github/scripts/check_imports/` — Custom import boundary enforcement
 
 ### Container Images
-- `docs/examples/Containerfile` (example base image)
-- `.github/workflows/container-build.yml` (build workflow)
-- `.github/workflows/container-build-matrix-check.yml` (matrix validation)
+- `docs/examples/Containerfile` — Example base image Containerfile
+- `.github/workflows/container-build.yml` — Build and push workflow
+- `.github/workflows/container-build-matrix-check.yml` — Matrix validation
+
+### Security
+- `.github/dependabot.yml` — Dependabot for uv and github-actions
 
 ### Agent Rules
-- `AGENTS.md` (comprehensive agent guide)
-- `docs/CONTRIBUTING.md` (contribution guidelines)
-- `docs/GOVERNANCE.md` (governance and roles)
+- `AGENTS.md` — Comprehensive AI agent context guide
+- `OWNERS` — Kubernetes-style ownership file

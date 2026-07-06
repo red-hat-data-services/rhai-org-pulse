@@ -1,278 +1,355 @@
 ---
 repository: "red-hat-data-services/autox-ci"
-overall_score: 4.6
+overall_score: 4.8
 scorecard:
   - dimension: "Unit Tests"
-    score: 1.0
-    status: "No unit tests — repo is exclusively functional/E2E test harness with no tests for its own library code"
+    score: 6.5
+    status: "Solid unit tests for benchmarks module; functional tests are E2E-only with no isolated unit tests for lib/"
   - dimension: "Integration/E2E"
-    score: 8.0
-    status: "Strong parametrized functional tests for AutoRAG and AutoML pipelines with positive and negative scenarios"
+    score: 7.5
+    status: "Strong parametrized functional tests against live RHOAI clusters with positive/negative scenarios"
   - dimension: "Build Integration"
     score: 1.0
-    status: "No CI/CD workflows, no PR-time validation, no build process"
+    status: "No CI/CD pipelines, no PR-time build validation, no automated checks of any kind"
   - dimension: "Image Testing"
     score: 0.0
-    status: "No Dockerfiles, no container images, no image testing"
+    status: "No container images, Dockerfiles, or image testing — not applicable for a test-only repo"
   - dimension: "Coverage Tracking"
-    score: 0.0
-    status: "No coverage configuration, no codecov integration, no coverage thresholds"
+    score: 1.0
+    status: "No coverage generation, no codecov/coveralls integration, no coverage thresholds"
   - dimension: "CI/CD Automation"
-    score: 1.5
-    status: "No GitHub Actions workflows; only a PR template and shell runner exist"
+    score: 1.0
+    status: "Zero CI/CD workflows — no GitHub Actions, no linting, no automated test runs on PRs"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules"
+    status: "No CLAUDE.md, no .claude/ directory, no agent rules for test automation guidance"
 critical_gaps:
-  - title: "No CI/CD pipeline — tests never run automatically"
-    impact: "Regressions in the test framework itself go undetected; broken test configs merge freely"
+  - title: "No CI/CD pipelines at all"
+    impact: "Code changes are never automatically validated — regressions, broken imports, and style drift are only caught manually"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "No unit tests for library code (2,400+ lines in autox_tests/lib/)"
-    impact: "Utility functions (KFP client wrappers, S3 helpers, env parsing, pipeline YAML resolution) are untested"
-    severity: "HIGH"
-    effort: "8-16 hours"
-  - title: "No code coverage tracking"
-    impact: "Impossible to measure or enforce test quality over time"
-    severity: "MEDIUM"
-    effort: "2-4 hours"
   - title: "No linting or static analysis"
-    impact: "Code quality drifts; type errors and style inconsistencies creep in"
-    severity: "MEDIUM"
+    impact: "No automated enforcement of code quality — no ruff, flake8, mypy, or pre-commit hooks"
+    severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No agent rules for AI-assisted development"
-    impact: "AI agents have no guidance for contributing to or using this test framework"
-    severity: "LOW"
+  - title: "No test coverage tracking"
+    impact: "No visibility into which library code (15K+ lines) is exercised by tests; regressions go unnoticed"
+    severity: "HIGH"
+    effort: "2-4 hours"
+  - title: "No security scanning"
+    impact: "No dependency vulnerability scanning, no secret detection, no SAST — credentials could leak"
+    severity: "HIGH"
     effort: "2-3 hours"
+  - title: "No unit tests for autox_tests/lib/ (15 modules, ~4K lines)"
+    impact: "Core utilities for K8s, KFP, S3, config loading, and failure diagnostics have zero isolated unit tests"
+    severity: "MEDIUM"
+    effort: "16-24 hours"
 quick_wins:
-  - title: "Add a GitHub Actions lint + dry-run workflow"
-    effort: "2-3 hours"
-    impact: "Catches syntax errors, import issues, and config problems on every PR"
-  - title: "Add ruff linting configuration"
+  - title: "Add a GitHub Actions CI workflow with ruff lint + unit tests"
+    effort: "2-4 hours"
+    impact: "Immediately catches broken imports, style issues, and unit test regressions on every PR"
+  - title: "Add ruff.toml configuration for linting and formatting"
     effort: "1-2 hours"
-    impact: "Enforces consistent Python style and catches common errors"
-  - title: "Add unit tests for env.py, clients.py, and pipeline_yaml_sources.py"
-    effort: "4-6 hours"
-    impact: "Validates the most-used library utilities that every test depends on"
-  - title: "Add pre-commit hooks for formatting and linting"
-    effort: "1 hour"
-    impact: "Prevents style drift and catches issues before push"
+    impact: "Enforces consistent code style across 19K+ lines of Python"
+  - title: "Add pytest-cov to benchmark unit tests"
+    effort: "1-2 hours"
+    impact: "Gives visibility into how much of benchmark_common and orchestrator code is tested"
+  - title: "Add Dependabot or Renovate for dependency updates"
+    effort: "30 minutes"
+    impact: "Automated alerts for vulnerable or outdated dependencies (boto3, kubernetes, kfp)"
+  - title: "Create basic CLAUDE.md with test patterns and conventions"
+    effort: "2-3 hours"
+    impact: "Enables AI agents to generate consistent, high-quality test code for this repo"
 recommendations:
   priority_0:
-    - "Implement GitHub Actions CI workflow with lint, type-check, and dry-run validation on PRs"
-    - "Add unit tests for the 10+ library modules in autox_tests/lib/ (clients, env, settings, s3_data, etc.)"
+    - "Create a GitHub Actions CI workflow that runs ruff lint + autox_benchmarks unit tests on every PR"
+    - "Add ruff.toml with sensible defaults for Python 3.12+ linting and formatting"
+    - "Add pytest-cov integration and generate coverage reports for the benchmarks unit tests"
   priority_1:
-    - "Configure ruff or flake8 for linting with pyproject.toml integration"
-    - "Add mypy or pyright type checking (the codebase already uses type annotations extensively)"
-    - "Set up codecov or coveralls for PR coverage reporting"
+    - "Write unit tests for autox_tests/lib/ modules (settings, config_loaders, k8s_utils, s3_data, kfp_progress)"
+    - "Add a periodic/dispatch GitHub Actions workflow that runs functional E2E tests against a live cluster"
+    - "Add Dependabot configuration for pip ecosystem dependency scanning"
+    - "Add pre-commit hooks (ruff, trailing whitespace, YAML lint, secret detection)"
   priority_2:
-    - "Create CLAUDE.md and .claude/rules/ for AI agent guidance"
-    - "Add pre-commit hooks (ruff, mypy, trailing whitespace)"
-    - "Consider adding a Makefile for common development tasks"
+    - "Add mypy type checking for stricter type safety across the codebase"
+    - "Create CLAUDE.md and .claude/rules/ for agent-assisted test development"
+    - "Add Gitleaks or TruffleHog for secret detection in CI"
+    - "Add CODEOWNERS file for review enforcement"
 ---
 
 # Quality Analysis: autox-ci
 
 ## Executive Summary
 
-- **Overall Score: 4.6/10**
-- **Repository Type**: Python test harness / E2E test suite for AutoX components (AutoRAG, AutoML) on RHOAI
-- **Primary Language**: Python 3.12+
-- **Framework**: pytest + KFP + Kubernetes + S3 (boto3)
-- **Agent Rules Status**: Missing
+- **Overall Score: 4.8/10**
+- **Repository Type**: Python test framework — end-to-end integration test suites and benchmark orchestration for AutoML/AutoRAG pipelines on OpenShift AI (RHOAI)
+- **Primary Language**: Python 3.12 (~19,500 lines across 2 packages)
+- **Framework**: pytest + KFP v2 + Kubernetes client + boto3
 
-**Key Strengths**: The functional test suite itself is well-designed — parametrized positive/negative scenarios, JSON-driven test configs with tag-based filtering, comprehensive artifact validation (S3, notebooks, KServe deployment), excellent failure diagnostics (pod logs, task-level errors), and strong fixture architecture with session-scoped resource management and cleanup.
+### Key Strengths
+- Well-structured parametrized functional tests with positive/negative scenarios and config-driven test execution
+- Strong test infrastructure (conftest fixtures for KFP, S3, kubeconfig, DSPA auto-setup, cleanup tracking)
+- Good benchmark unit test coverage for orchestrator, CLI, pipeline params, compare logic, and credential loading
+- Comprehensive PR template with checklist and structured sections
+- Excellent `run_tests.sh` wrapper with env management, suite selection, tag filtering, and dry-run mode
 
-**Critical Gaps**: The repository has **zero CI/CD automation** — no GitHub Actions workflows, no linting, no type checking, no coverage tracking. The library code that powers all tests (~2,400 lines across 10+ modules) has no unit tests of its own. There are no agent rules for AI-assisted development.
+### Critical Gaps
+- **Zero CI/CD workflows** — no GitHub Actions, no automated checks on PRs
+- **No linting or static analysis** — no ruff, flake8, mypy, or pre-commit hooks
+- **No test coverage tracking** — no pytest-cov, no codecov, no coverage thresholds
+- **No security scanning** — no dependency scanning, no secret detection
+- **No agent rules** — no CLAUDE.md, no `.claude/` directory
+
+### Agent Rules Status: Missing
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 1.0/10 | No unit tests for library code; repo is E2E-only |
-| Integration/E2E | 8.0/10 | Strong parametrized functional tests with positive/negative paths |
-| **Build Integration** | **1.0/10** | **No CI/CD workflows, no PR-time validation** |
-| Image Testing | 0.0/10 | N/A — no container images in this repo |
-| Coverage Tracking | 0.0/10 | No coverage config, no codecov, no thresholds |
-| CI/CD Automation | 1.5/10 | Only PR template exists; no automated workflows |
-| Agent Rules | 0.0/10 | No CLAUDE.md, no .claude/ directory |
+| Unit Tests | 6.5/10 | Solid benchmarks unit tests (71 test functions); no unit tests for autox_tests/lib/ |
+| Integration/E2E | 7.5/10 | Strong parametrized functional tests with pos/neg scenarios against live RHOAI clusters |
+| **Build Integration** | **1.0/10** | **No CI/CD at all — no PR validation, no automated builds** |
+| Image Testing | N/A | Not applicable — test-only repo with no container images |
+| Coverage Tracking | 1.0/10 | No coverage generation or reporting |
+| CI/CD Automation | 1.0/10 | Zero workflows — no GitHub Actions, no linting, no automated test runs |
+| Agent Rules | 0.0/10 | No CLAUDE.md, no .claude/ directory, no test automation guidance |
 
 ## Critical Gaps
 
-### 1. No CI/CD Pipeline
-- **Impact**: Tests never run automatically; broken test configs, syntax errors, and import failures merge freely. The test framework itself can regress without detection.
+### 1. No CI/CD Pipelines
+- **Impact**: Code changes are never automatically validated. Broken imports, regressions, and style drift are only caught by manual review or runtime failures on clusters.
 - **Severity**: HIGH
 - **Effort**: 4-8 hours
-- **Details**: The `.github/workflows/` directory does not exist. There are no GitHub Actions, no GitLab CI, no Jenkinsfile, no Makefile. The only automation is `run_tests.sh`, a local shell wrapper.
+- **Details**: The `.github/` directory contains only a PR template — no workflows whatsoever. There are no GitHub Actions, no GitLab CI, no Jenkins pipelines.
 
-### 2. No Unit Tests for Library Code
-- **Impact**: The `autox_tests/lib/` directory contains ~2,400 lines of Python across 10+ modules (clients.py, env.py, settings.py, pipeline_yaml_sources.py, s3_data.py, rhoai_support.py, kfp_progress.py, etc.) with zero unit test coverage.
+### 2. No Linting or Static Analysis
+- **Impact**: 19,500+ lines of Python with zero automated quality enforcement. Inconsistencies in style, unused imports, and type errors accumulate silently.
 - **Severity**: HIGH
-- **Effort**: 8-16 hours
-- **Details**: Functions like `make_kfp_client()`, `load_tests_env()`, `resolve_precompiled_pipeline_yaml()`, `ensure_s3_bucket_exists()`, and `build_temp_kubeconfig()` are critical infrastructure that every test depends on. Bugs in these functions would cascade silently.
-
-### 3. No Coverage Tracking
-- **Impact**: No way to measure how much of the library code is exercised, enforce minimums, or track trends.
-- **Severity**: MEDIUM
 - **Effort**: 2-4 hours
+- **Details**: No `ruff.toml`, `.flake8`, `mypy.ini`, `.pylintrc`, or `.pre-commit-config.yaml` exists. No linting is configured in `pyproject.toml` either.
 
-### 4. No Linting or Static Analysis
-- **Impact**: The codebase uses Python type annotations extensively (good), but there is no mypy/pyright configuration to validate them. No ruff, flake8, or pylint configuration exists.
-- **Severity**: MEDIUM
+### 3. No Test Coverage Tracking
+- **Impact**: No visibility into which portions of the 15K+ lines of library/utility code are exercised by tests. Coverage regressions go unnoticed.
+- **Severity**: HIGH
 - **Effort**: 2-4 hours
+- **Details**: No `.coveragerc`, no `codecov.yml`, no pytest-cov configuration. The `pyproject.toml` has no coverage settings.
 
-### 5. No Agent Rules
-- **Impact**: AI agents contributing to this repo have no guidance on test patterns, fixture usage, JSON config schema, or the testing philosophy.
-- **Severity**: LOW
+### 4. No Security Scanning
+- **Impact**: Credentials flow through environment variables and `.env` files. No automated detection of leaked secrets, vulnerable dependencies, or insecure patterns.
+- **Severity**: HIGH
 - **Effort**: 2-3 hours
+- **Details**: No CodeQL, Trivy, Snyk, Gitleaks, or Dependabot configuration. The `.gitignore` properly excludes `.env` files, but there's no automated verification.
+
+### 5. No Unit Tests for Core Library (autox_tests/lib/)
+- **Impact**: 15 modules (~4,000 lines) providing Kubernetes utilities, KFP helpers, S3 operations, config loading, failure diagnostics, and settings management have zero isolated unit tests. Bugs in these shared utilities affect all functional test suites.
+- **Severity**: MEDIUM
+- **Effort**: 16-24 hours
+- **Details**: Modules like `k8s_utils.py` (495 lines), `settings.py` (658 lines), `config_loaders.py` (324 lines), `managed_pipelines.py` (375 lines), `dspa_support.py` (401 lines) contain complex logic but are only exercised indirectly through E2E functional tests that require live clusters.
 
 ## Quick Wins
 
-### 1. Add GitHub Actions CI Workflow (2-3 hours)
+### 1. Add a GitHub Actions CI workflow (2-4 hours)
+Run `ruff check` + `ruff format --check` + `pytest autox_benchmarks/tests/` on every PR.
+
 ```yaml
+# .github/workflows/ci.yml
 name: CI
-on: [pull_request]
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
 jobs:
-  lint-and-dry-run:
+  lint-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
-      - run: uv sync --extra test_autorag
+      - uses: astral-sh/setup-uv@v3
+      - run: uv sync --extra dev
+        working-directory: autox_benchmarks
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: ./run_tests.sh --dry-run "autorag and positive"
-      - run: ./run_tests.sh --dry-run --suite automl "tabular"
+      - run: uv run pytest autox_benchmarks/tests/ -v --tb=short
 ```
 
-### 2. Add Ruff Configuration (1-2 hours)
-Add to `pyproject.toml`:
+### 2. Add ruff.toml configuration (1-2 hours)
+
 ```toml
-[tool.ruff]
+# ruff.toml
 target-version = "py312"
 line-length = 120
 
-[tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM"]
+[lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "S"]
+ignore = ["S101"]  # assert is expected in test code
+
+[lint.per-file-ignores]
+"tests/**" = ["S"]
+"autox_tests/**" = ["S"]
 ```
 
-### 3. Add Pre-commit Hooks (1 hour)
+### 3. Add pytest-cov to benchmark tests (1-2 hours)
+Add `pytest-cov` to dev dependencies and run with `--cov=automl_benchmark --cov=autorag_benchmark --cov=benchmark_common`.
+
+### 4. Add Dependabot (30 minutes)
+
 ```yaml
-# .pre-commit-config.yaml
-repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.0
-    hooks:
-      - id: ruff
-      - id: ruff-format
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: pip
+    directory: /autox_benchmarks
+    schedule:
+      interval: weekly
 ```
 
-### 4. Add Unit Tests for Core Library Modules (4-6 hours)
-Start with:
-- `test_env.py` — test `load_tests_env()` and path resolution
-- `test_pipeline_yaml_sources.py` — test URL construction and local path resolution
-- `test_clients.py` — test client creation with mock configs
+### 5. Create CLAUDE.md with test patterns (2-3 hours)
+Document the parametrized test pattern, conftest fixture hierarchy, config-driven scenario model, and positive/negative test conventions used throughout the repo.
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
-- **Workflows**: None (`.github/workflows/` does not exist)
-- **PR Template**: Good — `pull_request_template.md` has structured sections and a checklist
-- **Test Runner**: `run_tests.sh` is well-designed with `--dry-run`, `--suite`, `--tags`, and `--extras` support
-- **Verdict**: The PR template and test runner are good, but without CI nothing runs automatically
+- **Workflows**: None. The `.github/` directory only contains `pull_request_template.md`.
+- **PR Validation**: No automated checks. The PR template has a manual checklist but nothing enforces it.
+- **Periodic Jobs**: None.
+- **Build Automation**: None — no Makefile, no build targets.
+- **Concurrency/Caching**: N/A.
 
 ### Test Coverage
-- **Functional Tests**: 3 test files with parametrized positive and negative scenarios
-  - `autorag/test_pipeline_functional.py` — 2 positive + 3 negative AutoRAG scenarios
-  - `automl/test_tabular_functional.py` — 3 positive + 6 negative tabular scenarios
-  - `automl/test_timeseries_functional.py` — 2 positive + 5 negative timeseries scenarios
-- **Test Configs**: JSON-driven (`test_configs.json`, `tabular_test_configs.json`, `timeseries_test_configs.json`)
-- **Tag Filtering**: Supports `smoke`, `negative`, `validation`, `storage`, `credentials` tags
-- **Artifact Validation**: Comprehensive S3 artifact checks (patterns, notebooks, leaderboard, metrics)
-- **Notebook Execution**: Downloads and runs indexing/inference notebooks via papermill
-- **Deployment Testing**: Optional KServe InferenceService creation, readiness wait, and v1/v2 scoring
-- **Failure Diagnostics**: Pod log fetching, task-level error extraction, formatted reports
-- **Unit Tests**: None — the library code powering all of this is untested
-- **Coverage**: No `.coveragerc`, no `codecov.yml`, no coverage generation
+
+#### autox_tests/ (Functional E2E Tests)
+- **Test files**: 3 (`test_pipeline_functional.py`, `test_tabular_functional.py`, `test_timeseries_functional.py`)
+- **Test functions**: ~13 (parametrized — actual test instances depend on config JSON scenarios)
+- **Framework**: pytest with extensive conftest fixture hierarchy
+- **Pattern**: Config-driven parametrized tests with positive (assert SUCCEEDED + validate artifacts) and negative (assert FAILED + verify fault task) scenarios
+- **Infrastructure**: Auto-creates DSPA, manages KFP clients, builds temp kubeconfigs, tracks S3 cleanup
+- **Notable**: Tests validate pipeline outputs in S3 (models, leaderboards, notebooks), execute downloaded notebooks via papermill, and optionally test KServe deployment with v1/v2 inference
+- **Limitation**: Requires live RHOAI cluster — cannot run in CI without cluster access
+
+#### autox_benchmarks/tests/ (Unit + Integration Tests)
+- **Test files**: 10 (9 unit, 1 integration)
+- **Test functions**: 71
+- **Framework**: pytest with fixtures, monkeypatch, tmp_path, unittest.mock
+- **Coverage areas**: CLI argument forwarding, orchestrator dry-run, pipeline parameter building, package path resolution, compare logic, credential loading, storage buckets, benchmark script invocation
+- **Integration test**: Online smoke benchmark against live KFP + S3 (guarded by conftest prerequisite validation)
+- **Strength**: Good use of test fixtures, realistic test data, edge case coverage (missing files, invalid configs, fail-fast behavior)
+
+#### Test-to-Code Ratio
+- Test lines: 2,015
+- Source lines: 15,864
+- **Ratio: 0.12** (low — industry target is 0.5-1.0+)
+
+#### Conftest Infrastructure (1,680 lines across 6 files)
+- Rich fixture ecosystem with session-scoped KFP clients, S3 clients, kubeconfig management
+- DSPA auto-setup, health checking, and cleanup tracking
+- Integration test isolation via `pytest_ignore_collect`
+- Well-structured but only exercised through live cluster tests
 
 ### Code Quality
-- **Linting**: No `.golangci.yaml`, no `ruff.toml`, no `flake8`, no `mypy.ini`
-- **Pre-commit**: No `.pre-commit-config.yaml`
-- **Type Annotations**: The codebase uses Python 3.12+ type annotations extensively (`str | None`, `list[str]`, `dict[str, Any]`), but there's no mypy/pyright to validate them
-- **Code Organization**: Clean separation between test suites (autorag, automl), shared lib, and configs
-- **Docstrings**: Thorough module and function docstrings throughout
+- **Linting**: None configured. No ruff, flake8, pylint, or ESLint.
+- **Formatting**: No formatter configured. Code is manually formatted.
+- **Type Checking**: No mypy or pyright. Type hints are used in some files (especially benchmarks) but not enforced.
+- **Pre-commit Hooks**: None. No `.pre-commit-config.yaml`.
+- **Static Analysis**: No SAST tools (CodeQL, Semgrep, gosec).
+- **Code Style**: Generally good — docstrings on modules, clear function naming, structured logging. But inconsistent without enforcement.
 
 ### Container Images
-- **Dockerfiles**: None — this is a pure test harness, not an application
-- **Image Testing**: N/A
-- **Scoring Note**: The 0.0 score for Image Testing reflects absence but is not a deficiency for this repo type
+- **Not applicable** — this is a test framework repository, not a service that produces container images. No Dockerfile, Containerfile, or image build process exists.
+- The repo does include a `podman run` example in the README for running tests in containers, but no image testing is performed.
 
 ### Security
-- **Container Scanning**: None (N/A)
-- **SAST**: No CodeQL, gosec, Semgrep
-- **Dependency Scanning**: No automated dependency scanning
-- **Secret Detection**: `.gitignore` properly excludes `.env` files; env examples don't contain secrets
-- **TLS Handling**: Test code properly supports configurable TLS verification and CA bundles
+- **Dependency Scanning**: None. No Dependabot, Renovate, or Snyk.
+- **Secret Detection**: None. No Gitleaks, TruffleHog, or detect-secrets.
+- **SAST**: None. No CodeQL or Semgrep.
+- **Credential Management**: `.env` files are properly gitignored. `.env.*.example` templates don't contain real secrets. PR template checklist includes "No secrets or credentials committed."
+- **Risk**: Credentials for RHOAI clusters, S3, and KFP tokens flow through environment variables. Without automated secret scanning, accidental commits are possible.
 
 ### Agent Rules (Agentic Flow Quality)
 - **Status**: Missing
-- **CLAUDE.md**: Not present
-- **.claude/ directory**: Not present
-- **Rules Coverage**: No rules for any test type
-- **Recommendation**: Create rules covering test config JSON schema, fixture usage patterns, negative test design, and library utility conventions. Use `/test-rules-generator` to bootstrap.
+- **Coverage**: No rules exist for any test type
+- **Quality**: N/A
+- **Gaps**: No CLAUDE.md, no AGENTS.md, no `.claude/` directory, no `.claude/rules/`, no `.claude/skills/`
+- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
+  - Parametrized functional test patterns (positive/negative)
+  - Conftest fixture conventions and hierarchy
+  - Config-driven scenario model (JSON configs, tags, env files)
+  - Benchmarks unit test patterns (dry-run, mocking, fixture usage)
+  - KFP/S3/Kubernetes utility testing patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Implement GitHub Actions CI workflow** — At minimum: lint, format-check, dry-run validation, and JSON config schema validation on every PR
-2. **Add unit tests for library modules** — Start with `env.py`, `clients.py`, `pipeline_yaml_sources.py`, `s3_data.py`, and config loaders. These are the foundation everything else depends on.
+1. **Create a GitHub Actions CI workflow** — Run `ruff check`, `ruff format --check`, and `pytest autox_benchmarks/tests/` on every PR. This is the single highest-impact improvement.
+2. **Add ruff.toml for linting/formatting** — Enforce consistent code style across all 19K+ lines. Start with a permissive ruleset and tighten over time.
+3. **Add pytest-cov and generate coverage reports** — At minimum for `autox_benchmarks/tests/` which can run without a live cluster.
 
 ### Priority 1 (High Value)
-3. **Configure ruff for linting** — Add `[tool.ruff]` section to `pyproject.toml`; integrate into CI
-4. **Add mypy or pyright type checking** — The codebase already has extensive type annotations; validating them is low-effort/high-value
-5. **Set up coverage tracking** — Add `pytest-cov` and `codecov.yml`; report coverage on PRs
-6. **Add pre-commit hooks** — Enforce formatting and linting before push
+4. **Write unit tests for `autox_tests/lib/` modules** — These 15 modules contain complex logic for K8s operations, config parsing, S3 data management, and failure diagnostics. Mocking the external dependencies (kubernetes client, boto3, kfp) would make them testable offline.
+5. **Add a periodic/dispatch workflow for functional E2E tests** — Use `workflow_dispatch` to trigger E2E tests with cluster credentials stored as GitHub secrets.
+6. **Add Dependabot for pip ecosystem** — Automated vulnerability alerts for boto3, kubernetes, kfp, and other dependencies.
+7. **Add pre-commit hooks** — ruff, trailing whitespace, YAML lint, `.env` file detection.
 
 ### Priority 2 (Nice-to-Have)
-7. **Create agent rules** — Add `CLAUDE.md` and `.claude/rules/` to guide AI-assisted development
-8. **Add a Makefile** — Common targets: `lint`, `format`, `test-dry-run`, `test-unit`
-9. **Add JSON schema validation for test configs** — Validate `*_test_configs.json` files against a JSON Schema to prevent malformed configs
-10. **Consider adding contract tests** — Validate the JSON config schema that downstream repos provide when using autox-ci as a submodule
+8. **Add mypy type checking** — Many files already use type hints; adding mypy enforcement would catch type errors at CI time.
+9. **Create CLAUDE.md and `.claude/rules/`** — Document test patterns, fixture conventions, and config-driven scenario model for AI-assisted test development.
+10. **Add Gitleaks or TruffleHog** — Automated secret detection in CI to prevent accidental credential commits.
+11. **Add CODEOWNERS** — Enforce review by specific team members for critical paths (conftest.py, lib/, configs/).
 
 ## Comparison to Gold Standards
 
 | Dimension | autox-ci | odh-dashboard | notebooks | kserve |
 |-----------|----------|---------------|-----------|--------|
-| Unit Tests | 1.0 | 9.0 | 7.0 | 9.0 |
-| Integration/E2E | 8.0 | 9.0 | 8.0 | 9.0 |
-| Build Integration | 1.0 | 8.0 | 7.0 | 8.0 |
-| Image Testing | 0.0 | 7.0 | 9.0 | 7.0 |
-| Coverage Tracking | 0.0 | 8.0 | 5.0 | 9.0 |
-| CI/CD Automation | 1.5 | 9.0 | 8.0 | 9.0 |
-| Agent Rules | 0.0 | 8.0 | 3.0 | 2.0 |
-| **Overall** | **4.6** | **8.5** | **7.0** | **8.0** |
-
-**Key Gap vs Gold Standards**: The biggest differentiator is CI/CD automation. Gold standard repos have comprehensive GitHub Actions workflows that run lint, type-check, unit tests, and integration tests on every PR. autox-ci has none of this infrastructure despite having a mature functional test suite.
+| CI/CD Workflows | 0 workflows | 10+ workflows | 5+ workflows | 15+ workflows |
+| PR Validation | Manual checklist only | Full lint + test + build | Lint + image test | Lint + unit + E2E |
+| Unit Tests | 71 (benchmarks only) | 500+ | 100+ | 1000+ |
+| E2E Tests | Config-driven parametrized | Multi-layer with contracts | 5-layer image validation | Multi-version + envtest |
+| Coverage Tracking | None | Codecov with thresholds | Coverage reports | Codecov enforcement |
+| Linting | None | ESLint + Prettier | shellcheck + yamllint | golangci-lint (40+ linters) |
+| Security Scanning | None | Snyk + SAST | Trivy + SBOM | CodeQL + Snyk |
+| Pre-commit | None | Comprehensive | Present | Present |
+| Agent Rules | None | Comprehensive .claude/rules/ | Basic | Basic |
+| Test-to-Code Ratio | 0.12 | ~0.8 | ~0.5 | ~1.0+ |
 
 ## File Paths Reference
 
-| File | Purpose |
-|------|---------|
-| `pyproject.toml` | Dependencies, pytest markers, extras |
-| `run_tests.sh` | Test runner wrapper (uv + pytest) |
-| `autox_tests/autorag/test_pipeline_functional.py` | AutoRAG functional tests |
-| `autox_tests/automl/test_tabular_functional.py` | Tabular AutoML functional tests |
-| `autox_tests/automl/test_timeseries_functional.py` | Timeseries AutoML functional tests |
-| `autox_tests/autorag/configs/test_configs.json` | AutoRAG test scenarios (5 configs) |
-| `autox_tests/automl/configs/tabular_test_configs.json` | Tabular scenarios (9 configs) |
-| `autox_tests/automl/configs/timeseries_test_configs.json` | Timeseries scenarios (7 configs) |
-| `autox_tests/lib/clients.py` | KFP and S3 client factories |
-| `autox_tests/lib/env.py` | .env file loading |
-| `autox_tests/lib/settings.py` | Environment-driven settings |
-| `autox_tests/lib/pipeline_yaml_sources.py` | Pipeline YAML resolution (local/URL) |
-| `autox_tests/lib/s3_data.py` | S3 upload helpers |
-| `autox_tests/lib/rhoai_support.py` | OpenShift namespace/secret setup |
-| `autox_tests/lib/kfp_progress.py` | KFP run progress polling |
-| `.github/pull_request_template.md` | PR template with checklist |
-| `autox_tests/.env.rag.example` | AutoRAG env template |
-| `autox_tests/.env.ml.example` | AutoML env template |
+### Project Configuration
+- `pyproject.toml` — Root project dependencies, pytest config, uv sources
+- `autox_benchmarks/pyproject.toml` — Benchmarks sub-package dependencies
+- `.python-version` — Python 3.12
+- `.gitignore` — Comprehensive Python gitignore with `.env` exclusions
+- `.github/pull_request_template.md` — Structured PR template
+
+### Test Infrastructure
+- `run_tests.sh` — Main test runner with suite/tag/env management
+- `autox_tests/conftest.py` — Root conftest (KFP client, DSPA, kubeconfig, S3)
+- `autox_tests/automl/conftest.py` — AutoML fixtures
+- `autox_tests/autorag/conftest.py` — AutoRAG fixtures
+- `autox_benchmarks/tests/conftest.py` — Benchmarks test fixtures
+- `autox_benchmarks/tests/integration/conftest.py` — Integration test prerequisites
+
+### Functional Test Suites
+- `autox_tests/automl/test_tabular_functional.py` — Tabular pipeline tests (345 lines)
+- `autox_tests/automl/test_timeseries_functional.py` — Time series pipeline tests (346 lines)
+- `autox_tests/autorag/test_pipeline_functional.py` — RAG pipeline tests (193 lines)
+
+### Benchmark Unit Tests
+- `autox_benchmarks/tests/test_automl_orchestrator_dry_run.py` — Orchestrator dry-run (240 lines)
+- `autox_benchmarks/tests/test_compare_logic.py` — Compare logic (172 lines)
+- `autox_benchmarks/tests/test_automl_pipeline_params.py` — Pipeline params (164 lines)
+- `autox_benchmarks/tests/test_automl_cli.py` — CLI tests (148 lines)
+- `autox_benchmarks/tests/test_automl_package_resolve.py` — Package resolution (147 lines)
+- `autox_benchmarks/tests/integration/test_automl_online.py` — Online integration (119 lines)
+
+### Core Library (untested)
+- `autox_tests/lib/settings.py` — Settings management (658 lines)
+- `autox_tests/lib/k8s_utils.py` — Kubernetes utilities (495 lines)
+- `autox_tests/lib/dspa_support.py` — DSPA support (401 lines)
+- `autox_tests/lib/managed_pipelines.py` — Pipeline management (375 lines)
+- `autox_tests/lib/config_loaders.py` — Config loading (324 lines)
+- `autox_tests/automl/utils.py` — AutoML test utilities (1,453 lines)
+- `autox_tests/autorag/utils.py` — AutoRAG test utilities (356 lines)

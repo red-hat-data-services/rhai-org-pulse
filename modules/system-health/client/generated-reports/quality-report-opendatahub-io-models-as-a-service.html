@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on May 28, 2026 at 09:42 PM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:10 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/models-as-a-service</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="169.64586"
+                                stroke-dashoffset="147.026412"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.0</div>
+                        <div class="score-value">7.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Excellent test-to-code ratio (1.14:1) with race detection and coverage generation</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Excellent test-to-code ratio (1.29:1), 50 test files with race detection and coverage profiling</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Comprehensive pytest E2E suite with Prow CI, multi-user testing, and group testing</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">22 pytest E2E tests covering multi-tenant isolation, security, OIDC, and full deployment validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Konflux PR builds + Kustomize validation + codegen verification, but no image startup tests</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Tekton/Konflux PR builds, Kustomize validation, CRD codegen verification, operator chaos testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Multi-stage UBI9 Dockerfiles with FIPS, but no scanning or runtime validation</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
+                            <div class="scorecard-status">Multi-stage UBI9 builds with FIPS compliance, but no vulnerability scanning or runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Coverage generated and uploaded as artifacts, but no enforcement or threshold tracking</div>
+                            <div class="scorecard-status">Coverage profiling and HTML reports generated but no codecov integration or thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">18 pipelines (11 GHA + 7 Tekton), OpenAPI validation, promotion workflows, path-filtered triggers</div>
+                            <div class="scorecard-status">14 GitHub Actions + 9 Tekton pipelines with path-scoped triggers, chaos testing, API breaking change detection</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Good AGENTS.md with build/test conventions but no structured .claude/rules/ for test patterns</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Comprehensive AGENTS.md with repo structure, commands, and conventions; missing .claude/rules/</div>
                         </div>
                     </div>
                 </div>
@@ -411,32 +411,32 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No coverage enforcement or threshold tracking</div>
-                            <p>Coverage can silently regress with no PR-level feedback or minimum thresholds</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No container image security scanning</div>
-                            <p>Vulnerabilities in dependencies and base images not caught before deployment</p>
+                            <div class="item-description">No container vulnerability scanning in CI</div>
+                            <p>CVEs in base images or dependencies not caught until production scanning</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No pre-commit hooks</div>
-                            <p>Lint and format issues caught only in CI, slowing feedback loop</p>
+                        <li class="item-card high">
+                            <div class="item-description">No coverage thresholds or codecov integration</div>
+                            <p>Test coverage can regress silently without enforcement; no PR-level coverage feedback</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">Security scanners configured but not wired into CI</div>
+                            <p>Semgrep rules and Gitleaks config exist but never run in PR/push workflows</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No image runtime validation tests</div>
-                            <p>Container startup failures or missing files not caught until deployment</p>
+                            <div class="item-description">No SBOM generation or image signing</div>
+                            <p>Supply chain security gap; cannot verify image provenance or contents</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
@@ -456,32 +456,40 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add codecov integration with PR comments and thresholds</div>
-                            <p>Automatic coverage tracking, PR-level feedback, regression prevention</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to GitHub Actions PR workflow</div>
-                            <p>Early detection of CVEs in dependencies and base images</p>
+                            <div class="item-description">Add Trivy scanning to PR workflows</div>
+                            <p>Catch container vulnerabilities before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add pre-commit hooks with golangci-lint and gitleaks</div>
-                            <p>Faster developer feedback, catch lint/secret issues before push</p>
+                            <div class="item-description">Wire Semgrep into CI</div>
+                            <p>Activate existing security rules that are already written and maintained</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create .claude/rules/ test automation guidance</div>
-                            <p>Improve AI-generated test quality and consistency across contributors</p>
+                            <div class="item-description">Add codecov integration with threshold</div>
+                            <p>Prevent coverage regression and provide PR-level coverage feedback</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add Gitleaks CI workflow</div>
+                            <p>Activate existing secret detection config in CI pipeline</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create .claude/rules/ for test patterns</div>
+                            <p>Improve AI-generated test quality with framework-specific patterns</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -501,15 +509,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add codecov/coveralls integration with minimum coverage thresholds and PR comments</li><li>Add Trivy container scanning to PR and push workflows for both maas-api and maas-controller images</li></ul>
+                            <ul><li>Add Trivy or Snyk container scanning to PR workflows for both maas-api and maas-controller images</li><li>Wire existing Semgrep rules and Gitleaks config into GitHub Actions CI workflows</li><li>Add codecov integration with minimum coverage threshold (e.g., 70%) and PR reporting</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add container startup validation tests (health endpoint check after image build)</li><li>Create structured .claude/rules/ with unit-test, integration-test, and e2e-test patterns</li><li>Add CodeQL or Semgrep CI workflow for automated SAST on PRs</li></ul>
+                            <ul><li>Add SBOM generation (syft/cyclonedx) and image signing (cosign) to Tekton push pipelines</li><li>Create .claude/rules/ with unit-tests.md, e2e-tests.md, and controller-tests.md for AI-assisted test creation</li><li>Add pre-commit hooks for golangci-lint, gitleaks, and semgrep</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add pre-commit hooks (.pre-commit-config.yaml) for golangci-lint, gitleaks, and YAML validation</li><li>Add API contract tests between maas-api and maas-controller</li><li>Add performance regression testing for API endpoints</li></ul>
+                            <ul><li>Add local Kind/Minikube E2E tests in GitHub Actions for faster PR feedback</li><li>Add performance/load testing for the maas-api inference proxy endpoints</li><li>Add contract tests between maas-api and maas-controller components</li></ul>
                         </div>
                     </div>
                 </div>

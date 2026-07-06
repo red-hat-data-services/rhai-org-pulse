@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on May 28, 2026 at 09:51 PM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 05:01 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/minio-model-storage</h2>
         </header>
 
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No test files exist — zero unit tests</div>
+                            <div class="scorecard-status">No tests exist — zero test files, zero test targets</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No automated integration or E2E tests</div>
+                            <div class="scorecard-status">No integration or E2E tests of any kind</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">Manual Makefile build only, no PR-time validation</div>
+                            <div class="scorecard-status">Manual Makefile build only; no PR-time validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.5/10</div>
-                            <div class="scorecard-status">Dockerfile exists but no image validation, scanning, or runtime tests</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No runtime validation; no startup test; no vulnerability scan</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tools, thresholds, or reporting</div>
+                            <div class="scorecard-status">No coverage tooling — no code to cover</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CI/CD workflows — no .github/workflows, no Jenkinsfile, no .gitlab-ci.yml</div>
+                            <div class="scorecard-status">No CI/CD pipeline exists — no GitHub Actions, no Tekton, nothing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
+                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent guidance</div>
                         </div>
                     </div>
                 </div>
@@ -412,42 +412,50 @@
                         
                         <li class="item-card high">
                             <div class="item-description">No CI/CD pipeline of any kind</div>
-                            <p>All builds, tests, and validations are fully manual — no automated quality gates</p>
+                            <p>Every change merges without any automated gate — no build, no test, no lint, no scan</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Zero test coverage</div>
-                            <p>No unit, integration, or E2E tests — regressions are undetectable</p>
+                            <div class="item-description">No automated tests whatsoever</div>
+                            <p>No regression detection; broken models or scripts ship silently</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-16 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container image scanning or validation</div>
-                            <p>Vulnerabilities in base images (ubi9, minio) go undetected; no SBOM</p>
+                            <div class="item-description">No container image scanning</div>
+                            <p>Vulnerable base images and dependencies ship to consumers undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">Hardcoded credentials in source</div>
-                            <p>data-connection.yaml contains base64-encoded credentials; build-image.sh uses minioadmin/minioadmin; README uses admin/password</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No linting, static analysis, or pre-commit hooks</div>
-                            <p>Shell scripts and Dockerfile have no automated quality checks</p>
+                            <div class="item-description">Hardcoded credentials in scripts</div>
+                            <p>Default minioadmin/minioadmin credentials baked into build script; no secret management</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No image runtime validation</div>
+                            <p>Broken images (missing models, corrupt files) are not caught until consumers try to use them</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">Single commit history, no branching strategy</div>
+                            <p>No code review enforcement, no protected branches, no PR workflow</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -464,43 +472,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add a GitHub Actions workflow for image build validation</div>
-                            <p>Catch Dockerfile build failures on every PR</p>
+                            <div class="item-description">Add a basic GitHub Actions CI workflow</div>
+                            <p>Establish a minimum quality gate — build the image on every PR</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to the image build</div>
-                            <p>Detect known CVEs in ubi9 and minio base images automatically</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add ShellCheck linting for hacks/*.sh</div>
-                            <p>Catch shell scripting bugs and portability issues</p>
+                            <div class="item-description">Add Trivy container scanning</div>
+                            <p>Catch known vulnerabilities in base images before they ship</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Hadolint for Dockerfile linting</div>
-                            <p>Enforce Dockerfile best practices (pinned versions, layer optimization)</p>
+                            <div class="item-description">Add a smoke test that starts the container and checks MinIO health</div>
+                            <p>Verify the image actually works before merging</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Remove hardcoded credentials from checked-in YAML files</div>
-                            <p>Eliminate secret exposure in the repository</p>
+                            <div class="item-description">Add a .dockerignore file</div>
+                            <p>Reduce image build context size and avoid leaking unnecessary files</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">15 minutes</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Create a CI/CD pipeline (GitHub Actions) with at minimum: image build, Trivy scan, ShellCheck lint</li><li>Remove hardcoded credentials from data-connection.yaml and scripts — use environment variables or sealed secrets</li><li>Add basic smoke test: build image, start container, verify MinIO health endpoint responds</li></ul>
+                            <ul><li>Create a GitHub Actions workflow that builds the Docker image and runs Trivy on every PR</li><li>Add a container smoke test: start image, wait for health, verify models are accessible via mc</li><li>Enable branch protection on main: require PR review and passing CI</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add container runtime validation: build → start → mc alias → mc ls → verify model files present</li><li>Pin base image tags (ubi9:9.x, minio:RELEASE.yyyy-mm-dd) to avoid silent breakage from upstream updates</li><li>Add multi-architecture build support (amd64/arm64)</li></ul>
+                            <ul><li>Add model integrity validation (checksums for LFS-tracked model files)</li><li>Add multi-architecture image build support (linux/amd64, linux/arm64)</li><li>Replace hardcoded credentials with build arguments or environment variables</li><li>Add a .dockerignore to exclude docs, .git, and non-essential files</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Create agent rules (.claude/rules/) for Dockerfile and shell script conventions</li><li>Add SBOM generation with Syft or similar</li><li>Add image signing with cosign</li></ul>
+                            <ul><li>Add CLAUDE.md and .claude/rules/ for agent-assisted development</li><li>Add SBOM generation (syft) to image build pipeline</li><li>Add image signing with cosign for supply chain integrity</li><li>Consider Renovate/Dependabot for base image updates</li></ul>
                         </div>
                     </div>
                 </div>

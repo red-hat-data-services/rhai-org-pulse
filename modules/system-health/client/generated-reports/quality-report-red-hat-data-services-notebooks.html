@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:52 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 05:13 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/notebooks</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#28a745"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="73.51320600000005"
+                                stroke-dashoffset="79.168068"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">8.7</div>
+                        <div class="score-value">8.6</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Comprehensive Python/Go unit tests with pytest-subtests, pyfakefs, doctests, and strict markers</div>
+                            <div class="scorecard-status">Comprehensive pytest suite with 247 test functions, subtests, pyfakefs mocking, Go tests, strict markers, and allure integration</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Multi-layer testing: testcontainers, Playwright browser, OpenShift cluster, papermill notebook smoke</div>
+                            <div class="scorecard-status">Multi-layer container integration tests with testcontainers, Playwright browser E2E, runtime smoke tests, manifest validation, and K8s notebook tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">PR-time builds for ODH and RHOAI variants with Konflux simulation and hermetic prefetch</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">PR-time image builds with smart changed-file matrix, ODH/RHOAI variants, multi-platform support, and Tekton/Konflux pipelines</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
-                            <div class="scorecard-status">5-layer validation: build, testcontainers, Makefile smoke, OpenShift, Playwright; multi-arch support</div>
+                            <div class="scorecard-status">Gold-standard 5-layer image validation: base image tests, workbench startup, runtime library checks, GPU library loading, and manifest annotation validation via SBOM</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Codecov with Python+Go flags, branch coverage, JUnit uploads; thresholds informational only</div>
+                            <div class="scorecard-status">Codecov integration with Python and Go flags, carryforward, informational status on PRs, but no hard enforcement thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
-                            <div class="scorecard-status">43+ workflows, concurrency control, matrix builds, smart change detection, SHA-pinned actions</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">40+ GitHub Actions workflows with concurrency control, path filtering, template reuse, SHA-pinned actions, and Renovate self-hosted for dependency updates</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Comprehensive AGENTS.md, CLAUDE.md, Cursor rules, testing docs, ADRs, and .agents/skills scaffolding</div>
+                            <div class="scorecard-status">Comprehensive CLAUDE.md, AGENTS.md, cursor rules, testing docs, and agent skills directory — best-in-class AI agent guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,27 +411,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card medium">
-                            <div class="item-description">Coverage thresholds are informational only</div>
-                            <p>Coverage can regress silently — no enforcement gate to block PRs with declining coverage</p>
+                            <div class="item-description">No hard coverage enforcement threshold</div>
+                            <p>Coverage can silently regress without failing CI; informational-only Codecov checks</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No SBOM generation or image signing in GHA pipeline</div>
-                            <p>Supply chain attestation relies entirely on Konflux/Tekton; GHA-built images lack provenance</p>
+                            <div class="item-description">Container integration tests skip fork PRs</div>
+                            <p>External contributors get no integration test feedback on their PRs</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card low">
-                            <div class="item-description">Container tests excluded from default collection</div>
-                            <p>Developers can merge changes that break container tests if they only run &#x27;make test&#x27;</p>
+                            <div class="item-description">Some CI checks not exposed as Makefile targets</div>
+                            <p>yamllint, hadolint, gotestsum, prek run inline in CI — local dev parity gap (tracked as issue #3174)</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">2-3 hours to document the gap more prominently</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -448,27 +448,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Enforce coverage threshold on patch (change informational to blocking)</div>
-                            <p>Prevents coverage regression on new code without blocking existing uncovered areas</p>
+                            <div class="item-description">Add coverage enforcement threshold to Codecov config</div>
+                            <p>Prevent silent coverage regression by failing PRs that drop below threshold</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add cosign image signing to GHA build template</div>
-                            <p>Supply chain provenance for all GHA-built images; complements existing Konflux signing</p>
+                            <div class="item-description">Expose yamllint and hadolint as Makefile targets</div>
+                            <p>Local dev parity with CI, faster feedback loop before push</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Syft SBOM generation to PR build pipeline</div>
-                            <p>Already have .syft.yaml config; just needs workflow integration</p>
+                            <div class="item-description">Add agent skills beyond README placeholder</div>
+                            <p>Enable AI agents to leverage repository-specific automation skills</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -485,15 +485,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Switch Codecov patch status from informational to enforcing with a reasonable target (e.g., 60%)</li><li>Add SBOM generation using the existing .syft.yaml configuration in the GHA build template</li></ul>
+                            <ul><li>Set Codecov coverage threshold to fail PRs that regress significantly (e.g., target: auto, threshold: 5%)</li><li>Consider enabling container integration tests for fork PRs with reduced scope (read-only, no secrets needed)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add cosign image signing for GHA-built images to match Konflux signing</li><li>Consider adding a required PR check that runs container tests for Dockerfile changes</li><li>Expand browser tests beyond Code-Server to cover JupyterLab UI flows</li></ul>
+                            <ul><li>Extract inline CI checks (yamllint, hadolint, gotestsum, prek) into Makefile targets for local parity</li><li>Add performance regression tests for notebook startup time</li><li>Populate .agents/skills/ with repository-specific automation skills</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add performance benchmarking for image build times to detect build-time regressions</li><li>Consider contract tests between ImageStream annotation format and ODH Dashboard consumer</li><li>Add mutation testing (e.g., mutmut) for critical CI scripts</li></ul>
+                            <ul><li>Add contract tests between manifests and ImageStream consumers (odh-dashboard, operator)</li><li>Add chaos/resilience testing for notebook pod recovery scenarios</li><li>Consider adding mutation testing for critical path code</li></ul>
                         </div>
                     </div>
                 </div>

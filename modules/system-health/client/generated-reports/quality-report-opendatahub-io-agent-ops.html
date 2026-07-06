@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:00 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 03:43 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/agent-ops</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="565.4861999999999"
+                                stroke-dashoffset="441.079236"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">0.0</div>
+                        <div class="score-value">2.2</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">Repository is empty - no code or tests exist</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Tests exist for 3 of 5 components; banking-agent, playground, and mcp-server lack unit tests entirely</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">Repository is empty - no integration or E2E tests exist</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Testcontainers for pgvector DB tests; manual bash script for A2A agent tests; no automated E2E suite</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">Repository is empty - no build configuration exists</div>
+                            <div class="scorecard-status">No CI/CD pipeline exists; Dockerfiles are never built or validated in automation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">Repository is empty - no container image testing exists</div>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">UBI9 base images and some pinned digests; no scanning, no runtime validation, no multi-arch</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">Repository is empty - no coverage tracking configured</div>
+                            <div class="scorecard-status">No codecov, coveralls, or any coverage reporting; no thresholds enforced</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">Repository is empty - no CI/CD workflows exist</div>
+                            <div class="scorecard-status">No GitHub Actions, GitLab CI, or any CI/CD configuration; all testing is manual</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">Repository is empty - no agent rules or AI guidance exist</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory; no AI-assisted test guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +411,51 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Repository has no content</div>
-                            <p>No code, tests, CI/CD, or documentation exist — the entire quality stack must be built from scratch</p>
+                            <div class="item-description">No CI/CD pipeline of any kind</div>
+                            <p>All testing, building, and validation is entirely manual; regressions can merge undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">Varies by project scope</span>
+                                <span class="meta-tag effort-tag">8-16 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No CI/CD pipeline</div>
-                            <p>When code is added, there will be no automated quality gates without CI/CD setup</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No testing framework</div>
-                            <p>No test infrastructure to validate correctness of future code</p>
+                            <div class="item-description">No coverage tracking or enforcement</div>
+                            <p>Test coverage can silently decrease; no visibility into untested code paths</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No security scanning</div>
-                            <p>Vulnerabilities in dependencies or code will go undetected</p>
+                            <div class="item-description">No container image security scanning</div>
+                            <p>Vulnerable dependencies and base image CVEs go undetected until production</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">Banking agent and MCP server have zero unit tests</div>
+                            <p>Core financial operations code (account updates, transactions) has no automated validation</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No linting or static analysis</div>
+                            <p>Code quality issues, type errors, and style inconsistencies accumulate over time</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No pre-commit hooks</div>
+                            <p>Developers can commit code without any local quality checks</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +472,51 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Initialize repository with README, LICENSE, and CODEOWNERS</div>
-                            <p>Establishes project identity, ownership, and contribution guidelines</p>
+                            <div class="item-description">Add a basic GitHub Actions CI workflow with pytest</div>
+                            <p>Automated test execution on every PR; immediate regression detection</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add GitHub Actions CI workflow from day one</div>
-                            <p>Ensures quality gates are in place before any code is merged</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create CLAUDE.md and .claude/rules/ for agent-assisted development</div>
-                            <p>Guides AI coding assistants to produce high-quality, consistent code and tests</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add pre-commit hooks configuration</div>
-                            <p>Catches formatting, linting, and secret exposure issues before commits</p>
+                            <div class="item-description">Add ruff for linting and formatting</div>
+                            <p>Catches bugs, enforces style consistency, replaces multiple tools (flake8, isort, black)</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add Trivy scanning to container builds</div>
+                            <p>Automated CVE detection for all 5 container images</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add pytest-cov and codecov integration</div>
+                            <p>Visibility into coverage trends; foundation for coverage enforcement</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add pre-commit hooks (ruff, mypy, gitleaks)</div>
+                            <p>Local quality gate before code reaches the repository</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create CLAUDE.md with test patterns for AI-assisted development</div>
+                            <p>Consistent AI-generated test quality across all components</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +533,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Initialize the repository with a proper project structure, build system, and README</li><li>Set up CI/CD pipeline (GitHub Actions) with linting, testing, and build steps from the first commit</li><li>Add container image scanning (Trivy) and dependency scanning from day one</li></ul>
+                            <ul><li>Create GitHub Actions CI workflow: run pytest across all components on every PR</li><li>Add unit tests for banking-agent (agent_executor.py, agent.py, __main__.py) and mcp-server (mcp_server.py, database_manager.py)</li><li>Add container image vulnerability scanning (Trivy) for all 5 Dockerfiles</li><li>Add coverage tracking with codecov and enforce minimum thresholds (start at 50%)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Establish test infrastructure (unit, integration, E2E) matching the chosen language/framework</li><li>Configure coverage tracking (Codecov) with minimum thresholds before codebase grows</li><li>Create comprehensive agent rules (.claude/rules/) for test automation guidance</li></ul>
+                            <ul><li>Add ruff linting/formatting and mypy type checking to CI pipeline</li><li>Pin all Dockerfile base image digests (banking-agent, knowledge-agent, mcp-server currently use :latest)</li><li>Create automated E2E test suite that can run in Kind/Minikube without a full OpenShift cluster</li><li>Add pre-commit hooks with ruff, mypy, and gitleaks for local quality enforcement</li><li>Create comprehensive CLAUDE.md and .claude/rules/ for AI-assisted test generation</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add pre-commit hooks for formatting, linting, and secret detection</li><li>Set up CODEOWNERS for automated review routing</li><li>Document architecture decisions and testing strategy in docs/</li></ul>
+                            <ul><li>Add SAST scanning (CodeQL or Semgrep) for security analysis</li><li>Add Dockerfile linting with hadolint</li><li>Add multi-architecture builds for container images</li><li>Add Helm chart testing with chart-testing and helm-unittest</li><li>Add API contract testing between agents (A2A protocol validation)</li><li>Add load testing for the orchestrator agent routing</li></ul>
                         </div>
                     </div>
                 </div>

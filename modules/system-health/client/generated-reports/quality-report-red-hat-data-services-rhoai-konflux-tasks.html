@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 12:17 PM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 05:28 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/rhoai-konflux-tasks</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="435.42437399999994"
+                                stroke-dashoffset="452.38896"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">2.3</div>
+                        <div class="score-value">2.0</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No test files exist; complex bash scripts in tasks are completely untested</div>
+                            <div class="scorecard-status">No tests exist - zero YAML validation, task schema, or script unit tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No integration test suite; PR PipelineRuns serve as only minimal build validation</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No pipeline execution tests or task run validation tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">PR-time builds for container-build pipeline and rhoai-init; most tasks lack PR validation</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Good PAC self-testing with Konflux pipelines but no task content validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Minimal test Dockerfile (UBI8 base only); no runtime or functional validation</div>
+                            <div class="scorecard-status">Trivial test Dockerfile; strong security scanning in pipeline but no runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tools, thresholds, or PR reporting configured</div>
+                            <div class="scorecard-status">No coverage tracking of any kind</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Strong Konflux integration with security scanning, Slack notifications, and Renovate</div>
+                            <div class="scorecard-status">Solid Konflux PAC integration, Renovate automerge, Slack notifications</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory; no test automation guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, .claude/ directory, or agent rules</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Zero test coverage for Tekton tasks and embedded bash scripts</div>
-                            <p>Complex logic in rhoai-init (semver comparison, CPE ID generation, Slack formatting) and GitHub API interactions in trigger-* tasks are completely untested. Bugs ship to production undetected.</p>
+                            <div class="item-description">Zero test coverage for Tekton tasks and pipelines</div>
+                            <p>Task regressions, broken parameters, and script bugs are only caught in production pipelines</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No YAML schema validation for Tekton task definitions</div>
-                            <p>Invalid Tekton task YAML (wrong parameter types, missing fields, incorrect apiVersions) discovered only at runtime on the cluster</p>
+                            <div class="item-description">No YAML/Tekton linting or validation</div>
+                            <p>Malformed YAML or invalid Tekton resource definitions can be merged without detection</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Most tasks lack PR-time validation</div>
-                            <p>Only rhoai-init and container-build pipeline have PR triggers; changes to 7+ other tasks and 5 step actions have no pre-merge validation</p>
+                            <div class="item-description">No local development validation tooling</div>
+                            <p>Contributors have no way to validate changes locally before pushing</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No task contract testing (parameters/results schema validation)</div>
+                            <p>Breaking changes to task interfaces go undetected until downstream pipelines fail</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No ShellCheck or linting for embedded bash scripts</div>
-                            <p>Bash scripts in tasks may contain syntax errors, unquoted variables, or unsafe patterns not caught until execution</p>
+                            <div class="item-description">Embedded bash scripts in YAML have no shellcheck or unit testing</div>
+                            <p>Shell script bugs in tasks are invisible until runtime failures occur</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">6-10 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,32 +464,32 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add ShellCheck CI validation for embedded bash scripts</div>
-                            <p>Catch common bash errors (unquoted variables, missing error handling) before merge</p>
+                            <div class="item-description">Add yamllint and tekton-lint to pre-commit hooks</div>
+                            <p>Catch YAML syntax errors and Tekton schema violations before merge</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add ShellCheck CI step for embedded bash scripts</div>
+                            <p>Catch common shell scripting errors in Tekton task scripts</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Tekton YAML schema validation with tkn CLI or yamllint</div>
-                            <p>Ensure all task/pipeline definitions conform to Tekton API schema</p>
+                            <div class="item-description">Create a root README.md</div>
+                            <p>Improve discoverability and onboarding for contributors</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add unit tests for rhoai-init semver_ge function</div>
-                            <p>Validate the most complex logic in the repo: version comparison affecting CPE IDs and RHEL version selection</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create CLAUDE.md with repository guidelines and task patterns</div>
-                            <p>Enable AI-assisted development with proper context about Tekton task conventions</p>
+                            <div class="item-description">Add .pre-commit-config.yaml with yamllint and shellcheck</div>
+                            <p>Local validation for contributors before pushing</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
@@ -501,15 +509,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Extract embedded bash scripts into standalone files and add comprehensive unit tests using bats-core or shunit2</li><li>Add Tekton YAML validation (tkn task validate, tkn pipeline validate) as a PR check</li><li>Add PR-time PipelineRun definitions for ALL tasks and step actions, not just rhoai-init and container-build</li></ul>
+                            <ul><li>Add YAML/Tekton linting (yamllint + tekton-lint) as a PR-time check and pre-commit hook</li><li>Extract embedded bash scripts from YAML and add ShellCheck + unit tests (bats-core)</li><li>Add task parameter/result contract tests to detect breaking API changes</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add ShellCheck linting for all embedded bash scripts in tasks and step actions</li><li>Create integration tests that validate task behavior with mock environments (e.g., test trigger-group-testing with stubbed GitHub API)</li><li>Add pre-commit hooks with yamllint and shellcheck</li><li>Create CLAUDE.md and .claude/rules/ for task development patterns</li></ul>
+                            <ul><li>Add Tekton task execution tests using tkn or a test harness</li><li>Create a Makefile with lint, test, and validate targets for local development</li><li>Add agent rules (.claude/rules/) for test creation and task development patterns</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add BATS tests for step action scripts (secure-push-oci, secure-git-push, git-clone)</li><li>Implement contract tests to validate task parameter schemas against consumer expectations</li><li>Add version consistency checks across task versions (e.g., rhoai-init 0.1 vs 0.2 vs 0.3)</li></ul>
+                            <ul><li>Add task documentation generation from YAML annotations</li><li>Implement version compatibility testing across rhoai-init 0.1/0.2/0.3</li><li>Add Tekton catalog task compliance checking</li></ul>
                         </div>
                     </div>
                 </div>

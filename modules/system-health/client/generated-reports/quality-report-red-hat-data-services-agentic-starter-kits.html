@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:17 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:41 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/agentic-starter-kits</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="147.026412"
+                                stroke-dashoffset="135.71668799999998"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.4</div>
+                        <div class="score-value">7.6</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">Good tool-level unit tests per agent; no coverage tracking or enforcement</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">90 test files across all agents with pytest, strong test-to-code ratio (0.64)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Excellent behavioral test suite with adversarial, API contract, and deployment integration tests</div>
+                            <div class="scorecard-status">Nightly deployment integration tests on OpenShift, behavioral evals with cluster btests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">No PR-time container build validation; nightly-only deployment tests</div>
+                            <div class="scorecard-status">No PR-time container build or image validation; deployment tests only nightly</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
-                            <div class="scorecard-status">UBI9 base, non-root, .dockerignore present but no image scanning or runtime validation on PRs</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Dockerfiles exist per agent but no runtime validation, no Trivy/Snyk scanning</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No codecov, no coverage thresholds, no coverage reporting</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">No coverage generation, no codecov integration, no coverage thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Well-organized workflows with concurrency control, change detection, test reporting, and nightly deployment tests</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">7 workflows with concurrency control, path filtering, JUnit reports, Dependabot</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Strong AGENTS.md and CLAUDE.md; 9 Claude skills for tracing; no .claude/rules/ for test patterns</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Comprehensive AGENTS.md and CLAUDE.md with commands, boundaries, and gotchas</div>
                         </div>
                     </div>
                 </div>
@@ -412,7 +412,7 @@
                         
                         <li class="item-card high">
                             <div class="item-description">No code coverage tracking or enforcement</div>
-                            <p>Cannot measure test coverage trends or set minimum thresholds; regressions go undetected</p>
+                            <p>Cannot measure test coverage trends or enforce minimum thresholds on PRs</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
@@ -420,26 +420,34 @@
                         </li>
                         <li class="item-card high">
                             <div class="item-description">No container image security scanning</div>
-                            <p>Vulnerabilities in base images and dependencies not caught before deployment</p>
+                            <p>Vulnerabilities in UBI9 base images or Python dependencies go undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
+                        <li class="item-card high">
                             <div class="item-description">No PR-time container build validation</div>
-                            <p>Dockerfile breakages discovered only at nightly deployment time, not on PRs</p>
+                            <p>Dockerfile breakage discovered only in nightly deployment tests or post-merge</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">6-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Behavioral/integration tests not automated on PRs</div>
-                            <p>Agent regressions in response quality, tool usage, and safety only caught nightly or manually</p>
+                            <div class="item-description">No SAST/CodeQL integration</div>
+                            <p>Static application security vulnerabilities not caught automatically</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">Ruff lint rules are minimal (E, F, I only)</div>
+                            <p>Missing common Python quality checks (bugbear, security, complexity, annotations)</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +464,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add pytest-cov and coverage reporting to agent-tests.yml</div>
-                            <p>Immediate visibility into test coverage across all agents</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to code-quality.yml</div>
-                            <p>Early detection of CVEs in UBI9 base images and Python dependencies</p>
+                            <div class="item-description">Add Trivy container scanning to code-quality workflow</div>
+                            <p>Catch CVEs in base images and Python dependencies on every PR</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Enable more Ruff lint rules (S for security, B for bugbear)</div>
-                            <p>Catch common Python security anti-patterns and bugs at lint time</p>
+                            <div class="item-description">Enable pytest-cov and upload to Codecov</div>
+                            <p>Immediate visibility into test coverage with PR annotations</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Expand ruff lint rules to include B, S, C4, UP, SIM</div>
+                            <p>Catch more bugs, security issues, and simplification opportunities</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add .claude/rules/ directory with test creation guidelines</div>
-                            <p>Improve AI-generated test consistency across agent frameworks</p>
+                            <div class="item-description">Add PR-time Docker build smoke test</div>
+                            <p>Catch Dockerfile breakage before merge, not in nightly runs</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +509,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add coverage tracking with pytest-cov and codecov/coveralls integration</li><li>Add Trivy or Grype container scanning in CI for all Dockerfiles</li></ul>
+                            <ul><li>Add pytest-cov to test dependencies and generate coverage reports in agent-tests workflow</li><li>Integrate Trivy scanning for all agent Dockerfiles in the code-quality workflow</li><li>Add PR-time container build validation (at minimum docker build --check)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add PR-time Dockerfile build validation (build but don&#x27;t push) for changed agents</li><li>Create .claude/rules/ with test patterns for unit, behavioral, and integration tests</li><li>Run a lightweight behavioral test subset on PRs (API contract tests against a local agent)</li></ul>
+                            <ul><li>Add CodeQL or Semgrep for Python SAST scanning</li><li>Expand ruff rules to include flake8-bugbear (B), bandit (S), comprehensions (C4), pyupgrade (UP)</li><li>Add coverage thresholds and Codecov PR commenting</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SAST scanning (CodeQL or Semgrep) for Python code</li><li>Add Dependabot or Renovate for automated dependency updates</li><li>Expand Ruff rules to include security (S), bugbear (B), and type annotation (ANN) checks</li><li>Add multi-architecture container builds for ARM64 support</li></ul>
+                            <ul><li>Add multi-architecture container builds (linux/amd64 + linux/arm64)</li><li>Add performance/latency regression tests for agent endpoints</li><li>Add SBOM generation (syft/cyclonedx) to container builds</li><li>Create .claude/rules/ directory with test creation rules per test type</li></ul>
                         </div>
                     </div>
                 </div>

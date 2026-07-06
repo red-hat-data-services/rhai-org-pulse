@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on May 29, 2026 at 08:09 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 03:52 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/dsp-dev-tools</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="497.62785599999995"
+                                stroke-dashoffset="508.93757999999997"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">1.2</div>
+                        <div class="score-value">1.0</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,32 +365,32 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No test files found anywhere in the repository</div>
+                            <div class="scorecard-status">No test files of any kind exist in the repository</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E test infrastructure</div>
+                            <div class="scorecard-status">No integration or E2E tests; scripts interact with live clusters without validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">Two Dockerfiles present but no CI build validation</div>
+                            <div class="scorecard-status">Two Dockerfiles exist but no CI build process or validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.5/10</div>
-                            <div class="scorecard-status">Dockerfiles exist but no image testing, scanning, or validation</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">Dockerfiles present but no runtime validation, scanning, or multi-arch support</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tooling or tracking configured</div>
+                            <div class="scorecard-status">No coverage tooling or tracking of any kind</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CI/CD pipeline (no GitHub Actions, GitLab CI, or Jenkins)</div>
+                            <div class="scorecard-status">No CI/CD pipeline — no GitHub Actions, Makefile, Jenkinsfile, or GitLab CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
@@ -411,43 +411,51 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No CI/CD pipeline of any kind</div>
-                            <p>Changes are merged without any automated validation — no linting, no tests, no build checks</p>
+                            <div class="item-description">No CI/CD pipeline at all</div>
+                            <p>Changes merge without any automated validation — broken scripts, invalid manifests, and syntax errors go undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Zero test coverage across all dimensions</div>
-                            <p>Shell scripts and Python utilities are untested; broken scripts discovered only during manual use</p>
+                            <div class="item-description">Zero test coverage</div>
+                            <p>Shell scripts that manipulate OpenShift cluster state have no tests; errors only found at runtime by developers</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-16 hours</span>
+                                <span class="meta-tag effort-tag">12-20 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No security scanning on container images</div>
-                            <p>Dockerfiles install packages via curl without verification; no vulnerability scanning</p>
+                            <div class="item-description">No YAML/manifest validation</div>
+                            <p>Kustomize overlays and Kubernetes manifests are never validated; broken manifests waste developer time</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No code quality tooling</div>
-                            <p>No linting (shellcheck, pylint/ruff), no formatting, no static analysis</p>
+                            <div class="item-description">Committed __pycache__ and binary artifacts</div>
+                            <p>Repository hygiene issues; .pyc files and compiled artifacts tracked in git</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">0.5 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Single contributor, minimal git history</div>
-                            <p>Bus factor of 1; only 1 commit on main branch suggests squash-and-force-push workflow or limited collaboration</p>
+                            <div class="item-description">No container image scanning</div>
+                            <p>Toolbox and ngrok-curl Dockerfiles install packages from the internet without vulnerability scanning</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">N/A (organizational)</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">Hardcoded image references with no pinning strategy</div>
+                            <p>Manifests reference specific image tags (e.g., quay.io/hukhan/...) that may break or become unavailable</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,35 +472,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add ShellCheck linting via GitHub Actions</div>
-                            <p>Catches common shell scripting errors in 13 .sh files automatically on PRs</p>
+                            <div class="item-description">Add a GitHub Actions workflow for YAML/manifest linting</div>
+                            <p>Catch invalid YAML and Kubernetes manifests before merge — use yamllint + kustomize build validation</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning for Dockerfiles</div>
-                            <p>Detects vulnerabilities in base images (fedora-toolbox:40, ngrok:3.6.0-debian)</p>
+                            <div class="item-description">Add ShellCheck linting for shell scripts</div>
+                            <p>Catch common shell scripting errors (unquoted variables, missing error handling) across 13 .sh files</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add basic YAML validation workflow</div>
-                            <p>Validates 102 YAML/Kustomize files that form the core of this repo</p>
+                            <div class="item-description">Update .gitignore to exclude __pycache__ and .pyc files</div>
+                            <p>Clean up repository hygiene; remove tracked compiled Python files</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">0.5 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add a CLAUDE.md with project context</div>
-                            <p>Enables AI-assisted development with proper context about the dev tooling purpose</p>
+                            <div class="item-description">Add a comprehensive README with usage instructions</div>
+                            <p>Root README is just the title — developers have no onboarding guide for the tooling collection</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add pre-commit hooks for YAML and shell validation</div>
+                            <p>Shift-left validation catches errors before they reach the repository</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +525,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Create a basic GitHub Actions CI workflow with ShellCheck, yamllint, and Dockerfile linting (hadolint)</li><li>Add Trivy or Snyk scanning for the two Dockerfiles to catch base image vulnerabilities</li></ul>
+                            <ul><li>Implement a basic GitHub Actions CI pipeline with YAML linting, ShellCheck, and kustomize build validation</li><li>Add manifest validation for all kustomize overlays to catch broken references and invalid resources</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add integration tests for the dev-setup/main.sh script (at minimum, input validation and template generation)</li><li>Add kustomize build validation for all overlay directories to catch manifest errors before deployment</li><li>Pin curl-downloaded binaries in Dockerfiles to SHA256 checksums for supply chain security</li></ul>
+                            <ul><li>Add integration tests for dev-setup scripts using a test cluster or mocked oc/kubectl</li><li>Add Dockerfile linting (hadolint) and basic image build validation</li><li>Pin all image references in manifests and Dockerfiles to specific digests or tags</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Create CLAUDE.md and agent rules for contributing patterns</li><li>Add pre-commit hooks for shell and YAML linting</li><li>Consider adding Python type checking (mypy/ruff) for the 14 Python files</li></ul>
+                            <ul><li>Create agent rules (.claude/rules/) for consistent script and manifest creation</li><li>Add Trivy scanning for the toolbox and ngrok-curl Dockerfiles</li><li>Add documentation validation (markdownlint) and link checking</li></ul>
                         </div>
                     </div>
                 </div>

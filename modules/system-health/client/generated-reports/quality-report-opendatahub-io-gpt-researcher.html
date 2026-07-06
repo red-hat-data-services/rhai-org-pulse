@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:21 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 03:56 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/gpt-researcher</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="435.42437399999994"
+                                stroke-dashoffset="373.220892"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">2.3</div>
+                        <div class="score-value">3.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Tests exist but most require external API keys; only 4 files use mocking for true isolation</div>
+                            <div class="scorecard-status">13 test files exist but most require live API keys; only 2 use proper mocking</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No automated E2E tests; docker-compose test profile is manual-only and references missing files</div>
+                            <div class="scorecard-status">No automated integration or E2E tests; docker-compose test profile runs only 2 files</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.5/10</div>
-                            <div class="scorecard-status">No PR-triggered workflows; PR test workflow trigger is commented out; zero PR gates</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No PR-triggered CI at all; build only runs on push to master</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Multi-stage Dockerfiles with non-root user but no vulnerability scanning or runtime validation</div>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">Multi-stage Dockerfile present but no image validation, scanning, or startup testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage generation, no codecov/coveralls integration, no thresholds</div>
+                            <div class="scorecard-status">No coverage tool, no codecov integration, no thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">Only push-to-master build+deploy; PR test workflow commented out; no PR quality gates</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">3 workflows exist but none run on PRs; tests are dispatch-only</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Good .claude/SKILL.md development guide and .cursorrules but no test creation rules</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Claude SKILL.md with architecture references exists; no test rules or .claude/rules/</div>
                         </div>
                     </div>
                 </div>
@@ -411,51 +411,51 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">PR test workflow is commented out — zero automated quality gates on PRs</div>
-                            <p>Any code can be merged to master without running tests, linting, or type checks</p>
+                            <div class="item-description">No CI runs on pull requests</div>
+                            <p>Bugs, regressions, and breaking changes are not caught before merge</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No code coverage tracking or enforcement</div>
-                            <p>No visibility into test coverage; regressions go undetected</p>
+                            <div class="item-description">No test coverage tracking</div>
+                            <p>No visibility into what code is tested; coverage can silently regress</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Most tests require live API keys (OpenAI, Tavily)</div>
-                            <p>Tests cannot run in CI without expensive API calls; no fast feedback loop</p>
+                            <div class="item-description">Tests require live API keys to run</div>
+                            <p>Tests cannot run in CI without expensive secrets; no offline test suite</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">12-20 hours</span>
+                                <span class="meta-tag effort-tag">8-16 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No Python linting or type checking in CI</div>
-                            <p>Style inconsistencies, type errors, and code smells accumulate unchecked</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No container vulnerability scanning</div>
-                            <p>Vulnerable dependencies in production images go undetected</p>
+                            <div class="item-description">No container image security scanning</div>
+                            <p>Vulnerable dependencies in images go undetected until production</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Zero frontend tests</div>
-                            <p>Next.js UI regressions are invisible; no automated verification of frontend behavior</p>
+                            <div class="item-description">No linting or static analysis in CI</div>
+                            <p>Code quality regressions not caught; no type checking enforcement</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">16-24 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No pre-commit hooks</div>
+                            <p>Developers can commit code that violates standards without warning</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -472,16 +472,8 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Uncomment PR trigger on docker-build.yml and add basic pytest run</div>
-                            <p>Immediate automated testing on every PR</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add ruff linting + mypy type checking to a PR workflow</div>
-                            <p>Catch style issues and type errors before merge</p>
+                            <div class="item-description">Add PR-triggered lint + type-check workflow</div>
+                            <p>Catch syntax errors, type issues, and style violations before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -489,26 +481,34 @@
                         </li>
                         <li class="item-card ">
                             <div class="item-description">Add Trivy container scanning to build workflow</div>
-                            <p>Automated vulnerability detection for Docker images</p>
+                            <p>Detect known CVEs in container images before deployment</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add pytest-cov and codecov integration</div>
-                            <p>Coverage visibility and trend tracking on every PR</p>
+                            <div class="item-description">Add pytest coverage reporting with codecov</div>
+                            <p>Visibility into test coverage; set baseline for improvement</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Separate unit tests from integration tests with pytest markers</div>
-                            <p>Fast CI with unit tests on PR; integration tests on schedule</p>
+                            <div class="item-description">Add pre-commit hooks (ruff, mypy, prettier)</div>
+                            <p>Enforce code quality locally before push</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create unit test rules in .claude/rules/</div>
+                            <p>Guide AI-assisted test generation for consistent, high-quality tests</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -525,15 +525,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Enable PR-triggered test workflow — currently commented out in docker-build.yml</li><li>Add pytest-cov coverage generation and codecov integration with minimum threshold</li><li>Add ruff linting and mypy type checking as PR gates</li><li>Add Trivy container scanning to the build pipeline</li></ul>
+                            <ul><li>Create PR-triggered CI workflow running linting, type checking, and unit tests</li><li>Add pytest coverage with codecov and set minimum threshold (e.g., 50% to start)</li><li>Refactor tests to use mocks/fixtures instead of requiring live API keys</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Refactor tests to separate true unit tests (mocked) from integration tests (API-dependent)</li><li>Add frontend testing framework (Jest + React Testing Library or Playwright)</li><li>Create .claude/rules/ with test creation guidelines for unit, integration, and E2E tests</li><li>Add pre-commit hooks for linting, formatting, and type checking</li></ul>
+                            <ul><li>Add Trivy or Snyk container scanning to build pipeline</li><li>Create comprehensive integration test suite using docker-compose</li><li>Add pre-commit hooks with ruff, mypy, and prettier</li><li>Create .claude/rules/ with unit-test, integration-test, and security-test patterns</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SAST scanning (CodeQL or Semgrep) for security vulnerability detection</li><li>Add secret detection (gitleaks) to prevent credential leaks</li><li>Integrate hallucination eval suite into CI as a periodic job</li><li>Add image startup validation tests using Testcontainers</li></ul>
+                            <ul><li>Add CodeQL or Semgrep SAST scanning</li><li>Implement Gitleaks secret detection</li><li>Add multi-architecture Docker builds</li><li>Create performance regression tests for research pipelines</li><li>Add frontend test infrastructure (Jest/Vitest for Next.js)</li></ul>
                         </div>
                     </div>
                 </div>

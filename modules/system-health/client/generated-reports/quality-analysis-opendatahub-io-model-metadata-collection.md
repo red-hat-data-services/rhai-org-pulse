@@ -1,467 +1,405 @@
 ---
 repository: "opendatahub-io/model-metadata-collection"
-overall_score: 6.1
+overall_score: 6.2
 scorecard:
   - dimension: "Unit Tests"
-    score: 8.5
-    status: "Excellent coverage with 135 test functions, 229 subtests, table-driven patterns, and test-to-code ratio >1:1"
+    score: 7.5
+    status: "Strong coverage with 23 test files, 8753 LOC tests vs 7636 LOC source (1.15:1 ratio)"
   - dimension: "Integration/E2E"
-    score: 4.0
-    status: "Integration tests exist in registry package but are permanently skipped; no E2E pipeline or deployment testing"
+    score: 3.0
+    status: "Registry integration tests exist but are skipped; no E2E test suite"
   - dimension: "Build Integration"
     score: 5.0
-    status: "Docker builds on PR with multi-arch support and GHA caching, but no runtime validation or Konflux simulation"
+    status: "Docker build on PRs (path-filtered) with multi-arch; no Konflux simulation"
   - dimension: "Image Testing"
-    score: 4.0
-    status: "Multi-arch build (amd64/arm64/ppc64le) with caching, but no runtime validation, no vulnerability scanning, no SBOM"
+    score: 3.5
+    status: "Multi-arch build with caching; no runtime validation or startup tests"
   - dimension: "Coverage Tracking"
     score: 3.0
-    status: "Makefile has test-coverage target with race detector but no CI enforcement, no codecov integration, no thresholds"
+    status: "Makefile target exists (test-coverage) but no CI integration or enforcement"
   - dimension: "CI/CD Automation"
     score: 7.0
-    status: "Lint + test on PRs, Docker build/push on main, branch sync automation, pinned actions in CI (not in build workflow)"
+    status: "Lint + test on PRs; Docker build on path changes; branch sync automation"
   - dimension: "Agent Rules"
-    score: 7.0
-    status: "Comprehensive CLAUDE.md with testing notes, architecture docs, and contributing guide, but no .claude/rules/ directory"
+    score: 6.0
+    status: "Comprehensive CLAUDE.md with architecture and commands; no .claude/rules/ directory"
 critical_gaps:
-  - title: "No coverage enforcement in CI"
-    impact: "Coverage can silently regress without detection; no visibility into test gaps"
+  - title: "No coverage tracking or enforcement in CI"
+    impact: "Coverage regressions go undetected; no visibility into test quality trends"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No security scanning (Trivy, CodeQL, gosec, Dependabot)"
-    impact: "Vulnerabilities in dependencies and code not detected before merge"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "Integration tests always skipped in CI"
-    impact: "Registry interaction code (core business logic) is never validated in automated pipelines"
-    severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "No container image runtime validation"
-    impact: "Image startup failures and data integrity issues not caught until deployment"
-    severity: "MEDIUM"
     effort: "4-6 hours"
+  - title: "No security scanning (Trivy, CodeQL, SAST)"
+    impact: "Vulnerabilities in dependencies and container images not detected before merge"
+    severity: "HIGH"
+    effort: "2-4 hours"
+  - title: "No container runtime validation"
+    impact: "Image startup issues and data integrity not verified until deployment"
+    severity: "HIGH"
+    effort: "4-8 hours"
+  - title: "No E2E or integration test automation"
+    impact: "End-to-end pipeline correctness only verified manually; registry tests skipped in CI"
+    severity: "HIGH"
+    effort: "12-20 hours"
+  - title: "Two packages have zero test coverage"
+    impact: "cmd/metadata-report and internal/report have no tests"
+    severity: "MEDIUM"
+    effort: "4-8 hours"
 quick_wins:
-  - title: "Add codecov integration to CI workflow"
-    effort: "2-3 hours"
-    impact: "Immediate visibility into coverage trends and PR-level coverage delta reporting"
-  - title: "Add Trivy container scanning to PR workflow"
+  - title: "Add Trivy container scanning to CI"
     effort: "1-2 hours"
-    impact: "Catch CVEs in base image and dependencies before merge"
-  - title: "Add Dependabot or Renovate for dependency updates"
-    effort: "30 minutes"
-    impact: "Automated security patches for Go module dependencies"
-  - title: "Pin action versions in build workflow (SHA pinning)"
-    effort: "30 minutes"
-    impact: "Consistent builds and supply chain security; CI workflow already does this"
+    impact: "Catch vulnerabilities in UBI9-micro base image and copied data files"
+  - title: "Add Codecov integration to CI workflow"
+    effort: "2-3 hours"
+    impact: "Automated coverage tracking with PR comments and trend visibility"
+  - title: "Add golangci-lint config file"
+    effort: "1-2 hours"
+    impact: "Explicit linter selection and consistent config across CI and local runs"
+  - title: "Add unit tests for cmd/metadata-report and internal/report"
+    effort: "3-4 hours"
+    impact: "Close the two zero-coverage package gaps"
 recommendations:
   priority_0:
-    - "Add codecov/coveralls integration with coverage thresholds (e.g., 70% minimum, no decrease on PR)"
-    - "Add security scanning: Trivy for container images, CodeQL or gosec for SAST, Dependabot for dependency updates"
-    - "Enable integration tests in CI with a dedicated workflow (periodic or on-demand with network access)"
+    - "Add Codecov/Coveralls integration to CI with coverage thresholds"
+    - "Add container security scanning (Trivy) to PR and push workflows"
+    - "Enable CodeQL or gosec for static application security testing"
   priority_1:
-    - "Add container image runtime validation (startup check, data file verification) in PR workflow"
-    - "Create .claude/rules/ directory with test creation rules for unit tests, integration tests, and data validation"
-    - "Add golangci-lint configuration file (.golangci.yml) to customize enabled linters beyond defaults"
+    - "Create integration tests that validate catalog generation end-to-end"
+    - "Add container runtime validation (startup test, data file integrity checks)"
+    - "Add .claude/rules/ with test creation guidelines for unit, integration, and catalog tests"
+    - "Add tests for cmd/metadata-report and internal/report packages"
   priority_2:
-    - "Add SBOM generation (syft/cdx) to image build pipeline"
-    - "Add image signing with cosign for supply chain integrity"
-    - "Add benchmark regression testing in CI to catch performance regressions"
+    - "Add Dependabot or Renovate for automated dependency updates"
+    - "Create a golangci-lint config file with explicit linter selection"
+    - "Add SBOM generation to container image builds"
+    - "Add secret detection (Gitleaks) to pre-commit and CI"
 ---
 
 # Quality Analysis: model-metadata-collection
 
 ## Executive Summary
 
-- **Overall Score: 6.1/10**
+- **Overall Score: 6.2/10**
 - **Repository Type**: Go CLI application / data pipeline
-- **Primary Language**: Go 1.24+ (toolchain go1.25.7)
-- **Purpose**: Extracts, enriches, and catalogs model metadata from Red Hat AI container images and HuggingFace collections
-
-### Key Strengths
-- **Exceptional unit test coverage**: 135 test functions with 229 subtests across 23 test files; test-to-code ratio exceeds 1:1 (8,626 test lines vs 7,590 source lines)
-- **Idiomatic Go testing**: Extensive use of table-driven tests (45 instances), `t.TempDir()`, `httptest.NewServer`, and subtests
-- **Well-documented for AI agents**: Comprehensive CLAUDE.md with testing notes, architecture docs, pitfall documentation
-- **Multi-architecture Docker builds**: Supports amd64, arm64, ppc64le with GitHub Actions cache
-- **Pre-commit hooks**: go-fmt, go-vet, golangci-lint, trailing-whitespace, end-of-file-fixer
-
-### Critical Gaps
-- No coverage enforcement or reporting in CI
-- No security scanning of any kind (container, SAST, dependencies)
-- Integration tests exist but are always skipped in CI
-- No container runtime validation
-
-### Agent Rules Status: **Partial**
-- CLAUDE.md exists with good project context, testing notes, and architecture
-- No `.claude/rules/` directory with structured test creation rules
-- No AGENTS.md
+- **Primary Language**: Go 1.24+
+- **Purpose**: Extracts, enriches, and catalogs metadata from Red Hat AI ModelCar container images
+- **Key Strengths**: Excellent test-to-code ratio (1.15:1), well-organized Go packages, comprehensive CLAUDE.md, pre-commit hooks, multi-arch Docker builds
+- **Critical Gaps**: No coverage tracking/enforcement, no security scanning, no E2E tests, no container runtime validation
+- **Agent Rules Status**: CLAUDE.md present and comprehensive; no `.claude/rules/` directory for test automation guidance
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 8.5/10 | Excellent coverage, table-driven, comprehensive edge cases |
-| Integration/E2E | 4.0/10 | Integration tests exist but always skipped; no E2E pipeline |
-| **Build Integration** | **5.0/10** | **Docker builds on PR, multi-arch, but no runtime validation** |
-| Image Testing | 4.0/10 | Multi-arch build, no scanning, no runtime checks, no SBOM |
-| Coverage Tracking | 3.0/10 | Local-only target, no CI enforcement or reporting |
-| CI/CD Automation | 7.0/10 | Lint + test on PRs, Docker build/push, branch sync |
-| Agent Rules | 7.0/10 | Strong CLAUDE.md, no .claude/rules/ for test patterns |
+| Unit Tests | 7.5/10 | Strong: 23 test files, 8753 LOC tests vs 7636 source (1.15:1 ratio) |
+| Integration/E2E | 3.0/10 | Weak: registry integration tests skipped; no E2E suite |
+| **Build Integration** | **5.0/10** | **Docker build on PRs (path-filtered); no Konflux simulation** |
+| Image Testing | 3.5/10 | Multi-arch build with GHA caching; no runtime/startup validation |
+| Coverage Tracking | 3.0/10 | Makefile target exists but unused in CI; no enforcement |
+| CI/CD Automation | 7.0/10 | Lint + test on PRs; Docker build; branch sync; concurrency not configured |
+| Agent Rules | 6.0/10 | Comprehensive CLAUDE.md; no .claude/rules/ for test guidance |
 
 ## Critical Gaps
 
-### 1. No Coverage Enforcement in CI
-- **Impact**: Coverage can silently regress; no visibility into test gaps per PR
+### 1. No Coverage Tracking or Enforcement in CI
+- **Impact**: Coverage regressions go undetected; no visibility into quality trends
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Current State**: `make test-coverage` exists locally with race detector and HTML output, but the CI workflow only runs `make test` (no coverage flags)
-- **What's Missing**: codecov/coveralls integration, coverage thresholds, PR-level delta reporting
+- **Effort**: 4-6 hours
+- **Details**: The Makefile has a `test-coverage` target that generates `coverage.out` and opens an HTML report locally, but this is never run in CI. No Codecov/Coveralls integration. No PR coverage gates.
 
 ### 2. No Security Scanning
-- **Impact**: Vulnerabilities in Go dependencies and container base images go undetected
+- **Impact**: Vulnerabilities in Go dependencies and container images not detected pre-merge
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Current State**: Zero security scanning tools configured — no Trivy, no CodeQL, no gosec, no Dependabot/Renovate, no gitleaks, no SBOM generation
-- **Risk**: The application processes OCI container images from external registries and makes HTTP calls to HuggingFace API — supply chain risk surface is non-trivial
+- **Details**: No Trivy, Snyk, CodeQL, gosec, or any SAST/DAST tool configured. The container image uses `registry.access.redhat.com/ubi9-micro:latest` (good base choice) but its contents are never scanned. No `.trivyignore`, `.gitleaks.toml`, or security-related workflow exists.
 
-### 3. Integration Tests Always Skipped
-- **Impact**: Registry interaction code — the core business logic for fetching manifests and parsing layers — is never validated in automated pipelines
+### 3. No Container Runtime Validation
+- **Impact**: Image startup, data file integrity, and permissions not verified until deployment
 - **Severity**: HIGH
-- **Effort**: 8-12 hours
-- **Current State**: 8 integration tests in `internal/registry/registry_test.go` all call `t.Skip()` unconditionally. No separate CI workflow or build tag to run them.
-- **Note**: Tests mention "should be run separately with -integration flag" but no such flag or workflow exists
+- **Effort**: 4-8 hours
+- **Details**: The Dockerfile copies YAML catalog files and sets permissions, but there's no CI step that builds and runs the image to verify the data files are valid, accessible, and properly formatted. A malformed YAML file would pass CI and only fail at runtime.
 
-### 4. No Container Image Runtime Validation
-- **Impact**: Built images may fail at startup or serve corrupted/missing data files
+### 4. No E2E or Integration Test Automation
+- **Impact**: Full pipeline correctness (HuggingFace fetch -> OCI extraction -> enrichment -> catalog generation) only verified manually
+- **Severity**: HIGH
+- **Effort**: 12-20 hours
+- **Details**: `internal/registry/registry_test.go` contains integration tests that are explicitly skipped during `make test`. No E2E test exists that runs the full extractor pipeline against sample data. The `sample-data/` and `testdata` symlink exist but aren't used in an automated integration test.
+
+### 5. Two Packages Have Zero Test Coverage
+- **Impact**: `cmd/metadata-report` and `internal/report` are untested
 - **Severity**: MEDIUM
-- **Effort**: 4-6 hours
-- **Current State**: Dockerfile copies data files and sets permissions, but there's no automated check that the built image starts correctly or serves valid data
-- **What's Missing**: A CI step that builds, runs, and validates the container (e.g., check that all YAML files are parseable, permissions are correct)
+- **Effort**: 4-8 hours
+- **Details**: Every other package has at least one test file. These two packages handle metadata reporting and analysis but have no test coverage.
 
 ## Quick Wins
 
-### 1. Add Codecov Integration (2-3 hours)
-Add coverage generation and upload to the CI workflow:
-```yaml
-- name: Run tests with coverage
-  run: go test -race -coverprofile=coverage.out ./...
+### 1. Add Trivy Container Scanning (~1-2 hours)
+Add to the build-and-push workflow after the Docker build step:
 
-- name: Upload coverage
-  uses: codecov/codecov-action@v4
-  with:
-    files: coverage.out
-    fail_ci_if_error: true
-```
-
-### 2. Add Trivy Scanning (1-2 hours)
-Add container scanning to the build workflow:
 ```yaml
 - name: Run Trivy vulnerability scanner
   uses: aquasecurity/trivy-action@master
   with:
-    image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}'
+    image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
     format: 'sarif'
     output: 'trivy-results.sarif'
     severity: 'CRITICAL,HIGH'
 ```
 
-### 3. Add Dependabot (30 minutes)
-Create `.github/dependabot.yml`:
+### 2. Add Codecov Integration (~2-3 hours)
+Modify the CI test step to generate and upload coverage:
+
 ```yaml
-version: 2
-updates:
-  - package-ecosystem: "gomod"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
+- name: Run tests with coverage
+  run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
+
+- name: Upload coverage to Codecov
+  uses: codecov/codecov-action@v4
+  with:
+    file: ./coverage.out
+    fail_ci_if_error: true
 ```
 
-### 4. Pin Action Versions in Build Workflow (30 minutes)
-The CI workflow correctly pins actions to SHA hashes, but the build workflow uses mutable tags (`@v4`, `@v3`, `@v5`). Pin all actions to commit SHAs for supply chain security.
+### 3. Create golangci-lint Config File (~1-2 hours)
+Currently using golangci-lint via GitHub Action with default settings. A `.golangci.yml` would make linter selection explicit and consistent:
+
+```yaml
+linters:
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - unused
+    - gosimple
+    - ineffassign
+    - typecheck
+    - gosec
+    - revive
+```
+
+### 4. Add Tests for Uncovered Packages (~3-4 hours)
+`cmd/metadata-report/` and `internal/report/` have source files but zero test files. Adding basic unit tests would close these gaps.
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows (4 total)**:
-
+**Workflows** (4 total):
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `ci.yml` | PR + push to main | Lint (golangci-lint v2.11.4) + Tests |
-| `build-and-push-static-model-catalog-data.yml` | PR + push to main (path-filtered) | Docker build/push to quay.io |
-| `sync-branch-stable.yml` | Push to main | Auto-sync main → stable branch |
-| `sync-branch-stable2x.yml` | Push to main | Auto-sync main → stable-2.x branch |
+| `ci.yml` | PR + push to main | Lint (golangci-lint v2.11.4) + format check + tests |
+| `build-and-push-static-model-catalog-data.yml` | Push/PR to main (path-filtered: `data/**`, `Dockerfile`) | Docker multi-arch build + push to quay.io |
+| `sync-branch-stable.yml` | Push to main | Auto-sync main -> stable branch |
+| `sync-branch-stable2x.yml` | Push to main | Auto-sync main -> stable-2.x branch |
 
 **Strengths**:
-- CI workflow pins actions to SHA hashes (supply chain security)
-- Lint runs `golangci-lint` v2.11.4 with `--only-new-issues` flag
-- Format checking (`make fmt-check`) catches unformatted code
-- Docker build uses GHA cache (`cache-from: type=gha`, `cache-to: type=gha,mode=max`)
-- Multi-architecture support: `linux/amd64,linux/arm64,linux/ppc64le`
-- Build workflow is path-filtered (only triggers on data/Dockerfile changes)
-- Branch sync automation reduces manual merge overhead
-- Permissions scoped to least privilege (`contents: read`)
+- Pinned action versions with SHA hashes in `ci.yml` (security best practice)
+- Multi-architecture support (amd64, arm64, ppc64le) in Docker builds
+- GHA build cache (`cache-from: type=gha`, `cache-to: type=gha,mode=max`)
+- Path-filtered Docker builds (only triggers on data/Dockerfile changes)
+- `only-new-issues: true` on golangci-lint (reduces noise on existing codebase)
 
-**Weaknesses**:
-- CI workflow does not generate coverage reports
-- Build workflow uses mutable action tags (`@v4`, `@v5`) unlike the CI workflow
-- No concurrency control on CI jobs (could waste resources on rapid pushes)
-- No test result caching between lint and test jobs
-- Tests run in build workflow redundantly (also run in CI workflow)
+**Gaps**:
+- No concurrency control on workflows (could have concurrent runs on rapid pushes)
+- No test timeout configured
+- Docker build runs tests again (`make test`) redundantly when both workflows trigger
+- Checkout actions in sync workflows use `@v5` (not SHA-pinned like ci.yml)
 
 ### Test Coverage
 
-**Test Inventory**:
-
-| Package | Test Files | Test Functions | Lines |
-|---------|-----------|---------------|-------|
-| `internal/catalog` | 3 | ~25 | ~2,200 |
-| `internal/huggingface` | 3 | ~20 | ~1,300 |
-| `internal/enrichment` | 3 | ~15 | ~800 |
-| `pkg/utils` | 6 | ~35 | ~2,000 |
-| `internal/config` | 3 | ~10 | ~600 |
-| `internal/metadata` | 1 | ~8 | ~500 |
-| `internal/registry` | 1 | ~12 | ~900 (all skipped) |
-| `cmd/model-extractor` | 1 | ~5 | ~300 |
-| `pkg/types` | 2 | ~5 | ~400 |
+**Unit Test Distribution**:
+| Package | Source Files | Test Files | Ratio |
+|---------|-------------|------------|-------|
+| `pkg/utils` | 6 | 6 | 1.00 |
+| `internal/catalog` | 3 | 3 | 1.00 |
+| `internal/config` | 3 | 3 | 1.00 |
+| `internal/enrichment` | 2 | 3 | 1.50 |
+| `internal/huggingface` | 3 | 3 | 1.00 |
+| `internal/metadata` | 2 | 1 | 0.50 |
+| `internal/registry` | 1 | 1 | 1.00 (skipped) |
+| `pkg/types` | 4 | 2 | 0.50 |
+| `cmd/model-extractor` | 1 | 1 | 1.00 |
+| `cmd/metadata-report` | 1 | 0 | **0.00** |
+| `internal/report` | 1 | 0 | **0.00** |
 
 **Strengths**:
-- 23 test files covering every major package
-- 135 test functions with 229 subtests (table-driven testing extensively used — 45 instances)
-- Test-to-code ratio: 1.14:1 (8,626 test lines / 7,590 source lines) — excellent
-- Tests use `t.TempDir()` for filesystem isolation
-- HuggingFace client tests use `httptest.NewServer` for HTTP mocking
-- Test data in `sample-data/` with symlink at `testdata/` (Go convention)
-- Edge cases well-covered: empty inputs, nil fields, malformed data
+- Overall test-to-code ratio of 1.15:1 (8753 test LOC / 7636 source LOC)
+- Good use of `t.TempDir()` for test isolation
+- Test fixtures in `sample-data/` with symlink at `testdata/`
+- Tests use standard Go `testing` package (no external test frameworks)
+- Comprehensive table-driven tests in `pkg/utils/` tests
 
-**Weaknesses**:
-- All 8 registry integration tests permanently skipped
-- No E2E tests or pipeline integration tests
-- No benchmark tests running in CI (Makefile target exists but not wired up)
-- Race detector only enabled in `test-coverage` target, not in regular `test`
+**Gaps**:
+- `internal/report` and `cmd/metadata-report` have zero tests
+- `internal/metadata` has only 1 test file for 2 source files
+- `pkg/types` has only 2 test files for 4 source files
+- No mock framework used (tests use hand-crafted test data)
+- Registry integration tests are skipped in CI
 
 ### Code Quality
 
 **Linting**:
-- golangci-lint v2.11.4 in CI with 5-minute timeout
-- No `.golangci.yml` configuration file — using defaults only
-- Pre-commit hooks: go-fmt, go-vet, golangci-lint
-- Additional pre-commit hooks: trailing-whitespace, end-of-file-fixer, check-yaml, check-added-large-files
-- `make check` target runs fmt-check, vet, lint locally
+- golangci-lint v2.11.4 in CI via GitHub Action
+- No `.golangci.yml` config file — uses default linter set
+- `go vet` and `gofmt` also run via pre-commit hooks and Makefile targets
+- `fmt-check` ensures code formatting in CI
+
+**Pre-commit Hooks**:
+- `.pre-commit-config.yaml` configured with:
+  - `go-fmt` — code formatting
+  - `go-vet` — static analysis
+  - `golangci-lint` — comprehensive linting
+  - `trailing-whitespace` — whitespace cleanup
+  - `end-of-file-fixer` — newline consistency
+  - `check-yaml` — YAML validation
+  - `check-added-large-files` — prevents accidental large file commits
 
 **Strengths**:
-- Multiple quality gates (CI lint + pre-commit hooks + Makefile targets)
-- Format checking enforced in CI (`make fmt-check`)
-- Conventional commits documented in CONTRIBUTING.md
-- DCO sign-off required
-- PR template with testing checklist
-- CODEOWNERS file with team-based review assignment
+- Pre-commit hooks cover both Go-specific and general checks
+- CI and local hooks are aligned (both run fmt + vet + lint)
+- Makefile `check` target runs `fmt-check`, `vet`, and `lint`
+- CODEOWNERS configured for review routing
 
-**Weaknesses**:
-- No `.golangci.yml` to customize linters (missing errcheck, staticcheck tuning, etc.)
-- No static analysis beyond golangci-lint (no gosec, no CodeQL)
-- No secret detection (no gitleaks)
+**Gaps**:
+- No explicit golangci-lint config file (relying on defaults)
+- No static analysis beyond golangci-lint (no CodeQL, gosec, Semgrep)
+- No secret detection configured
 
 ### Container Images
 
 **Dockerfile Analysis**:
-- Base image: `registry.access.redhat.com/ubi9-micro:latest` (minimal, good security posture)
-- Non-root user (UID 1001) — good practice
-- Proper file permissions set (644 for data, 755 for directories)
-- Volume mount points for `/app/data` and `/app/benchmarks`
-- OCI labels for metadata (`io.k8s.description`, `io.openshift.tags`)
-- `.dockerignore` excludes test files, docs, IDE files, coverage reports
+- Base image: `registry.access.redhat.com/ubi9-micro:latest` (minimal, good choice)
+- Single-stage build (copies pre-generated data files, no Go compilation)
+- Non-root user (UID 1001) with proper ownership
+- Volume mounts for `/app/data` and `/app/benchmarks`
+- OCI labels for metadata
+- Multi-architecture: amd64, arm64, ppc64le
 
 **Strengths**:
-- UBI9-micro base image (minimal attack surface)
-- Non-root execution
-- Multi-architecture support (amd64, arm64, ppc64le)
-- GHA build caching
+- Minimal base image (ubi9-micro) reduces attack surface
+- Non-root user configuration
+- Proper file permissions (644 for data, 755 for directories)
+- Good Docker ignore patterns (excludes tests, docs, IDE files)
 
-**Weaknesses**:
-- No vulnerability scanning (Trivy, Snyk)
+**Gaps**:
+- No health check defined
+- No runtime validation in CI (no startup test)
 - No SBOM generation
-- No image signing (cosign)
-- No runtime validation after build
-- Base image tag `latest` is mutable (should pin to digest)
-- No multi-stage build (simplified Dockerfile — just copies data files)
+- No image signing/attestation
+- No vulnerability scanning on built image
+- `CMD ["sleep", "infinity"]` — data-only container, but no validation that data files are accessible
 
 ### Security
 
-**Current State**: No security scanning infrastructure exists.
+**Status**: Minimal security practices
 
-| Security Control | Status |
-|-----------------|--------|
-| Container scanning (Trivy/Snyk) | Missing |
-| SAST (CodeQL/gosec) | Missing |
-| Dependency scanning (Dependabot/Renovate) | Missing |
-| Secret detection (gitleaks) | Missing |
-| SBOM generation | Missing |
-| Image signing (cosign) | Missing |
-| Supply chain attestation | Missing |
+**Present**:
+- SHA-pinned GitHub Actions in `ci.yml` (e.g., `actions/checkout@34e114876b...`)
+- Non-root container user
+- Minimal base image (ubi9-micro)
+- `.env.example` with secrets kept out of repo (`.env` in `.gitignore`)
+- CODEOWNERS for review enforcement
 
-**Risk Assessment**: The application processes external container images (OCI registries) and makes API calls to HuggingFace. It handles authentication tokens (`.env.example` shows `HF_TOKEN`). The absence of any security scanning creates significant risk for:
-- Known CVE exploitation via Go dependencies
-- Base image vulnerabilities
-- Accidental token/secret commits
-- Supply chain attacks through unpinned action versions (build workflow)
+**Missing**:
+- No container scanning (Trivy, Snyk, Grype)
+- No SAST (CodeQL, gosec, Semgrep)
+- No dependency scanning (Dependabot, Renovate)
+- No secret detection (Gitleaks, TruffleHog)
+- No SBOM generation
+- No image signing
+- No security policy (`SECURITY.md`)
+- Sync workflow actions not SHA-pinned (`@v5`, `@v7`, `@1.4.0`)
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status**: Partial — CLAUDE.md present, no structured rules
+**Status**: Partially Present
 
-**CLAUDE.md Quality** (10,529 bytes — comprehensive):
-- Project overview and architecture reference
-- Key commands for build, test, lint, run
-- Testing notes (unit vs integration, test fixtures location)
-- CI infrastructure documentation
-- Detailed workflows for adding new models, collections, MCP servers
-- Common pitfalls with solutions
-- Checklists for common operations
+**CLAUDE.md** (comprehensive, 10,775 bytes):
+- Project overview and architecture
+- All key commands documented
+- Testing notes (unit vs integration test distinction)
+- Detailed instructions for adding new models, collections, MCP servers
+- HuggingFace naming conventions with critical constraints
 - Docker build instructions
+- Common pitfalls and checklists
+- Checklist for adding new model collections
 
-**What's Missing**:
-- No `.claude/rules/` directory with structured test creation rules
-- No AGENTS.md for multi-agent coordination
-- No explicit test patterns for AI agents to follow (e.g., "when writing tests for this repo, use table-driven tests with these patterns...")
-- No test quality gates or checklists specifically for AI-generated code
+**Missing**:
+- No `.claude/` directory (`.gitignore` excludes it with `.claude/`)
+- No `.claude/rules/` for test creation patterns
+- No AGENTS.md
+- No test automation guidance for AI agents (unit test patterns, integration test patterns, catalog test patterns)
+- CLAUDE.md focused on workflow guidance, not test quality standards
 
-**Recommendation**: Generate structured agent rules using `/test-rules-generator` to create:
-- `unit-tests.md` — Go table-driven test patterns, `t.TempDir()` usage, `httptest` for HTTP
-- `integration-tests.md` — Registry test patterns, skip guards, network isolation
-- `data-validation.md` — YAML catalog validation patterns
+**Quality Assessment**:
+- CLAUDE.md is well-structured and actionable for development workflows
+- Missing test automation guidance — an AI agent would not know the project's testing patterns, assertion styles, or test data management approach
+- The `.gitignore` entry for `.claude/` prevents checking in agent rules
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add codecov integration with coverage thresholds**
-   - Generate coverage in CI: `go test -race -coverprofile=coverage.out ./...`
-   - Upload to codecov with `fail_ci_if_error: true`
-   - Set minimum threshold (e.g., 70%) and require no decrease on PRs
-   - Estimated effort: 2-3 hours
+1. **Add Codecov/Coveralls integration to CI** — Generate coverage in CI and enforce minimum thresholds. Block PRs that reduce coverage.
 
-2. **Add security scanning pipeline**
-   - Trivy: container image scanning on build workflow
-   - CodeQL or gosec: Go static analysis
-   - Dependabot: automated dependency updates for gomod and github-actions
-   - Gitleaks: pre-commit hook for secret detection
-   - Estimated effort: 3-4 hours total
+2. **Add container security scanning** — Add Trivy to the build workflow to scan the built image. Set severity thresholds to fail on CRITICAL/HIGH.
 
-3. **Enable integration tests in CI**
-   - Create a dedicated workflow with network access for registry tests
-   - Use build tags (`//go:build integration`) instead of unconditional `t.Skip()`
-   - Run periodically (nightly) or on-demand via `workflow_dispatch`
-   - Estimated effort: 8-12 hours
+3. **Enable SAST scanning** — Add CodeQL or gosec to catch security issues in Go code (especially around HTTP calls to HuggingFace, registry auth, YAML parsing).
 
 ### Priority 1 (High Value)
 
-4. **Add container runtime validation in build workflow**
-   - After building, start container and verify data files are present and parseable
-   - Check non-root user works, volume mounts accessible
-   - Estimated effort: 4-6 hours
+4. **Create integration tests using sample-data** — The `sample-data/` directory with `testdata` symlink is already set up. Create tests that run the full extraction pipeline against this data to validate catalog generation end-to-end.
 
-5. **Create `.claude/rules/` with test creation rules**
-   - Document Go testing patterns specific to this repo
-   - Include table-driven test templates, httptest patterns, testdata conventions
-   - Add quality checklist for AI-generated test code
-   - Estimated effort: 3-4 hours
+5. **Add container runtime validation** — After building the Docker image in CI, run it and verify data files are readable and valid YAML.
 
-6. **Add golangci-lint configuration file**
-   - Create `.golangci.yml` with explicitly enabled linters
-   - Enable errcheck, staticcheck, gosec, gocritic, etc.
-   - Estimated effort: 2-3 hours
+6. **Add tests for uncovered packages** — `cmd/metadata-report` and `internal/report` need unit tests.
+
+7. **Create `.claude/rules/` directory** — Add test creation guidelines for AI agents. Remove `.claude/` from `.gitignore` and add rules for:
+   - Unit test patterns (table-driven, t.TempDir, test fixtures)
+   - Integration test patterns (registry, HuggingFace API)
+   - Catalog validation test patterns
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Add SBOM generation to image build pipeline**
-   - Use syft or cdx-gomod for Software Bill of Materials
-   - Attach to container image as attestation
-   - Estimated effort: 2-3 hours
+8. **Add Dependabot or Renovate** — Automated dependency update PRs for Go modules and GitHub Actions.
 
-8. **Add image signing with cosign**
-   - Sign built images for supply chain integrity
-   - Estimated effort: 2-3 hours
+9. **Create explicit golangci-lint config** — Define enabled linters, especially `gosec` for security checks.
 
-9. **Add benchmark regression testing**
-   - Wire up `make benchmark` in CI with result comparison
-   - Catch performance regressions in metadata processing
-   - Estimated effort: 4-6 hours
+10. **Add SBOM generation** — Use Syft or Trivy to generate SBOMs for container images.
 
-10. **Add concurrency control to CI workflows**
-    - Prevent redundant CI runs on rapid pushes:
-    ```yaml
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
-    ```
-    - Estimated effort: 15 minutes
+11. **Add secret detection** — Configure Gitleaks in pre-commit and CI (especially important given `.env` and registry credentials).
+
+12. **Add workflow concurrency control** — Prevent redundant workflow runs on rapid pushes.
+
+13. **SHA-pin all GitHub Actions** — Sync workflows use unpinned `@v5`/`@v7` tags.
 
 ## Comparison to Gold Standards
 
-| Dimension | model-metadata-collection | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
-|-----------|--------------------------|---------------------|-------------------|---------------|
-| Unit Tests | 8.5 — Excellent ratio, table-driven | 9.0 — Multi-layer testing | 7.0 — Image-focused | 9.0 — Comprehensive |
-| Integration/E2E | 4.0 — Skipped tests | 9.0 — Contract + E2E | 8.0 — Multi-layer image tests | 9.0 — Multi-version E2E |
-| Build Integration | 5.0 — Docker builds, no validation | 8.0 — Konflux simulation | 9.0 — 5-layer validation | 7.0 — Operator integration |
-| Image Testing | 4.0 — Multi-arch, no scanning | 7.0 — Basic scanning | 9.0 — Runtime + scanning | 7.0 — Security scanning |
-| Coverage Tracking | 3.0 — Local only | 8.0 — Enforced thresholds | 6.0 — Basic tracking | 9.0 — Codecov enforcement |
-| CI/CD Automation | 7.0 — Lint + test + build | 9.0 — Comprehensive | 8.0 — Multi-stage | 9.0 — Full pipeline |
-| Agent Rules | 7.0 — Good CLAUDE.md | 9.0 — Full rules + skills | 5.0 — Basic | 4.0 — Minimal |
+| Dimension | model-metadata-collection | odh-dashboard | notebooks | kserve |
+|-----------|--------------------------|---------------|-----------|--------|
+| Unit Tests | 7.5 (good ratio, 2 gaps) | 9.0 (multi-layer) | 7.0 | 9.0 |
+| Integration/E2E | 3.0 (skipped/missing) | 9.0 (contract + E2E) | 8.0 | 9.0 |
+| Build Integration | 5.0 (path-filtered Docker) | 8.0 (full build validation) | 9.0 (5-layer) | 8.0 |
+| Image Testing | 3.5 (build only) | 7.0 | 9.0 (runtime validation) | 7.0 |
+| Coverage Tracking | 3.0 (local only) | 9.0 (enforced) | 6.0 | 9.0 (enforced) |
+| CI/CD Automation | 7.0 (solid basics) | 9.0 (comprehensive) | 8.0 | 9.0 |
+| Agent Rules | 6.0 (CLAUDE.md only) | 9.0 (full rules) | 4.0 | 3.0 |
+| **Overall** | **6.2** | **8.7** | **7.3** | **7.7** |
 
 ## File Paths Reference
 
-### CI/CD
-- `.github/workflows/ci.yml` — Lint + test on PRs
-- `.github/workflows/build-and-push-static-model-catalog-data.yml` — Docker build/push
-- `.github/workflows/sync-branch-stable.yml` — Main → stable sync
-- `.github/workflows/sync-branch-stable2x.yml` — Main → stable-2.x sync
-- `Makefile` — Build, test, lint, coverage, docker targets
-
-### Testing
-- `cmd/model-extractor/main_test.go` — CLI and .env loading tests
-- `internal/catalog/catalog_test.go` — Catalog generation tests (1620 lines)
-- `internal/catalog/mcp_catalog_test.go` — MCP catalog tests
-- `internal/catalog/mcp_enrichment_test.go` — MCP enrichment tests
-- `internal/huggingface/client_test.go` — HF client tests with httptest (775 lines)
-- `internal/huggingface/collections_test.go` — Collection processing tests
-- `internal/huggingface/tags_test.go` — Tag parsing tests
-- `internal/enrichment/enrichment_test.go` — Enrichment pipeline tests
-- `internal/enrichment/toolcalling_test.go` — Tool-calling extraction tests
-- `internal/enrichment/vllmconfig_test.go` — vLLM config tests
-- `internal/metadata/parser_test.go` — Modelcard parsing tests
-- `internal/config/config_test.go` — Config tests
-- `internal/config/model_families_test.go` — Model family validation tests
-- `internal/config/vllmconfig_test.go` — vLLM config loading tests
-- `internal/registry/registry_test.go` — Registry tests (all skipped)
-- `pkg/types/toolcalling_test.go` — Type tests
-- `pkg/types/vllmconfig_test.go` — Type tests
-- `pkg/utils/text_test.go` — Text normalization tests (505 lines)
-- `pkg/utils/license_test.go` — License detection tests
-- `pkg/utils/retry_test.go` — Retry logic tests
-- `pkg/utils/template_test.go` — Template rendering tests
-- `pkg/utils/validation_test.go` — Validation utility tests
-- `pkg/utils/yaml_test.go` — YAML utility tests
-- `sample-data/` — Test fixtures (9 files, symlinked at `testdata/`)
-
-### Code Quality
-- `.pre-commit-config.yaml` — go-fmt, go-vet, golangci-lint, trailing-whitespace, end-of-file-fixer, check-yaml, check-added-large-files
-- No `.golangci.yml` configuration file
-
-### Container Images
-- `Dockerfile` — UBI9-micro based, non-root, data-only image
-- `.dockerignore` — Excludes tests, docs, IDE files
-
-### Documentation
-- `CLAUDE.md` — Agent guidance (10,529 bytes)
-- `ARCHITECTURE.md` — Architecture with Mermaid diagrams
-- `CONTRIBUTING.md` — Development setup, testing, commit conventions
-- `README.md` — Project overview and usage
-- `.github/pull_request_template.md` — PR checklist
-- `.github/CODEOWNERS` — Team-based review assignment
-
-### Security
-- No security configuration files exist
+| File | Purpose |
+|------|---------|
+| `.github/workflows/ci.yml` | PR lint + test pipeline |
+| `.github/workflows/build-and-push-static-model-catalog-data.yml` | Docker multi-arch build |
+| `.github/workflows/sync-branch-stable.yml` | Main -> stable sync |
+| `.github/workflows/sync-branch-stable2x.yml` | Main -> stable-2.x sync |
+| `Makefile` | Build, test, lint, process targets |
+| `.pre-commit-config.yaml` | Local pre-commit hooks |
+| `Dockerfile` | Container image (data-only, ubi9-micro) |
+| `.dockerignore` | Docker build exclusions |
+| `CLAUDE.md` | Agent development guidance |
+| `CONTRIBUTING.md` | Developer setup and workflow |
+| `ARCHITECTURE.md` | System architecture docs |
+| `.github/CODEOWNERS` | Review routing |
+| `go.mod` | Go module (1.24, toolchain 1.25.7) |
+| `sample-data/` / `testdata` | Test fixtures (symlinked) |

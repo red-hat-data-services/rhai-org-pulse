@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:23 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:46 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/codeflare-sdk</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#fd7e14"
+                                stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="265.778514"
+                                stroke-dashoffset="220.539618"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">5.3</div>
+                        <div class="score-value">6.1</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">Good test-to-code ratio (~0.77:1) with pytest, but coverage enforcement broken by continue-on-error</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">12 collocated test files with pytest + mocking; 90% threshold exists but not enforced (continue-on-error)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Comprehensive KinD-based E2E with GPU support, but label-gated and not automatic on PRs</div>
+                            <div class="scorecard-status">Comprehensive KinD + GPU e2e suite with full stack deployment; label-gated, not automatic on PRs</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">No PR-time package build validation, no wheel/sdist testing, Python version mismatch in CI</div>
+                            <div class="scorecard-status">No PR-time build validation; poetry build only in manual release workflow</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">N/A - pure Python library with no container images; no package installation testing</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">N/A as a Python library — but no wheel/sdist validation or install testing on PRs</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Codecov upload exists but coverage check uses continue-on-error; no .codecov.yml enforcement</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Codecov uploads present but coverage check uses continue-on-error; no PR enforcement</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">10 workflows with concurrency control and merge queue support, but E2E/notebook tests label-gated</div>
+                            <div class="scorecard-status">Good workflow structure with concurrency control; e2e is label-gated, no Python version matrix</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no AI-assisted development guidance whatsoever</div>
+                            <div class="scorecard-status">No .claude/ directory, no CLAUDE.md, no agent rules of any kind</div>
                         </div>
                     </div>
                 </div>
@@ -411,51 +411,51 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Coverage enforcement is silently broken</div>
-                            <p>PRs can merge with failing coverage — the 90% threshold check has continue-on-error: true, making it advisory only</p>
+                            <div class="item-description">Coverage enforcement is broken — continue-on-error: true</div>
+                            <p>The 90% coverage threshold is decorative; PRs with coverage regressions merge freely</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No security scanning (SAST, dependency audit, secret detection)</div>
-                            <p>Vulnerabilities in dependencies or code not detected until downstream consumers are affected</p>
+                            <div class="item-description">No Python linter or type checker in CI</div>
+                            <p>No static analysis catches type errors, unused imports, or code smells before merge</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Dependabot PRs auto-approved with lgtm+approved labels</div>
-                            <p>Malicious or breaking dependency updates could merge without human review</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">E2E tests are label-gated, not automatic</div>
-                            <p>Regressions can merge to main if reviewer forgets to add the &#x27;e2e&#x27; label</p>
+                            <div class="item-description">No SAST or secret detection</div>
+                            <p>Vulnerabilities and leaked credentials are not caught before merge</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Python version mismatch: CI uses 3.8 but pyproject.toml requires ^3.9</div>
-                            <p>Unit tests run on an unsupported Python version; may mask compatibility issues</p>
+                            <div class="item-description">E2E tests are label-gated, not automatic on PRs</div>
+                            <p>E2E regressions can merge when labels are not applied; requires manual reviewer action</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">30 minutes</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No type checking (mypy/pyright)</div>
-                            <p>Type errors in Kubernetes API interactions not caught until runtime</p>
+                            <div class="item-description">No PR-time package build validation</div>
+                            <p>Broken packages not caught until release time; sdist/wheel issues discovered too late</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No Python version matrix testing</div>
+                            <p>SDK claims Python 3.9+ support but only tests on 3.8 (which is EOL)</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -473,39 +473,47 @@
                         
                         <li class="item-card ">
                             <div class="item-description">Remove continue-on-error from coverage check</div>
-                            <p>Immediately enforces the existing 90% coverage threshold on every PR</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Fix Python version in unit-tests.yml from 3.8 to 3.9+</div>
-                            <p>Aligns CI with declared package requirements</p>
+                            <p>Immediately enforces the existing 90% coverage threshold</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">15 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add .codecov.yml with PR coverage gates</div>
-                            <p>Prevents coverage regressions on PRs with per-commit and per-project checks</p>
+                            <div class="item-description">Add ruff to pre-commit and CI</div>
+                            <p>Fast linting + import sorting replaces need for flake8, isort; catches common bugs</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Remove auto-approval from dependabot-labeler workflow</div>
-                            <p>Prevents unsupervised dependency updates from merging</p>
+                            <div class="item-description">Add CodeQL workflow</div>
+                            <p>Free GitHub-native SAST scanning for Python vulnerabilities</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add poetry build step to PR workflow</div>
+                            <p>Catches broken package metadata and import issues before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL or Bandit security scanning workflow</div>
-                            <p>Catches common Python security vulnerabilities in PRs</p>
+                            <div class="item-description">Fix Python version: unit tests use 3.8 (EOL) but pyproject.toml requires ^3.9</div>
+                            <p>Aligns CI with actual minimum supported Python version</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">30 minutes</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add basic agent rules for test patterns</div>
+                            <p>Enables AI-assisted test generation following project conventions</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -525,15 +533,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Fix broken coverage enforcement: remove continue-on-error: true from unit-tests.yml</li><li>Remove auto-approval of dependabot PRs — require human review for dependency updates</li><li>Fix Python version mismatch in CI (3.8 → 3.9+)</li></ul>
+                            <ul><li>Remove continue-on-error: true from unit-tests.yml coverage check to enforce 90% threshold</li><li>Add ruff or flake8+mypy to CI for static analysis and type checking</li><li>Add CodeQL or Bandit workflow for Python SAST scanning</li><li>Fix Python version mismatch: CI uses 3.8 (EOL) but pyproject.toml requires ^3.9</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Make E2E tests run automatically on all PRs (remove label gate, or add to merge queue)</li><li>Add security scanning: CodeQL for SAST, pip-audit for dependency vulnerabilities</li><li>Add .codecov.yml with coverage thresholds and PR checks</li><li>Add mypy type checking with gradual adoption</li></ul>
+                            <ul><li>Add Python version matrix (3.9, 3.10, 3.11, 3.12) to unit test workflow</li><li>Add poetry build + twine check step to PR workflow for package validation</li><li>Add codecov.yml with PR comment and coverage decrease blocking</li><li>Create .claude/rules/ with unit test and e2e test guidelines</li><li>Add conftest.py files with shared fixtures to reduce test boilerplate</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Create comprehensive agent rules (.claude/rules/) for test automation guidance</li><li>Add package build validation (wheel install + import test) to PR workflow</li><li>Add multi-Python-version testing matrix (3.9, 3.10, 3.11, 3.12)</li><li>Expand linting beyond black — add ruff for comprehensive Python linting</li></ul>
+                            <ul><li>Add gitleaks or trufflehog for secret detection in pre-commit</li><li>Enable mypy strict mode with gradual adoption via per-module overrides</li><li>Add CODEOWNERS file for automated PR review assignment</li><li>Consider removing label gate from e2e tests for merge_group events</li><li>Add upgrade/migration tests to CI instead of manual-only</li></ul>
                         </div>
                     </div>
                 </div>

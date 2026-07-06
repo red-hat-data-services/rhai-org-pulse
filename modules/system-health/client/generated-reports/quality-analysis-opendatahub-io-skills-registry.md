@@ -1,417 +1,384 @@
 ---
 repository: "opendatahub-io/skills-registry"
-overall_score: 3.0
+overall_score: 6.4
 scorecard:
   - dimension: "Unit Tests"
-    score: 1.0
-    status: "No unit tests for 1,745 lines of Python across 7 scripts"
+    score: 7.5
+    status: "Solid unittest suite covering all scripts with 0.32 test-to-code ratio"
   - dimension: "Integration/E2E"
-    score: 2.0
-    status: "CI sync checks serve as basic integration validation; eval dataset infrastructure exists"
+    score: 5.0
+    status: "Pre-commit hooks test local flow; no end-to-end marketplace install tests"
   - dimension: "Build Integration"
-    score: 7.0
-    status: "CI validates schema and generated file sync, but no script-level testing"
+    score: 3.0
+    status: "No container builds or deployment validation — registry is metadata-only"
   - dimension: "Image Testing"
-    score: -1
-    status: "N/A — repository does not build container images"
-  - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tool configured (no codecov, coveralls, or .coveragerc)"
+    status: "N/A — no container images built by this repository"
+  - dimension: "Coverage Tracking"
+    score: 2.0
+    status: "No coverage measurement, no codecov, no coverage thresholds"
   - dimension: "CI/CD Automation"
-    score: 7.0
-    status: "Well-structured workflows with pinned actions and sync validation, but no test/lint execution"
+    score: 8.5
+    status: "Well-organized workflows with diff-aware validation, artifact sync checks, and site deployment"
   - dimension: "Agent Rules"
-    score: 7.0
-    status: "Comprehensive CLAUDE.md, ARCHITECTURE.md, 2 skills; missing .claude/rules/"
+    score: 8.0
+    status: "Comprehensive CLAUDE.md with commands, architecture, and key rules; two skills; eval harness"
 critical_gaps:
-  - title: "Zero test coverage for all Python scripts"
-    impact: "Regressions in validate_registry.py, sync_marketplace.py, generate_catalog.py, generate_site.py, check_versions.py, sync_drawio_from_svg.py, and extract_diagram_feedback.py could silently ship broken logic"
-    severity: "HIGH"
-    effort: "8-16 hours"
-  - title: "No linting or static analysis configured"
-    impact: "Code style inconsistencies, potential bugs, and security issues go undetected"
+  - title: "No test coverage tracking or enforcement"
+    impact: "Cannot detect coverage regressions; new scripts may lack tests entirely"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No dependency scanning or Dependabot/Renovate"
-    impact: "Vulnerable dependencies (pyyaml, jsonschema, mkdocs) go unpatched"
+  - title: "No integration test for marketplace install round-trip"
+    impact: "Schema or sync bugs may pass CI but break Claude Code plugin installation"
+    severity: "HIGH"
+    effort: "6-8 hours"
+  - title: "No security scanning (SAST, dependency, secret detection)"
+    impact: "Vulnerable dependencies or leaked secrets could ship undetected"
     severity: "MEDIUM"
-    effort: "1-2 hours"
-  - title: "No secret detection (gitleaks/trufflehog)"
-    impact: "Accidental credential exposure in commits would go unnoticed"
+    effort: "2-3 hours"
+  - title: "Missing linter configuration for Python scripts"
+    impact: "Code style inconsistencies and potential bugs go uncaught"
     severity: "MEDIUM"
     effort: "1-2 hours"
 quick_wins:
-  - title: "Add ruff linting to CI"
-    effort: "1-2 hours"
-    impact: "Catch style issues, unused imports, and potential bugs across all 7 scripts"
-  - title: "Enable Dependabot for pip dependencies"
-    effort: "30 minutes"
-    impact: "Automated security updates for pyyaml, jsonschema, mkdocs-material"
-  - title: "Add pip dependency caching to validate.yml"
-    effort: "30 minutes"
-    impact: "Faster CI runs by caching pip installs"
-  - title: "Add pytest with a few smoke tests for validate_registry.py"
+  - title: "Add coverage.py and codecov to validate.yml"
     effort: "2-3 hours"
-    impact: "Catch regressions in the most critical script (schema validation)"
+    impact: "Immediate visibility into test coverage and trend tracking"
+  - title: "Add ruff linter to pre-commit and CI"
+    effort: "1 hour"
+    impact: "Catch Python style issues and potential bugs automatically"
+  - title: "Add Dependabot or Renovate for dependency updates"
+    effort: "30 minutes"
+    impact: "Automated security updates for pyyaml, jsonschema, and mkdocs dependencies"
+  - title: "Add GitHub CodeQL or Semgrep scanning"
+    effort: "1 hour"
+    impact: "Detect injection vulnerabilities in registry validation scripts"
 recommendations:
   priority_0:
-    - "Add unit tests for all Python scripts — especially validate_registry.py, sync_marketplace.py, and generate_site.py which are critical path"
-    - "Configure ruff for linting and formatting; add to CI workflow"
+    - "Add coverage.py tracking with codecov integration and minimum threshold (e.g., 80%)"
+    - "Add end-to-end integration test that validates marketplace.json can be consumed by a Claude Code mock"
   priority_1:
-    - "Enable Dependabot for Python dependency scanning"
-    - "Add mypy type checking (scripts already use Python 3.12 type hints like list[str] and dict[str, list])"
-    - "Create .claude/rules/ with test patterns for future contributors"
+    - "Add ruff or flake8 linting to pre-commit hooks and CI workflow"
+    - "Add Dependabot for automated dependency updates"
+    - "Add security scanning (CodeQL or Semgrep) for Python scripts"
   priority_2:
-    - "Add pre-commit hooks for local development"
-    - "Add CodeQL or Semgrep for static security analysis"
-    - "Add gitleaks for secret detection"
+    - "Add type annotations and mypy checking to scripts/"
+    - "Add mutation testing (mutmut) to measure test suite effectiveness"
+    - "Create .claude/rules/ directory with test creation guidelines"
 ---
 
 # Quality Analysis: skills-registry
 
 ## Executive Summary
 
-- **Overall Score: 3.0/10**
-- **Repository Type**: Plugin marketplace / registry (Python scripts + YAML config)
-- **Primary Language**: Python (7 scripts, 1,745 lines)
-- **Key Strengths**: Excellent developer documentation (CLAUDE.md, ARCHITECTURE.md, CONTRIBUTING.md), well-designed CI sync validation, pinned action SHAs, clean single-source-of-truth architecture
-- **Critical Gaps**: Zero test coverage, no linting, no dependency scanning, no code coverage tracking
-- **Agent Rules Status**: Present (CLAUDE.md is strong) — missing `.claude/rules/`
+- **Overall Score: 6.4/10**
+- **Repository Type**: Python metadata registry / plugin marketplace
+- **Primary Language**: Python 3.12 (scripts + tests), YAML/JSON (data)
+- **Framework**: Custom registry with JSON Schema validation, MkDocs site generator
+- **Key Strengths**: Well-structured CI pipeline with diff-aware validation, strong JSON Schema enforcement, good test coverage of validation logic, comprehensive CLAUDE.md documentation, evaluation harness for diagram feedback
+- **Critical Gaps**: No coverage tracking, no security scanning, no Python linting, no integration testing of the actual marketplace consumption path
+- **Agent Rules Status**: Present and comprehensive (CLAUDE.md with commands, architecture, key rules)
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 1/10 | No unit tests for any of the 7 Python scripts |
-| Integration/E2E | 2/10 | CI sync checks provide basic integration validation |
-| Build Integration | 7/10 | Schema validation and generated-file sync checks in CI |
-| Image Testing | N/A | Repository does not build container images |
-| Coverage Tracking | 0/10 | No coverage tool configured |
-| CI/CD Automation | 7/10 | Good workflow structure, but no test/lint execution |
-| Agent Rules | 7/10 | Strong CLAUDE.md, ARCHITECTURE.md; no `.claude/rules/` |
+| Unit Tests | 7.5/10 | Solid unittest suite covering all 6 scripts with security-focused edge cases |
+| Integration/E2E | 5.0/10 | Pre-commit hooks validate local flow; no E2E marketplace install testing |
+| **Build Integration** | **3.0/10** | **No container or deployment validation — registry is metadata-only** |
+| Image Testing | N/A | No container images built by this repository |
+| Coverage Tracking | 2.0/10 | No coverage measurement, no codecov, no thresholds |
+| CI/CD Automation | 8.5/10 | 4 workflows, diff-aware validation, artifact sync checks, Pages deployment |
+| Agent Rules | 8.0/10 | Comprehensive CLAUDE.md, 2 skills, eval harness for diagram quality |
 
 ## Critical Gaps
 
-### 1. Zero Test Coverage for All Python Scripts
-- **Impact**: Regressions in core scripts could silently break the marketplace, catalog, site generation, and schema validation
-- **Severity**: HIGH
-- **Effort**: 8-16 hours
-- **Details**: The repository has 7 Python scripts totaling 1,745 lines with zero test files. Key scripts at risk:
-  - `validate_registry.py` (300 lines) — schema validation, duplicate detection, remote plugin validation
-  - `generate_site.py` (750 lines) — the largest and most complex script, generates MkDocs pages
-  - `sync_marketplace.py` (120 lines) — generates marketplace.json consumed by Claude Code
-  - `generate_catalog.py` (184 lines) — generates human-readable catalog
-  - `check_versions.py` (124 lines) — polls repos for version bumps
-  - `sync_drawio_from_svg.py` (128 lines) — SVG/drawio sync with XML manipulation
-  - `extract_diagram_feedback.py` (139 lines) — eval dataset extraction
-
-### 2. No Linting or Static Analysis
-- **Impact**: No automated code quality enforcement; style drift, unused imports, type errors go undetected
+### 1. No Test Coverage Tracking or Enforcement
+- **Impact**: Cannot detect coverage regressions; new scripts (e.g., `discover_skills.py`, `extract_diagram_feedback.py`, `sync_drawio_from_svg.py`, `check_versions.py`) may ship without any tests
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: No `.flake8`, `ruff.toml`, `mypy.ini`, `.pylintrc`, or any linting config. The code already uses Python 3.12 features (type hints like `list[str]`, `dict[str, list]`, `str | None`) which would benefit from mypy verification.
+- **Details**: Of the 11 scripts in `scripts/`, only 6 have corresponding test files. `discover_skills.py` (217 lines), `check_versions.py` (130 lines), `sync_drawio_from_svg.py` (128 lines), `extract_diagram_feedback.py` (139 lines), and `sync_marketplace.py` (120 lines) have no dedicated test files.
 
-### 3. No Dependency Scanning
-- **Impact**: Known vulnerabilities in pyyaml, jsonschema, or mkdocs could go unpatched indefinitely
+### 2. No Integration Test for Marketplace Install Round-Trip
+- **Impact**: A valid `registry.yaml` could produce a `marketplace.json` that Claude Code cannot parse. Schema validation catches structural issues but not semantic consumption issues.
+- **Severity**: HIGH
+- **Effort**: 6-8 hours
+- **Details**: CI validates that generated files are in sync, but never validates that the generated `marketplace.json` can be successfully consumed by a client. A mock consumer test would close this gap.
+
+### 3. No Security Scanning
+- **Impact**: Vulnerable Python dependencies (pyyaml, jsonschema, mkdocs stack) could ship undetected. Scripts that shell out to `git` and process untrusted registry data have injection surface.
+- **Severity**: MEDIUM
+- **Effort**: 2-3 hours
+- **Details**: No CodeQL, Semgrep, Dependabot, or Snyk configured. The Unicode safety check is a good start but only covers homoglyph attacks.
+
+### 4. No Python Linter Configuration
+- **Impact**: Code style inconsistencies and potential bugs in the 3,189 lines of Python scripts go uncaught
 - **Severity**: MEDIUM
 - **Effort**: 1-2 hours
-- **Details**: No Dependabot configuration, no Renovate, no Snyk. Dependencies are manually pinned in CI (`pyyaml==6.0.3`, `jsonschema==4.26.0`) which is good for reproducibility but means no automated vulnerability alerts.
-
-### 4. No Secret Detection
-- **Impact**: Accidental credential exposure in commits would go unnoticed
-- **Severity**: MEDIUM
-- **Effort**: 1-2 hours
-- **Details**: No gitleaks, trufflehog, or similar tool configured. While this repo primarily contains YAML/Python config, contributors could accidentally commit API tokens or credentials.
+- **Details**: No `ruff.toml`, `.flake8`, `pylintrc`, or `mypy.ini` found. Pre-commit hooks only run registry-specific validators, not general Python linting.
 
 ## Quick Wins
 
-### 1. Add ruff Linting to CI (1-2 hours)
-Catch style issues, unused imports, and potential bugs across all 7 scripts.
-
+### 1. Add coverage.py and Codecov Integration (2-3 hours)
+- **Impact**: Immediate visibility into coverage gaps and trend tracking
+- **Implementation**:
 ```yaml
-# Add to .github/workflows/validate.yml
-- name: Lint with ruff
+# Add to validate.yml after "Run unit tests" step
+- name: Run unit tests with coverage
   run: |
-    pip install ruff
-    ruff check scripts/
-    ruff format --check scripts/
+    pip install coverage
+    python3 -m coverage run -m unittest discover -s tests -p 'test_*.py'
+    python3 -m coverage report --fail-under=70
+    python3 -m coverage xml
+
+- name: Upload coverage
+  uses: codecov/codecov-action@v4
+  with:
+    file: coverage.xml
 ```
 
-Create `ruff.toml`:
-```toml
-target-version = "py312"
-line-length = 100
-
-[lint]
-select = ["E", "F", "W", "I", "UP", "B", "SIM"]
-```
-
-### 2. Enable Dependabot (30 minutes)
-Create `.github/dependabot.yml`:
+### 2. Add Ruff Linter (1 hour)
+- **Impact**: Fast Python linting and formatting enforcement
+- **Implementation**:
 ```yaml
+# .pre-commit-config.yaml addition
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.0
+    hooks:
+      - id: ruff
+      - id: ruff-format
+```
+
+### 3. Add Dependabot (30 minutes)
+- **Impact**: Automated security updates for all Python dependencies
+- **Implementation**:
+```yaml
+# .github/dependabot.yml
 version: 2
 updates:
   - package-ecosystem: pip
-    directory: "/"
+    directory: /
     schedule:
       interval: weekly
   - package-ecosystem: github-actions
-    directory: "/"
+    directory: /
     schedule:
       interval: weekly
 ```
 
-### 3. Add pip Caching to CI (30 minutes)
+### 4. Add CodeQL Security Scanning (1 hour)
+- **Impact**: Detect injection vulnerabilities in subprocess calls
+- **Implementation**:
 ```yaml
-# In validate.yml, after setup-python
-- uses: actions/cache@v4
-  with:
-    path: ~/.cache/pip
-    key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
-```
-
-### 4. Add Smoke Tests for validate_registry.py (2-3 hours)
-```python
-# tests/test_validate_registry.py
-import pytest
-from scripts.validate_registry import (
-    load_registry, validate_schema, check_duplicates,
-    check_categories, check_strict_consistency,
-)
-
-@pytest.fixture
-def sample_registry():
-    return load_registry("registry.yaml")
-
-@pytest.fixture
-def schema():
-    from scripts.validate_registry import load_schema
-    return load_schema("schema/registry.schema.json")
-
-def test_schema_valid(sample_registry, schema):
-    errors = validate_schema(sample_registry, schema)
-    assert errors == []
-
-def test_no_duplicates(sample_registry):
-    errors = check_duplicates(sample_registry)
-    assert errors == []
-
-def test_categories_valid(sample_registry):
-    errors = check_categories(sample_registry)
-    assert errors == []
-
-def test_strict_consistency(sample_registry):
-    errors = check_strict_consistency(sample_registry)
-    assert errors == []
+# .github/workflows/codeql.yml
+name: CodeQL Analysis
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: python
+      - uses: github/codeql-action/analyze@v3
 ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflow Inventory (4 workflows):**
+**Strengths**:
+- **4 well-organized workflows**: `validate.yml` (PR+push), `diagram-pr.yml` (SVG sync), `deploy-site.yml` (Pages), `unicode-safety.yml` (security)
+- **Diff-aware validation**: The `validate.yml` workflow uses `--diff-base` to only enforce contract rules on touched skills, avoiding false positives on existing entries
+- **Artifact sync verification**: CI regenerates `marketplace.json`, `catalog.md`, and site content, then fails if they differ — ensures contributors run scripts before pushing
+- **Concurrency control**: `deploy-site.yml` uses `concurrency: { group: pages, cancel-in-progress: false }` to prevent race conditions
+- **Pinned action SHAs**: All GitHub Actions use full commit SHA references (e.g., `actions/checkout@34e114876b...`) preventing supply-chain attacks
+- **Eval data collection**: `diagram-pr.yml` extracts before/after pairs for evaluation datasets — shows commitment to measurable quality
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `validate.yml` | PR (paths), push to main | Schema validation + sync checks |
-| `unicode-safety.yml` | All PRs | Hidden unicode character detection |
-| `diagram-pr.yml` | PRs modifying SVGs | SVG→drawio sync + eval dataset extraction |
-| `deploy-site.yml` | Push to main, manual | MkDocs build + GitHub Pages deployment |
-
-**Strengths:**
-- All GitHub Actions pinned to exact commit SHAs (e.g., `actions/checkout@34e114876b...`)
-- Path-based trigger filtering (only runs on relevant file changes)
-- Concurrency control on deploy-site with `cancel-in-progress: false`
-- Minimal permissions (contents: read for most workflows)
-- Sync-check pattern: regenerate → `git diff --exit-code` catches drift
-
-**Gaps:**
-- No pip dependency caching (installs from scratch each run)
-- No linting step in any workflow
-- No test execution step
-- No matrix testing across Python versions
-- `diagram-pr.yml` has `contents: write` and pushes commits — no branch protection enforcement visible
+**Gaps**:
+- No caching of Python dependencies in `validate.yml` — `pip install` runs fresh each time
+- No test parallelization (though with 6 test files, this is minor)
+- No status badges in README for CI health
+- No Makefile — common commands are documented in CLAUDE.md but not scripted
 
 ### Test Coverage
 
-**Current State: Zero test files.**
+**Strengths**:
+- **6 test files** with **1,023 lines** of test code covering **3,189 lines** of script code (0.32 ratio)
+- **Security-focused testing**: Tests for path traversal (`../outside/SKILL.md`), symlink attacks, invalid git refs (`-oops`), and command injection prevention
+- **Contract validation tests**: Thorough testing of JSON Schema validation rules, metric constraints, and source assertions
+- **Bootstrap isolation test**: `test_script_bootstrap.py` verifies scripts prefer repo-root imports over PYTHONPATH poisoning — preventing supply-chain attacks
+- **Framework**: Standard `unittest` with `unittest.mock` — no external test dependencies needed
 
-The repository has 7 Python scripts (1,745 lines total) with no corresponding test files. No `tests/` directory, no `*_test.py` files, no `pytest.ini`, no `conftest.py`.
-
-**What passes for testing:**
-- `validate_registry.py` running in CI validates the registry against a JSON Schema — this is effectively a data validation test, not a code test
-- CI sync checks verify generated files match source of truth — a form of integration check
-- `eval/diagram-feedback/eval.yaml` exists for testing the diagram-layout skill — this tests an external skill, not this repository's code
-
-**Test-to-code ratio**: 0:1,745 (0%)
-
-**Scripts that most need tests:**
-1. `generate_site.py` (750 lines) — complex template logic, scope handling, enrichment merging
-2. `validate_registry.py` (300 lines) — 6 validation functions that need unit tests
-3. `sync_marketplace.py` (120 lines) — field mapping logic
-4. `sync_drawio_from_svg.py` (128 lines) — XML parsing and compression handling
+**Gaps**:
+- **5 scripts without dedicated tests**:
+  - `discover_skills.py` (217 lines) — skill discovery logic untested
+  - `check_versions.py` (130 lines) — version polling untested
+  - `sync_drawio_from_svg.py` (128 lines) — SVG sync logic untested
+  - `extract_diagram_feedback.py` (139 lines) — eval data extraction untested
+  - `sync_marketplace.py` (120 lines) — marketplace generation partially tested via sync check but no unit tests
+- **No coverage measurement** — impossible to know actual line/branch coverage
+- **No mutation testing** — test suite effectiveness unknown
+- **No parametrized tests** — many test methods repeat similar patterns that could be consolidated
 
 ### Code Quality
 
-**No quality tools configured.**
+**Strengths**:
+- **Pre-commit hooks**: Two local hooks (`validate-registry-contracts` and `skill-linter-registry`) run on `registry.yaml` changes
+- **JSON Schema validation**: Comprehensive schema (`registry.schema.json`, 458 lines) with pattern constraints, conditional validation (`if/then`), and `additionalProperties: false`
+- **Input sanitization in CI**: Base ref validation uses regex `^[A-Za-z0-9._/-]+$` to prevent injection
+- **Unicode safety check**: Dedicated workflow to detect hidden unicode characters (homoglyph attacks)
 
-| Tool | Status |
-|------|--------|
-| Linter (ruff/flake8/pylint) | Not configured |
-| Formatter (black/ruff format) | Not configured |
-| Type checker (mypy/pyright) | Not configured |
-| Pre-commit hooks | Not configured |
-| Import sorter (isort/ruff) | Not configured |
-
-**Observations:**
-- Code is generally clean and well-structured despite no tooling
-- Consistent style across scripts (docstrings, argparse usage, clean function boundaries)
-- Uses Python 3.12 type hints (`list[str]`, `dict[str, list]`, `str | None`) but no type checker validates them
-- No `pyproject.toml` or `setup.cfg` for project metadata
+**Gaps**:
+- **No Python linter** — no ruff, flake8, pylint, or mypy configured
+- **No type annotations** — scripts use dynamic typing throughout
+- **No formatter** — no black or ruff-format configured
+- **Pre-commit hooks are registry-specific only** — no general Python quality hooks
 
 ### Container Images
 
-**N/A** — This repository does not build container images. It is a metadata registry that references external repositories.
+- **N/A**: This repository does not build container images. It is a pure metadata registry that generates JSON and Markdown files. No Dockerfile, Containerfile, or docker-compose found.
 
 ### Security
 
-| Practice | Status |
-|----------|--------|
-| Unicode safety check | Present (unicode-safety.yml) |
-| Action SHA pinning | Present (all actions pinned) |
-| Minimal permissions | Present (contents: read for most) |
-| Secret detection | Missing |
-| SAST/CodeQL | Missing |
-| Dependency scanning | Missing (no Dependabot/Renovate) |
-| Vulnerability scanning | Missing |
+**Strengths**:
+- **Unicode safety check**: Dedicated CI workflow using `dcondrey/unicode-safety-check@v3.0.0`
+- **Pinned GitHub Action SHAs**: All actions use full 40-character commit SHAs, preventing tag-based supply chain attacks
+- **Input validation in scripts**: Git refs validated against `^[A-Za-z0-9._/-]+$` pattern before use in subprocess calls
+- **Path traversal prevention**: Tests explicitly verify that `../` paths and symlinks are rejected
+- **Subprocess timeout enforcement**: All subprocess calls include explicit timeouts (30s)
 
-**Positive:** The repo demonstrates good supply chain security practices for GitHub Actions (SHA pinning, minimal permissions). The unicode safety check is a nice touch for a registry that processes user-submitted YAML.
-
-**Gaps:** No automated secret detection, no static analysis, and no dependency vulnerability monitoring.
+**Gaps**:
+- **No CodeQL or Semgrep**: Python code not scanned for injection patterns
+- **No Dependabot or Renovate**: Dependencies (`pyyaml==6.0.3`, `jsonschema==4.26.0`, mkdocs stack) not automatically updated
+- **No secret scanning**: No Gitleaks or TruffleHog configured
+- **No OSSF Scorecard**: Not participating in OpenSSF security best practices
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status: Present and strong at the documentation level**
+**Strengths**:
+- **Comprehensive CLAUDE.md** (98 lines): Documents common commands, architecture overview, key rules (strict vs non-strict, marketplace format, agents), adding plugins workflow, and references
+- **Two registered skills**: `analyze-plugin` and `generate-site` skills in `skills/` directory
+- **Evaluation harness**: `eval/diagram-feedback/eval.yaml` defines layout quality evaluation with validator and judge-based scoring
+- **Plugin architecture documentation**: `ARCHITECTURE.md` with ASCII diagrams showing data flow, plugin model, and CI pipeline
+- **Contributing guide**: `CONTRIBUTING.md` with detailed instructions for adding plugins, choosing canonical contracts
 
-| Component | Status | Quality |
-|-----------|--------|---------|
-| `CLAUDE.md` | Present | Comprehensive — covers commands, architecture, key rules, common pitfalls |
-| `ARCHITECTURE.md` | Present | Excellent — ASCII diagrams, data flow, CI pipeline, plugin model |
-| `CONTRIBUTING.md` | Present | Detailed step-by-step guide with strict/non-strict examples |
-| `.claude-plugin/plugin.json` | Present | Minimal but functional |
-| `skills/` (2 skills) | Present | Detailed SKILL.md files with multi-step instructions |
-| `.claude/rules/` | Missing | No test automation guidance for AI agents |
-
-**Strengths:**
-- CLAUDE.md includes the critical "before committing, run all four generators" rule
-- Architecture documentation uses clear ASCII diagrams
-- Two well-documented skills (generate-site, analyze-plugin) with comprehensive instructions
-- CONTRIBUTING.md covers both strict and non-strict plugin modes
-
-**Gaps:**
-- No `.claude/rules/` directory for test patterns
-- No guidance on how AI agents should write tests for this repo's scripts
-- No linting/formatting rules for AI-generated code
-
-**Recommendation**: Generate test automation rules with `/test-rules-generator` once tests are added.
+**Gaps**:
+- **No `.claude/rules/` directory**: No test creation rules for AI agents
+- **No test pattern documentation**: CLAUDE.md doesn't describe testing conventions or how to write tests for new scripts
+- **No `.claude/` directory at all**: Skills live in top-level `skills/` directory; no agent-specific configuration
+- **Recommendation**: Generate test rules with `/test-rules-generator` to help AI agents write consistent tests
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add pytest-based unit tests for all Python scripts**
-   - Start with `validate_registry.py` (most critical — gatekeeps all PRs)
-   - Add tests for `sync_marketplace.py` (field mapping correctness)
-   - Add tests for `generate_site.py` (template rendering, scope handling)
-   - Target: 80%+ coverage on core validation/generation functions
-   - Effort: 8-16 hours
+1. **Add coverage.py tracking with codecov integration and minimum threshold (e.g., 70%)**
+   - Prevents coverage regressions on new scripts
+   - Makes untested scripts visible immediately
+   - Effort: 2-3 hours
 
-2. **Configure ruff for linting and formatting**
-   - Add `ruff.toml` with reasonable defaults
-   - Add ruff check + format steps to `validate.yml`
-   - Effort: 2-4 hours
+2. **Write tests for the 5 untested scripts** (`discover_skills.py`, `check_versions.py`, `sync_drawio_from_svg.py`, `extract_diagram_feedback.py`, `sync_marketplace.py`)
+   - These scripts total 734 lines with zero test coverage
+   - Prioritize `sync_marketplace.py` (generates the file Claude Code actually consumes) and `discover_skills.py` (core discovery logic)
+   - Effort: 8-12 hours
 
 ### Priority 1 (High Value)
 
-3. **Enable Dependabot for pip + GitHub Actions**
-   - Automated vulnerability alerts for dependencies
-   - Automated PR creation for action updates
+3. **Add ruff linting and formatting to pre-commit and CI**
+   - Fast, comprehensive Python linting
+   - Effort: 1-2 hours
+
+4. **Add Dependabot for dependency updates**
+   - Automate security patches for pyyaml, jsonschema, mkdocs
+   - Also cover GitHub Actions version updates
    - Effort: 30 minutes
 
-4. **Add mypy type checking**
-   - Scripts already use modern type hints — validate them
-   - Create `mypy.ini` or `[tool.mypy]` in `pyproject.toml`
-   - Add to CI workflow
-   - Effort: 2-3 hours
+5. **Add CodeQL or Semgrep security scanning**
+   - Detect injection patterns in subprocess calls
+   - Effort: 1-2 hours
 
-5. **Create `.claude/rules/` for test automation guidance**
-   - Document pytest patterns for registry validation
-   - Provide fixture examples for registry data
+6. **Create `.claude/rules/` with test creation guidelines**
+   - Help AI agents write consistent, security-focused tests matching existing patterns
+   - Use `/test-rules-generator` to bootstrap from existing test suite
    - Effort: 2-3 hours
 
 ### Priority 2 (Nice-to-Have)
 
-6. **Add pre-commit hooks**
-   - ruff (lint + format), mypy, trailing whitespace, YAML validation
-   - Effort: 1-2 hours
+7. **Add type annotations and mypy strict checking**
+   - Improve code maintainability and catch type errors
+   - Effort: 4-6 hours
 
-7. **Add CodeQL or Semgrep for static security analysis**
-   - Catch SQL injection-like patterns in YAML/JSON handling
-   - Effort: 1-2 hours
+8. **Add pip caching to CI workflow**
+   - Speed up CI runs by caching pyyaml and jsonschema installs
+   - Effort: 30 minutes
 
-8. **Add gitleaks for secret detection**
-   - Prevent accidental credential commits
-   - Effort: 1 hour
+9. **Add integration test for marketplace.json consumption**
+   - Mock a Claude Code client parsing the generated marketplace.json
+   - Verify all required fields, skill discovery paths, and strict/non-strict semantics
+   - Effort: 6-8 hours
 
-9. **Add a `pyproject.toml` for project metadata**
-   - Consolidate tool configuration (ruff, mypy, pytest)
-   - Define project dependencies properly
-   - Effort: 1 hour
+10. **Add CI status badges to README.md**
+    - Quick visibility into build health
+    - Effort: 15 minutes
 
 ## Comparison to Gold Standards
 
 | Dimension | skills-registry | odh-dashboard | notebooks | kserve |
-|-----------|----------------|---------------|-----------|--------|
-| Unit Tests | None | Comprehensive Jest suite | Shell-based validation | Go unit tests with coverage |
-| Integration | CI sync checks only | Cypress E2E, contract tests | Multi-layer image testing | envtest, multi-version |
-| Coverage Tracking | None | Codecov with enforcement | N/A | Coverage thresholds |
-| Linting | None | ESLint + Prettier | ShellCheck | golangci-lint (30+ linters) |
-| Pre-commit | None | Present | Present | Present |
-| Security Scanning | Unicode check only | Snyk, CodeQL | Trivy | CodeQL, gosec |
-| Agent Rules | Strong CLAUDE.md | Comprehensive rules | Limited | N/A |
-| CI Quality | Good structure, no testing | Multi-stage with testing | Comprehensive | Comprehensive |
+|-----------|:-:|:-:|:-:|:-:|
+| Unit Tests | 7.5 | 9.0 | 7.0 | 9.0 |
+| Integration/E2E | 5.0 | 9.0 | 8.0 | 9.5 |
+| Build Integration | 3.0 | 7.0 | 8.0 | 8.0 |
+| Image Testing | N/A | 6.0 | 9.5 | 7.0 |
+| Coverage Tracking | 2.0 | 8.0 | 5.0 | 9.0 |
+| CI/CD Automation | 8.5 | 9.0 | 8.5 | 9.0 |
+| Agent Rules | 8.0 | 8.5 | 3.0 | 2.0 |
+| **Overall** | **6.4** | **8.4** | **7.3** | **7.6** |
+
+**Key Takeaway**: skills-registry excels in CI automation and agent documentation but significantly lags in coverage tracking and integration testing. The security-conscious testing approach (path traversal, symlink, injection prevention) is notable and above average.
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/validate.yml` — Main CI: schema validation + sync checks
-- `.github/workflows/unicode-safety.yml` — Unicode character detection
-- `.github/workflows/diagram-pr.yml` — SVG/drawio sync automation
-- `.github/workflows/deploy-site.yml` — MkDocs site deployment
+- `.github/workflows/validate.yml` — PR/push validation (schema, contracts, sync checks, unit tests)
+- `.github/workflows/diagram-pr.yml` — SVG → draw.io sync on PR
+- `.github/workflows/deploy-site.yml` — MkDocs site deployment to GitHub Pages
+- `.github/workflows/unicode-safety.yml` — Hidden unicode character detection
 
-### Scripts (Core Code)
-- `scripts/validate_registry.py` (300 lines) — Schema validation, duplicate/category/strict checks
-- `scripts/generate_site.py` (750 lines) — MkDocs page generation with enrichment
-- `scripts/generate_catalog.py` (184 lines) — Human-readable catalog generation
-- `scripts/sync_marketplace.py` (120 lines) — marketplace.json generation
-- `scripts/check_versions.py` (124 lines) — Remote version polling
-- `scripts/sync_drawio_from_svg.py` (128 lines) — SVG→drawio XML extraction
-- `scripts/extract_diagram_feedback.py` (139 lines) — Eval dataset case extraction
+### Testing
+- `tests/test_validate_registry.py` — Schema and contract validation tests (443 lines)
+- `tests/test_run_skill_linter.py` — Skill linter wrapper tests (237 lines)
+- `tests/test_generate_site.py` — Site generation tests (136 lines)
+- `tests/test_registry_contracts.py` — Touch detection and git read tests (115 lines)
+- `tests/test_script_bootstrap.py` — PYTHONPATH poisoning resistance tests (51 lines)
+- `tests/test_generate_catalog.py` — Catalog rendering tests (41 lines)
+- `tests/registry_contract_fixtures.py` — Shared test fixtures (56 lines)
 
-### Configuration
-- `registry.yaml` — Single source of truth (12 plugins, ~600 lines)
-- `schema/registry.schema.json` — JSON Schema for registry validation
-- `.claude-plugin/marketplace.json` — Generated Claude Code marketplace format
+### Scripts (Source Code)
+- `scripts/validate_registry.py` — Schema validation + contract checks (481 lines)
+- `scripts/generate_site.py` — MkDocs site content generator (995 lines)
+- `scripts/run_skill_linter.py` — Skill linter orchestration (449 lines)
+- `scripts/generate_catalog.py` — catalog.md generator (286 lines)
+- `scripts/registry_contracts.py` — Contract data model + diff detection (243 lines)
+- `scripts/discover_skills.py` — Skill discovery from repos (217 lines) ⚠️ No tests
+- `scripts/extract_diagram_feedback.py` — Eval data extraction (139 lines) ⚠️ No tests
+- `scripts/check_versions.py` — Version polling (130 lines) ⚠️ No tests
+- `scripts/sync_drawio_from_svg.py` — SVG to draw.io sync (128 lines) ⚠️ No tests
+- `scripts/sync_marketplace.py` — marketplace.json generator (120 lines) ⚠️ No tests
 
-### Documentation
-- `CLAUDE.md` — AI agent guidance
-- `ARCHITECTURE.md` — System design documentation
-- `CONTRIBUTING.md` — Contributor guide
-- `README.md` — Project overview
+### Quality Configuration
+- `.pre-commit-config.yaml` — Local pre-commit hooks (registry-specific only)
+- `schema/registry.schema.json` — JSON Schema for registry.yaml (458 lines)
+- `config/skill-linter-registry.json` — Skill linter configuration
 
-### Skills
-- `skills/generate-site/SKILL.md` — Site generation orchestration skill
-- `skills/analyze-plugin/SKILL.md` — Plugin analysis and enrichment skill
-
-### Eval
-- `eval/diagram-feedback/eval.yaml` — Diagram layout evaluation configuration
+### Agent Rules & Documentation
+- `CLAUDE.md` — Claude Code agent guidance (98 lines)
+- `ARCHITECTURE.md` — Architecture documentation with diagrams
+- `CONTRIBUTING.md` — Contributor guide with contract guidelines
+- `skills/analyze-plugin/SKILL.md` — Plugin analysis skill
+- `skills/generate-site/SKILL.md` — Site generation skill
+- `eval/diagram-feedback/eval.yaml` — Diagram quality evaluation harness

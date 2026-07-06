@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:42 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:17 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/odh-automation-serving</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="520.247304"
+                                stroke-dashoffset="475.0084079999999"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">0.8</div>
+                        <div class="score-value">1.6</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No tests of any kind — repo contains zero testable source code</div>
+                            <div class="scorecard-status">No source code or tests exist — pure workflow automation repo</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E testing; workflows are never validated before merge</div>
+                            <div class="scorecard-status">No integration or E2E tests; workflows are untested</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No PR-time validation; no workflow linting or dry-run simulation</div>
+                            <div class="scorecard-status">No build artifacts; repo contains only GitHub Actions workflows</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">N/A — repo does not build images (only queries Quay.io SHAs)</div>
+                            <div class="scorecard-status">No container images built — repo queries Quay.io SHAs only</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">Nothing to measure — no source code or tests exist</div>
+                            <div class="scorecard-status">No code to cover; no workflow validation coverage</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">7 workflow_dispatch workflows exist but lack validation, linting, and security hardening</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">7 dispatch-only workflows for upstream sync; no PR-triggered CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent guidance of any kind</div>
+                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no documentation</div>
                         </div>
                     </div>
                 </div>
@@ -411,51 +411,59 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Script injection vulnerabilities in all workflows</div>
-                            <p>Unsanitized github.event.inputs.* used directly in run: steps — exploitable by anyone with dispatch permissions</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No workflow testing or validation on PRs</div>
-                            <p>Broken workflows are only discovered when someone manually dispatches them</p>
+                            <div class="item-description">All workflows are manual-dispatch only — no automated CI</div>
+                            <p>Workflow changes are merged without any validation; broken workflows discovered only at dispatch time</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Unpinned third-party action (TobKed/github-forks-sync-action@master)</div>
-                            <p>Supply chain risk — upstream action changes could break workflows or introduce malicious code</p>
+                            <div class="item-description">No workflow testing or validation</div>
+                            <p>Syntax errors, logic bugs, and incorrect repository names ship without detection</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">1 hour</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Inconsistent secret management (PAT_TOKEN vs ACTIONS_PAT)</div>
-                            <p>Confusion about which token has which permissions; harder to audit and rotate</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Force-push workflow with no guardrails</div>
-                            <p>force_push_to_trigger_openshift-ci_builds.yml can rewrite history on any branch of any target repo</p>
+                            <div class="item-description">Security: command injection via unquoted workflow_dispatch inputs</div>
+                            <p>User-supplied input (commit SHAs, branch names) is interpolated directly into shell commands without quoting</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
+                        <li class="item-card high">
+                            <div class="item-description">Hardcoded org typo in push_release.yml (opendatahub.io vs opendatahub-io)</div>
+                            <p>Release sync workflow targets wrong GitHub organization; silent failure</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">0.5 hours</span>
+                            </div>
+                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">No documentation beyond a one-line README</div>
-                            <p>Team members cannot understand workflow purpose, prerequisites, or safe usage without reading YAML</p>
+                            <div class="item-description">No secret rotation or audit trail</div>
+                            <p>PAT_TOKEN and ACTIONS_PAT used across all workflows with write permissions; no rotation policy</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">Force-push workflow exists without guardrails</div>
+                            <p>Amends and force-pushes to downstream branches; no approval gate or audit log</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No documentation — README is a single title line</div>
+                            <p>No usage instructions, no architecture overview, no runbook for operators</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -472,35 +480,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Pin third-party action to a commit SHA</div>
-                            <p>Eliminates supply chain risk from TobKed/github-forks-sync-action@master</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add actionlint to a PR workflow</div>
-                            <p>Catch workflow syntax errors before merge; prevents broken dispatches</p>
+                            <div class="item-description">Add actionlint and yamllint CI on PRs</div>
+                            <p>Catches workflow syntax errors and YAML issues before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Sanitize workflow_dispatch inputs via environment variables</div>
-                            <p>Eliminates script injection vulnerabilities across all 7 workflows</p>
+                            <div class="item-description">Quote all ${{ inputs.* }} expressions in shell commands</div>
+                            <p>Eliminates command injection risk from user-supplied dispatch inputs</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Unify secret names (PAT_TOKEN → ACTIONS_PAT or vice versa)</div>
-                            <p>Simplifies secret management and audit</p>
+                            <div class="item-description">Fix &#x27;opendatahub.io&#x27; → &#x27;opendatahub-io&#x27; typo in push_release.yml</div>
+                            <p>Fixes broken release sync targeting wrong GitHub organization</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">15 minutes</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add CODEOWNERS file</div>
+                            <p>Ensures workflow changes get reviewed by automation team</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">30 minutes</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add a meaningful README with workflow descriptions</div>
+                            <p>Makes the repo self-documenting for new team members</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +533,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Fix script injection: move all github.event.inputs.* references out of run: blocks into env: mappings</li><li>Pin TobKed/github-forks-sync-action to a specific commit SHA instead of @master</li><li>Add branch protection guardrails to the force-push workflow (restrict target branches)</li></ul>
+                            <ul><li>Add PR-triggered CI with actionlint to validate workflow syntax before merge</li><li>Fix command injection vulnerabilities — quote all dispatch inputs in run: blocks</li><li>Fix &#x27;opendatahub.io&#x27; org name typo in push_release.yml</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add a PR workflow with actionlint to validate workflow YAML on every change</li><li>Consolidate duplicate repo-mapping logic into a reusable composite action or shared script</li><li>Write comprehensive README documenting each workflow&#x27;s purpose, inputs, and prerequisites</li></ul>
+                            <ul><li>Add workflow integration tests using act or workflow dry-run validation</li><li>Create comprehensive README documenting each workflow&#x27;s purpose and usage</li><li>Add CODEOWNERS and branch protection to require reviews for workflow changes</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add workflow_dispatch input validation (check branch exists, commit SHA format valid)</li><li>Create CLAUDE.md with workflow contribution guidelines and testing expectations</li><li>Add CODEOWNERS to require review for workflow changes</li></ul>
+                            <ul><li>Consolidate duplicate sync logic into reusable composite actions</li><li>Add Slack/email notifications for workflow failures</li><li>Create agent rules for safe workflow authoring patterns</li></ul>
                         </div>
                     </div>
                 </div>

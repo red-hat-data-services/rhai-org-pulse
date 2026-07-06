@@ -1,328 +1,547 @@
 ---
 repository: "opendatahub-io-contrib/traefik-proxy"
-overall_score: 2.1
+overall_score: 3.5
 scorecard:
   - dimension: "Unit Tests"
-    score: 3.0
-    status: "Inherited upstream tests exist but no tests for the custom ConfigMap proxy added in the fork"
+    score: 4.0
+    status: "Tests exist for upstream code but the ODH custom module (TraefikTomlConfigmapProxy) has zero tests"
   - dimension: "Integration/E2E"
-    score: 2.0
-    status: "Upstream integration tests for etcd/consul/toml proxies exist; zero integration tests for the Kubernetes ConfigMap proxy"
+    score: 5.0
+    status: "Good integration tests for upstream proxy implementations with real etcd/consul/traefik but nothing for the ConfigMap proxy"
   - dimension: "Build Integration"
-    score: 0.0
-    status: "No PR-time build validation, no Konflux simulation, no image builds"
+    score: 2.0
+    status: "Only basic python -m build on a single Python version, no artifact validation"
   - dimension: "Image Testing"
-    score: 0.0
-    status: "No Dockerfile, no container image builds, no runtime validation"
+    score: 1.0
+    status: "N/A - Python library with no container images or runtime validation"
   - dimension: "Coverage Tracking"
-    score: 2.0
-    status: "Upstream codecov integration exists in test.yml but fork CI is likely non-functional (ubuntu-20.04 runner, Python 3.7-3.9)"
+    score: 4.0
+    status: "pytest-cov and codecov exist but no thresholds or enforcement; custom code untested"
   - dimension: "CI/CD Automation"
-    score: 2.0
-    status: "Two inherited workflows (test + release) using outdated actions (actions/checkout@v2, setup-python@v2) and deprecated ubuntu-20.04 runner"
+    score: 3.0
+    status: "All Python versions and runner OS are EOL; outdated actions; no caching or concurrency control"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude directory, no agent rules or test automation guidance"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory; zero agent-assisted test guidance"
 critical_gaps:
-  - title: "Zero test coverage for custom TraefikTomlConfigmapProxy"
-    impact: "The only code unique to this fork (354 lines of Kubernetes ConfigMap proxy logic) has no tests at all"
+  - title: "ODH custom module (TraefikTomlConfigmapProxy) has ZERO tests"
+    impact: "The entire reason this fork exists — the Kubernetes ConfigMap proxy implementation — is completely untested. Regressions or bugs in route add/delete/get, ConfigMap persistence, or multi-pod synchronization would be invisible."
     severity: "HIGH"
-    effort: "16-24 hours"
-  - title: "Repository appears abandoned since July 2021"
-    impact: "No updates in ~5 years; dependencies are severely outdated; security vulnerabilities likely unpatched"
-    severity: "HIGH"
-    effort: "N/A - requires organizational decision"
-  - title: "No container image or deployment pipeline"
-    impact: "No way to build, test, or deploy the package as a container; no security scanning"
-    severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "CI workflows use deprecated runners and actions"
-    impact: "GitHub Actions workflows likely fail on ubuntu-20.04 (EOL) with Python 3.7 (EOL); tests may not actually run"
+    effort: "8-16 hours"
+  - title: "All CI Python versions are end-of-life"
+    impact: "Tests run on Python 3.7/3.8/3.9 — all EOL. No guarantee of compatibility with Python 3.10+. Security vulnerabilities in EOL interpreters."
     severity: "HIGH"
     effort: "2-4 hours"
   - title: "No security scanning of any kind"
-    impact: "No dependency scanning, no SAST, no secret detection; vulnerable dependencies go undetected"
+    impact: "No SAST, dependency scanning, or secret detection. Vulnerabilities in dependencies (aiohttp, kubernetes, etc.) go undetected."
     severity: "HIGH"
-    effort: "4-6 hours"
-quick_wins:
-  - title: "Update CI workflows to modern runners and actions"
     effort: "2-3 hours"
-    impact: "Restore basic CI functionality with ubuntu-latest, actions/checkout@v4, Python 3.10+"
-  - title: "Add basic unit tests for TraefikTomlConfigmapProxy"
-    effort: "8-12 hours"
-    impact: "Cover the only custom code in this fork; catch regressions in ConfigMap routing logic"
-  - title: "Add Dependabot or Renovate for dependency updates"
-    effort: "1 hour"
-    impact: "Automated alerts for outdated/vulnerable dependencies"
-  - title: "Add pre-commit-config.yaml with black and ruff"
+  - title: "Fork appears stale with only 1 commit"
+    impact: "Upstream jupyterhub/traefik-proxy has continued development. This fork is likely missing security patches, bug fixes, and Python version support."
+    severity: "MEDIUM"
+    effort: "4-8 hours to rebase/sync"
+  - title: "No type checking or linting beyond black"
+    impact: "Runtime type errors, unused imports, unreachable code, and other issues go undetected. The custom module has several potential type issues."
+    severity: "MEDIUM"
+    effort: "3-4 hours"
+quick_wins:
+  - title: "Add pytest tests for TraefikTomlConfigmapProxy with mocked Kubernetes API"
+    effort: "4-6 hours"
+    impact: "Cover the most critical untested code — the entire reason this fork exists"
+  - title: "Update CI to Python 3.10/3.11/3.12 and ubuntu-latest"
     effort: "1-2 hours"
-    impact: "Enforce consistent formatting and catch common Python issues"
+    impact: "Ensure compatibility with supported Python versions and modern OS"
+  - title: "Add dependabot.yml for automated dependency updates"
+    effort: "30 minutes"
+    impact: "Automatic security patches for vulnerable dependencies"
+  - title: "Add ruff linter to CI"
+    effort: "1-2 hours"
+    impact: "Catch bugs, enforce style, replace black with faster all-in-one tool"
+  - title: "Upgrade GitHub Actions from v2 to v4"
+    effort: "30 minutes"
+    impact: "Security improvements and Node.js 20 support (v2 uses deprecated Node 12)"
 recommendations:
   priority_0:
-    - "Determine if this fork is still needed — if the upstream jupyterhub/traefik-proxy has evolved, consider contributing the ConfigMap proxy upstream or archiving this repo"
-    - "Add unit and integration tests for TraefikTomlConfigmapProxy with mocked Kubernetes client"
-    - "Update CI to use supported runners (ubuntu-latest) and Python versions (3.10+)"
+    - "Write comprehensive unit and integration tests for TraefikTomlConfigmapProxy covering route CRUD, ConfigMap persistence, multi-pod sync, error handling, and Kubernetes API failures"
+    - "Update CI matrix to Python 3.10/3.11/3.12 on ubuntu-latest with current GitHub Actions versions"
+    - "Sync with upstream jupyterhub/traefik-proxy to incorporate security patches and bug fixes"
   priority_1:
-    - "Add Dockerfile and container build pipeline if the package is deployed as a container"
-    - "Add dependency scanning (Dependabot/Renovate) and SAST (CodeQL)"
-    - "Create agent rules (.claude/rules/) for test patterns specific to JupyterHub proxy implementations"
+    - "Add ruff for linting and type checking (or mypy) to catch bugs at development time"
+    - "Add GitHub dependency scanning (Dependabot or pip-audit in CI)"
+    - "Add coverage threshold enforcement (e.g., 70% minimum) to prevent regressions"
+    - "Integrate performance benchmarks into CI to detect proxy performance regressions"
   priority_2:
-    - "Add integration tests that deploy against a real KinD cluster to validate ConfigMap proxy behavior"
-    - "Add performance benchmarks for the ConfigMap proxy (the upstream has a performance/ directory)"
-    - "Consider syncing with upstream jupyterhub/traefik-proxy to pick up 5 years of improvements"
+    - "Add agent rules (.claude/rules/) for test creation guidance"
+    - "Add pre-commit hooks via .pre-commit-config.yaml for consistent developer experience"
+    - "Consider adding integration tests that run against a real Kind cluster with Traefik and ConfigMaps"
 ---
 
 # Quality Analysis: traefik-proxy (opendatahub-io-contrib)
 
 ## Executive Summary
 
-- **Overall Score: 2.1/10**
-- **Repository Type**: Python library — JupyterHub proxy implementation using Traefik with Kubernetes ConfigMap storage
-- **Primary Language**: Python (~7,070 lines)
-- **Fork Status**: Fork of `jupyterhub/traefik-proxy` with **1 commit** adding `TraefikTomlConfigmapProxy`
-- **Last Activity**: July 22, 2021 (~5 years ago)
-- **Agent Rules Status**: Missing — no CLAUDE.md, no `.claude/` directory
-
-### Key Strengths
-- Inherited test suite from upstream with good proxy testing patterns (pytest-asyncio, parametrized fixtures)
-- Has a performance benchmarking framework (inherited from upstream)
-- Contributing guidelines and code formatting (black) are documented
-
-### Critical Gaps
-- The **only custom code** in this fork (TraefikTomlConfigmapProxy, 354 lines) has **zero test coverage**
-- Repository is effectively **abandoned** — no commits since July 2021
-- CI workflows use **deprecated** runners (ubuntu-20.04) and Python versions (3.7-3.9)
-- **No security scanning**, no container builds, no dependency management automation
+- **Overall Score: 3.5/10**
+- **Repository Type**: Python library — JupyterHub proxy implementation using Traefik
+- **Primary Language**: Python
+- **Framework**: JupyterHub proxy plugin (with Kubernetes ConfigMap backend)
+- **Fork of**: [jupyterhub/traefik-proxy](https://github.com/jupyterhub/traefik-proxy)
+- **ODH Contribution**: Custom `TraefikTomlConfigmapProxy` class that stores Traefik routing config in Kubernetes ConfigMaps
+- **Key Strengths**: Upstream code has decent integration tests with real etcd/consul/traefik; codecov integration exists; performance benchmark framework present
+- **Critical Gaps**: The custom ODH module (the entire reason this fork exists) has **zero tests**; all CI Python versions are EOL; no security scanning; fork appears stale with only 1 commit
+- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 3.0/10 | Inherited upstream tests; zero tests for custom code |
-| Integration/E2E | 2.0/10 | Upstream integration tests for etcd/consul; none for ConfigMap proxy |
-| **Build Integration** | **0.0/10** | **No PR-time build validation or Konflux simulation** |
-| Image Testing | 0.0/10 | No Dockerfile, no container builds, no runtime validation |
-| Coverage Tracking | 2.0/10 | Inherited codecov config; likely non-functional on deprecated CI |
-| CI/CD Automation | 2.0/10 | Two outdated workflows; deprecated actions and runners |
-| Agent Rules | 0.0/10 | No agent rules, no test automation guidance |
+| Unit Tests | 4/10 | Tests exist for upstream code but ODH custom module has zero tests |
+| Integration/E2E | 5/10 | Good integration tests for upstream proxies with real services; nothing for ConfigMap proxy |
+| **Build Integration** | **2/10** | **Only basic `python -m build` on a single Python version** |
+| Image Testing | 1/10 | N/A — Python library with no container images |
+| Coverage Tracking | 4/10 | pytest-cov + codecov exist but no thresholds; custom code untested |
+| CI/CD Automation | 3/10 | EOL Python versions, outdated actions, no caching or concurrency |
+| Agent Rules | 0/10 | No agent rules whatsoever |
 
 ## Critical Gaps
 
-### 1. Zero Test Coverage for Custom Code
-- **Impact**: The `TraefikTomlConfigmapProxy` class (354 lines) — the entire reason this fork exists — has no tests
-- **Severity**: HIGH
-- **Effort**: 16-24 hours
-- **Details**: The class interacts with the Kubernetes API to manage ConfigMaps for Traefik routing. It includes:
-  - ConfigMap creation and update logic
-  - Route addition/deletion via ConfigMap patches
-  - Multi-pod route verification with retry logic
-  - Endpoint resolution for Traefik service pods
-  - None of these code paths are tested
+### 1. ODH Custom Module Has ZERO Tests (Severity: HIGH)
 
-### 2. Repository Abandoned Since 2021
-- **Impact**: 5 years without updates means severely outdated dependencies, unpatched vulnerabilities, drift from upstream
-- **Severity**: HIGH
-- **Effort**: N/A — requires organizational decision
-- **Details**:
-  - Single commit on top of upstream fork
-  - Python 3.7, 3.8, 3.9 (all EOL) in CI matrix
-  - actions/checkout@v2, actions/setup-python@v2 (both deprecated)
-  - ubuntu-20.04 runner (EOL April 2025)
-  - Dependencies like `etcd3`, `python-consul2` may be unmaintained
+The `TraefikTomlConfigmapProxy` class in `jupyterhub_traefik_proxy/toml_configmap.py` (354 lines) is the sole contribution from this fork and has **no test coverage at all**. This module:
 
-### 3. No Container Image Pipeline
-- **Impact**: No way to build, scan, or validate container images
-- **Severity**: HIGH
-- **Effort**: 8-12 hours
-- **Details**: No Dockerfile or Containerfile exists. If this library is deployed within a container, that container is built elsewhere without validation in this repo.
+- Manages route CRUD operations via Kubernetes ConfigMaps
+- Handles multi-pod Traefik synchronization
+- Implements mutex-based concurrency control
+- Interacts with the Kubernetes API for ConfigMap create/read/patch
 
-### 4. No Security Scanning
-- **Impact**: Vulnerable dependencies and code issues go undetected
-- **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: No CodeQL, no Trivy, no Snyk, no Dependabot, no secret detection, no SAST of any kind.
+**Untested behaviors include:**
+- `add_route()` — ConfigMap patching, route alias generation, multi-pod wait
+- `delete_route()` — ConfigMap cleanup
+- `get_all_routes()` — Route deserialization from ConfigMap
+- `_ensure_configmap()` — ConfigMap creation on first use
+- `_wait_for_route_in_traefik_all_pods()` — retry logic with endpoint resolution
+- `_resolve_traefik_pod_ips()` — Kubernetes Endpoints parsing
+- Error handling paths (HTTPError retry, ApiException handling)
 
-### 5. CI Workflows Likely Broken
-- **Impact**: Tests may not actually run, giving false confidence
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**:
-  - `ubuntu-20.04` runner has been deprecated by GitHub
-  - Python 3.7 is EOL since June 2023
-  - actions/checkout@v2 and setup-python@v2 are deprecated
-  - The codecov submission uses the deprecated `codecov` CLI (not `codecov/codecov-action`)
+**Impact**: Any regression or bug in route management, ConfigMap persistence, or Kubernetes API interaction would be completely invisible until runtime failures occur in production JupyterHub deployments.
+
+### 2. All CI Python Versions Are End-of-Life (Severity: HIGH)
+
+The test matrix uses Python 3.7, 3.8, and 3.9 — all of which have reached end-of-life:
+- Python 3.7: EOL June 2023
+- Python 3.8: EOL October 2024
+- Python 3.9: EOL October 2025
+
+The runner OS (`ubuntu-20.04`) is also EOL (April 2025) and GitHub has deprecated it.
+
+**Impact**: No guarantee the library works with modern Python (3.10+). Security vulnerabilities in the Python interpreter itself go unpatched.
+
+### 3. No Security Scanning (Severity: HIGH)
+
+The repository has:
+- No SAST (CodeQL, Semgrep, Bandit)
+- No dependency scanning (Dependabot, pip-audit, Safety)
+- No secret detection (Gitleaks, TruffleHog)
+- No `.gitleaks.toml` or `.trivyignore`
+
+The library depends on `aiohttp`, `kubernetes`, `toml`, and other packages that have had CVEs. Without scanning, vulnerable versions persist indefinitely.
+
+### 4. Fork Appears Stale (Severity: MEDIUM)
+
+The entire fork history consists of a single commit:
+```
+b468da0 Add a custom implementation of TraefikTomlConfigmapProxy (#2)
+```
+
+The upstream `jupyterhub/traefik-proxy` has continued active development. This fork is likely missing:
+- Security patches
+- Bug fixes
+- Python version support updates
+- Traefik version compatibility updates
+
+### 5. No Type Checking or Linting Beyond Black (Severity: MEDIUM)
+
+The only code quality tool is the `black` formatter, configured via `pyproject.toml` and an optional git hook. There is:
+- No linter (ruff, flake8, pylint)
+- No type checker (mypy, pyright)
+- No static analysis
+
+The custom module has several potential issues that a linter/type checker would catch:
+- Bare `except:` clauses in `tests/utils.py`
+- Missing type annotations throughout
+- Potential `NoneType` access in `_get_route_unsafe`
 
 ## Quick Wins
 
-### 1. Update CI Workflows (2-3 hours)
-Modernize `.github/workflows/test.yml`:
-- Runner: `ubuntu-20.04` → `ubuntu-latest`
-- Actions: `@v2` → `@v4`
-- Python matrix: `3.7-3.9` → `3.10-3.12`
-- Codecov: `codecov` CLI → `codecov/codecov-action@v4`
+### 1. Write Tests for TraefikTomlConfigmapProxy (4-6 hours)
 
-### 2. Add Dependabot (1 hour)
-Create `.github/dependabot.yml` for automated dependency update PRs.
+Using `unittest.mock` to mock the Kubernetes client:
 
-### 3. Add Pre-commit Config (1-2 hours)
-Replace the manual `git-hooks/` with a `.pre-commit-config.yaml` using black, ruff, and other standard checks.
+```python
+# tests/test_toml_configmap.py
+import pytest
+from unittest.mock import MagicMock, patch, AsyncMock
+from jupyterhub_traefik_proxy.toml_configmap import TraefikTomlConfigmapProxy
 
-### 4. Add Basic ConfigMap Proxy Tests (8-12 hours)
-Write unit tests for `TraefikTomlConfigmapProxy` using `unittest.mock` to mock the Kubernetes client:
-- Test `_ensure_configmap()` for both exists and not-found cases
-- Test `add_route()` updates routes_cache and persists to ConfigMap
-- Test `delete_route()` removes routes and persists
-- Test `get_all_routes()` correctly parses cached routes
-- Test `_resolve_traefik_pod_ips()` endpoint resolution
+@pytest.fixture
+def mock_k8s_client():
+    with patch('jupyterhub_traefik_proxy.toml_configmap.client') as mock_client:
+        mock_v1 = MagicMock()
+        mock_client.CoreV1Api.return_value = mock_v1
+        mock_cm = MagicMock()
+        mock_cm.data = {'rules.toml': '[backends]\n[frontends]\n'}
+        mock_v1.read_namespaced_config_map.return_value = mock_cm
+        yield mock_v1
+
+@pytest.mark.asyncio
+async def test_add_route(mock_k8s_client):
+    proxy = TraefikTomlConfigmapProxy()
+    # ... test add_route updates ConfigMap correctly
+
+@pytest.mark.asyncio
+async def test_delete_route(mock_k8s_client):
+    proxy = TraefikTomlConfigmapProxy()
+    # ... test delete_route removes from ConfigMap
+
+@pytest.mark.asyncio
+async def test_ensure_configmap_creates_when_missing(mock_k8s_client):
+    from kubernetes.client.rest import ApiException
+    mock_k8s_client.read_namespaced_config_map.side_effect = ApiException(status=404, reason='Not Found')
+    proxy = TraefikTomlConfigmapProxy()
+    mock_k8s_client.create_namespaced_config_map.assert_called_once()
+```
+
+### 2. Update CI to Modern Python Versions (1-2 hours)
+
+```yaml
+# .github/workflows/test.yml
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python:
+          - "3.10"
+          - "3.11"
+          - "3.12"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+```
+
+### 3. Add Dependabot (30 minutes)
+
+```yaml
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+```
+
+### 4. Add Ruff Linter (1-2 hours)
+
+```toml
+# pyproject.toml
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "SIM"]
+```
+
+```yaml
+# In CI workflow
+- name: Lint with ruff
+  run: |
+    pip install ruff
+    ruff check .
+```
+
+### 5. Upgrade GitHub Actions (30 minutes)
+
+Replace all `@v2` with `@v4`:
+- `actions/checkout@v2` → `actions/checkout@v4`
+- `actions/setup-python@v2` → `actions/setup-python@v5`
+- `pypa/gh-action-pypi-publish@v1.4.1` → `pypa/gh-action-pypi-publish@release/v1`
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows Found**: 2
-- `test.yml` — Runs pytest on PRs and pushes (Python 3.7, 3.8, 3.9)
-- `release.yml` — Builds and publishes to PyPI on tags
+**Workflows:**
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `test.yml` | PR + push (all branches) | Run pytest with coverage |
+| `release.yml` | Tags + master push | Build wheel, publish to PyPI |
 
-**Issues**:
-- No concurrency control (concurrent PRs can run tests simultaneously)
-- No caching of pip dependencies
-- No matrix for multiple OS (only ubuntu-20.04)
-- Runner and Python versions are all EOL/deprecated
-- Test workflow installs real `traefik`, `etcd`, and `consul` binaries — heavy setup
-- No timeout configuration on jobs
-- Release workflow publishes with `pypa/gh-action-pypi-publish@v1.4.1` (current is v1.12+)
+**Issues:**
+- **Outdated matrix**: Python 3.7/3.8/3.9 (all EOL)
+- **Outdated runner**: `ubuntu-20.04` (EOL, deprecated by GitHub)
+- **Outdated actions**: All at v2 (v4/v5 available; v2 uses Node.js 12 which is deprecated)
+- **No concurrency control**: Multiple workflow runs can overlap
+- **No pip caching**: Each run reinstalls all dependencies from scratch
+- **No fail-fast disabled for the right reason**: It's disabled, which is good for matrix testing, but the rationale comment is minimal
+- **Package build only on 3.8**: The sdist/wheel build only runs on one Python version
+- **codecov without token**: Uses bare `codecov` command which may fail without `CODECOV_TOKEN` secret
+
+**Missing:**
+- No concurrency groups to cancel stale runs
+- No pip caching (`actions/cache` or `setup-python` cache)
+- No test result reporting (e.g., `pytest --junitxml`)
+- No lint/format check step
+- No type checking step
 
 ### Test Coverage
 
-**Test Files**: 5 files, 1,243 total lines
-- `test_proxy.py` (26 lines) — Parameterized proxy tests across 10 backend configurations
-- `proxytest.py` (449 lines) — Core test suite: route CRUD, headers, websockets, check_routes
-- `test_installer.py` (185 lines) — Binary installer tests (traefik, etcd, consul)
-- `test_traefik_api_auth.py` (52 lines) — API authentication tests
-- `test_traefik_utils.py` (74 lines) — Utility function tests
+**Test Inventory:**
 
-**Source Files**: ~2,370 lines (excluding `_version.py`)
-- `toml_configmap.py` (354 lines) — **UNTESTED** — the fork's custom code
-- `proxy.py` (347 lines) — Base proxy class
-- `kv_proxy.py` (369 lines) — Key-value store proxy
-- `toml.py` (274 lines) — TOML file proxy
-- `consul.py` (242 lines) — Consul proxy
-- `etcd.py` (196 lines) — Etcd proxy
-- `install.py` (415 lines) — Binary installer
-- `traefik_utils.py` (159 lines) — Utility functions
+| File | Lines | Type | What It Tests |
+|------|-------|------|---------------|
+| `test_proxy.py` | 26 | Integration | Parameterized across all 10 proxy fixture variants |
+| `proxytest.py` | 449 | Shared | Core test implementations: add/get/delete routes, get_all_routes, host/origin headers, check_routes, websockets |
+| `test_traefik_api_auth.py` | 52 | Integration | Traefik API authentication (valid/invalid credentials) |
+| `test_traefik_utils.py` | 74 | Unit | Route round-trip serialization, atomic file writing |
+| `test_installer.py` | 185 | Integration | Binary installer for traefik/etcd/consul (version, platform, output dir) |
+| `conftest.py` | 343 | Fixtures | 15+ fixtures for various proxy configurations |
+| `utils.py` | 65 | Utilities | Host checks, backend port resolution |
 
-**Test-to-Code Ratio**: ~0.52 (reasonable for inherited code, but the custom code has 0.0)
+**Metrics:**
+- **Test lines**: 1,243 (across tests/)
+- **Source lines**: 1,849 (excluding auto-generated `_version.py`)
+- **Test-to-code ratio**: 67% — decent for upstream code
+- **Test-to-code ratio for ODH custom code**: 0% — **zero tests for 354 lines of custom code**
 
-**Test Infrastructure**:
-- Framework: pytest with pytest-asyncio
-- Fixtures: Well-structured with parameterized proxy backends
-- Real service dependencies: Tests require running etcd and consul
-- Coverage: pytest-cov configured, codecov submission attempted
-- No mocking of Kubernetes API (the custom ConfigMap proxy can't be tested without K8s)
+**Strengths:**
+- Comprehensive parameterized testing across proxy implementations (TOML, etcd, consul) with both managed and external modes
+- Integration tests launch real etcd and consul processes
+- Tests cover auth and no-auth scenarios
+- URL encoding and special character handling tested
+- WebSocket routing tested
+
+**Weaknesses:**
+- `TraefikTomlConfigmapProxy` has **zero tests** — this is the most critical gap
+- No mocking of Kubernetes API for unit-level testing
+- Performance benchmarks exist but aren't run in CI
+- No negative/error path testing (what happens when etcd/consul is down?)
+- No concurrent access testing for the mutex-protected routes
 
 ### Code Quality
 
-**Formatting**: Black configured in `pyproject.toml` with custom exclusions
-**Pre-commit**: Manual git hook in `git-hooks/pre-commit` (runs `black .`), not using `.pre-commit-config.yaml`
-**Linting**: No linter configured (no ruff, flake8, pylint, mypy)
-**Type checking**: No type annotations, no mypy configuration
-**Static analysis**: None
+**Tools in Use:**
+| Tool | Status | Notes |
+|------|--------|-------|
+| black | Configured | Via `pyproject.toml` and optional git hook |
+| ruff/flake8/pylint | Missing | No linter configured |
+| mypy/pyright | Missing | No type checking |
+| pre-commit | Missing | Only manual git hook, not `.pre-commit-config.yaml` |
+| CodeQL | Missing | No SAST |
+| Bandit | Missing | No Python security linter |
+
+**Code Issues Observed:**
+- Bare `except:` in `tests/utils.py:is_open()` — catches and silences all exceptions
+- No type annotations in any module
+- `_get_route_unsafe` has a recursive helper `get_target_data` that mutates outer scope — error-prone pattern
+- Hard-coded retry count (`tries_left = 3`) in `_wait_for_route_in_traefik_all_pods` with no configuration
 
 ### Container Images
 
-**Status**: No container-related files whatsoever
-- No Dockerfile/Containerfile
-- No docker-compose.yml
-- No .dockerignore
-- No multi-architecture support
-- No SBOM generation
-- No image signing
+**Not applicable** — this is a pure Python library distributed via PyPI. There are no Dockerfiles, Containerfiles, or container image builds.
+
+However, if this library is used inside container images (e.g., JupyterHub deployments), the consumers should test the library within their container builds.
 
 ### Security
 
-**Status**: No security practices implemented
-- No CodeQL workflow
-- No dependency scanning (Dependabot/Renovate)
-- No container scanning (Trivy/Snyk)
-- No secret detection (Gitleaks/TruffleHog)
-- No SBOM generation
-- Hardcoded credentials in test fixtures (expected for tests, but no `.gitleaks.toml` to distinguish)
+**Security Posture: Weak**
+
+| Security Practice | Status |
+|-------------------|--------|
+| SAST (CodeQL/Semgrep/Bandit) | Missing |
+| Dependency scanning (Dependabot/Safety/pip-audit) | Missing |
+| Secret detection (Gitleaks/TruffleHog) | Missing |
+| Container scanning (Trivy/Snyk) | N/A |
+| SBOM generation | Missing |
+| Signed releases | Missing |
+
+**Dependency Risk:**
+The library depends on:
+- `aiohttp` — has had multiple CVEs
+- `kubernetes` — Kubernetes Python client, needs regular updates
+- `toml` — archived; should migrate to `tomllib` (stdlib in 3.11+) or `tomli`
+- `etcd3` / `python-consul2` — niche dependencies with uncertain maintenance
+
+Without dependency scanning, vulnerable versions persist indefinitely.
 
 ### Agent Rules (Agentic Flow Quality)
 
 **Status**: Missing
-- No `CLAUDE.md` or `AGENTS.md`
+- No `CLAUDE.md` in repository root
+- No `AGENTS.md` in repository root
 - No `.claude/` directory
-- No `.claude/rules/` directory
-- No test automation guidance for AI agents
-- No custom skills
+- No `.claude/rules/` for test creation guidance
+- No `.claude/skills/` for custom skills
 
-**Recommendation**: If this repo is actively maintained, generate agent rules using `/test-rules-generator` to provide:
-- Unit test patterns for JupyterHub proxy implementations
-- Integration test guidance for Kubernetes-backed proxies
-- Mock patterns for the Kubernetes client
+**Impact**: AI coding assistants have no project-specific guidance for:
+- Writing tests for the Kubernetes ConfigMap proxy
+- Understanding the proxy architecture
+- Following project conventions
+- Knowing which backends to test against
+
+**Recommendation**: Generate test rules with `/test-rules-generator` covering:
+- Unit tests with mocked Kubernetes API
+- Integration tests with real Traefik
+- Async test patterns (pytest-asyncio)
+- Fixture usage patterns
+
+### Performance Testing
+
+**Status**: Present but not automated
+
+The `performance/` directory contains a comprehensive benchmark framework:
+- `check_perf.py` — Main benchmark runner (methods + throughput)
+- `perf_utils.py` — Timing utilities and argument parsing
+- `run_benchmark.sh` / `run_benchmark_sequential.sh` — Shell scripts for running benchmarks
+- `ProxyPerformance.ipynb` — Jupyter notebook for analysis
+- `results/` — CSV results for various proxy backends
+
+**Benchmarks measured:**
+- Route add/delete/get_all performance (concurrent and sequential)
+- HTTP throughput (small and large payloads)
+- WebSocket throughput
+
+**Gap**: These benchmarks are not integrated into CI, so performance regressions go undetected.
 
 ## Recommendations
 
-### Priority 0 (Critical — Decide First)
+### Priority 0 (Critical)
 
-1. **Determine if this fork is still needed**
-   - The upstream `jupyterhub/traefik-proxy` has had 5 years of development since this fork
-   - If the ConfigMap proxy is still needed, consider contributing it upstream
-   - If not needed, archive this repository
+1. **Write comprehensive tests for TraefikTomlConfigmapProxy**
+   - Unit tests with mocked Kubernetes client for all CRUD operations
+   - Test ConfigMap creation when missing
+   - Test multi-pod synchronization logic
+   - Test error handling (API failures, timeouts, HTTP errors)
+   - Test concurrent access (mutex correctness)
+   - Effort: 8-16 hours
 
-2. **Add tests for TraefikTomlConfigmapProxy** (if keeping the repo)
-   - Mock `kubernetes.client.CoreV1Api` to test ConfigMap CRUD
-   - Test route add/delete/get lifecycle
-   - Test multi-pod route verification with retry logic
-   - Test error handling (ConfigMap not found, API failures)
+2. **Update CI to supported Python versions and modern tooling**
+   - Python 3.10, 3.11, 3.12 matrix
+   - `ubuntu-latest` runner
+   - Actions v4/v5
+   - Add pip caching
+   - Add concurrency control
+   - Effort: 2-4 hours
 
-3. **Update CI to use supported infrastructure**
-   - Modern runners, Python versions, and action versions
+3. **Sync with upstream jupyterhub/traefik-proxy**
+   - Rebase or merge upstream changes
+   - Resolve any conflicts in the custom module
+   - Pick up security patches and bug fixes
+   - Effort: 4-8 hours
 
 ### Priority 1 (High Value)
 
-1. **Add dependency scanning** — Dependabot or Renovate
-2. **Add SAST** — CodeQL for Python
-3. **Add linting** — ruff for fast Python linting and formatting
-4. **Create agent rules** — test patterns for proxy implementations
+4. **Add linting and type checking**
+   - Add `ruff` for linting (replaces black + flake8 + isort)
+   - Add `mypy` for type checking with at least `--ignore-missing-imports`
+   - Add type annotations to the custom module
+   - Effort: 3-4 hours
+
+5. **Add dependency scanning**
+   - Enable Dependabot for pip and GitHub Actions
+   - Add `pip-audit` to CI workflow
+   - Effort: 1-2 hours
+
+6. **Add coverage enforcement**
+   - Add `.codecov.yml` with minimum threshold (e.g., 70%)
+   - Require PR coverage to not decrease
+   - Effort: 1-2 hours
+
+7. **Integrate performance benchmarks into CI**
+   - Run a subset of benchmarks on PRs
+   - Store results and compare against baseline
+   - Effort: 4-6 hours
 
 ### Priority 2 (Nice-to-Have)
 
-1. **Add KinD-based integration tests** for the ConfigMap proxy
-2. **Sync with upstream** to pick up improvements
-3. **Add performance testing** for the ConfigMap proxy (upstream has benchmarking framework)
-4. **Add type annotations** and mypy checking
+8. **Add agent rules for test creation**
+   - Create `.claude/rules/` with test patterns for this project
+   - Document pytest-asyncio patterns, fixture usage, Kubernetes mocking
+   - Effort: 2-3 hours
+
+9. **Add pre-commit hooks via `.pre-commit-config.yaml`**
+   - Replace manual git hook with standard pre-commit framework
+   - Include ruff, mypy, trailing whitespace, YAML lint
+   - Effort: 1-2 hours
+
+10. **Add integration tests with Kind cluster**
+    - Deploy Traefik + ConfigMap-based proxy in Kind
+    - Test actual route registration and traffic forwarding
+    - Effort: 8-16 hours
 
 ## Comparison to Gold Standards
 
-| Practice | traefik-proxy | odh-dashboard | notebooks | kserve |
-|----------|--------------|---------------|-----------|--------|
-| Unit Tests | Inherited only | Comprehensive | Image-focused | Extensive |
-| Integration Tests | Inherited only | Contract tests | Multi-layer | Multi-version |
-| Custom Code Tests | **None** | Full coverage | Full coverage | Full coverage |
-| Coverage Tracking | Broken codecov | Enforced | Tracked | Enforced |
-| CI/CD | Deprecated | Modern, cached | Multi-arch | Matrix |
-| Security Scanning | **None** | Trivy + CodeQL | Trivy | Snyk + CodeQL |
-| Container Testing | **None** | Image validation | 5-layer | Runtime tests |
-| Agent Rules | **None** | Comprehensive | Present | Present |
-| Pre-commit | Manual only | Enforced | Enforced | Enforced |
-| Last Activity | 2021 | Active | Active | Active |
+| Dimension | traefik-proxy | odh-dashboard | notebooks | kserve |
+|-----------|--------------|---------------|-----------|--------|
+| Unit Tests | 4/10 | 9/10 | 7/10 | 8/10 |
+| Integration/E2E | 5/10 | 9/10 | 8/10 | 9/10 |
+| Build Integration | 2/10 | 8/10 | 9/10 | 7/10 |
+| Image Testing | 1/10 | 7/10 | 9/10 | 7/10 |
+| Coverage Tracking | 4/10 | 8/10 | 6/10 | 8/10 |
+| CI/CD Automation | 3/10 | 9/10 | 8/10 | 9/10 |
+| Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
+| **Overall** | **3.5/10** | **8.5/10** | **7.5/10** | **7.5/10** |
+
+### Key Gaps vs. Gold Standards
+
+- **odh-dashboard**: Has multi-layer testing (unit, integration, E2E, contract), comprehensive CI with caching and concurrency, coverage enforcement, and detailed agent rules. traefik-proxy lacks all of these.
+- **notebooks**: Has 5-layer image validation, multi-architecture support, and security scanning. traefik-proxy has no container testing at all.
+- **kserve**: Has multi-version testing, coverage enforcement, and comprehensive E2E. traefik-proxy's integration tests are good for upstream code but miss the ODH custom module entirely.
 
 ## File Paths Reference
 
-| Category | Path | Notes |
-|----------|------|-------|
-| CI/CD | `.github/workflows/test.yml` | Main test workflow (deprecated) |
-| CI/CD | `.github/workflows/release.yml` | PyPI release workflow |
-| Source | `jupyterhub_traefik_proxy/toml_configmap.py` | Custom fork code (UNTESTED) |
-| Source | `jupyterhub_traefik_proxy/proxy.py` | Base proxy class |
-| Tests | `tests/test_proxy.py` | Parameterized proxy tests |
-| Tests | `tests/proxytest.py` | Core test implementations |
-| Tests | `tests/conftest.py` | Test fixtures and setup |
-| Config | `pyproject.toml` | Black formatting config |
-| Config | `setup.py` | Package configuration |
-| Dependencies | `requirements.txt` | Runtime dependencies |
-| Dependencies | `dev-requirements.txt` | Test/dev dependencies |
-| Hooks | `git-hooks/pre-commit` | Manual black formatter hook |
-| Performance | `performance/` | Benchmark framework (inherited) |
+### Source Code
+- `jupyterhub_traefik_proxy/toml_configmap.py` — **ODH custom module** (354 lines, zero tests)
+- `jupyterhub_traefik_proxy/proxy.py` — Base TraefikProxy class
+- `jupyterhub_traefik_proxy/toml.py` — TOML file-based proxy
+- `jupyterhub_traefik_proxy/etcd.py` — etcd-backed proxy
+- `jupyterhub_traefik_proxy/consul.py` — Consul-backed proxy
+- `jupyterhub_traefik_proxy/kv_proxy.py` — Key-value store base proxy
+- `jupyterhub_traefik_proxy/install.py` — Binary installer
+- `jupyterhub_traefik_proxy/traefik_utils.py` — Shared utilities
+
+### Tests
+- `tests/test_proxy.py` — Integration test entry point
+- `tests/proxytest.py` — Shared test implementations
+- `tests/test_traefik_api_auth.py` — API auth tests
+- `tests/test_traefik_utils.py` — Utility unit tests
+- `tests/test_installer.py` — Installer tests
+- `tests/conftest.py` — Pytest fixtures
+
+### CI/CD
+- `.github/workflows/test.yml` — Test workflow (PR + push)
+- `.github/workflows/release.yml` — Release workflow (tags)
+
+### Configuration
+- `pyproject.toml` — Build system and black config
+- `setup.py` — Package metadata
+- `setup.cfg` — Versioneer config
+- `requirements.txt` — Runtime dependencies
+- `dev-requirements.txt` — Development dependencies
+- `readthedocs.yml` — Documentation build
+
+### Performance
+- `performance/check_perf.py` — Benchmark runner
+- `performance/perf_utils.py` — Timing utilities
+- `performance/results/` — Benchmark CSV results
+
+### Git Hooks
+- `git-hooks/pre-commit` — Black formatter hook
+- `git-hooks/install` — Hook installer

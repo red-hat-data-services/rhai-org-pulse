@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:51 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:25 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/opendatahub.io</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="463.69868399999996"
+                                stroke-dashoffset="429.76951199999996"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">1.8</div>
+                        <div class="score-value">2.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No test files exist anywhere in the repository</div>
+                            <div class="scorecard-status">No test files exist; no testing framework installed</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E test infrastructure</div>
+                            <div class="scorecard-status">No integration or E2E tests; no Cypress/Playwright/Jest configured</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">PR workflow runs gatsby build only — no type checking, no linting</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">PR workflow runs gatsby build but no type-check, lint, or image validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No Dockerfile, no container image pipeline</div>
+                            <div class="scorecard-status">No Dockerfile, no container builds, no image testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tool configured, no codecov/coveralls integration</div>
+                            <div class="scorecard-status">No coverage tools configured; no codecov, coveralls, or thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Three basic workflows: PR build check, two deploy pipelines (duplicated)</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Three workflows present (PR build, deploy, Pages) with caching but minimal validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
                         </div>
                     </div>
                 </div>
@@ -412,7 +412,7 @@
                         
                         <li class="item-card high">
                             <div class="item-description">Zero test coverage — no tests of any kind</div>
-                            <p>Any code change can silently break the site with no automated detection</p>
+                            <p>Regressions, broken pages, and rendering issues are completely undetectable before merge</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">16-24 hours</span>
@@ -420,39 +420,31 @@
                         </li>
                         <li class="item-card high">
                             <div class="item-description">No linting or static analysis in CI</div>
-                            <p>Code quality regressions, inconsistent patterns, and potential bugs go undetected</p>
+                            <p>Code quality issues, unused imports, and type errors slip into main unchecked</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Duplicate deploy workflows (deploy-site.yml and gatsby.yml)</div>
-                            <p>Confusing CI config, potential race conditions on deploy, wasted compute</p>
+                        <li class="item-card high">
+                            <div class="item-description">No security scanning</div>
+                            <p>Vulnerable dependencies (npm) are never detected; no Dependabot, Snyk, or Trivy</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">No security scanning (SAST, dependency, secret detection)</div>
-                            <p>Vulnerable dependencies and leaked secrets are not caught</p>
+                        <li class="item-card medium">
+                            <div class="item-description">PR workflow only runs build — no typecheck</div>
+                            <p>TypeScript type errors can merge despite strict: true in tsconfig</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No type checking in CI</div>
-                            <p>TypeScript errors can be merged without detection despite tsconfig having strict mode</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No Dependabot or Renovate for dependency updates</div>
-                            <p>Dependencies become stale and accumulate vulnerabilities over time</p>
+                            <div class="item-description">Duplicate deployment workflows</div>
+                            <p>deploy-site.yml and gatsby.yml both deploy on push to main, risking race conditions</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1 hour</span>
@@ -472,43 +464,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add TypeScript type checking to PR workflow</div>
-                            <p>Catches type errors before merge — the typecheck script already exists in package.json</p>
+                            <div class="item-description">Add npm run typecheck to PR workflow</div>
+                            <p>Catch type errors before merge — tsconfig already has strict: true</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add ESLint with React/TypeScript config</div>
-                            <p>Catches bugs, enforces consistency across 34 TSX and 8 TS source files</p>
+                            <div class="item-description">Add ESLint with React/TypeScript plugins</div>
+                            <p>Catch code quality issues, unused variables, accessibility problems</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Enable GitHub Dependabot for npm</div>
+                            <p>Automated dependency vulnerability alerts and PRs</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">30 minutes</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add Lighthouse CI to PR workflow</div>
+                            <p>Catch performance regressions, accessibility issues, and SEO problems for every PR</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Dependabot configuration</div>
-                            <p>Automated dependency update PRs keep npm packages current and secure</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
                             <div class="item-description">Consolidate duplicate deploy workflows</div>
-                            <p>Eliminates confusion and potential double-deploys</p>
+                            <p>Eliminate race conditions between deploy-site.yml and gatsby.yml</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add basic Cypress or Playwright smoke tests</div>
-                            <p>Validates that key pages render correctly on every PR</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -525,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add TypeScript type checking (npm run typecheck) to the PR workflow immediately</li><li>Install and configure ESLint with typescript-eslint and eslint-plugin-react, add to CI</li><li>Add at least smoke-level E2E tests (Cypress or Playwright) to verify page rendering</li></ul>
+                            <ul><li>Add ESLint + TypeScript type checking to PR workflow to establish minimum quality gate</li><li>Enable Dependabot or Renovate for automated dependency vulnerability scanning</li><li>Add at least smoke-level unit tests for key components (Navbar, Layout, ContentCard)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add dependency scanning via Dependabot or Renovate</li><li>Add GitHub CodeQL or Snyk for security scanning</li><li>Consolidate the two overlapping deploy workflows into one</li><li>Add component-level unit tests with Jest and React Testing Library</li></ul>
+                            <ul><li>Add Cypress or Playwright E2E tests for critical pages (homepage, docs, blog)</li><li>Add Lighthouse CI for performance/accessibility regression detection</li><li>Create agent rules (.claude/rules/) for test creation and code quality standards</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add accessibility testing (axe-core) for key pages</li><li>Add Lighthouse CI for performance regression detection</li><li>Create CLAUDE.md and .claude/rules/ for agent-assisted development</li><li>Add pre-commit hooks with Husky for local quality gates</li></ul>
+                            <ul><li>Add visual regression testing (Percy, Chromatic) for UI consistency</li><li>Add link checking automation to catch broken internal/external links</li><li>Containerize the build for reproducibility and add image scanning</li></ul>
                         </div>
                     </div>
                 </div>

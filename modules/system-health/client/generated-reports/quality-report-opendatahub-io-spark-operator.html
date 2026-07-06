@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:06 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:35 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/spark-operator</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#ffc107"
+                                stroke="#28a745"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="130.06182599999997"
+                                stroke-dashoffset="101.78751600000001"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.7</div>
+                        <div class="score-value">8.2</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Good Ginkgo/Gomega suite with envtest; 42 test files, 0.76 test-to-code LOC ratio</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">60 test files, strong controller/webhook coverage with Ginkgo + testify</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Excellent dual-method (Helm + Kustomize) E2E across 9 Kubernetes versions (v1.24-v1.32)</div>
+                            <div class="scorecard-status">Multi-version E2E matrix (K8s v1.32-v1.35), dual deploy methods (Helm + Kustomize), Kueue integration tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Konflux pipelines for PR/push/release; multi-arch builds; centralized pipeline from odh-konflux-central</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">PR-time Docker builds, Kustomize lint &amp; drift detection, Tekton/Konflux pipelines configured</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
-                            <div class="scorecard-status">Images loaded to KIND for E2E but Trivy runs weekly only; no PR-time scanning or SBOM</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Multi-stage Docker builds, Kind-loaded image validation, but no container runtime scanning</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Codecov with separate unit/e2e flags and auto threshold with 1% regression tolerance</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Codecov with separate unit/e2e flags, auto-threshold enforcement on PRs</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">17 workflows with concurrency control, multi-version matrix, reusable workflows, composite actions</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">19 workflows, concurrency control, path-filtered triggers, reusable workflows</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">CLAUDE.md with project context present but no .claude/rules/ for test automation guidance</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Comprehensive CLAUDE.md with project structure, build, test, and lint docs; no .claude/rules/</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +411,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No PR-time container vulnerability scanning</div>
-                            <p>Security vulnerabilities in dependencies only detected weekly; can ship to production undetected</p>
+                            <div class="item-description">No container image vulnerability scanning</div>
+                            <p>CVEs in base images or dependencies may reach production undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No SBOM generation or image signing</div>
-                            <p>Supply chain compliance gaps; no verifiable software bill of materials for production images</p>
+                            <div class="item-description">No SAST/CodeQL workflow</div>
+                            <p>Go-specific security patterns (SQL injection, path traversal) not checked</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Weak pre-commit hooks (only helm-docs)</div>
-                            <p>Code quality checks only enforced in CI, not at developer commit time</p>
+                            <div class="item-description">Pre-commit hooks limited to Helm docs only</div>
+                            <p>Linting and formatting checks only run in CI, not at commit time</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No CodeQL or SAST in PR workflow</div>
-                            <p>Static analysis security findings not surfaced until weekly Semgrep runs</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -457,31 +449,31 @@
                         
                         <li class="item-card ">
                             <div class="item-description">Add Trivy scanning to PR workflow</div>
-                            <p>Catch security vulnerabilities before merge; already have Trivy workflow as template</p>
+                            <p>Catch CVEs in base Spark images and Go dependencies before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Expand pre-commit hooks with golangci-lint and go-vet</div>
-                            <p>Shift-left code quality checks to developer workstation</p>
+                            <div class="item-description">Add CodeQL analysis workflow</div>
+                            <p>Automated Go security pattern detection on every PR</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL workflow for Go</div>
-                            <p>Automated SAST on every PR; GitHub provides free CodeQL for open source</p>
+                            <div class="item-description">Expand pre-commit hooks with golangci-lint and gitleaks</div>
+                            <p>Shift lint and secret detection left to developer workstations</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create basic .claude/rules/ for test patterns</div>
-                            <p>Guide AI-assisted test generation with project-specific Ginkgo/envtest patterns</p>
+                            <div class="item-description">Create .claude/rules/ for test pattern guidance</div>
+                            <p>Improve AI-generated test quality with repo-specific patterns</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -501,15 +493,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add Trivy container scanning to PR workflow to catch vulnerabilities before merge</li><li>Add SBOM generation to Konflux pipelines for supply chain compliance</li></ul>
+                            <ul><li>Add container image vulnerability scanning (Trivy) to PR and push workflows</li><li>Add CodeQL or gosec SAST workflow for Go security analysis</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add CodeQL SAST workflow for Go security analysis on PRs</li><li>Expand pre-commit hooks to include golangci-lint, go-vet, go-fmt</li><li>Create .claude/rules/ with Ginkgo/envtest test patterns for AI-assisted development</li><li>Add strict coverage threshold enforcement (e.g., minimum 60% for new code)</li></ul>
+                            <ul><li>Expand pre-commit hooks with golangci-lint, go-fmt, and gitleaks</li><li>Add container runtime validation (image startup + health check in Kind)</li><li>Create .claude/rules/ directory with unit-test, e2e-test, and webhook-test rules</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add image signing/attestation with cosign for supply chain security</li><li>Add performance regression testing for operator reconciliation loops</li><li>Consolidate E2E test suites (test/e2e/ and examples/openshift/tests/e2e/) as noted in CLAUDE.md</li></ul>
+                            <ul><li>Add SBOM generation for container images</li><li>Add image signing/attestation with cosign</li><li>Add performance regression tests for reconciliation loops</li></ul>
                         </div>
                     </div>
                 </div>

@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 09:59 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 03:31 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">openclaw/openclaw</h2>
         </header>
 
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
-                            <div class="scorecard-status">6,171 test files with Vitest; 0.66 test-to-source ratio; extensive domain coverage</div>
+                            <div class="scorecard-status">6,785 test files with Vitest; exceptional test-to-code ratio of 0.71</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Contract tests, boundary tests, live E2E with Mantis, Docker E2E lanes, multi-OS matrix</div>
+                            <div class="scorecard-status">Extensive E2E suite across CLI, gateway, UI, Docker, and live provider lanes</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">PR-time build artifacts, Docker build validation, package acceptance pipeline</div>
+                            <div class="scorecard-status">PR-time artifact builds with verification; Docker multi-stage builds cached</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Multi-stage Docker builds, install smoke tests, Docker E2E, release validation</div>
+                            <div class="scorecard-status">Install smoke tests, Docker E2E lanes, package acceptance workflows</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Vitest coverage-v8 integration, Swift codecov, no enforced PR coverage thresholds</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">No codecov/coveralls integration; no coverage thresholds or PR reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
-                            <div class="scorecard-status">56 workflows, 2200-line main CI, preflight routing, concurrency control, Blacksmith runners</div>
+                            <div class="scorecard-status">66 workflows; advanced concurrency, caching, matrix routing, and Blacksmith runners</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
-                            <div class="scorecard-status">277-line AGENTS.md, comprehensive coding/testing/review/security guidelines, copilot instructions</div>
+                            <div class="scorecard-status">Comprehensive AGENTS.md with 20+ scoped files; extensive .agents/skills directory</div>
                         </div>
                     </div>
                 </div>
@@ -410,28 +410,28 @@
                 <div class="section-content">
                     <ul class="items-list">
                         
-                        <li class="item-card medium">
-                            <div class="item-description">No enforced coverage thresholds on PRs</div>
-                            <p>Coverage can silently regress with no gate blocking merges</p>
+                        <li class="item-card high">
+                            <div class="item-description">No coverage tracking or enforcement</div>
+                            <p>Cannot detect coverage regressions on PRs; no visibility into uncovered code paths</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">No container vulnerability scanning (Trivy/Snyk) in PR or release pipeline</div>
-                            <p>Vulnerable base images or dependencies may ship undetected in Docker releases</p>
+                        <li class="item-card medium">
+                            <div class="item-description">No container vulnerability scanning</div>
+                            <p>Docker images ship without Trivy/Snyk scan; CVEs may reach production undetected</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No SBOM generation or image signing</div>
-                            <p>Supply chain transparency gaps; no attestation for published container images</p>
+                            <div class="item-description">No SBOM generation</div>
+                            <p>No software bill of materials for supply chain compliance or audit</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -448,27 +448,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to Docker release workflow</div>
-                            <p>Catch CVEs in base images and runtime dependencies before publishing</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add codecov/coveralls PR integration with thresholds</div>
-                            <p>Prevent coverage regression with automatic PR gating</p>
+                            <div class="item-description">Add Codecov integration with PR comments</div>
+                            <p>Immediate visibility into coverage trends and regressions per PR</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add SBOM generation to Docker release pipeline</div>
+                            <div class="item-description">Add Trivy container scanning to Docker release workflow</div>
+                            <p>Detect CVEs in base images and dependencies before release</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Generate SBOM during Docker build</div>
                             <p>Supply chain transparency and compliance readiness</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -485,15 +485,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add container image vulnerability scanning (Trivy) to PR and release workflows</li><li>Enforce minimum coverage thresholds with codecov/coveralls PR checks</li></ul>
+                            <ul><li>Integrate Codecov or Coveralls with coverage thresholds to prevent regressions</li><li>Add container image vulnerability scanning (Trivy) to Docker release and PR workflows</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add SBOM generation and image signing (cosign) to Docker release pipeline</li><li>Add multi-architecture (ARM64) Docker image builds to release workflow</li></ul>
+                            <ul><li>Generate SBOM for Docker images using Syft or Docker BuildKit attestation</li><li>Add image signing with Cosign for release images</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add fuzz testing for parser/protocol surfaces</li><li>Formalize performance regression thresholds with automated Kova baseline enforcement</li></ul>
+                            <ul><li>Add API contract testing between gateway, plugins, and UI</li><li>Implement accessibility testing for Control UI (axe-core or Playwright a11y)</li></ul>
                         </div>
                     </div>
                 </div>

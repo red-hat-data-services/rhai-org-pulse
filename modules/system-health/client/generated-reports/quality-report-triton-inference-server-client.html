@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on May 28, 2026 at 09:31 PM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 03:38 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">triton-inference-server/client</h2>
         </header>
 
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Minimal unit tests across Python (495 LOC), C++ (3605 LOC), and Rust (380 LOC); no Java tests at all</div>
+                            <div class="scorecard-status">Limited unit tests across Python, C++, and Rust; no Java tests; tests not run in CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">C++ integration tests require running Triton server; Rust has env-gated online tests; no automated E2E pipeline</div>
+                            <div class="scorecard-status">C++ tests require running Triton server but no CI automation; Rust integration test present but untested in CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No PR-time build validation, no image testing, no Konflux simulation</div>
+                            <div class="scorecard-status">No PR-time build validation; CMake builds are manual; no container image testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No Dockerfiles, no container image builds, no runtime validation in this repo</div>
+                            <div class="scorecard-status">No Dockerfiles, no container image builds, no runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No codecov, coveralls, or any coverage tracking configured</div>
+                            <div class="scorecard-status">No coverage generation, no codecov integration, no coverage thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Only 2 workflows: pre-commit linting and CodeQL scanning; no test execution in CI</div>
+                            <div class="scorecard-status">Only pre-commit and CodeQL workflows; no test execution, no build validation in CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory; no AI agent test guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory; zero AI agent guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,8 +411,8 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No tests execute in CI/CD</div>
-                            <p>Tests exist but never run automatically; regressions can be merged freely</p>
+                            <div class="item-description">No test execution in CI/CD pipeline</div>
+                            <p>Tests exist but are never run automatically; regressions go undetected until manual testing</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">8-12 hours</span>
@@ -420,42 +420,42 @@
                         </li>
                         <li class="item-card high">
                             <div class="item-description">No coverage tracking or enforcement</div>
-                            <p>No visibility into what code is tested; coverage can silently degrade</p>
+                            <p>No visibility into which code paths are tested; coverage can silently degrade</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Extremely low test-to-code ratio</div>
-                            <p>~4,600 lines of test code vs ~25,000+ lines of source across 4 languages; many untested paths</p>
+                            <div class="item-description">No container image build or testing</div>
+                            <p>Client library packaging issues not caught; no validation that built artifacts work</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">40+ hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No container image testing</div>
-                            <p>Client libraries are distributed as pip wheels and C++ binaries but no build or packaging validation in CI</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">8-16 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">CodeQL only scans Python, not C++ or Java</div>
-                            <p>C++ code (gRPC/HTTP client) has no SAST coverage despite being security-sensitive network code</p>
+                            <div class="item-description">No integration test automation</div>
+                            <p>C++ client tests require a running Triton server but CI never sets one up; integration failures are invisible</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
-                        <li class="item-card low">
-                            <div class="item-description">No agent rules for test automation</div>
-                            <p>AI-assisted development cannot leverage project-specific test patterns</p>
+                        <li class="item-card medium">
+                            <div class="item-description">Java client has zero tests</div>
+                            <p>Entire Java client library is completely untested</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">8-16 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No dependency vulnerability scanning beyond CodeQL</div>
+                            <p>Only Python CodeQL SAST; no Trivy/Snyk for container or dependency scanning</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -473,7 +473,7 @@
                         
                         <li class="item-card ">
                             <div class="item-description">Add pytest execution to PR workflow</div>
-                            <p>Ensure Python unit tests run on every PR; catch regressions immediately</p>
+                            <p>Python unit tests (shared memory, HTTP client) would run on every PR, catching regressions immediately</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -481,15 +481,15 @@
                         </li>
                         <li class="item-card ">
                             <div class="item-description">Add codecov integration for Python tests</div>
-                            <p>Immediate visibility into Python test coverage with PR reporting</p>
+                            <p>Immediate visibility into Python test coverage with PR-level reporting</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Extend CodeQL to C++ and Java</div>
-                            <p>SAST coverage for security-sensitive gRPC/HTTP client code</p>
+                            <div class="item-description">Extend CodeQL to cover C++ code</div>
+                            <p>CodeQL currently only scans Python; enabling C++ catches memory safety issues in the C++ client</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
@@ -497,15 +497,15 @@
                         </li>
                         <li class="item-card ">
                             <div class="item-description">Add Trivy dependency scanning</div>
-                            <p>Detect vulnerable dependencies in Python packages and Maven pom.xml</p>
+                            <p>Detect known vulnerabilities in Python/Java/Rust dependencies before they ship</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create basic agent rules for test patterns</div>
-                            <p>Consistent AI-generated tests following project conventions</p>
+                            <div class="item-description">Create basic CLAUDE.md with test patterns</div>
+                            <p>Guide AI agents to produce consistent, correct tests following existing patterns</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -525,15 +525,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add CI workflow that executes Python pytest, C++ GoogleTest, and Rust cargo test on every PR</li><li>Add codecov/coveralls integration with minimum coverage thresholds</li><li>Extend CodeQL to scan C++ and Java in addition to Python</li></ul>
+                            <ul><li>Add GitHub Actions workflow to run Python unit tests (pytest) on every PR</li><li>Add GitHub Actions workflow to run C++ tests via CMake/CTest with a Triton server container</li><li>Implement coverage tracking with codecov for at least the Python client</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add integration test workflow that spins up a Triton server container and runs client tests against it</li><li>Add pip wheel build validation in PR workflow to catch packaging issues</li><li>Add Trivy or Snyk scanning for dependency vulnerabilities</li><li>Increase Python unit test coverage for HTTP and gRPC client modules</li></ul>
+                            <ul><li>Add integration tests that spin up a Triton server container and validate client operations end-to-end</li><li>Create JUnit tests for the Java HTTP client library</li><li>Extend CodeQL scanning to include C++ in the language matrix</li><li>Add Trivy or Snyk dependency scanning workflow</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add contract tests between client and server gRPC API</li><li>Create agent rules for test automation (.claude/rules/)</li><li>Add performance regression tests for client latency/throughput</li><li>Add multi-platform build validation (Linux, macOS, Windows)</li></ul>
+                            <ul><li>Add comprehensive agent rules (.claude/rules/) for test creation patterns</li><li>Add multi-architecture build validation for the client libraries</li><li>Implement contract tests for the gRPC/HTTP API boundary</li><li>Add performance regression tests for client throughput/latency</li></ul>
                         </div>
                     </div>
                 </div>

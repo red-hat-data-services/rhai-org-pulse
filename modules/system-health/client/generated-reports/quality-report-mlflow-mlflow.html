@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on May 29, 2026 at 08:06 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 03:29 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">mlflow/mlflow</h2>
         </header>
 
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">793 test files with pytest, extensive ML flavor coverage, parametrized tests</div>
+                            <div class="scorecard-status">Exceptional coverage with 1046 test files covering 1135 source files (0.92 ratio); pytest with strict markers, parallelized matrix runs</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Helm E2E with Kind, cross-version matrix testing, database migration E2E, tracing SDK tests</div>
+                            <div class="scorecard-status">Cross-version testing, Helm E2E with Kind clusters, Docker integration tests, gateway benchmarks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">PR-time wheel builds (dev/skinny/tracing), Helm chart lint+template, no Konflux but self-contained pipeline</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Wheel builds on PR, Helm template rendering, but no container image validation on PR</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">Multi-arch Docker builds on release, Helm E2E deploys image in Kind, but no PR-time image validation or startup testing</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
+                            <div class="scorecard-status">Basic Dockerfiles present, Helm E2E builds images into Kind, but no PR-time image validation or startup tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">pytest-cov in test requirements but no codecov/coveralls integration, no PR coverage gates</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">pytest-cov dependency exists but no codecov/coveralls integration, no coverage enforcement or thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
-                            <div class="scorecard-status">84 workflow files, concurrency control, path-based triggers, OPA policy enforcement, benchmark CI</div>
+                            <div class="scorecard-status">85 workflows, concurrency control, caching, matrix strategies, custom actions, OPA policy enforcement</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">CLAUDE.md with comprehensive guidance, .claude/rules/ for Python and GitHub Actions, 9 custom skills, hooks for enforcement</div>
+                            <div class="scorecard-status">Comprehensive CLAUDE.md, .claude/rules/ with Python and GitHub Actions guides, 6+ skills, hooks, settings</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No code coverage tracking or enforcement</div>
-                            <p>Cannot measure test coverage trends, no PR gates to prevent coverage regression</p>
+                            <div class="item-description">No coverage tracking or enforcement</div>
+                            <p>Cannot detect test coverage regressions; no visibility into which code paths are untested</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container security scanning (Trivy/Snyk/CodeQL)</div>
-                            <p>Vulnerabilities in dependencies and container images not detected in CI</p>
+                            <div class="item-description">No container security scanning (Trivy, Snyk, etc.)</div>
+                            <p>Vulnerabilities in base images and dependencies are not detected before release</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No PR-time Docker image build validation</div>
-                            <p>Image build failures only discovered at release time when push-images runs</p>
+                        <li class="item-card high">
+                            <div class="item-description">No SAST/CodeQL integration</div>
+                            <p>Static security vulnerabilities not caught in CI; relies solely on manual review</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No SAST/DAST integration in CI pipeline</div>
-                            <p>Static analysis security vulnerabilities not automatically caught before merge</p>
+                            <div class="item-description">No PR-time container image validation</div>
+                            <p>Image build failures only discovered at release time; no startup or runtime validation</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No dependency vulnerability scanning</div>
+                            <p>Known CVEs in Python dependencies may go undetected between manual audits</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +464,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Codecov integration to master.yml</div>
-                            <p>Instant visibility into coverage trends, PR-level coverage diff reporting</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to push-images.yml</div>
-                            <p>Catch known CVEs in released Docker images</p>
+                            <div class="item-description">Add CodeQL scanning workflow</div>
+                            <p>Automatic static analysis for security vulnerabilities on every PR</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL or Semgrep workflow</div>
-                            <p>Automated SAST catching injection, XSS, and other security vulnerabilities</p>
+                            <div class="item-description">Add Trivy container scanning to push-images workflow</div>
+                            <p>Catch vulnerabilities in Docker images before publishing to GHCR</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add PR-time Dockerfile build validation</div>
-                            <p>Catch image build regressions before they reach release pipeline</p>
+                            <div class="item-description">Enable codecov integration with coverage thresholds</div>
+                            <p>Visibility into test coverage trends and prevention of coverage regression</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">3-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add pip-audit or safety check to CI</div>
+                            <p>Automated detection of known vulnerabilities in Python dependencies</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add SBOM generation to container image publishing</div>
+                            <p>Supply chain transparency and compliance with SBOM requirements</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Implement Codecov or Coveralls with PR coverage gates and minimum threshold enforcement</li><li>Add CodeQL or Semgrep for automated SAST scanning on PRs</li><li>Add Trivy scanning for Docker images in release and PR workflows</li></ul>
+                            <ul><li>Implement coverage tracking with codecov/coveralls and enforce minimum thresholds</li><li>Add container security scanning (Trivy) to both PR and release workflows</li><li>Enable CodeQL or Semgrep for static application security testing</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add PR-time Docker image build smoke test to validate images before merge</li><li>Add dependency vulnerability scanning (Dependabot alerts or Snyk)</li><li>Expand agent rules to cover E2E test patterns and integration test guidelines</li></ul>
+                            <ul><li>Add dependency vulnerability scanning (pip-audit, safety, or Dependabot)</li><li>Implement PR-time Docker image build validation and startup testing</li><li>Add SBOM generation and image signing for published container images</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add performance regression testing beyond gateway/tracing benchmarks (e.g., model loading latency)</li><li>Add contract testing for the REST API boundaries</li><li>Consider adding accessibility testing for the React frontend</li></ul>
+                            <ul><li>Add contract testing for API boundaries (REST, gRPC, GraphQL)</li><li>Implement chaos engineering tests for MLflow server resilience</li><li>Add performance regression testing beyond gateway benchmarks</li></ul>
                         </div>
                     </div>
                 </div>

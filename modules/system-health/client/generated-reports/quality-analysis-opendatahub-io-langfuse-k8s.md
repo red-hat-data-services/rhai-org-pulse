@@ -1,449 +1,378 @@
 ---
 repository: "opendatahub-io/langfuse-k8s"
-overall_score: 3.8
+overall_score: 3.9
 scorecard:
   - dimension: "Unit Tests"
-    score: 7.5
-    status: "Strong helm-unittest suite with 52 test cases and 89% test-to-template ratio"
+    score: 7.0
+    status: "Solid helm-unittest coverage with 9 test suites (1,387 lines) covering core templates"
   - dimension: "Integration/E2E"
-    score: 1.0
-    status: "No integration or E2E tests; no Kind/Minikube deployment validation"
+    score: 2.0
+    status: "No chart-testing (ct) install validation, no Kind/Minikube deployment tests"
   - dimension: "Build Integration"
-    score: 5.0
-    status: "Helm lint and helm-docs validation on PRs; no deployment-level validation"
+    score: 4.0
+    status: "Helm lint + helm-docs validation on PR, but no chart installation testing"
   - dimension: "Image Testing"
     score: 2.0
-    status: "No chart artifact runtime validation; no referenced image verification"
+    status: "Pure Helm chart — no image builds or scanning of referenced container images"
   - dimension: "Coverage Tracking"
     score: 1.0
-    status: "No coverage tracking, enforcement, or reporting"
+    status: "No coverage tracking or reporting for Helm unit tests"
   - dimension: "CI/CD Automation"
-    score: 6.5
-    status: "4 workflows with lint/test/release/auto-bump; missing concurrency control and security scanning"
+    score: 7.0
+    status: "4 workflows with lint, unit tests, auto-release, and weekly upstream version sync"
   - dimension: "Agent Rules"
-    score: 0.0
-    status: "No CLAUDE.md, .claude/ directory, or agent rules"
+    score: 1.0
+    status: "No CLAUDE.md, .claude/ directory, or agent rules of any kind"
 critical_gaps:
-  - title: "No integration or E2E testing"
-    impact: "Chart may fail to deploy on real clusters despite passing unit tests; template rendering correctness ≠ deployment success"
+  - title: "No chart-testing (ct) integration or install validation"
+    impact: "Chart template rendering passes but actual installation may fail due to dependency issues, resource conflicts, or runtime failures"
     severity: "HIGH"
-    effort: "16-24 hours"
-  - title: "No security scanning"
-    impact: "Vulnerabilities in chart dependencies (PostgreSQL, ClickHouse, Redis, MinIO sub-charts) go undetected"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No coverage tracking or enforcement"
-    impact: "No visibility into which templates and value combinations lack test coverage; untested templates include HPA, VPA, ScaledObject, secrets"
-    severity: "MEDIUM"
-    effort: "2-4 hours"
-  - title: "Missing test coverage for several templates"
-    impact: "HPA, VPA, ScaledObject, postgresql-secret, nextauth-secret, and extra-manifests templates have no dedicated tests"
-    severity: "MEDIUM"
     effort: "8-12 hours"
-  - title: "No agent rules for AI-assisted development"
-    impact: "AI agents lack guidance on chart conventions, test patterns, and values.yaml schema when contributing"
+  - title: "No security scanning of referenced container images"
+    impact: "Vulnerable base images (langfuse/langfuse, bitnamilegacy/* subchart images) shipped to users without detection"
+    severity: "HIGH"
+    effort: "2-4 hours"
+  - title: "No coverage tracking for Helm tests"
+    impact: "No visibility into which templates and value combinations are tested vs. untested"
+    severity: "MEDIUM"
+    effort: "2-3 hours"
+  - title: "Missing tests for HPA, VPA, KEDA, and worker templates"
+    impact: "Scaling configuration regressions go undetected; worker deployment issues not caught"
+    severity: "MEDIUM"
+    effort: "4-6 hours"
+  - title: "No agent rules for AI-assisted contributions"
+    impact: "AI agents making PRs lack chart-specific guidance, leading to inconsistent contributions"
     severity: "LOW"
-    effort: "3-4 hours"
+    effort: "2-3 hours"
 quick_wins:
+  - title: "Add Trivy scanning for referenced container images"
+    effort: "1-2 hours"
+    impact: "Detect known CVEs in langfuse/langfuse and bitnamilegacy/* images before release"
   - title: "Add concurrency control to CI workflows"
     effort: "30 minutes"
-    impact: "Prevent redundant workflow runs on rapid PR updates"
-  - title: "Add Kubeconform/Kubeval validation to PR workflow"
+    impact: "Prevent redundant CI runs on rapid pushes; save GitHub Actions minutes"
+  - title: "Add chart-testing (ct) lint step to PR workflow"
     effort: "1-2 hours"
-    impact: "Validate rendered manifests against Kubernetes API schemas before merge"
-  - title: "Add Trivy scanning for sub-chart dependencies"
-    effort: "1-2 hours"
-    impact: "Detect known CVEs in PostgreSQL, ClickHouse, Redis, and MinIO images referenced by the chart"
-  - title: "Add helm-unittest tests for untested templates (HPA, VPA, ScaledObject, secrets)"
-    effort: "4-6 hours"
-    impact: "Close the template coverage gap from ~60% to ~95%"
-  - title: "Create basic CLAUDE.md with chart development conventions"
-    effort: "1-2 hours"
-    impact: "Enable AI agents to contribute correctly following existing patterns"
+    impact: "Catch chart schema issues, version bump requirements, and maintainer metadata problems"
+  - title: "Create basic CLAUDE.md with Helm chart contribution guidelines"
+    effort: "1 hour"
+    impact: "Guide AI agents on chart conventions, test requirements, and values.yaml patterns"
 recommendations:
   priority_0:
-    - "Add integration testing with ct (chart-testing) and Kind to validate chart installation on real clusters"
-    - "Add Kubeconform validation to PR workflow to catch schema violations before merge"
-    - "Add security scanning (Trivy) for sub-chart container images"
+    - "Implement chart-testing (ct) with install validation using Kind clusters to catch deployment failures before merge"
+    - "Add container image vulnerability scanning (Trivy) to catch CVEs in referenced images"
   priority_1:
-    - "Add helm-unittest coverage for HPA, VPA, ScaledObject, postgresql-secret, nextauth-secret, and extra-manifests templates"
-    - "Add concurrency control and caching to GitHub Actions workflows"
-    - "Create CLAUDE.md and agent rules for consistent AI-assisted contributions"
+    - "Add Helm unit tests for HPA, VPA, KEDA, and worker deployment templates"
+    - "Implement chart-testing install tests with multiple values.yaml scenarios (minimal, full, external DBs)"
+    - "Add CI concurrency control to prevent redundant workflow runs"
   priority_2:
-    - "Add Dependabot or Renovate for automated dependency management of sub-charts"
-    - "Add pre-commit hooks for local validation (helm lint, yaml lint)"
-    - "Add Pluto or kubepug to detect deprecated Kubernetes API usage"
+    - "Create agent rules for Helm chart contributions (.claude/rules/)"
+    - "Add pre-commit hooks for helm-docs, yaml linting, and schema validation"
+    - "Implement Kubeconform or kubeval for Kubernetes manifest schema validation"
 ---
 
 # Quality Analysis: langfuse-k8s
 
 ## Executive Summary
 
-- **Overall Score: 3.8/10**
+- **Overall Score: 3.9/10**
 - **Repository Type**: Helm chart for deploying [Langfuse](https://langfuse.com/) (LLM observability platform) on Kubernetes
-- **Primary Language**: YAML (Helm templates + Helm unit tests)
-- **Chart Version**: 1.5.22 | **App Version**: 3.155.1
-- **Contributors**: 21 contributors across 100+ commits
-- **Key Strengths**: Strong unit test suite (52 test cases, 89% test-to-template ratio), excellent input validation templates, automated version bumping workflow, comprehensive Redis/ClickHouse/S3 configuration testing
-- **Critical Gaps**: No integration/E2E testing, no security scanning, no coverage tracking, no agent rules
-- **Agent Rules Status**: Missing
+- **Primary Language**: YAML (Helm templates)
+- **Chart Version**: 1.5.22 (appVersion: 3.155.1)
+- **Key Strengths**: Good Helm unit test coverage, comprehensive input validation template, automated upstream version tracking
+- **Critical Gaps**: No chart installation testing, no security scanning, no coverage tracking, no agent rules
+- **Agent Rules Status**: Missing — no CLAUDE.md, no `.claude/` directory
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 7.5/10 | Strong helm-unittest suite with 52 test cases covering major config permutations |
-| Integration/E2E | 1.0/10 | No integration or E2E tests; no Kind/Minikube deployment validation |
-| **Build Integration** | **5.0/10** | **Helm lint + helm-docs on PRs; no deployment-level validation** |
-| Image Testing | 2.0/10 | No chart artifact runtime validation; no referenced image verification |
-| Coverage Tracking | 1.0/10 | No coverage tracking, enforcement, or reporting |
-| CI/CD Automation | 6.5/10 | 4 workflows with lint/test/release/auto-bump; gaps in concurrency + security |
-| Agent Rules | 0.0/10 | No CLAUDE.md, .claude/ directory, or agent rules |
+| Unit Tests | 7/10 | Solid helm-unittest coverage with 9 test suites (1,387 lines) |
+| Integration/E2E | 2/10 | No chart-testing (ct) install validation or Kind cluster tests |
+| **Build Integration** | **4/10** | **Helm lint + helm-docs on PR, no chart install test** |
+| Image Testing | 2/10 | Pure Helm chart — no image builds or scanning of referenced images |
+| Coverage Tracking | 1/10 | No coverage tracking or reporting |
+| CI/CD Automation | 7/10 | 4 workflows: lint, test, release, auto-version-update |
+| Agent Rules | 1/10 | No CLAUDE.md, .claude/ directory, or agent rules |
 
 ## Critical Gaps
 
-### 1. No Integration or E2E Testing
-- **Impact**: Chart unit tests validate template rendering correctness, but a chart can render valid YAML and still fail to deploy (wrong RBAC, misconfigured probes, dependency ordering issues). Without Kind/Minikube testing, deployment failures are only discovered by end users.
+### 1. No Chart Installation Testing (HIGH)
+- **Impact**: Helm templates may render correctly but fail during actual `helm install` due to dependency resolution, resource ordering, or runtime configuration issues
+- **Current state**: Only `helm lint` and `helm unittest` run — no actual deployment validation
 - **Severity**: HIGH
-- **Effort**: 16-24 hours
-- **Recommendation**: Add [chart-testing (ct)](https://github.com/helm/chart-testing) with Kind to validate chart installation and basic smoke tests in CI.
+- **Effort**: 8-12 hours
+- **Recommendation**: Add [chart-testing (ct)](https://github.com/helm/chart-testing) with Kind cluster for install/upgrade testing
 
-### 2. No Security Scanning
-- **Impact**: The chart bundles 5 sub-charts (PostgreSQL 16.4.9, ClickHouse 8.0.5, Valkey 2.2.4, MinIO 14.10.5, Common 2.30.0) from Bitnami. Vulnerabilities in these container images or their configurations go completely undetected.
+### 2. No Security Scanning of Referenced Container Images (HIGH)
+- **Impact**: The chart deploys `langfuse/langfuse`, `langfuse/langfuse-worker`, and multiple `bitnamilegacy/*` images. Vulnerable images ship to users undetected.
+- **Current state**: No Trivy, Snyk, or any vulnerability scanning
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Recommendation**: Add Trivy scanning to the PR workflow to scan rendered manifests and referenced container images for known CVEs.
+- **Note**: The chart recently migrated to `bitnamilegacy/*` images due to Bitnami registry changes — these legacy images may have delayed security patches
 
-### 3. No Coverage Tracking
-- **Impact**: Several templates have no dedicated test coverage: `web/hpa.yaml`, `web/vpa.yaml`, `web/scaled-object.yaml`, `worker/hpa.yaml`, `worker/vpa.yaml`, `worker/scaled-object.yaml`, `postgresql-secret.yaml`, `nextauth-secret.yaml`, `extra-manifests.yaml`. Changes to these templates have no safety net.
+### 3. No Coverage Tracking (MEDIUM)
+- **Impact**: No way to know which templates, value combinations, and code paths are tested vs. untested
+- **Current state**: Tests run but produce no coverage metrics
 - **Severity**: MEDIUM
-- **Effort**: 2-4 hours (for tracking), 8-12 hours (for closing coverage gaps)
+- **Effort**: 2-3 hours
 
-### 4. Missing Template Test Coverage
-- **Impact**: 9 of 15 template files (60%) have dedicated test coverage. The remaining 6 templates (40%) rely only on `helm lint` for validation.
+### 4. Missing Tests for Key Templates (MEDIUM)
+- **Impact**: HPA, VPA, KEDA, and worker-specific template regressions go undetected
+- **Templates without dedicated tests**: `worker/hpa.yaml`, `worker/vpa.yaml`, `web/vpa.yaml`, `web/scaled-object.yaml`, `worker/scaled-object.yaml`, `nextauth-secret.yaml`, `postgresql-secret.yaml`, `extra-manifests.yaml`
 - **Severity**: MEDIUM
-- **Effort**: 8-12 hours
-- **Templates needing tests**:
-  - `web/hpa.yaml` - HPA configuration and thresholds
-  - `web/vpa.yaml` - VPA resource controls
-  - `web/scaled-object.yaml` - KEDA ScaledObject configuration
-  - `worker/hpa.yaml`, `worker/vpa.yaml`, `worker/scaled-object.yaml` - Mirror of web scaling
-  - `postgresql-secret.yaml` - Secret generation
-  - `nextauth-secret.yaml` - NextAuth secret generation
-  - `extra-manifests.yaml` - Custom manifests rendering
+- **Effort**: 4-6 hours
 
-### 5. No Agent Rules
-- **Impact**: AI agents contributing to this chart have no guidance on Helm template patterns, values.yaml schema, test conventions, or naming standards.
+### 5. No Agent Rules (LOW)
+- **Impact**: AI-assisted contributions lack chart-specific guidance
+- **Current state**: No CLAUDE.md, AGENTS.md, or `.claude/` directory
 - **Severity**: LOW
-- **Effort**: 3-4 hours
+- **Effort**: 2-3 hours
 
 ## Quick Wins
 
-### 1. Add Concurrency Control to Workflows (30 minutes)
-Add concurrency groups to prevent redundant runs on rapid PR updates:
+### 1. Add Concurrency Control to CI Workflows (~30 min)
 ```yaml
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 ```
+Add to `test.yaml` and `validate.yaml` to prevent redundant runs on rapid pushes.
 
-### 2. Add Kubeconform Validation (1-2 hours)
-Validate rendered manifests against Kubernetes API schemas:
+### 2. Add Trivy Image Scanning (1-2 hours)
 ```yaml
-- name: Install Kubeconform
-  run: |
-    wget -O /tmp/kubeconform.tar.gz https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
-    tar xf /tmp/kubeconform.tar.gz -C /usr/local/bin
-
-- name: Validate manifests
-  run: |
-    helm template langfuse charts/langfuse/ -f charts/langfuse/values.lint.yaml | \
-      kubeconform -strict -summary
-```
-
-### 3. Add Trivy Scanning (1-2 hours)
-Scan for vulnerabilities in referenced container images:
-```yaml
-- name: Run Trivy vulnerability scanner
+- name: Scan referenced images
   uses: aquasecurity/trivy-action@master
   with:
-    scan-type: 'config'
-    scan-ref: 'charts/langfuse/templates/'
-    severity: 'CRITICAL,HIGH'
+    image-ref: 'langfuse/langfuse:${{ steps.chart-version.outputs.app_version }}'
+    format: 'sarif'
+    output: 'trivy-results.sarif'
 ```
 
-### 4. Add Missing Template Tests (4-6 hours)
-Create `hpa_test.yaml`, `vpa_test.yaml`, `scaled-object_test.yaml`, and `secrets_test.yaml` to cover the remaining ~40% of untested templates.
+### 3. Add chart-testing Lint Step (1-2 hours)
+```yaml
+- name: Run chart-testing (lint)
+  uses: helm/chart-testing-action@v2
+  with:
+    command: lint
+    config: ct.yaml
+```
 
-### 5. Create CLAUDE.md (1-2 hours)
-Add basic agent rules covering chart conventions, test patterns, and contribution guidelines.
+### 4. Create CLAUDE.md (1 hour)
+Basic agent rules for Helm chart conventions, test requirements, and PR standards.
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflow Inventory (4 workflows)**:
+**Workflows (4 total):**
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `validate.yaml` | PR (charts/** paths) | Helm lint + helm-docs validation |
-| `test.yaml` | PR + push to main | Helm unit tests with JUnit output |
-| `release.yaml` | Push to main (Chart.yaml changes) | Package + push to GHCR + GitHub Release |
-| `update-langfuse-version.yml` | Weekly schedule (Mon 9am UTC) + manual | Auto-bump Langfuse appVersion |
+| `test.yaml` | PR + push to main | Runs helm-unittest with JUnit reporting |
+| `validate.yaml` | PR (charts/** paths) | Helm lint + helm-docs freshness check |
+| `release.yaml` | Push to main (Chart.yaml changes) | Package + push to GHCR + chart-releaser |
+| `update-langfuse-version.yml` | Weekly cron (Mon 9AM UTC) + manual dispatch | Auto-detect new Langfuse release, create version bump PR |
 
-**Strengths**:
-- Automated version bumping with PR creation (smart use of `peter-evans/create-pull-request`)
-- JUnit test result publishing via `EnricoMi/publish-unit-test-result-action` for PR visibility
-- helm-docs validation prevents documentation drift
-- OCI registry publishing (GHCR) for modern Helm distribution
-- Dual release (GHCR OCI + GitHub chart-releaser) for maximum compatibility
+**Strengths:**
+- JUnit test result publishing via `EnricoMi/publish-unit-test-result-action`
+- Helm-docs freshness validation prevents stale README
+- Automated upstream version tracking with auto-PR creation
+- Dual artifact publishing (GHCR OCI + chart-releaser for Helm repo)
 
-**Gaps**:
+**Weaknesses:**
 - No concurrency control on any workflow
-- No caching (Helm plugins, dependencies downloaded fresh every run)
-- No security scanning workflow
-- No branch protection validation
-- No Kubernetes schema validation (Kubeconform/Kubeval)
-- Helm version pinned to v3.13.2 (may be outdated)
-- No matrix testing across multiple Kubernetes versions
+- No caching of Helm dependencies between runs
+- No chart-testing (ct) integration
+- No security scanning workflows (CodeQL, Trivy, Dependabot)
+- `validate.yaml` only triggers on `charts/**` path changes — misses `.github/` workflow changes
 
 ### Test Coverage
 
-**Test Suite Summary**:
-- **Framework**: helm-unittest v1.0.0
-- **Test Files**: 9
-- **Test Cases**: 52
-- **Test Lines**: 1,387
-- **Template Lines**: 1,560 (including `_helpers.tpl`)
-- **Test-to-Template Ratio**: 89% (excellent)
+**Helm Unit Tests (9 suites, 1,387 lines):**
 
-**Test Coverage by Feature**:
+| Test File | Lines | What It Tests |
+|-----------|-------|---------------|
+| `basic_test.yaml` | 70 | Default rendering, labels, image tags |
+| `clickhouse-cluster_test.yaml` | 138 | ClickHouse cluster mode, env vars, migration URLs |
+| `downward-api_test.yaml` | 166 | Downward API field references, resource field refs |
+| `extra-containers_test.yaml` | 64 | Sidecar containers for web and worker |
+| `extra-env_test.yaml` | 34 | Additional environment variables |
+| `ingress_test.yaml` | 188 | Ingress with default/custom backends, mixed backends, TLS |
+| `minimal-installation_test.yaml` | 83 | Example values rendering, secret references, DB config |
+| `redis-cluster_test.yaml` | 550 | Redis standalone/cluster/sentinel modes, TLS, auth |
+| `s3-media-upload-validation_test.yaml` | 94 | S3 media upload validation, force path style |
 
-| Test File | Test Cases | Lines | Coverage Area |
-|-----------|-----------|-------|---------------|
-| `redis-cluster_test.yaml` | 17 | 550 | Redis standalone/cluster/TLS/auth/passwordless/overrides/validation |
-| `ingress_test.yaml` | 4 | 188 | Ingress rendering, custom backends, mixed backends, disabled |
-| `downward-api_test.yaml` | 6 | 166 | Kubernetes Downward API env vars (fieldRef, resourceFieldRef) |
-| `clickhouse-cluster_test.yaml` | 6 | 138 | ClickHouse cluster/standalone modes, replica counts |
-| `s3-media-upload-validation_test.yaml` | 6 | 94 | S3 media upload validation, MinIO forcePathStyle, bucket config |
-| `minimal-installation_test.yaml` | 3 | 83 | Minimal install rendering, secret references, DB connections |
-| `basic_test.yaml` | 3 | 70 | Basic rendering, labels, image tags |
-| `extra-containers_test.yaml` | 3 | 64 | Sidecar containers for web/worker |
-| `extra-env_test.yaml` | 1 | 34 | Additional environment variables |
+**Test-to-Template Ratio**: 9 test files : 16 template files (56% template coverage)
 
-**Templates WITH Test Coverage** (9/15 = 60%):
-- `web/deployment.yaml` - Extensively tested
-- `worker/deployment.yaml` - Extensively tested
-- `web/service.yaml` - Basic test
-- `serviceaccount.yaml` - Basic test
-- `ingress.yaml` - Thorough testing
-- `validations.yaml` - Validation failure tests
+**Templates WITH dedicated tests**: `web/deployment.yaml`, `worker/deployment.yaml`, `web/service.yaml`, `serviceaccount.yaml`, `ingress.yaml`
 
-**Templates WITHOUT Test Coverage** (6/15 = 40%):
-- `web/hpa.yaml` - No tests
-- `web/vpa.yaml` - No tests
-- `web/scaled-object.yaml` - No tests
-- `worker/hpa.yaml` - No tests
-- `worker/vpa.yaml` - No tests
-- `worker/scaled-object.yaml` - No tests
-- `postgresql-secret.yaml` - No tests
-- `nextauth-secret.yaml` - No tests
-- `extra-manifests.yaml` - No tests
-
-**Testing Strengths**:
-- Excellent edge case coverage (passwordless Redis, null passwords, TLS combinations)
-- Validation failure testing (tests that chart correctly rejects invalid configs)
-- Multiple value file combinations (lint values, minimal install values, custom test values)
-- Both positive (should render) and negative (should fail) assertions
+**Templates WITHOUT dedicated tests**: `web/hpa.yaml`, `web/vpa.yaml`, `web/scaled-object.yaml`, `worker/hpa.yaml`, `worker/vpa.yaml`, `worker/scaled-object.yaml`, `nextauth-secret.yaml`, `postgresql-secret.yaml`, `extra-manifests.yaml`, `validations.yaml`, `_helpers.tpl`
 
 ### Code Quality
 
-**Linting**: Helm lint runs on PRs with dedicated lint values (`values.lint.yaml`).
+**Linting:**
+- `helm lint` runs in `validate.yaml` workflow with `values.lint.yaml` for required secrets
+- `helm-docs` freshness check enforces documentation stays up-to-date
 
-**Documentation**: helm-docs enforced via CI - documentation stays in sync with `values.yaml` comments.
+**Static Analysis:**
+- No SAST tools (CodeQL, gosec, Semgrep)
+- No dependency scanning (Dependabot)
+- No secret detection (Gitleaks, TruffleHog)
 
-**Input Validation**: Exceptionally strong - 250 lines of validation templates (`validations.yaml`) covering:
-- Logging level/format validation
-- Auth provider validation
-- ClickHouse configuration (shard count, host requirements)
-- Redis configuration (standalone vs cluster vs sentinel mutual exclusivity)
-- S3 configuration (bucket, forcePathStyle, provider type)
-- PostgreSQL, Redis, ClickHouse, S3 `additionalEnv` conflict detection
-- Scaling configuration conflicts (KEDA + HPA/VPA mutual exclusivity)
+**Pre-commit Hooks:**
+- None configured
 
-**Template Quality**: Well-structured helper templates (`_helpers.tpl`, 726 lines) with:
-- Consistent naming patterns
-- Value-or-secret resolution pattern (supports direct values, secretKeyRef, fieldRef, resourceFieldRef)
-- Comprehensive environment variable generation for all dependencies
-
-**Missing**:
-- No pre-commit hooks
-- No YAML linting beyond `helm lint`
-- No static analysis
+**Input Validation:**
+- Excellent: 250+ line `validations.yaml` template validates:
+  - Logging level/format values
+  - Auth provider names
+  - ClickHouse shard constraints
+  - Redis deployment vs. external validation
+  - Redis cluster/sentinel mutual exclusion
+  - S3 storage provider type
+  - Mutual exclusion of additionalEnv vs. structured config (prevents double-configuration)
+  - Scaling config mutual exclusion (KEDA vs. HPA/VPA)
 
 ### Container Images
 
-This is a Helm chart repository - it does not build container images. It references:
+**Not applicable as a Helm chart** — the repository does not build container images. However, it references:
 - `langfuse/langfuse` (web)
 - `langfuse/langfuse-worker` (worker)
-- Bitnami sub-chart images (PostgreSQL, ClickHouse, Valkey, MinIO)
+- `bitnamilegacy/postgresql` (subchart)
+- `bitnamilegacy/clickhouse` (subchart)
+- `bitnamilegacy/valkey` (subchart)
+- `bitnamilegacy/minio` (subchart)
+- `bitnamilegacy/zookeeper` (subchart dependency)
 
-No verification of referenced images is performed. No scanning for vulnerabilities in referenced images.
+**Risk**: The migration to `bitnamilegacy/*` images (due to Bitnami's August 2025 registry restructuring) means these images may receive delayed or no security patches compared to the active `bitnami/*` images.
 
 ### Security
 
-**Current State**: No security practices in place.
-
-**Missing**:
-- No Trivy/Snyk scanning for container image vulnerabilities
-- No SAST/CodeQL analysis
-- No secret detection (Gitleaks/TruffleHog)
-- No Kubeconform/Kubeval for Kubernetes schema validation
-- No network policy templates
-- No Pod Security Standards enforcement
-- No RBAC least-privilege verification
-
-**Positive Notes**:
-- Chart uses `secretKeyRef` patterns for sensitive values (passwords, keys, tokens)
-- Input validation prevents common misconfiguration errors
-- Uses separate deployment for web and worker components (good separation of concerns)
+- **No security scanning**: No Trivy, Snyk, CodeQL, or any security scanning
+- **No SBOM generation**: No software bill of materials
+- **No Dependabot**: No automated dependency update scanning for subchart dependencies
+- **Secret handling**: Values properly support `existingSecret` pattern for production deployments (good practice)
+- **CODEOWNERS**: Single owner `@Steffen911` for all files
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: None - no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
+- **Coverage**: None — no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
 - **Quality**: N/A
-- **Gaps**:
-  - No guidance for AI agents on Helm template patterns
-  - No test creation rules for helm-unittest
-  - No values.yaml schema documentation for agents
-  - No contribution guidelines for chart development
-- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering helm-unittest patterns, values.yaml conventions, and template naming standards
+- **Gaps**: Everything — no test type rules, no chart conventions, no PR guidelines
+- **Recommendation**: Generate rules with `/test-rules-generator` for Helm chart testing patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add chart-testing (ct) with Kind for integration testing**
-   - Install chart on real Kind cluster in CI
-   - Validate all sub-chart dependencies deploy correctly
-   - Test upgrade paths between chart versions
-   - Effort: 16-24 hours
+1. **Implement chart-testing (ct) with Kind cluster installation**
+   - Add `ct.yaml` configuration
+   - Create install test values for multiple scenarios (minimal, full, external DBs)
+   - Test chart install + upgrade path
+   - Effort: 8-12 hours
+   - Example:
+   ```yaml
+   # ct.yaml
+   chart-dirs:
+     - charts
+   target-branch: main
+   helm-extra-args: --timeout 600s
+   ```
 
-2. **Add Kubeconform validation to PR workflow**
-   - Validate rendered manifests against Kubernetes API schemas
-   - Test across multiple K8s versions (1.28, 1.29, 1.30, 1.31)
-   - Effort: 1-2 hours
-
-3. **Add security scanning for sub-chart dependencies**
-   - Trivy for container image CVE scanning
-   - Config scanning for Kubernetes security best practices
+2. **Add container image vulnerability scanning**
+   - Add Trivy scanning for referenced images
+   - Set up weekly scanning schedule
+   - Configure fail thresholds for critical/high CVEs
    - Effort: 2-4 hours
 
 ### Priority 1 (High Value)
 
-4. **Close template test coverage gap**
-   - Add tests for HPA, VPA, ScaledObject templates (web + worker)
-   - Add tests for postgresql-secret and nextauth-secret generation
-   - Add tests for extra-manifests rendering
-   - Effort: 8-12 hours
+3. **Expand Helm unit test coverage**
+   - Add tests for HPA, VPA, KEDA templates
+   - Add tests for worker deployment variations
+   - Add tests for secret templates (nextauth, postgresql)
+   - Add tests for extra-manifests template
+   - Test validation failure paths (negative tests)
+   - Effort: 4-6 hours
 
-5. **Add CI workflow improvements**
-   - Concurrency control on all workflows
-   - Helm dependency caching
-   - Matrix testing across Kubernetes versions
-   - Effort: 2-4 hours
+4. **Add CI concurrency control and caching**
+   - Add `concurrency` blocks to prevent duplicate runs
+   - Cache Helm dependencies between runs
+   - Effort: 1-2 hours
 
-6. **Create CLAUDE.md and agent rules**
-   - Chart development conventions
-   - Test creation patterns for helm-unittest
-   - Values.yaml schema documentation
-   - Effort: 3-4 hours
+5. **Add Kubeconform manifest validation**
+   - Validate generated manifests against Kubernetes schemas
+   - Test multiple Kubernetes versions for compatibility
+   - Effort: 2-3 hours
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Add Dependabot/Renovate for sub-chart dependency updates**
-   - Currently only Langfuse app version is auto-bumped
-   - Sub-chart versions (PostgreSQL, ClickHouse, Valkey, MinIO) require manual updates
+6. **Create agent rules for Helm chart contributions**
+   - CLAUDE.md with chart structure, conventions, testing requirements
+   - `.claude/rules/` for test patterns (helm-unittest syntax)
+   - Effort: 2-3 hours
+
+7. **Add pre-commit hooks**
+   - yaml lint, helm-docs, schema validation
    - Effort: 1-2 hours
 
-8. **Add pre-commit hooks**
-   - YAML linting, helm lint, helm-docs validation
-   - Catch issues before CI
-   - Effort: 1-2 hours
-
-9. **Add Pluto for Kubernetes API deprecation detection**
-   - Detect deprecated API usage before Kubernetes upgrades break deployments
+8. **Enable Dependabot for subchart dependencies**
+   - Auto-detect updates to PostgreSQL, ClickHouse, Valkey, MinIO subcharts
    - Effort: 1 hour
+
+9. **Add OpenSSF Scorecard or similar security baseline**
+   - Effort: 2-3 hours
 
 ## Comparison to Gold Standards
 
-| Dimension | langfuse-k8s | odh-dashboard | notebooks | kserve |
-|-----------|:---:|:---:|:---:|:---:|
-| Unit Tests | 7.5 | 9.0 | 7.0 | 9.0 |
-| Integration/E2E | 1.0 | 9.0 | 8.0 | 9.0 |
-| Build Integration | 5.0 | 8.0 | 7.0 | 8.0 |
-| Image Testing | 2.0 | 7.0 | 9.0 | 7.0 |
-| Coverage Tracking | 1.0 | 8.0 | 5.0 | 8.0 |
-| CI/CD Automation | 6.5 | 9.0 | 8.0 | 9.0 |
-| Agent Rules | 0.0 | 8.0 | 3.0 | 2.0 |
-| **Overall** | **3.8** | **8.5** | **7.0** | **8.0** |
-
-**Key Observations**:
-- langfuse-k8s has surprisingly strong unit testing for a community Helm chart (7.5/10)
-- The massive gap is in integration/E2E testing - this is where gold standards like kserve and odh-dashboard invest heavily
-- Security and coverage tracking are the easiest areas to improve with the least effort
+| Feature | langfuse-k8s | odh-dashboard | notebooks | Best Practice |
+|---------|-------------|---------------|-----------|---------------|
+| Unit Tests | helm-unittest (9 suites) | Jest + Cypress | pytest | Framework-appropriate |
+| Integration/E2E | None | Cypress E2E | Image testing | chart-testing + Kind |
+| Build Validation | helm lint | Multi-mode builds | Multi-arch | ct install + upgrade |
+| Coverage Tracking | None | Codecov | Codecov | Coverage enforcement |
+| Security Scanning | None | Trivy + CodeQL | Trivy | Trivy + SBOM |
+| CI/CD | 4 workflows | 15+ workflows | Periodic jobs | Comprehensive |
+| Agent Rules | None | Comprehensive | None | Full test rules |
+| Input Validation | Excellent (250+ lines) | Schema validation | N/A | Template validation |
+| Auto Version Sync | Weekly (upstream) | N/A | N/A | Dependabot/Renovate |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/validate.yaml` - Helm lint + helm-docs validation
-- `.github/workflows/test.yaml` - Helm unit tests
-- `.github/workflows/release.yaml` - Chart packaging and release
-- `.github/workflows/update-langfuse-version.yml` - Automated version bumping
+- `.github/workflows/test.yaml` — Helm unit tests with JUnit reporting
+- `.github/workflows/validate.yaml` — Helm lint + helm-docs validation
+- `.github/workflows/release.yaml` — Chart packaging and release
+- `.github/workflows/update-langfuse-version.yml` — Weekly upstream version sync
 
-### Chart
-- `charts/langfuse/Chart.yaml` - Chart metadata and dependencies
-- `charts/langfuse/values.yaml` - Default values (732 lines)
-- `charts/langfuse/values.lint.yaml` - CI lint values
-- `charts/langfuse/templates/_helpers.tpl` - Helper templates (726 lines)
-- `charts/langfuse/templates/validations.yaml` - Input validation (250 lines)
+### Chart Structure
+- `charts/langfuse/Chart.yaml` — Chart metadata and dependencies
+- `charts/langfuse/values.yaml` — Default values (730+ lines)
+- `charts/langfuse/values.lint.yaml` — Values for lint validation
+- `charts/langfuse/templates/_helpers.tpl` — Template helpers (727 lines)
+- `charts/langfuse/templates/validations.yaml` — Input validation (251 lines)
 
-### Templates (15 files, 1560 lines)
-- `charts/langfuse/templates/web/deployment.yaml` - Web deployment
-- `charts/langfuse/templates/worker/deployment.yaml` - Worker deployment
-- `charts/langfuse/templates/web/service.yaml` - Web service
-- `charts/langfuse/templates/ingress.yaml` - Ingress resource
-- `charts/langfuse/templates/serviceaccount.yaml` - ServiceAccount
-- `charts/langfuse/templates/web/hpa.yaml` - Web HPA (UNTESTED)
-- `charts/langfuse/templates/web/vpa.yaml` - Web VPA (UNTESTED)
-- `charts/langfuse/templates/web/scaled-object.yaml` - Web KEDA ScaledObject (UNTESTED)
-- `charts/langfuse/templates/worker/hpa.yaml` - Worker HPA (UNTESTED)
-- `charts/langfuse/templates/worker/vpa.yaml` - Worker VPA (UNTESTED)
-- `charts/langfuse/templates/worker/scaled-object.yaml` - Worker KEDA ScaledObject (UNTESTED)
-- `charts/langfuse/templates/postgresql-secret.yaml` - PostgreSQL secret (UNTESTED)
-- `charts/langfuse/templates/nextauth-secret.yaml` - NextAuth secret (UNTESTED)
-- `charts/langfuse/templates/extra-manifests.yaml` - Custom manifests (UNTESTED)
+### Templates
+- `charts/langfuse/templates/web/deployment.yaml` — Web deployment
+- `charts/langfuse/templates/worker/deployment.yaml` — Worker deployment
+- `charts/langfuse/templates/web/service.yaml` — Web service
+- `charts/langfuse/templates/web/hpa.yaml` — Web HPA
+- `charts/langfuse/templates/web/vpa.yaml` — Web VPA
+- `charts/langfuse/templates/web/scaled-object.yaml` — Web KEDA ScaledObject
+- `charts/langfuse/templates/ingress.yaml` — Ingress
+- `charts/langfuse/templates/serviceaccount.yaml` — ServiceAccount
 
-### Tests (9 files, 1387 lines, 52 test cases)
-- `charts/langfuse/tests/basic_test.yaml` - Basic rendering (3 tests)
-- `charts/langfuse/tests/clickhouse-cluster_test.yaml` - ClickHouse config (6 tests)
-- `charts/langfuse/tests/downward-api_test.yaml` - Downward API (6 tests)
-- `charts/langfuse/tests/extra-containers_test.yaml` - Sidecar containers (3 tests)
-- `charts/langfuse/tests/extra-env_test.yaml` - Additional env vars (1 test)
-- `charts/langfuse/tests/ingress_test.yaml` - Ingress (4 tests)
-- `charts/langfuse/tests/minimal-installation_test.yaml` - Minimal install (3 tests)
-- `charts/langfuse/tests/redis-cluster_test.yaml` - Redis cluster/sentinel (17 tests)
-- `charts/langfuse/tests/s3-media-upload-validation_test.yaml` - S3 validation (6 tests)
-- `charts/langfuse/tests/values/` - Test value files (6 files)
+### Tests
+- `charts/langfuse/tests/basic_test.yaml` — Basic rendering tests
+- `charts/langfuse/tests/redis-cluster_test.yaml` — Redis mode tests (550 lines)
+- `charts/langfuse/tests/ingress_test.yaml` — Ingress tests (188 lines)
+- `charts/langfuse/tests/clickhouse-cluster_test.yaml` — ClickHouse tests
+- `charts/langfuse/tests/downward-api_test.yaml` — Downward API tests
 
-### Documentation
-- `README.md` - Main documentation (auto-generated by helm-docs)
-- `UPGRADE.md` - Upgrade guide
-- `TROUBLESHOOTING.md` - Troubleshooting guide
-- `examples/` - Example configurations
-
-### Governance
-- `.github/CODEOWNERS` - @Steffen911 owns all files
-- `.github/ISSUE_TEMPLATE/bug_report.yml` - Bug report template
-- `.github/ISSUE_TEMPLATE/feature_request.yml` - Feature request template
+### Other
+- `CODEOWNERS` — Single owner (@Steffen911)
+- `examples/` — Example values files for installation
+- `UPGRADE.md` — Upgrade documentation
+- `TROUBLESHOOTING.md` — Troubleshooting guide

@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:34 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:53 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/insta-merge</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="497.62785599999995"
+                                stroke-dashoffset="531.557028"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">1.2</div>
+                        <div class="score-value">0.6</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No tests of any kind exist in this repository</div>
+                            <div class="scorecard-status">No tests of any kind exist</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E tests; script logic is entirely untested</div>
+                            <div class="scorecard-status">No integration or end-to-end tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">Docker image builds via GitHub Action runtime but no PR-time validation</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No CI/CD workflows; no PR-time validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">Dockerfile exists but no runtime validation, scanning, or multi-arch support</div>
+                            <div class="scorecard-status">Dockerfile exists but is untested; unpinned base image tag</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tooling, thresholds, or reporting of any kind</div>
+                            <div class="scorecard-status">No coverage tooling or reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No CI/CD workflows; action.yml defines the Action but no testing pipeline exists</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No GitHub Actions workflows in the repository itself</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
+                            <div class="scorecard-status">No CLAUDE.md, .claude/ directory, or agent rules</div>
                         </div>
                     </div>
                 </div>
@@ -411,51 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Zero test coverage — no tests of any kind</div>
-                            <p>All behavior changes are unvalidated; merge conflicts, edge cases, and regressions go undetected</p>
+                            <div class="item-description">Zero test coverage</div>
+                            <p>Any change to entrypoint.sh can silently break merge/rebase logic for all consumers</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-16 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
                             <div class="item-description">No CI/CD pipeline</div>
-                            <p>No automated checks run on PRs or pushes; broken code can be merged freely</p>
+                            <p>No automated checks on PRs — broken code can be merged without detection</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container image scanning or validation</div>
-                            <p>Vulnerable base images and runtime failures go undetected until production use</p>
+                            <div class="item-description">Security: GitHub token exposed via set -x and git config</div>
+                            <p>Token is echoed to GitHub Actions logs and stored in git config on disk</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Security issues in entrypoint.sh — set -x exposes tokens</div>
-                            <p>GitHub tokens and credentials are printed to workflow logs via set -x debug output</p>
+                            <div class="item-description">Multiple bugs in entrypoint.sh</div>
+                            <p>Typos and undefined variables cause silent failures in downstream branch fallback and HTTPS URL construction</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">1 hour</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Hardcoded gh CLI version in Dockerfile</div>
-                            <p>No automated dependency updates; will accumulate vulnerabilities over time</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No linting or static analysis</div>
-                            <p>Shell script bugs, quoting issues, and unsafe patterns are not caught</p>
+                            <div class="item-description">Unpinned base image tag</div>
+                            <p>Builds are not reproducible; a bad upstream push to :latest breaks all consumers</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">0.5 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -472,35 +464,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add ShellCheck linting via GitHub Actions workflow</div>
-                            <p>Catches quoting bugs, undefined variables, and unsafe patterns in entrypoint.sh</p>
+                            <div class="item-description">Fix known bugs in entrypoint.sh</div>
+                            <p>Correct typo on line 43 (DOWNSTREAM_BREANCH), undefined var on line 47 (UPSTREAM_REPO_PATH), and missing error handling</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Replace set -x with selective debug logging</div>
-                            <p>Prevents accidental token exposure in CI logs</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning workflow</div>
-                            <p>Detects vulnerable packages in the Alpine-based Docker image</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Dependabot or Renovate for gh CLI version bumps</div>
-                            <p>Keeps dependencies current and reduces CVE exposure</p>
+                            <div class="item-description">Add set -euo pipefail and mask token from logs</div>
+                            <p>Prevent silent failures and stop leaking GitHub token to CI logs</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add a basic CI workflow with ShellCheck</div>
+                            <p>Catch shell scripting errors automatically on every PR</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Pin Dockerfile base image to a digest</div>
+                            <p>Reproducible builds; protect against supply-chain attacks via :latest tag</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">0.5 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add BATS tests for entrypoint.sh</div>
+                            <p>Regression protection for the core merge/rebase logic</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Fix security issue: replace set -x with targeted echo statements to avoid leaking GITHUB_TOKEN in logs</li><li>Add a basic CI workflow with ShellCheck linting and Dockerfile build validation on PRs</li><li>Add Trivy or Grype container scanning to detect base image vulnerabilities</li></ul>
+                            <ul><li>Fix the three known bugs in entrypoint.sh (typo, undefined variable, missing $ prefix)</li><li>Stop leaking GitHub token: remove set -x or mask sensitive vars, remove git config user.password</li><li>Add a minimal CI workflow that runs ShellCheck and BATS tests on PRs</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Write shell script tests using bats-core for entrypoint.sh merge logic</li><li>Add integration tests that exercise the action against a test repository</li><li>Pin and auto-update the gh CLI version with Dependabot/Renovate</li></ul>
+                            <ul><li>Write BATS unit tests covering: successful merge, conflict resolution, PR merge path, error cases</li><li>Pin Dockerfile base image to a specific digest for reproducible builds</li><li>Add Trivy or Grype scanning for the Docker image</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add CLAUDE.md and .claude/rules/ for agent-assisted development guidance</li><li>Add Hadolint for Dockerfile best-practice linting</li><li>Add multi-architecture image builds (amd64/arm64)</li></ul>
+                            <ul><li>Add integration tests that exercise the action in a real GitHub Actions environment</li><li>Add Dependabot for gh CLI version updates in Dockerfile</li><li>Create CLAUDE.md and agent rules for test creation guidance</li></ul>
                         </div>
                     </div>
                 </div>

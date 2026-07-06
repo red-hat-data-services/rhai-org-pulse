@@ -1,298 +1,297 @@
 ---
 repository: "kubeflow/kubeflow"
-overall_score: 1.2
+overall_score: 1.5
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No source code or tests exist — repo is documentation-only umbrella"
+    status: "No source code or test files present — umbrella repository only"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests — no code to test"
+    status: "No integration or E2E tests — all testing in subproject repos"
   - dimension: "Build Integration"
     score: 0.0
-    status: "No build system, Dockerfiles, or CI workflows present"
+    status: "No build system, Dockerfiles, or Makefile present"
   - dimension: "Image Testing"
     score: 0.0
     status: "No container images built from this repository"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling — no code to measure"
+    status: "No coverage tooling — no code to cover"
   - dimension: "CI/CD Automation"
     score: 3.0
-    status: "Only stale-bot and issue label bot configured; no test or build workflows"
+    status: "GitHub issue routing configured; no workflows for testing or building"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, .claude/ directory, or agent rules present"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
-  - title: "Repository is an empty umbrella — no code, tests, or CI"
-    impact: "This repo cannot be quality-assessed as a software project; all Kubeflow code lives in sub-repositories (katib, pipelines, notebooks, trainer, etc.)"
+  - title: "Repository is an umbrella/meta repo with no source code"
+    impact: "All quality practices, testing, and CI/CD live in 12+ independent subproject repositories — no centralized quality governance"
     severity: "HIGH"
     effort: "N/A — by design"
-  - title: "No CI/CD workflows"
-    impact: "No automated quality gates of any kind (linting, testing, security scanning)"
+  - title: "No cross-subproject integration testing"
+    impact: "Subprojects are tested independently; no validation that combined Kubeflow distribution works end-to-end"
     severity: "HIGH"
-    effort: "N/A"
-  - title: "No contribution quality gates"
-    impact: "PRs to documentation/roadmap have no automated validation (link checking, markdown linting)"
+    effort: "40-80 hours"
+  - title: "No centralized quality standards or testing guidelines"
+    impact: "Each subproject defines its own quality bar independently, leading to inconsistency across the ecosystem"
     severity: "MEDIUM"
-    effort: "2-4 hours"
-  - title: "No agent rules for AI-assisted contributions"
-    impact: "AI agents have no guidance for contributing to this repo or understanding its umbrella nature"
+    effort: "16-24 hours"
+  - title: "No agent rules for AI-assisted development"
+    impact: "AI coding agents have no guidance for contributing to Kubeflow or its subprojects"
     severity: "LOW"
-    effort: "1-2 hours"
+    effort: "4-8 hours"
 quick_wins:
-  - title: "Add markdown linting workflow"
-    effort: "1-2 hours"
-    impact: "Catch broken links, formatting issues in README, ROADMAP, CHANGELOG"
-  - title: "Add CLAUDE.md explaining repo structure"
-    effort: "30 minutes"
-    impact: "Guide AI agents to the correct sub-repositories for code analysis"
-  - title: "Add link-checking CI workflow"
-    effort: "1-2 hours"
-    impact: "Prevent broken links to sub-projects and documentation"
-  - title: "Update stale .gitignore entries"
-    effort: "30 minutes"
-    impact: "Remove references to code artifacts that no longer exist in this repo"
+  - title: "Add a centralized TESTING.md with quality standards for all subprojects"
+    effort: "4-6 hours"
+    impact: "Establishes minimum quality bar across the ecosystem"
+  - title: "Add CI workflow to validate cross-links and subproject references"
+    effort: "2-3 hours"
+    impact: "Ensures issue routing and documentation links remain valid"
+  - title: "Create CLAUDE.md with contribution guidelines for AI agents"
+    effort: "2-3 hours"
+    impact: "Directs AI agents to correct subproject repositories"
+  - title: "Add a workflow to periodically audit subproject quality practices"
+    effort: "8-12 hours"
+    impact: "Provides visibility into quality consistency across the Kubeflow ecosystem"
 recommendations:
   priority_0:
-    - "Recognize this is an umbrella repo — quality analysis should target sub-repositories (kubeflow/pipelines, kubeflow/katib, kubeflow/notebooks, etc.)"
+    - "Evaluate whether this repo should host cross-subproject integration tests for the Kubeflow Community Distribution"
+    - "Define and publish minimum quality standards (coverage thresholds, required CI checks) for all Kubeflow subprojects"
   priority_1:
-    - "Add markdown linting and link-checking CI workflows for documentation quality"
-    - "Add CLAUDE.md or AGENTS.md to guide AI contributors to the correct sub-repos"
+    - "Add link-checking CI workflow to validate README, CONTRIBUTING, and issue template URLs"
+    - "Create a quality dashboard that aggregates test/coverage metrics from all subproject repos"
   priority_2:
-    - "Clean up stale .gitignore entries referencing code no longer in this repo"
-    - "Consider adding a CODEOWNERS file for documentation review routing"
+    - "Add CLAUDE.md or AGENTS.md to guide AI contributors to the correct subproject repos"
+    - "Consider hosting shared CI/CD templates (reusable workflows) for subprojects to adopt"
 ---
 
 # Quality Analysis: kubeflow/kubeflow
 
 ## Executive Summary
 
-- **Overall Score: 1.2/10**
-- **Repository Type**: Umbrella / meta-repository (documentation-only)
-- **Primary Languages**: None (Markdown documentation only)
-- **Total Files**: 14 (README, ROADMAP, CHANGELOG, logos, GitHub configs)
-- **Agent Rules Status**: Missing
+- **Overall Score: 1.5/10**
+- **Repository Type**: Umbrella/meta repository (gateway to Kubeflow subprojects)
+- **Primary Languages**: None — no source code present
+- **Key Finding**: This repository is **not a development repository**. It serves as a branding, documentation, and issue-routing gateway to 12+ independent Kubeflow subproject repositories. All source code, tests, CI/CD pipelines, and quality practices reside in the individual subprojects.
 
-**Key Finding**: `kubeflow/kubeflow` is **not a software project** — it is a community umbrella repository that serves as the landing page for the Kubeflow ecosystem. All source code, tests, CI/CD, and container images were migrated to dedicated sub-repositories:
+### Key Strengths
+- Clear documentation of project purpose and community structure
+- Well-organized issue routing to correct subproject repositories (14 repos linked)
+- Proper OWNERS file with approvers and emeritus designations
+- Clean repository structure with no stale artifacts
 
-| Sub-Repository | Purpose |
-|---|---|
-| `kubeflow/pipelines` | ML Pipelines |
-| `kubeflow/katib` | Hyperparameter Tuning |
-| `kubeflow/notebooks` | Jupyter Notebooks |
-| `kubeflow/trainer` | Distributed Training |
-| `kubeflow/model-registry` | Model Registry |
-| `kserve/kserve` | Model Serving |
-| `kubeflow/spark-operator` | Spark on K8s |
-| `kubeflow/dashboard` | Central Dashboard |
-| `kubeflow/manifests` | Deployment Manifests |
-| `kubeflow/sdk` | Python SDK |
+### Critical Gaps
+- No source code, tests, or CI/CD pipelines (by design — umbrella repo)
+- No cross-subproject integration testing for the combined Kubeflow distribution
+- No centralized quality standards or guidelines for subprojects
+- No agent rules for AI-assisted development
 
-The low score reflects the absence of code and quality infrastructure, which is **by design** for an umbrella repo. Quality analysis should be redirected to the individual sub-repositories listed above.
+### Agent Rules Status: **Missing**
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0/10 | No source code or tests — documentation-only umbrella |
-| Integration/E2E | 0/10 | No integration or E2E tests — no code to test |
-| **Build Integration** | **0/10** | **No build system, Dockerfiles, or CI workflows** |
-| Image Testing | 0/10 | No container images built from this repository |
-| Coverage Tracking | 0/10 | No coverage tooling — no code to measure |
-| CI/CD Automation | 3/10 | Stale-bot and issue label bot only; no test/build workflows |
-| Agent Rules | 0/10 | No CLAUDE.md, .claude/ directory, or agent rules |
+| Unit Tests | 0/10 | No source code or test files — umbrella repo |
+| Integration/E2E | 0/10 | No integration tests — all testing in subproject repos |
+| **Build Integration** | **0/10** | **No build system, Dockerfiles, or Makefile** |
+| Image Testing | 0/10 | No container images built from this repo |
+| Coverage Tracking | 0/10 | No coverage tooling — no code to cover |
+| CI/CD Automation | 3/10 | Issue routing configured; no testing workflows |
+| Agent Rules | 0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory |
 
 ## Critical Gaps
 
-### 1. Repository is an empty umbrella — no code, tests, or CI
-- **Impact**: This repo cannot be meaningfully assessed as a software project. All Kubeflow code lives in sub-repositories.
-- **Severity**: HIGH
+### 1. Repository Is an Umbrella/Meta Repo with No Source Code
+- **Impact**: All quality practices, testing, and CI/CD live in 12+ independent subproject repositories with no centralized quality governance
+- **Severity**: HIGH (architectural)
 - **Effort**: N/A — this is by design
-- **Note**: The `.gitignore` still references Go binaries, Python `.pyc` files, Bazel outputs, and component directories that no longer exist, confirming code was migrated out.
+- **Context**: The README explicitly states: *"This repository serves primarily as a gateway to Kubeflow subprojects and shared project metadata. Kubeflow development happens in the individual subproject repositories."*
 
-### 2. No CI/CD workflows
-- **Impact**: No automated quality gates for documentation PRs (link checking, markdown linting, spell checking)
+### 2. No Cross-Subproject Integration Testing
+- **Impact**: Subprojects (Pipelines, Notebooks, Trainer, KServe, Katib, Hub, etc.) are tested independently. There is no validation that the combined Kubeflow Community Distribution works end-to-end when subprojects are composed together.
 - **Severity**: HIGH
-- **Effort**: N/A for code CI; 2-4 hours for documentation CI
+- **Effort**: 40-80 hours
+- **Recommendation**: Evaluate whether this repo (or `kubeflow/community-distribution`) should host integration tests
 
-### 3. No contribution quality gates for documentation
-- **Impact**: PRs modifying ROADMAP.md, README.md, or CHANGELOG.md have no automated validation
+### 3. No Centralized Quality Standards
+- **Impact**: Each subproject independently defines its own quality bar — testing frameworks, coverage thresholds, CI configurations, and security scanning vary widely
 - **Severity**: MEDIUM
-- **Effort**: 2-4 hours
+- **Effort**: 16-24 hours
+- **Recommendation**: Publish a `TESTING.md` or `QUALITY.md` document with minimum standards
 
-### 4. No agent rules or AI guidance
-- **Impact**: AI agents attempting to analyze or contribute to this repo have no guidance about its umbrella nature
+### 4. No Agent Rules for AI-Assisted Development
+- **Impact**: AI coding agents have no guidance for contributing to Kubeflow or navigating the subproject structure
 - **Severity**: LOW
-- **Effort**: 1-2 hours
+- **Effort**: 4-8 hours
 
 ## Quick Wins
 
-### 1. Add markdown linting workflow (1-2 hours)
-Catch broken links and formatting issues in documentation files.
+### 1. Add a Centralized TESTING.md (4-6 hours)
+- **Impact**: Establishes minimum quality bar across the ecosystem
+- **Implementation**: Document required testing practices, coverage thresholds, and CI checks that all subprojects should follow
 
+### 2. Add Link-Checking CI Workflow (2-3 hours)
+- **Impact**: Ensures issue routing and documentation links in README, CONTRIBUTING, and issue templates remain valid
+- **Implementation**:
 ```yaml
-# .github/workflows/markdown-lint.yml
-name: Markdown Lint
-on: [pull_request]
+name: Check Links
+on:
+  schedule:
+    - cron: '0 8 * * 1'
+  pull_request:
+    branches: [master, main]
 jobs:
-  lint:
+  check-links:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: DavidAnson/markdownlint-cli2-action@v16
+      - uses: lycheeverse/lychee-action@v2
         with:
-          globs: '**/*.md'
+          args: --verbose '*.md' '.github/**/*.yml'
+          fail: true
 ```
 
-### 2. Add CLAUDE.md explaining repo structure (30 minutes)
-Guide AI agents to the correct sub-repositories.
+### 3. Create CLAUDE.md for AI Agent Guidance (2-3 hours)
+- **Impact**: Directs AI agents to correct subproject repositories
+- **Implementation**: Simple guidance file explaining the umbrella structure and linking to subprojects
 
-```markdown
-# CLAUDE.md
-This is the Kubeflow umbrella repository. It contains only documentation,
-logos, and community governance files. There is no source code here.
-
-For code analysis, testing, or contributions, go to the relevant sub-repo:
-- kubeflow/pipelines - ML Pipelines
-- kubeflow/katib - Hyperparameter Tuning
-- kubeflow/notebooks - Jupyter Notebooks
-...
-```
-
-### 3. Add link-checking CI workflow (1-2 hours)
-Prevent broken links in README table pointing to sub-projects.
-
-```yaml
-# .github/workflows/link-check.yml
-name: Link Check
-on: [pull_request]
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: lycheeverse/lychee-action@v1
-        with:
-          args: --verbose '**/*.md'
-```
-
-### 4. Clean up stale .gitignore (30 minutes)
-Remove references to artifacts that no longer exist (Go binaries, Python `.pyc`, Bazel, component directories).
+### 4. Subproject Quality Audit Workflow (8-12 hours)
+- **Impact**: Aggregates quality metrics from all subprojects into a single dashboard
+- **Implementation**: Scheduled workflow that queries each subproject's CI status, coverage, and open security advisories
 
 ## Detailed Findings
 
+### Repository Structure
+
+The repository contains only 8 non-git files:
+
+| File | Purpose |
+|------|---------|
+| `README.md` | Project overview, community links |
+| `ROADMAP.md` | Links to subproject roadmaps |
+| `CONTRIBUTING.md` | Links to contributor guide |
+| `LICENSE` | Apache 2.0 license |
+| `OWNERS` | Approvers list (6 active, 4 emeritus) |
+| `.gitignore` | Standard ignore file |
+| `.github/ISSUE_TEMPLATE/config.yml` | Issue routing to 14 subproject repos |
+| `logo/*` | 3 SVG logo files |
+
 ### CI/CD Pipeline
 - **Workflows**: None (`.github/workflows/` directory does not exist)
-- **Automation present**:
-  - `stale.yml` — Probot stale issue/PR bot (90-day stale, 7-day close)
-  - `issue_label_bot.yaml` — MLBot for auto-labeling issues
-  - `ISSUE_TEMPLATE/config.yml` — Redirects issues to sub-repositories (blank issues disabled)
-- **Missing**: Build, test, lint, security scan, deploy workflows
+- **Issue Routing**: Well-configured issue template routes users to 14 correct subproject repositories
+- **Branch Protection**: Not analyzable from repo clone alone
+- **Assessment**: The only CI/CD-like mechanism is the issue template configuration that prevents issues from being filed in this repo and redirects to subprojects
+
+### Subproject Ecosystem
+
+Issues are routed to these subproject repositories:
+
+| Subproject | Repository |
+|-----------|-----------|
+| KServe | `kserve/kserve` |
+| Katib | `kubeflow/katib` |
+| Hub (Model Registry) | `kubeflow/hub` |
+| MPI Operator | `kubeflow/mpi-operator` |
+| Notebooks | `kubeflow/notebooks` |
+| Pipelines | `kubeflow/pipelines` |
+| SDK | `kubeflow/sdk` |
+| Spark Operator | `kubeflow/spark-operator` |
+| Trainer | `kubeflow/trainer` |
+| Dashboard | `kubeflow/dashboard` |
+| Profile Controller | `kubeflow/dashboard` |
+| Community Distribution | `kubeflow/community-distribution` |
+| Community & Governance | `kubeflow/community` |
 
 ### Test Coverage
-- **Unit tests**: None (no source code)
-- **Integration tests**: None
-- **E2E tests**: None
-- **Test files found**: 0
-- **Coverage tracking**: None
+- **Unit Tests**: None — no source code
+- **Integration Tests**: None
+- **E2E Tests**: None
+- **Coverage Tracking**: None
+- **Test-to-Code Ratio**: N/A
 
-### Code Quality
-- **Linting**: No linting configuration (no `.golangci.yaml`, `.eslintrc`, `ruff.toml`, etc.)
-- **Pre-commit hooks**: No `.pre-commit-config.yaml`
-- **Static analysis**: No SAST tools configured
+### Code Quality Tools
+- **Linting**: None configured
+- **Pre-commit Hooks**: None (no `.pre-commit-config.yaml`)
+- **Static Analysis**: None
 - **Formatters**: None
 
 ### Container Images
 - **Dockerfiles**: None
-- **Container builds**: None
-- **Image scanning**: None
-- **SBOM generation**: None
+- **Image Build**: None
+- **Security Scanning**: None
+- **SBOM Generation**: None
+- **Multi-architecture**: N/A
 
-### Security
-- **Vulnerability scanning**: None
-- **Dependency scanning**: None (no dependencies)
-- **Secret detection**: None
-- **CodeQL**: Not configured
+### Security Practices
+- **SAST/CodeQL**: Not configured
+- **Dependency Scanning**: N/A (no dependencies)
+- **Secret Detection**: Not configured
+- **Vulnerability Scanning**: Not configured
 
 ### Agent Rules (Agentic Flow Quality)
 - **Status**: Missing
-- **CLAUDE.md**: Not present
-- **AGENTS.md**: Not present
-- **.claude/ directory**: Not present
-- **Coverage**: No test type rules (no tests exist)
+- **Coverage**: No test type rules (no `.claude/rules/` directory)
 - **Quality**: N/A
-- **Gaps**: Complete absence of AI agent guidance
-- **Recommendation**: Add a CLAUDE.md explaining the umbrella nature and directing agents to sub-repos
-
-### Repository Governance
-- **OWNERS file**: Present with 6 approvers (andreyvelich, franciscojavierarceo, juliusvonkohout, johnugeorge, terrytangyuan, zijianjoy)
-- **CONTRIBUTING.md**: Present but minimal — redirects to kubeflow.org documentation
-- **LICENSE**: Apache 2.0
-- **ROADMAP.md**: Comprehensive release history from v0.6 through v1.11 (planned Dec 2025)
-- **CHANGELOG.md**: Present (large file, ~289KB)
+- **Gaps**: No CLAUDE.md, AGENTS.md, or `.claude/` directory exists
+- **Recommendation**: Add a CLAUDE.md that explains the umbrella structure and directs AI agents to the correct subproject repositories. This is especially valuable since agents may attempt to find source code here and waste time.
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Redirect quality analysis to sub-repositories** — This umbrella repo is not where code quality practices apply. Analyze these repos instead:
-   - `kubeflow/pipelines` — Largest and most complex Kubeflow component
-   - `kubeflow/notebooks` — Notebook infrastructure with image building
-   - `kubeflow/katib` — Hyperparameter tuning operator
-   - `kubeflow/trainer` — Distributed training operator
-   - `kubeflow/manifests` — Deployment manifests and Kustomize overlays
+1. **Evaluate cross-subproject integration testing** — Determine whether this repo or `kubeflow/community-distribution` should host end-to-end tests that validate the full Kubeflow stack when subprojects are composed together. This is the most significant quality gap in the ecosystem.
+2. **Define minimum quality standards** — Publish a `QUALITY.md` document with required practices for all Kubeflow subprojects: minimum test coverage thresholds, required CI checks (linting, security scanning), coverage reporting, and release testing requirements.
 
 ### Priority 1 (High Value)
-1. **Add documentation CI workflows** — Markdown linting and link checking for the ~5 Markdown files
-2. **Add CLAUDE.md** — Guide AI agents to understand this is an umbrella repo and direct them to sub-repos
-3. **Modernize issue templates** — Current config only redirects; could add a "Documentation" issue type for this repo
+1. **Add link-checking CI workflow** — Validate that all URLs in README, CONTRIBUTING, and issue templates resolve correctly. Dead links are a common problem in umbrella repos.
+2. **Create quality dashboard** — Aggregate test/coverage/security metrics from all subproject repos into a single view. Consider using a scheduled GitHub Action that queries each subproject's status.
+3. **Add shared CI/CD templates** — Provide reusable GitHub Actions workflows that subprojects can adopt for consistent testing, scanning, and release processes.
 
 ### Priority 2 (Nice-to-Have)
-1. **Clean up stale .gitignore** — Remove references to Go/Python/Bazel artifacts from the code migration era
-2. **Add CODEOWNERS** — Route documentation changes to specific reviewers
-3. **Add spell-checking** — `cspell` or similar for documentation quality
-4. **Archive or clearly label** — Make the umbrella nature more prominent in GitHub repo settings (description, topics)
+1. **Add CLAUDE.md** — Guide AI contributors to the correct subproject repos and prevent wasted effort on this umbrella repo.
+2. **Add automated OWNERS validation** — Ensure OWNERS files stay current and emeritus designations are tracked.
+3. **Consider hosting shared test fixtures** — Common test data, mock configurations, or integration test harnesses that multiple subprojects need.
 
 ## Comparison to Gold Standards
 
 | Dimension | kubeflow/kubeflow | odh-dashboard | notebooks | kserve |
-|-----------|-------------------|---------------|-----------|--------|
+|-----------|------------------|---------------|-----------|--------|
 | Unit Tests | 0/10 (no code) | 9/10 | 7/10 | 8/10 |
-| Integration/E2E | 0/10 (no code) | 8/10 | 8/10 | 9/10 |
-| Build Integration | 0/10 (no builds) | 7/10 | 8/10 | 7/10 |
-| Image Testing | 0/10 (no images) | 6/10 | 9/10 | 7/10 |
-| Coverage Tracking | 0/10 (no code) | 8/10 | 5/10 | 8/10 |
-| CI/CD Automation | 3/10 (bots only) | 9/10 | 8/10 | 9/10 |
-| Agent Rules | 0/10 (none) | 7/10 | 3/10 | 2/10 |
-| **Overall** | **1.2/10** | **8.0/10** | **7.5/10** | **7.8/10** |
+| Integration/E2E | 0/10 | 9/10 | 8/10 | 9/10 |
+| Build Integration | 0/10 | 7/10 | 8/10 | 6/10 |
+| Image Testing | 0/10 | 6/10 | 9/10 | 6/10 |
+| Coverage Tracking | 0/10 | 8/10 | 5/10 | 8/10 |
+| CI/CD Automation | 3/10 | 9/10 | 8/10 | 9/10 |
+| Agent Rules | 0/10 | 8/10 | 2/10 | 2/10 |
+| **Overall** | **1.5/10** | **8.2/10** | **7.0/10** | **7.5/10** |
 
-**Note**: This comparison is inherently unfair — `kubeflow/kubeflow` is not a code repository. The scores reflect the absence of software quality practices, which is expected for a documentation-only umbrella repo.
+**Note**: Direct comparison is inherently unfair — `kubeflow/kubeflow` is an umbrella/meta repo while the gold standards are active development repositories. A more meaningful comparison would be against each Kubeflow subproject individually.
 
 ## File Paths Reference
 
-| File | Purpose |
-|------|---------|
-| `README.md` | Project landing page with sub-repo table |
-| `ROADMAP.md` | Release history and future plans |
-| `CHANGELOG.md` | Detailed change log (~289KB) |
-| `CONTRIBUTING.md` | Contributor redirect to kubeflow.org |
-| `OWNERS` | Prow-style approver list |
-| `LICENSE` | Apache 2.0 |
-| `.github/stale.yml` | Probot stale issue configuration |
-| `.github/issue_label_bot.yaml` | MLBot label configuration |
-| `.github/ISSUE_TEMPLATE/config.yml` | Issue routing to sub-repos |
-| `.github/OWNERS` | GitHub-specific owners |
-| `.gitignore` | Stale entries from pre-migration era |
-| `logo/*.svg` | Kubeflow brand assets (3 files) |
+| Category | Path | Status |
+|----------|------|--------|
+| CI/CD Workflows | `.github/workflows/` | Does not exist |
+| Issue Templates | `.github/ISSUE_TEMPLATE/config.yml` | Present — routes to 14 subprojects |
+| Makefile | `Makefile` | Does not exist |
+| Dockerfiles | `**/Dockerfile` | None found |
+| Test Files | `**/*_test.*` | None found |
+| Coverage Config | `.codecov.yml` | Does not exist |
+| Linting Config | `.golangci.yaml` | Does not exist |
+| Pre-commit | `.pre-commit-config.yaml` | Does not exist |
+| Security Scanning | `.gitleaks.toml` / `.trivyignore` | Does not exist |
+| Agent Rules | `.claude/` / `CLAUDE.md` | Does not exist |
+| OWNERS | `OWNERS` | Present — 6 active approvers |
 
-## Suggested Next Steps
+## Key Insight
 
-If you want to assess Kubeflow's actual quality practices, run this analysis on the sub-repositories:
+**The real quality story of Kubeflow cannot be told from this repository alone.** To assess Kubeflow's quality practices comprehensively, each subproject repository should be analyzed individually:
 
-```bash
-/quality-repo-analysis https://github.com/kubeflow/pipelines
-/quality-repo-analysis https://github.com/kubeflow/notebooks
-/quality-repo-analysis https://github.com/kubeflow/katib
-/quality-repo-analysis https://github.com/kubeflow/trainer
-/quality-repo-analysis https://github.com/kubeflow/manifests
-```
+- `kubeflow/pipelines` — ML pipeline orchestration
+- `kubeflow/trainer` — Distributed training operators
+- `kubeflow/notebooks` — Jupyter notebook infrastructure
+- `kubeflow/katib` — Hyperparameter tuning
+- `kubeflow/hub` — Model registry
+- `kserve/kserve` — Model serving
+
+Consider running `/quality-repo-analysis` on each subproject for a complete picture.

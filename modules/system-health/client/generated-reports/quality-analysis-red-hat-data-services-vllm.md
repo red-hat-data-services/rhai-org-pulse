@@ -1,347 +1,342 @@
 ---
 repository: "red-hat-data-services/vllm"
-overall_score: 1.4
+overall_score: 2.8
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No source code or test files — downstream packaging repo only"
+    status: "No source code in repo — downstream build wrapper only"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or end-to-end tests for the built container image"
+    status: "No integration or E2E tests; no image startup validation"
   - dimension: "Build Integration"
-    score: 4.0
-    status: "Konflux Tekton pipeline exists with multi-arch builds, but skip-checks=true"
+    score: 5.0
+    status: "Konflux Tekton pipeline with multi-arch builds; skip-checks enabled"
   - dimension: "Image Testing"
     score: 2.0
-    status: "Image builds but no runtime validation, startup checks, or smoke tests"
+    status: "Image builds on PR but no runtime validation or smoke tests"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tracking — no source code to cover"
+    status: "N/A — no source code to cover"
   - dimension: "CI/CD Automation"
     score: 5.0
-    status: "Centralized Tekton pipeline auto-synced from konflux-central, multi-arch"
+    status: "Tekton PipelineRun auto-synced from konflux-central; Clair scan configured"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules"
+    status: "No CLAUDE.md, .claude/ directory, or agent rules"
 critical_gaps:
-  - title: "No container image runtime validation"
-    impact: "Built images may fail at runtime (bad entrypoint, missing deps, config errors) with no detection before deployment"
+  - title: "No image runtime validation or smoke tests"
+    impact: "Built images may fail at startup or serve incorrect responses — caught only in downstream testing or production"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "skip-checks=true in Tekton pipeline"
-    impact: "Konflux validation checks are skipped on PR builds, potentially allowing non-compliant images"
+  - title: "skip-checks: true in Tekton pipeline"
+    impact: "Bypasses Konflux built-in quality gates; vulnerabilities or build issues may pass undetected"
     severity: "HIGH"
     effort: "1-2 hours"
-  - title: "No smoke tests for vLLM inference endpoint"
-    impact: "Cannot verify the container can actually serve inference requests before shipping"
+  - title: "No vulnerability threshold enforcement"
+    impact: "Clair scan runs but no evidence of blocking on critical/high CVEs — images with known vulnerabilities may ship"
     severity: "HIGH"
-    effort: "8-16 hours"
-  - title: "No security scanning enforcement or results gating"
-    impact: "Clair scan task exists but results may not gate the pipeline; vulnerabilities could ship"
-    severity: "MEDIUM"
     effort: "2-4 hours"
-quick_wins:
-  - title: "Remove skip-checks=true from Tekton pipeline"
-    effort: "1 hour"
-    impact: "Re-enables Konflux built-in validation checks for image compliance"
-  - title: "Add container startup validation step"
-    effort: "2-3 hours"
-    impact: "Catches broken images before they reach production — verify entrypoint succeeds"
-  - title: "Add CLAUDE.md with packaging repo conventions"
+  - title: "No Dockerfile linting or best-practice validation"
+    impact: "Dockerfile changes (e.g., base image version bumps) have no automated validation before merge"
+    severity: "MEDIUM"
     effort: "1-2 hours"
-    impact: "Guides AI agents and contributors on the repo's purpose and Dockerfile conventions"
-  - title: "Pin the RHAIIS_VERSION ARG to a digest"
+  - title: "README is unmodified upstream copy"
+    impact: "No downstream-specific documentation; contributors don't understand this repo's purpose vs upstream vllm-project/vllm"
+    severity: "LOW"
+    effort: "1-2 hours"
+quick_wins:
+  - title: "Remove skip-checks: true from Tekton pipeline"
+    effort: "30 minutes (in konflux-central)"
+    impact: "Re-enables Konflux built-in quality gates for vulnerability and compliance checks"
+  - title: "Add hadolint Dockerfile linting to PR pipeline"
+    effort: "1-2 hours"
+    impact: "Catches Dockerfile best-practice violations before merge"
+  - title: "Add image startup smoke test"
+    effort: "2-4 hours"
+    impact: "Validates built container actually starts and responds on health endpoint"
+  - title: "Add CODEOWNERS file"
+    effort: "30 minutes"
+    impact: "Ensures PRs get reviewed by appropriate maintainers"
+  - title: "Write downstream-specific README"
     effort: "1 hour"
-    impact: "Ensures reproducible builds by referencing the base image by digest, not just tag"
+    impact: "Clarifies repo purpose, build process, and relationship to upstream vllm-project/vllm"
 recommendations:
   priority_0:
-    - "Add container image startup/smoke test to Tekton pipeline to validate the built image can start and respond"
-    - "Remove skip-checks=true to re-enable Konflux compliance validation"
-    - "Add gating on Clair scan results — fail the pipeline if critical/high CVEs are found"
+    - "Remove skip-checks: true from Tekton PipelineRun to re-enable Konflux quality gates (change in konflux-central)"
+    - "Add container image startup smoke test that validates vllm_tgis_adapter process starts and health endpoint responds"
+    - "Enforce vulnerability thresholds on Clair scan results — block merge on critical/high CVEs"
   priority_1:
-    - "Add a basic inference health-check test (hit /health or /v1/models endpoint in built image)"
-    - "Add image size tracking to detect unexpected bloat"
-    - "Create CLAUDE.md with repo purpose, Dockerfile conventions, and contribution guidelines"
-  priority_2:
+    - "Add hadolint or dockerfile-lint to PR pipeline for Dockerfile best-practice validation"
+    - "Add image size regression check to prevent unexpected image bloat from base image changes"
+    - "Create downstream-specific README documenting repo purpose, build flow, and contribution process"
     - "Add SBOM generation and attestation for supply chain security"
-    - "Add image signing with cosign"
-    - "Track base image currency — alert when upstream RHAIIS image has a newer version"
+  priority_2:
+    - "Add CLAUDE.md with build contribution guidance for AI agents"
+    - "Add CODEOWNERS for automated review routing"
+    - "Consider adding a periodic job to test latest base image compatibility"
+    - "Add Dependabot or Renovate for base image version tracking"
 ---
 
 # Quality Analysis: red-hat-data-services/vllm
 
 ## Executive Summary
+- Overall Score: 2.8/10
+- Key Strengths: Konflux/Tekton CI pipeline with multi-arch builds (amd64/arm64), Clair vulnerability scanning configured, ecosystem cert preflight checks, pipeline configs centrally managed via konflux-central
+- Critical Gaps: No runtime image validation, skip-checks bypasses quality gates, no vulnerability thresholds, no Dockerfile linting, no smoke tests
+- Agent Rules Status: Missing
 
-- **Overall Score: 1.4/10**
-- **Repository Type**: Downstream packaging/distribution repository (not a source code repo)
-- **Key Strength**: Centralized Konflux/Tekton pipeline with multi-architecture (amd64/arm64) builds, auto-synced from `konflux-central`
-- **Critical Gap**: No testing whatsoever — no runtime validation, no smoke tests, no health checks for the built container image
-- **Agent Rules Status**: Missing — no CLAUDE.md, no `.claude/` directory
+## Repository Profile
 
-### Repository Context
+| Attribute | Value |
+|-----------|-------|
+| Repository | red-hat-data-services/vllm |
+| Type | Downstream Konflux build wrapper |
+| Primary Language | Dockerfile (no application source code) |
+| Framework | Tekton/Konflux CI |
+| Default Branch | main |
+| Files in repo | 5 (Dockerfile, Tekton pipeline, README, LICENSE, .tekton/README) |
 
-This is **not a traditional source code repository**. It is a thin downstream packaging repo that:
-- Contains a single `Dockerfile.konflux.cuda` that re-layers the upstream `registry.redhat.io/rhaiis/vllm-cuda-rhel9` image
-- Has a Tekton PipelineRun definition auto-synced from `konflux-central`
-- Contains no source code (no Python, Go, or any application code)
-- Has only **1 commit** on a single branch (`main`)
-
-The actual vLLM source code, tests, and quality tooling live in the upstream `vllm-project/vllm` repository. This analysis evaluates what quality practices exist (or should exist) in this packaging layer.
+**Key Finding**: This is NOT a source code repository. It is a minimal downstream build packaging repo that wraps the upstream `vllm-project/vllm` via a pre-built Red Hat AI Image Stream base image (`registry.redhat.io/rhaiis/vllm-cuda-rhel9`). All source code, tests, and development tooling live upstream.
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0/10 | No source code or test files |
-| Integration/E2E | 0/10 | No integration or end-to-end tests |
-| **Build Integration** | **4/10** | **Konflux pipeline exists, multi-arch, but skip-checks=true** |
-| Image Testing | 2/10 | Image builds but no runtime validation |
-| Coverage Tracking | 0/10 | No coverage — no source code to cover |
-| CI/CD Automation | 5/10 | Centralized Tekton pipeline, auto-synced |
-| Agent Rules | 0/10 | No agent rules or documentation |
+| Unit Tests | 0.0/10 | No source code in repo — downstream build wrapper only |
+| Integration/E2E | 0.0/10 | No integration or E2E tests; no image startup validation |
+| **Build Integration** | **5.0/10** | **Konflux Tekton pipeline with multi-arch builds; skip-checks enabled** |
+| Image Testing | 2.0/10 | Image builds on PR but no runtime validation or smoke tests |
+| Coverage Tracking | 0.0/10 | N/A — no source code to cover |
+| CI/CD Automation | 5.0/10 | Tekton PipelineRun auto-synced from konflux-central; Clair scan configured |
+| Agent Rules | 0.0/10 | No CLAUDE.md, .claude/ directory, or agent rules |
 
 ## Critical Gaps
 
-### 1. No Container Image Runtime Validation
-- **Impact**: Built images may fail at runtime (bad entrypoint, missing Python dependencies, misconfigured environment variables) with zero detection before deployment
-- **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Details**: The Dockerfile sets `ENTRYPOINT ["python3", "-m", "vllm_tgis_adapter", "--uvicorn-log-level=warning"]` but there is no validation that this entrypoint actually succeeds. If the upstream base image changes or breaks the adapter module, it would not be caught.
+1. **No image runtime validation or smoke tests**
+   - Impact: Built images may fail at startup or serve incorrect responses — caught only in downstream testing or production
+   - Severity: HIGH
+   - Effort: 4-8 hours
+   - Detail: The Dockerfile sets `ENTRYPOINT ["python3", "-m", "vllm_tgis_adapter", "--uvicorn-log-level=warning"]` but no CI step validates this entrypoint actually starts. A broken base image or misconfigured environment variable would pass the build pipeline undetected.
 
-### 2. skip-checks=true in Tekton Pipeline
-- **Impact**: Konflux built-in validation checks are bypassed on PR builds, potentially allowing non-compliant or broken images to pass CI
-- **Severity**: HIGH
-- **Effort**: 1-2 hours (change in `konflux-central`, not this repo)
-- **Details**: The pipeline parameter `skip-checks: true` disables validation. While this may speed up builds, it defeats the purpose of having a gated CI pipeline.
-- **Location**: `.tekton/vllm-cuda-pull-request.yaml` line `skip-checks: true`
+2. **`skip-checks: true` in Tekton pipeline**
+   - Impact: Bypasses Konflux built-in quality gates; vulnerabilities or build issues may pass undetected
+   - Severity: HIGH
+   - Effort: 1-2 hours (change in konflux-central repo)
+   - Detail: The PipelineRun spec includes `skip-checks: true`, which disables Konflux validation tasks. This was likely set for initial bootstrapping but should be removed for production branches.
 
-### 3. No Smoke Tests for vLLM Inference
-- **Impact**: Cannot verify the container image can actually load a model and serve inference requests before shipping to customers
-- **Severity**: HIGH
-- **Effort**: 8-16 hours
-- **Details**: A packaging repo that produces a container image for LLM inference should at minimum verify: (1) the image starts, (2) the health endpoint responds, (3) a small test model can be loaded. None of this exists.
+3. **No vulnerability threshold enforcement**
+   - Impact: Clair scan runs but results are not gated — images with critical CVEs can still be pushed
+   - Severity: HIGH
+   - Effort: 2-4 hours
+   - Detail: While `clair-scan` is configured as a Tekton task with dedicated compute resources (8 CPU, 16Gi memory), there is no evidence of fail-on-severity thresholds or blocking policies.
 
-### 4. No Security Scanning Enforcement
-- **Impact**: The Tekton pipeline includes `clair-scan` and `ecosystem-cert-preflight-checks` tasks with resource allocations, but it's unclear if their results gate the pipeline
-- **Severity**: MEDIUM
-- **Effort**: 2-4 hours
-- **Details**: Resource limits are defined for scan tasks (16 CPU / 32Gi memory), suggesting they run, but without `skip-checks=true` set to `false`, results may not block merging.
+4. **No Dockerfile linting or best-practice validation**
+   - Impact: Dockerfile changes have no automated validation
+   - Severity: MEDIUM
+   - Effort: 1-2 hours
+
+5. **README is unmodified upstream copy**
+   - Impact: No documentation specific to this downstream repo's purpose or build process
+   - Severity: LOW
+   - Effort: 1-2 hours
 
 ## Quick Wins
 
-### 1. Remove `skip-checks=true` (1 hour)
-Change in `konflux-central` repo (this repo's `.tekton/` is auto-synced):
-```yaml
-# Before
-- name: skip-checks
-  value: true
+1. **Remove `skip-checks: true` from Tekton pipeline** (in konflux-central)
+   - Effort: 30 minutes
+   - Impact: Re-enables Konflux built-in quality gates
+   - Implementation: Edit `pipelineruns/vllm/.tekton/vllm-cuda-pull-request.yaml` in konflux-central, remove the `skip-checks: true` parameter
 
-# After
-- name: skip-checks
-  value: false
-```
-**Impact**: Re-enables all Konflux built-in validation, including enterprise compliance checks.
+2. **Add hadolint Dockerfile linting**
+   - Effort: 1-2 hours
+   - Impact: Catches Dockerfile best-practice violations before merge
+   - Implementation: Add a Tekton task or GitHub Action that runs `hadolint Dockerfile.konflux.cuda`
 
-### 2. Add Container Startup Validation (2-3 hours)
-Add a Tekton task that pulls the built image and verifies the entrypoint succeeds:
-```yaml
-# Example Tekton task step
-- name: validate-image-startup
-  image: $(params.output-image)
-  command: ["python3", "-c", "import vllm_tgis_adapter; print('Image startup OK')"]
-  timeout: 60s
-```
-**Impact**: Catches broken images immediately — missing modules, bad Python paths, incompatible dependencies.
+3. **Add image startup smoke test**
+   - Effort: 2-4 hours
+   - Impact: Validates built container starts and health endpoint responds
+   - Implementation: After image build, run a container and check the process starts:
+   ```bash
+   # Example smoke test
+   timeout 60 docker run --rm -d --name vllm-smoke \
+     -e MODEL_NAME=test -e DISABLE_LOGPROBS_DURING_SPEC_DECODING=false \
+     $IMAGE_URL && docker logs vllm-smoke 2>&1 | grep -q "started" \
+     && echo "PASS" || echo "FAIL"
+   ```
 
-### 3. Add CLAUDE.md (1-2 hours)
-Create a `CLAUDE.md` file documenting:
-- This is a downstream packaging repo (not source code)
-- Dockerfile conventions and labeling requirements
-- How `.tekton/` files are managed (synced from `konflux-central`)
-- Base image sourcing and version pinning strategy
+4. **Add CODEOWNERS file**
+   - Effort: 30 minutes
+   - Impact: Ensures PRs get reviewed by appropriate maintainers
 
-**Impact**: Guides AI agents and human contributors to understand this repo's purpose and constraints.
-
-### 4. Pin Base Image to Digest (1 hour)
-```dockerfile
-# Before
-FROM registry.redhat.io/rhaiis/vllm-cuda-rhel9:${RHAIIS_VERSION} as vllm-grpc-adapter
-
-# After — pin to specific digest for reproducibility
-FROM registry.redhat.io/rhaiis/vllm-cuda-rhel9@sha256:<digest> as vllm-grpc-adapter
-```
-**Impact**: Guarantees reproducible builds. Tag-based references can change without notice.
+5. **Write downstream-specific README**
+   - Effort: 1 hour
+   - Impact: Clarifies repo purpose and build process
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**What exists**:
-- Tekton PipelineRun definition (`.tekton/vllm-cuda-pull-request.yaml`)
-- Triggered on PR events via PipelinesAsCode annotations:
-  - On comment: `/build-cuda`
-  - On label: `kfbuild-all` or `kfbuild-cuda`
-- Multi-architecture builds: `linux-extra-fast/amd64` + `linux-m2xlarge/arm64`
-- Pipeline reference resolved from `konflux-central` repo (centralized management)
-- Pipeline timeout: 10 hours (tasks: 8 hours)
-- Image expiry: 5 days for PR images
-- Max 3 pipeline runs kept
+**Tekton/Konflux-based CI** (no GitHub Actions):
 
-**What's missing**:
-- No push/merge pipeline (only PR-triggered)
-- No periodic/nightly builds
-- No post-merge validation
-- Checks are skipped (`skip-checks: true`)
-- No Slack/notification on failure (explicitly disabled)
+| Aspect | Finding |
+|--------|---------|
+| CI System | Tekton PipelineRun via Konflux |
+| Pipeline Source | Auto-synced from `red-hat-data-services/konflux-central` |
+| Pipeline Reference | `pipelines/multi-arch-container-build.yaml` |
+| Trigger | PR events + label triggers (`kfbuild-all`, `kfbuild-cuda`) + comment trigger (`/build-cuda`) |
+| Concurrency | `cancel-in-progress: true` — good practice |
+| Timeouts | Pipeline: 10h, Tasks: 8h — appropriately set for large image builds |
+| Max Kept Runs | 3 — good for resource management |
+| Namespace | `rhoai-tenant` |
+
+**Pipeline Tasks Identified**:
+- `ecosystem-cert-preflight-checks` (8 CPU, 16Gi mem / 16 CPU, 32Gi limits)
+- `clair-scan` (8 CPU, 16Gi mem / 16 CPU, 32Gi limits)
+- Multi-arch build (amd64 via `linux-extra-fast`, arm64 via `linux-m2xlarge`)
+
+**Concerns**:
+- `skip-checks: true` bypasses validation
+- `hermetic: false` — non-hermetic builds reduce reproducibility
+- `build-source-image: false` — no source image for traceability
+- Slack failure notifications disabled (`enable-slack-failure-notification: false`)
 
 ### Test Coverage
 
-**Status**: No tests exist in any form.
+**No tests exist in this repository.** This is expected for a build wrapper repo, but runtime validation of the built image is critically missing.
 
-This is a packaging-only repository with zero test files:
-- 0 `test_*.py` files
-- 0 `*_test.py` files
-- 0 `conftest.py` files
-- No `tests/`, `test/`, `e2e/`, or `integration/` directories
-- No pytest, unittest, or any test framework configuration
-
-**For a packaging repo, appropriate tests would include**:
-- Container startup validation
-- Entrypoint verification
-- Health endpoint checks
-- Environment variable validation
-- Base image compatibility checks
+- No unit tests (no source code)
+- No integration tests
+- No E2E tests
+- No image startup validation
+- No smoke tests
+- No health check validation
 
 ### Code Quality
 
-**Status**: No code quality tooling.
-
-- No `.pre-commit-config.yaml`
-- No linting configuration (no ruff, flake8, pylint)
-- No type checking (no mypy)
-- No formatting tools
+**No code quality tools configured:**
+- No linting (no `.flake8`, `ruff.toml`, `.pylintrc`)
+- No pre-commit hooks (no `.pre-commit-config.yaml`)
 - No static analysis
+- No Dockerfile linting (no hadolint, no dockerfile-lint)
 
-This is understandable given there's no source code to lint — only a Dockerfile. However, Dockerfile linting (e.g., `hadolint`) could be added.
+This is partially expected for a build-only repo, but Dockerfile linting should be present.
 
 ### Container Images
 
 **Dockerfile Analysis** (`Dockerfile.konflux.cuda`):
-- **Base image**: `registry.redhat.io/rhaiis/vllm-cuda-rhel9:${RHAIIS_VERSION}` (version 3.2.2)
-- **Build stages**: Single FROM — simple re-layer, not a multi-stage build
-- **Configuration**: Sets environment variables (`GRPC_PORT`, `PORT`, `DISABLE_LOGPROBS_DURING_SPEC_DECODING`)
-- **Security**: Runs as non-root user (`USER 2000`)
-- **Labels**: Comprehensive Red Hat labeling (component, display name, description, license)
 
-**Strengths**:
-- Non-root user execution
-- Proper Red Hat labeling
-- Clear entrypoint definition
+| Aspect | Finding |
+|--------|---------|
+| Base Image | `registry.redhat.io/rhaiis/vllm-cuda-rhel9:${RHAIIS_VERSION}` |
+| Base Version | 3.2.2 (hardcoded ARG) |
+| Build Stages | Single stage (thin layer on base) |
+| User | Non-root (UID 2000) — good practice |
+| Entrypoint | `python3 -m vllm_tgis_adapter --uvicorn-log-level=warning` |
+| Multi-arch | Yes (amd64 + arm64 via Tekton) |
+| Image Size | Minimal addition over base — good |
 
-**Gaps**:
-- No `HEALTHCHECK` instruction
-- No runtime validation
-- Version pinned by tag, not digest
-- No `.dockerignore` (not critical given minimal files)
+**Environment Variables**:
+- `GRPC_PORT=8033` — gRPC adapter port
+- `PORT=8000` — HTTP serving port
+- `DISABLE_LOGPROBS_DURING_SPEC_DECODING=false` — spec decoding override
+
+**Concerns**:
+- No `HEALTHCHECK` instruction in Dockerfile
+- Base image version pinned as ARG but no automated update mechanism
+- No `.dockerignore` file (minimal impact since repo has few files)
 
 ### Security
 
-**What exists (via Tekton pipeline)**:
-- `clair-scan` task with dedicated resources (8 CPU, 16Gi request / 16 CPU, 32Gi limit)
-- `ecosystem-cert-preflight-checks` task with same resource allocation
-- Non-root container execution (USER 2000)
+**Partial security tooling via Tekton pipeline**:
 
-**What's missing**:
-- No vulnerability threshold enforcement
-- No SBOM generation
-- No image signing/attestation (cosign)
-- No `.trivyignore` or vulnerability exception tracking
-- No Gitleaks/secret detection (though minimal risk with no source code)
-- `skip-checks: true` potentially bypasses scan gating
+| Tool | Status |
+|------|--------|
+| Clair scan | Configured in Tekton pipeline |
+| Ecosystem cert preflight | Configured in Tekton pipeline |
+| Trivy | Not configured |
+| CodeQL/SAST | Not configured |
+| Secret detection | Not configured |
+| SBOM generation | Not configured |
+| Image signing | Not configured |
+| Vulnerability thresholds | Not enforced |
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status**: Missing
-
-- No `CLAUDE.md` file
-- No `AGENTS.md` file
-- No `.claude/` directory
-- No `.claude/rules/` for test patterns
-- No `.claude/skills/` for custom workflows
-- No documentation for AI-assisted development
-
-**Recommendation**: Even for a thin packaging repo, a `CLAUDE.md` is valuable to explain:
-- The repo's purpose as a downstream packaging layer
-- The relationship to `konflux-central` for pipeline management
-- Dockerfile modification guidelines
-- Base image update procedures
+- **Status**: Missing
+- **CLAUDE.md**: Not present
+- **AGENTS.md**: Not present
+- **`.claude/` directory**: Not present
+- **`.claude/rules/`**: Not present
+- **Coverage**: No test type rules (N/A for build-only repo)
+- **Recommendation**: Add minimal CLAUDE.md with build contribution guidance
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add container image runtime validation** — Implement a Tekton task that starts the built image and verifies the entrypoint succeeds (import check, health endpoint). This is the single most impactful improvement.
+1. **Remove `skip-checks: true`** from Tekton PipelineRun
+   - Change in `konflux-central` repo: `pipelineruns/vllm/.tekton/vllm-cuda-pull-request.yaml`
+   - This re-enables all Konflux built-in quality gates
 
-2. **Remove `skip-checks=true`** — Re-enable Konflux compliance validation. This change must be made in the `konflux-central` repository since `.tekton/` is auto-synced.
+2. **Add container image startup smoke test**
+   - After building the image, run it briefly to validate the entrypoint starts
+   - Check that `vllm_tgis_adapter` process initializes without errors
+   - Verify the health endpoint responds
 
-3. **Gate pipeline on Clair scan results** — Ensure the pipeline fails if critical or high-severity CVEs are detected in the built image.
+3. **Enforce vulnerability thresholds on Clair scan**
+   - Configure Clair to fail the pipeline on critical/high severity CVEs
+   - Define an allowlist process for known exceptions
 
 ### Priority 1 (High Value)
 
-4. **Add inference health-check test** — After building the image, run a lightweight test that hits `/health` or `/v1/models` to verify the vLLM server can start (even without a full model).
-
-5. **Add Dockerfile linting** — Integrate `hadolint` to catch Dockerfile anti-patterns and enforce best practices.
-
-6. **Create CLAUDE.md** — Document repo purpose, Dockerfile conventions, pipeline management, and contribution workflow.
-
-7. **Add image size tracking** — Monitor image size across builds to detect unexpected bloat from base image changes.
+4. **Add hadolint Dockerfile linting** to validate Dockerfile best practices
+5. **Add image size regression check** to catch unexpected bloat from base image updates
+6. **Create downstream-specific README** documenting:
+   - This repo's purpose vs upstream `vllm-project/vllm`
+   - Build flow through Konflux
+   - How to trigger builds (`/build-cuda` comment, labels)
+   - Base image update process
+7. **Enable `hermetic: true`** for reproducible builds
+8. **Add SBOM generation** for supply chain transparency
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add SBOM generation and cosign signing** — Enhance supply chain security with software bill of materials and image attestation.
-
-9. **Track base image currency** — Set up automated alerts when the upstream `rhaiis/vllm-cuda-rhel9` image has newer versions available.
-
-10. **Add a push/merge pipeline** — Currently only PR builds exist. Add a merge-triggered pipeline for producing release-quality images.
-
-11. **Enable failure notifications** — `enable-slack-failure-notification` is set to `false`. Enable it for build failure awareness.
+9. **Add CLAUDE.md** with contribution guidance for AI agents
+10. **Add CODEOWNERS** for automated review routing
+11. **Enable Slack failure notifications** for build failures
+12. **Add Dependabot/Renovate** for base image version tracking
+13. **Consider periodic base image compatibility testing**
 
 ## Comparison to Gold Standards
 
-| Practice | vllm (this repo) | odh-dashboard | notebooks | kserve |
-|----------|-------------------|---------------|-----------|--------|
-| Unit Tests | None (N/A) | Comprehensive Jest suite | N/A (image repo) | Go test + pytest |
-| Integration Tests | None | Contract tests, API tests | N/A | Multi-version E2E |
-| Image Smoke Tests | None | N/A | 5-layer validation | Image startup checks |
-| Coverage Tracking | None | Codecov enforced | N/A | Codecov with thresholds |
-| Security Scanning | Clair (possibly skipped) | Trivy + CodeQL | Trivy on all images | SAST + dependency scan |
-| Multi-arch | amd64 + arm64 | N/A | Multi-arch builds | N/A |
-| Agent Rules | None | Comprehensive rules | Partial | None |
-| Dockerfile Linting | None | N/A | hadolint | N/A |
-| Image Health Check | None | N/A | Startup validation | Health probes |
-| Pipeline Gating | skip-checks=true | Full gating | Full gating | Full gating |
-
-### Key Takeaway
-
-The closest gold standard comparison is **notebooks**, which is also primarily an image-building repository. Notebooks implements a 5-layer validation approach:
-1. Image builds successfully
-2. Image starts and passes health checks
-3. Key packages import correctly
-4. Functional tests pass (e.g., notebook execution)
-5. Security scans pass with enforced thresholds
-
-This repo implements only layer 1 (image builds), and even that has `skip-checks=true`.
+| Dimension | vllm (this repo) | notebooks (gold) | odh-dashboard (gold) | Gap |
+|-----------|-------------------|-------------------|----------------------|-----|
+| Image Build | Konflux multi-arch | GitHub Actions multi-arch | GitHub Actions | Parity |
+| Image Smoke Test | None | 5-layer validation | Container startup tests | Critical gap |
+| Vulnerability Scan | Clair (no thresholds) | Trivy with thresholds | Trivy + Snyk | Major gap |
+| Dockerfile Lint | None | hadolint | hadolint | Gap |
+| SBOM | None | SBOM generation | SBOM generation | Gap |
+| Coverage | N/A | Codecov integration | Codecov enforcement | N/A |
+| Agent Rules | None | Not applicable | Comprehensive .claude/rules/ | Gap |
+| Documentation | Upstream README only | Downstream docs | Comprehensive docs | Gap |
 
 ## File Paths Reference
 
 | File | Purpose |
 |------|---------|
-| `Dockerfile.konflux.cuda` | Container image definition — re-layers upstream RHAIIS vLLM CUDA image |
-| `.tekton/vllm-cuda-pull-request.yaml` | Tekton PipelineRun for PR builds (auto-synced from konflux-central) |
-| `.tekton/README.md` | Instructions for modifying pipelines via konflux-central |
-| `README.md` | Upstream vLLM project documentation (from vllm-project/vllm) |
+| `Dockerfile.konflux.cuda` | Container image build definition |
+| `.tekton/vllm-cuda-pull-request.yaml` | Konflux Tekton PipelineRun for PR builds |
+| `.tekton/README.md` | Warning about auto-sync from konflux-central |
+| `README.md` | Unmodified upstream vLLM README |
 | `LICENSE` | Apache 2.0 license |
 
-## Summary
+## Notes
 
-`red-hat-data-services/vllm` is a minimal downstream packaging repository with significant quality gaps. While the centralized Konflux/Tekton pipeline and multi-architecture build support provide a solid CI foundation, the complete absence of any testing — especially container runtime validation — is a critical risk. The highest-impact improvement is adding container image startup and health-check validation to the Tekton pipeline, which would catch the most common failure modes (broken entrypoints, missing dependencies, misconfigured environment) before images reach production.
+This repository is a **downstream build packaging wrapper**, not a source code repository. The actual vLLM source code, tests, and development tooling live in the upstream `vllm-project/vllm` repository. Quality improvements for this repo should focus on:
+
+1. **Build pipeline hardening** (remove skip-checks, enforce vulnerability thresholds)
+2. **Image validation** (smoke tests, startup checks)
+3. **Supply chain security** (SBOM, attestation, hermetic builds)
+4. **Documentation** (downstream-specific README, contribution guide)
+
+Source code quality metrics (unit tests, integration tests, code coverage) are not applicable to this repository type.

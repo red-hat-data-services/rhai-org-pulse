@@ -1,356 +1,431 @@
 ---
 repository: "red-hat-data-services/kserve"
-overall_score: 8.1
+overall_score: 7.9
 scorecard:
   - dimension: "Unit Tests"
     score: 8.5
-    status: "Strong Go unit tests with envtest, comprehensive Python pytest coverage across all server runtimes"
+    status: "192 Go + 255 Python test files with envtest, pytest-cov, multi-Python-version matrix"
   - dimension: "Integration/E2E"
     score: 9.0
-    status: "Exceptional E2E suite: 77 Python test files across 12+ categories, Minikube-based, multi-install-method matrix"
+    status: "91 E2E tests across 14 domains; Minikube/KinD PR-gated; multi-Istio-version matrix"
   - dimension: "Build Integration"
     score: 7.5
-    status: "Distro build tag verification on PRs, Konflux Dockerfiles present but no PR-time Konflux simulation"
+    status: "Distro build-tag verification on PR; Tekton/Konflux multi-arch PR builds; no Konflux simulation in GitHub CI"
   - dimension: "Image Testing"
-    score: 7.0
-    status: "All images built and deployed in E2E on PRs, but no standalone image runtime validation or vulnerability scanning"
+    score: 6.5
+    status: "Multi-stage UBI Dockerfiles with license checking; no runtime validation or startup tests"
   - dimension: "Coverage Tracking"
-    score: 9.0
-    status: "go-test-coverage with 80% threshold, PR coverage diff reporting, master baseline comparison"
+    score: 8.5
+    status: "go-test-coverage enforces 80% threshold; PR coverage diff reporting; Python pytest-cov available but not enforced"
   - dimension: "CI/CD Automation"
     score: 9.0
-    status: "40+ workflows with concurrency control, path filtering, matrix strategies, reusable actions"
+    status: "48 workflows with concurrency control, path-based triggers, pinned SHAs, required checks gate"
   - dimension: "Agent Rules"
-    score: 0.0
-    status: "No .claude directory, CLAUDE.md, or AGENTS.md — zero AI-assisted development guidance"
+    score: 7.0
+    status: "AGENTS.md + 5 detailed .rules/ files for midstream patterns; missing test creation guidance"
 critical_gaps:
-  - title: "No container vulnerability scanning in CI"
-    impact: "CVEs in base images or dependencies not caught until downstream Konflux pipeline or production"
+  - title: "No container image runtime validation"
+    impact: "Image startup failures and runtime issues not caught until deployment on cluster"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No agent rules for AI-assisted development"
-    impact: "AI agents generate tests/code with no project-specific guidance, leading to inconsistent patterns"
-    severity: "MEDIUM"
-    effort: "4-8 hours"
-  - title: "No PR-time Konflux build simulation"
-    impact: "Distro-specific build failures only caught after merge in downstream Konflux pipelines"
-    severity: "MEDIUM"
-    effort: "8-12 hours"
-  - title: "No Python coverage enforcement"
-    impact: "Python runtime servers have pytest --cov but no threshold enforcement or PR reporting"
-    severity: "MEDIUM"
+    effort: "6-8 hours"
+  - title: "Python coverage not enforced"
+    impact: "Python SDK (384 source files) has pytest-cov installed but no threshold enforcement; coverage can silently regress"
+    severity: "HIGH"
     effort: "4-6 hours"
+  - title: "No vulnerability scanning in CI"
+    impact: "Container vulnerabilities discovered only after images are built in Konflux; Snyk config exists but no CI workflow"
+    severity: "MEDIUM"
+    effort: "2-4 hours"
+  - title: "No agent rules for test creation"
+    impact: "AI-assisted test generation lacks guidance on test patterns, envtest setup, and pytest conventions specific to this repo"
+    severity: "MEDIUM"
+    effort: "3-4 hours"
 quick_wins:
   - title: "Add Trivy scanning to PR workflow"
-    effort: "2-3 hours"
-    impact: "Catch CVEs in base images and Go/Python dependencies before merge"
-  - title: "Add Python coverage threshold enforcement"
-    effort: "2-4 hours"
-    impact: "Prevent coverage regression in Python runtime servers"
-  - title: "Create basic CLAUDE.md with test conventions"
-    effort: "2-3 hours"
-    impact: "Improve AI-generated test quality and consistency across Go/Python"
-  - title: "Add Gitleaks secret detection to PR workflow"
     effort: "1-2 hours"
-    impact: "Prevent accidental credential leaks in PRs"
+    impact: "Catch CVEs in base images and Go/Python dependencies before merge"
+  - title: "Enforce Python coverage threshold"
+    effort: "2-3 hours"
+    impact: "Prevent Python SDK coverage regressions with pytest-cov --cov-fail-under"
+  - title: "Add container startup validation step to E2E workflows"
+    effort: "3-4 hours"
+    impact: "Catch entrypoint and runtime failures before full E2E test execution"
+  - title: "Generate test creation agent rules with /test-rules-generator"
+    effort: "2-3 hours"
+    impact: "Enable consistent AI-generated tests following envtest and pytest patterns"
 recommendations:
   priority_0:
-    - "Add container image vulnerability scanning (Trivy) to PR and scheduled workflows"
-    - "Enforce Python test coverage thresholds matching Go's 80% standard"
+    - "Add container vulnerability scanning (Trivy) to PR and scheduled workflows"
+    - "Enforce Python test coverage thresholds across all Python packages"
+    - "Add image startup validation to catch runtime failures before E2E tests"
   priority_1:
-    - "Create comprehensive agent rules (.claude/rules/) for unit, integration, and E2E test patterns"
-    - "Add PR-time Konflux build simulation for distro tag validation"
-    - "Add secret detection (Gitleaks) to CI pipeline"
+    - "Create agent rules for unit test, integration test, and E2E test creation patterns"
+    - "Add SBOM generation to GitHub CI (Syft config exists but is unused in workflows)"
+    - "Integrate Codecov or similar for unified Go+Python coverage visualization"
   priority_2:
-    - "Add API contract testing for gRPC/REST prediction interfaces"
-    - "Implement performance regression testing for prediction latency"
-    - "Add SBOM generation to image build workflows"
+    - "Add contract tests for the KServe Python SDK inference protocol"
+    - "Add performance regression testing for prediction latency"
+    - "Implement chaos engineering tests for controller resilience"
 ---
 
 # Quality Analysis: red-hat-data-services/kserve
 
 ## Executive Summary
 
-- **Overall Score: 8.1/10**
-- **Repository Type**: Kubernetes operator + Python ML serving runtimes (Go + Python)
-- **Key Strengths**: Exceptional E2E test infrastructure with Minikube-based testing across multiple installation methods; strong Go coverage enforcement at 80% with PR diff reporting; comprehensive CI/CD with 40+ workflows, path filtering, concurrency control, and matrix strategies; distro build tag verification for Red Hat downstream builds
-- **Critical Gaps**: No container vulnerability scanning in CI; no AI agent development rules; no Python coverage enforcement despite pytest --cov usage; no PR-time Konflux build simulation
-- **Agent Rules Status**: Missing — no `.claude/`, `CLAUDE.md`, or `AGENTS.md`
+- **Overall Score: 7.9/10**
+- **Repository Type**: Kubernetes operator (Go) + Python ML serving SDK — midstream fork of kserve/kserve
+- **Primary Languages**: Go (589 files), Python (639 files)
+- **Key Strengths**: Comprehensive E2E suite with 91 tests across 14 domains, excellent Go coverage enforcement at 80%, robust CI/CD with 48 workflows featuring path-based triggers and SHA-pinned actions, strong midstream isolation via build-tag companion file pattern with detailed agent rules
+- **Critical Gaps**: No container vulnerability scanning in CI, Python coverage not enforced, no image runtime validation
+- **Agent Rules Status**: Present — AGENTS.md + 5 detailed `.rules/` files covering build tags, distro builds, kustomize hygiene, makefile split, and RBAC isolation. Missing test creation guidance.
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 8.5/10 | 152 Go test files + 230 Python test files, envtest for controller testing, multi-version Python matrix |
-| Integration/E2E | 9.0/10 | 77 E2E test files across 12+ categories, Minikube deployment, kustomize+helm matrix |
-| Build Integration | 7.5/10 | Distro build check on PRs, Konflux Dockerfiles ready, but no PR-time Konflux simulation |
-| Image Testing | 7.0/10 | All images built and loaded in E2E, but no standalone runtime validation or vuln scanning |
-| Coverage Tracking | 9.0/10 | go-test-coverage v2 with 80% total threshold, master baseline diff, PR comment reporting |
-| CI/CD Automation | 9.0/10 | 40+ workflows, concurrency groups, path filtering, reusable composite actions |
-| Agent Rules | 0.0/10 | No AI-assisted development guidance whatsoever |
+| Unit Tests | 8.5/10 | 192 Go + 255 Python test files; envtest for controllers; multi-Python-version matrix |
+| Integration/E2E | 9.0/10 | 91 E2E tests across 14 domains; PR-gated on Minikube/KinD; multi-Istio-version matrix |
+| **Build Integration** | **7.5/10** | **Distro build-tag verification; Tekton/Konflux multi-arch PR builds; missing GitHub CI Konflux simulation** |
+| Image Testing | 6.5/10 | Multi-stage UBI Dockerfiles with license checking; no runtime/startup validation |
+| Coverage Tracking | 8.5/10 | Go: 80% threshold enforced with PR diff reporting; Python: pytest-cov available but unenforced |
+| CI/CD Automation | 9.0/10 | 48 workflows; concurrency control; path filtering; SHA-pinned actions; required checks gate |
+| Agent Rules | 7.0/10 | AGENTS.md + 5 .rules/ files for midstream patterns; no test creation rules |
 
 ## Critical Gaps
 
-### 1. No Container Vulnerability Scanning
-- **Impact**: CVEs in UBI base images, Go modules, or Python packages not caught until downstream Konflux pipeline or production deployment
+### 1. No Container Image Runtime Validation
+- **Impact**: Image startup failures, misconfigured entrypoints, and missing runtime dependencies not caught until deployment on an actual cluster
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: The repo builds 15+ container images (controller, router, agent, storage-initializer, plus ~10 Python server runtimes), but none are scanned for vulnerabilities in CI. No Trivy, Snyk, or Grype integration exists. The Konflux Dockerfiles (`Dockerfiles/*.Dockerfile.konflux`) are used downstream but their security posture is never validated pre-merge.
+- **Effort**: 6-8 hours
+- **Detail**: The E2E workflows build images and deploy to Minikube, but there is no explicit image startup validation step. If a container fails to start, the failure is discovered as a cryptic E2E test timeout rather than a clear "image failed to start" error. Adding a dedicated startup check (e.g., `docker run --rm image --help` or health check probe) before E2E tests would catch these issues early.
 
-### 2. No AI Agent Development Rules
-- **Impact**: AI-assisted code contributions lack project-specific guidance on testing patterns, framework usage, and conventions
-- **Severity**: MEDIUM
-- **Effort**: 4-8 hours
-- **Details**: The repository has no `.claude/` directory, `CLAUDE.md`, or `AGENTS.md`. Given the complexity of this repo (Go operator + Python runtimes, envtest, Ginkgo-like patterns, pytest E2E with custom markers), AI agents need guidance on:
-  - Go test conventions (envtest setup, controller reconciler testing)
-  - Python test conventions (pytest fixtures, server runtime mocking)
-  - E2E test markers and category structure
-  - Linting rules (45+ golangci-lint checks, ruff)
-
-### 3. No PR-time Konflux Build Simulation
-- **Impact**: Distro-specific build issues (FIPS mode, UBI base images, CGO settings) discovered only after merge in downstream Konflux pipelines
-- **Severity**: MEDIUM
-- **Effort**: 8-12 hours
-- **Details**: The `distro-build-check.yml` workflow verifies Go compilation with distro tags, which is a solid baseline. However, it doesn't test the actual Konflux Dockerfile builds (`Dockerfiles/*.Dockerfile.konflux`). These use `registry.redhat.io/ubi9/go-toolset`, FIPS-compliant build flags (`GOEXPERIMENT=strictfipsruntime`), and different CGO settings (`CGO_ENABLED=1` vs `0`).
-
-### 4. No Python Coverage Enforcement
-- **Impact**: Python test coverage can silently regress without blocking PRs, despite pytest --cov being already in use
-- **Severity**: MEDIUM
+### 2. Python Coverage Not Enforced
+- **Impact**: The Python SDK has 384 source files and 255 test files with `pytest-cov` installed across all packages, but no coverage threshold is enforced in CI. Coverage can silently regress.
+- **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: The Go side has rigorous coverage enforcement (80% threshold via `go-test-coverage`), but Python tests run with `pytest --cov` without any threshold checking. Each server runtime (sklearn, xgb, lgb, pmml, paddle, huggingface) generates coverage data that's never compared or enforced.
+- **Detail**: All Python packages include `pytest-cov` as a test dependency. The `python-test.yml` workflow runs tests across Python 3.10/3.11/3.12 but does not pass `--cov-fail-under` flags. Adding threshold enforcement (e.g., `--cov-fail-under=70`) and coverage reporting to the workflow would close this gap.
+
+### 3. No Vulnerability Scanning in CI
+- **Impact**: Container vulnerabilities are discovered only after images are built in Konflux. A `.snyk` config exists but has no corresponding CI workflow.
+- **Severity**: MEDIUM
+- **Effort**: 2-4 hours
+- **Detail**: The repository has a `.snyk` policy file excluding dev/docs/hack directories, and a `.syft.yaml` for SBOM generation, but neither is integrated into any GitHub Actions workflow. Adding a Trivy scan step to the E2E or build workflows would catch vulnerabilities before merge.
+
+### 4. No Agent Rules for Test Creation
+- **Impact**: AI-assisted test generation lacks guidance on this repository's specific test patterns, envtest setup idioms, and Python pytest conventions
+- **Severity**: MEDIUM
+- **Effort**: 3-4 hours
+- **Detail**: The existing `.rules/` directory has excellent coverage of midstream patterns (build tags, distro builds, kustomize, RBAC) but contains no guidance for test creation. The `AGENTS.md` file documents testing conventions at a high level but doesn't provide the structured, actionable patterns that agent rules need (framework-specific examples, anti-patterns, checklist).
 
 ## Quick Wins
 
-### 1. Add Trivy Container Scanning (2-3 hours)
-Add Trivy scanning to the existing E2E workflow or create a dedicated scanning workflow that runs on PRs for at least the controller image.
+### 1. Add Trivy Scanning to PR Workflow (1-2 hours)
+**Impact**: Catch CVEs in base images and Go/Python dependencies before merge
 
-### 2. Enforce Python Coverage Thresholds (2-4 hours)
-Add `--cov-fail-under=80` to pytest invocations in `python-test.yml`, matching the Go 80% standard.
+```yaml
+# Add to .github/workflows/go.yml or create .github/workflows/trivy-scan.yml
+- name: Run Trivy vulnerability scanner
+  uses: aquasecurity/trivy-action@master
+  with:
+    scan-type: 'fs'
+    scan-ref: '.'
+    severity: 'CRITICAL,HIGH'
+    exit-code: '1'
+```
 
-### 3. Create Basic CLAUDE.md (2-3 hours)
-Document test conventions, framework usage, and coding standards. Use `/test-rules-generator` to bootstrap.
+### 2. Enforce Python Coverage Threshold (2-3 hours)
+**Impact**: Prevent Python SDK coverage regressions
 
-### 4. Add Gitleaks Secret Detection (1-2 hours)
-Add `.gitleaks.toml` config and a CI step to scan for credential leaks.
+Add `--cov-fail-under=70` to pytest invocations in `python-test.yml` and configure per-package coverage reporting.
+
+### 3. Add Container Startup Validation (3-4 hours)
+**Impact**: Catch entrypoint and runtime failures before full E2E test execution
+
+Add a post-build step in E2E workflows to verify each container starts and responds to health checks before deploying to Minikube/KinD.
+
+### 4. Generate Test Creation Agent Rules (2-3 hours)
+**Impact**: Enable consistent AI-generated tests following envtest and pytest patterns
+
+Run `/test-rules-generator` against this repository to generate `.claude/rules/` files covering unit test, integration test, and E2E test creation patterns.
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Strengths:**
-- **40+ workflows** with clear naming and organization
-- **Concurrency control** on every workflow (`cancel-in-progress: true`)
-- **Path filtering** to avoid unnecessary CI runs (Go changes don't trigger Python tests and vice versa)
-- **Matrix strategies** for Python versions (3.10, 3.11, 3.12), install methods (kustomize, helm), and network layers (istio-ingress, envoy-gatewayapi, istio-gatewayapi)
-- **Merge queue support** (`merge_group` triggers)
-- **Reusable composite actions** in `.github/actions/` (minikube-setup, kserve-dep-setup, base-download, load-docker-images, free-up-disk-space)
-- **Action pinning** with SHA hashes verified by pre-commit hook
-- **Required checks enforcement** via `enforce-required-checks` workflow with 3-hour timeout
+**Score: 9.0/10** — Excellent
 
-**PR-Triggered Workflows:**
-| Workflow | Purpose |
-|----------|---------|
-| `go.yml` | Go unit tests + coverage |
-| `python-test.yml` | All Python server unit tests (7 runtimes) |
-| `e2e-test.yml` | Full E2E suite (predictor, transformer, explainer, graph, raw, etc.) |
-| `e2e-test-llmisvc.yaml` | LLMInferenceService E2E |
-| `e2e-test-odh-xks-kind.yml` | ODH xKS E2E on KinD with Istio matrix |
-| `precommit-check.yml` | Manifest generation, linting, formatting verification |
-| `distro-build-check.yml` | Compile with/without distro build tags |
-| `go-license-check.yml` | License compliance (go-licenses) |
-| `scheduled-go-security-scan.yml` | Gosec SAST + CodeQL upload |
-| `pr-style-check.yml` | PR formatting standards |
-| `required-checks.yml` | Gate all checks before merge |
+The repository has 48 GitHub Actions workflows with strong engineering practices:
+
+- **PR-triggered tests**: Go tests (`go.yml`), Python tests (`python-test.yml`), E2E tests (`e2e-test.yml`), precommit checks (`precommit-check.yml`), distro build verification (`distro-build-check.yml`), and multiple specialized E2E suites (LLMISvc, ModelCache, ODH xKS, kserve-module, quick-install)
+- **Concurrency control**: All workflows use `cancel-in-progress: true` with `group: ${{ github.workflow }}-${{ github.ref }}`
+- **Path-based triggers**: Workflows only run when relevant files change (e.g., `python-test.yml` only runs on `python/**` changes)
+- **SHA-pinned actions**: All third-party actions pinned to commit SHAs with version comments
+- **Required checks gate**: `required-checks.yml` enforces all PR checks pass before merge with a 3-hour timeout
+- **Merge queue support**: All key workflows support `merge_group` events
+- **Security scanning**: Go security scan with Gosec (scheduled weekly + on PR), SARIF upload to GitHub Code Scanning
+- **Unicode safety check**: Detects hidden unicode characters in PRs
+- **License checking**: `go-license-check.yml` validates all Go dependencies
+- **Docker image publishing**: 15+ docker publish workflows for individual components
+
+**Tekton/Konflux Integration**: 7 Tekton PipelineRun definitions for PR builds covering all Go binaries (agent, controller, llmisvc-controller, localmodel-agent, router, storage-initializer, kserve-module-operator). Multi-arch builds (x86_64, ppc64le, s390x, arm64) with hermetic builds and RPM prefetching. Pipelines managed centrally via `konflux-central` repository.
+
+**Gap**: No Konflux build simulation in GitHub CI — the Tekton builds run in the Konflux environment, and GitHub CI has a separate `distro-build-check.yml` that verifies compilation with and without distro build tags but doesn't simulate the full Konflux pipeline.
 
 ### Test Coverage
 
-**Go Tests (152 test files / 363 source files):**
-- Test-to-source ratio: 0.42 (strong for an operator)
-- Uses `envtest` with `setup-envtest` for controller testing against real API server
-- Coverage profile generated via `go test -coverprofile coverage.out`
-- Coverage threshold enforced at 80% via `go-test-coverage` v2
-- PR comment reporting with diff against master baseline
-- Exclusions: generated code (deepcopy, openapi, client)
+**Score: 8.5/10 (Go) / 7.0/10 (Python)**
 
-**Python Tests (230 test files / 365 source files):**
-- Test-to-source ratio: 0.63 (excellent)
-- Comprehensive coverage across all server runtimes:
-  - kserve SDK, sklearn, xgb, lgb, pmml, paddle, huggingface
-  - Numpy 1.x compatibility testing
-- Multi-version matrix: Python 3.10, 3.11, 3.12
-- Uses `pytest --cov` but **no threshold enforcement**
-- UV-based dependency management with caching
+**Go Testing**:
+- 192 test files for 397 source files (test-to-code ratio: 0.48)
+- envtest framework for controller testing with `pkgtest.NewEnvTest()` wrapper
+- Coverage enforcement: 80% threshold via `go-test-coverage` tool
+- PR coverage diff reporting: Automated PR comments comparing branch vs. master coverage
+- Coverage exclusions: Generated files (deepcopy, defaults, openapi), client packages, testing utilities
+- Sophisticated coverage script (`coverage.sh`) that filters ignored patterns from `coverage.out`
 
-**E2E Tests (77 Python test files):**
-- 25+ pytest markers for test categorization
-- Categories: predictor, transformer, explainer, graph, raw, autoscaling, kourier, path_based_routing, qpext, llm, vllm, modelcache, llminferenceservice
-- Multi-install-method testing: kustomize + helm
-- Multi-network-layer testing: istio-ingress, envoy-gatewayapi, istio-gatewayapi
-- Minikube-based cluster with full KServe deployment
-- Image artifacts passed between build and test jobs
-- 40-minute timeout per test suite
+**Python Testing**:
+- 255 test files for 384 source files (test-to-code ratio: 0.66)
+- Multi-version matrix: Tests run across Python 3.10, 3.11, and 3.12
+- pytest with pytest-cov, pytest-asyncio
+- Test structure organized per package: `python/kserve/test/`, `python/huggingfaceserver/tests/`, `python/autogluonserver/tests/`, `python/storage/test/`
+- **Gap**: pytest-cov is installed but coverage thresholds are not enforced in CI
+
+### E2E Testing
+
+**Score: 9.0/10** — Excellent
+
+- **91 E2E test files** across 14 test domains:
+  - Predictors (sklearn, tensorflow, torchserve, xgboost, triton, vLLM, predictive, raw deployment)
+  - Transformers (standard, raw, collocation)
+  - Explainers (ART)
+  - Batchers (standard, custom port, raw)
+  - InferenceGraphs
+  - Model storage (S3, S3 TLS)
+  - Credentials
+  - Custom models (gRPC, Ray)
+  - LLMISvc (dedicated workflow)
+  - ModelCache (dedicated workflow)
+  - QPExt (queue proxy extension)
+  - Logger
+  - Helm deployment tests
+- **Infrastructure**: Minikube-based with reusable GitHub Actions (minikube-setup, kserve-dep-setup, free-up-disk-space)
+- **Multi-install-method testing**: Smart matrix detection — runs Kustomize, Helm, or both based on which paths changed
+- **Multi-version testing**: ODH xKS E2E runs against multiple Istio versions (1.27.5, 1.28.3) with TLS on/off matrix
+- **Dedicated E2E suites**: Separate workflows for LLMISvc, ModelCache, kserve-module, quick-install, ODH xKS
+- All E2E workflows are PR-gated with path-based triggers
 
 ### Code Quality
 
-**Go Linting (golangci-lint v2):**
-- **45+ linters enabled** including security-focused ones (gosec, bodyclose, contextcheck)
-- Format enforcement: gofmt, gofumpt, goimports
-- Import alias enforcement for k8s packages
-- Test-specific rules: forbidigo prevents direct fmt.Print/SetLogger in tests
-- 6-minute timeout, runs on Go 1.25
-- Excludes generated code paths
+**Score: 8.5/10** — Strong
 
-**Python Linting (Ruff):**
-- Rules: B (flake8-bugbear), E, F, W
-- Format: ruff-format
-- Pre-commit hooks configured
+**Go Linting** (`.golangci.yml`):
+- Comprehensive golangci-lint v2 configuration with 40+ linters enabled
+- Notable linters: gosec, govet, staticcheck, bodyclose, contextcheck, errorlint, gocritic, ineffassign, misspell, prealloc, unconvert, unparam
+- Custom `forbidigo` rules enforcing `pkgtest.SetupTestLogger` instead of `SetLogger` in tests
+- Import alias enforcement via `importas` (corev1, metav1, ctrl, gwapiv1)
+- Code formatting via gofmt, gofumpt, goimports
+- Generated code exclusions (client/, openapi/, zz_generated)
+- Timeout: 6 minutes
 
-**Pre-commit Hooks:**
-- helm-docs for chart README generation
-- GitHub Actions SHA pinning verification (`verify-pinned-actions`)
-- ruff-format + ruff lint for Python
+**Python Linting** (`ruff.toml`):
+- Ruff configured with B (bugbear), E (pycodestyle), F (pyflakes), W (warnings) rule sets
+- Line length: 88
+- Extensive exclude list for generated/vendored code
+- Pre-commit integration via `ruff-pre-commit`
 
-**Static Analysis:**
-- Gosec with CodeQL SARIF upload (PR + weekly schedule)
-- License compliance checking via `go-licenses`
-- Build tag verification for distro builds
+**Pre-commit Hooks** (`.pre-commit-config.yaml`):
+- Helm docs generation
+- GitHub Actions SHA pinning verification (`pinact`)
+- Ruff formatting and linting
+- Note: Pre-commit config is minimal — only 3 hooks. The heavy lifting is done by `make precommit` which runs ~20 checks.
+
+**Precommit Make Target**: The `make precommit` / `make check` target runs a comprehensive suite:
+- Go version upgrade check, dependency sync, image env sync
+- Go vet, golangci-lint, Ruff format, Ruff lint
+- Code generation (controller-gen, helm-docs)
+- Manifest generation and sync
+- Kustomize builds, Helm chart linting
+- UV lock file sync, action SHA pinning verification
 
 ### Container Images
 
-**Build Process:**
-- 15+ container images across Go and Python components
-- Multi-stage builds with `registry.access.redhat.com/ubi9/go-toolset:1.25` base
-- Build caching via `--mount=type=cache`
-- Docker Buildx for multi-platform support
-- Non-root user (1000:1000) in runtime images
-- License extraction via go-licenses in separate build stage
+**Score: 6.5/10** — Moderate
 
-**Konflux Integration:**
-- 7 Konflux-specific Dockerfiles in `Dockerfiles/` directory
-- Use `registry.redhat.io/ubi9/go-toolset:1.25` (Red Hat registry)
-- FIPS compliance: `CGO_ENABLED=1`, `GOEXPERIMENT=strictfipsruntime`
-- Distro build tags (`-tags "distro,strictfipsruntime"`)
-- UBI minimal runtime base
+**Dockerfiles**:
+- Main `Dockerfile`: Multi-stage (deps → builder → license → runtime) with UBI9 base images
+- Parallel build stages (builder and license) for BuildKit optimization
+- Build caching with `--mount=type=cache` for Go module and build caches
+- GOTAGS build argument for distro build-tag support
+- Non-root user (kserve, uid 1000)
+- License checking via `go-licenses` during build
 
-**Gaps:**
-- No Trivy/Snyk/Grype vulnerability scanning
-- No SBOM generation
-- No image signing or attestation
-- No standalone runtime validation (images only tested through E2E deployment)
+**Konflux Dockerfiles** (`Dockerfiles/`):
+- 9 Konflux-specific Dockerfiles for production builds
+- SHA-pinned base images (UBI9 go-toolset and ubi-minimal)
+- Multi-arch support (TARGETOS/TARGETARCH build args)
+- FIPS compliance (`GOEXPERIMENT=strictfipsruntime`)
+- Hermetic builds with RPM prefetching
+
+**Gaps**:
+- No image startup validation in CI (no `docker run --entrypoint` health check)
+- No Trivy/Grype scanning in GitHub workflows
+- No image signing or attestation in GitHub CI (handled by Konflux)
+- SBOM config (`.syft.yaml`) exists but is not used in any GitHub workflow
 
 ### Security
 
-**Strengths:**
-- Gosec security scanner with SARIF upload to GitHub Code Scanning
-- License compliance enforcement via go-licenses
-- GitHub Actions pinned to SHA hashes (verified by pre-commit)
-- Non-root container images
+**Score: 7.5/10** — Good
+
+**Strengths**:
+- Gosec security scanner runs on every PR with SARIF upload to GitHub Code Scanning
+- Scheduled weekly security scan (Sundays at midnight UTC)
+- `.snyk` policy file configured (excludes dev_tools, docs, hack, tf2openapi)
+- SHA-pinned GitHub Actions across all workflows
+- Unicode safety check on PRs
+- Go license compliance checking on every PR
+- Non-root container images (uid 1000)
 - FIPS-compliant builds in Konflux Dockerfiles
 
-**Gaps:**
-- No container image vulnerability scanning (Trivy/Snyk)
-- No dependency scanning (Dependabot/Renovate not detected in workflows)
-- No secret detection (Gitleaks/TruffleHog)
-- No SBOM generation
+**Gaps**:
+- No container image vulnerability scanning (Trivy/Grype) in GitHub CI
+- No dependency scanning workflow (Snyk config exists but no workflow)
+- No secret detection (no Gitleaks/TruffleHog)
+- SBOM generation config exists (`.syft.yaml`) but is not integrated into CI
 
 ### Agent Rules (Agentic Flow Quality)
 
-- **Status**: Missing
-- **Coverage**: None — no `.claude/` directory, `CLAUDE.md`, or `AGENTS.md` found
-- **Quality**: N/A
-- **Gaps**:
-  - No unit test creation rules (Go envtest patterns, Python pytest patterns)
-  - No E2E test guidance (pytest markers, fixture usage, Minikube deployment)
-  - No coding convention documentation for AI agents
-  - No linting rules reference for 45+ golangci-lint checks
-- **Recommendation**: Generate comprehensive agent rules using `/test-rules-generator` covering:
-  - Go unit tests with envtest (controller reconciliation patterns)
-  - Python unit tests with pytest (server runtime testing patterns)
-  - E2E tests with custom markers (predictor, transformer, explainer, etc.)
-  - Linting and formatting conventions
+**Score: 7.0/10** — Good midstream rules, missing test guidance
+
+**Status**: Present — strong midstream-specific guidance
+
+**AGENTS.md** (root):
+- Comprehensive repository context: layout, constraints, testing conventions
+- Controller development patterns with envtest
+- Make targets and focused test commands
+- ODH-specific change patterns (hook pairs, additive files)
+- Clear testing guidance: per-test namespaces, Eventually/Consistently, retry patterns
+
+**.rules/ Directory** (5 files):
+1. **build-tags.md** (7KB) — Detailed rules for midstream build-tag companion files (`*_odh.go`/`*_default.go`), with 6 violation types and detection signals including cross-file call analysis
+2. **distro-builds.md** (4KB) — GOTAGS propagation rules through Dockerfiles, Makefiles, and Tekton PipelineRuns with 5 violation types
+3. **kustomize-hygiene.md** (4KB) — Upstream manifest separation rules with 2 violation types and 8 specific exemptions for known technical debt
+4. **makefile-split.md** (3KB) — Makefile.overrides.mk isolation rules with 4 violation types
+5. **rbac-isolation.md** (5KB) — RBAC marker package isolation rules with 4 violation/advisory types and pre-existing debt tracking
+
+**Quality Assessment**:
+- Rules are **exceptionally well-structured**: each has Context (why), Violations (flag as blocking), and Exemptions (do not flag) sections
+- Rules are **highly specific**: real file paths, real function names, real PR examples
+- Rules include **pre-existing technical debt tracking** — exemptions for known drift that predates the policy
+- Rules are **mutually referencing**: build-tags.md references distro-builds.md, rbac-isolation.md references build-tags.md
+
+**Gaps**:
+- **No test creation rules**: No guidance for AI agents on how to write unit tests (envtest patterns), Python tests (pytest conventions), or E2E tests (test infrastructure setup)
+- **No `.claude/` directory**: Rules are in `.rules/` which is non-standard for Claude Code. No `.claude/rules/` or `.claude/skills/`
+- **No code review agent rules**: No guidance on what to look for beyond midstream-specific patterns
+
+**Recommendation**: Run `/test-rules-generator` to generate `.claude/rules/` files for test creation. Consider moving `.rules/` content to `.claude/rules/` for standard Claude Code integration.
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add container vulnerability scanning** — Integrate Trivy into PR and/or scheduled workflows to scan at least the controller, router, and storage-initializer images. Focus on HIGH/CRITICAL CVEs.
+1. **Add container vulnerability scanning to CI** — Integrate Trivy as a PR-gated workflow step. The `.snyk` and `.syft.yaml` configs show security awareness but lack CI integration. Trivy can scan both the filesystem (Go/Python dependencies) and built images.
 
-2. **Enforce Python coverage thresholds** — Add `--cov-fail-under=80` to all `pytest --cov` invocations in `python-test.yml`. This brings parity with Go's 80% enforcement.
+2. **Enforce Python test coverage thresholds** — Add `--cov-fail-under=70` to pytest invocations in `python-test.yml`. All Python packages already have `pytest-cov` as a dependency. Add coverage reporting to PRs similar to the Go coverage PR comments.
+
+3. **Add image startup validation** — Add a post-build step in E2E workflows that runs each built container with a health check before deploying to Minikube. This catches entrypoint issues, missing dependencies, and configuration errors early with a clear error message rather than a cryptic E2E timeout.
 
 ### Priority 1 (High Value)
 
-3. **Create agent rules** — Generate `.claude/rules/` with test creation rules for Go (envtest), Python (pytest), and E2E (markers/fixtures). Include coding conventions extracted from `.golangci.yml` and `ruff.toml`.
+4. **Create agent rules for test creation** — Generate `.claude/rules/` files covering:
+   - Go unit tests: envtest patterns, `pkgtest.NewEnvTest()`, fake client builders, Eventually/Consistently
+   - Python unit tests: pytest conventions, pytest-asyncio, mocking strategies
+   - E2E tests: Minikube setup, KServe dependency installation, inference validation patterns
 
-4. **Add PR-time Konflux build simulation** — Build at least the controller image using the Konflux Dockerfile on PRs with Go file changes. This catches FIPS/distro-tag issues pre-merge.
+5. **Integrate SBOM generation into CI** — The `.syft.yaml` config is already tuned with appropriate exclusions. Add a Syft-based SBOM generation step to build workflows.
 
-5. **Add secret detection** — Add Gitleaks with a `.gitleaks.toml` baseline to prevent credential leaks. Integrate as a pre-commit hook and CI step.
-
-6. **Add dependency scanning** — Enable Dependabot or Renovate for Go modules and Python dependencies to catch known CVEs in dependencies.
+6. **Add unified coverage dashboard** — Integrate Codecov or similar for cross-language coverage visualization. Go coverage is well-tracked but Python coverage is invisible.
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Add API contract testing** — Create contract tests for the KServe prediction protocol (v1/v2 REST and gRPC) to catch breaking API changes.
+7. **Add contract tests for KServe Python SDK** — The Python inference protocol (V2 predict, explain, OpenAI-compatible) would benefit from contract tests ensuring API compatibility across server implementations.
 
-8. **Add performance regression testing** — Benchmark prediction latency for key runtimes (sklearn, huggingface) and track regressions.
+8. **Add performance regression testing** — Prediction latency benchmarks for core model servers to catch performance regressions.
 
-9. **Generate SBOMs** — Add SBOM generation (Syft/SPDX) to image builds for supply chain transparency.
+9. **Implement chaos engineering tests** — Controller resilience testing (pod deletion during reconciliation, network partitions, API server unavailability).
 
-10. **Add mutation testing** — Use `go-mutesting` or similar to verify test effectiveness beyond code coverage.
+10. **Expand pre-commit hooks** — The current config has only 3 hooks. Consider adding Go test hooks, Python type checking (mypy), and Dockerfile linting (hadolint).
 
 ## Comparison to Gold Standards
 
-| Dimension | red-hat-data-services/kserve | odh-dashboard (Gold) | notebooks (Gold) |
-|-----------|------------------------------|----------------------|-------------------|
-| Unit Test Coverage | Strong (Go 80% enforced, Python no enforcement) | Multi-layer with contract tests | N/A (image-focused) |
-| E2E Coverage | Exceptional (77 tests, multi-method matrix) | Comprehensive Cypress suite | N/A |
-| Coverage Enforcement | Go: 80% threshold + PR diff | Codecov with PR gates | N/A |
-| Image Scanning | None | Trivy integration | 5-layer validation |
-| Secret Detection | None | Gitleaks | N/A |
-| Agent Rules | None | Comprehensive .claude/rules/ | N/A |
-| CI/CD Sophistication | Exceptional (40+ workflows, matrix, merge queue) | Strong | Strong |
-| Build Integration | Distro build check (partial) | Full Konflux simulation | N/A |
-| Pre-commit Hooks | Helm docs, SHA pinning, ruff | Comprehensive | N/A |
-| License Compliance | go-licenses enforcement | N/A | N/A |
+| Dimension | kserve (this repo) | odh-dashboard | notebooks | Kubernetes Best Practice |
+|-----------|-------------------|---------------|-----------|------------------------|
+| Unit Tests | 8.5 — envtest + pytest-cov | 9.0 — Jest + RTL + contract | 7.0 — Notebook execution | 8.0 — envtest standard |
+| Integration/E2E | 9.0 — 91 tests, 14 domains | 9.0 — Cypress E2E + API | 8.0 — Multi-image validation | 8.5 — Ginkgo/Gomega |
+| Build Integration | 7.5 — Distro build verification | 6.0 — No Konflux simulation | 7.0 — Image build matrix | 7.0 — Make + Docker |
+| Image Testing | 6.5 — License check only | 5.0 — Basic build | 9.0 — 5-layer validation | 7.0 — Trivy + startup |
+| Coverage Tracking | 8.5 — Go 80% enforced | 9.0 — Codecov enforced | 5.0 — No tracking | 8.0 — Codecov + thresholds |
+| CI/CD Automation | 9.0 — 48 workflows, pinned | 8.5 — Well-organized | 8.0 — Matrix builds | 8.0 — Standard |
+| Agent Rules | 7.0 — 5 midstream rules | 8.5 — Comprehensive rules | 3.0 — Minimal | 5.0 — CONTRIBUTING.md |
+| **Overall** | **7.9** | **8.2** | **6.7** | **7.4** |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/go.yml` — Go unit tests + coverage
-- `.github/workflows/python-test.yml` — Python server unit tests
-- `.github/workflows/e2e-test.yml` — Main E2E test suite
-- `.github/workflows/e2e-test-llmisvc.yaml` — LLMInferenceService E2E
-- `.github/workflows/e2e-test-odh-xks-kind.yml` — ODH xKS E2E on KinD
-- `.github/workflows/precommit-check.yml` — Precommit verification
+- `.github/workflows/go.yml` — Go unit tests with coverage enforcement
+- `.github/workflows/python-test.yml` — Python tests across 3.10/3.11/3.12
+- `.github/workflows/e2e-test.yml` — Main E2E suite (predictors, transformers, explainers, etc.)
+- `.github/workflows/e2e-test-llmisvc.yaml` — LLMISvc-specific E2E tests
+- `.github/workflows/e2e-test-modelcache.yaml` — ModelCache E2E tests
+- `.github/workflows/e2e-test-odh-xks-kind.yml` — ODH xKS E2E with multi-Istio matrix
+- `.github/workflows/e2e-test-kserve-module.yml` — kserve-module E2E tests
+- `.github/workflows/e2e-test-quick-install.yaml` — Quick install E2E
+- `.github/workflows/precommit-check.yml` — Pre-commit validation
 - `.github/workflows/distro-build-check.yml` — Distro build tag verification
-- `.github/workflows/scheduled-go-security-scan.yml` — Gosec + CodeQL
-- `.github/workflows/required-checks.yml` — Required checks gate
-- `.github/.testcoverage.yml` — Go coverage threshold config (80%)
+- `.github/workflows/scheduled-go-security-scan.yml` — Gosec security scanning
+- `.github/workflows/required-checks.yml` — Required checks enforcement gate
 
 ### Testing
-- `pkg/` — 141 Go test files for controllers and APIs
-- `cmd/` — 5 Go test files for CLI commands
-- `python/kserve/` — KServe Python SDK tests
-- `python/sklearnserver/`, `xgbserver/`, `lgbserver/`, etc. — Runtime server tests
-- `test/e2e/` — 77 E2E test files with pytest
-- `test/e2e/pytest.ini` — 25+ custom pytest markers
-- `test/e2e/conftest.py` — Shared E2E fixtures
-- `qpext/` — Queue proxy extension tests
+- `test/e2e/` — 91 E2E test files across 14 subdirectories
+- `pkg/**/*_test.go` — Go unit tests colocated with source
+- `python/kserve/test/` — KServe Python SDK tests
+- `python/huggingfaceserver/tests/` — HuggingFace server tests
+- `python/autogluonserver/tests/` — AutoGluon server tests
+- `python/storage/test/` — Storage tests
 
 ### Code Quality
-- `.golangci.yml` — 45+ linters, v2 config
-- `ruff.toml` — Python linting rules
-- `.pre-commit-config.yaml` — Pre-commit hooks
-- `coverage.sh` — Coverage report generation script
+- `.golangci.yml` — 40+ linter golangci-lint v2 configuration
+- `ruff.toml` — Python linting with B/E/F/W rule sets
+- `.pre-commit-config.yaml` — Helm docs, action pinning, Ruff hooks
+- `Makefile` — `precommit` target with ~20 checks
+- `.github/.testcoverage.yml` — Go coverage threshold (80%)
+- `coverage.sh` / `.cov-ignore` — Coverage filtering
 
 ### Container Images
-- `Dockerfile` — Main controller (UBI9 multi-stage)
-- `agent.Dockerfile`, `router.Dockerfile`, etc. — Component Dockerfiles
-- `Dockerfiles/*.Dockerfile.konflux` — 7 Konflux-specific Dockerfiles
-- `python/*.Dockerfile` — Python server runtime Dockerfiles
+- `Dockerfile` — Main multi-stage Go controller Dockerfile
+- `Dockerfiles/` — 9 Konflux-specific Dockerfiles
+- `agent.Dockerfile`, `router.Dockerfile`, etc. — Component-specific Dockerfiles
+- `.dockerignore` — Docker build exclusions
+- `.syft.yaml` — SBOM generation configuration
 
-### Build
-- `Makefile` — Primary build orchestration
-- `Makefile.tools.mk` — Tool management
-- `Makefile.overrides.mk` — Distro-specific overrides
-- `kserve-deps.env` — Dependency versions
-- `kserve-images.env` — Image configurations
+### Security
+- `.snyk` — Snyk policy file
+- `.github/workflows/scheduled-go-security-scan.yml` — Gosec + CodeQL SARIF
+- `.github/workflows/unicode-safety.yml` — Unicode safety check
+- `.github/workflows/go-license-check.yml` — License compliance
+
+### Agent Rules
+- `AGENTS.md` — Repository context, constraints, conventions, testing guidance
+- `.rules/build-tags.md` — Midstream build-tag companion file rules
+- `.rules/distro-builds.md` — GOTAGS propagation rules
+- `.rules/kustomize-hygiene.md` — Upstream manifest separation rules
+- `.rules/makefile-split.md` — Makefile.overrides.mk isolation rules
+- `.rules/rbac-isolation.md` — RBAC marker package isolation rules
+
+### Build System
+- `Makefile` — Primary build orchestration (40KB)
+- `Makefile.overrides.mk` — Midstream overrides (GOTAGS=distro)
+- `Makefile.ocp.mk` — OpenShift-specific targets
+- `Makefile.tools.mk` — Tool installation targets
+- `.tekton/` — 7 Tekton PipelineRun definitions for Konflux builds
+- `rpms.in.yaml` / `rpms.lock.yaml` — RPM dependency management

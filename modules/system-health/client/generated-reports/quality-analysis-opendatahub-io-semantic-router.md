@@ -1,406 +1,451 @@
 ---
 repository: "opendatahub-io/semantic-router"
-overall_score: 8.2
+overall_score: 7.9
 scorecard:
   - dimension: "Unit Tests"
     score: 8.5
-    status: "Strong coverage with 160 test files across Go/Rust/Python/TypeScript; 35% test-to-source ratio"
+    status: "Excellent coverage with 160 Go test files, 34 Rust tests, 19 Python tests, 11 TS specs across a polyglot codebase"
   - dimension: "Integration/E2E"
     score: 9.0
-    status: "Exceptional E2E framework with 53 test cases across 18 profiles; Kind-based K8s testing automated on PRs"
+    status: "Outstanding E2E framework with 18 profiles, Kind-based K8s testing, matrix-based change detection"
   - dimension: "Build Integration"
-    score: 7.5
-    status: "PR-time Docker builds for 6 images (amd64); multi-arch on merge; no Konflux simulation"
-  - dimension: "Image Testing"
     score: 7.0
-    status: "Multi-stage cross-compiled Dockerfiles with PR-time build validation; no runtime image testing or vulnerability scanning"
+    status: "PR-time Docker builds for dashboard and images, multi-arch via buildx, but no Konflux simulation"
+  - dimension: "Image Testing"
+    score: 6.5
+    status: "18 Dockerfiles with multi-stage builds and multi-arch support, but no runtime validation or vulnerability scanning"
   - dimension: "Coverage Tracking"
     score: 4.0
-    status: "Codecov only for operator subproject; no coverage tracking for core semantic-router"
+    status: "Coverage only for operator (Codecov); no coverage for core Go, Rust, Python, or TypeScript packages"
   - dimension: "CI/CD Automation"
-    score: 9.5
-    status: "23 workflows with smart change detection, concurrency control, caching, and matrix-based parallel testing"
-  - dimension: "Agent Rules"
     score: 9.0
-    status: "Comprehensive AGENTS.md with layered rule system, 35+ agent docs, playbooks, ADRs, and tech-debt tracking"
+    status: "25 workflows with smart path-based filtering, concurrency control, caching, performance benchmarks on PRs"
+  - dimension: "Agent Rules"
+    score: 9.5
+    status: "Best-in-class agent harness with AGENTS.md, skill registry, task matrix, e2e profile map, architecture guardrails"
 critical_gaps:
-  - title: "No coverage tracking for core semantic-router"
-    impact: "Cannot measure or enforce test coverage for the main Go codebase (272 source files)"
+  - title: "No coverage tracking for core packages"
+    impact: "Cannot measure or enforce test coverage for 458 Go source files, 116 Rust files, or 170 Python files"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No container security scanning (Trivy/Snyk/CodeQL)"
-    impact: "Vulnerability detection relies entirely on manual review; no automated supply chain security"
+  - title: "No container vulnerability scanning"
+    impact: "18 Docker images built without Trivy/Snyk scanning; vulnerabilities reach production undetected"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No SBOM generation or image signing"
-    impact: "No software bill of materials for supply chain compliance; images are unsigned"
+  - title: "No SAST/CodeQL integration"
+    impact: "No static application security testing despite handling PII, auth tokens, and security-sensitive classification"
+    severity: "HIGH"
+    effort: "2-3 hours"
+  - title: "No image runtime validation in CI"
+    impact: "Container images built but not smoke-tested for startup; failures caught only in E2E or production"
     severity: "MEDIUM"
     effort: "4-6 hours"
-  - title: "No secret detection in CI"
-    impact: "Committed secrets or API keys could go undetected"
-    severity: "MEDIUM"
-    effort: "1-2 hours"
 quick_wins:
-  - title: "Add Trivy scanning to PR workflow"
+  - title: "Add Trivy scanning to docker-publish workflow"
     effort: "1-2 hours"
-    impact: "Immediate vulnerability detection for all 6 container images built on PRs"
-  - title: "Add codecov integration for core Go tests"
-    effort: "2-3 hours"
-    impact: "Coverage visibility and enforcement for 272 Go source files"
-  - title: "Add Gitleaks secret detection to pre-commit"
-    effort: "1 hour"
-    impact: "Prevent accidental secret commits across all languages"
-  - title: "Add CodeQL/SAST workflow"
-    effort: "2-3 hours"
-    impact: "Automated static security analysis for Go, Rust, Python, and TypeScript"
+    impact: "Detect CVEs in all 18 Docker images before they reach registries"
+  - title: "Enable CodeQL analysis"
+    effort: "1-2 hours"
+    impact: "Catch security vulnerabilities in Go, Python, and TypeScript code automatically"
+  - title: "Add -coverprofile to test-semantic-router target"
+    effort: "1-2 hours"
+    impact: "Start tracking test coverage for the core Go package (458 source files)"
+  - title: "Add SBOM generation to docker-publish"
+    effort: "1-2 hours"
+    impact: "Supply chain transparency for all published container images"
 recommendations:
   priority_0:
-    - "Add coverage tracking (codecov) for core semantic-router Go tests — currently only operator has it"
-    - "Add container image vulnerability scanning (Trivy) to PR and nightly workflows"
+    - "Add coverage tracking across all languages (Go, Rust, Python, TypeScript) with Codecov integration and enforcement thresholds"
+    - "Add container vulnerability scanning (Trivy) to docker-publish and PR build workflows"
+    - "Enable CodeQL or Semgrep for SAST across Go, Python, and TypeScript"
   priority_1:
-    - "Add SBOM generation and image signing (Cosign/Sigstore) to Docker publish pipeline"
-    - "Add CodeQL or gosec SAST scanning as a PR workflow"
-    - "Add secret detection (Gitleaks) to pre-commit hooks and CI"
+    - "Add image runtime startup validation (health check probe) for all Dockerfiles in CI"
+    - "Add SBOM generation and image signing (cosign) to the container publishing pipeline"
+    - "Add secret detection (Gitleaks) to pre-commit and CI"
   priority_2:
-    - "Add dashboard frontend unit test coverage (currently only e2e specs)"
-    - "Add Rust code coverage tracking for candle-binding/ml-binding/nlp-binding"
-    - "Add contract tests between Go router and dashboard backend API"
+    - "Add contract tests for the OpenAI-compatible API boundaries"
+    - "Add chaos engineering tests for Envoy extproc resilience"
+    - "Add accessibility testing for the dashboard frontend"
 ---
 
-# Quality Analysis: semantic-router (opendatahub-io/semantic-router)
+# Quality Analysis: semantic-router (opendatahub-io)
 
 ## Executive Summary
 
-- **Overall Score: 8.2/10**
-- **Repository Type**: Multi-language monorepo (Go primary, Rust bindings, Python CLI/tools, TypeScript dashboard)
-- **Framework**: LLM inference routing system with Envoy ExtProc, Kubernetes operator, Helm charts
-- **Key Strengths**: Exceptional CI/CD automation (23 workflows), comprehensive E2E testing (53 test cases, 18 profiles), outstanding agent rules ecosystem
-- **Critical Gaps**: No coverage tracking for core codebase, no container security scanning, no SBOM/signing
-- **Agent Rules Status**: Present and comprehensive — layered system with AGENTS.md, 35+ docs, playbooks, ADRs, and tech-debt register
+- **Overall Score: 7.9/10**
+- **Repository Type**: Polyglot platform (Go + Rust + Python + TypeScript) — AI-powered semantic routing system with Envoy external processor, Kubernetes operator, dashboard, and ML bindings
+- **Key Strengths**: Exceptional E2E testing infrastructure (18 profiles, Kind-based, matrix-driven), best-in-class agent rules harness, comprehensive CI with 25 workflows, strong pre-commit hooks, active performance benchmarking on PRs
+- **Critical Gaps**: No coverage tracking for core packages, no container vulnerability scanning, no SAST/CodeQL integration
+- **Agent Rules Status**: **Exemplary** — AGENTS.md, docs/agent/ directory with testing strategy, architecture guardrails, skill registry, task matrix, e2e profile map, and feature-complete checklist
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 8.5/10 | Strong: 160 test files, 35% ratio, Go/Rust/Python/TS coverage |
-| Integration/E2E | 9.0/10 | Exceptional: 53 test cases, 18 profiles, Kind K8s, automated on PRs |
-| **Build Integration** | **7.5/10** | **PR-time Docker builds (6 images); no Konflux simulation** |
-| Image Testing | 7.0/10 | Multi-stage cross-compiled builds validated on PR; no runtime/vulnerability scanning |
-| Coverage Tracking | 4.0/10 | Only operator has codecov; core codebase has zero coverage tracking |
-| CI/CD Automation | 9.5/10 | 23 workflows, smart change detection, concurrency, caching, matrix |
-| Agent Rules | 9.0/10 | Comprehensive layered system with docs, playbooks, ADRs, guardrails |
+| Unit Tests | 8.5/10 | 160 Go, 34 Rust, 19 Python, 11 TS test files with strong test-to-code ratios |
+| Integration/E2E | 9.0/10 | 18 E2E profiles with Kind clusters, matrix-based path filtering, comprehensive test reports |
+| Build Integration | 7.0/10 | PR-time Docker builds, multi-arch (amd64/arm64), but no Konflux simulation |
+| Image Testing | 6.5/10 | 18 multi-stage Dockerfiles but no runtime validation or vulnerability scanning |
+| Coverage Tracking | 4.0/10 | Only operator has Codecov; core Go/Rust/Python/TS have zero coverage tracking |
+| CI/CD Automation | 9.0/10 | 25 workflows, smart path filters, concurrency control, caching, perf benchmarks on PRs |
+| Agent Rules | 9.5/10 | Best-in-class: AGENTS.md, skill registry, task matrix, architecture guardrails, testing strategy |
 
 ## Critical Gaps
 
-### 1. No Coverage Tracking for Core Semantic Router
-- **Impact**: 272 Go source files with 126 test files but no way to measure, track, or enforce coverage
+### 1. No Coverage Tracking for Core Packages
+- **Impact**: Cannot measure or enforce test coverage for the main codebase (458 Go source files, 116 Rust files, 170 Python files, 258 TypeScript files)
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: The operator subproject (`deploy/operator/`) has Codecov integration with `coverprofile` and upload, but the core `src/semantic-router/` codebase — which is the heart of the project — has no coverage generation in `make test` and no codecov upload in the `test-and-build.yml` workflow
-- **Fix**: Add `-coverprofile=coverage.out -covermode=atomic` to the Go test command and add `codecov/codecov-action@v4` step
+- **Details**: The `test-semantic-router` Make target runs `go test -v` without `-coverprofile`. Only `deploy/operator` generates coverage and uploads to Codecov. The core router, candle-binding, dashboard backend, and all Python/TypeScript code lack coverage tracking entirely.
+- **Recommendation**: Add `-coverprofile=coverage.out -covermode=atomic` to `test-semantic-router`, add Codecov upload steps to `test-and-build.yml`, and configure thresholds.
 
-### 2. No Container Security Scanning
-- **Impact**: 15+ Dockerfiles produce images with no automated vulnerability scanning; security issues discovered only at deployment time
+### 2. No Container Vulnerability Scanning
+- **Impact**: 18 Docker images are built and published without any vulnerability scanning. CVEs in base images (CentOS Stream 10, UBI 10) or dependencies could reach production.
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: No Trivy, Snyk, Grype, or any CVE scanner in any workflow. The Docker publish workflow builds and pushes without scanning. No `.trivyignore` exists.
-- **Fix**: Add Trivy scan step after image build in `docker-publish.yml` PR job
+- **Details**: No Trivy, Snyk, or Grype configuration found. The `docker-publish.yml` workflow builds and pushes images but performs no security scanning. No `.trivyignore` or security scanning config exists.
+- **Recommendation**: Add Trivy scanning step after each image build in `docker-publish.yml`.
 
-### 3. No SBOM Generation or Image Signing
-- **Impact**: No software bill of materials for compliance; images pushed to GHCR are unsigned
+### 3. No SAST/CodeQL Integration
+- **Impact**: Security-sensitive code (PII detection, jailbreak classification, auth middleware, rate limiting) lacks automated security analysis.
+- **Severity**: HIGH
+- **Effort**: 2-3 hours
+- **Details**: No CodeQL, gosec CI workflow, Semgrep, or equivalent found. The `golangci-lint` config includes `gosec` as a linter rule, which provides some coverage for Go, but there's no dedicated SAST for Python or TypeScript.
+
+### 4. No Image Runtime Validation
+- **Impact**: Container images are built but never smoke-tested for startup in the build pipeline. Startup failures are only caught in E2E tests or production.
 - **Severity**: MEDIUM
 - **Effort**: 4-6 hours
-- **Details**: Multi-arch images are published to GHCR but without provenance attestation, SBOM, or Cosign signatures
-
-### 4. No Secret Detection in CI
-- **Impact**: API keys, tokens, or credentials could be committed without detection
-- **Severity**: MEDIUM
-- **Effort**: 1-2 hours
-- **Details**: No Gitleaks, TruffleHog, or similar tool in pre-commit hooks or CI workflows
+- **Details**: The `docker-publish.yml` builds images but doesn't run them to verify they start correctly. A basic health check probe would catch many runtime issues.
 
 ## Quick Wins
 
-### 1. Add Trivy Scanning to PR Workflow (1-2 hours)
+### 1. Add Trivy Scanning to Docker Publish (1-2 hours)
 ```yaml
 - name: Run Trivy vulnerability scanner
   uses: aquasecurity/trivy-action@master
   with:
-    image-ref: ${{ steps.tags.outputs.tags }}
+    image-ref: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
     format: 'sarif'
     output: 'trivy-results.sarif'
     severity: 'CRITICAL,HIGH'
 ```
 
-### 2. Add Codecov for Core Tests (2-3 hours)
-Add to `test-and-build.yml` after the test step:
+### 2. Enable CodeQL Analysis (1-2 hours)
 ```yaml
-- name: Upload coverage to Codecov
-  uses: codecov/codecov-action@v4
+name: "CodeQL"
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        language: ['go', 'python', 'javascript']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+      - uses: github/codeql-action/autobuild@v3
+      - uses: github/codeql-action/analyze@v3
+```
+
+### 3. Add Coverage to Core Tests (1-2 hours)
+In `tools/make/build-run-test.mk`, change `test-semantic-router`:
+```makefile
+test-semantic-router:
+	cd src/semantic-router && CGO_ENABLED=1 go test -v -coverprofile=../../coverage.out -covermode=atomic $$(go list ./...)
+```
+
+### 4. Add SBOM Generation (1-2 hours)
+```yaml
+- name: Generate SBOM
+  uses: anchore/sbom-action@v0
   with:
-    files: src/semantic-router/coverage.out
-    flags: core
-    name: semantic-router-coverage
+    image: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+    format: spdx-json
 ```
-
-### 3. Add Gitleaks to Pre-commit (1 hour)
-Add to `.pre-commit-config.yaml`:
-```yaml
-- repo: https://github.com/gitleaks/gitleaks
-  rev: v8.18.0
-  hooks:
-    - id: gitleaks
-```
-
-### 4. Add CodeQL Workflow (2-3 hours)
-Create `.github/workflows/codeql.yml` with Go, Python, and JavaScript analysis.
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Outstanding CI/CD infrastructure with 23 workflows:**
+**Strengths:**
+- **25 GitHub Actions workflows** — one of the most comprehensive CI setups observed
+- **Smart path-based filtering** via reusable `ci-changes.yml` workflow with `dorny/paths-filter` — tests only run when relevant code changes (14+ path filters including per-E2E-profile granularity)
+- **Concurrency control** on all major workflows (`cancel-in-progress: true`)
+- **Aggressive caching** — Rust cargo, Go modules, model downloads, Node.js dependencies all cached
+- **Performance benchmarks on PRs** — component benchmarks run on PR with results posted as PR comments
+- **Nightly builds** — scheduled test runs at 2 AM UTC with Docker publishing
+- **Draft PR skipping** — all test workflows skip draft PRs
+
+**Workflows Inventory (25 total):**
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `test-and-build.yml` | PR + push + nightly | Core unit tests with Milvus + Redis |
-| `pre-commit.yml` | PR + push | Linting, formatting, agent fast gate |
-| `integration-test-k8s.yml` | PR + push | 14-profile Kind-based E2E tests |
-| `integration-test-helm.yml` | PR + push | Helm lint + template validation |
-| `integration-test-memory.yml` | PR (path-filtered) | Memory features with Milvus |
-| `integration-test-vllm-sr-cli.yml` | PR | CLI integration tests |
-| `dashboard-test.yml` | PR (dashboard changes) | Dashboard lint + type check + build |
-| `operator-ci.yml` | PR (operator changes) | Operator lint + test + coverage |
-| `performance-test.yml` | PR (perf-related paths) | Benchmarks with PR commenting |
-| `performance-nightly.yml` | Nightly | Full performance regression suite |
-| `docker-publish.yml` | PR + push | 6 images: amd64 on PR, multi-arch on push |
-| `docker-release.yml` | Release | Release image publishing |
-| `helm-publish.yml` | Push | Helm chart publishing |
+| `test-and-build.yml` | PR, push, nightly, manual | Core unit tests (Go + Rust) with Milvus & Redis |
+| `integration-test-k8s.yml` | PR, push, manual | E2E tests via Kind clusters (18 profiles) |
+| `integration-test-helm.yml` | PR, push, manual | Helm chart lint + template validation |
+| `integration-test-memory.yml` | PR (path-filtered), manual | Memory feature integration with Milvus |
+| `integration-test-vllm-sr-cli.yml` | PR, push, manual | CLI end-to-end tests |
+| `dashboard-test.yml` | PR, push, manual | Dashboard lint, type-check, build |
+| `operator-ci.yml` | PR, push (path-filtered) | Operator lint, unit tests with coverage, manifest verify |
+| `performance-test.yml` | PR (path-filtered), manual | Component benchmarks with PR comments |
+| `performance-nightly.yml` | Manual (cron commented out) | Nightly performance baseline |
+| `pre-commit.yml` | PR, push, manual | Pre-commit hook enforcement |
+| `docker-publish.yml` | Manual | Multi-arch Docker image builds |
+| `docker-release.yml` | Push (tags) | Release image publishing |
+| `helm-publish.yml` | PR, push, manual | Helm chart OCI publishing |
+| `pypi-publish.yml` | Push (tags), manual | Python package publishing |
+| `publish-crate.yml` | Push (tags), manual | Rust crate publishing |
+| `precommit-publish.yml` | Push, PR | Pre-commit Docker image |
+| `paper-build.yml` | PR, push | Academic paper PDF build |
+| `anti-spam-filter.yml` | PR, PR comments | Content moderation |
+| `cleanup-existing-spam.yml` | Manual | Spam cleanup utility |
+| `check-translation-staleness.yml` | Daily, manual | Documentation translation freshness |
+| `ci-changes.yml` | Reusable | Path-based change detection (14+ filters) |
+| `issue-manager.yml` | Issues | Issue management automation |
+| `owner-notification.yml` | PR target | Auto-assign reviewers from OWNER files |
 
-**Strengths:**
-- Smart change detection (`ci-changes.yml` reusable workflow) — tests only run when relevant files change
-- Concurrency control on all workflows with `cancel-in-progress: true`
-- Comprehensive caching (Rust, Go, Node, pre-commit, models)
-- Matrix strategy for E2E profiles with `fail-fast: false`
-- Test artifacts and reports uploaded on failure
-- Performance benchmarks with PR commenting
-
-**Gaps:**
-- No security scanning workflows (CodeQL, Trivy, Gitleaks)
-- No dependency update automation (Renovate/Dependabot)
+**Areas for Improvement:**
+- No Konflux build simulation on PRs
+- No security scanning workflows (Trivy, CodeQL, Gitleaks)
+- Performance nightly cron is commented out
 
 ### Test Coverage
 
-**Unit Tests (8.5/10)**
-- **160 total test files** across the codebase
-- Core Go router: 126 test files for 272 source files (46% file ratio)
-- Operator: 5 test files with coverage tracking
-- Dashboard backend: 8 test files (Go handlers)
-- Dashboard frontend: 1 unit test + 10 Playwright e2e specs
-- Rust bindings: test support in candle-binding, onnx-binding
-- Testing framework: Go standard `testing` + `testify`
-- Build tags for integration tests (`integration`, `milvus`)
+**Go (Core):**
+- 160 test files / 458 source files = **0.35 test-to-source ratio**
+- Testing framework: Go standard `testing` package with testify assertions
+- Tests span: classification, extproc, cache, memory, decision engine, config, vectorstore, API server, auth, rate limiting
+- Integration tests with real Milvus and Redis in CI
+- No coverage profiling enabled
 
-**Integration/E2E Tests (9.0/10)**
-- **Custom E2E framework** (`e2e/`) with Go-based test runner
-- **53 test case files** covering:
-  - AI Gateway, AIBrix, Istio, LLM-D, Dynamo integration
-  - Routing strategies, model selection, MCP classification
-  - RAG, vector store, streaming, rate limiting
-  - PII detection, jailbreak detection, hallucination
-  - Response API, auth/RBAC, multi-replica health
-  - Performance throughput, resource utilization
-- **18 E2E profiles** with dedicated Kubernetes manifests
-- Kind cluster provisioning automated in CI
-- Profile-specific change detection — only affected profiles test on PR
-- CLI integration tests (Python-based)
-- Memory integration tests with Docker Compose (Milvus + llm-katan)
+**Rust (candle-binding):**
+- 34 test files / 116 source files = **0.29 test-to-source ratio**
+- Tests cover: classifiers (LoRA, traditional), FFI safety, tokenization, model architectures, embeddings
+- `cargo check` and `cargo fmt` in pre-commit
 
-**Performance Tests**
-- Dedicated benchmark suite in `perf/` with Go benchmarks
-- Configurable SLO thresholds in `perf/config/thresholds.yaml`
-- Regression detection with percentage-based thresholds
-- PR-time benchmarks with result commenting
-- Nightly full performance suite
+**Python (vllm-sr, training, e2e):**
+- 19 test files covering CLI, config, plugins, latency validation
+- Black formatter enforced via pre-commit
+- No pytest configuration or coverage tracking found
+
+**TypeScript (dashboard frontend):**
+- 11 spec/test files including Playwright E2E tests
+- Playwright config for E2E (auth-flow, playground, model-inventory, ratings, etc.)
+- 1 unit test file (hireclaw-prompt.test.mjs)
+- ESLint + TypeScript type checking in CI
+
+**Go (dashboard backend):**
+- 18 test files covering handlers, auth, router, deploy
+- Comprehensive test coverage for API endpoints
+
+**Go (operator):**
+- 5 test files covering controllers, webhooks, types validation
+- Coverage with `-coverprofile` and Codecov upload
+- envtest available in Makefile but not used in CI workflow directly
+
+**Go (benchmarks):**
+- 6 benchmark test files in `perf/benchmarks/`
+- Classification, decision, cache, extproc, preference benchmarks
+- Run on PRs with results posted as comments
 
 ### Code Quality
 
-**Linting (Strong)**
-- `golangci-lint v2.5.0` with 12 linters enabled:
-  - `bodyclose`, `copyloopvar`, `depguard`, `errorlint`, `gocritic`
-  - `gosec` (security), `importas`, `misspell`, `revive`, `staticcheck`
-  - `testifylint`, `unconvert`
-- Formatters: `gofumpt` + `gci` (import grouping)
-- ESLint for dashboard frontend and website
-- Rust: `clippy` + `rustfmt` via pre-commit
-- Python: `black` formatter
-- Markdown: `markdownlint`
-- YAML: `yamllint`
-- Shell: `shellcheck`
-- Codespell: spelling checker
+**Linting:**
+- **golangci-lint v2.5.0** with 14 enabled linters including `gosec`, `staticcheck`, `errorlint`, `bodyclose`, `depguard`
+- Separate agent-specific lint config (`.golangci.agent.yml`)
+- **ESLint** for TypeScript/JavaScript
+- **Black** (Python formatter) via pre-commit
+- **shellcheck** for shell scripts
+- **yamllint** for YAML files
+- **markdown-lint** for documentation
 
-**Pre-commit Hooks (Strong)**
-- `.pre-commit-config.yaml` with hooks for Go, Rust, Python, JS/TS, Markdown, YAML, Shell
-- Enforced in CI via `make precommit-check`
-- Agent fast gate (`make agent-fast-gate`) validates changed files against structural rules
+**Pre-commit Hooks (11 hooks):**
+- `trailing-whitespace`, `end-of-file-fixer`, `check-added-large-files` (500KB limit)
+- `go fmt`, `go lint` (golangci-lint), `shellcheck`
+- `md fmt`, `yaml/yml fmt`
+- `js/ts lint` (ESLint)
+- `cargo fmt`, `cargo check` (Rust)
+- `black` (Python)
 
-**Static Analysis**
-- `gosec` enabled in golangci-lint (with reasonable exclusions for dev/test)
-- No standalone SAST tool (CodeQL, Semgrep)
-- No dependency vulnerability scanning
+**Static Analysis:**
+- gosec embedded in golangci-lint (Go only)
+- No CodeQL, Semgrep, or dedicated SAST tool
+- No dependency scanning (Dependabot/Renovate)
+- No secret detection (Gitleaks/TruffleHog)
 
 ### Container Images
 
-**Build Process (7.0/10)**
-- 15+ Dockerfiles for various components
-- Multi-stage cross-compilation for amd64/arm64 (extproc, dashboard, vllm-sr, llm-katan)
-- ROCm variants for AMD GPU support (extproc-rocm, vllm-sr-rocm)
-- PR-time builds: 6 images built on amd64 only (fast feedback)
-- Push/merge builds: full multi-arch with manifest merge
-- GHA build cache (`type=gha`) for layer reuse
-- Docker Buildx with QEMU for arm64
+**18 Dockerfiles identified across:**
+- `tools/docker/Dockerfile` — Main development image (CentOS Stream 10)
+- `tools/docker/Dockerfile.extproc` — Envoy external processor
+- `tools/docker/Dockerfile.extproc-rocm` — AMD ROCm variant
+- `deploy/operator/Dockerfile` — Kubernetes operator (UBI 10 multi-stage)
+- `dashboard/Dockerfile` & `dashboard/backend/Dockerfile` — Dashboard images
+- `src/vllm-sr/Dockerfile` & `src/vllm-sr/Dockerfile.rocm` — vLLM-SR images
+- `onnx-binding/Dockerfile.rocm` & `Dockerfile.fa-test` — ONNX/Flash Attention
+- Various others for training, testing, mock services
+
+**Multi-architecture support:**
+- `docker-publish.yml` supports `linux/amd64` and `linux/arm64` via buildx
+- Cross-compilation option available
+- QEMU setup for cross-platform builds
 
 **Gaps:**
-- No runtime validation of built images
-- No Trivy/Snyk vulnerability scanning
+- No vulnerability scanning on any images
 - No SBOM generation
-- No image signing (Cosign/Sigstore)
-- No image startup testing in CI
+- No image signing (cosign)
+- No runtime startup validation in CI
+- No `.dockerignore` at repository root
 
 ### Security
 
-**Current State (Weak)**
-- `gosec` linter enabled (basic Go security checks)
-- PII detection and jailbreak detection as application features (not CI security)
-- No CodeQL or SAST workflow
+**Current State:**
+- gosec linter enabled for Go code (via golangci-lint)
+- No dedicated security scanning workflows
 - No container vulnerability scanning
-- No dependency scanning (Dependabot/Renovate/Snyk)
-- No secret detection (Gitleaks/TruffleHog)
-- No SBOM or supply chain attestation
-- GHCR images are pushed unsigned
+- No dependency vulnerability scanning
+- No secret detection in CI
+- PII detection and jailbreak classification are security-critical features that would benefit from SAST
+
+**Positive Security Practices:**
+- Auth middleware with proper testing (`auth/handlers_test.go`, `auth/middleware_test.go`)
+- RBAC testing (`test-authz-rbac.sh`, E2E profile `authz-rbac`)
+- TLS testing (`tls_test.go`)
+- PII policy testing (`pii/policy_test.go`)
+- Jailbreak classifier testing
+- User ID validation in production vs. dev modes
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status: Present and Comprehensive (9.0/10)**
+**Status**: **Exemplary (9.5/10)** — This is the most comprehensive agent harness observed across any analyzed repository.
 
-This is one of the most thorough agent rule systems observed across repositories:
+**What exists:**
+- `AGENTS.md` at root — Entry point for coding agents with non-negotiable rules, canonical commands, and rule layers
+- `docs/agent/` — 20+ files including README, architecture guardrails, testing strategy, repo map, environments, governance, module boundaries, glossary, context management, feature-complete checklist, tech debt register, playbooks, plans
+- `tools/agent/` — Executable rule layer with:
+  - `repo-manifest.yaml` — Repository structure and conventions
+  - `task-matrix.yaml` — Task selection and gate escalation rules
+  - `skill-registry.yaml` (35KB) — Comprehensive skill definitions
+  - `e2e-profile-map.yaml` — E2E test profile mapping
+  - `structure-rules.yaml` — Code structure enforcement
+  - `context-map.yaml` — Context dependency mapping
+  - `scripts/` — Agent automation scripts
+  - `skills/` (35 skills) — Reusable agent skills
+- `tools/make/agent.mk` — Agent-specific Make targets (`agent-validate`, `agent-lint`, `agent-ci-gate`, `agent-feature-gate`, `agent-scorecard`)
 
-- **`AGENTS.md`** at root: structured entry point with read-first order, supported environments, non-negotiable rules, canonical commands, and rule layer index
-- **35+ agent documentation files** in `docs/agent/`:
-  - Architecture guardrails, module boundaries, governance
-  - Testing strategy, feature-complete checklist
-  - Repo map, change surfaces, environments
-  - Context management, glossary
-  - 4 playbooks (e2e-selection, go-router, rust-bindings, vllm-sr-cli-docker)
-  - 3 ADRs (architecture decision records)
-  - 11 tech-debt entries with structured index
-  - 3 execution plans
-- **Executable rule layer** in `tools/agent/`:
-  - `repo-manifest.yaml` — repository structure and ownership
-  - `task-matrix.yaml` — task routing and validation rules
-  - `skill-registry.yaml` — agent skill definitions
-  - `structure-rules.yaml` — structural validation rules
-  - `e2e-profile-map.yaml` — E2E profile ownership mapping
-  - `context-map.yaml` — context boundaries
-- **Agent-specific Makefile targets** (`tools/make/agent.mk`):
-  - `agent-bootstrap`, `agent-validate`, `agent-scorecard`
-  - `agent-lint`, `agent-ci-gate`, `agent-feature-gate`
-  - `agent-e2e-affected`, `agent-report`
-- **Local `AGENTS.md` files** in hotspot directories for sub-tree rules
-- **Agent fast gate** enforced in CI pre-commit workflow
+**Quality Assessment:**
+- Rules are comprehensive, actionable, and framework-specific
+- Testing strategy covers validation ladder from harness-only to full E2E
+- Architecture guardrails prevent module boundary violations
+- Feature-complete checklist ensures done criteria
+- Tech debt tracking integrated into agent workflow
+- Multiple environment support (cpu-local, amd-local, ci-k8s)
+- Per-directory AGENTS.md for hotspot trees
 
-**Gaps:**
-- No `.claude/rules/` directory with test-type-specific rules (unit-tests.md, e2e-tests.md)
-- Agent rules are documentation-oriented; could benefit from machine-readable test pattern templates
+**Minor gap:** No `.claude/rules/` directory with per-test-type rules (e.g., `unit-tests.md`, `e2e-tests.md`), though the `docs/agent/testing-strategy.md` and skill registry cover this functionally.
+
+### Performance Testing
+
+**Strong Practices:**
+- Dedicated `performance-test.yml` workflow triggered on PRs
+- Component benchmarks (classification, decision, cache, extproc, preference)
+- Results posted as PR comments for regression detection
+- `performance-nightly.yml` for baseline tracking (currently disabled)
+- Model caching across runs
+- Separate `perf/` directory with benchmark infrastructure
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add coverage tracking for core semantic-router** — Currently the most impactful gap. Add `-coverprofile` to `make test-semantic-router` and upload to Codecov in `test-and-build.yml`. Set initial threshold at current baseline, then ratchet up.
+1. **Add coverage tracking for core Go package** — Add `-coverprofile` to `test-semantic-router` target and upload to Codecov in `test-and-build.yml`. Set initial threshold at project's current coverage level and ratchet up.
 
-2. **Add container vulnerability scanning** — Add Trivy to `docker-publish.yml` PR builds. Block on CRITICAL/HIGH findings. This is a standard security practice for any project publishing container images.
+2. **Add container vulnerability scanning** — Add Trivy scanning to `docker-publish.yml` and consider a separate PR-time scanning step for Dockerfiles that change.
+
+3. **Enable CodeQL for Go, Python, and TypeScript** — Create a new CodeQL workflow targeting the three primary languages. The security-sensitive nature of this codebase (PII detection, jailbreak classification, auth) makes this essential.
 
 ### Priority 1 (High Value)
 
-3. **Add CodeQL/SAST workflow** — Create a dedicated security scanning workflow for Go, Python, and TypeScript. GitHub CodeQL is free for public repos and catches real vulnerabilities.
+4. **Add image runtime startup validation** — After building each Docker image in CI, run it with a health check to verify startup. Even a basic `docker run --rm -d && curl localhost:PORT/healthz` would catch many issues.
 
-4. **Add SBOM generation and image signing** — Add `syft` for SBOM and `cosign` for image signing to the Docker publish pipeline. Important for supply chain security compliance.
+5. **Add SBOM generation and image signing** — Use `anchore/sbom-action` for SBOM and `sigstore/cosign` for signing in `docker-publish.yml`.
 
-5. **Add secret detection** — Add Gitleaks to both pre-commit hooks and CI. Trivial effort with high security value.
+6. **Add secret detection** — Add Gitleaks to pre-commit config and as a CI workflow. The codebase handles HF tokens, API keys, and auth credentials.
 
-6. **Add Dependabot or Renovate** — Automate dependency updates for Go, Rust, Python, and npm. Currently no automated dependency management.
+7. **Re-enable performance nightly** — The `performance-nightly.yml` has the cron schedule commented out. Re-enable it to establish continuous performance baselines.
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Dashboard frontend unit test coverage** — Currently only has Playwright e2e specs and 1 unit test. Add Vitest/Jest unit tests for React components.
+8. **Add OpenAI API contract tests** — The semantic router implements an OpenAI-compatible API; contract tests would ensure compatibility doesn't drift.
 
-8. **Rust code coverage** — Add `cargo-tarpaulin` or `llvm-cov` for candle-binding, ml-binding, nlp-binding, and upload to Codecov.
+9. **Add Rust coverage tracking** — Use `cargo-tarpaulin` or `llvm-cov` to track coverage for the 116 Rust source files.
 
-9. **Contract tests** — Add contract tests between Go router gRPC/HTTP API and dashboard backend API consumers.
+10. **Add dependency vulnerability scanning** — Enable Dependabot or Renovate for automated dependency updates across Go, Rust, Python, and npm.
 
-10. **Add `.claude/rules/` test pattern templates** — Supplement the excellent agent docs with machine-readable test creation rules for each test type.
+11. **Add accessibility testing for dashboard** — The dashboard frontend with Playwright infrastructure could easily add accessibility checks.
+
+12. **Add `.dockerignore`** — No root `.dockerignore` exists, which may cause unnecessary files to be included in build contexts.
 
 ## Comparison to Gold Standards
 
 | Dimension | semantic-router | odh-dashboard | notebooks | kserve |
 |-----------|----------------|---------------|-----------|--------|
-| Unit Tests | 8.5 | 9.0 | 7.0 | 9.0 |
-| Integration/E2E | 9.0 | 9.0 | 8.0 | 9.5 |
-| Build Integration | 7.5 | 8.0 | 9.0 | 7.0 |
-| Image Testing | 7.0 | 7.0 | 9.5 | 6.0 |
-| Coverage Tracking | 4.0 | 8.0 | 5.0 | 9.0 |
-| CI/CD Automation | 9.5 | 9.0 | 8.0 | 8.5 |
-| Agent Rules | 9.0 | 8.0 | 3.0 | 2.0 |
-| **Overall** | **8.2** | **8.4** | **7.5** | **7.6** |
+| Unit Tests | 8.5 — 224 test files, 4 languages | 9.0 — Multi-layer | 7.0 — Image-focused | 9.0 — Comprehensive |
+| Integration/E2E | 9.0 — 18 profiles, Kind | 9.0 — Contract tests | 8.0 — 5-layer | 9.0 — Multi-version |
+| Build Integration | 7.0 — PR builds, multi-arch | 8.0 — Full validation | 7.0 — Image pipeline | 7.0 — Standard |
+| Image Testing | 6.5 — Builds only | 7.0 — Runtime checks | 9.0 — 5-layer validation | 7.0 — Deployment tests |
+| Coverage Tracking | 4.0 — Operator only | 8.0 — Enforced thresholds | 6.0 — Partial | 9.0 — Full enforcement |
+| CI/CD Automation | 9.0 — 25 workflows | 9.0 — Comprehensive | 8.0 — Image pipeline | 8.0 — Well-structured |
+| Agent Rules | 9.5 — Best-in-class | 8.0 — Comprehensive | 5.0 — Basic | 6.0 — Standard |
+| **Overall** | **7.9** | **8.3** | **7.1** | **7.9** |
 
-**Notable strengths vs. gold standards:**
-- CI/CD automation is best-in-class (23 workflows with smart change detection)
-- Agent rules system is the most comprehensive observed
-- E2E framework is exceptionally well-designed (53 test cases, 18 profiles, profile-specific change detection)
-- Performance testing with SLO thresholds is ahead of most projects
+**Notable Strengths vs Gold Standards:**
+- Agent rules harness is the most sophisticated observed (exceeds odh-dashboard)
+- E2E testing infrastructure with 18 profiles and matrix-driven selection is exceptional
+- Performance benchmarking on PRs with automated PR comments is a best practice
+- CI path-filtering granularity (14+ filters with per-E2E-profile detection) is industry-leading
 
-**Notable gaps vs. gold standards:**
-- Coverage tracking is significantly behind odh-dashboard and kserve
-- Security scanning is absent (all gold standards have at least Trivy or CodeQL)
-- No SBOM/signing (notebooks and kserve have this)
+**Key Gap vs Gold Standards:**
+- Coverage tracking is the single largest gap — odh-dashboard and kserve both enforce coverage thresholds while semantic-router tracks coverage for only the operator component
 
 ## File Paths Reference
 
-### CI/CD Workflows (23 total)
-- `.github/workflows/test-and-build.yml` — Core unit tests
-- `.github/workflows/pre-commit.yml` — Linting and formatting
-- `.github/workflows/integration-test-k8s.yml` — K8s E2E (18 profiles)
-- `.github/workflows/integration-test-helm.yml` — Helm validation
-- `.github/workflows/integration-test-memory.yml` — Memory integration
-- `.github/workflows/docker-publish.yml` — Container image builds
-- `.github/workflows/performance-test.yml` — PR benchmarks
-- `.github/workflows/operator-ci.yml` — Operator tests + coverage
-- `.github/workflows/dashboard-test.yml` — Dashboard checks
+### CI/CD
+- `.github/workflows/test-and-build.yml` — Core test and build
+- `.github/workflows/integration-test-k8s.yml` — E2E K8s tests
+- `.github/workflows/operator-ci.yml` — Operator CI with coverage
+- `.github/workflows/docker-publish.yml` — Image publishing
+- `.github/workflows/ci-changes.yml` — Path-based change detection
 
-### Test Infrastructure
-- `src/semantic-router/pkg/` — 126 Go unit test files
-- `e2e/testcases/` — 53 E2E test cases
-- `e2e/profiles/` — 18 E2E profiles
-- `perf/benchmarks/` — Performance benchmarks
-- `perf/config/thresholds.yaml` — SLO thresholds
-- `dashboard/frontend/e2e/` — 10 Playwright specs
-- `dashboard/backend/handlers/` — 8 Go handler tests
+### Testing
+- `src/semantic-router/pkg/*/` — Go unit tests (160 files)
+- `candle-binding/src/*/` — Rust unit tests (34 files)
+- `e2e/` — E2E test framework with 18 profiles
+- `perf/benchmarks/` — Performance benchmarks (6 files)
+- `dashboard/frontend/e2e/` — Playwright E2E tests (10 files)
+- `dashboard/backend/handlers/` — Backend handler tests (18 files)
 
 ### Code Quality
-- `tools/linter/go/.golangci.yml` — 12 Go linters
-- `.pre-commit-config.yaml` — Multi-language hooks
-- `website/eslint.config.mjs` — Website ESLint
-- `dashboard/frontend/eslint.config.js` — Dashboard ESLint
+- `tools/linter/go/.golangci.yml` — Go linter config (14 linters)
+- `.pre-commit-config.yaml` — 11 pre-commit hooks
+- `tools/make/linter.mk` — Linter Make targets
 
-### Container Images (15+ Dockerfiles)
-- `tools/docker/Dockerfile.extproc` — Main ExtProc image (cross-compiled)
-- `tools/docker/Dockerfile.extproc-rocm` — AMD ROCm variant
-- `src/vllm-sr/Dockerfile` — vLLM-SR Python image
-- `dashboard/backend/Dockerfile` — Dashboard backend
-- `e2e/testing/llm-katan/Dockerfile` — Test mock LLM
+### Container Images
+- `tools/docker/Dockerfile` — Main development image
+- `deploy/operator/Dockerfile` — Operator (UBI 10 multi-stage)
+- 18 Dockerfiles total across the repository
 
 ### Agent Rules
-- `AGENTS.md` — Root agent entry point
-- `docs/agent/` — 35+ agent documentation files
-- `tools/agent/` — Executable rule layer (YAML configs)
-- `tools/make/agent.mk` — Agent Makefile targets
+- `AGENTS.md` — Agent entry point
+- `docs/agent/` — 20+ agent documentation files
+- `tools/agent/` — Executable rule layer (manifests, skills, scripts)
+- `CODEOWNERS` — Per-directory ownership via OWNER files

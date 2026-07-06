@@ -1,161 +1,137 @@
 ---
 repository: "opendatahub-io/llm-d-playbooks"
-overall_score: 2.1
+overall_score: 1.8
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No source code or unit tests exist - this is a documentation/playbook repository"
+    status: "No unit tests exist anywhere in the repository"
   - dimension: "Integration/E2E"
-    score: 3.0
-    status: "Validation playbooks exist in README form but no automated test scripts"
+    score: 1.0
+    status: "Validation steps described in docs but no automated test scripts exist"
   - dimension: "Build Integration"
     score: 0.0
-    status: "No build system, no container images, no PR validation"
+    status: "No CI/CD pipelines, no build automation, no PR validation"
   - dimension: "Image Testing"
     score: 0.0
-    status: "No container images are built by this repository"
+    status: "No container images built or tested by this repository"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No code coverage - no source code to cover"
+    status: "No coverage tooling configured"
   - dimension: "CI/CD Automation"
-    score: 1.0
-    status: "No GitHub Actions workflows, no CI/CD pipeline of any kind"
+    score: 0.0
+    status: "No .github/workflows/, no Makefile, no CI configuration of any kind"
   - dimension: "Agent Rules"
     score: 0.0
     status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
-  - title: "No CI/CD pipeline at all"
-    impact: "No automated validation of playbook content, YAML manifests, or scripts"
+  - title: "Zero CI/CD pipeline — no automated quality gates"
+    impact: "Any contributor can merge broken YAML manifests, invalid Kustomize overlays, or non-functional scripts without any automated check"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "No automated validation of Kubernetes manifests"
-    impact: "Broken YAML, invalid Kustomize overlays, or incorrect CRD references go undetected"
+  - title: "No linting or validation for Kubernetes manifests"
+    impact: "Invalid YAML, missing required fields, or schema violations in Kustomize/K8s manifests go undetected until cluster apply time"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "Validation playbooks are documentation-only, not executable scripts"
-    impact: "Steps 03, 05, and 07 describe validation but provide no runnable scripts to perform it"
+  - title: "No tests for Python benchmark generators"
+    impact: "Regressions in kv-cache-prompt-generator.py, prefix-cache-generator.py, or heterogeneous-workload-generator.py are only caught manually"
     severity: "HIGH"
-    effort: "16-24 hours"
-  - title: "No linting or formatting enforcement"
-    impact: "Markdown inconsistencies, YAML formatting errors, and broken links accumulate"
+    effort: "4-8 hours"
+  - title: "Shell scripts contain hardcoded URLs and credentials"
+    impact: "bench-all.sh contains a hardcoded AWS ELB URL; scripts lack input validation and error handling"
     severity: "MEDIUM"
-    effort: "2-3 hours"
-  - title: "Shell scripts lack validation"
-    impact: "bench-all.sh scripts have hardcoded URLs and no error handling (set -e, shellcheck)"
+    effort: "2-4 hours"
+  - title: "No secret scanning or dependency vulnerability checks"
+    impact: "Hardcoded endpoints or leaked credentials in scripts go undetected"
     severity: "MEDIUM"
     effort: "1-2 hours"
-  - title: "No agent rules for contribution guidance"
-    impact: "AI-assisted contributions have no guardrails for playbook quality or manifest correctness"
-    severity: "LOW"
-    effort: "2-3 hours"
 quick_wins:
-  - title: "Add YAML/Kustomize linting workflow"
+  - title: "Add GitHub Actions workflow for YAML/Kustomize validation"
     effort: "2-3 hours"
-    impact: "Catch invalid Kubernetes manifests and Kustomize overlays before merge"
-  - title: "Add Markdown linting and link checking"
-    effort: "1-2 hours"
-    impact: "Ensure consistent documentation quality and no broken links"
-  - title: "Add ShellCheck for bash scripts"
+    impact: "Catches invalid manifests before merge; validates all 38 YAML files on every PR"
+  - title: "Add markdownlint for documentation quality"
     effort: "1 hour"
-    impact: "Catch common shell scripting errors in bench-all.sh and generate-all.sh scripts"
-  - title: "Add kustomize build validation to CI"
-    effort: "2-3 hours"
-    impact: "Verify all kustomize overlays render correctly on every PR"
+    impact: "Ensures consistent formatting across 18 markdown files that form the entire user-facing content"
+  - title: "Add pytest for the 3 Python generators (678 lines of code)"
+    effort: "4-6 hours"
+    impact: "Validates prompt generation logic, word count assertions, and CSV output format"
+  - title: "Add shellcheck for the 4 shell scripts"
+    effort: "1 hour"
+    impact: "Catches quoting issues, undefined variables, and portability problems in bench-all.sh and generate-all.sh"
+  - title: "Add pre-commit hooks for YAML + markdown + Python"
+    effort: "1-2 hours"
+    impact: "Enforces basic quality locally before push"
 recommendations:
   priority_0:
-    - "Create a GitHub Actions CI pipeline with YAML linting (yamllint), Kustomize build validation, and Markdown linting"
-    - "Convert validation README playbooks (Steps 03, 05, 07) into executable shell scripts that can be run against a live cluster"
+    - "Create a minimal GitHub Actions CI pipeline with YAML lint, Kustomize build validation, and Python syntax checks"
+    - "Add kubeconform or kubeval to validate all Kubernetes manifests against their CRD schemas"
+    - "Remove hardcoded AWS ELB URL from bench-all.sh and parameterize all external endpoints"
   priority_1:
-    - "Add ShellCheck linting for all shell scripts in the repository"
-    - "Add link checking for markdown files to catch broken cross-references"
-    - "Create a Kustomize build matrix that validates all overlays (llm-d/qwen, vllm/qwen, etc.)"
+    - "Write pytest test suite for the 3 Python generators covering edge cases (zero replicas, cache overflow, etc.)"
+    - "Add Kustomize build CI step that runs `kustomize build` on all overlay directories to catch reference errors"
+    - "Create CLAUDE.md or AGENTS.md with contribution guidelines and test expectations"
   priority_2:
-    - "Add CLAUDE.md or agent rules for AI-assisted playbook contributions"
-    - "Add Python linting (ruff) for the test data generator scripts"
-    - "Add a pre-commit configuration for local development"
+    - "Add link checker for markdown documentation to catch broken internal/external links"
+    - "Add Grafana dashboard JSON schema validation"
+    - "Add CODEOWNERS file to enforce review requirements"
 ---
 
 # Quality Analysis: llm-d-playbooks
 
 ## Executive Summary
-- **Overall Score: 2.1/10**
-- **Repository Type**: Documentation / Deployment Playbook (no source code)
-- **Primary Languages**: Markdown, YAML (Kubernetes manifests), Python (utility scripts), Shell (benchmark scripts)
-- **Framework**: Kubernetes (KServe, LLM-D, Kustomize)
-- **Agent Rules Status**: Missing
-
-This repository is a **documentation-focused deployment playbook** for llm-d across multiple Kubernetes platforms (OpenShift, AKS, CKS). It contains no source code, no CI/CD pipelines, no automated tests, and no quality tooling. The repository consists of:
-
-- **8 step-by-step playbook directories** (01-cluster-bring-up through 08-benchmarking)
-- **Kubernetes manifests** (Kustomize overlays for vLLM and LLM-D deployments)
-- **Python utility scripts** for generating benchmark test data
-- **Shell scripts** for running GuideLLM benchmarks
-- **Validation playbooks** described in READMEs but not implemented as executable scripts
-
-The low score reflects the complete absence of automation, not a judgment on the documentation quality itself, which is well-structured and thorough.
+- **Overall Score: 1.8/10**
+- **Repository Type**: Documentation/playbook repository with Kubernetes manifests and Python benchmarking tools
+- **Primary Content**: 18 markdown docs, 38 YAML/Kustomize manifests, 3 Python generators (678 LoC), 4 shell scripts (85 LoC)
+- **Key Strengths**: Excellent documentation quality and structure; well-organized 8-step deployment playbook; comprehensive benchmarking guide with real performance data
+- **Critical Gaps**: Zero CI/CD automation; no tests of any kind; no linting; no security scanning; no agent rules
+- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0/10 | No source code or unit tests exist |
-| Integration/E2E | 3/10 | Validation playbooks exist as README documentation but no automated scripts |
-| Build Integration | 0/10 | No build system, no container images, no PR validation |
-| Image Testing | 0/10 | No container images are built by this repository |
-| Coverage Tracking | 0/10 | No code coverage - no source code to cover |
-| CI/CD Automation | 1/10 | No GitHub Actions, no CI/CD pipeline of any kind |
+| Unit Tests | 0/10 | No unit tests exist anywhere in the repository |
+| Integration/E2E | 1/10 | Validation steps described in documentation but no automated test scripts |
+| **Build Integration** | **0/10** | **No CI/CD pipelines, no build automation, no PR validation** |
+| Image Testing | 0/10 | No container images built or tested by this repository |
+| Coverage Tracking | 0/10 | No coverage tooling configured |
+| CI/CD Automation | 0/10 | No .github/workflows/, no Makefile, no CI configuration |
 | Agent Rules | 0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory |
 
 ## Critical Gaps
 
-### 1. No CI/CD Pipeline
-- **Impact**: No automated validation of any repository content on PRs or merges
+### 1. Zero CI/CD Pipeline — No Automated Quality Gates
+- **Impact**: Any contributor can merge broken YAML manifests, invalid Kustomize overlays, or non-functional scripts without any automated check
 - **Severity**: HIGH
 - **Effort**: 4-8 hours
-- **Details**: The `.github/workflows/` directory does not exist. There is no GitHub Actions, Jenkins, or GitLab CI configuration. Every change is merged without any automated checks.
+- **Details**: The repository has no `.github/workflows/` directory, no `Makefile`, no `.gitlab-ci.yml`, and no CI configuration of any kind. The 38 YAML manifests and 3 Python scripts receive zero automated validation.
 
-### 2. No Automated Validation of Kubernetes Manifests
-- **Impact**: Broken YAML, invalid Kustomize overlays, or incorrect CRD references go undetected until someone attempts deployment
+### 2. No Linting or Validation for Kubernetes Manifests
+- **Impact**: Invalid YAML, missing required fields, or schema violations in Kustomize/K8s manifests go undetected until someone runs `oc apply` or `kubectl apply` on a live cluster
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: The repository contains 20+ Kustomize YAML files across `08-benchmarking/intelligent-inference-scheduler/` including overlays for llm-d (qwen, phi, granite), vllm (qwen, phi, granite), guidellm, and monitoring. None are validated in CI. A `kustomize build` step would catch structural errors immediately.
+- **Details**: The repository contains 38 YAML files across `08-benchmarking/intelligent-inference-scheduler/` including complex resources like `LLMInferenceService`, `InferenceService`, `ServingRuntime`, `Gateway`, and `HardwareProfile` CRDs. None are validated against schemas.
 
-### 3. Validation Playbooks Are Documentation-Only
-- **Impact**: Steps 03 (Control Plane Readiness), 05 (RDMA Network Validation), and 07 (LLM Deployment Validation) describe validation categories and directories but the referenced subdirectories (`crds-present/`, `operators-healthy/`, `connectivity/`, `bandwidth/`, `functional/`, `performance/`) do not exist in the repository
+### 3. No Tests for Python Benchmark Generators
+- **Impact**: Regressions in the 3 Python scripts (678 total lines) are only caught through manual execution
 - **Severity**: HIGH
-- **Effort**: 16-24 hours
-- **Details**: The READMEs reference validation directories that don't exist yet:
-  - `03-control-plane-readiness/validation/crds-present/` - not present
-  - `03-control-plane-readiness/validation/operators-healthy/` - not present
-  - `03-control-plane-readiness/validation/llm-d-deployable/` - not present
-  - `05-rdma-network-validation/validation/connectivity/` - not present
-  - `05-rdma-network-validation/validation/bandwidth/` - not present
-  - `05-rdma-network-validation/validation/latency-stability/` - not present
-  - `07-llm-deployment-validation/validation/functional/` - not present
-  - `07-llm-deployment-validation/validation/performance/` - not present
-  - `shared/scripts/` - not present
-  - `shared/assets/` - not present
+- **Effort**: 4-8 hours
+- **Details**: `kv-cache-prompt-generator.py`, `prefix-cache-generator.py`, and `heterogeneous-workload-generator.py` contain critical benchmarking logic (KV cache capacity math, prompt interleaving, word-to-token conversion). The scripts have inline assertions but no test suite.
 
-### 4. No Linting or Formatting Enforcement
-- **Impact**: Markdown inconsistencies, YAML formatting errors, and broken links accumulate over time
+### 4. Shell Scripts Contain Hardcoded URLs
+- **Impact**: `heterogeneous/bench-all.sh` contains a hardcoded AWS ELB URL (`a970653680479411ea2687bb74860cd4-328874611.us-east-2.elb.amazonaws.com`); `prefix/bench-all.sh` uses placeholder `<gateway-hostname>` (inconsistent patterns)
 - **Severity**: MEDIUM
-- **Effort**: 2-3 hours
+- **Effort**: 2-4 hours
 
-### 5. Shell Scripts Lack Validation
-- **Impact**: `bench-all.sh` scripts contain hardcoded URLs (including an AWS ELB URL in `heterogeneous/bench-all.sh`), no `set -e` for error handling, and would not pass ShellCheck
+### 5. No Secret Scanning or Dependency Vulnerability Checks
+- **Impact**: The hardcoded AWS ELB URL and any future credentials go undetected; `requirements.txt` pins `guidellm==0.3.1` but no tooling checks for known CVEs
 - **Severity**: MEDIUM
 - **Effort**: 1-2 hours
 
-### 6. Python Scripts Have No Tests or Linting
-- **Impact**: The `kv-cache-prompt-generator.py` and `heterogeneous-workload-generator.py` scripts (~350 lines total) have no unit tests and no linting configuration
-- **Severity**: MEDIUM
-- **Effort**: 3-4 hours
-
 ## Quick Wins
 
-### 1. Add YAML/Kustomize Linting Workflow (2-3 hours)
-**Impact**: Catch invalid Kubernetes manifests and Kustomize overlays before merge
-
+### 1. Add GitHub Actions Workflow for YAML/Kustomize Validation (2-3 hours)
+- **Impact**: Catches invalid manifests before merge
+- **Implementation**:
 ```yaml
 # .github/workflows/validate.yml
 name: Validate
@@ -168,240 +144,175 @@ jobs:
       - name: YAML Lint
         uses: ibiqlik/action-yamllint@v3
         with:
-          file_or_dir: .
+          file_or_dir: '.'
           config_data: |
             extends: default
             rules:
-              line-length:
-                max: 200
+              line-length: {max: 200}
+              truthy: disable
   kustomize:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Kustomize
-        uses: imranismail/setup-kustomize@v2
-      - name: Validate overlays
+      - name: Install kustomize
         run: |
-          for dir in $(find . -name kustomization.yaml -exec dirname {} \;); do
-            echo "Building $dir..."
-            kustomize build "$dir" > /dev/null
-          done
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+      - name: Validate Kustomize builds
+        run: |
+          find . -name kustomization.yaml -execdir sh -c 'echo "Building $(pwd)..." && kustomize build . > /dev/null' \;
 ```
 
-### 2. Add Markdown Linting and Link Checking (1-2 hours)
-**Impact**: Ensure consistent documentation quality and catch broken cross-references
+### 2. Add Markdownlint (1 hour)
+- **Impact**: Ensures consistent formatting across 18 markdown files
+- **Implementation**: Add `markdownlint-cli2` to the CI workflow
 
+### 3. Add Pytest for Python Generators (4-6 hours)
+- **Impact**: Validates prompt generation logic, word count assertions, CSV output
+- **Implementation**: Create `test_generators.py` covering edge cases like zero replicas, cache overflow, minimum word counts
+
+### 4. Add Shellcheck (1 hour)
+- **Impact**: Catches quoting issues, undefined variables in `bench-all.sh` and `generate-all.sh`
+- **Implementation**: Add `shellcheck` step to CI
+
+### 5. Add Pre-commit Hooks (1-2 hours)
+- **Impact**: Enforces quality locally before push
+- **Implementation**:
 ```yaml
-  markdown-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: DavidAnson/markdownlint-cli2-action@v19
-      - name: Check links
-        uses: gaurav-nelson/github-action-markdown-link-check@v1
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.10.0
+    hooks:
+      - id: shellcheck
+  - repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+      - id: black
 ```
-
-### 3. Add ShellCheck for Bash Scripts (1 hour)
-**Impact**: Catch common shell scripting errors
-
-```yaml
-  shellcheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: ShellCheck
-        uses: ludeeus/action-shellcheck@master
-        with:
-          scandir: '.'
-```
-
-### 4. Add kustomize build validation (2-3 hours)
-**Impact**: Verify all 7 Kustomize overlay combinations render correctly
-
-The repository has overlays at:
-- `08-benchmarking/intelligent-inference-scheduler/llm-d/` (qwen, phi, granite)
-- `08-benchmarking/intelligent-inference-scheduler/vllm/` (qwen, phi, granite)
-- `08-benchmarking/intelligent-inference-scheduler/guidellm/` (llm-d, vllm, llm-d-phi, etc.)
-- `08-benchmarking/intelligent-inference-scheduler/monitoring/`
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
-**Score: 1/10**
-
-- **No `.github/workflows/` directory** - Zero CI/CD automation
-- **No Makefile** - No build targets or convenience scripts
-- **No pre-commit hooks** - No local validation before commits
-- **No branch protection** - Cannot enforce CI checks on PRs (nothing to enforce)
-
-The score is 1 rather than 0 because the Kustomize overlay structure itself provides a form of declarative build configuration, though it is never validated automatically.
+- **Status**: Non-existent
+- **Workflows**: None — no `.github/workflows/`, no `Makefile`, no `.gitlab-ci.yml`
+- **PR Validation**: None
+- **Build Automation**: None
+- **Observation**: This is a documentation-heavy repository, but it contains 38 Kubernetes manifests and 678 lines of Python that would benefit significantly from automated validation.
 
 ### Test Coverage
-**Score: 0/10 (Unit) / 3/10 (Integration/E2E)**
-
-**Unit Tests**: None. The Python scripts (`kv-cache-prompt-generator.py`, `heterogeneous-workload-generator.py`) have no accompanying test files.
-
-**Integration/E2E**: The repository describes validation in three areas but provides no executable validation scripts:
-
-1. **Control Plane Readiness (Step 03)**: Describes CRD presence, operator health, and deployability checks. Directory structure planned but not populated.
-2. **RDMA Network Validation (Step 05)**: Describes connectivity, bandwidth, and latency/stability checks. Directory structure planned but not populated.
-3. **LLM Deployment Validation (Step 07)**: Describes functional and performance validation. Directory structure planned but not populated.
-
-The 3/10 score reflects that the validation *taxonomy* is well-designed and the benchmarking infrastructure (GuideLLM jobs, Kustomize overlays, test data generators) is functional.
+- **Unit Tests**: 0 test files found. The Python generators have inline `assert` statements but no test framework.
+- **Integration Tests**: The playbook documents validation steps (CRD checks, operator health, RDMA connectivity/bandwidth/latency, functional and performance tests) but these are manual procedures to be run on a live cluster — not automated test scripts.
+- **E2E Tests**: None. The benchmarking workflow (Steps 3-7 of the playbook at `08-benchmarking/`) is entirely manual.
+- **Coverage Tracking**: None — no `.codecov.yml`, no `coverage` in any configuration.
+- **Test-to-Code Ratio**: 0:678 (Python), 0:85 (Shell), 0:38 (YAML files)
 
 ### Code Quality
-**Score: 1/10**
-
-- **No linting configuration** - No yamllint, markdownlint, shellcheck, ruff, or flake8
-- **No formatting enforcement** - No prettier, black, or isort
-- **No pre-commit hooks** - No `.pre-commit-config.yaml`
-- **Hardcoded values in scripts** - `bench-all.sh` contains hardcoded AWS ELB URLs and model names
-- **No `.editorconfig`** - No consistent formatting across editors
-
-Positives:
-- `.gitignore` exists (excludes `.DS_Store` and `prompts.csv`)
-- Python scripts use `argparse` for configuration rather than hardcoding all values
+- **Linting**: No linting tools configured (no `.golangci.yaml`, `.eslintrc`, `ruff.toml`, `.flake8`, `mypy.ini`)
+- **Pre-commit Hooks**: No `.pre-commit-config.yaml`
+- **Static Analysis**: None (no CodeQL, gosec, Semgrep)
+- **Code Style**: Python scripts use consistent formatting but no enforced style (no `black`, `ruff`, or `isort`)
+- **Type Hints**: Python scripts lack type annotations beyond the one function signature in `kv-cache-prompt-generator.py`
 
 ### Container Images
-**Score: 0/10**
-
-- No `Dockerfile` or `Containerfile` in the repository
-- No container images are built
-- References external images (`ghcr.io/vllm-project/guidellm:latest`, `registry.access.redhat.com/ubi9/ubi:latest`) but does not build any
+- **Status**: Not applicable — this repository does not build container images
+- **Observation**: The Kubernetes manifests reference external images (`registry.access.redhat.com/ubi9/ubi:latest`, vLLM runtime, KServe) but the repo itself builds nothing
 
 ### Security
-**Score: 1/10**
-
-- **No security scanning** - No Trivy, Snyk, CodeQL, or Gitleaks
-- **No dependency scanning** - `requirements.txt` has only 2 dependencies (`pandas`, `guidellm==0.3.1`) with no vulnerability checking
-- **No secret detection** - No `.gitleaks.toml` or equivalent
-- **Hardcoded URL in script** - `heterogeneous/bench-all.sh` contains an AWS ELB URL (`a970653680479411ea2687bb74860cd4-328874611.us-east-2.elb.amazonaws.com`)
-
-Positive:
-- Kubernetes manifests use `security.opendatahub.io/enable-auth` annotations
-- LLM-D deployment uses TLS (`--cert-path`, `--secure-serving`)
+- **Secret Scanning**: None (no `.gitleaks.toml`, no Gitleaks/TruffleHog integration)
+- **Dependency Scanning**: None — `requirements.txt` pins `guidellm==0.3.1` but no Dependabot or Snyk configured
+- **Hardcoded Credentials**: `heterogeneous/bench-all.sh` contains a hardcoded AWS ELB URL that appears to be a real endpoint
+- **SAST**: None
 
 ### Agent Rules (Agentic Flow Quality)
-**Score: 0/10**
-
 - **Status**: Missing
-- **Coverage**: No agent rules exist
-- **CLAUDE.md**: Not present
-- **AGENTS.md**: Not present
-- **`.claude/` directory**: Not present
-- **Recommendation**: Generate agent rules with `/test-rules-generator` covering:
-  - Playbook contribution guidelines (markdown structure, step numbering)
-  - Kubernetes manifest validation requirements
-  - Kustomize overlay patterns and naming conventions
-  - Shell script standards (`set -euo pipefail`, no hardcoded URLs)
+- **Coverage**: No test type rules exist
+- **Quality**: N/A
+- **Gaps**: No `CLAUDE.md`, no `AGENTS.md`, no `.claude/` directory, no `.claude/rules/`, no `.claude/skills/`
+- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
+  - YAML manifest validation patterns
+  - Python generator test patterns
+  - Kustomize overlay testing
+  - Shell script testing guidelines
+
+### Repository Structure Quality
+- **Strengths**:
+  - Well-organized numbered directory structure (01-08) following deployment order
+  - Each step has clear README.md with purpose, prerequisites, and next steps
+  - Excellent benchmarking documentation with real performance comparisons (vLLM vs LLM-D)
+  - Kustomize overlays properly structured with base/overlay pattern
+  - Good use of kustomization.yaml for environment-specific configuration
+- **Weaknesses**:
+  - Validation directories (`03-control-plane-readiness/validation/`, `05-rdma-network-validation/validation/`, `07-llm-deployment-validation/validation/`) reference subdirectories that don't exist in the repository (e.g., `crds-present/`, `operators-healthy/`, `connectivity/`, `bandwidth/`, `functional/`, `performance/`)
+  - This means the validation steps are documentation-only — the actual scripts/tools are either not yet written or live elsewhere
+  - `.gitignore` only excludes `.DS_Store` and `prompts.csv`
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-
-1. **Create a GitHub Actions CI pipeline** with:
-   - YAML linting (`yamllint`)
-   - Kustomize build validation for all overlays
-   - Markdown linting (`markdownlint`)
-   - Link checking for broken cross-references
-   - ShellCheck for bash scripts
-
-2. **Implement the planned validation scripts** for Steps 03, 05, and 07:
-   - Convert README descriptions into executable shell scripts
-   - Add scripts for CRD presence checks, operator health, RDMA connectivity
-   - Create functional test scripts for LLM deployment validation
+1. **Create a minimal GitHub Actions CI pipeline** with YAML lint, Kustomize build validation, Python syntax checks, and shellcheck — this is the single highest-value improvement for the repository
+2. **Add kubeconform or kubeval** to validate all Kubernetes manifests against CRD schemas (especially `LLMInferenceService`, `InferenceService`, `ServingRuntime`, `Gateway` resources)
+3. **Remove hardcoded AWS ELB URL** from `heterogeneous/bench-all.sh` and parameterize all external endpoints consistently (as `prefix/bench-all.sh` does with `<gateway-hostname>` placeholder)
 
 ### Priority 1 (High Value)
-
-3. **Add Python linting and testing** for test-data-generator scripts:
-   - Add `ruff` configuration for the Python scripts
-   - Write unit tests for `kv-cache-prompt-generator.py` (argument parsing, capacity math, prompt generation)
-   - Write unit tests for `heterogeneous-workload-generator.py` (ratio calculations, interleaving logic)
-
-4. **Remove hardcoded values from shell scripts**:
-   - Parameterize URLs, model names, and concurrency levels in `bench-all.sh`
-   - Add `set -euo pipefail` to all shell scripts
-
-5. **Add CLAUDE.md or agent rules** for AI-assisted contributions:
-   - Playbook structure conventions
-   - Kustomize overlay patterns
-   - README template requirements
+1. **Write pytest test suite** for the 3 Python generators covering:
+   - Edge cases: zero replicas, cache overflow, prompt size exceeding cache
+   - Output format validation: CSV headers, column count, row count
+   - Math validation: 80% fill calculation, unique-per-replica math
+   - Word count assertions: verify generated prompts match target lengths
+2. **Add Kustomize build CI step** that runs `kustomize build` on all 10 overlay directories to catch broken patch references
+3. **Create CLAUDE.md** with contribution guidelines, test expectations, and development workflow
+4. **Implement the missing validation scripts** referenced in steps 03, 05, and 07 (currently only documented in README but no actual scripts exist)
 
 ### Priority 2 (Nice-to-Have)
-
-6. **Add a pre-commit configuration** (`.pre-commit-config.yaml`) for local development with:
-   - yamllint
-   - markdownlint
-   - shellcheck
-   - trailing whitespace/end-of-file fixes
-
-7. **Add a CODEOWNERS file** for review assignment
-
-8. **Add dependency vulnerability scanning** for the Python `requirements.txt`
+1. **Add link checker** for markdown docs (many external links to platform documentation that could rot)
+2. **Add Grafana dashboard JSON schema validation** for the 846-line dashboard ConfigMap
+3. **Add CODEOWNERS** file to enforce review requirements
+4. **Add Dependabot** for `requirements.txt` dependency updates
+5. **Add Python type hints** and `mypy` checking for the generators
 
 ## Comparison to Gold Standards
 
 | Dimension | llm-d-playbooks | odh-dashboard | notebooks | kserve |
-|-----------|:-:|:-:|:-:|:-:|
-| CI/CD Pipeline | None | Multi-workflow, PR+periodic | Comprehensive image CI | Multi-version testing CI |
-| Unit Tests | 0 files | 1000+ spec files | N/A (images) | Extensive Go tests |
-| Integration/E2E | READMEs only | Cypress E2E suite | 5-layer validation | envtest + E2E |
-| Coverage Tracking | None | Codecov enforced | N/A | Codecov enforced |
-| Linting | None | ESLint + Prettier | yamllint | golangci-lint (20+ linters) |
-| Security Scanning | None | Snyk, CodeQL | Trivy | CodeQL, Snyk |
-| Agent Rules | None | Comprehensive | Basic | None |
-| Pre-commit Hooks | None | Yes | Yes | No |
-| Manifest Validation | None | Kustomize CI | N/A | Kustomize CI |
+|-----------|----------------|---------------|-----------|--------|
+| CI/CD | None | Comprehensive multi-workflow | Multi-stage validation | Extensive GH Actions |
+| Unit Tests | None | Jest + React Testing Library | Pytest suites | Go testing + envtest |
+| Integration/E2E | Manual docs only | Cypress E2E + contract tests | 5-layer image validation | KServe E2E framework |
+| Coverage | None | Codecov with enforcement | Coverage tracking | Codecov with thresholds |
+| YAML Validation | None | Kustomize in CI | Manifest validation | CRD validation in CI |
+| Security Scanning | None | Snyk + Gitleaks | Trivy scanning | CodeQL + Snyk |
+| Agent Rules | None | Comprehensive .claude/rules/ | Basic rules | N/A |
+| Pre-commit | None | ESLint + Prettier hooks | Python hooks | golangci-lint hooks |
 
 ## File Paths Reference
 
 ### Repository Structure
-```
-llm-d-playbooks/
-  01-cluster-bring-up/README.md
-  02-operators/README.md
-  03-control-plane-readiness/
-    README.md
-    validation/README.md           # References non-existent subdirectories
-  04-rdma-networking/README.md
-  05-rdma-network-validation/
-    README.md
-    validation/README.md           # References non-existent subdirectories
-  06-llm-d-deploy/
-    README.md
-    apply/README.md
-  07-llm-deployment-validation/
-    README.md
-    validation/README.md           # References non-existent subdirectories
-  08-benchmarking/
-    README.md
-    intelligent-inference-scheduler/
-      README.md                    # Comprehensive A/B benchmarking guide
-      guidellm/                    # Kustomize overlays for GuideLLM jobs
-      llm-d/                      # Kustomize overlays for LLM-D deployment
-      vllm/                       # Kustomize overlays for vLLM deployment
-      monitoring/                  # Grafana + Prometheus manifests
-      test-data-generator/
-        requirements.txt           # pandas, guidellm==0.3.1
-        prefix/
-          kv-cache-prompt-generator.py
-          bench-all.sh
-        heterogeneous/
-          heterogeneous-workload-generator.py
-          bench-all.sh
-  shared/README.md                 # References non-existent scripts/ and assets/
-  .gitignore
-  LICENSE
-  README.md
-```
+- `README.md` — Top-level overview and deployment step index
+- `01-cluster-bring-up/` through `08-benchmarking/` — Ordered deployment playbook steps
+- `shared/` — Common resources (currently only README)
 
-### Key Files Analyzed
-- `README.md` - Root deployment guide
-- `08-benchmarking/intelligent-inference-scheduler/README.md` - Detailed A/B benchmark playbook
-- `08-benchmarking/intelligent-inference-scheduler/llm-d/base/llm-infra.yaml` - LLMInferenceService manifest
-- `08-benchmarking/intelligent-inference-scheduler/guidellm/base/guidellm-job.yaml` - GuideLLM benchmark job
-- `08-benchmarking/intelligent-inference-scheduler/test-data-generator/prefix/kv-cache-prompt-generator.py` - Benchmark data generator
-- `08-benchmarking/intelligent-inference-scheduler/test-data-generator/heterogeneous/heterogeneous-workload-generator.py` - Heterogeneous workload generator
-- `03-control-plane-readiness/validation/README.md` - Control plane validation plan
-- `05-rdma-network-validation/validation/README.md` - RDMA validation plan
-- `07-llm-deployment-validation/validation/README.md` - Deployment validation plan
+### Key Configuration Files
+- `08-benchmarking/intelligent-inference-scheduler/llm-d/base/llm-infra.yaml` — LLMInferenceService CRD with scheduler config
+- `08-benchmarking/intelligent-inference-scheduler/vllm/base/serving-runtime.yaml` — vLLM ServingRuntime
+- `08-benchmarking/intelligent-inference-scheduler/monitoring/openshift-dashboard.yaml` — Grafana dashboard (846 lines)
+- `08-benchmarking/intelligent-inference-scheduler/guidellm/base/guidellm-job.yaml` — GuideLLM benchmark Job
+
+### Python Generators
+- `08-benchmarking/intelligent-inference-scheduler/test-data-generator/prefix/kv-cache-prompt-generator.py` (207 lines)
+- `08-benchmarking/intelligent-inference-scheduler/test-data-generator/prefix/prefix-cache-generator.py` (261 lines)
+- `08-benchmarking/intelligent-inference-scheduler/test-data-generator/heterogeneous/heterogeneous-workload-generator.py` (210 lines)
+
+### Shell Scripts
+- `08-benchmarking/intelligent-inference-scheduler/test-data-generator/prefix/bench-all.sh` (36 lines)
+- `08-benchmarking/intelligent-inference-scheduler/test-data-generator/prefix/generate-all.sh` (8 lines)
+- `08-benchmarking/intelligent-inference-scheduler/test-data-generator/heterogeneous/bench-all.sh` (35 lines)
+- `08-benchmarking/intelligent-inference-scheduler/test-data-generator/heterogeneous/generate-all.sh` (6 lines)
+
+### Dependencies
+- `08-benchmarking/intelligent-inference-scheduler/test-data-generator/requirements.txt` — `pandas`, `guidellm==0.3.1`

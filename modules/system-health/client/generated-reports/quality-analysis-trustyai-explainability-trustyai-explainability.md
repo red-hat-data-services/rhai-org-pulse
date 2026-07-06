@@ -1,139 +1,145 @@
 ---
 repository: "trustyai-explainability/trustyai-explainability"
-overall_score: 5.8
+overall_score: 5.6
 scorecard:
   - dimension: "Unit Tests"
     score: 7.5
-    status: "Strong unit test coverage with 1042 test methods across 256 test files; 0.56 test-to-code ratio"
+    status: "Strong test suite with 257 test files, JUnit 5 + Mockito + REST-Assured + Quarkus test profiles"
   - dimension: "Integration/E2E"
     score: 6.0
-    status: "Dedicated integration test modules for DMN/PMML/OpenNLP and OpenShift E2E suite, but integration tests excluded from default build"
+    status: "Dedicated integration tests module with DMN/PMML/OpenNLP; external E2E suite (trustyai-tests) via containerized pytest"
   - dimension: "Build Integration"
     score: 3.0
-    status: "No PR-time Docker image build validation; multi-Maven-version matrix but no Konflux simulation"
+    status: "No PR-time Docker build, no Konflux simulation, no image validation before merge"
   - dimension: "Image Testing"
-    score: 2.5
-    status: "Dockerfile present but no image build in CI, no startup validation, no runtime testing"
+    score: 3.5
+    status: "Multi-stage Dockerfile exists but no runtime validation, no startup testing, no multi-arch CI"
   - dimension: "Coverage Tracking"
-    score: 1.0
-    status: "No JaCoCo, no Codecov/Coveralls, no coverage thresholds or PR reporting"
+    score: 2.0
+    status: "No JaCoCo plugin, no Codecov/Coveralls integration, no coverage thresholds or PR reporting"
   - dimension: "CI/CD Automation"
     score: 6.5
-    status: "Good concurrency control and multi-Maven-version matrix; Trivy scanning present; but build and test are separate with no coverage step"
+    status: "Separate build and test workflows with concurrency control and multi-Maven matrix; lacks caching"
   - dimension: "Agent Rules"
     score: 0.0
     status: "No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance"
 critical_gaps:
   - title: "No code coverage tracking or enforcement"
-    impact: "Impossible to know actual coverage levels; regressions in coverage go undetected; no PR feedback on coverage changes"
+    impact: "Impossible to know current coverage levels or detect coverage regressions on PRs"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No container image build or runtime validation in CI"
-    impact: "Dockerfile changes can break production image without detection until downstream builds"
+  - title: "No PR-time Docker image build or validation"
+    impact: "Dockerfile and image issues discovered only post-merge in downstream Konflux/CPaaS builds"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "Integration tests excluded from default CI pipeline"
-    impact: "26 integration test files across DMN/PMML/OpenNLP modules only run with explicit profile activation; regressions can slip through"
+  - title: "No agent rules for AI-assisted test creation"
+    impact: "AI agents lack guidance on test patterns, frameworks, and quality standards for this project"
+    severity: "MEDIUM"
+    effort: "3-4 hours"
+  - title: "No dependency scanning or secret detection"
+    impact: "Vulnerable dependencies and leaked secrets may go undetected until production"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No SAST tools beyond Trivy filesystem scan"
-    impact: "No CodeQL, SpotBugs, or FindBugs for static analysis of Java code; security vulnerabilities in code logic not caught automatically"
-    severity: "MEDIUM"
-    effort: "3-5 hours"
-  - title: "No pre-commit hooks or local quality gates"
-    impact: "Formatting issues and code quality problems only caught in CI, increasing feedback loop time"
+  - title: "Integration tests not run in CI by default"
+    impact: "Integration regressions in DMN/PMML/OpenNLP discovered late"
     severity: "MEDIUM"
     effort: "2-3 hours"
 quick_wins:
-  - title: "Add JaCoCo coverage plugin and Codecov integration"
-    effort: "4-6 hours"
-    impact: "Immediate visibility into coverage levels, PR-level coverage reporting, ability to set minimum thresholds"
-  - title: "Add image build step to CI workflow"
+  - title: "Add JaCoCo plugin and Codecov integration"
+    effort: "3-4 hours"
+    impact: "Gain visibility into coverage levels and enforce minimum thresholds on PRs"
+  - title: "Add Dependabot for dependency updates"
+    effort: "30 minutes"
+    impact: "Automated dependency update PRs with security vulnerability detection"
+  - title: "Add PR-time Docker build step"
     effort: "2-3 hours"
-    impact: "Catch Dockerfile and build issues before merge; validates multi-stage build works correctly"
-  - title: "Enable integration tests in CI via profile activation"
-    effort: "1-2 hours"
-    impact: "Ensures DMN, PMML, and OpenNLP integration tests run automatically on PRs"
-  - title: "Add CodeQL or SpotBugs analysis workflow"
+    impact: "Catch Dockerfile and image build failures before merge"
+  - title: "Generate agent rules with /test-rules-generator"
     effort: "2-3 hours"
-    impact: "Automated static analysis catches security and bug patterns in Java code"
-  - title: "Create basic CLAUDE.md with test standards"
-    effort: "2-3 hours"
-    impact: "AI-assisted development follows consistent test patterns; reduces review burden"
+    impact: "Improve AI-generated test quality for Quarkus + JUnit 5 + REST-Assured patterns"
+  - title: "Enable Maven dependency caching in CI"
+    effort: "1 hour"
+    impact: "Reduce CI build times significantly across 3-version Maven matrix"
 recommendations:
   priority_0:
-    - "Add JaCoCo plugin to all modules and integrate with Codecov for coverage tracking and enforcement"
-    - "Add Docker image build and startup validation to the CI workflow"
-    - "Activate integration test profile in CI pipeline so DMN/PMML/OpenNLP tests run on PRs"
+    - "Add JaCoCo coverage plugin with 70%+ line coverage threshold and Codecov PR reporting"
+    - "Add Dependabot or Renovate for automated dependency updates and CVE detection"
+    - "Add PR-time Docker image build to catch build failures before merge"
   priority_1:
-    - "Add CodeQL or SpotBugs static analysis workflow for Java security and bug detection"
-    - "Create .claude/rules/ with test automation guidance for unit, integration, and Quarkus tests"
-    - "Add pre-commit hooks for formatting validation (currently only in CI)"
+    - "Run integration tests in CI (activate the integration-tests Maven profile in a workflow)"
+    - "Add CodeQL or Semgrep SAST scanning workflow"
+    - "Add secret detection (Gitleaks) to PR workflow"
+    - "Create comprehensive agent rules (.claude/rules/) for test creation patterns"
   priority_2:
-    - "Add @QuarkusIntegrationTest coverage for the service module (currently 0 files)"
-    - "Add performance regression testing for AI/ML explainability algorithms"
-    - "Implement contract testing between explainability-core, connectors, and service modules"
+    - "Add multi-architecture Docker build testing (amd64, arm64)"
+    - "Add container runtime validation (startup, health check, basic API response)"
+    - "Add pre-commit hooks for formatting and import sort validation"
+    - "Add performance regression tests for critical XAI algorithms"
 ---
 
 # Quality Analysis: trustyai-explainability
 
 ## Executive Summary
 
-- **Overall Score: 5.8/10**
-- **Repository Type**: Java library + Quarkus service (Maven multi-module)
-- **Primary Language**: Java 17
-- **Framework**: Quarkus 3.8.5 (service), JUnit 5 + Mockito (testing)
-- **Key Strengths**: Good unit test volume (1042 test methods), multi-Maven-version CI matrix, Trivy security scanning, well-structured Quarkus test profiles
-- **Critical Gaps**: No coverage tracking at all, no image build/test in CI, integration tests not in default pipeline, no SAST tools, no agent rules
-- **Agent Rules Status**: Missing — no CLAUDE.md, no `.claude/` directory
+- **Overall Score: 5.6/10**
+- **Repository Type**: Java library + Quarkus REST service (monorepo)
+- **Primary Language**: Java 17 (Maven multi-module)
+- **Framework**: Quarkus 3.8.5 with REST-Assured testing
+- **Key Strengths**: Good test-to-code ratio (257 test files / 450 source files = 0.57), comprehensive Quarkus test profiles (146 annotations), active Trivy security scanning, code formatting enforcement
+- **Critical Gaps**: No coverage tracking, no PR-time image builds, no dependency scanning, no agent rules
+- **Agent Rules Status**: Missing
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 7.5/10 | Strong test count (1042 methods), 0.56 test-to-code ratio, JUnit 5 + Mockito |
-| Integration/E2E | 6.0/10 | Dedicated modules for DMN/PMML/OpenNLP but excluded from default build; E2E on OpenShift |
-| **Build Integration** | **3.0/10** | **No PR-time image build; multi-Maven matrix but no Konflux/production simulation** |
-| Image Testing | 2.5/10 | Dockerfile exists but no CI build, no startup validation, no runtime testing |
-| Coverage Tracking | 1.0/10 | No JaCoCo, no Codecov, no thresholds, no PR reporting |
-| CI/CD Automation | 6.5/10 | Concurrency control, Maven matrix (3.6.3/3.8.8/3.9.2), Trivy scanning, Surefire reports |
-| Agent Rules | 0.0/10 | No CLAUDE.md, no .claude/ directory, no test automation guidance |
+| Unit Tests | 7.5/10 | Strong test suite with JUnit 5, Mockito, REST-Assured, Quarkus test profiles |
+| Integration/E2E | 6.0/10 | Dedicated integration module + external E2E (trustyai-tests); not run in default CI |
+| **Build Integration** | **3.0/10** | **No PR-time Docker build, no Konflux simulation** |
+| Image Testing | 3.5/10 | Multi-stage Dockerfile exists but no runtime validation |
+| Coverage Tracking | 2.0/10 | No JaCoCo, no Codecov, no coverage thresholds |
+| CI/CD Automation | 6.5/10 | Separate build/test workflows with matrix strategy; lacks caching |
+| Agent Rules | 0.0/10 | No CLAUDE.md, no .claude/ directory |
 
 ## Critical Gaps
 
 ### 1. No Code Coverage Tracking or Enforcement
-- **Impact**: Without JaCoCo or any coverage tool, there is zero visibility into test coverage levels. Coverage regressions go completely undetected. PRs cannot show coverage diffs.
+- **Impact**: Cannot measure current test coverage levels or detect regressions
 - **Severity**: HIGH
+- **Details**: No JaCoCo Maven plugin configured. No Codecov/Coveralls integration. No coverage reports generated in CI workflows. Zero visibility into which code paths are untested.
 - **Effort**: 4-6 hours
-- **Details**: Neither the root `pom.xml` nor any module pom references JaCoCo, Cobertura, or any coverage plugin. No `.codecov.yml` or Coveralls configuration exists. The CI workflow runs tests but produces no coverage artifacts.
+- **Remediation**: Add JaCoCo plugin to parent POM, configure aggregate report, integrate with Codecov
 
-### 2. No Container Image Build or Runtime Validation in CI
-- **Impact**: The Dockerfile is a multi-stage build using `registry.access.redhat.com/ubi8/openjdk-17` that compiles and packages the Quarkus service. Changes to the Dockerfile, dependency versions, or build profiles can break the image without detection until downstream Konflux or production builds.
+### 2. No PR-Time Docker Image Build
+- **Impact**: Dockerfile/image build failures discovered only post-merge in Konflux/CPaaS pipelines
 - **Severity**: HIGH
+- **Details**: The CI workflow (`CI.yaml`) runs `mvn package -Dmaven.test.skip=true` but never builds the Docker image. Dockerfile issues, missing dependencies, or multi-stage build failures are only caught downstream.
 - **Effort**: 4-8 hours
-- **Details**: The `CI.yaml` workflow runs `mvn package -Dmaven.test.skip=true` but never builds the Docker image. No image startup validation exists. No multi-architecture build testing.
+- **Remediation**: Add Docker build step to CI workflow, validate image startup
 
-### 3. Integration Tests Excluded from Default CI Pipeline
-- **Impact**: 26 integration test files across 3 sub-modules (DMN, PMML, OpenNLP) only run when the `integration-tests` Maven profile is explicitly activated. This means regressions in integration with decision models, scoring models, and NLP pipelines can slip through undetected.
+### 3. No Dependency Scanning or Secret Detection
+- **Impact**: Vulnerable dependencies and leaked secrets may reach production
 - **Severity**: HIGH
+- **Details**: No Dependabot/Renovate configuration. No Gitleaks or TruffleHog. Trivy scans filesystem but not specifically dependency trees. No SAST (CodeQL/Semgrep) beyond Trivy.
 - **Effort**: 2-4 hours
-- **Details**: The `explainability-integrationtests` module is only included via `<profile><id>integration-tests</id>` and is not part of the default `<modules>` list in the root pom.
+- **Remediation**: Add dependabot.yml, configure Gitleaks, consider CodeQL
 
-### 4. No SAST Tools Beyond Trivy Filesystem Scan
-- **Impact**: Trivy scans for known CVEs in dependencies but does not analyze Java source code for security vulnerabilities, code smells, or bug patterns. No CodeQL, SpotBugs, FindBugs, or PMD is configured.
+### 4. Integration Tests Not in Default CI
+- **Impact**: Integration regressions in DMN/PMML/OpenNLP integrations go undetected
 - **Severity**: MEDIUM
-- **Effort**: 3-5 hours
-- **Details**: The `trivy-scan.yaml` uses `codeql-action/upload-sarif` only to publish Trivy results to the Security tab — no actual CodeQL analysis runs.
-
-### 5. No Pre-commit Hooks or Local Quality Gates
-- **Impact**: Code formatting is validated in CI (`formatter-maven-plugin:validate`) but no pre-commit hooks exist to catch issues locally before push, increasing developer feedback loop.
-- **Severity**: MEDIUM
+- **Details**: The `integration-tests` Maven profile is defined but not activated in any CI workflow. The 26 integration test files in `explainability-integrationtests/` are only run manually.
 - **Effort**: 2-3 hours
+
+### 5. No Agent Rules
+- **Impact**: AI-assisted development has no guidance on project test patterns, standards, or frameworks
+- **Severity**: MEDIUM
+- **Details**: No CLAUDE.md, AGENTS.md, or `.claude/` directory exists. AI agents generating tests will default to generic patterns rather than project-specific Quarkus/REST-Assured conventions.
+- **Effort**: 3-4 hours
 
 ## Quick Wins
 
-### 1. Add JaCoCo Coverage Plugin and Codecov Integration (4-6 hours)
-Add to root `pom.xml`:
+### 1. Add JaCoCo Plugin + Codecov Integration (3-4 hours)
+Add to parent `pom.xml`:
 ```xml
 <plugin>
     <groupId>org.jacoco</groupId>
@@ -151,243 +157,275 @@ Add to root `pom.xml`:
     </executions>
 </plugin>
 ```
-Add codecov upload step to `test.yaml` workflow.
+Add Codecov upload step to `test.yaml` workflow.
 
-### 2. Add Image Build Step to CI Workflow (2-3 hours)
+### 2. Add Dependabot (30 minutes)
+Create `.github/dependabot.yml`:
+```yaml
+version: 2
+updates:
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+```
+
+### 3. Add PR-Time Docker Build (2-3 hours)
 Add to `CI.yaml`:
 ```yaml
 - name: Build Docker image
   run: docker build -t trustyai-service:test .
-- name: Validate image starts
+- name: Verify image starts
   run: |
     docker run -d --name test-service trustyai-service:test
     sleep 10
-    docker exec test-service curl -f http://localhost:8080/q/health/ready || exit 1
-    docker stop test-service
+    docker logs test-service
+    docker exec test-service curl -f http://localhost:8080/q/health || exit 1
 ```
 
-### 3. Enable Integration Tests in CI (1-2 hours)
-Add a step or separate job in `test.yaml`:
-```yaml
-- name: Run Integration Tests
-  run: mvn test -Pintegration-tests -Dformatter.skip=true
-```
+### 4. Enable Maven Caching (1 hour)
+The `s4u/setup-maven-action` already includes caching via `actions/cache`, but verify it's properly configured. With 3 Maven versions in the matrix, caching saves significant CI time.
 
-### 4. Add CodeQL Analysis Workflow (2-3 hours)
-Create `.github/workflows/codeql.yml`:
-```yaml
-name: CodeQL Analysis
-on: [push, pull_request]
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: java
-      - uses: github/codeql-action/autobuild@v3
-      - uses: github/codeql-action/analyze@v3
-```
-
-### 5. Create Basic CLAUDE.md (2-3 hours)
-Add test automation guidance for AI-assisted development covering JUnit 5 patterns, Quarkus test profiles, and module-specific conventions.
+### 5. Generate Agent Rules (2-3 hours)
+Run `/test-rules-generator` to create `.claude/rules/` with project-specific test patterns for:
+- JUnit 5 + Quarkus test profiles
+- REST-Assured API testing
+- Mockito patterns for service dependencies
+- H2 database test configuration
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows (3 total)**:
+**Workflows Inventory:**
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `CI.yaml` | push, PR | Build (`mvn package -DskipTests`) + formatting validation |
-| `test.yaml` | push, PR | Unit tests (`mvn test`) + Surefire report upload |
-| `trivy-scan.yaml` | push (main), PR (main/incubation/stable) | Trivy filesystem scan + SARIF upload |
+| `CI.yaml` | push, PR | Build (`mvn package -Dmaven.test.skip=true`) + formatting validation |
+| `test.yaml` | push, PR | Unit tests (`mvn test`) with Surefire report + artifact upload |
+| `trivy-scan.yaml` | push (main), PR | Filesystem Trivy scan (MEDIUM+), SARIF upload to Security tab |
 
-**Strengths**:
-- Concurrency control with `cancel-in-progress: true` — prevents redundant runs
-- Multi-Maven-version matrix (3.6.3, 3.8.8, 3.9.2) — ensures broad compatibility
-- 30-45 minute timeouts — prevents hung builds
-- Surefire test report generation and artifact upload
-- `fail-fast: false` — all matrix combinations run even if one fails
+**Strengths:**
+- Concurrency control with `cancel-in-progress: true` on both build and test workflows
+- Multi-Maven-version matrix testing (3.6.3, 3.8.8, 3.9.2) — good for library compatibility
+- Surefire test report generation with `action-surefire-report`
+- Test artifact upload for debugging
+- 30-45 minute timeouts set appropriately
 
-**Weaknesses**:
-- Build and test are separate workflows with duplicated setup (JDK, Maven, disk cleanup)
-- No caching of Maven dependencies (`.m2/repository`)
-- Build workflow skips tests entirely (`-Dmaven.test.skip=true`)
-- No image build step in any workflow
-- No dependency update automation (Dependabot/Renovate)
-- Only runs on `ubuntu-22.04` despite having Windows support scaffolding
+**Weaknesses:**
+- Build workflow runs `mvn package -Dmaven.test.skip=true` — tests are in a separate workflow, which is fine for separation, but no Docker build occurs
+- No caching explicitly configured (relies on s4u/setup-maven-action's built-in caching)
+- No integration test workflow
+- No nightly/periodic test runs
+- GitHub Actions versions are outdated (`actions/checkout@v3`, `actions/upload-artifact@v6`)
+- Ubuntu version pinned to 22.04 (LTS, but may need updating for security patches)
 
 ### Test Coverage
 
-**Unit Tests (7.5/10)**:
-- **256 test files** with **1042 @Test methods** across all modules
-- **Test-to-code ratio**: 0.56 (256 test files / 450 source files) — solid
-- **Framework**: JUnit 5 (`jupiter 5.9.1`) + Mockito (`4.8.0`) + AssertJ (`3.22.0`) + Awaitility (`4.2.0`)
-- **159 files with assertions** — good assertion density
-- **46 files using mocks** — appropriate mocking level
-- **70 @QuarkusTest files** — comprehensive Quarkus service endpoint testing
-- **Well-organized test profiles** (14 profiles): PVC, Memory, Hibernate, Migration, Prometheus, Disabled Endpoints
+**Module-Level Breakdown:**
 
-**Module-level breakdown**:
-| Module | Test Files | Source Files | Focus |
-|--------|-----------|-------------|-------|
-| explainability-core | 98 | ~200 | Explainability algorithms (LIME, SHAP, Counterfactual), metrics, model operations |
-| explainability-service | 119 | ~200 | Quarkus REST endpoints, storage, metrics, scenarios |
-| explainability-connectors | 12 | ~30 | KServe v1/v2 protocol connectors |
-| explainability-arrow | 1 | ~10 | Arrow format serialization |
-| explainability-integrationtests | 26 | 0 | DMN/PMML/OpenNLP integration |
+| Module | Source Files | Test Files | Ratio |
+|--------|-------------|------------|-------|
+| explainability-core | 201 | 98 | 0.49 |
+| explainability-service | 194 | 120 | 0.62 |
+| explainability-connectors | 51 | 12 | 0.24 |
+| explainability-arrow | 3 | 1 | 0.33 |
+| explainability-integrationtests | 0 | 26 | N/A |
+| **Total** | **450** | **257** | **0.57** |
 
-**Integration Tests (6.0/10)**:
-- Dedicated `explainability-integrationtests` module with 3 sub-modules:
-  - `explainability-integrationtests-dmn` — Decision Model testing
-  - `explainability-integrationtests-pmml` — Predictive Model testing  
-  - `explainability-integrationtests-opennlp` — NLP pipeline testing
-- **Critical issue**: Only activated via `integration-tests` Maven profile, not run in default CI
+**Lines of Code:**
+- Source: ~66,100 LOC
+- Tests: ~37,350 LOC (56% of source)
+- Overall test-to-code ratio is healthy
 
-**E2E Tests**:
-- `tests/` directory contains OpenShift-based E2E suite using `trustyai-tests` (Python/pytest)
-- Requires an OpenShift cluster with ODH installed
-- Automated via `installandtest.sh` script
-- Tests operator deployment, DSC installation, and service functionality
-- Not run in GitHub Actions CI (requires cluster access)
+**Test Frameworks:**
+- JUnit Jupiter 5.9.1 (primary)
+- Mockito 4.8.0
+- AssertJ 3.22.0
+- Awaitility 4.2.0 (async testing)
+- REST-Assured (service API testing)
+- Quarkus JUnit 5 integration
+- Quarkus test H2 (in-memory database)
+- 146 Quarkus test annotations (@QuarkusTest, @TestProfile, etc.)
+- 417 REST-Assured usages in service tests
+
+**Strengths:**
+- Comprehensive Quarkus test infrastructure with multiple test profiles
+- Good use of REST-Assured for API endpoint testing
+- In-memory H2 database for isolated test execution
+- Strong core library testing (98 test files for algorithmic correctness)
+- Mock infrastructure (MockStorageConfig, MockServiceConfig, MockPrometheusScheduler)
+
+**Weaknesses:**
+- Connectors module undertested (12 tests for 51 source files)
+- Arrow module minimally tested (1 test for 3 source files)
+- No coverage metrics generated or tracked
+- Integration tests not run in CI
 
 ### Code Quality
 
-**Formatting**:
-- Eclipse formatter configuration (`config/eclipse-format.xml`)
-- `formatter-maven-plugin` and `impsort-maven-plugin` enforce code style
-- Validation runs in CI on Ubuntu builds
-- `validate-formatting` profile for strict enforcement
+**Code Formatting:**
+- Eclipse-based formatter enforced via `formatter-maven-plugin`
+- Import sorting enforced via `impsort-maven-plugin`
+- `validate-formatting` Maven profile for CI enforcement
+- Kogito code style configuration (`config/eclipse-format.xml`)
 
-**No Static Analysis**:
-- ❌ No SpotBugs/FindBugs
-- ❌ No PMD
-- ❌ No Checkstyle
-- ❌ No CodeQL analysis (only SARIF upload from Trivy)
-- ❌ No pre-commit hooks
+**Strengths:**
+- Formatter validation in CI build workflow
+- Consistent code style across project
+- Import order standardization
+
+**Weaknesses:**
+- No static analysis beyond formatting (no SpotBugs, PMD, Error Prone)
+- No pre-commit hooks (`.pre-commit-config.yaml` missing)
+- No linting beyond Java formatting
+- No SAST tools (CodeQL, Semgrep) integrated
 
 ### Container Images
 
-**Dockerfile Analysis**:
-- Multi-stage build: build stage (ubi8/openjdk-17) → runtime stage (ubi8/openjdk-17-runtime)
-- Uses `service-minimal` Maven profile for production build
-- Proper layer separation for Quarkus app (lib, jar, app, quarkus directories)
-- Red Hat UBI base images (good for compliance)
-- Build argument support for version tracking
+**Dockerfile Analysis:**
+- Multi-stage build (build + runtime)
+- Base: `ubi8/openjdk-17:latest` (build), `ubi8/openjdk-17-runtime:latest` (runtime)
+- Proper layer separation for Quarkus app (lib, jar, app, quarkus)
+- Red Hat UBI base images (good for enterprise/compliance)
+- `odh` Quarkus profile used for builds
+- SBOM configuration via `.syft.yaml` (excludes test/demo/CI directories)
+- Proper labeling with Red Hat component metadata
 
-**Gaps**:
-- ❌ No image build in CI workflow
-- ❌ No startup validation
-- ❌ No health check testing
-- ❌ No multi-architecture build
-- ❌ No image signing or attestation
+**Strengths:**
+- Multi-stage build reduces final image size
+- UBI base images with proper licensing
+- Syft SBOM generation configured
+- Layer optimization for Quarkus deployments
+
+**Weaknesses:**
+- No multi-architecture build support in CI
+- No image startup/health check validation
+- No image scanning of the built image (Trivy scans source, not container)
+- No container runtime testing (Testcontainers, etc.)
+- Docker image never built in CI workflows
 
 ### Security
 
-**Present**:
-- ✅ Trivy filesystem scanning (MEDIUM/HIGH/CRITICAL severity)
-- ✅ SARIF results uploaded to GitHub Security tab
-- ✅ Syft SBOM configuration (`.syft.yaml`) with proper exclusions
-- ✅ CODEOWNERS file for review gating
+**Current Practices:**
+- Trivy filesystem scan on PRs (MEDIUM, HIGH, CRITICAL)
+- SARIF results uploaded to GitHub Security tab
+- Trivy exit-code=0 (non-blocking — vulnerabilities don't fail the build)
+- No Dependabot configuration
+- No secret detection (Gitleaks, TruffleHog)
+- No CodeQL or SAST scanning
+- Manual CVE management (Netty version overrides in POM)
 
-**Missing**:
-- ❌ No CodeQL or SAST for Java source code
-- ❌ No secret detection (Gitleaks, TruffleHog)
-- ❌ No dependency update automation (Dependabot/Renovate)
-- ❌ No container image scanning (only filesystem scan)
-- ❌ Trivy exit-code is `0` — scan never fails the build
+**Strengths:**
+- Trivy integration with SARIF reporting
+- Proactive CVE patching (Netty, XStream, protobuf version overrides)
+- Apache 2.0 license compliance requirements documented in CONTRIBUTING.md
+
+**Weaknesses:**
+- Trivy scan is non-blocking (exit-code: 0)
+- No container image scanning (only filesystem)
+- No Dependabot for automated dependency updates
+- No secret detection
+- No SAST beyond Trivy's vulnerability database
+- GitHub Actions not checked for supply chain attacks (no pinned SHAs for third-party actions)
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: None — no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
+- **Coverage**: No test type rules exist
 - **Quality**: N/A
-- **Gaps**: No test automation guidance, no coding standards for AI agents, no test creation rules
-- **Recommendation**: Generate rules with `/test-rules-generator` covering:
-  - JUnit 5 unit test patterns
-  - Quarkus @QuarkusTest patterns with test profiles
-  - Integration test conventions for DMN/PMML/OpenNLP
-  - Mockito patterns used in the project
-  - AssertJ assertion conventions
+- **Gaps**: No CLAUDE.md, no AGENTS.md, no `.claude/` directory, no `.claude/rules/` for test creation
+- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
+  - JUnit 5 + Quarkus @QuarkusTest patterns
+  - REST-Assured endpoint testing conventions
+  - Mockito patterns for service layer testing
+  - H2 in-memory database test configuration
+  - Test profile creation guidelines
+  - Integration test patterns for DMN/PMML/OpenNLP
+
+### E2E Testing
+
+The E2E test infrastructure exists in the `tests/` directory and points to an external `trustyai-tests` repository:
+- **External repo**: `github.com/trustyai-explainability/trustyai-tests`
+- **Framework**: Python pytest with Poetry
+- **Infrastructure**: Containerized test runner with OpenShift CLI
+- **Scope**: Full ODH/RHOAI deployment testing on live clusters
+- **Markers**: `openshift and not heavy` (default), customizable via `PYTEST_MARKERS`
+- **Features**: Operator installation, DSC setup, model serving integration
+
+This is a mature E2E setup but is fully external and not triggered from this repository's CI.
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add JaCoCo coverage tracking** — Add the JaCoCo plugin to all modules, generate XML/HTML reports, and integrate with Codecov. Set minimum coverage thresholds (e.g., 60% line coverage) to prevent regressions.
+1. **Add JaCoCo + Codecov integration** — No coverage tracking exists. Add JaCoCo plugin to parent POM, generate aggregate reports, integrate with Codecov for PR-level coverage reporting. Set initial threshold at 60% and increase over time.
 
-2. **Add Docker image build and health validation to CI** — The Dockerfile should be built on every PR to catch multi-stage build failures. Add a health check step using the Quarkus health endpoint (`/q/health/ready`).
+2. **Add Dependabot for dependency management** — Multiple manual CVE version overrides in POM (Netty, XStream, protobuf) indicate active vulnerability management but no automation. Dependabot will automate this.
 
-3. **Activate integration tests in CI** — Add a CI job or step that runs `mvn test -Pintegration-tests` so the 26 DMN/PMML/OpenNLP integration tests run automatically on every PR.
+3. **Add PR-time Docker build** — The Dockerfile is never built in CI. Add a workflow step to build and optionally test the image on PRs.
 
 ### Priority 1 (High Value)
 
-4. **Add CodeQL or SpotBugs** — Java-specific static analysis will catch security vulnerabilities and bug patterns that Trivy's dependency scanning misses.
+4. **Run integration tests in CI** — Activate the `integration-tests` Maven profile in a periodic or PR workflow to catch DMN/PMML/OpenNLP regressions.
 
-5. **Make Trivy scan fail on HIGH/CRITICAL** — Change `exit-code: '0'` to `exit-code: '1'` so security issues actually block merges.
+5. **Add CodeQL SAST scanning** — Complement Trivy's filesystem scan with CodeQL for Java-specific security analysis.
 
-6. **Add Maven dependency caching** — Use `actions/cache` for `.m2/repository` to reduce CI build times across the multi-Maven matrix.
+6. **Add secret detection** — Configure Gitleaks in CI to prevent accidental credential leaks.
 
-7. **Create comprehensive agent rules** — Add `.claude/rules/` with test patterns, module conventions, and coding standards to improve AI-assisted development quality.
+7. **Create agent rules** — Generate `.claude/rules/` with project-specific test patterns using `/test-rules-generator`.
 
-8. **Add pre-commit hooks** — Create `.pre-commit-config.yaml` with formatting, import sorting, and basic Java checks.
+8. **Make Trivy scan blocking** — Change `exit-code` from `0` to `1` to fail PRs with HIGH/CRITICAL vulnerabilities.
 
 ### Priority 2 (Nice-to-Have)
 
-9. **Add @QuarkusIntegrationTest coverage** — The service module has 70 @QuarkusTest files but 0 @QuarkusIntegrationTest files. Integration tests validate the actual built artifact.
+9. **Add multi-architecture Docker builds** — Test arm64 builds alongside amd64.
 
-10. **Add performance regression testing** — For explainability algorithms (LIME, SHAP, Counterfactual) that are computationally intensive, add benchmark tests with regression thresholds.
+10. **Add container runtime validation** — Use Testcontainers or Docker Compose to validate image startup and basic API responses in CI.
 
-11. **Add contract tests between modules** — Validate API boundaries between explainability-core, connectors, and service modules.
+11. **Add pre-commit hooks** — Enforce formatting, import sorting, and commit message standards locally.
 
-12. **Consolidate CI workflows** — Merge `CI.yaml` and `test.yaml` to eliminate duplicated JDK/Maven setup and disk cleanup steps.
+12. **Add performance regression tests** — Track execution time of core XAI algorithms (LIME, SHAP, counterfactuals) to detect performance regressions.
 
-13. **Add Dependabot or Renovate** — Automate dependency updates for the 20+ direct dependencies.
+13. **Pin GitHub Actions versions** — Use SHA-pinned action references instead of tags for supply chain security.
 
 ## Comparison to Gold Standards
 
-| Capability | trustyai-explainability | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
-|-----------|----------------------|---------------------|-------------------|---------------|
-| Unit Tests | ✅ 1042 methods | ✅ 2000+ | ✅ Comprehensive | ✅ Comprehensive |
-| Test-to-Code Ratio | ✅ 0.56 | ✅ ~0.8 | ✅ ~0.6 | ✅ ~0.7 |
-| Coverage Tracking | ❌ None | ✅ Codecov enforced | ✅ Coverage reports | ✅ Codecov 80%+ |
-| Integration Tests | ⚠️ Not in default CI | ✅ Automated | ✅ Automated | ✅ Automated |
-| E2E Tests | ⚠️ Requires cluster | ✅ Cypress automated | ✅ Image validation | ✅ Multi-version |
-| Image Build in CI | ❌ None | ✅ PR-time builds | ✅ Multi-arch builds | ✅ PR validation |
-| Image Runtime Testing | ❌ None | ✅ Startup checks | ✅ 5-layer validation | ✅ Health checks |
-| Security Scanning | ⚠️ Trivy (non-blocking) | ✅ Trivy + CodeQL | ✅ Trivy blocking | ✅ Multiple scanners |
-| SAST | ❌ None | ✅ CodeQL | ⚠️ Limited | ✅ CodeQL + gosec |
-| Pre-commit Hooks | ❌ None | ✅ Comprehensive | ⚠️ Limited | ✅ golangci-lint |
-| Agent Rules | ❌ None | ✅ Comprehensive rules | ⚠️ Basic | ⚠️ Basic |
-| Dependency Automation | ❌ None | ✅ Dependabot | ✅ Renovate | ✅ Dependabot |
-| Maven Caching | ❌ None | N/A (npm) | N/A | N/A (Go) |
+| Dimension | trustyai-explainability | odh-dashboard | notebooks | kserve |
+|-----------|------------------------|---------------|-----------|--------|
+| Unit Tests | 7.5 (JUnit 5 + Quarkus) | 9.0 (Jest + RTL) | 7.0 | 8.5 |
+| Integration/E2E | 6.0 (external suite) | 9.0 (Cypress + contract) | 8.5 | 9.0 |
+| Build Integration | 3.0 (no image build) | 7.0 | 6.0 | 7.5 |
+| Image Testing | 3.5 (no validation) | 7.5 | 9.0 (5-layer) | 7.0 |
+| Coverage Tracking | 2.0 (none) | 8.5 (enforced) | 6.0 | 8.0 |
+| CI/CD Automation | 6.5 (matrix strategy) | 9.0 | 8.0 | 9.0 |
+| Agent Rules | 0.0 (none) | 8.0 | 3.0 | 2.0 |
+| **Overall** | **5.6** | **8.5** | **7.0** | **7.5** |
+
+**Key gaps vs. gold standards:**
+- Missing coverage tracking (odh-dashboard enforces 80%+ thresholds)
+- No PR-time image build (notebooks validates 5 layers)
+- No contract tests (odh-dashboard tests API boundaries)
+- No agent rules (odh-dashboard has comprehensive .claude/rules/)
 
 ## File Paths Reference
 
-### CI/CD
-- `.github/workflows/CI.yaml` — Build workflow (multi-Maven-version matrix)
-- `.github/workflows/test.yaml` — Unit test workflow with Surefire reporting
-- `.github/workflows/trivy-scan.yaml` — Trivy security scanning
-
-### Testing
-- `explainability-core/src/test/` — 98 test files (algorithms, metrics, model)
-- `explainability-service/src/test/` — 119 test files (endpoints, scenarios, profiles)
-- `explainability-connectors/src/test/` — 12 test files (KServe v1/v2)
-- `explainability-arrow/src/test/` — 1 test file
-- `explainability-integrationtests/` — 26 integration test files (DMN/PMML/OpenNLP)
-- `tests/` — OpenShift E2E test infrastructure
-
-### Build
-- `pom.xml` — Root POM with 5 Maven profiles
-- `Dockerfile` — Multi-stage production build
-- `config/eclipse-format.xml` — Code formatting rules
-- `.syft.yaml` — SBOM generation configuration
-
-### Project Structure
-- `explainability-core/` — Core algorithms (LIME, SHAP, Counterfactual, fairness metrics)
-- `explainability-service/` — Quarkus REST service
-- `explainability-connectors/` — KServe protocol connectors
-- `explainability-arrow/` — Apache Arrow serialization
-- `explainability-integrationtests/` — DMN/PMML/OpenNLP integration tests
+| File | Purpose |
+|------|---------|
+| `.github/workflows/CI.yaml` | Build workflow with formatting validation |
+| `.github/workflows/test.yaml` | Unit test execution with Surefire report |
+| `.github/workflows/trivy-scan.yaml` | Trivy filesystem security scan |
+| `pom.xml` | Parent POM with test framework versions and profiles |
+| `explainability-service/pom.xml` | Service POM with Quarkus test dependencies |
+| `Dockerfile` | Multi-stage build for TrustyAI service |
+| `.syft.yaml` | SBOM generation configuration |
+| `config/eclipse-format.xml` | Code formatting rules |
+| `tests/Makefile` | E2E test runner configuration |
+| `tests/Dockerfile` | E2E test container |
+| `tests/installandtest.sh` | E2E test orchestration script |
+| `CONTRIBUTING.md` | Development guidelines and standards |
+| `CODEOWNERS` | `@trustyai-explainability/developers` |
+| `OWNERS` | Approvers and reviewers list |

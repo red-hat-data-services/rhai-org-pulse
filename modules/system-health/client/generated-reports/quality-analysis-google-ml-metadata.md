@@ -1,402 +1,411 @@
 ---
 repository: "google/ml-metadata"
-overall_score: 4.8
+overall_score: 5.4
 scorecard:
   - dimension: "Unit Tests"
-    score: 7.0
-    status: "Strong C++ test suite via Bazel with gtest/gmock; Python tests use pytest + absltest"
+    score: 7.5
+    status: "Extensive C++ unit tests (317 test cases) with multi-backend parameterized suites; Python tests adequate (85 test methods)"
   - dimension: "Integration/E2E"
     score: 5.0
-    status: "Multi-backend database tests (SQLite, MySQL, PostgreSQL) but no E2E deployment testing"
+    status: "Multi-backend integration tests (SQLite, MySQL, PostgreSQL) via parameterized suites; no E2E tests for gRPC server or deployment scenarios"
   - dimension: "Build Integration"
-    score: 3.0
-    status: "Conda-based PR builds for multiple OS/Python versions; no container image validation at PR time"
+    score: 4.0
+    status: "Conda build and test workflows on PRs across 2 OS × 4 Python versions; no Docker image validation or Konflux-style PR-time build simulation"
   - dimension: "Image Testing"
     score: 2.0
-    status: "Dockerfiles exist for server and manylinux builds, but no image runtime validation or scanning"
+    status: "Dockerfiles exist for server and dev debug but no CI-driven image builds, no runtime validation, no vulnerability scanning"
   - dimension: "Coverage Tracking"
     score: 2.0
-    status: "pytest-cov listed in conda environment but no codecov integration, thresholds, or PR reporting"
+    status: "pytest-cov installed in conda env but never invoked; no coverage reports, thresholds, or codecov/coveralls integration"
   - dimension: "CI/CD Automation"
-    score: 5.0
-    status: "4 GitHub workflows with matrix builds but no concurrency control or test result caching"
+    score: 6.5
+    status: "4 GitHub Actions workflows with matrix builds, caching, and pre-commit; but Bazel tests not in CI, no concurrency control, no required status checks visible"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory present"
+    status: "No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance"
 critical_gaps:
-  - title: "No code coverage tracking or enforcement"
-    impact: "Cannot measure test effectiveness or detect coverage regressions on PRs"
+  - title: "Bazel C++ tests not running in CI"
+    impact: "Core library's 317 C++ unit tests are only runnable via local Bazel builds; regressions can go undetected in PRs"
+    severity: "HIGH"
+    effort: "8-16 hours"
+  - title: "No coverage tracking or enforcement"
+    impact: "pytest-cov dependency exists but is never used; no coverage data collected, reported, or enforced"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No container image security scanning"
-    impact: "Vulnerability exposure in published Docker images; base image ubuntu:20.04 is EOL"
+  - title: "No container image CI or security scanning"
+    impact: "Server Dockerfile is never built or tested in CI; no Trivy/Snyk scanning, no SBOM generation"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No SAST/CodeQL or dependency scanning"
-    impact: "Security vulnerabilities in C++/Python code and dependencies go undetected"
+    effort: "6-8 hours"
+  - title: "No E2E or gRPC server integration tests"
+    impact: "gRPC metadata store server has no automated deployment or smoke testing; issues found only in production"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No image runtime validation"
-    impact: "Docker server image startup issues not caught until production deployment"
+    effort: "12-20 hours"
+  - title: "No agent rules for AI-assisted development"
+    impact: "AI coding agents have no guidance for test creation, code standards, or repository conventions"
     severity: "MEDIUM"
-    effort: "4-6 hours"
-  - title: "Outdated base images (ubuntu:20.04 EOL)"
-    impact: "Missing security patches and potential supply chain risks"
-    severity: "HIGH"
-    effort: "4-8 hours"
+    effort: "3-4 hours"
 quick_wins:
-  - title: "Add codecov integration to conda-test workflow"
+  - title: "Enable pytest-cov in conda-test workflow"
+    effort: "1-2 hours"
+    impact: "Immediate visibility into Python test coverage; pytest-cov is already a dependency"
+  - title: "Add codecov integration"
     effort: "2-3 hours"
-    impact: "Instant visibility into Python test coverage with PR reporting"
-  - title: "Add Trivy scanning GitHub Action"
+    impact: "PR-level coverage reporting and enforcement with minimal setup"
+  - title: "Add Trivy scanning workflow for Dockerfile"
     effort: "1-2 hours"
-    impact: "Catch known CVEs in Docker images and dependencies before release"
-  - title: "Add CodeQL workflow for C++ and Python"
-    effort: "1-2 hours"
-    impact: "Automated SAST detecting security vulnerabilities and code quality issues"
-  - title: "Add workflow concurrency control"
+    impact: "Automated vulnerability scanning for container images"
+  - title: "Add concurrency control to PR workflows"
     effort: "30 minutes"
-    impact: "Prevent redundant CI runs on rapid pushes, save CI minutes"
+    impact: "Cancel redundant CI runs on force-pushes, saving CI resources"
+  - title: "Generate CLAUDE.md with test rules"
+    effort: "2-3 hours"
+    impact: "Enable AI agents to write tests matching existing patterns and conventions"
 recommendations:
   priority_0:
-    - "Add codecov/coveralls integration with minimum coverage thresholds and PR gate"
-    - "Add container image vulnerability scanning (Trivy) for all Dockerfiles"
-    - "Enable GitHub CodeQL for C++ and Python static analysis"
-    - "Upgrade base images from ubuntu:20.04 (EOL) to ubuntu:22.04 or 24.04"
+    - "Add Bazel C++ test execution to CI (GitHub Actions with bazel test //...)"
+    - "Enable pytest --cov in conda-test workflow and add codecov reporting"
+    - "Add container image build and Trivy scanning to CI pipeline"
   priority_1:
-    - "Add Docker server image startup/smoke tests in CI"
-    - "Add dependency scanning (Dependabot or Renovate) for Bazel WORKSPACE and pip dependencies"
-    - "Add concurrency control to all GitHub workflows"
-    - "Create agent rules (.claude/rules/) for test automation guidance"
+    - "Create E2E tests for gRPC metadata store server (docker-compose based)"
+    - "Add CLAUDE.md with test creation rules covering C++, Python, and Go patterns"
+    - "Add concurrency control to all PR workflows"
   priority_2:
-    - "Add integration tests that deploy metadata_store_server in a container and run gRPC client tests"
-    - "Add multi-architecture Docker image builds (arm64 support)"
-    - "Add SBOM generation for published images"
-    - "Add performance regression testing for metadata store operations"
+    - "Add SBOM generation for container images"
+    - "Implement CodeQL or SAST analysis workflow"
+    - "Add multi-architecture Docker image builds (linux/amd64, linux/arm64)"
 ---
 
-# Quality Analysis: google/ml-metadata
+# Quality Analysis: ML Metadata (google/ml-metadata)
 
 ## Executive Summary
 
-- **Overall Score: 4.8/10**
-- **Repository Type**: Python/C++ library with Bazel build system
-- **Primary Languages**: C++ (~30k LOC source, ~20.6k LOC tests), Python (~3k LOC source, ~2.4k LOC tests)
-- **Framework**: ML metadata store library with gRPC server, SQLite/MySQL/PostgreSQL backends
-- **Key Strengths**: Solid C++ unit test suite (27 test files, 20+ Bazel test targets), multi-backend database testing, good pre-commit hooks with Ruff linter, matrix CI builds across OS and Python versions
-- **Critical Gaps**: No coverage tracking/enforcement, no security scanning (SAST/containers), no image runtime validation, outdated base images (ubuntu:20.04 EOL), no agent rules
-- **Agent Rules Status**: Missing - no CLAUDE.md, AGENTS.md, or .claude/ directory
+- **Overall Score: 5.4/10**
+- **Repository Type**: ML infrastructure library (metadata store for ML workflows)
+- **Primary Languages**: C++ (core), Python (bindings/tests), Go (bindings), Protobuf
+- **Build System**: Bazel (C++), setuptools + Conda (Python packaging)
+- **Key Strengths**: Extensive C++ unit test suite with multi-database parameterized testing, good pre-commit hook setup with Ruff linting, solid multi-platform conda build/test matrix
+- **Critical Gaps**: Core C++ tests not running in CI, zero coverage tracking, no container image CI, no E2E testing, no agent rules
+- **Agent Rules Status**: Missing - no CLAUDE.md, no .claude/ directory
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 7.0/10 | Strong C++ test suite via Bazel gtest/gmock; Python uses pytest + absltest |
-| Integration/E2E | 5.0/10 | Multi-backend DB tests (SQLite, MySQL, PostgreSQL) but no E2E deployment testing |
-| **Build Integration** | **3.0/10** | **Conda-based PR builds for multi-OS/Python; no container image validation at PR time** |
-| Image Testing | 2.0/10 | Dockerfiles exist but no runtime validation or scanning |
-| Coverage Tracking | 2.0/10 | pytest-cov in environment but no codecov, thresholds, or PR reporting |
-| CI/CD Automation | 5.0/10 | 4 workflows with matrix builds; no concurrency control or test result caching |
-| Agent Rules | 0.0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory |
+| Unit Tests | 7.5/10 | 317 C++ test cases + 85 Python test methods; thorough parameterized suites |
+| Integration/E2E | 5.0/10 | Multi-backend integration tests exist but no E2E server testing |
+| **Build Integration** | **4.0/10** | **Conda build matrix on PRs; no Docker or Konflux simulation** |
+| Image Testing | 2.0/10 | Dockerfiles exist but never built/tested in CI |
+| Coverage Tracking | 2.0/10 | pytest-cov dependency exists but never invoked |
+| CI/CD Automation | 6.5/10 | 4 workflows with matrix builds; Bazel tests missing from CI |
+| Agent Rules | 0.0/10 | No agent rules or test automation guidance |
 
 ## Critical Gaps
 
-### 1. No Code Coverage Tracking or Enforcement
-- **Impact**: Cannot measure test effectiveness, detect coverage regressions, or enforce minimums on PRs
+### 1. Bazel C++ Tests Not Running in CI
+- **Impact**: The repository's most comprehensive test suite (27 C++ test files, 317 test cases, ~20,600 lines of test code) across SQLite, MySQL, and PostgreSQL backends only runs via local `bazel test` invocation. CI workflows only test the Python wheel via pytest.
+- **Severity**: HIGH
+- **Effort**: 8-16 hours
+- **Detail**: The `conda-test.yml` workflow builds the wheel and runs `pytest -vv`, but this only exercises 2 Python test files (85 test methods). The C++ tests that validate the core metadata store, query execution, access objects, and utilities are never executed in CI.
+
+### 2. No Coverage Tracking or Enforcement
+- **Impact**: Despite `pytest-cov` being listed in `ci/environment.yml` and `ci/environment-macos.yml`, the conda-test workflow runs `pytest -vv` without any `--cov` flag. No coverage reports are generated, no codecov/coveralls integration exists, and no coverage thresholds are enforced.
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: The conda environment includes `pytest-cov` as a dependency, but no coverage is actually collected or reported. No `.codecov.yml`, `.coveragerc`, or coverage upload steps exist in any workflow. For C++ tests via Bazel, no `--instrumentation_filter` or `--coverage_report_generator` flags are configured.
 
-### 2. No Container Image Security Scanning
-- **Impact**: Published Docker images (metadata_store_server) may contain known CVEs. Base image `ubuntu:20.04` reached EOL in April 2025.
+### 3. No Container Image CI or Security Scanning
+- **Impact**: The repository has two Dockerfiles (`ml_metadata/tools/docker_server/Dockerfile` for the gRPC server and `ml_metadata/tools/dev_debug/Dockerfile` for debugging), but neither is built in CI. No vulnerability scanning (Trivy, Snyk), no SBOM generation, no image signing.
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: Three Dockerfiles exist (`tools/docker_server/Dockerfile`, `tools/docker_build/Dockerfile.manylinux2010`, `tools/dev_debug/Dockerfile`) but none have associated Trivy, Snyk, or Grype scanning. No `.trivyignore` file exists.
+- **Effort**: 6-8 hours
 
-### 3. No SAST/CodeQL or Dependency Scanning
-- **Impact**: Security vulnerabilities in C++ and Python code go undetected. No automated dependency update mechanism.
+### 4. No E2E or gRPC Server Tests
+- **Impact**: The metadata store server is a gRPC service, but there are no automated tests that spin up the server, connect a client, and validate end-to-end behavior. Python tests support `--use_grpc_backend` but this requires manual server setup; it's not automated in CI.
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: No CodeQL workflow, no Semgrep, no gosec equivalent for C++. No Dependabot/Renovate configuration for Bazel WORKSPACE HTTP archives or Python dependencies. The WORKSPACE file pins many third-party dependencies by SHA256 but has no automated update mechanism.
+- **Effort**: 12-20 hours
 
-### 4. Outdated Base Images
-- **Impact**: `ubuntu:20.04` (used in all 3 Dockerfiles) reached EOL April 2025. Missing security patches.
-- **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Details**: The `manylinux2010` Dockerfile references `gcr.io/tfx-oss-public/manylinux2014-bazel:bazel-6.5.0` which may also have outdated dependencies. The server Dockerfile uses `ubuntu:20.04` in both build and runtime stages.
-
-### 5. No Image Runtime Validation
-- **Impact**: Docker server image startup issues not caught until deployment
+### 5. No Agent Rules
+- **Impact**: No CLAUDE.md, no .claude/ directory, no rules for AI agents creating tests or contributing code. This means AI-assisted development has no guidance on test patterns, naming conventions, or quality standards.
 - **Severity**: MEDIUM
-- **Effort**: 4-6 hours
-- **Details**: The `metadata_store_server` Docker image is built but never tested for startup validation, health checks, or functional correctness in CI. The `build_docker_image.sh` script only builds the image without running it.
+- **Effort**: 3-4 hours
 
 ## Quick Wins
 
-### 1. Add Codecov Integration (2-3 hours)
-Add coverage collection and upload to the conda-test workflow:
+### 1. Enable pytest-cov in conda-test workflow (1-2 hours)
+**Impact**: Immediate visibility into Python test coverage
+
 ```yaml
-    - name: Run tests with coverage
+# In .github/workflows/conda-test.yml, change:
+    - name: Run tests
       shell: bash -l {0}
       run: |
-        pytest -vv --cov=ml_metadata --cov-report=xml
+        rm -rf bazel-*
+        pytest -vv --cov=ml_metadata --cov-report=xml:coverage.xml
 
     - name: Upload coverage
       uses: codecov/codecov-action@v4
       with:
-        file: ./coverage.xml
-        fail_ci_if_error: true
+        files: coverage.xml
+        token: ${{ secrets.CODECOV_TOKEN }}
 ```
 
-### 2. Add Trivy Scanning (1-2 hours)
-```yaml
-    - name: Build Docker image
-      run: docker build -t mlmd-server -f ml_metadata/tools/docker_server/Dockerfile .
+### 2. Add Trivy Scanning Workflow (1-2 hours)
+**Impact**: Automated vulnerability scanning for container images
 
-    - name: Run Trivy vulnerability scanner
+```yaml
+# .github/workflows/trivy-scan.yml
+name: Trivy Security Scan
+on:
+  pull_request:
+  push:
+    branches: [master]
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build server image
+      run: docker build -t mlmd-server -f ml_metadata/tools/docker_server/Dockerfile .
+    - name: Run Trivy
       uses: aquasecurity/trivy-action@master
       with:
         image-ref: 'mlmd-server'
         format: 'sarif'
         output: 'trivy-results.sarif'
-        severity: 'CRITICAL,HIGH'
-```
-
-### 3. Add CodeQL Workflow (1-2 hours)
-```yaml
-name: "CodeQL"
-on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
-  schedule:
-    - cron: '0 6 * * 1'
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        language: ['python', 'cpp']
-    steps:
-    - uses: actions/checkout@v4
-    - uses: github/codeql-action/init@v3
+    - name: Upload results
+      uses: github/codeql-action/upload-sarif@v3
       with:
-        languages: ${{ matrix.language }}
-    - uses: github/codeql-action/autobuild@v3
-    - uses: github/codeql-action/analyze@v3
+        sarif_file: 'trivy-results.sarif'
 ```
 
-### 4. Add Workflow Concurrency Control (30 minutes)
-Add to each workflow:
+### 3. Add Concurrency Control (30 minutes)
+**Impact**: Cancel redundant CI runs on force-pushes
+
 ```yaml
+# Add to each workflow file:
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 ```
+
+### 4. Generate Agent Rules (2-3 hours)
+**Impact**: Enable AI agents to follow established patterns
+
+Use `/test-rules-generator` to create `.claude/rules/` with patterns for:
+- C++ unit tests (gtest/gmock patterns, `TEST_F`, `INSTANTIATE_TEST_SUITE_P`)
+- Python tests (pytest fixtures, `absltest.TestCase`, parameterized)
+- Bazel BUILD file test targets (`ml_metadata_cc_test`, `py_test`)
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows Inventory** (4 workflows):
+**Workflows Inventory** (4 total):
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `lint.yml` | PR + push to master | Run pre-commit hooks |
-| `cd-docs.yml` | PR + push to master + dispatch | Build/deploy MkDocs documentation |
-| `conda-build.yml` | PR + push + release + dispatch | Build wheels for Linux/macOS x Python 3.9-3.12 |
-| `conda-test.yml` | PR + push + dispatch | Build, install, and run pytest for Linux/macOS x Python 3.9-3.12 |
+| `lint.yml` | PR + push to master | pre-commit hooks (Ruff, YAML/JSON/TOML checks) |
+| `cd-docs.yml` | PR + push to master + manual | MkDocs build/deploy to GitHub Pages |
+| `conda-build.yml` | PR + push + release + manual | Build Python wheels (2 OS × 4 Python versions) |
+| `conda-test.yml` | PR + push + manual | Build, install, and test wheels (2 OS × 4 Python versions) |
 
 **Strengths**:
-- Matrix builds across 2 OS (Linux, macOS) x 4 Python versions (3.9, 3.10, 3.11, 3.12) = 8 build configurations
-- Micromamba environment caching (`cache-environment: true`)
-- Reusable build action at `.github/reusable-build/action.yml`
-- Automated PyPI upload on release tags
-- Wheel auditing (auditwheel on Linux, delocate on macOS)
-- `fail-fast: false` ensures all matrix variants complete
+- Matrix testing across Ubuntu + macOS and Python 3.10-3.13
+- Micromamba environment caching for faster builds
+- Separate build and test workflows
+- Automatic PyPI upload on release tags
+- pre-commit.ci integration for automatic fixes
 
-**Gaps**:
-- No concurrency control on any workflow — rapid pushes cause redundant CI runs
-- No workflow status badges in README (only PyPI badge)
-- No test result caching or test splitting
-- conda-test workflow uses `setup.py bdist_wheel` while conda-build uses `python -m build` (inconsistency)
-- No nightly/periodic test jobs
-- Reusable build action (`reusable-build/action.yml`) uses Docker-based builds but is not invoked by any current workflow
+**Weaknesses**:
+- No concurrency control on any workflow
+- Bazel C++ tests completely absent from CI
+- No required status checks visible in repository configuration
+- `conda-test.yml` uses deprecated `setup.py bdist_wheel` instead of `python -m build`
+- Reusable build action (`reusable-build/action.yml`) uses Docker Compose manylinux approach but this isn't integrated into the main build workflow
 
 ### Test Coverage
 
-**C++ Tests** (27 test files, ~20,600 LOC):
-- Framework: Google Test (gtest) + Google Mock (gmock)
-- Test targets: ~20 Bazel `cc_test` and `ml_metadata_cc_test` targets
-- Backend-specific tests: SQLite, MySQL, PostgreSQL metadata access object tests
-- Test utilities: `test_util.h/cc`, `metadata_store_test_suite.h/cc` (shared test harness)
-- Query tests: `filter_query_ast_resolver_test.cc`, `filter_query_builder_test.cc`
-- Utility tests: `field_mask_utils_test.cc`, `record_parsing_utils_test.cc`, `struct_utils_test.cc`
+**C++ Tests (Core Library)**:
+- **27 test files**, ~20,600 lines of test code
+- **317 individual test cases** (TEST, TEST_F, TEST_P macros)
+- **Frameworks**: Google Test (gtest) + Google Mock (gmock)
+- **Multi-backend**: Parameterized test suites run against SQLite, MySQL, and PostgreSQL
+- **Key test file**: `metadata_access_object_test.cc` has 179 test cases alone
+- **Test infrastructure**: Custom test utilities (`test_util.h`), test suites (`metadata_store_test_suite.h`)
+- **Test-to-source ratio**: 20,598 lines test / 50,405 lines source = **0.41** (adequate for C++)
 
-**Python Tests** (2 test files, ~2,400 LOC):
-- Framework: pytest + absltest + parameterized
-- `metadata_store_test.py` (~2,300 LOC): Comprehensive metadata store operations testing
-- `mlmd_types_test.py` (~70 LOC): System type validation tests
-- Configurable gRPC backend testing via pytest CLI options (conftest.py)
+**Python Tests (Bindings)**:
+- **2 test files**, ~2,394 lines of test code
+- **85 test methods** in `metadata_store_test.py`
+- **Frameworks**: pytest + absltest + parameterized
+- **gRPC support**: Tests can target a live gRPC server via `--use_grpc_backend` flag
+- **Test-to-source ratio**: 2,394 lines test / 4,939 lines source = **0.48** (good)
 
-**Test-to-Code Ratio**:
-- C++: 20,598 test LOC / 30,015 source LOC = **0.69** (moderate)
-- Python: 2,394 test LOC / 3,049 source LOC = **0.79** (good)
+**Go Tests (Bindings)**:
+- **1 test file**: `metadata_store_test.go`
+- Minimal Go bindings testing
 
-**Gaps**:
-- C++ tests only run via Bazel (not in GitHub Actions CI — conda-test only runs pytest)
-- No coverage measurement for either C++ or Python
-- No integration tests that deploy the gRPC server container
-- No contract tests for the proto/gRPC API surface
+**Missing**:
+- No E2E tests for the gRPC server deployment
+- No contract tests between proto definitions and implementations
+- No performance/benchmark tests in CI
+- No fuzz testing
 
 ### Code Quality
 
-**Linting** (Good):
-- **Ruff**: Comprehensive configuration in `pyproject.toml` with 15+ rule categories enabled (E, W, F, UP, B, SIM, I, N, D, ANN, T10, PT, RET, ARG, FIX, ERA, PD, NPY)
-- Per-file ignores for `__init__.py` and `*_test.py` files
-- Google docstring convention enforced
-- isort configured with black profile
+**Linting** (Strong):
+- **Ruff**: Comprehensive configuration in `pyproject.toml` with 15 rule categories enabled (E, W, F, UP, B, SIM, I, N, D, ANN, T10, PT, RET, ARG, FIX, ERA, PD, NPY)
+- **pre-commit**: 6 hooks configured (end-of-file-fixer, trailing-whitespace, check-json, check-yaml, check-toml, ruff)
+- **CI enforcement**: pre-commit runs on PRs via `pre-commit/action@v3.0.1`
+- **pre-commit.ci**: Monthly auto-updates with auto-fix commits
 
-**Pre-commit Hooks** (Good):
-- `pre-commit-hooks v4.6.0`: end-of-file-fixer, trailing-whitespace, check-json, check-yaml, check-toml
-- `ruff-pre-commit v0.5.6`: Ruff linter with auto-fix
-- CI enforcement via `pre-commit/action@v3.0.1` in lint workflow
-- Pre-commit.ci integration for autoupdates
-
-**Static Analysis** (Missing):
-- No CodeQL/SAST for C++ or Python
+**Missing**:
+- No C++ linting (clang-tidy, cpplint) in CI
+- No static analysis (CodeQL, Semgrep, gosec)
 - No secret detection (Gitleaks, TruffleHog)
-- No type checking (mypy, pyright) despite Python type annotations in some files
+- No dependency scanning
 
 ### Container Images
 
-**Dockerfiles** (3):
+**Dockerfiles** (2 files):
+1. `ml_metadata/tools/docker_server/Dockerfile` - Multi-stage build for gRPC metadata store server
+   - Builder: Ubuntu 20.04 + Bazel 7.7.0 + C++ toolchain
+   - Runtime: Minimal Ubuntu 20.04 with just the server binary
+   - Proper multi-stage build reducing final image size
+2. `ml_metadata/tools/dev_debug/Dockerfile` - Development/debug environment (Bazel 6.1.0)
 
-| Dockerfile | Purpose | Base Image |
-|------------|---------|------------|
-| `tools/docker_server/Dockerfile` | gRPC metadata store server | ubuntu:20.04 (EOL) |
-| `tools/docker_build/Dockerfile.manylinux2010` | manylinux wheel building | gcr.io/tfx-oss-public/manylinux2014-bazel:bazel-6.5.0 |
-| `tools/dev_debug/Dockerfile` | Development debugging environment | ubuntu:20.04 (EOL) |
+**docker-compose.yml**: Defines manylinux Python wheel build services for Python 3.9-3.11
 
 **Strengths**:
-- Server Dockerfile uses multi-stage build (builder + runtime)
-- Minimal runtime image (only metadata_store_server binary + tzdata)
-- Docker-compose for multi-Python-version wheel builds
+- Multi-stage Docker build for production server image
+- Minimal runtime image with only necessary binaries
 
-**Gaps**:
-- All base images use EOL `ubuntu:20.04` (EOL April 2025)
+**Weaknesses**:
+- No CI-driven image builds
+- No runtime validation (image startup testing)
 - No vulnerability scanning
 - No SBOM generation
-- No image signing/attestation
-- No runtime validation tests
-- No health check defined in server Dockerfile
-- No `.dockerignore` file (copies entire repo context)
-- Single architecture only (x86_64, no arm64)
-- No container startup test in CI
+- No image signing or attestation
+- No multi-architecture support (x86_64 only)
+- Base image Ubuntu 20.04 is approaching EOL
+- Dev debug Dockerfile uses outdated Bazel 6.1.0 vs server's 7.7.0
 
 ### Security
 
-**Overall Security Posture**: Weak
+**Current Security Posture**: Minimal
 
-| Practice | Status |
-|----------|--------|
-| SAST/CodeQL | Not configured |
-| Dependency scanning | Not configured |
-| Secret detection | Not configured |
-| Container scanning | Not configured |
-| Signed releases | Not verified |
-| SECURITY.md | Not present |
-| Dependabot/Renovate | Not configured |
-
-**Specific Concerns**:
-- Bazel WORKSPACE pins ~15 third-party C++ dependencies by SHA256 hash but has no automated update mechanism
-- Python dependencies in `setup.py` use wide version ranges (e.g., `protobuf>=4.21.6,<5`)
-- No `SECURITY.md` file for vulnerability disclosure
-- Docker images not signed or attested
+- No vulnerability scanning (Trivy, Snyk, Grype)
+- No SAST/CodeQL integration
+- No dependency scanning (Dependabot, Renovate)
+- No secret detection
+- No SBOM generation
+- No image signing
+- CLA requirement via Google's CLA bot
+- Apache 2.0 license
 
 ### Agent Rules (Agentic Flow Quality)
 
-- **Status**: Missing
-- **Coverage**: No test automation guidance for AI agents
-- **Quality**: N/A
-- **Gaps**: No `CLAUDE.md`, `AGENTS.md`, `.claude/` directory, or test creation rules exist
-- **Recommendation**: Generate rules with `/test-rules-generator` to cover:
-  - C++ gtest patterns and Bazel test target creation
-  - Python pytest patterns with absltest compatibility
-  - Multi-backend database test patterns
-  - Proto/gRPC testing patterns
+**Status**: Missing
+- No `CLAUDE.md` or `AGENTS.md` in repository root
+- No `.claude/` directory
+- No `.claude/rules/` for test creation guidance
+- No `.claude/skills/` for custom workflows
+
+**Coverage**: None - no test types have rules
+
+**Quality**: N/A
+
+**Gaps**:
+- No C++ unit test creation rules (gtest/gmock patterns, parameterized suites)
+- No Python test creation rules (pytest fixtures, absltest integration)
+- No Bazel BUILD file rules for test targets
+- No code review standards or conventions documented for AI agents
+- No proto schema testing rules
+
+**Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
+- C++ test patterns: `TEST_F`, `INSTANTIATE_TEST_SUITE_P`, gmock matchers
+- Python test patterns: pytest fixtures, parameterized tests, gRPC backend testing
+- Bazel BUILD rules: `ml_metadata_cc_test`, `py_test`, `ml_metadata_go_test`
+- Proto testing conventions
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Add code coverage tracking** — Integrate codecov with minimum thresholds (70%+ for Python). Add `--cov` to pytest in conda-test workflow. For C++, consider Bazel coverage with `--combined_report=lcov`.
-2. **Add container vulnerability scanning** — Add Trivy or Grype scanning for all 3 Dockerfiles, block on CRITICAL/HIGH CVEs.
-3. **Enable CodeQL** — Add CodeQL workflow for C++ and Python SAST. GitHub provides this free for public repositories.
-4. **Upgrade base images** — Move from `ubuntu:20.04` (EOL) to `ubuntu:22.04` or `24.04` across all Dockerfiles.
+
+1. **Add Bazel C++ test execution to CI** - The most impactful single improvement. Create a workflow that runs `bazel test //ml_metadata/...` to exercise the 317 C++ test cases that are currently only runnable locally.
+
+2. **Enable coverage tracking** - Change `pytest -vv` to `pytest -vv --cov=ml_metadata --cov-report=xml` and add codecov integration. The `pytest-cov` dependency is already in the conda environments.
+
+3. **Add container image scanning** - Create a Trivy-based workflow that builds the server Docker image and scans for vulnerabilities on every PR.
 
 ### Priority 1 (High Value)
-1. **Add Docker server smoke tests** — Build and start the metadata_store_server container in CI, verify gRPC health check responds.
-2. **Add dependency management** — Configure Dependabot or Renovate for Python deps and Bazel WORKSPACE HTTP archives.
-3. **Add workflow concurrency control** — Prevent redundant CI runs on rapid pushes.
-4. **Run C++ tests in CI** — Currently only Python tests run in GitHub Actions. Add a workflow that runs Bazel C++ tests.
-5. **Create agent rules** — Add `.claude/rules/` with patterns for C++ gtest, Python pytest, and multi-backend testing.
-6. **Add SECURITY.md** — Provide vulnerability disclosure process.
+
+4. **Create gRPC E2E test workflow** - Use docker-compose to start the metadata store server, then run Python tests with `--use_grpc_backend` flag against the live server.
+
+5. **Add agent rules** - Create `.claude/rules/` with test creation patterns for C++, Python, Go, and Bazel BUILD files.
+
+6. **Add concurrency control** - Add `concurrency` blocks to all 4 workflow files to cancel redundant runs.
+
+7. **Add CodeQL or SAST analysis** - Enable GitHub's CodeQL for C++ and Python static analysis.
 
 ### Priority 2 (Nice-to-Have)
-1. **Add E2E integration tests** — Deploy metadata_store_server in a container, run gRPC client tests against it.
-2. **Multi-architecture Docker builds** — Add arm64 support for the server image.
-3. **Add SBOM generation** — Use Syft or Trivy to generate SBOMs for published images.
-4. **Add performance regression testing** — Benchmark metadata store operations (Put/Get artifacts, lineage queries).
-5. **Add Python type checking** — Enable mypy or pyright in CI alongside Ruff.
-6. **Add Docker health check** — Add `HEALTHCHECK` instruction to server Dockerfile.
+
+8. **Add SBOM generation** - Generate SBOMs for container images using syft or trivy.
+
+9. **Upgrade base images** - Move Dockerfiles from Ubuntu 20.04 (approaching EOL) to 22.04 or 24.04.
+
+10. **Add multi-architecture builds** - Support linux/arm64 alongside linux/amd64 for the server image.
+
+11. **Add Dependabot or Renovate** - Automated dependency update management.
+
+12. **Add C++ linting** - Integrate clang-tidy or cpplint into CI for C++ code quality.
 
 ## Comparison to Gold Standards
 
-| Practice | ml-metadata | odh-dashboard | notebooks | kserve |
-|----------|-------------|---------------|-----------|--------|
-| Unit test coverage | Moderate (C++ strong, Python limited) | Comprehensive | Moderate | Strong |
-| Integration/E2E tests | Multi-backend DB only | Full E2E suite | Image testing | Multi-version |
-| Coverage enforcement | None | Codecov with gates | None | Codecov enforced |
-| Container scanning | None | Trivy integrated | Trivy integrated | Trivy + Snyk |
-| SAST/CodeQL | None | CodeQL enabled | None | CodeQL enabled |
-| Pre-commit hooks | Yes (Ruff) | Yes (comprehensive) | Limited | Yes |
-| Image runtime tests | None | Deployment testing | 5-layer validation | Startup tests |
-| CI concurrency | None | Configured | Configured | Configured |
-| Agent rules | None | Comprehensive | None | Partial |
-| Multi-arch images | No | Yes | Yes | Yes |
-| Dependency scanning | None | Dependabot | Renovate | Dependabot |
+| Dimension | ml-metadata | odh-dashboard | notebooks | kserve |
+|-----------|-------------|---------------|-----------|--------|
+| Unit Tests | 7.5 - Extensive C++ suites | 9.0 - Jest + React Testing Library | 7.0 - Notebook validation | 9.0 - Go testing + envtest |
+| Integration/E2E | 5.0 - Multi-DB but no E2E | 9.0 - Cypress + contract tests | 8.0 - 5-layer validation | 9.0 - Multi-version E2E |
+| Build Integration | 4.0 - Conda only | 8.0 - Module Federation validation | 7.0 - Image build matrix | 7.0 - Operator manifests |
+| Image Testing | 2.0 - Dockerfiles unused in CI | 7.0 - Container validation | 9.0 - Gold standard | 8.0 - Runtime validation |
+| Coverage Tracking | 2.0 - Dependency exists, unused | 9.0 - Codecov enforcement | 6.0 - Basic coverage | 9.0 - Threshold enforcement |
+| CI/CD Automation | 6.5 - Matrix builds, pre-commit | 9.0 - Comprehensive workflows | 8.0 - Multi-platform CI | 9.0 - Release automation |
+| Agent Rules | 0.0 - None | 9.0 - Comprehensive rules | 3.0 - Basic docs | 5.0 - Some guidelines |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/lint.yml` — Pre-commit lint enforcement
-- `.github/workflows/cd-docs.yml` — MkDocs documentation deployment
-- `.github/workflows/conda-build.yml` — Multi-OS/Python wheel building
-- `.github/workflows/conda-test.yml` — Multi-OS/Python test execution
-- `.github/reusable-build/action.yml` — Reusable Docker-based build action
-
-### Build System
-- `WORKSPACE` — Bazel workspace with ~15 external C++ dependencies
-- `.bazelrc` — Bazel configuration (C++17, platform flags)
-- `setup.py` — Python package setup with Bazel build integration
-- `pyproject.toml` — pytest config, Ruff linter config, build system requirements
-- `ml_metadata/metadata_store/BUILD` — Main Bazel BUILD file (~1046 lines, ~20 test targets)
+- `.github/workflows/lint.yml` - pre-commit CI
+- `.github/workflows/cd-docs.yml` - MkDocs deployment
+- `.github/workflows/conda-build.yml` - Python wheel builds
+- `.github/workflows/conda-test.yml` - Python tests
+- `.github/reusable-build/action.yml` - Reusable build action
 
 ### Testing
-- `ml_metadata/metadata_store/*_test.cc` — 21 C++ test files
-- `ml_metadata/query/*_test.cc` — 2 C++ query test files
-- `ml_metadata/util/*_test.cc` — 4 C++ utility test files
-- `ml_metadata/metadata_store/metadata_store_test.py` — Main Python test suite
-- `ml_metadata/metadata_store/mlmd_types_test.py` — System types tests
-- `ml_metadata/metadata_store/conftest.py` — pytest fixtures for gRPC backend
+- `ml_metadata/metadata_store/*_test.cc` - 24 C++ test files
+- `ml_metadata/util/*_test.cc` - 3 C++ utility test files
+- `ml_metadata/query/*_test.cc` - 2 C++ query test files
+- `ml_metadata/metadata_store/metadata_store_test.py` - Main Python test file
+- `ml_metadata/metadata_store/mlmd_types_test.py` - Types test file
+- `ml_metadata/metadata_store/metadata_store_test.go` - Go test file
 
-### Container Images
-- `ml_metadata/tools/docker_server/Dockerfile` — gRPC server image
-- `ml_metadata/tools/docker_build/Dockerfile.manylinux2010` — Wheel build image
-- `ml_metadata/tools/dev_debug/Dockerfile` — Debug environment
-- `docker-compose.yml` — Multi-Python-version wheel builds
+### Build System
+- `WORKSPACE` - Bazel workspace configuration
+- `.bazelversion` - Bazel 7.7.0
+- `.bazelrc` - Bazel build flags (C++17, proto options)
+- `ml_metadata/metadata_store/BUILD` - Main BUILD file with 20+ test targets
+- `setup.py` - Python packaging with custom Bazel build integration
+- `pyproject.toml` - Build requirements and tool configuration
 
 ### Code Quality
-- `.pre-commit-config.yaml` — Pre-commit hooks (pre-commit-hooks + Ruff)
-- `pyproject.toml` — Ruff linter configuration (15+ rule categories)
+- `.pre-commit-config.yaml` - 6 pre-commit hooks (end-of-file, trailing-ws, json, yaml, toml, ruff)
+- `pyproject.toml` - Ruff configuration with 15 rule categories
+
+### Container Images
+- `ml_metadata/tools/docker_server/Dockerfile` - Production gRPC server (multi-stage)
+- `ml_metadata/tools/dev_debug/Dockerfile` - Development environment
+- `docker-compose.yml` - Manylinux wheel build services
+
+### Documentation
+- `mkdocs.yml` - MkDocs Material configuration
+- `docs/` - Documentation source
+- `CONTRIBUTING.md` - Contribution guidelines with pre-commit instructions
+- `RELEASE.md` - Release process

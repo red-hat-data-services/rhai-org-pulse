@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 12:08 PM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 05:24 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/rhai-org-pulse</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#ffc107"
+                                stroke="#28a745"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="180.95558400000002"
+                                stroke-dashoffset="101.78751600000001"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">6.8</div>
+                        <div class="score-value">8.2</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">222 test files for 492 source files (45% ratio); Vitest + @vue/test-utils; well-organized per-module structure</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">293 unit tests via Vitest across client/server; strong test-to-code ratio (0.86:1); modules like releases (105) and team-tracker (79) have excellent coverage. Gaps in okr-hub and system-health (0 tests each).</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Playwright smoke + module integration tests against containers; dynamic matrix for changed modules</div>
+                            <div class="scorecard-status">14 Playwright specs covering smoke + integration; matrix-driven CI for per-module integration; containerized test execution; shared helpers and constants.</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">PR builds Docker images and runs Playwright smoke tests; kustomize and OpenAPI validation</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">PR-time container builds with smoke tests for both core and AI Eng images; kustomize overlay validation; multi-image build pipeline with layered architecture.</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Multi-stage builds with UBI9; runtime smoke tests; no vulnerability scanning or SBOM</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">Smoke tests validate image startup, health endpoints, UI rendering, and routing. No vulnerability scanning (Trivy/Snyk) or SBOM generation.</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No coverage tracking, thresholds, or reporting configured anywhere</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">No codecov/coveralls integration; no coverage thresholds; no PR coverage reporting; no coverage generation configured in vitest.</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Smart path filtering, concurrency control, Socket Security, automated deploys, Claude code review</div>
+                            <div class="scorecard-status">Mature 7-workflow pipeline: CI, integration tests, build/push, Claude AI review, guard configs, sync-preprod, claude-issues. Smart change detection, concurrency control, matrix strategy.</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Comprehensive AGENTS.md + CLAUDE.md; automated Claude review and issue triage; AI config guard</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
+                            <div class="scorecard-status">Exceptional: AGENTS.md (vendor-neutral), .claude/CLAUDE.md (deep architecture), .claude/commands/ (pr-review, create-module), .github/instructions/review.instructions.md (automated review checklist). Guard workflow protects AI config changes.</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +411,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No test coverage tracking or enforcement</div>
-                            <p>Cannot measure coverage trends, detect regressions, or enforce minimum thresholds; no visibility into untested code</p>
+                            <div class="item-description">No code coverage tracking or enforcement</div>
+                            <p>Cannot measure test effectiveness; no PR coverage regression alerts; blind spots in untested modules go undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container image vulnerability scanning</div>
-                            <p>Known CVEs in base images or dependencies could ship to production undetected</p>
+                            <div class="item-description">No container vulnerability scanning</div>
+                            <p>CVEs in base images and dependencies not detected until production; no SBOM for compliance</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No SAST or CodeQL integration</div>
-                            <p>Security vulnerabilities in application code may not be caught before merge</p>
+                            <div class="item-description">Zero unit tests for okr-hub and system-health modules</div>
+                            <p>Two active modules have no test coverage at all; bugs ship undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">8-16 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No SBOM generation or image signing</div>
-                            <p>Cannot verify supply chain integrity or audit component inventory</p>
+                            <div class="item-description">No SAST/CodeQL or secret detection</div>
+                            <p>Static analysis vulnerabilities and leaked secrets not caught pre-merge</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,8 +456,8 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Vitest coverage reporting and Codecov integration</div>
-                            <p>Immediate visibility into test coverage with PR comments and trend tracking</p>
+                            <div class="item-description">Add Vitest coverage generation and codecov integration</div>
+                            <p>Immediate visibility into coverage gaps; PR-level coverage reporting; prevents coverage regressions</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">3-4 hours</span>
@@ -465,26 +465,26 @@
                         </li>
                         <li class="item-card ">
                             <div class="item-description">Add Trivy container scanning to build-images workflow</div>
-                            <p>Catches known CVEs in container images before deployment</p>
+                            <p>Automated CVE detection for all 6 container images before push to Quay</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL or Semgrep workflow for SAST</div>
-                            <p>Automated detection of security anti-patterns in JavaScript code</p>
+                            <div class="item-description">Enable CodeQL analysis workflow</div>
+                            <p>Free GitHub-native SAST scanning for JavaScript vulnerabilities</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add .claude/rules/ test automation guidelines</div>
-                            <p>Standardize AI-generated test quality across unit, integration, and smoke tests</p>
+                            <div class="item-description">Add unit tests for system-health module</div>
+                            <p>Cover 6 Vue components and 8 JS files currently at 0% test coverage</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +501,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add Vitest coverage with --coverage flag, set minimum threshold at 60%, integrate with Codecov for PR reporting</li><li>Add Trivy scanning for both backend and frontend container images in build-images.yml</li></ul>
+                            <ul><li>Add Vitest coverage generation (--coverage flag + v8/istanbul provider) and integrate with codecov for PR-level reporting</li><li>Add Trivy/Grype container scanning step to build-images.yml before pushing to Quay</li><li>Write unit tests for okr-hub and system-health modules (currently 0 tests each)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add CodeQL or Semgrep SAST workflow for JavaScript/Node.js security analysis</li><li>Add SBOM generation (Syft or Trivy SBOM mode) for supply chain visibility</li><li>Create .claude/rules/ with test patterns for Vitest unit tests and Playwright integration tests</li></ul>
+                            <ul><li>Enable GitHub CodeQL workflow for JavaScript SAST scanning</li><li>Add Gitleaks or TruffleHog for secret detection in PRs</li><li>Add coverage thresholds (e.g., 70% minimum) to prevent coverage regressions</li><li>Add customer-insights module unit tests (only 1 test for 38 files)</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add multi-architecture builds (amd64 + arm64) for developer parity</li><li>Add performance/load testing for API endpoints</li><li>Add contract tests between frontend API client and backend routes</li><li>Add accessibility testing with axe-core in Playwright tests</li></ul>
+                            <ul><li>Add multi-architecture image builds (arm64) for developer parity</li><li>Add SBOM generation (Syft/SPDX) for compliance tracking</li><li>Consider adding API contract tests for the /api/modules/* endpoints</li><li>Add performance testing for dashboard load times</li></ul>
                         </div>
                     </div>
                 </div>

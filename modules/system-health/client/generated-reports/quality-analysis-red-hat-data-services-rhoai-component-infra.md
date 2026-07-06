@@ -1,74 +1,74 @@
 ---
 repository: "red-hat-data-services/rhoai-component-infra"
-overall_score: 1.5
+overall_score: 2.1
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No tests exist — zero test files in the entire repository"
+    status: "No tests exist anywhere in the repository"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests; cross-repo PR creation is completely untested"
+    status: "No integration or end-to-end tests"
   - dimension: "Build Integration"
     score: 1.0
-    status: "No PR-triggered workflows; all workflows are manual dispatch only"
+    status: "No PR workflow; all workflows are manual dispatch only"
   - dimension: "Image Testing"
     score: 0.0
-    status: "N/A — repo does not build container images (but modifies Dockerfiles in other repos without validation)"
+    status: "No container images built; not applicable for this repo type"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling of any kind"
+    status: "No coverage tooling or reporting configured"
   - dimension: "CI/CD Automation"
-    score: 3.0
-    status: "Functional GitHub Actions orchestration but manual-only triggers, no PR validation, no caching"
+    score: 4.0
+    status: "Three manual-dispatch workflows with orchestrator pattern; no PR-triggered CI"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules"
+    status: "No CLAUDE.md, .claude/ directory, or agent rules present"
 critical_gaps:
-  - title: "Zero test coverage for automation scripts"
-    impact: "Python scripts that create PRs across 5+ repos have no unit or integration tests — a regex bug could silently corrupt Dockerfiles or YAML templates across the entire RHOAI runtime fleet"
+  - title: "Zero test coverage for Python automation scripts"
+    impact: "Regex-based file transformations in update_vllm_repositories.py and update_odh_runtime_versions.py can silently produce wrong results — incorrect version strings pushed to downstream repos"
     severity: "HIGH"
     effort: "8-12 hours"
-  - title: "No PR-triggered CI validation"
-    impact: "Changes to automation scripts are merged without any automated validation — syntax errors, logic bugs, or broken regex patterns are only discovered when someone manually triggers the workflow"
-    severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "shell=True command injection risk"
-    impact: "Both Python scripts use subprocess.run(cmd, shell=True) with string interpolation for git commands — malicious or malformed version strings could execute arbitrary commands"
+  - title: "No PR-triggered CI workflow"
+    impact: "Code changes to automation scripts merge without any validation — broken scripts discovered only when manually triggered"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No input validation on version strings"
-    impact: "Version values from YAML config are used directly in regex replacements and git branch names without validation — could break Dockerfiles or create invalid branch names"
+  - title: "No input validation or error handling tests"
+    impact: "Malformed YAML config or unexpected Dockerfile formats cause silent failures or crashes during runtime updates"
+    severity: "HIGH"
+    effort: "4-6 hours"
+  - title: "GitHub token exposed in subprocess calls"
+    impact: "Token appears in git remote URLs passed to subprocess.run with shell=True — risk of token leakage in logs or error messages"
     severity: "MEDIUM"
     effort: "2-3 hours"
-  - title: "No linting or static analysis"
-    impact: "Python code quality is not enforced — potential bugs, style inconsistencies, and security issues go undetected"
+  - title: "No dry-run validation or integration test"
+    impact: "Dry-run mode may diverge from actual execution behavior; no verification that dry-run accurately previews changes"
     severity: "MEDIUM"
-    effort: "1-2 hours"
+    effort: "4-6 hours"
 quick_wins:
-  - title: "Add ruff linting and type checking to CI"
+  - title: "Add a basic PR CI workflow with Python linting and syntax checks"
     effort: "1-2 hours"
-    impact: "Catches syntax errors, unused imports, and type mismatches before merge"
-  - title: "Add a basic PR-triggered workflow that validates Python syntax"
-    effort: "1-2 hours"
-    impact: "Prevents broken scripts from being merged — catches import errors, syntax errors"
-  - title: "Replace shell=True with subprocess list arguments"
-    effort: "1-2 hours"
-    impact: "Eliminates command injection risk in both Python scripts"
-  - title: "Add version string validation regex"
+    impact: "Catch broken Python scripts before merge; establishes CI culture"
+  - title: "Add pytest unit tests for regex-based version update functions"
+    effort: "3-4 hours"
+    impact: "Validate the core business logic — version string replacement in Dockerfiles and YAML annotations"
+  - title: "Add a pre-commit config with ruff and yaml-lint"
     effort: "1 hour"
-    impact: "Prevents malformed versions from propagating to downstream repos"
+    impact: "Catch formatting issues, import errors, and YAML syntax problems at commit time"
+  - title: "Add CODEOWNERS file"
+    effort: "30 minutes"
+    impact: "Ensure proper review for changes to automation scripts"
 recommendations:
   priority_0:
-    - "Add unit tests for regex-based file update logic (update_dockerfile_version, update_yaml_annotation) — these are the highest-risk functions"
-    - "Add a PR-triggered CI workflow that runs linting, type checking, and unit tests on every PR"
-    - "Fix shell=True command injection vulnerability in both Python scripts"
+    - "Add pytest unit tests for update_dockerfile_version() and update_yaml_annotation() — these regex-based transformations are the critical business logic"
+    - "Create a PR-triggered CI workflow that runs linting (ruff) and tests (pytest) on every push"
+    - "Sanitize GitHub token from subprocess error output and git remote URLs in logs"
   priority_1:
-    - "Add integration tests with mock Git repos to validate the full clone-update-commit-PR flow"
-    - "Add input validation for version strings, branch names, and config file contents"
-    - "Add pre-commit hooks with ruff, mypy, and gitleaks"
+    - "Add integration tests that exercise the full update flow with mock repos (using tmp directories)"
+    - "Add YAML schema validation for update-runtime-version.yaml config file"
+    - "Create agent rules (.claude/rules/) for test creation patterns"
   priority_2:
-    - "Add dry-run test workflow that validates config changes against actual downstream repo file structures"
-    - "Create CLAUDE.md with contribution and testing guidelines"
+    - "Add type hints and mypy strict checking to Python scripts"
+    - "Consider using click or argparse instead of environment variables for CLI interface"
     - "Add dependabot or renovate for GitHub Actions version updates"
 ---
 
@@ -76,285 +76,267 @@ recommendations:
 
 ## Executive Summary
 
-- **Overall Score: 1.5/10**
-- **Repository Type**: Infrastructure automation (Python scripts + GitHub Actions)
-- **Primary Language**: Python (~650 lines), YAML (~380 lines)
-- **Size**: 7 files, ~1,031 lines, 1 commit
-- **Purpose**: Automated runtime version updates across RHOAI component repos (vllm, vllm-rocm, vllm-cpu, vllm-gaudi, odh-model-controller)
-- **Key Strengths**: Clean orchestrator workflow pattern with dry-run support, good README documentation
-- **Critical Gaps**: Zero tests, no PR validation, command injection risk, no linting
-- **Agent Rules Status**: Missing — no CLAUDE.md, no `.claude/` directory
+- **Overall Score: 2.1/10**
+- **Repository Type**: Infrastructure automation (Python scripts + GitHub Actions workflows)
+- **Primary Language**: Python (650 lines across 2 scripts)
+- **Purpose**: Automates runtime version updates across RHOAI component repositories (VLLM variants + ODH Model Controller)
+- **Key Strengths**: Well-structured orchestrator workflow pattern; dry-run support; good separation of VLLM vs ODH update paths
+- **Critical Gaps**: Zero tests, zero CI on PRs, no linting, no security scanning, no agent rules
+- **Agent Rules Status**: Missing — no CLAUDE.md, .claude/ directory, or testing guidance
 
-This is a high-risk automation repo that creates PRs across 5+ downstream repositories, yet has absolutely no test coverage or CI validation. A single regex bug in the Python scripts could silently corrupt Dockerfiles or YAML templates across the entire RHOAI runtime fleet.
+This is a small but **operationally critical** repository — bugs in these automation scripts silently push incorrect version strings to downstream production repositories. The risk-to-coverage ratio is extremely high.
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0/10 | No tests exist — zero test files in the entire repository |
-| Integration/E2E | 0/10 | No integration or E2E tests; cross-repo PR creation is completely untested |
-| **Build Integration** | **1/10** | **No PR-triggered workflows; all workflows are manual dispatch only** |
-| Image Testing | 0/10 | N/A — repo does not build images (but modifies Dockerfiles in other repos without validation) |
-| Coverage Tracking | 0/10 | No coverage tooling of any kind |
-| CI/CD Automation | 3/10 | Functional GitHub Actions orchestration but manual-only triggers, no PR validation |
-| Agent Rules | 0/10 | No CLAUDE.md, no `.claude/` directory, no agent rules |
+| Unit Tests | 0/10 | No tests exist anywhere in the repository |
+| Integration/E2E | 0/10 | No integration or end-to-end tests |
+| Build Integration | 1/10 | No PR workflow; all workflows are manual dispatch only |
+| Image Testing | N/A | No container images built (not applicable) |
+| Coverage Tracking | 0/10 | No coverage tooling or reporting |
+| CI/CD Automation | 4/10 | Three manual-dispatch workflows; no PR-triggered CI |
+| Agent Rules | 0/10 | No CLAUDE.md, .claude/, or agent rules present |
 
 ## Critical Gaps
 
-### 1. Zero Test Coverage for Automation Scripts
-- **Impact**: Python scripts that create PRs across 5+ repos have no unit or integration tests. A regex bug in `update_dockerfile_version()` or `update_yaml_annotation()` could silently corrupt Dockerfiles or YAML templates across the entire RHOAI runtime fleet.
-- **Severity**: HIGH
-- **Effort**: 8-12 hours
-- **Risk Example**: The regex `r'^(\s*ARG\s+VLLM_VERSION\s*=\s*)(["\']?)([^"\'\r\n]+)(\2)(\s*)$'` in `update_vllm_repositories.py:99` is never tested against edge cases (multi-line ARG, commented-out ARG, no quotes, etc.)
+### 1. Zero Test Coverage for Python Automation Scripts (HIGH)
+- **Impact**: The core business logic — regex-based version string replacement in Dockerfiles (`ARG VLLM_VERSION="x.y.z"`) and YAML annotations (`opendatahub.io/runtime-version: x.y.z`) — has zero test coverage
+- **Risk**: A subtle regex bug could push malformed version strings to 5+ downstream repositories, breaking production builds
+- **Files affected**:
+  - `.github/scripts/update_vllm_repositories.py` (321 lines) — `update_dockerfile_version()` at line 88
+  - `.github/scripts/update_odh_runtime_versions.py` (329 lines) — `update_yaml_annotation()` at line 91
+- **Effort**: 8-12 hours for comprehensive test suite
 
-### 2. No PR-Triggered CI Validation
-- **Impact**: Changes to automation scripts are merged without any automated validation. Syntax errors, logic bugs, or broken regex patterns are only discovered when someone manually triggers the workflow.
-- **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: All 3 workflows use `workflow_dispatch` only — there are no `pull_request` or `push` triggers.
-
-### 3. Command Injection via shell=True
-- **Impact**: Both Python scripts (`update_vllm_repositories.py:67`, `update_odh_runtime_versions.py:67`) use `subprocess.run(cmd, shell=True)` with string-interpolated variables. A crafted version string or repo name could execute arbitrary commands.
-- **Severity**: HIGH
+### 2. No PR-Triggered CI Workflow (HIGH)
+- **Impact**: Changes to automation scripts merge without any automated validation — no linting, no syntax checks, no tests
+- **Risk**: Broken Python scripts discovered only when manually triggered, potentially during a time-sensitive release
 - **Effort**: 2-4 hours
-- **Details**: Lines like `self.run_command(f"git clone {repo_url} {repo_dir}")` pass user-influenced data through a shell interpreter.
 
-### 4. No Input Validation
-- **Impact**: Version strings from `update-runtime-version.yaml` are used directly in regex replacements, git branch names, and PR bodies without any validation. Malformed values could break downstream files or create invalid branches.
-- **Severity**: MEDIUM
+### 3. No Input Validation Testing (HIGH)
+- **Impact**: The YAML config file (`src/config/update-runtime-version.yaml`) has no schema validation; malformed entries cause unpredictable behavior
+- **Risk**: Typos in runtime names or version strings silently skip updates or produce incorrect PRs
+- **Effort**: 4-6 hours
+
+### 4. GitHub Token Handling in Subprocess Calls (MEDIUM)
+- **Impact**: Both scripts construct git remote URLs with the token embedded (`https://x-access-token:{token}@github.com/...`) and pass them to `subprocess.run(shell=True)` — token could appear in error output
+- **Files**: `update_vllm_repositories.py:158-159`, `update_odh_runtime_versions.py:160-161`
 - **Effort**: 2-3 hours
 
-### 5. No Code Quality Tooling
-- **Impact**: No linting (ruff, flake8), no type checking (mypy), no pre-commit hooks, no static analysis. Code quality relies entirely on manual review.
-- **Severity**: MEDIUM
-- **Effort**: 1-2 hours
+### 5. No Dry-Run Validation (MEDIUM)
+- **Impact**: Dry-run mode uses conditional returns that may diverge from actual execution paths as code evolves
+- **Risk**: Operators rely on dry-run to preview changes but it may not accurately represent what would happen
+- **Effort**: 4-6 hours
 
 ## Quick Wins
 
-### 1. Add Ruff Linting (1-2 hours)
-Create a basic PR workflow and `ruff.toml`:
-
+### 1. Add PR CI Workflow (1-2 hours)
+Create `.github/workflows/ci.yml`:
 ```yaml
-# .github/workflows/ci.yml
 name: CI
-on: [pull_request]
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
 jobs:
-  lint:
+  lint-and-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-      - run: pip install ruff
-      - run: ruff check .github/scripts/
-      - run: ruff format --check .github/scripts/
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - run: pip install ruff pytest pyyaml requests
+    - run: ruff check .github/scripts/
+    - run: pytest tests/ -v
 ```
 
-### 2. Fix shell=True Vulnerability (1-2 hours)
-Replace string-based commands with list arguments:
-
+### 2. Add Unit Tests for Version Update Functions (3-4 hours)
+Create `tests/test_update_vllm.py`:
 ```python
-# Before (vulnerable):
-subprocess.run(f"git clone {repo_url} {repo_dir}", shell=True)
+import pytest
+from pathlib import Path
+import tempfile
 
-# After (safe):
-subprocess.run(["git", "clone", str(repo_url), str(repo_dir)], check=True)
+def test_update_dockerfile_version_basic():
+    """Test basic ARG VLLM_VERSION replacement"""
+    content = 'ARG VLLM_VERSION="0.9.0"\n'
+    # ... test regex replacement produces correct output
+
+def test_update_dockerfile_version_no_quotes():
+    """Test unquoted version is handled"""
+
+def test_update_yaml_annotation():
+    """Test opendatahub.io/runtime-version annotation update"""
 ```
 
-### 3. Add Version Validation (1 hour)
-```python
-import re
-VERSION_PATTERN = re.compile(r'^v?\d+\.\d+\.\d+(\.\d+)?$')
-
-def validate_version(version: str) -> bool:
-    return bool(VERSION_PATTERN.match(version))
+### 3. Add Pre-commit Config (1 hour)
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.0
+    hooks:
+      - id: ruff
+      - id: ruff-format
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
 ```
 
-### 4. Add Basic Unit Tests (2-3 hours)
-```python
-# tests/test_update_vllm.py
-def test_update_dockerfile_version_with_quotes():
-    content = 'ARG VLLM_VERSION="v0.9.0"\n'
-    expected = 'ARG VLLM_VERSION="v0.10.0"\n'
-    # Test regex replacement logic
-
-def test_update_dockerfile_version_without_quotes():
-    content = 'ARG VLLM_VERSION=v0.9.0\n'
-    expected = 'ARG VLLM_VERSION="v0.10.0"\n'
-
-def test_update_dockerfile_preserves_surrounding_content():
-    content = 'FROM base\nARG VLLM_VERSION="v0.9.0"\nRUN build\n'
-    # Verify only the version line changes
+### 4. Add CODEOWNERS (30 minutes)
+```
+# CODEOWNERS
+* @red-hat-data-services/rhoai-runtime-team
+.github/workflows/ @red-hat-data-services/rhoai-runtime-team
+.github/scripts/ @red-hat-data-services/rhoai-runtime-team
 ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows Found**: 3 workflows, all `workflow_dispatch` only
+**Workflows Found**: 3 workflows, all manual-dispatch (`workflow_dispatch`) only
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | `update-runtime-versions.yml` | Manual dispatch | Orchestrator — calls the other two workflows |
-| `update-vllm-repositories.yml` | Manual dispatch + `workflow_call` | Updates Dockerfiles in VLLM repos |
-| `update-odh-runtime-versions.yml` | Manual dispatch + `workflow_call` | Updates YAML annotations in odh-model-controller |
+| `update-vllm-repositories.yml` | Manual dispatch + workflow_call | Updates `ARG VLLM_VERSION` in Dockerfiles across VLLM repos |
+| `update-odh-runtime-versions.yml` | Manual dispatch + workflow_call | Updates `opendatahub.io/runtime-version` annotations in ODH Model Controller |
 
 **Strengths**:
 - Clean orchestrator pattern with conditional job execution
-- Good use of `workflow_call` for reusability
-- Dry-run support for preview mode
-- Runtime filtering for selective updates
-- Summary generation with step summaries
+- Supports runtime filtering (individual or all runtimes)
+- Dry-run mode for previewing changes
+- Reusable workflows via `workflow_call`
+- GitHub Step Summary reporting
 
 **Weaknesses**:
-- No PR-triggered validation of any kind
-- No concurrency control
-- No caching (pip install runs every time)
-- No status badges or notifications
-- Uses `actions/setup-python@v4` (outdated, v5 available)
-- No timeout configuration on workflows
+- No PR-triggered CI at all — no linting, no tests, no validation on code changes
+- No concurrency control on dispatch workflows
+- Hardcoded `ubuntu-latest` runner (no pinned version)
+- `actions/setup-python@v4` is outdated (v5 is current)
+- No caching of pip dependencies
 
 ### Test Coverage
 
-**Test Files**: 0
-**Test Framework**: None configured
-**Test-to-Code Ratio**: 0:1
+**Status**: Zero tests. No test files, no test directories, no test configuration, no test dependencies.
 
-There are literally zero tests in this repository. The two Python scripts (`update_vllm_repositories.py` at 321 lines and `update_odh_runtime_versions.py` at 329 lines) contain complex logic including:
-- YAML file parsing and manipulation
-- Regex-based file content replacement
-- Git operations (clone, branch, commit, push)
-- GitHub API calls for PR creation
-- Error handling and summary generation
-
-None of this is tested.
+- No `tests/` directory
+- No `*_test.py` or `test_*.py` files
+- No `pytest.ini`, `pyproject.toml`, or `setup.cfg`
+- No test-related entries in any configuration
 
 ### Code Quality
 
 **Linting**: None configured
-**Type Checking**: None configured
-**Pre-commit Hooks**: None
+- No `ruff.toml`, `.flake8`, `pylintrc`, or `.mypy.ini`
+- No pre-commit hooks (`.pre-commit-config.yaml` absent)
+- No type hints in Python scripts
+- Both scripts use bare `except Exception` patterns
+
 **Static Analysis**: None
-**Code Formatters**: None
+- No CodeQL, Semgrep, or Bandit configuration
+- No secret detection (Gitleaks, TruffleHog)
 
-The Python code is reasonably structured with classes and methods, but:
-- No type hints on method signatures
-- No docstrings beyond single-line descriptions
-- Duplicate code between the two scripts (~60% overlap in structure)
-- Magic strings throughout (repo names, file patterns, regex patterns)
+**Code Structure**:
+- Two well-organized Python classes (`VLLMRepositoryUpdater`, `ODHRuntimeVersionUpdater`)
+- Reasonable separation of concerns (clone, update, PR creation)
+- Good use of pathlib for file operations
+- Missing: proper logging (uses print statements), argument parsing, type annotations
 
-### Container Images
+### Container Image Testing
 
-Not directly applicable — this repo doesn't build images. However, it **modifies Dockerfiles in other repos** without any validation that the resulting Dockerfiles are still valid. There's no test that runs `docker build` on the modified files.
+**Not applicable** — this repo does not build container images. It updates version references in other repositories' Dockerfiles.
 
 ### Security Practices
 
 **Critical Issues**:
-1. **Command Injection** (`shell=True`): Both scripts at line 67 use `subprocess.run(cmd, shell=True)` with interpolated variables. This is a well-known security anti-pattern.
-2. **Token in URL**: `f"https://x-access-token:{self.github_token}@github.com/{repo_name}.git"` embeds the token in the URL, which could leak in logs or error messages.
-3. **No secret scanning**: No gitleaks, trufflehog, or similar tools configured.
-4. **No dependency pinning**: `pip install PyYAML requests` doesn't pin versions.
+1. **Token in subprocess**: GitHub token embedded in git remote URLs via `subprocess.run(shell=True)` — potential for injection and log leakage
+2. **No secret scanning**: No Gitleaks, TruffleHog, or similar configured
+3. **No dependency pinning**: `pip install PyYAML requests` without version pins in workflows
+4. **No SECURITY.md or CONTRIBUTING.md**: No security reporting guidance
 
-**Missing**:
-- No CodeQL or SAST integration
-- No dependency scanning (no dependabot/renovate)
-- No `.gitignore` (minor, but notable)
-- No CODEOWNERS file
+**Positive**:
+- Token sourced from GitHub secrets (not hardcoded)
+- Temp directories cleaned up in `finally` blocks
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: None — no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
+- **Coverage**: N/A — no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
 - **Quality**: N/A
-- **Gaps**: Everything is missing
-- **Recommendation**: Generate test automation rules with `/test-rules-generator` covering:
-  - Unit test patterns for regex replacement functions
-  - Integration test patterns for Git operations
-  - Mock patterns for GitHub API calls
+- **Gaps**: No test automation guidance, no coding standards, no review checklists
+- **Recommendation**: Generate test creation rules with `/test-rules-generator`
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add unit tests for regex-based file update logic**
-   - Test `update_dockerfile_version()` with various Dockerfile formats
-   - Test `update_yaml_annotation()` with various YAML structures
-   - Test edge cases: comments, multi-line values, missing fields
-   - Effort: 4-6 hours
+1. **Add pytest unit tests for regex-based version update functions**
+   - Test `update_dockerfile_version()` with: basic quoted version, unquoted version, missing ARG line, multiple ARG lines, version with pre-release suffix
+   - Test `update_yaml_annotation()` with: standard annotation, quoted annotation, multiple annotations, missing annotation
+   - Test `load_runtime_versions()` with: valid config, empty config, malformed YAML
 
-2. **Add PR-triggered CI workflow**
-   - Lint with ruff
-   - Type check with mypy
-   - Run unit tests with pytest
-   - Validate YAML config structure
-   - Effort: 4-6 hours
+2. **Create a PR-triggered CI workflow**
+   - Run `ruff` linting on all Python files
+   - Run `yamllint` on YAML configs
+   - Run `pytest` test suite
+   - Validate `update-runtime-version.yaml` schema
 
-3. **Fix shell=True command injection**
-   - Replace all `subprocess.run(cmd, shell=True)` with list-based arguments
-   - Add input validation for all externally-sourced values
-   - Effort: 2-4 hours
+3. **Sanitize token handling**
+   - Avoid embedding tokens in shell command strings
+   - Use environment variables for git authentication instead of URL embedding
+   - Ensure subprocess error output doesn't contain tokens
 
 ### Priority 1 (High Value)
 
-4. **Add integration tests with mock Git repos**
-   - Use `tempfile` to create test repo structures
-   - Test the full clone-update-commit flow
-   - Mock GitHub API calls with `responses` or `unittest.mock`
-   - Effort: 8-12 hours
+4. **Add integration tests with mock repositories**
+   - Create temporary git repos in pytest fixtures
+   - Exercise full clone → update → commit → verify flow
+   - Test dry-run mode produces accurate preview
 
-5. **Add pre-commit hooks**
-   - ruff (linting + formatting)
-   - mypy (type checking)
-   - gitleaks (secret detection)
-   - YAML validation
-   - Effort: 2-3 hours
+5. **Add YAML schema validation for config file**
+   - Validate runtime names match known mappings
+   - Validate version format (e.g., semver pattern)
+   - Fail fast on unknown runtime entries
 
-6. **Refactor duplicate code**
-   - Extract shared logic (clone, git ops, PR creation) into a base class
-   - Reduce ~60% code duplication between the two scripts
-   - Effort: 4-6 hours
+6. **Create agent rules for consistent test patterns**
+   - `.claude/rules/unit-tests.md` — Python testing patterns for this repo
+   - `.claude/rules/workflow-tests.md` — Workflow validation guidance
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Add dry-run validation test**
-   - Scheduled workflow that runs dry-run against actual downstream repos
-   - Validates that config file references still exist
-   - Effort: 4-6 hours
-
-8. **Add dependabot/renovate**
-   - Pin and auto-update GitHub Actions versions
-   - Pin Python dependencies
-   - Effort: 1-2 hours
-
-9. **Create CLAUDE.md and agent rules**
-   - Document contribution guidelines
-   - Add test creation rules for automation scripts
-   - Effort: 2-3 hours
+7. **Add type hints and mypy strict checking**
+8. **Use argparse instead of environment variables for script inputs**
+9. **Add dependabot for GitHub Actions version updates**
+10. **Pin dependency versions in workflow pip install steps**
+11. **Add CODEOWNERS, SECURITY.md, and CONTRIBUTING.md**
 
 ## Comparison to Gold Standards
 
 | Dimension | rhoai-component-infra | odh-dashboard | notebooks | kserve |
 |-----------|----------------------|---------------|-----------|--------|
-| Unit Tests | 0/10 | 9/10 | 7/10 | 9/10 |
-| Integration/E2E | 0/10 | 9/10 | 8/10 | 9/10 |
-| Build Integration | 1/10 | 8/10 | 7/10 | 8/10 |
-| Image Testing | 0/10 | 7/10 | 9/10 | 7/10 |
-| Coverage Tracking | 0/10 | 8/10 | 6/10 | 9/10 |
-| CI/CD Automation | 3/10 | 9/10 | 8/10 | 9/10 |
-| Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
-| **Overall** | **1.5/10** | **8.5/10** | **7.0/10** | **8.0/10** |
+| Unit Tests | 0/10 — None | 9/10 — Comprehensive Jest suite | 7/10 — Python tests | 9/10 — Go test suite |
+| Integration/E2E | 0/10 — None | 9/10 — Cypress E2E | 8/10 — Multi-layer | 9/10 — E2E with Kind |
+| Build Integration | 1/10 — No PR CI | 8/10 — PR builds | 7/10 — Image builds | 8/10 — PR validation |
+| Coverage Tracking | 0/10 — None | 8/10 — Codecov | 6/10 — Basic | 9/10 — Enforced thresholds |
+| CI/CD Automation | 4/10 — Manual only | 9/10 — Full automation | 8/10 — Periodic + PR | 9/10 — Comprehensive |
+| Agent Rules | 0/10 — None | 8/10 — Comprehensive rules | 3/10 — Minimal | 2/10 — Basic |
 
-This repository scores the lowest of any analyzed repository. While its small size and narrow focus (automation tooling) partially explain the lack of testing infrastructure, the fact that it **modifies files across 5+ production repositories** makes the absence of tests a critical risk.
+**Key Insight**: While this is a small infrastructure repo, its operational impact (automatically pushing version changes to 5+ downstream repositories) demands testing rigor disproportionate to its code size. A single regex bug here cascades across the entire RHOAI runtime ecosystem.
 
 ## File Paths Reference
 
 | File | Purpose | Lines |
 |------|---------|-------|
 | `.github/workflows/update-runtime-versions.yml` | Orchestrator workflow | 124 |
-| `.github/workflows/update-vllm-repositories.yml` | VLLM Dockerfile updater workflow | 104 |
-| `.github/workflows/update-odh-runtime-versions.yml` | ODH YAML updater workflow | 105 |
-| `.github/scripts/update_vllm_repositories.py` | VLLM version update logic | 321 |
-| `.github/scripts/update_odh_runtime_versions.py` | ODH annotation update logic | 329 |
-| `src/config/update-runtime-version.yaml` | Runtime version configuration | 10 |
-| `README.md` | Documentation | 39 |
+| `.github/workflows/update-vllm-repositories.yml` | VLLM Dockerfile updater workflow | 105 |
+| `.github/workflows/update-odh-runtime-versions.yml` | ODH YAML annotation updater workflow | 106 |
+| `.github/scripts/update_vllm_repositories.py` | VLLM update automation | 321 |
+| `.github/scripts/update_odh_runtime_versions.py` | ODH update automation | 329 |
+| `src/config/update-runtime-version.yaml` | Runtime version configuration | 11 |
+| `README.md` | Documentation | 40 |

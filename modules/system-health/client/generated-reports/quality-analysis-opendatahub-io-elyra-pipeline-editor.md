@@ -1,356 +1,390 @@
 ---
 repository: "opendatahub-io/elyra-pipeline-editor"
-overall_score: 4.3
+overall_score: 4.8
 scorecard:
   - dimension: "Unit Tests"
-    score: 6.0
-    status: "Solid unit test suite with Jest + Testing Library; decent coverage of core logic but some UI components untested"
+    score: 6.5
+    status: "Good test-to-code ratio (22 test files / 57 src files); Jest + Testing Library; 5,309 test LOC covering validation, migration, UI components"
   - dimension: "Integration/E2E"
-    score: 2.0
-    status: "Minimal Cypress suite with only 1 trivial test scenario; no meaningful E2E coverage"
+    score: 3.0
+    status: "Cypress present but minimal — single E2E test (no-toolbar); no real user-flow coverage; Storybook-based integration only"
   - dimension: "Build Integration"
-    score: 1.0
-    status: "No Dockerfile, no container build, no PR-time build validation beyond JS compilation"
+    score: 2.0
+    status: "No container image build; no Konflux simulation; no PR-time build validation beyond yarn build"
   - dimension: "Image Testing"
     score: 0.0
-    status: "No container images built or tested; library distributed via npm only"
+    status: "No Dockerfile or container image testing; library published as npm package only"
   - dimension: "Coverage Tracking"
-    score: 5.0
-    status: "Codecov integration exists but no thresholds enforced; no coverage gates on PRs"
+    score: 6.0
+    status: "Codecov integration in CI; LCOV + text reporters; collectCoverageFrom configured; but no enforcement thresholds"
   - dimension: "CI/CD Automation"
-    score: 4.0
-    status: "Single workflow covers lint/test/cypress but uses outdated actions (v2) and Node 12/14/15; no concurrency control"
+    score: 5.5
+    status: "Single workflow with lint, test, coverage, Cypress jobs; multi-node matrix; yarn cache; but outdated actions (v2), no concurrency control"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules or AI-assisted test guidance"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory; no AI agent test automation guidance"
 critical_gaps:
-  - title: "Repository appears dormant — last commit March 2024"
-    impact: "No active maintenance means accumulating dependency vulnerabilities and stale CI"
+  - title: "Repository appears unmaintained — last commit March 2024"
+    impact: "No security patches, dependency updates, or bug fixes for 15+ months; consumers face increasing CVE exposure"
     severity: "HIGH"
     effort: "Ongoing"
-  - title: "Cypress E2E suite has only 1 trivial test"
-    impact: "No meaningful end-to-end coverage of pipeline editor interactions"
-    severity: "HIGH"
-    effort: "16-24 hours"
-  - title: "No security scanning whatsoever"
-    impact: "No Trivy, CodeQL, Snyk, or dependency scanning; known vulnerabilities in pinned deps (prismjs, trim)"
+  - title: "Severely outdated CI dependencies"
+    impact: "actions/checkout@v2, actions/setup-node@v2, actions/cache@v2, codecov-action@v1 are all EOL/deprecated; CI may break at any time"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "CI uses deprecated GitHub Actions versions"
-    impact: "actions/checkout@v2, actions/setup-node@v2, actions/cache@v2 are deprecated; codecov-action@v1 is EOL"
+  - title: "Minimal E2E test coverage"
+    impact: "Only 1 Cypress test (renders empty pipeline message); no user flow coverage for pipeline editing, node drag/drop, properties panels"
+    severity: "HIGH"
+    effort: "16-24 hours"
+  - title: "No security scanning"
+    impact: "No Trivy, Snyk, CodeQL, or dependency scanning; vulnerabilities in 700K+ line yarn.lock undetected"
+    severity: "HIGH"
+    effort: "2-4 hours"
+  - title: "No container image or build integration testing"
+    impact: "Library consumers discover build issues; no validation that the package integrates correctly"
+    severity: "MEDIUM"
+    effort: "8-12 hours"
+  - title: "No coverage enforcement thresholds"
+    impact: "Coverage can silently decrease without blocking PRs"
     severity: "MEDIUM"
     effort: "1-2 hours"
-  - title: "No coverage enforcement or thresholds"
-    impact: "Coverage can silently regress with no gating on PRs"
-    severity: "MEDIUM"
-    effort: "1-2 hours"
-  - title: "Node.js test matrix uses EOL versions (12, 14, 15)"
-    impact: "Testing against unsupported runtimes provides false confidence; modern Node versions not tested"
-    severity: "MEDIUM"
-    effort: "1 hour"
 quick_wins:
-  - title: "Upgrade GitHub Actions to v4"
-    effort: "1 hour"
-    impact: "Fix deprecation warnings, improve caching, better security"
-  - title: "Update Node.js test matrix to 18, 20, 22"
-    effort: "30 minutes"
-    impact: "Test against supported LTS versions"
-  - title: "Add codecov.yml with coverage threshold"
-    effort: "1 hour"
-    impact: "Prevent silent coverage regressions"
-  - title: "Add GitHub CodeQL analysis workflow"
+  - title: "Update CI actions to current versions (v4)"
     effort: "1-2 hours"
-    impact: "Automated SAST scanning for JavaScript/TypeScript vulnerabilities"
-  - title: "Add Dependabot configuration"
+    impact: "Prevent CI breakage from EOL action versions; improve security of CI pipeline"
+  - title: "Add CodeQL / dependency scanning workflow"
+    effort: "1-2 hours"
+    impact: "Automated vulnerability detection for TypeScript codebase and dependencies"
+  - title: "Add coverage threshold enforcement in Jest config"
     effort: "30 minutes"
-    impact: "Automated dependency update PRs to address known CVEs"
+    impact: "Prevent coverage regressions on PRs"
+  - title: "Add concurrency control to CI workflow"
+    effort: "30 minutes"
+    impact: "Cancel redundant CI runs on force-pushed commits"
+  - title: "Create basic CLAUDE.md with test patterns"
+    effort: "2-3 hours"
+    impact: "Guide AI agents to generate consistent, high-quality tests"
 recommendations:
   priority_0:
-    - "Determine project status — if actively used by ODH, establish maintenance cadence and update all dependencies"
-    - "Add security scanning (CodeQL + Dependabot) to catch vulnerabilities in stale dependencies"
-    - "Upgrade CI to use current GitHub Actions versions and Node.js LTS matrix"
+    - "Assess project status — if actively consumed by ODH, establish maintenance cadence or archive if abandoned"
+    - "Update all GitHub Actions to current versions (checkout@v4, setup-node@v4, cache@v4, codecov-action@v4)"
+    - "Add CodeQL analysis workflow for automated vulnerability scanning"
+    - "Add Dependabot or Renovate for automated dependency updates"
   priority_1:
-    - "Expand Cypress E2E suite to cover core pipeline editor interactions (drag-drop, node properties, validation)"
-    - "Add coverage enforcement with codecov.yml thresholds (e.g., 70% minimum)"
-    - "Add pre-commit hooks for TypeScript type checking (currently only Prettier via husky)"
+    - "Expand Cypress E2E tests to cover core user flows — pipeline creation, node operations, property editing"
+    - "Add coverage enforcement thresholds (e.g., 70% minimum)"
+    - "Add concurrency control to prevent redundant CI runs"
+    - "Create .claude/rules/ with unit test and E2E test patterns"
   priority_2:
-    - "Create agent rules (.claude/rules/) for consistent test patterns"
-    - "Add accessibility testing (axe-core) for the pipeline editor UI"
+    - "Add accessibility testing (jest-axe or Cypress-axe)"
+    - "Add visual regression testing for Storybook components"
     - "Consider migrating from Jest to Vitest for faster test execution"
+    - "Add pre-commit hook enforcement via CI (currently husky local only)"
 ---
 
 # Quality Analysis: elyra-pipeline-editor
 
 ## Executive Summary
-- **Overall Score: 4.3/10**
-- **Repository Type**: TypeScript monorepo (React component library)
-- **Primary Language**: TypeScript/React
-- **Packages**: `@elyra/pipeline-editor` (UI), `@elyra/pipeline-services` (logic)
-- **Framework**: React 17 + Carbon Design System + Elyra Canvas
-- **Build Tool**: Microbundle (pipeline-editor), TypeScript compiler (pipeline-services)
-- **Last Commit**: March 13, 2024 (15+ months dormant)
-- **Agent Rules Status**: Missing — no CLAUDE.md, no .claude/ directory
+
+- **Overall Score: 4.8/10**
+- **Repository**: [opendatahub-io/elyra-pipeline-editor](https://github.com/opendatahub-io/elyra-pipeline-editor)
+- **Type**: TypeScript/React UI library (monorepo with Lerna)
+- **Packages**: `pipeline-editor` (React components), `pipeline-services` (validation/migration logic)
+- **Codebase**: ~18,145 lines of TypeScript across 82 files
+- **Last Commit**: March 13, 2024 (15+ months ago — likely unmaintained)
+- **Agent Rules Status**: Missing
 
 ### Key Strengths
-- Solid unit test foundation with Jest + React Testing Library
-- Good test coverage for pipeline-services package (migration, validation, circular references)
-- ESLint configuration with testing-library and jest-dom plugins
-- Husky pre-commit hooks with lint-staged (Prettier formatting)
-- Storybook for component development and visual testing
-- Strict TypeScript configuration (strict mode, nullChecks, etc.)
+- Solid unit test coverage for `pipeline-services` package (validation, migration v1-v8)
+- Strict TypeScript configuration (all strict checks enabled)
+- Well-configured ESLint with import ordering, license headers, and test-specific rules
+- Husky pre-commit hooks with lint-staged for formatting
+- Codecov integration for coverage reporting
+- Multi-node-version testing matrix (Node 12, 14, 15)
 
 ### Critical Gaps
-- Repository appears dormant (no commits in 15+ months)
-- Cypress E2E suite has only 1 trivial test
-- Zero security scanning (no CodeQL, Trivy, Dependabot)
-- CI uses deprecated action versions and EOL Node.js versions
-- No container image building or testing
-- No coverage enforcement thresholds
+- Repository appears unmaintained (no commits in 15+ months)
+- All GitHub Actions use deprecated v2 versions
+- Only 1 Cypress E2E test — effectively no integration testing
+- Zero security scanning (no CodeQL, Trivy, Snyk, or dependency scanning)
+- No container/image testing (npm library, but no build integration validation)
+- No AI agent test automation rules
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 6.0/10 | Solid Jest + Testing Library suite; 22 test files across 2 packages |
-| Integration/E2E | 2.0/10 | Cypress configured but only 1 trivial test scenario |
-| Build Integration | 1.0/10 | No container build; only JS compilation checked on PR |
-| Image Testing | 0.0/10 | N/A — library published to npm, no container images |
-| Coverage Tracking | 5.0/10 | Codecov upload exists but no thresholds or PR gates |
-| CI/CD Automation | 4.0/10 | Single workflow with lint/test/cypress; deprecated actions |
-| Agent Rules | 0.0/10 | No agent rules, CLAUDE.md, or AI-assisted test guidance |
+| Unit Tests | 6.5/10 | Good ratio (22 test files / 57 src); Jest + Testing Library; strong migration/validation coverage |
+| Integration/E2E | 3.0/10 | Cypress exists but has only 1 trivial test; no real user-flow coverage |
+| **Build Integration** | **2.0/10** | **No container build; no Konflux simulation; basic yarn build only** |
+| Image Testing | 0.0/10 | No Dockerfile; no container image testing at all |
+| Coverage Tracking | 6.0/10 | Codecov integration; LCOV reporters; but no enforcement thresholds |
+| CI/CD Automation | 5.5/10 | Single workflow with 4 jobs; yarn cache; multi-node matrix; outdated actions |
+| Agent Rules | 0.0/10 | No CLAUDE.md, .claude/, or test automation guidance |
 
 ## Critical Gaps
 
-### 1. Repository Appears Dormant
-- **Impact**: No active maintenance means accumulating dependency vulnerabilities, stale CI, and potential incompatibility with downstream consumers
+### 1. Repository Appears Unmaintained
+- **Impact**: No security patches, dependency updates, or bug fixes for 15+ months
 - **Severity**: HIGH
-- **Evidence**: Last commit was `db22f1c` on March 13, 2024 — a Dependabot bump for `@babel/traverse`. Only 1 commit in the shallow clone history
-- **Action**: Determine if this project is still actively consumed by ODH components; if so, establish maintenance cadence
+- **Evidence**: Last commit `db22f1c` on 2024-03-13 was a Dependabot bump of `@babel/traverse`
+- **Only branch**: `main` — no active development branches
 
-### 2. Minimal E2E Test Coverage
-- **Impact**: The pipeline editor's core interactions (drag-drop nodes, configure properties, validate pipelines, export) are completely untested at the integration level
+### 2. Severely Outdated CI Dependencies
+- **Impact**: CI pipeline uses EOL GitHub Actions that may stop working; security risk
 - **Severity**: HIGH
-- **Evidence**: `cypress/integration/no-toolbar.ts` contains a single test that visits a Storybook iframe and checks for empty pipeline text
-- **Effort**: 16-24 hours for meaningful coverage
-- **Action**: Add Cypress tests for: node creation, node connection, property panel interaction, validation error display, pipeline save/load
-
-### 3. Zero Security Scanning
-- **Impact**: Known vulnerabilities in pinned dependencies (`prismjs@1.25.0`, `trim@0.0.3`, `immer@9.0.7`) go undetected
-- **Severity**: HIGH
-- **Evidence**: No `.github/workflows/codeql.yml`, no `.trivyignore`, no `.gitleaks.toml`, no Dependabot config
 - **Effort**: 2-4 hours
-- **Action**: Add CodeQL workflow and `dependabot.yml`
+- **Details**:
+  - `actions/checkout@v2` → current is v4
+  - `actions/setup-node@v2` → current is v4
+  - `actions/cache@v2` → current is v4
+  - `codecov/codecov-action@v1` → current is v4
+  - Node test matrix (12, 14, 15) — all are EOL; current LTS is Node 20/22
 
-### 4. Deprecated CI Infrastructure
-- **Impact**: `actions/checkout@v2`, `actions/setup-node@v2`, `actions/cache@v2` are deprecated. `codecov/codecov-action@v1` is EOL. Node matrix tests against EOL versions (12, 14, 15)
-- **Severity**: MEDIUM
-- **Evidence**: `.github/workflows/build.yaml` lines 28-38
-- **Effort**: 1-2 hours
-- **Action**: Upgrade to `@v4` actions, update Node matrix to `[18, 20, 22]`
+### 3. Minimal E2E Test Coverage
+- **Impact**: No coverage of core user flows; regressions in pipeline editing go undetected
+- **Severity**: HIGH
+- **Effort**: 16-24 hours
+- **Details**: Single Cypress test at `cypress/integration/no-toolbar.ts` only checks that an empty pipeline renders a message. No tests for:
+  - Pipeline creation/editing
+  - Node drag-and-drop
+  - Property panel interactions
+  - Validation error display
+  - Pipeline migration flows
+
+### 4. No Security Scanning
+- **Impact**: 700K+ line yarn.lock with transitive dependencies unscanned for CVEs
+- **Severity**: HIGH
+- **Effort**: 2-4 hours
+- **Details**: No CodeQL, Trivy, Snyk, Dependabot alerts, or any other security scanning configured
 
 ### 5. No Coverage Enforcement
-- **Impact**: Coverage can regress silently; PRs can merge with decreased coverage
+- **Impact**: Coverage can silently decrease without blocking PRs
 - **Severity**: MEDIUM
-- **Evidence**: `codecov/codecov-action@v1` uploads coverage but there's no `codecov.yml` with `target` or `threshold` settings
 - **Effort**: 1-2 hours
-- **Action**: Add `codecov.yml` with `project.default.target: 70%` and `patch.default.target: 80%`
+- **Details**: Codecov uploads coverage but no `codecov.yml` or Jest `coverageThreshold` enforces minimums
+
+### 6. No Container Image Testing
+- **Impact**: Library consumers discover integration issues
+- **Severity**: MEDIUM
+- **Effort**: 8-12 hours
+- **Details**: As an npm library, no Dockerfile exists. However, there's no build integration testing to validate the published package works correctly in consumer applications
 
 ## Quick Wins
 
-### 1. Upgrade GitHub Actions Versions (1 hour)
-Replace deprecated action versions in `.github/workflows/build.yaml`:
+### 1. Update CI Actions to v4 (1-2 hours)
+Replace all `@v2` action references with `@v4`. Update Node test matrix to active versions (18, 20, 22).
+
+### 2. Add CodeQL Scanning (1-2 hours)
 ```yaml
-- uses: actions/checkout@v4
-- uses: actions/setup-node@v4
-- uses: actions/cache@v4
-- uses: codecov/codecov-action@v4
+# .github/workflows/codeql.yml
+name: CodeQL
+on: [push, pull_request]
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+      - uses: github/codeql-action/analyze@v3
 ```
 
-### 2. Update Node.js Test Matrix (30 minutes)
-Replace EOL versions with current LTS:
-```yaml
-strategy:
-  matrix:
-    node-version: [18, 20, 22]
+### 3. Add Coverage Thresholds (30 minutes)
+Add to `jest.config.js`:
+```javascript
+coverageThreshold: {
+  global: {
+    branches: 60,
+    functions: 70,
+    lines: 70,
+    statements: 70,
+  },
+},
 ```
 
-### 3. Add Coverage Threshold (1 hour)
-Create `codecov.yml`:
+### 4. Add CI Concurrency Control (30 minutes)
+Add to `build.yaml`:
 ```yaml
-coverage:
-  status:
-    project:
-      default:
-        target: 70%
-    patch:
-      default:
-        target: 80%
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 ```
 
-### 4. Add CodeQL Scanning (1-2 hours)
-Create `.github/workflows/codeql.yml` for automated SAST on push/PR.
-
-### 5. Add Dependabot (30 minutes)
-Create `.github/dependabot.yml` for automated dependency PRs:
-```yaml
-version: 2
-updates:
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-```
+### 5. Create Basic Agent Rules (2-3 hours)
+Create `.claude/rules/unit-tests.md` with Jest + Testing Library patterns from existing tests.
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflow**: Single workflow `build.yaml` ("Validate") triggered on push and pull_request
+**Workflow**: Single `.github/workflows/build.yaml` ("Validate")
+- **Trigger**: Push and pull_request (all branches)
+- **Jobs**:
+  1. `prepare-yarn-cache` — installs dependencies and populates cache
+  2. `lint` — ESLint + Prettier format check
+  3. `test-coverage` — Jest with `--coverage`, uploads to Codecov
+  4. `test` — Jest across Node 12/14/15 matrix
+  5. `test-integration` — Cypress E2E via Storybook
 
-**Jobs** (5 total):
-1. **prepare-yarn-cache** — Installs dependencies and caches node_modules + Cypress binary
-2. **lint** — Runs ESLint with `--max-warnings=0` and Prettier format check
-3. **test-coverage** — Runs `jest --coverage` and uploads to Codecov
-4. **test** — Matrix job testing on Node 12/14/15 (all EOL)
-5. **test-integration** — Runs Cypress tests against Storybook
+**Strengths**:
+- Cache sharing between jobs via `actions/cache`
+- Separate coverage and test jobs
+- Multi-version Node testing
 
-**Issues**:
-- No concurrency control (`concurrency:` block missing) — multiple PR pushes queue up
-- No workflow-level timeout
-- Caching uses `actions/cache@v2` instead of built-in `setup-node` caching
-- `yarn install` runs in every job despite cache (should use `--frozen-lockfile` consistently)
-- Node version `"*"` for installation is non-deterministic
-- No release workflow or automated publishing
+**Weaknesses**:
+- All actions at v2 (deprecated/EOL)
+- Node versions 12/14/15 are all EOL
+- No concurrency control — redundant runs on force-pushed PRs
+- No release/publish automation
+- `yarn install` runs in every job despite cache (should use cache hit check)
 
 ### Test Coverage
 
-**Unit Tests (22 files)**:
-- **pipeline-editor** (9 test files): Tests for PipelineEditor, PalettePanel, NodeTooltip, PipelineController, SplitPanelLayout, TabbedPanelLayout, properties-panels, ThemeProvider
-- **pipeline-services** (13 test files): Comprehensive migration tests (v1-v8), validation tests, circular reference detection, utility tests
-- **Framework**: Jest 26 + ts-jest + React Testing Library
-- **Quality**: Tests use proper testing patterns (render, screen, userEvent); good isolation with test-utils
+**Framework**: Jest 26 with ts-jest, @testing-library/react, @testing-library/jest-dom
 
-**Integration/E2E Tests**:
-- **Cypress 9.2.1** configured but with only 1 test file
-- Single test: visits Storybook iframe, checks for empty pipeline message text
-- No tests for: node interaction, pipeline creation, validation, property panels, drag-and-drop
+**Test Distribution**:
+| Package | Test Files | Focus |
+|---------|-----------|-------|
+| pipeline-services | 12 | Validation logic, migration v1-v8, circular references |
+| pipeline-editor | 10 | React components (NodeTooltip, PipelineEditor, PalettePanel, etc.) |
 
-**Coverage**:
-- Coverage collection configured for all `.ts/.tsx` files excluding declarations, test files, and test-utils
-- Reports in `lcov` and `text` format
-- Uploaded to Codecov but no enforcement thresholds
+**Test-to-Code Ratio**: 22 test files / 57 source files = 38.6% (decent for a UI library)
+**Test LOC**: 5,309 lines of tests / 12,185 lines of source = 43.6% test-to-code ratio
 
-**Test-to-Code Ratio**: 22 test files / ~38 source files = 0.58 (adequate for core logic, weak for UI components)
+**Strengths**:
+- Good coverage of migration logic (v1-v8, each with dedicated tests)
+- Validation logic well-tested including circular reference detection
+- React components tested with Testing Library (DOM-centric testing)
+- `PipelineController` has comprehensive tests (1,395 lines)
+
+**Weaknesses**:
+- Several React components lack test files entirely (CustomFormControls, IconButton, errors, ThemeProvider)
+- No snapshot tests despite being a UI component library
+- No accessibility tests (jest-axe)
 
 ### Code Quality
 
-**ESLint** (Strong):
-- React-app base configuration
-- Jest + Testing Library plugins for test quality
-- Import order enforcement with alphabetical sorting
-- Header/license enforcement
-- `--max-warnings=0` enforcement in CI (zero tolerance)
+**ESLint**: Well-configured with:
+- `react-app` base config
+- `jest/recommended` and `jest/style` rules
+- `testing-library/react` rules
+- `jest-dom/recommended` rules
+- Import ordering and license header enforcement
+- TypeScript-specific overrides for test files
 
-**Prettier** (Configured):
-- Empty config `{}` (uses defaults)
-- CI runs `format:check` to enforce
-- Husky pre-commit runs Prettier via lint-staged
+**TypeScript**: Strict mode enabled:
+- `strict: true`, `strictNullChecks`, `strictFunctionTypes`
+- `strictBindCallApply`, `strictPropertyInitialization`
+- `noImplicitReturns`, `noFallthroughCasesInSwitch`
+- `forceConsistentCasingInFileNames`
 
-**TypeScript** (Strong):
-- Strict mode enabled with all strict options
-- `noImplicitReturns`, `noFallthroughCasesInSwitch`, `forceConsistentCasingInFileNames`
-- `isolatedModules` for compatibility
+**Prettier**: Configured (empty config = defaults), integrated via lint-staged
 
-**Pre-commit Hooks**:
-- Husky v3 with lint-staged
-- Only runs Prettier formatting — no type checking, no linting in pre-commit
+**Pre-commit Hooks**: Husky v3 with lint-staged (formats `.tsx,.ts,.js,.md,.css,.html,.json`)
+- Note: Husky v3 is very outdated (current is v9)
+- Hook only runs Prettier, not ESLint
 
 ### Container Images
 
-**Not Applicable** — This is a React component library published to npm. No Dockerfile or container build exists. The library is consumed by downstream applications (e.g., Elyra, ODH Dashboard components).
+**Status**: Not applicable — this is a pure npm library package. No Dockerfile, Containerfile, or docker-compose exists.
+
+However, the lack of any integration testing for the published package (e.g., testing that imports work correctly in a consumer app, or that the bundle is correctly generated) is a gap.
 
 ### Security
 
-**Status: Critical Gap**
+**Status**: No security scanning of any kind.
 
-| Security Practice | Status |
-|------------------|--------|
-| CodeQL/SAST | Not configured |
-| Dependency scanning | Not configured |
-| Trivy/container scanning | N/A (no containers) |
-| Secret detection | Not configured |
-| Dependabot | Not configured |
-| Known vulnerable deps | `prismjs@1.25.0`, `trim@0.0.3` pinned in resolutions |
-
-The `resolutions` field in `package.json` pins `prismjs@1.25.0` and `trim@0.0.3` — these appear to be security fixes but are now themselves outdated.
+- No CodeQL/SAST
+- No dependency scanning (Dependabot/Renovate/Snyk)
+- No secret detection
+- No vulnerability scanning
+- `yarn.lock` is 700K+ lines with extensive transitive dependencies
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status**: Missing
-- No `CLAUDE.md` or `AGENTS.md` in repository root
-- No `.claude/` directory
-- No `.claude/rules/` for test creation patterns
-- No `.claude/skills/` for custom skills
-- No testing documentation beyond inline code comments
+**Status**: Missing entirely.
 
-**Recommendation**: Generate agent rules with `/test-rules-generator` to establish:
-- Unit test patterns for React components (Testing Library conventions)
-- Jest configuration and mock patterns
-- Cypress E2E test templates for pipeline editor interactions
-- Coverage expectations and test organization
+- No `CLAUDE.md` or `AGENTS.md`
+- No `.claude/` directory
+- No `.claude/rules/` for test creation guidance
+- No `.claude/skills/` for custom analysis
+
+**Recommendation**: Generate rules with `/test-rules-generator` covering:
+- Unit test patterns (Jest + Testing Library for React components)
+- Migration test patterns (versioned migration testing)
+- Validation test patterns
+- Cypress E2E test patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Assess project lifecycle status** — Determine if `elyra-pipeline-editor` is still actively consumed. If yes, assign a maintainer and establish monthly maintenance cadence
-2. **Add security scanning** — CodeQL workflow + Dependabot for npm and GitHub Actions
-3. **Upgrade CI infrastructure** — Actions v4, Node LTS matrix, fix codecov action
+
+1. **Determine project status** — If actively consumed by ODH components, establish a maintenance cadence. If abandoned, archive the repository and document alternatives.
+2. **Update all GitHub Actions** to v4 and Node matrix to LTS versions (18, 20, 22)
+3. **Add CodeQL analysis** for automated TypeScript vulnerability scanning
+4. **Add Dependabot** for automated dependency update PRs
 
 ### Priority 1 (High Value)
-1. **Expand Cypress E2E suite** — Add tests for pipeline creation, node connection, property editing, validation display, error handling
-2. **Add coverage enforcement** — `codecov.yml` with project (70%) and patch (80%) targets
-3. **Add TypeScript type checking to CI** — Run `tsc --noEmit` as a separate CI step (currently only runs during `build`)
-4. **Upgrade dependencies** — React 17→18, Jest 26→29, Cypress 9→13, TypeScript 4.1→5.x
+
+1. **Expand Cypress E2E coverage** — Add tests for pipeline creation, node operations, property panel editing, validation error display
+2. **Add coverage enforcement** — Set minimum thresholds in Jest config or `codecov.yml`
+3. **Add concurrency control** to CI workflow
+4. **Create `.claude/rules/`** with unit test and E2E test creation patterns
+5. **Update Husky to v9** and add ESLint to pre-commit hooks
 
 ### Priority 2 (Nice-to-Have)
-1. **Create agent rules** — `.claude/rules/` with unit-tests.md, e2e-tests.md, react-components.md
-2. **Add accessibility testing** — `@axe-core/react` or `jest-axe` for a11y validation
-3. **Add Storybook visual regression** — Chromatic or Percy for visual snapshot testing
-4. **Migrate to Vitest** — Faster test execution, native ESM support
-5. **Add concurrency control** — `concurrency: { group: ..., cancel-in-progress: true }` to CI workflow
+
+1. Add accessibility testing (`jest-axe` for components)
+2. Add visual regression testing for Storybook stories
+3. Migrate from Jest 26 to Vitest for faster test execution
+4. Add Storybook interaction tests as an alternative to Cypress
+5. Add build-time bundle size checks
+6. Consider migrating from Lerna to modern workspaces (npm/yarn/pnpm)
 
 ## Comparison to Gold Standards
 
-| Practice | elyra-pipeline-editor | odh-dashboard | notebooks | kserve |
-|----------|----------------------|---------------|-----------|--------|
-| Unit Tests | Jest + RTL (22 files) | Jest + RTL (500+ files) | pytest | Go testing |
-| E2E Tests | Cypress (1 test) | Cypress (comprehensive) | Robot Framework | Kind + pytest |
-| Coverage Tracking | Codecov (no thresholds) | Codecov (enforced) | Per-notebook | Codecov (enforced) |
-| Security Scanning | None | CodeQL + Snyk | Trivy | CodeQL + Trivy |
-| CI Actions Version | v2 (deprecated) | v4 (current) | v4 (current) | v4 (current) |
-| Pre-commit | Prettier only | Prettier + lint + type check | Various | golangci-lint |
-| Agent Rules | None | Comprehensive | None | None |
-| Dependency Management | Manual | Dependabot | Dependabot | Dependabot |
-| Container Testing | N/A | E2E with Kind | 5-layer validation | envtest + Kind |
-| Release Automation | None | Automated | Automated | Automated |
+| Practice | elyra-pipeline-editor | odh-dashboard | notebooks | Best Practice |
+|----------|----------------------|---------------|-----------|---------------|
+| Unit Tests | Jest + Testing Library | Jest + Testing Library + Cypress CT | pytest | Framework-specific, comprehensive |
+| E2E Tests | 1 Cypress test | Extensive Cypress suite | Multi-layer validation | Full user-flow coverage |
+| Coverage Tracking | Codecov (no thresholds) | Codecov with enforcement | Coverage reports | Enforced minimums |
+| Security Scanning | None | CodeQL + Snyk | Trivy + Snyk | Multi-tool scanning |
+| CI/CD | Single workflow (outdated) | Multi-workflow, modern | Multi-workflow | Modular, current actions |
+| Container Testing | None (npm library) | Image builds + E2E | 5-layer validation | Build + runtime + security |
+| Agent Rules | None | Comprehensive .claude/ | N/A | Test creation rules per type |
+| Pre-commit | Prettier only (Husky v3) | ESLint + Prettier | Pre-commit framework | Lint + format + type-check |
+| TypeScript Strictness | Full strict mode | Strict mode | N/A (Python) | All strict checks enabled |
 
 ## File Paths Reference
 
-| File | Purpose |
-|------|---------|
-| `.github/workflows/build.yaml` | Single CI workflow (lint, test, coverage, cypress) |
-| `package.json` | Root monorepo config with husky/lint-staged |
-| `jest.config.js` | Root Jest config (projects mode) |
-| `jest.config.base.js` | Shared Jest preset (ts-jest, node env) |
-| `.eslintrc.js` | ESLint with react-app, jest, testing-library plugins |
-| `.prettierrc` | Prettier config (empty/defaults) |
-| `tsconfig.base.json` | Shared TypeScript strict config |
-| `cypress.json` | Cypress config pointing to Storybook (localhost:6006) |
-| `cypress/integration/no-toolbar.ts` | Single E2E test |
-| `lerna.json` | Lerna monorepo config (yarn workspaces) |
-| `packages/pipeline-editor/` | React component library (UI) |
-| `packages/pipeline-services/` | Pipeline logic (migration, validation) |
+### CI/CD
+- `.github/workflows/build.yaml` — Single CI workflow (lint, test, coverage, Cypress)
+
+### Testing
+- `jest.config.js` — Root Jest config (multi-project)
+- `jest.config.base.js` — Shared Jest configuration
+- `packages/pipeline-editor/jest.config.js` — Editor package Jest config (jsdom env)
+- `packages/pipeline-services/jest.config.js` — Services package Jest config (node env)
+- `cypress.json` — Cypress configuration (base URL: localhost:6006)
+- `cypress/integration/no-toolbar.ts` — Only E2E test
+
+### Code Quality
+- `.eslintrc.js` — Root ESLint configuration
+- `cypress/.eslintrc.js` — Cypress-specific ESLint overrides
+- `.prettierrc` — Prettier config (defaults)
+- `tsconfig.base.json` — TypeScript strict configuration
+
+### Project Structure
+- `lerna.json` — Lerna monorepo config (v3)
+- `package.json` — Root package with workspaces, scripts, husky config
+- `packages/pipeline-editor/` — React component library
+- `packages/pipeline-services/` — Validation and migration logic
+
+### Other
+- `CONTRIBUTING.md` — Contributor guidelines (DCO)
+- `.github/PULL_REQUEST_TEMPLATE` — PR template
+- `stories/` — Storybook stories
+- `.storybook/` — Storybook configuration
+- `examples/` — Example applications

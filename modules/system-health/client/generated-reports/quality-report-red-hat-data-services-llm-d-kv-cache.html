@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:48 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 05:04 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/llm-d-kv-cache</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#fd7e14"
+                                stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="231.84934199999992"
+                                stroke-dashoffset="203.57503199999996"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">5.9</div>
+                        <div class="score-value">6.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Solid Go unit tests across pkg/ with testify; benchmark tests present; but no coverage enforcement</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Strong Go + Python test suites with testify, testcontainers, and pytest; 87% test-to-source LOC ratio in Go</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Testcontainers-based E2E on PR; integration tests for component interaction; Kind script for cluster-level testing</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Testcontainers-based E2E for UDS tokenizer, Go integration tests, Kind-based deployment script; some CI triggers disabled</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">No PR-time Konflux simulation; Dockerfile.konflux only in Tekton push/label trigger; 3 CI workflows disabled (target main_2)</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Tekton/Konflux pipeline exists but is label/comment-triggered, not automatic; no PR-time image build validation in GitHub CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Multi-stage Dockerfile; smoke test stage in Konflux Dockerfile; Trivy on release only; no PR-time image scanning</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Smoke test stage in Konflux Dockerfile; no runtime validation in PR CI; Trivy only on release</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No codecov/coveralls integration; no coverage flags in test commands; no coverage thresholds</div>
+                            <div class="scorecard-status">No codecov/coveralls integration; no coverage thresholds; no PR coverage reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">PR tests run for unit+E2E; nightly race detector; but lint/examples/UDS-tokenizer workflows disabled (main_2 branch)</div>
+                            <div class="scorecard-status">Core test workflow active on PRs; lint, examples, and UDS tokenizer CI disabled (target main_2); nightly race detector; good caching</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no AGENTS.md; Copilot setup present but minimal</div>
+                            <div class="scorecard-status">No CLAUDE.md, .claude/ directory, or agent rules; Copilot setup present but no test guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,51 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Three CI workflows effectively disabled — targeting non-existent main_2 branch</div>
-                            <p>Linting, examples testing, and UDS tokenizer integration tests never run on PRs to main</p>
+                            <div class="item-description">No code coverage tracking or enforcement</div>
+                            <p>Cannot measure or enforce test coverage; regressions go undetected; no visibility into untested code paths</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">Lint workflow disabled on main branch PRs</div>
+                            <p>Go linting (golangci-lint with 35+ linters), Python linting (ruff), and pre-commit checks do not run on PRs; code quality issues slip through</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No test coverage tracking or enforcement</div>
-                            <p>Coverage regressions go undetected; no baseline or trend visibility</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No PR-time container image scanning</div>
-                            <p>Vulnerabilities only discovered at release time via Trivy; critical CVEs can ship</p>
+                            <div class="item-description">No PR-time security scanning (Trivy only on release)</div>
+                            <p>Vulnerabilities in dependencies and container images are not detected until after release; shifts security left too late</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No PR-time Konflux build validation</div>
-                            <p>Konflux build failures discovered post-merge; Dockerfile.konflux not tested in CI</p>
+                        <li class="item-card high">
+                            <div class="item-description">No CodeQL/SAST or secret detection in CI</div>
+                            <p>Static application security testing gaps; potential code-level vulnerabilities and leaked secrets not caught</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No agent rules or AI test automation guidance</div>
-                            <p>AI-assisted contributions have no guardrails for test quality, patterns, or standards</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">kv_connectors Python tests not wired into CI</div>
-                            <p>fs_backend and performance tests exist but are never run automatically</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">3-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">Several CI workflows disabled (target non-existent main_2 branch)</div>
+                            <p>Lint, examples verification, and UDS tokenizer integration tests do not run; reduces CI safety net</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                     </ul>
@@ -472,35 +464,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Fix disabled workflows — change main_2 to main in ci-lint, ci-examples, ci-uds-tokenizer</div>
-                            <p>Immediately enables linting, examples verification, and Python integration tests on every PR</p>
+                            <div class="item-description">Fix disabled CI workflows by changing main_2 to main</div>
+                            <p>Re-enables lint checks, example verification, and UDS tokenizer integration tests on PRs</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add coverage generation flags to go test commands</div>
-                            <p>Generates coverage data; enables future codecov integration</p>
+                            <div class="item-description">Add Trivy scanning to PR CI workflow</div>
+                            <p>Catches container vulnerability issues before merge, not just at release time</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to PR workflow</div>
-                            <p>Catches container vulnerabilities before merge, not just at release</p>
+                            <div class="item-description">Add codecov integration with coverage generation</div>
+                            <p>Visibility into test coverage with PR-level enforcement and trend tracking</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create basic CLAUDE.md with testing standards</div>
-                            <p>Establishes test quality expectations for AI-assisted contributions</p>
+                            <div class="item-description">Add CodeQL SAST workflow</div>
+                            <p>Automated detection of code-level security vulnerabilities in Go and Python</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create basic agent rules for test patterns</div>
+                            <p>Consistent AI-generated test quality using existing testify/testcontainers/pytest patterns</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Fix disabled CI workflows by changing branch target from main_2 to main (30 min fix, massive impact)</li><li>Add coverage generation (-coverprofile, -covermode=atomic) to unit-test Makefile target</li><li>Integrate codecov with coverage thresholds and PR status checks</li></ul>
+                            <ul><li>Fix ci-lint.yaml, ci-examples.yaml, and ci-uds-tokenizer.yaml to trigger on &#x27;main&#x27; instead of &#x27;main_2&#x27;</li><li>Add codecov integration with coverage generation (go test -coverprofile, pytest --cov) and minimum threshold enforcement</li><li>Add Trivy container scanning to PR CI workflow, not just release pipeline</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Move Trivy scanning from release-only to PR workflow for early vulnerability detection</li><li>Wire kv_connectors/llmd_fs_backend Python tests into CI pipeline</li><li>Add PR-time Dockerfile.konflux build validation via docker build --target test</li><li>Create .claude/rules/ with test standards for Go and Python components</li></ul>
+                            <ul><li>Add CodeQL workflow for Go and Python static analysis</li><li>Add secret detection (gitleaks or trufflehog) to PR workflow</li><li>Create .claude/rules/ directory with test creation rules (unit-tests.md, integration-tests.md, e2e-tests.md)</li><li>Add concurrency control to ci-test.yaml to cancel redundant runs</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add Kind-based cluster integration test to periodic CI (tests/kind-vllm-cpu.sh already exists)</li><li>Add SBOM generation to release pipeline</li><li>Implement contract tests between Go gRPC client and Python tokenizer service</li><li>Add mutation testing (go-mutesting) to periodic CI</li></ul>
+                            <ul><li>Add performance regression benchmarking to CI (benchmark tests already exist but don&#x27;t run in CI)</li><li>Create contract tests for gRPC API boundaries</li><li>Add SBOM generation to container build process</li><li>Enable markdownlint in pre-commit (currently commented out)</li></ul>
                         </div>
                     </div>
                 </div>

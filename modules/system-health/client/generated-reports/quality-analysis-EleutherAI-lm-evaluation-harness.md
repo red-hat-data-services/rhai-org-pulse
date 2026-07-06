@@ -1,448 +1,381 @@
 ---
 repository: "EleutherAI/lm-evaluation-harness"
-overall_score: 5.8
+overall_score: 5.6
 scorecard:
   - dimension: "Unit Tests"
-    score: 7.0
-    status: "Solid pytest suite covering core evaluator, metrics, CLI, tasks, caching, and model backends"
+    score: 6.5
+    status: "35 test files covering core APIs, evaluator, models, and filters; good parametrized tests but low source-to-test ratio"
   - dimension: "Integration/E2E"
     score: 5.0
-    status: "Evaluator integration tests exist but GPU/model backend tests are commented out in CI"
+    status: "Evaluator integration tests exist but model backend tests are commented out in CI; no E2E pipeline tests"
   - dimension: "Build Integration"
-    score: 3.0
-    status: "No container builds, no image validation, no deployment testing in CI"
+    score: 2.0
+    status: "No container builds, no image testing, no build validation in PR workflows"
   - dimension: "Image Testing"
     score: 1.0
-    status: "No Dockerfile, no container image builds, no runtime validation"
+    status: "No Dockerfile, no container image, no runtime validation"
   - dimension: "Coverage Tracking"
-    score: 2.0
-    status: "pytest-cov in dev dependencies but no coverage enforcement, no codecov, no thresholds"
+    score: 1.5
+    status: "pytest-cov listed as dev dependency but no codecov integration, no thresholds, no PR coverage reports"
   - dimension: "CI/CD Automation"
     score: 6.0
-    status: "PR-triggered linting + multi-Python unit tests + task change detection, but no GPU testing or coverage reporting"
+    status: "3 workflows with matrix testing, uv caching, and changed-file detection; missing concurrency control and external model tests"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory — zero AI agent guidance"
+    status: "No CLAUDE.md, no .claude/ directory, no agent rules for test creation"
 critical_gaps:
   - title: "No coverage tracking or enforcement"
-    impact: "No visibility into test coverage, regressions can silently reduce coverage"
+    impact: "No visibility into test coverage trends; regressions can merge without detection"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No container image or deployment testing"
-    impact: "Library packaging issues not caught until PyPI publish; no containerized usage validation"
-    severity: "MEDIUM"
+  - title: "No security scanning in CI"
+    impact: "Dependency vulnerabilities, secrets, and code security issues not detected"
+    severity: "HIGH"
+    effort: "2-4 hours"
+  - title: "External model tests disabled in CI"
+    impact: "Model backend integrations (vLLM, OpenVINO, API models) not validated on PRs"
+    severity: "HIGH"
     effort: "8-12 hours"
-  - title: "GPU/model backend tests disabled in CI"
-    impact: "Model backend regressions (vLLM, OpenVINO, GGUF, etc.) not caught until users report"
-    severity: "HIGH"
-    effort: "16-24 hours"
-  - title: "No security scanning (SAST, dependency, secret detection)"
-    impact: "Vulnerabilities in dependencies or code not detected proactively"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No agent rules for AI-assisted development"
-    impact: "AI agents contributing to the repo have no guidance on test patterns, code style, or quality gates"
+  - title: "No container image or Dockerfile"
+    impact: "No standardized deployment, no reproducible runtime environment for users"
+    severity: "MEDIUM"
+    effort: "8-16 hours"
+  - title: "No concurrency control on workflows"
+    impact: "Redundant CI runs on rapid pushes waste resources"
     severity: "LOW"
-    effort: "4-6 hours"
+    effort: "1 hour"
 quick_wins:
-  - title: "Add codecov integration with coverage reporting"
+  - title: "Add codecov integration to PR workflow"
     effort: "2-4 hours"
-    impact: "Immediate visibility into test coverage with PR-level reporting and threshold enforcement"
-  - title: "Enable GitHub Dependabot for dependency scanning"
-    effort: "30 minutes"
-    impact: "Automated security alerts and PRs for vulnerable dependencies"
-  - title: "Add CodeQL or Bandit SAST scanning workflow"
+    impact: "Immediate visibility into coverage trends and PR-level coverage changes"
+  - title: "Add Trivy/Safety dependency scanning"
     effort: "1-2 hours"
-    impact: "Catch security issues in Python code (already using ruff with flake8-bandit rules, but no dedicated SAST)"
-  - title: "Add --cov flag to pytest in CI workflow"
+    impact: "Early detection of vulnerable dependencies (critical for ML supply chain)"
+  - title: "Enable concurrency control on workflows"
     effort: "30 minutes"
-    impact: "Generate coverage reports in CI (pytest-cov already a dev dependency)"
+    impact: "Cancel redundant CI runs, save compute"
+  - title: "Uncomment and fix external model test job"
+    effort: "4-6 hours"
+    impact: "Validate model backend integrations on every PR"
+  - title: "Add CodeQL or Semgrep scanning workflow"
+    effort: "1-2 hours"
+    impact: "Catch code security issues (injection, unsafe deserialization) before merge"
 recommendations:
   priority_0:
-    - "Add coverage tracking: enable pytest --cov in CI, integrate codecov, set minimum threshold (e.g. 60%)"
-    - "Re-enable GPU/model backend testing in CI with self-hosted GPU runners or conditional nightly jobs"
-    - "Add dependency scanning via Dependabot or pip-audit"
+    - "Add codecov/coveralls integration with PR reporting and minimum coverage thresholds"
+    - "Add dependency vulnerability scanning (Safety, pip-audit, or Trivy) to PR workflow"
+    - "Add CodeQL or Semgrep SAST scanning workflow"
   priority_1:
-    - "Add CodeQL or dedicated SAST workflow for security analysis"
-    - "Create a Dockerfile for containerized evaluation and test image builds in CI"
-    - "Add mypy type checking to CI (currently skipped in pre-commit)"
+    - "Re-enable and fix external model backend tests in CI"
+    - "Add Dockerfile for reproducible evaluation environments"
+    - "Create comprehensive agent rules for test creation (.claude/rules/)"
+    - "Add type checking (mypy) to CI pipeline — currently skipped in pre-commit"
   priority_2:
-    - "Create comprehensive agent rules (.claude/rules/) for test automation guidance"
+    - "Add integration tests for task YAML validation at scale"
     - "Add performance regression testing for evaluation throughput"
-    - "Add integration tests for new model backends (sglang, litellm) in CI"
+    - "Add multi-architecture container support"
+    - "Add SBOM generation and image signing"
 ---
 
-# Quality Analysis: lm-evaluation-harness
+# Quality Analysis: EleutherAI/lm-evaluation-harness
 
 ## Executive Summary
-- **Overall Score: 5.8/10**
-- **Repository Type**: Python library (LLM evaluation framework)
-- **Primary Language**: Python (88,480 lines of source, 10,690 lines of tests)
-- **Framework**: pytest with xdist parallelization
-- **Key Strengths**: Well-organized pre-commit hooks with ruff linting, comprehensive CLI test suite, smart task-change-triggered testing, multi-Python-version CI matrix
-- **Critical Gaps**: No coverage tracking/enforcement, GPU tests disabled in CI, no security scanning, no container image support, no agent rules
-- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
+
+- **Overall Score: 5.6/10**
+- **Repository Type**: Python library / CLI tool for evaluating language models
+- **Primary Language**: Python (88K+ lines of source, 10K+ lines of tests)
+- **Framework**: Custom evaluation framework with pluggable model backends (HuggingFace, vLLM, API models, etc.)
+- **Task Catalog**: 13,845 YAML task definitions across hundreds of benchmarks
+
+### Key Strengths
+- Strong pre-commit hook configuration with Ruff linting, codespell, and markdown checking
+- Well-structured test suite with parametrized tests covering core evaluation APIs
+- Smart CI optimization with changed-file detection for task modifications
+- Multi-Python-version matrix testing (3.10, 3.11, 3.12)
+- Good contributing documentation with clear guidelines
+
+### Critical Gaps
+- **No coverage tracking**: pytest-cov is a dev dependency but never used in CI; no codecov integration
+- **No security scanning**: No SAST, dependency scanning, or secret detection in any workflow
+- **Model tests disabled**: External model backend tests are commented out in CI
+- **No container support**: No Dockerfile, no image testing, no reproducible runtime
+- **No agent rules**: No CLAUDE.md or .claude/ directory for AI-assisted development
+
+### Agent Rules Status: Missing
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 7.0/10 | Solid pytest suite covering core evaluator, metrics, CLI, tasks, caching, and model backends |
-| Integration/E2E | 5.0/10 | Evaluator integration tests exist but GPU/model backend tests are commented out in CI |
-| Build Integration | 3.0/10 | No container builds, no image validation, no deployment testing in CI |
-| Image Testing | 1.0/10 | No Dockerfile, no container image builds, no runtime validation |
-| Coverage Tracking | 2.0/10 | pytest-cov in dev dependencies but no coverage enforcement, no codecov, no thresholds |
-| CI/CD Automation | 6.0/10 | PR-triggered linting + multi-Python unit tests + task change detection, but no GPU testing or coverage reporting |
-| Agent Rules | 0.0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory — zero AI agent guidance |
+| Unit Tests | 6.5/10 | 35 test files, ~10K lines; parametrized tests but low coverage ratio |
+| Integration/E2E | 5.0/10 | Evaluator integration tests exist; model backend tests disabled in CI |
+| **Build Integration** | **2.0/10** | **No container builds or image validation** |
+| Image Testing | 1.0/10 | No Dockerfile, no container images, no runtime validation |
+| Coverage Tracking | 1.5/10 | pytest-cov available but unused; no enforcement |
+| CI/CD Automation | 6.0/10 | 3 workflows, matrix testing, caching; missing concurrency and model tests |
+| Agent Rules | 0.0/10 | No CLAUDE.md, no .claude/ directory, no test creation rules |
 
 ## Critical Gaps
 
 ### 1. No Coverage Tracking or Enforcement
-- **Impact**: No visibility into test coverage; regressions can silently reduce coverage. Test-to-code ratio is only 12.1% (10,690 test lines vs 88,480 source lines).
+- **Impact**: No visibility into what percentage of code is tested; coverage can silently degrade
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: `pytest-cov` is listed as a dev dependency in `pyproject.toml`, but `--cov` is never used in the CI workflow (`unit_tests.yml`). No `.codecov.yml` or `.coveragerc` exists. No PR coverage gates.
+- **Details**: `pytest-cov` is listed in `[project.optional-dependencies] dev` but the CI pytest command does not include `--cov`. No `.codecov.yml` or `.coveragerc` exists. No PR comments with coverage diffs.
+- **File**: `pyproject.toml:87` (dev dependencies), `.github/workflows/unit_tests.yml:66` (pytest command)
 
-### 2. GPU/Model Backend Tests Disabled in CI
-- **Impact**: The `testmodels` job in `unit_tests.yml` (lines 92-124) is entirely commented out. Model backend tests for vLLM, OpenVINO, GGUF, sglang, litellm, and GPTQModel exist in `tests/models/` (12 test files) but only run locally. Two model test files (`test_openvino.py`, `test_hf_steered.py`) are explicitly `--ignore`d in the active test job.
-- **Severity**: HIGH
-- **Effort**: 16-24 hours (requires GPU runner infrastructure)
-
-### 3. No Security Scanning
-- **Impact**: No SAST (CodeQL, Semgrep), no dependency scanning (Dependabot, pip-audit), no secret detection (Gitleaks, TruffleHog). Ruff does enable `flake8-bandit` rules (`S` prefix) which catches some Python security issues, but this is not a substitute for dedicated security tooling.
+### 2. No Security Scanning
+- **Impact**: Python ML packages have significant supply-chain attack surface; dependency vulnerabilities go undetected
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
+- **Details**: No CodeQL, Semgrep, Trivy, Safety, pip-audit, Gitleaks, or Dependabot configuration. The pre-commit hooks include `detect-private-key` which is a minimal check, but no CI-level scanning exists. Given this project loads arbitrary task YAML and runs code, SAST is critical.
+- **Missing files**: No `.github/workflows/codeql.yml`, no `.github/dependabot.yml`, no `.gitleaks.toml`
 
-### 4. No Container/Image Testing
-- **Impact**: No Dockerfile exists. For a widely-used library, container support enables reproducible evaluations. No image build validation means packaging issues are only caught at PyPI publish time.
-- **Severity**: MEDIUM
+### 3. External Model Tests Disabled in CI
+- **Impact**: Model backend integrations (vLLM, OpenVINO, HF steered, API models) are not validated on PRs
+- **Severity**: HIGH
 - **Effort**: 8-12 hours
+- **Details**: The `testmodels` job in `unit_tests.yml` is entirely commented out. Tests in `tests/models/` exist for 14 model backends but several are explicitly ignored in the CI pytest command (`--ignore=tests/models/test_openvino.py --ignore=tests/models/test_hf_steered.py`). Only CPU-compatible model tests run.
+- **File**: `.github/workflows/unit_tests.yml:77-109` (commented out job)
 
-### 5. No Agent Rules
-- **Impact**: No AI agent guidance for contributors. As the project grows, AI-assisted development has no guardrails for test patterns, code conventions, or quality gates.
-- **Severity**: LOW
-- **Effort**: 4-6 hours
+### 4. No Container Image Support
+- **Impact**: Users cannot pull a ready-to-use Docker image; no standardized deployment
+- **Severity**: MEDIUM
+- **Effort**: 8-16 hours
+- **Details**: No Dockerfile, Containerfile, or docker-compose.yml. For an ML evaluation framework frequently used in CI pipelines and research environments, a container image would significantly improve reproducibility.
+
+### 5. Mypy Type Checking Skipped in CI
+- **Impact**: Type errors not caught before merge
+- **Severity**: MEDIUM
+- **Effort**: 4-8 hours
+- **Details**: The `SKIP` env var in the linter job explicitly skips mypy: `SKIP: "no-commit-to-branch,mypy"`. No standalone mypy check exists.
+- **File**: `.github/workflows/unit_tests.yml:33`
 
 ## Quick Wins
 
-### 1. Add `--cov` to pytest in CI (30 minutes)
+### 1. Add Codecov Integration (2-4 hours)
+- **Impact**: Immediate coverage visibility and trend tracking
+- **Implementation**:
 ```yaml
-# In unit_tests.yml, change:
+# Add to unit_tests.yml testcpu job
 - name: Test with pytest
-  run: pytest -x --showlocals -s -vv -n=auto --cov=lm_eval --cov-report=xml --ignore=tests/models/test_openvino.py --ignore=tests/models/test_hf_steered.py
-```
+  run: pytest -x --showlocals -s -vv -n=auto --cov=lm_eval --cov-report=xml --ignore=tests/models/test_openvino.py
 
-### 2. Enable Dependabot (30 minutes)
-Create `.github/dependabot.yml`:
-```yaml
-version: 2
-updates:
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-```
-
-### 3. Add Codecov Integration (2-4 hours)
-Add to `unit_tests.yml` after the test step:
-```yaml
 - name: Upload coverage
   uses: codecov/codecov-action@v4
   with:
-    files: ./coverage.xml
-    fail_ci_if_error: false
+    file: ./coverage.xml
+    flags: cpu-tests
 ```
-Create `.codecov.yml`:
+
+### 2. Add Dependency Scanning (1-2 hours)
+- **Impact**: Catch vulnerable ML dependencies before they reach production
+- **Implementation**:
 ```yaml
-coverage:
-  status:
-    project:
-      default:
-        target: 60%
-    patch:
-      default:
-        target: 70%
+# New workflow: .github/workflows/security.yml
+name: Security Scanning
+on: [push, pull_request]
+jobs:
+  dependency-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+      - run: uv pip install pip-audit && pip-audit
+```
+
+### 3. Enable Concurrency Control (30 minutes)
+- **Impact**: Cancel redundant CI runs on rapid pushes
+- **Implementation**: Add to each workflow:
+```yaml
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 ```
 
 ### 4. Add CodeQL Scanning (1-2 hours)
-Create `.github/workflows/codeql.yml`:
-```yaml
-name: CodeQL
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  schedule:
-    - cron: '0 6 * * 1'
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-    steps:
-      - uses: actions/checkout@v6
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: python
-      - uses: github/codeql-action/analyze@v3
-```
+- **Impact**: Catch unsafe deserialization, injection, and other code security issues
+- **Implementation**: Add `.github/workflows/codeql.yml` with Python language analysis
+
+### 5. Create Basic Agent Rules (2-3 hours)
+- **Impact**: Improve AI-generated test quality and consistency across contributors
+- **Implementation**: Create `CLAUDE.md` with testing standards and `.claude/rules/` with test patterns
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows (3 total):**
+**Workflows** (3 total):
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `unit_tests.yml` | PR + push to main | Linting (pre-commit) + CPU tests (Python 3.10/3.11/3.12) |
-| `new_tasks.yml` | PR + push to main | Detects task/API file changes, runs task-specific tests |
-| `publish.yml` | Tag push | Build + publish to PyPI and TestPyPI |
+| `unit_tests.yml` | PR + push to main | Linting (pre-commit) + CPU tests (3 Python versions) |
+| `new_tasks.yml` | PR + push to main | Tests only when task/API files change |
+| `publish.yml` | Tag push | Build and publish to PyPI |
 
-**Strengths:**
-- Multi-Python version matrix (3.10, 3.11, 3.12) with `fail-fast: true`
-- HuggingFace cache caching in CI to speed up tests
+**Strengths**:
+- Matrix testing across Python 3.10, 3.11, 3.12
 - `uv` for fast dependency installation with caching
-- Smart task-change detection using `tj-actions/changed-files` — only runs task tests when tasks/API files change
-- Artifact upload for test logs even on failure
-- Trusted publishing to PyPI (OIDC, no API tokens)
-- 30-minute timeout prevents runaway jobs
+- Changed-file detection (`tj-actions/changed-files`) to run task tests only when needed
+- HuggingFace cache to avoid re-downloading models
+- Test artifact upload even on failure
+- Timeouts on all jobs (5-30 minutes)
 
-**Gaps:**
-- No concurrency control on PR workflows (duplicate runs possible)
-- GPU/model backend test job commented out entirely
-- No coverage reporting in CI
-- No nightly/periodic test runs
-- No matrix for different OS (only Ubuntu)
-- mypy is explicitly skipped in pre-commit (`SKIP: "no-commit-to-branch,mypy"`)
+**Weaknesses**:
+- No concurrency control — rapid pushes trigger redundant runs
+- External model test job commented out entirely
+- No coverage collection or reporting
+- No security scanning workflows
+- No Dependabot configuration
+- `fail-fast: true` means first failure kills all matrix variants
 
 ### Test Coverage
 
-**Test Structure:**
-```
-tests/
-├── conftest.py              # Shared fixtures (on_ci, task_config, mock_configurable_task)
-├── __init__.py
-├── test_aggregation_pipeline.py
-├── test_cache.py             # Cache key hashing tests
-├── test_cli_subcommands.py   # Comprehensive CLI testing (955 lines)
-├── test_evaluator.py         # Core evaluation integration tests
-├── test_evaluator_utils.py
-├── test_fewshot_context.py
-├── test_filters.py
-├── test_group.py
-├── test_janitor.py
-├── test_metrics.py           # Metrics calculation tests with regression coverage
-├── test_misc.py
-├── test_prompt.py
-├── test_registry.py
-├── test_requests_caching.py
-├── test_samplers.py
-├── test_task_manager.py
-├── test_tasks.py             # Task validation framework
-├── test_unitxt_tasks.py
-├── test_utils.py             # Utility function tests (713 lines)
-├── utils.py                  # Test helpers
-├── models/
-│   ├── test_api.py
-│   ├── test_bos_handling.py
-│   ├── test_gguf.py
-│   ├── test_gptqmodel.py
-│   ├── test_hf_steered.py    # Ignored in CI
-│   ├── test_huggingface.py   # Comprehensive HF model tests
-│   ├── test_litellm.py
-│   ├── test_model_utils.py
-│   ├── test_openvino.py      # Ignored in CI
-│   ├── test_sglang.py
-│   ├── test_vllm.py
-│   └── test_vllm_context_length.py
-└── scripts/
-    └── test_zeno_visualize.py  # Ignored in CI
-```
+**Test Structure**:
+- 35 test files in `tests/` directory
+- ~10,784 lines of test code vs ~88,493 lines of source code (~12% ratio)
+- Well-organized with `tests/models/` subdirectory for model-specific tests
+- Shared fixtures in `conftest.py`
 
-**Statistics:**
-- 35 test files, 10,690 total test lines
-- 733 source files, 88,480 total source lines
-- Test-to-code ratio: ~12.1% (low for a library)
-- Testing framework: pytest with pytest-xdist for parallelization
-- Fixtures: Shared conftest.py with CI-aware fixtures
+**Testing Framework**: pytest with pytest-xdist (parallel execution) and pytest-cov (unused)
 
-**Strengths:**
-- CLI tests are exceptionally thorough (955 lines) covering argument parsing, subcommands, configuration precedence, and edge cases
-- Regression tests for specific bug fixes (e.g., `test_dict_metric_uses_custom_aggregation` for #3314, `test_custom_yaml_file_relative_path` for #3425)
-- Evaluator tests compare `simple_evaluate` vs `evaluate` to verify consistency
-- Task test framework dynamically detects new/modified tasks and runs validation
-- Good use of parametrize for testing multiple task types
-- Cache tests verify filesystem-safe key hashing
+**Test Categories**:
+| Category | Files | Description |
+|----------|-------|-------------|
+| Core API | 8 | evaluator, task_manager, registry, utils, filters, samplers |
+| Model Backends | 14 | HuggingFace, vLLM, SGLang, LiteLLM, Anthropic, OpenVINO, etc. |
+| Task System | 4 | task loading, YAML validation, unitxt integration |
+| Infrastructure | 5 | caching, CLI, metrics, aggregation, groups |
 
-**Gaps:**
-- Test-to-code ratio is low (12.1%) — many modules have no dedicated tests
-- No integration tests running in CI for model backends
-- `test_evaluator.py` has a TODO: "more fine grained unit tests" (line 12)
-- No tests for decontamination, loggers, or prompts modules
-- No property-based testing (hypothesis)
-- No benchmark/performance tests
+**Test Quality**:
+- Good use of `pytest.mark.parametrize` for testing multiple configurations
+- Integration-style tests that run actual model inference (e.g., `test_evaluator.py` runs full evaluation with pythia-160m)
+- Model tests use real model loading with CPU fallback
+- Missing: no mocking strategy documentation, no test categorization (unit vs integration markers)
+
+**Notable Gap**: 736 source files vs 35 test files means many modules have no dedicated tests. The 13,845 YAML task definitions have only basic validation testing.
 
 ### Code Quality
 
-**Linting (Strong):**
-- **Ruff**: Comprehensive configuration in `pyproject.toml` with preview mode enabled
-  - Rules: bugbear (B), comprehensions (C419), docstyle (D), pycodestyle (E), pyflakes (F), refurb (FURB), isort (I), type-checking (TC), bandit security (S), simplify (SIM), pyupgrade (UP)
-  - Auto-fixable rules configured
-  - Per-file ignores for `__init__.py`
-  - Google docstring convention
-- **Codespell**: Spell checking with ignore list
-- **PyMarkdown**: Markdown linting for documentation
+**Linting**: Ruff configured in `pyproject.toml` with extensive rule selection:
+- Bugbear (B), comprehension (C419), docstyle (D), pycodestyle (E), pyflakes (F)
+- Refurb (FURB), isort (I), type-checking (TC)
+- **Bandit security checks (S, S307)** — good for catching security anti-patterns
+- Simplify (SIM), pyupgrade (UP)
+- Per-file ignores for `__init__.py` import patterns
+- Google-style docstring convention
 
-**Pre-commit Hooks (Strong):**
-- 5 hook repositories configured in `.pre-commit-config.yaml`
-- pre-commit/pre-commit-hooks: 13 checks (large files, AST, JSON, YAML, merge conflicts, private keys, trailing whitespace, mixed line endings)
-- ruff-pre-commit: Linting + formatting
-- codespell: Spell checking
-- pymarkdown: Markdown linting
-- `detect-private-key` hook for basic secret detection
-- Test data excluded from linting (`^tests/testdata/`)
+**Pre-commit Hooks** (well-configured):
+| Hook | Purpose |
+|------|---------|
+| `pre-commit-hooks` (13 hooks) | Large files, AST, JSON, YAML, merge conflicts, secrets, whitespace |
+| `ruff-check` + `ruff-format` | Linting and formatting |
+| `codespell` | Spelling errors (excludes JSON, YAML, tasks) |
+| `pymarkdown` | Markdown linting |
 
-**Gaps:**
-- mypy type checking is skipped in CI (`SKIP: "no-commit-to-branch,mypy"`)
-- No dedicated static analysis tool beyond ruff
-- No complexity checks (e.g., radon, wily)
+**Static Analysis**:
+- Mypy is referenced but **explicitly skipped** in CI (`SKIP: "no-commit-to-branch,mypy"`)
+- No standalone mypy workflow
+- Ruff's bandit rules provide some security checking
 
 ### Container Images
 
-- **No Dockerfile** or Containerfile exists
-- **No docker-compose.yml**
-- **No .dockerignore**
-- This is a Python library primarily installed via pip/PyPI
-- For a tool this widely used, a reference Docker image would benefit reproducibility
+**Status**: No container support whatsoever
+- No Dockerfile or Containerfile
+- No docker-compose.yml
+- No image build, testing, or publishing
+- No multi-architecture support
+- No SBOM generation
+
+This is notable for an ML evaluation framework that users frequently deploy in containers for reproducible benchmarking.
 
 ### Security
 
-- **No dedicated security scanning workflows**
-- **No Dependabot configuration** — no automated dependency update PRs
-- **No CodeQL, Semgrep, or Bandit CI integration**
-- **No Gitleaks or TruffleHog** for secret detection
-- **Partial coverage**: Ruff enables `flake8-bandit` rules (S prefix) which catches some common Python security patterns
-- **Partial coverage**: pre-commit `detect-private-key` hook catches committed private keys
-- **PyPI trusted publishing** via OIDC — good practice, no API token exposure
+**Current State**: Minimal
+- Pre-commit `detect-private-key` hook (basic)
+- Ruff bandit rules (S, S307) catch some Python security anti-patterns
+- CLA enforcement for contributors
+- CODEOWNERS file exists (though minimal: `* @haileyschoelkopf`)
+
+**Missing**:
+- No CodeQL or Semgrep SAST scanning
+- No dependency vulnerability scanning (pip-audit, Safety, Trivy)
+- No Dependabot for automated dependency updates
+- No secret scanning (Gitleaks, TruffleHog)
+- No SBOM generation
+- No image signing or attestation
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: None — no CLAUDE.md, AGENTS.md, or .claude/ directory
+- **Coverage**: No agent rules exist
 - **Quality**: N/A
-- **Gaps**: No test automation guidance, no coding conventions for AI agents, no quality gates
-- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
-  - Unit test patterns (pytest fixtures, parametrize usage)
-  - Task test validation patterns
+- **Gaps**: No CLAUDE.md, no `.claude/` directory, no `.claude/rules/` for test creation guidance
+- **Recommendation**: Generate test automation rules with `/test-rules-generator` covering:
+  - Unit test patterns for task definitions
   - Model backend test patterns
-  - Metric test patterns with regression coverage
-  - CLI test patterns (argument parsing, subcommand testing)
+  - Evaluator integration test patterns
+  - YAML task validation test patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add coverage tracking and enforcement**
-   - Enable `pytest --cov=lm_eval` in CI
-   - Integrate codecov with PR reporting
-   - Set minimum coverage threshold (start at 60%, increase over time)
-   - Effort: 4-6 hours
-
-2. **Re-enable model backend testing**
-   - Uncomment or recreate the `testmodels` CI job
-   - Use self-hosted GPU runners or conditional nightly jobs
-   - At minimum, run CPU-compatible model tests (mock-based)
-   - Effort: 16-24 hours
-
-3. **Add dependency scanning**
-   - Enable Dependabot for pip and GitHub Actions
-   - Consider pip-audit in CI for vulnerability checks
-   - Effort: 1-2 hours
+1. **Add coverage tracking with codecov** — Add `--cov=lm_eval --cov-report=xml` to pytest CI command, configure `.codecov.yml` with minimum thresholds (suggest 60% initially), and add PR coverage comments
+2. **Add dependency vulnerability scanning** — Add `pip-audit` or `safety` to CI workflow to catch vulnerable ML dependencies (PyTorch, transformers, etc. have had CVEs)
+3. **Add SAST scanning** — Add CodeQL workflow for Python to catch unsafe deserialization (pickle), eval() usage, and injection vulnerabilities — critical for a framework that executes arbitrary task code
 
 ### Priority 1 (High Value)
 
-4. **Add CodeQL SAST scanning**
-   - Create dedicated workflow for Python security analysis
-   - Runs on PR + weekly schedule
-   - Effort: 1-2 hours
-
-5. **Enable mypy type checking in CI**
-   - Currently skipped in pre-commit; type hints exist in codebase
-   - Start with `--ignore-missing-imports` and gradually tighten
-   - Effort: 4-8 hours
-
-6. **Add concurrency control to PR workflows**
-   ```yaml
-   concurrency:
-     group: ${{ github.workflow }}-${{ github.ref }}
-     cancel-in-progress: true
-   ```
-   - Effort: 15 minutes
+4. **Re-enable external model tests** — Uncomment the `testmodels` job in `unit_tests.yml` or create a separate workflow with GPU/API mocking to test model backends
+5. **Enable mypy type checking in CI** — Remove mypy from `SKIP` env var or add standalone mypy workflow; the codebase has type hints that aren't being validated
+6. **Add Dockerfile for reproducible evaluation** — Multi-stage build with CPU and GPU variants for reproducible benchmarking
+7. **Create agent rules for test automation** — Add CLAUDE.md and `.claude/rules/` with patterns for unit tests, model tests, and task validation tests
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Create a reference Dockerfile**
-   - Enables containerized evaluation for reproducibility
-   - Test image builds in CI
-   - Effort: 4-6 hours
-
-8. **Add agent rules for AI-assisted development**
-   - Create `.claude/rules/` with test patterns and quality gates
-   - Document coding conventions and review expectations
-   - Effort: 4-6 hours
-
-9. **Add nightly/periodic CI jobs**
-   - Full model backend test suite
-   - Performance regression testing
-   - Effort: 8-12 hours
-
-10. **Add property-based testing with Hypothesis**
-    - Particularly valuable for metrics, tokenization, and data processing
-    - Effort: 8-12 hours
+8. **Add integration tests for YAML task validation at scale** — Validate all 13,845 task YAML files load correctly (beyond the changed-file tests)
+9. **Add Dependabot** — Automated dependency update PRs for security and freshness
+10. **Add performance regression testing** — Track evaluation throughput across versions
+11. **Add concurrency control** — Cancel redundant CI runs on rapid pushes
+12. **Add contributor experience improvements** — Test categorization markers (unit, integration, slow), test documentation
 
 ## Comparison to Gold Standards
 
-| Feature | lm-evaluation-harness | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
-|---------|----------------------|---------------------|-------------------|---------------|
-| Unit Test Coverage | 12.1% ratio | ~30%+ ratio | ~25% ratio | ~40% ratio |
-| Coverage Enforcement | None | Codecov with thresholds | Coverage tracking | Codecov enforced |
-| Integration Tests | Limited (CPU only) | Comprehensive E2E | Multi-layer | Multi-version |
-| Container Testing | None | Image build + validation | 5-layer validation | Runtime testing |
-| Security Scanning | Ruff bandit rules only | CodeQL + Trivy | Trivy | CodeQL + Snyk |
-| Pre-commit Hooks | Strong (5 repos, 18+ checks) | Strong | Moderate | Strong |
-| Linting | Ruff (comprehensive) | ESLint + Prettier | Various | golangci-lint |
-| Agent Rules | None | Comprehensive | Moderate | Moderate |
-| Dependency Scanning | None | Dependabot | Dependabot | Dependabot |
-| Multi-version Testing | Python 3.10/3.11/3.12 | Node versions | Python versions | K8s + Python versions |
+| Dimension | lm-evaluation-harness | odh-dashboard (gold) | notebooks (gold) | kserve (gold) |
+|-----------|----------------------|---------------------|-------------------|---------------|
+| Unit Tests | 6.5 - Good coverage of core APIs | 9.0 - Comprehensive with contract tests | 7.0 - Image-focused | 9.0 - envtest + unit |
+| Integration/E2E | 5.0 - Model tests disabled | 9.0 - Cypress E2E | 8.0 - Multi-layer | 9.0 - Multi-version |
+| Build Integration | 2.0 - No containers | 8.0 - Konflux integration | 9.0 - Multi-arch | 7.0 - Operator builds |
+| Image Testing | 1.0 - None | 7.0 - Basic | 10.0 - 5-layer | 7.0 - Deployment |
+| Coverage | 1.5 - Unused | 9.0 - Enforced | 6.0 - Basic | 9.0 - Thresholds |
+| CI/CD | 6.0 - Smart triggers | 9.0 - Full pipeline | 8.0 - Matrix | 9.0 - Comprehensive |
+| Agent Rules | 0.0 - None | 8.0 - Comprehensive | 3.0 - Basic | 2.0 - Minimal |
 
 ## File Paths Reference
 
-### CI/CD
-- `.github/workflows/unit_tests.yml` — Main PR testing (linting + CPU tests)
-- `.github/workflows/new_tasks.yml` — Task change detection and validation
-- `.github/workflows/publish.yml` — PyPI publishing
+### CI/CD Configuration
+- `.github/workflows/unit_tests.yml` — Main test workflow (linting + CPU tests)
+- `.github/workflows/new_tasks.yml` — Changed-file detection for task tests
+- `.github/workflows/publish.yml` — PyPI publishing on tags
 
 ### Testing
-- `tests/` — All test files (35 Python files)
-- `tests/conftest.py` — Shared pytest fixtures
-- `tests/models/` — Model backend tests (12 files)
-- `tests/testdata/` — Golden test data files
+- `tests/` — Main test directory (35 test files)
+- `tests/conftest.py` — Shared fixtures
+- `tests/models/` — Model backend tests (14 files)
+- `tests/testdata/` — Test data files
+- `pyproject.toml:87` — Dev dependencies including pytest, pytest-cov, pytest-xdist
 
 ### Code Quality
-- `pyproject.toml` — Ruff config, pytest config, dependencies
-- `.pre-commit-config.yaml` — Pre-commit hooks (5 repositories)
-- `CODEOWNERS` — `@baberabb @0xSMT`
+- `.pre-commit-config.yaml` — Pre-commit hooks (ruff, codespell, pymarkdown, security)
+- `pyproject.toml` — Ruff configuration with bandit rules
 
-### Source
-- `lm_eval/` — Main package (733 Python files, 88,480 lines)
-- `lm_eval/api/` — Core API (task, metrics, registry)
-- `lm_eval/models/` — Model backends
-- `lm_eval/tasks/` — Task definitions (YAML + Python)
-- `lm_eval/_cli/` — CLI implementation
-- `lm_eval/config/` — Configuration classes
-- `scripts/` — Utility scripts
+### Documentation
+- `CONTRIBUTING.md` — Contribution guidelines
+- `docs/` — Project documentation (13 files)
+- `CODEOWNERS` — Code ownership (single maintainer)
+
+### Source Structure
+- `lm_eval/` — Main package (736 Python files, 88K+ lines)
+- `lm_eval/api/` — Core API (task, model, metrics, registry)
+- `lm_eval/models/` — Model backends (29 files)
+- `lm_eval/tasks/` — Task definitions (13,845 YAML files)

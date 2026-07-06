@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:41 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:59 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/kueue</h2>
         </header>
 
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Excellent test-to-code ratio (0.50) with 226 test files, 119K LOC of tests vs 73K source. Go testing + Ginkgo/Gomega framework. Coverage profiling enabled via -coverprofile.</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">100 unit test files across pkg/ with Go testing + Gomega; coverage profile generated but no enforcement threshold</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Comprehensive envtest-based integration suites (25+ suites), multi-version E2E across K8s 1.30-1.32, multi-cluster (MultiKueue), TAS, cert-manager, and custom configs E2E variants.</div>
+                            <div class="scorecard-status">76 integration + 29 E2E test files; multi-version K8s testing (1.30-1.32); envtest + Kind; Ginkgo/Gomega BDD; 400+ test specs</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">No PR-triggered CI workflows in the fork. Konflux pipeline builds on PR but only validates container image build, not functional tests. No PR-time integration or E2E test execution.</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Konflux Tekton PR pipeline with multi-arch builds; no PR-time unit/integration/E2E test execution; post-merge test gap</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Three Dockerfiles (upstream, Konflux, RHOAI) with multi-arch support (x86_64, arm64, ppc64le, s390x). No runtime validation, startup testing, or container security scanning in CI.</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
+                            <div class="scorecard-status">Three Dockerfiles (upstream, Konflux, RHOAI); multi-arch (x86_64, ppc64le, s390x, arm64); no runtime validation or startup testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Unit tests generate cover.out via -coverprofile but no Codecov/Coveralls integration, no coverage thresholds, and no PR coverage reporting in the downstream fork.</div>
+                            <div class="scorecard-status">Cover.out generated via make test but no codecov/coveralls integration; no PR coverage gating or reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Fork has only 5 dispatch-only workflows (build/publish, release, SBOM, OpenVEX, Krew). No PR-triggered test workflows. Relies on upstream Prow CI. Konflux pipeline for PR image builds.</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
+                            <div class="scorecard-status">Upstream CI lives in kubernetes-sigs/kueue; fork has only manual dispatch workflows + Tekton PR build; no automated test workflows</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory. No AI agent test automation guidance.</div>
+                            <div class="scorecard-status">No .claude/ directory, no CLAUDE.md, no agent rules or test automation guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,8 +411,8 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No PR-triggered test CI in the downstream fork</div>
-                            <p>Code changes merged without running unit, integration, or E2E tests in CI. Quality regressions can reach production undetected.</p>
+                            <div class="item-description">No automated test execution in PR workflows</div>
+                            <p>Unit, integration, and E2E tests are never run automatically on PRs in this fork; regressions can merge undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">8-16 hours</span>
@@ -420,26 +420,34 @@
                         </li>
                         <li class="item-card high">
                             <div class="item-description">No coverage tracking or enforcement</div>
-                            <p>Coverage can silently regress. No visibility into test coverage trends or PR-level coverage deltas.</p>
+                            <p>Coverage profile is generated locally but not uploaded or gated; coverage can silently decrease</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container security scanning (Trivy/Snyk/CodeQL)</div>
-                            <p>Vulnerable dependencies or images could ship undetected. Only Snyk policy file exists but no CI integration.</p>
+                            <div class="item-description">No security scanning in CI</div>
+                            <p>No Trivy, CodeQL, gosec, or SAST in any workflow; Snyk config exists but is not wired into CI</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No container runtime validation</div>
+                            <p>Images built via Konflux but never tested for startup, health, or functional correctness before merge</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
                             <div class="item-description">No agent rules for AI-assisted development</div>
-                            <p>AI-generated code and tests lack project-specific guidance, reducing quality and consistency.</p>
+                            <p>AI agents have no guidance on test patterns, coding standards, or quality gates for this repo</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +464,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Codecov integration with coverage thresholds</div>
-                            <p>Immediate visibility into coverage trends and PR-level delta reporting. Prevent coverage regression.</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to Konflux pipeline</div>
-                            <p>Catch known CVEs in container images before merge. Trivial to add as a Tekton task.</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create basic agent rules for test patterns</div>
-                            <p>Standardize AI-generated test quality with project-specific Ginkgo/Gomega patterns.</p>
+                            <div class="item-description">Add codecov integration to unit test workflow</div>
+                            <p>PR-level coverage reporting and threshold enforcement</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add PR-triggered unit test workflow</div>
-                            <p>Catch unit test failures before merge. Reuse existing Makefile test target.</p>
+                            <div class="item-description">Add Trivy container scanning to Tekton PR pipeline</div>
+                            <p>Catch CVEs in base images and dependencies before merge</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create GitHub Actions workflow for unit tests on PRs</div>
+                            <p>Automated regression detection on every PR</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Generate basic agent rules with /test-rules-generator</div>
+                            <p>Consistent AI-generated tests following repo patterns</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add golangci-lint workflow for PRs</div>
+                            <p>Automated lint enforcement; config already exists and is comprehensive</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add PR-triggered GitHub Actions workflows for unit tests, linting, and integration tests in the downstream fork</li><li>Integrate Codecov with coverage thresholds and PR reporting</li><li>Add container vulnerability scanning (Trivy) to the Konflux pipeline and/or GitHub Actions</li></ul>
+                            <ul><li>Create a GitHub Actions PR workflow that runs &#x27;make test&#x27; (unit tests with coverage) and &#x27;make test-integration&#x27; on every PR</li><li>Add codecov/coveralls integration with minimum coverage threshold (e.g., 70%) to prevent coverage regression</li><li>Add security scanning (Trivy + gosec) to the Tekton PR pipeline or a GitHub Actions workflow</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add PR-time integration test execution using envtest</li><li>Create comprehensive agent rules for unit, integration, and E2E test patterns</li><li>Add image startup validation testing for built container images</li></ul>
+                            <ul><li>Add container runtime validation tests that verify image startup and health endpoint</li><li>Create comprehensive agent rules (.claude/rules/) covering unit test, integration test, and E2E test patterns</li><li>Wire Snyk integration into CI (config already exists at .snyk)</li><li>Add a golangci-lint GitHub Actions workflow to enforce the existing .golangci.yaml config on PRs</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add CodeQL/SAST scanning workflow</li><li>Implement pre-commit hooks for local development quality gates</li><li>Add performance regression testing to CI</li></ul>
+                            <ul><li>Add performance regression testing to CI (framework already exists in test/performance/)</li><li>Implement pre-commit hooks for local development (gofmt, goimports, lint)</li><li>Add SBOM generation to the Tekton PR pipeline (workflow exists for upstream but not automated)</li></ul>
                         </div>
                     </div>
                 </div>

@@ -1,400 +1,390 @@
 ---
 repository: "opendatahub-io/ODH-Build-Config"
-overall_score: 2.8
+overall_score: 3.8
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No source code or unit tests — this is a pure configuration/manifest repository"
+    status: "No unit tests — repo is configuration/manifests only, no application code"
   - dimension: "Integration/E2E"
-    score: 2.0
-    status: "Enterprise Contract integration test exists but is narrowly scoped to FBC fragment only"
+    score: 4.0
+    status: "Enterprise Contract integration tests via Konflux, no functional E2E"
   - dimension: "Build Integration"
-    score: 5.0
-    status: "Konflux Tekton pipelines for bundle and catalog builds on PR and push, but no manifest validation"
+    score: 6.0
+    status: "Tekton Konflux pipelines for PR and push builds with centralized pipeline refs"
   - dimension: "Image Testing"
-    score: 2.0
-    status: "Dockerfiles build FROM scratch and ose-operator-registry; no runtime validation or scanning"
+    score: 3.0
+    status: "OLM scorecard tests for bundle validation; no runtime image testing"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tracking — no source code to cover"
+    status: "No coverage tracking — not applicable for a config-only repo"
   - dimension: "CI/CD Automation"
-    score: 6.0
-    status: "Robust GitHub Actions + Tekton/Konflux pipeline integration with auto-merge and schedulers"
+    score: 7.0
+    status: "7 GitHub Actions workflows + 4 Tekton pipelines; Mergify auto-merge; scheduled sync"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
+    status: "No CLAUDE.md, no .claude/ directory, no agent guidance"
 critical_gaps:
-  - title: "No manifest validation on PRs"
-    impact: "Malformed CRDs, CSV errors, or invalid catalog YAML can merge without detection, breaking operator installation"
+  - title: "No YAML/manifest validation on PRs"
+    impact: "Malformed CRDs, CSVs, or catalog entries can merge and break downstream operator installs"
+    severity: "HIGH"
+    effort: "4-6 hours"
+  - title: "No OLM bundle validation in CI"
+    impact: "Bundle validation relies solely on scorecard config but is never executed in any workflow"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "No OLM bundle validation in CI"
-    impact: "Bundle scorecard tests exist in config but are never executed in any workflow or Tekton pipeline"
-    severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No security scanning for container images"
-    impact: "Vulnerability-laden base images or dependencies can ship without detection"
+  - title: "No security scanning on container images"
+    impact: "Vulnerabilities in base images (ose-operator-registry) not detected before release"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "Skip-checks enabled on FBC catalog builds"
-    impact: "FBC fragment Tekton pipelines explicitly set skip-checks: true and skip-fips: true, bypassing Konflux security and FIPS compliance checks"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No YAML schema validation for patch files"
-    impact: "Malformed bundle-patch.yaml or catalog-patch.yaml can cause silent failures in downstream processing"
+  - title: "Catalog integrity not validated"
+    impact: "FBC catalog.yaml changes can introduce broken channel graphs or missing upgrade edges"
     severity: "MEDIUM"
     effort: "4-6 hours"
-  - title: "Insta-merge bypasses all quality gates"
-    impact: "Bot PRs from Konflux are auto-merged with minimal feasibility check (title regex only), no content validation"
+  - title: "No Kustomize/manifest generation validation"
+    impact: "Processed bundle output correctness not verified before commit"
     severity: "MEDIUM"
     effort: "6-8 hours"
 quick_wins:
-  - title: "Add YAML lint validation to PR workflow"
+  - title: "Add yamllint and kubeconform validation to PR workflow"
+    effort: "2-3 hours"
+    impact: "Catch malformed YAML and invalid Kubernetes manifests before merge"
+  - title: "Add Trivy scanning to Tekton PR pipeline"
     effort: "1-2 hours"
-    impact: "Catch malformed YAML in bundle manifests, patches, and catalog configurations before merge"
-  - title: "Run operator-sdk bundle validate on PRs"
+    impact: "Detect known CVEs in catalog base image before release"
+  - title: "Add operator-sdk bundle validate step to CI"
     effort: "2-3 hours"
-    impact: "Validate OLM bundle structure, CRD schemas, and CSV completeness using the existing scorecard config"
-  - title: "Remove skip-checks: true from FBC Tekton pipelines"
-    effort: "1 hour"
-    impact: "Re-enable Konflux security and FIPS compliance checks for catalog builds"
-  - title: "Add Trivy scan for Dockerfile base images"
-    effort: "2-3 hours"
-    impact: "Detect vulnerabilities in ose-operator-registry and scratch-based bundle images"
+    impact: "Validate OLM bundle structure, annotations, and CSV correctness automatically"
+  - title: "Create CLAUDE.md with contribution and review guidelines"
+    effort: "1-2 hours"
+    impact: "Enable AI agents to understand repo conventions and review changes correctly"
 recommendations:
   priority_0:
-    - "Add OLM bundle validation (operator-sdk bundle validate) to PR workflows to catch CSV, CRD, and metadata errors"
-    - "Remove skip-checks and skip-fips flags from FBC Tekton pipeline configurations to restore security compliance gates"
-    - "Add YAML schema validation for bundle-patch.yaml, catalog-patch.yaml, and build-config.yaml"
+    - "Add YAML schema validation (kubeconform) for all CRD and CSV manifests on every PR"
+    - "Run operator-sdk bundle validate in CI to catch OLM packaging errors before merge"
+    - "Add container image vulnerability scanning (Trivy) to Tekton PR pipelines"
   priority_1:
-    - "Add Trivy or similar vulnerability scanning for built container images (bundle and FBC fragment)"
-    - "Validate catalog.yaml with opm validate before committing auto-generated catalog changes"
-    - "Add content validation to insta-merge workflows beyond title regex matching"
-    - "Create Enterprise Contract integration test for the bundle component, not just the FBC fragment"
+    - "Add opm validate for FBC catalog integrity checks on catalog changes"
+    - "Implement diff-based validation for bundle-patch.yaml and csv-patch.yaml processing"
+    - "Add Enterprise Contract checks to ODH (not just RHOAI) pipelines"
+    - "Create CLAUDE.md with repo conventions and manifest editing rules"
   priority_2:
-    - "Add agent rules (.claude/rules/) for manifest editing patterns and YAML configuration standards"
-    - "Add SBOM generation for bundle and catalog images"
-    - "Add Kustomize build validation for bundle manifests"
-    - "Implement image signing and attestation for built artifacts"
+    - "Add SBOM generation to bundle and catalog image builds"
+    - "Implement catalog upgrade-path testing (can OLM resolve the channel graph?)"
+    - "Add Mergify configuration validation (currently two mergify.yml files exist)"
+    - "Add image signing/attestation for bundle and catalog images"
 ---
 
 # Quality Analysis: ODH-Build-Config
 
 ## Executive Summary
+- **Overall Score: 3.8/10**
+- **Repository Type**: Build configuration / OLM operator bundle & catalog management
+- **Primary Languages**: YAML (manifests, workflows, Tekton pipelines), Dockerfile, shell scripts
+- **Framework**: OLM (Operator Lifecycle Manager) bundle & FBC (File-Based Catalog)
+- **Key Strengths**: Well-structured Konflux/Tekton integration, automated bundle sync from opendatahub-operator, Mergify auto-merge for bot-generated PRs
+- **Critical Gaps**: No manifest validation, no security scanning, no OLM bundle validation in CI, no agent rules
+- **Agent Rules Status**: Missing — no CLAUDE.md, no .claude/ directory
 
-- **Overall Score: 2.8/10**
-- **Repository Type**: Configuration/Manifest repository (operator bundle + FBC catalog management)
-- **Primary Purpose**: Manages the OpenDataHub/RHOAI operator bundle CSV, CRD manifests, FBC (File-Based Catalog) fragments, and automated build pipelines via Konflux/Tekton
-- **Key Strengths**: Well-structured CI/CD automation with GitHub Actions + Tekton/Konflux integration, auto-sync from upstream operator, Mergify-powered merge queues
-- **Critical Gaps**: No manifest validation on PRs, OLM scorecard tests configured but never executed, security checks explicitly skipped in Tekton pipelines, no content validation on auto-merged PRs
-- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
+This is a **build configuration repository** — it does not contain application code but rather operator bundle manifests, FBC catalog definitions, Tekton pipeline configs, and GitHub Actions workflows that automate the RHOAI/ODH operator build and release process. Quality practices must be evaluated differently than a typical code repository: the focus should be on **manifest validation**, **build pipeline reliability**, **catalog integrity**, and **security scanning** rather than unit tests and code coverage.
 
 ## Quality Scorecard
-
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0/10 | No source code — pure config/manifest repo |
-| Integration/E2E | 2/10 | Single Enterprise Contract test for FBC fragment only |
-| **Build Integration** | **5/10** | **Konflux Tekton builds on PR/push but no manifest validation** |
-| Image Testing | 2/10 | Dockerfiles exist but no runtime validation or scanning |
-| Coverage Tracking | 0/10 | N/A — no source code to cover |
-| CI/CD Automation | 6/10 | Robust automation pipeline but quality gates are weak |
-| Agent Rules | 0/10 | No AI agent guidance |
+| Unit Tests | 0/10 | No unit tests — N/A for config-only repo |
+| Integration/E2E | 4/10 | Enterprise Contract tests for RHOAI; no functional E2E |
+| **Build Integration** | **6/10** | **Tekton pipelines for PR + push with centralized pipeline refs** |
+| Image Testing | 3/10 | OLM scorecard config exists but never executed in CI |
+| Coverage Tracking | 0/10 | Not applicable for config/manifest repository |
+| CI/CD Automation | 7/10 | 7 GHA workflows + 4 Tekton pipelines; Mergify; scheduled sync |
+| Agent Rules | 0/10 | No agent guidance of any kind |
 
 ## Critical Gaps
 
-### 1. No Manifest Validation on PRs
-- **Impact**: Malformed CRDs, CSV errors, or invalid catalog YAML can merge undetected, breaking operator installation on customer clusters
+### 1. No YAML/Manifest Validation on PRs
+- **Impact**: Malformed CRDs, CSVs, or catalog entries can merge and break downstream operator installations. A missing field in the CSV or an invalid CRD spec would only be caught at install time.
+- **Severity**: HIGH
+- **Effort**: 4-6 hours
+- **Details**: The repository contains 20+ CRD manifests, a 2,903-line ClusterServiceVersion, and FBC catalog definitions. None are validated against their OpenAPI schemas or Kubernetes resource schemas in any CI workflow.
+
+### 2. No OLM Bundle Validation in CI
+- **Impact**: The `bundle/tests/scorecard/config.yaml` defines 6 scorecard tests (basic-check-spec, olm-bundle-validation, olm-crds-have-validation, olm-crds-have-resources, olm-spec-descriptors, olm-status-descriptors) but these are **never executed** in any GitHub Actions workflow or Tekton pipeline. Bundle structural issues are not caught until downstream consumers attempt installation.
 - **Severity**: HIGH
 - **Effort**: 4-8 hours
-- **Details**: The repository contains 24+ CRD manifests, a complex CSV (2816 lines), and catalog configurations — none are validated on PR. The `bundle/tests/scorecard/config.yaml` defines 6 OLM scorecard tests (basic-check-spec, olm-bundle-validation, olm-crds-have-validation, olm-crds-have-resources, olm-spec-descriptors, olm-status-descriptors) but these are **never executed** in any workflow or pipeline.
 
-### 2. Security Checks Explicitly Skipped
-- **Impact**: FBC fragment builds bypass Konflux security and FIPS compliance verification
+### 3. No Security Scanning on Container Images
+- **Impact**: The catalog image is built from `registry.redhat.io/openshift4/ose-operator-registry-rhel9:v4.20`. Vulnerabilities in this base image are never scanned. The bundle image uses `FROM scratch` (low risk) but the catalog image carries a full runtime.
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: Both FBC Tekton pipelines (`odh-fbc-fragment-ci-pull-request.yaml` and `odh-fbc-fragment-ci-push.yaml`) set `skip-checks: true` and `skip-fips: true`. This effectively disables Konflux's built-in security scanning and FIPS compliance checks for the catalog images.
 
-### 3. Insta-Merge with Minimal Validation
-- **Impact**: Bot-generated PRs from Konflux are auto-merged based solely on PR title regex matching, with no content validation
-- **Severity**: MEDIUM
-- **Effort**: 6-8 hours
-- **Details**: The `bundle-insta-merge.yaml` and `fbc-insta-merge.yaml` workflows auto-merge PRs from `red-hat-konflux[bot]` if the title matches `^Update.*-ci.* to [0-9a-z]{1,40}$`. The merge feasibility check only verifies the title format and that only expected files changed — there's no validation of the YAML content being merged.
-
-### 4. No Image Vulnerability Scanning
-- **Impact**: Vulnerabilities in base images or dependencies ship without detection
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: The bundle Dockerfile uses `FROM scratch` (minimal surface area, good) but the FBC catalog Dockerfile uses `FROM registry.redhat.io/openshift4/ose-operator-registry-rhel9:v4.20` — a substantial image with no vulnerability scanning configured.
-
-### 5. No YAML Schema Validation
-- **Impact**: Malformed patch files can cause silent failures in downstream bundle/catalog processing
+### 4. No Catalog Integrity Validation
+- **Impact**: FBC `catalog.yaml` changes processed by `process-fbc-fragment.yaml` could introduce broken channel graphs, missing upgrade edges, or duplicate entries. The `opm validate` tool exists for this purpose but is not used.
 - **Severity**: MEDIUM
 - **Effort**: 4-6 hours
-- **Details**: `bundle-patch.yaml` (348 lines, 80+ related images), `catalog-patch.yaml`, `build-config.yaml`, and `additional-images-patch.yaml` are critical configuration files with no schema validation. Errors in these files propagate through the entire build pipeline.
+
+### 5. No Processed Output Validation
+- **Impact**: The `process-operator-bundle.yaml` workflow transforms raw bundle files from `to-be-processed/` into the final `bundle/` directory. There is no validation step to verify the processed output matches expected structure, required fields, or has no regressions.
+- **Severity**: MEDIUM
+- **Effort**: 6-8 hours
 
 ## Quick Wins
 
-### 1. Add YAML Lint Validation (1-2 hours)
-Add `yamllint` to the PR workflow to catch syntax errors in all YAML files:
+### 1. Add yamllint + kubeconform to PR Workflow (2-3 hours)
 ```yaml
-- name: Lint YAML files
-  uses: ibiqlik/action-yamllint@v3
-  with:
-    file_or_dir: bundle/ catalog/ config/
-    config_data: |
-      extends: default
-      rules:
-        line-length: {max: 500}
-        document-start: disable
+# Add to a new .github/workflows/validate-manifests.yaml
+name: Validate Manifests
+on:
+  pull_request:
+    paths: ['bundle/**', 'catalog/**', 'to-be-processed/**']
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          pip install yamllint
+          curl -sL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz
+      - name: Lint YAML
+        run: yamllint -d relaxed bundle/ catalog/ config/
+      - name: Validate CRDs
+        run: ./kubeconform -strict -summary bundle/manifests/
 ```
 
-### 2. Run OLM Bundle Validation (2-3 hours)
-Execute the existing scorecard tests that are configured but never run:
+### 2. Add Trivy Scanning (1-2 hours)
+Add a Trivy scan step to the existing Tekton pipelines or create a new GitHub Actions workflow for catalog image scanning.
+
+### 3. Add operator-sdk bundle validate (2-3 hours)
 ```yaml
-- name: Validate OLM bundle
+- name: Validate OLM Bundle
   run: |
-    operator-sdk bundle validate ./bundle --select-optional suite=basic
-    operator-sdk bundle validate ./bundle --select-optional suite=olm
+    curl -sL https://github.com/operator-framework/operator-sdk/releases/latest/download/operator-sdk_linux_amd64 -o operator-sdk
+    chmod +x operator-sdk
+    ./operator-sdk bundle validate bundle/ --select-optional suite=operatorframework
 ```
 
-### 3. Remove skip-checks from FBC Pipelines (1 hour)
-In both `.tekton/odh-fbc-fragment-ci-*.yaml` files, change:
-```yaml
-- name: skip-checks
-  value: false   # was: true
-- name: skip-fips
-  value: false   # was: true
-```
+### 4. Create CLAUDE.md (1-2 hours)
+```markdown
+# ODH-Build-Config
 
-### 4. Add Trivy Scan for Base Images (2-3 hours)
-```yaml
-- name: Scan FBC base image
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: registry.redhat.io/openshift4/ose-operator-registry-rhel9:v4.20
-    severity: CRITICAL,HIGH
-    exit-code: 1
+## Purpose
+OLM operator bundle and FBC catalog configuration for RHOAI/ODH operator.
+
+## Key Directories
+- `bundle/` - Processed OLM bundle manifests (DO NOT edit CRDs directly - they come from opendatahub-operator)
+- `to-be-processed/bundle/` - Raw bundle input from opendatahub-operator sync
+- `catalog/` - FBC (File-Based Catalog) definitions
+- `config/` - Build configuration metadata
+- `.tekton/` - Konflux pipeline definitions
 ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflow Inventory (7 GitHub Actions + 4 Tekton Pipelines)**:
+**GitHub Actions Workflows (7 total)**:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
+| `bundle-insta-merge.yaml` | PR (paths: bundle-patch.yaml) | Auto-merge bot-generated bundle nudge PRs |
 | `bundle-sync.yml` | Schedule (every 2h) + dispatch | Sync bundle from opendatahub-operator stable branch |
-| `process-operator-bundle.yaml` | Push to bundle paths on main | Process and patch the operator bundle CSV |
-| `process-fbc-fragment.yaml` | Push to catalog-patch.yaml on main | Generate FBC catalog from templates |
-| `bundle-insta-merge.yaml` | PR opened (Konflux bot) | Auto-merge bundle nudge PRs |
-| `fbc-insta-merge.yaml` | PR opened (Konflux bot) | Auto-merge FBC nudge PRs |
-| `trigger-nightly-bundle-build.yaml` | Dispatch only | Nightly bundle build for release branches |
-| `trigger-nightly-fbc-build.yaml` | Dispatch only | Nightly FBC build with PCC cache management |
+| `fbc-insta-merge.yaml` | PR (paths: catalog-patch.yaml) | Auto-merge bot-generated FBC nudge PRs |
+| `process-fbc-fragment.yaml` | Push to main (catalog-patch.yaml) | Process FBC fragments into catalog |
+| `process-operator-bundle.yaml` | Push to main (bundle paths) | Process raw bundle into final manifests |
+| `trigger-nightly-bundle-build.yaml` | Dispatch only (cron commented out) | Trigger nightly bundle builds (non-main branches) |
+| `trigger-nightly-fbc-build.yaml` | Dispatch only (cron commented out) | Trigger nightly FBC builds (non-main branches) |
 
-| Tekton Pipeline | Trigger | Purpose |
-|----------------|---------|---------|
-| `odh-operator-bundle-ci-pull-request.yaml` | PR (label/comment) | Build bundle image for PR validation |
-| `odh-operator-bundle-ci-push.yaml` | Push to main (bundle changes) | Build and push bundle image |
-| `odh-fbc-fragment-ci-pull-request.yaml` | PR (label/comment) | Build FBC catalog image for PR validation |
-| `odh-fbc-fragment-ci-push.yaml` | Push to main (catalog changes) | Build and push FBC catalog image |
+**Tekton Pipelines (4 total)**:
+
+| Pipeline | Event | Purpose |
+|----------|-------|---------|
+| `odh-operator-bundle-ci-pull-request.yaml` | PR (label/comment triggered) | Build bundle image on PR via Konflux |
+| `odh-operator-bundle-ci-push.yaml` | Push to main (bundle changes) | Build and publish bundle image |
+| `odh-fbc-fragment-ci-pull-request.yaml` | PR (label/comment triggered) | Build FBC catalog image on PR via Konflux |
+| `odh-fbc-fragment-ci-push.yaml` | Push to main (catalog changes) | Build and publish FBC catalog image |
 
 **Strengths**:
-- Good separation of concerns between GitHub Actions (processing) and Tekton (building)
-- Tekton PR pipelines are triggered on-demand via labels (`build-bundle`, `build-catalog`, `build-all`) and comments (`/build-konflux bundle`, `/build-konflux catalog`), reducing unnecessary builds
-- Cancel-in-progress enabled for PR pipelines, preventing resource waste
-- Push pipelines use CEL expressions for precise path-based triggering
+- Tekton PR pipelines use `cancel-in-progress: true` for efficient resource usage
+- Push pipelines use CEL expressions with path-based filtering to avoid unnecessary builds
+- Centralized pipeline definitions via `odh-konflux-central.git` (good DRY practice)
 - Slack failure notifications enabled on push pipelines
-- Build nudge notification configured via `build.appstudio.openshift.io/build-nudge-files`
+- PR images have 5-day expiry to manage registry space
 
 **Weaknesses**:
-- No PR-triggered validation workflows for YAML content — PR checks rely solely on Tekton builds
-- GitHub Actions workflows use mixed checkout action versions (pinned sha vs v4)
-- Bundle sync uses `actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd` (pinned to specific SHA) while others use `@v4` — inconsistent versioning
-- No caching strategies in any workflow
+- PR builds are opt-in (label/comment triggered), not automatic — bundle/catalog changes can merge without being built
+- No validation steps in any pipeline — build success is the only gate
+- Nightly builds are commented out (dead code)
+- Two Mergify config files exist (`.mergify.yml` and `mergify.yml`) with slightly different configurations
 
 ### Test Coverage
 
-**Unit Tests**: N/A — This repository contains zero source code files (no `.py`, `.go`, `.sh`, `.ts`, or `.js` files). All logic lives in external repositories (`RHOAI-Konflux-Automation`, `opendatahub-operator`).
+**Unit Tests**: None (score: 0/10)
+- This is expected and acceptable for a configuration-only repository
+- There is no application code to unit test
 
-**Integration Tests**: 
-- Single Enterprise Contract (EC) test defined in `integration-tests/integration-test.yaml`
-- Scoped only to the FBC fragment component (`rhoai-fbc-fragment-v2-17`)
-- Uses `appstudio.redhat.com/v1beta2` IntegrationTestScenario
-- References `POLICY_CONFIGURATION: rhoai-tenant/registry-rhoai-prod` for policy enforcement
-- **Gap**: No equivalent EC test for the operator bundle component
+**Integration Tests**:
+- `integration-tests/integration-test.yaml`: An IntegrationTestScenario for RHOAI Enterprise Contract validation
+- `integration-tests/enterprise-contract.yaml`: Full EC pipeline definition with signature verification
+- These only apply to RHOAI tenant namespace, not the ODH build pipeline
 
 **OLM Scorecard Tests**:
-- `bundle/tests/scorecard/config.yaml` defines 6 scorecard tests:
-  1. `basic-check-spec` (v1.31.0)
-  2. `olm-bundle-validation` (v1.24.1)
-  3. `olm-crds-have-validation` (v1.24.1)
-  4. `olm-crds-have-resources` (v1.24.1)
-  5. `olm-spec-descriptors` (v1.24.1)
-  6. `olm-status-descriptors` (v1.24.1)
-- **These tests are never executed** — they exist only as configuration for potential manual runs
+- `bundle/tests/scorecard/config.yaml` defines 6 tests:
+  - `basic-check-spec` (v1.31.0)
+  - `olm-bundle-validation` (v1.24.1)
+  - `olm-crds-have-validation` (v1.24.1)
+  - `olm-crds-have-resources` (v1.24.1)
+  - `olm-spec-descriptors` (v1.24.1)
+  - `olm-status-descriptors` (v1.24.1)
+- **Critical issue**: These tests are configured but never executed in any CI pipeline
+- Version mismatch: basic-check-spec uses v1.31.0 while OLM tests use v1.24.1
 
 ### Code Quality
 
-- **No linting tools**: No YAML linters, no pre-commit hooks, no static analysis
-- **No `.pre-commit-config.yaml`**: No automated formatting or validation on commit
-- **No secret detection**: No gitleaks, trufflehog, or similar tools despite the repo containing image references with registry credentials patterns
-- **Mergify configured**: Two mergify files (`.mergify.yml` and `mergify.yml`) provide merge queue management with approval requirements and stale PR cleanup
-- **CODEOWNERS**: Well-defined with 6 trusted reviewers for all paths
+**Linting**: None
+- No yamllint, no shellcheck, no manifest validation
+- YAML files can contain syntax errors that merge silently
+
+**Pre-commit Hooks**: None
+- No `.pre-commit-config.yaml`
+
+**Static Analysis**: None
+- No CodeQL, no SAST tools
+- No Kustomize validation
+
+**Code Ownership**:
+- `CODEOWNERS` file assigns 6 reviewers for all files
+- `OWNERS` file (Prow format) uses `openshift-ci-robot` only
 
 ### Container Images
 
 **Bundle Image** (`bundle/Dockerfile`):
 - `FROM scratch` — minimal attack surface (good)
+- Extensive build-arg labeling for traceability (git URLs, commits)
+- Proper OLM labels for bundle metadata
 - Copies manifests, metadata, and scorecard tests
-- Proper OLM labels for bundle discovery
-- Build-time ARGs for traceability (git URL, commit, image, build metadata URL)
-- Multi-architecture labels: amd64, ppc64le, s390x, arm64
 
-**FBC Catalog Image** (`catalog/v4.20/Dockerfile`):
-- `FROM registry.redhat.io/openshift4/ose-operator-registry-rhel9:v4.20` — substantial base image
-- Properly configured entrypoint with `opm serve`
-- Cache pre-population with `opm serve --cache-only` (good for startup time)
-- No vulnerability scanning configured
-- x86_64 platform only (single arch)
+**Catalog Image** (`catalog/v4.20/Dockerfile`):
+- Based on `registry.redhat.io/openshift4/ose-operator-registry-rhel9:v4.20`
+- Runs `opm serve` with cache pre-population (good for startup performance)
+- Proper OLM and Red Hat labels
+- **No vulnerability scanning** of the base image
 
-**Gaps**:
-- No multi-stage builds (bundle is FROM scratch which is appropriate, catalog doesn't need multi-stage)
-- No image signing or attestation
-- No SBOM generation
-- FBC pipeline explicitly skips security checks
+**Multi-arch Support**:
+- FBC catalog pipeline explicitly sets `linux/x86_64` only — no multi-arch
+- Bundle pipeline doesn't specify platforms (defaults to runner arch)
 
 ### Security
 
-- **No SAST/CodeQL**: N/A (no source code)
-- **No container scanning**: No Trivy, Snyk, or Grype integration
-- **No secret detection**: No gitleaks or similar
-- **FIPS compliance skipped**: Both FBC Tekton pipelines set `skip-fips: true`
-- **Security checks skipped**: Both FBC Tekton pipelines set `skip-checks: true`
-- **Credential handling**: Workflows use GitHub Actions secrets appropriately but have inline credential construction (base64 auth tokens in workflow scripts)
+**Vulnerability Scanning**: None
+- No Trivy, Snyk, or Grype scanning
+- No `.trivyignore` file
+
+**Enterprise Contract**:
+- Integration test scenario configured for RHOAI tenant
+- EC pipeline verifies image signatures with cosign
+- Strict mode enabled (`STRICT: true`)
+- Ignores Rekor transparency log (`IGNORE_REKOR: true`)
+- Only applies to RHOAI builds, not ODH
+
+**Secret Management**:
+- GitHub App tokens used for cross-repo operations (good)
+- Quay registry credentials stored as GitHub secrets
+- No secret detection tooling (Gitleaks, TruffleHog)
+
+**Permissions**:
+- Some workflows use overly broad permissions (`security-events: write` on insta-merge workflows that don't need it)
+- The `process-*` workflows run in privileged containers
 
 ### Agent Rules (Agentic Flow Quality)
 
-- **Status**: Missing
-- **Coverage**: No agent rules whatsoever
-- **Quality**: N/A
-- **Gaps**: 
-  - No `CLAUDE.md` or `AGENTS.md` in repository root
-  - No `.claude/` directory
-  - No `.claude/rules/` for manifest editing patterns
-  - No documentation on YAML configuration standards for AI agents
-- **Recommendation**: Generate rules for YAML manifest editing, patch file structure, bundle validation requirements, and catalog configuration patterns using `/test-rules-generator`
+**Status**: Missing
+- No `CLAUDE.md` or `AGENTS.md`
+- No `.claude/` directory
+- No `.claude/rules/` for manifest editing guidelines
+- No testing documentation
+
+**Gap**: This repo has complex conventions (processed vs raw bundles, patch files, catalog structure) that would greatly benefit from agent rules to prevent incorrect edits.
+
+**Recommendation**: Generate rules covering:
+- Which files are auto-generated vs manually edited
+- How bundle-patch.yaml and csv-patch.yaml work
+- Catalog structure and FBC conventions
+- Review checklist for manifest changes
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-
-1. **Add OLM bundle validation to PR workflows**
-   - Execute the existing scorecard tests that are already configured in `bundle/tests/scorecard/config.yaml`
-   - Add `operator-sdk bundle validate ./bundle` as a required PR check
-   - Validates CRD schemas, CSV completeness, and metadata correctness
-
-2. **Re-enable security checks in FBC Tekton pipelines**
-   - Remove `skip-checks: true` and `skip-fips: true` from both FBC pipeline definitions
-   - These flags bypass Konflux's built-in security and FIPS compliance verification
-   - Critical for a component that ships as part of the Red Hat product
-
-3. **Add YAML schema validation for critical config files**
-   - Create JSON schemas for `bundle-patch.yaml`, `catalog-patch.yaml`, and `build-config.yaml`
-   - Validate on PR to catch malformed image references, version strings, and structural errors
-   - Especially important given the ~80+ related image entries in `bundle-patch.yaml`
+1. **Add YAML schema validation (kubeconform) for all CRD and CSV manifests on every PR** — prevents malformed Kubernetes resources from merging
+2. **Run `operator-sdk bundle validate` in CI** — catches OLM packaging errors (missing annotations, invalid CSV structure, CRD/CSV mismatches)
+3. **Add container image vulnerability scanning (Trivy) to Tekton PR pipelines** — detects known CVEs before release
 
 ### Priority 1 (High Value)
-
-4. **Add container image vulnerability scanning**
-   - Integrate Trivy or Grype for the FBC catalog base image
-   - Scan the built bundle image for any embedded vulnerabilities
-   - Set severity thresholds to fail builds on CRITICAL/HIGH findings
-
-5. **Add opm validate for catalog YAML**
-   - Run `opm validate` on generated catalog.yaml files before committing
-   - The nightly FBC build already runs `catalog_validator.py` — extend this to CI
-
-6. **Content validation for auto-merged PRs**
-   - Beyond the title regex in insta-merge workflows, validate:
-     - YAML syntax of changed files
-     - Image reference format (registry/org/repo@sha256:...)
-     - No unexpected file changes beyond the allowed paths
-
-7. **Create Enterprise Contract test for bundle component**
-   - The existing EC test only covers the FBC fragment
-   - Add equivalent test for `odh-operator-bundle-ci` component
+1. **Add `opm validate` for FBC catalog integrity** — verifies channel graphs, upgrade paths, and catalog structure
+2. **Implement diff-based validation for bundle processing** — verify that `process-operator-bundle` output matches expected structure
+3. **Add Enterprise Contract checks to ODH pipelines** (currently RHOAI-only)
+4. **Create CLAUDE.md with repo conventions** — enable AI agents to review and contribute correctly
+5. **Make Tekton PR builds automatic** (not label-gated) for all bundle/catalog changes
 
 ### Priority 2 (Nice-to-Have)
-
-8. **Add agent rules for manifest management**
-   - Create `.claude/rules/` with patterns for:
-     - Adding new related images to `bundle-patch.yaml`
-     - Updating CRD manifests
-     - Modifying catalog configurations
-     - YAML formatting standards
-
-9. **Add SBOM generation**
-   - Generate SBOM for both bundle and catalog images
-   - Required for supply chain security compliance
-
-10. **Standardize GitHub Actions checkout versions**
-    - Some workflows use pinned SHA, others use `@v4`
-    - Standardize to pinned SHA for reproducibility
-
-11. **Add image signing and attestation**
-    - Implement cosign signing for built artifacts
-    - Required for increasing supply chain security requirements
+1. **Add SBOM generation** to bundle and catalog image builds
+2. **Implement catalog upgrade-path testing** — verify OLM can resolve the channel graph end-to-end
+3. **Consolidate Mergify configs** — two files (`.mergify.yml` and `mergify.yml`) with divergent rules
+4. **Add image signing/attestation** for bundle and catalog images
+5. **Enable multi-arch builds** for FBC catalog image (currently x86_64 only)
+6. **Update scorecard test versions** — basic-check-spec is v1.31.0 but OLM tests are v1.24.1
+7. **Remove commented-out cron triggers** in nightly build workflows (dead code)
 
 ## Comparison to Gold Standards
 
-| Dimension | ODH-Build-Config | odh-dashboard | notebooks | kserve |
-|-----------|-----------------|---------------|-----------|--------|
-| Unit Tests | N/A (config repo) | Comprehensive Jest suite | N/A (image repo) | Go test + envtest |
-| Integration/E2E | 1 EC test (FBC only) | Multi-layer E2E | Image validation | Multi-version E2E |
-| Build Integration | Konflux builds, no validation | PR-time build + test | 5-layer validation | PR-time integration |
-| Image Testing | No runtime validation | N/A | Startup + functional | N/A |
-| Coverage Tracking | None | Codecov enforcement | N/A | Codecov enforcement |
-| CI/CD Automation | GHA + Tekton, weak gates | Comprehensive, multi-stage | Automated matrix | Prow + GHA |
-| Security Scanning | **Explicitly skipped** | CodeQL + dependency scan | Trivy scanning | CodeQL + Trivy |
-| Agent Rules | None | Comprehensive | Basic | None |
-| YAML Validation | None | ESLint + prettier | N/A | golangci-lint |
+| Feature | ODH-Build-Config | odh-dashboard | notebooks | kserve |
+|---------|-----------------|---------------|-----------|--------|
+| Unit Tests | N/A (config repo) | Comprehensive Jest suite | N/A (image repo) | Go test suite |
+| Integration Tests | EC only (RHOAI) | Contract tests | Image validation | envtest |
+| Manifest Validation | None | Kustomize validation | N/A | kubeconform |
+| Security Scanning | None | Trivy in CI | Trivy + Snyk | CodeQL + Trivy |
+| Coverage Tracking | N/A | Codecov enforced | N/A | Codecov |
+| CI/CD Automation | 7 GHA + 4 Tekton | Comprehensive GHA | Multi-layer GHA | Prow + GHA |
+| OLM Validation | Config only, not run | N/A | N/A | N/A |
+| Agent Rules | None | Comprehensive .claude/ | None | None |
+| Multi-arch | x86_64 only | N/A | Multi-arch | Multi-arch |
+| SBOM | None | Generated | Generated | Generated |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/bundle-sync.yml` — Upstream bundle sync (every 2h)
-- `.github/workflows/process-operator-bundle.yaml` — Bundle CSV patching
-- `.github/workflows/process-fbc-fragment.yaml` — FBC catalog generation
-- `.github/workflows/bundle-insta-merge.yaml` — Auto-merge bundle nudges
-- `.github/workflows/fbc-insta-merge.yaml` — Auto-merge FBC nudges
-- `.github/workflows/trigger-nightly-bundle-build.yaml` — Nightly bundle build
-- `.github/workflows/trigger-nightly-fbc-build.yaml` — Nightly FBC build
+- `.github/workflows/bundle-insta-merge.yaml` — Auto-merge bundle nudge PRs
+- `.github/workflows/bundle-sync.yml` — Scheduled bundle sync from opendatahub-operator
+- `.github/workflows/fbc-insta-merge.yaml` — Auto-merge FBC nudge PRs
+- `.github/workflows/process-fbc-fragment.yaml` — FBC fragment processing
+- `.github/workflows/process-operator-bundle.yaml` — Bundle processing
+- `.github/workflows/trigger-nightly-bundle-build.yaml` — Nightly bundle builds
+- `.github/workflows/trigger-nightly-fbc-build.yaml` — Nightly FBC builds
+- `.tekton/odh-operator-bundle-ci-pull-request.yaml` — Konflux PR pipeline
+- `.tekton/odh-operator-bundle-ci-push.yaml` — Konflux push pipeline
+- `.tekton/odh-fbc-fragment-ci-pull-request.yaml` — FBC PR pipeline
+- `.tekton/odh-fbc-fragment-ci-push.yaml` — FBC push pipeline
 
-### Tekton/Konflux
-- `.tekton/odh-operator-bundle-ci-pull-request.yaml` — PR bundle build
-- `.tekton/odh-operator-bundle-ci-push.yaml` — Push bundle build
-- `.tekton/odh-fbc-fragment-ci-pull-request.yaml` — PR FBC build
-- `.tekton/odh-fbc-fragment-ci-push.yaml` — Push FBC build
-
-### Bundle
-- `bundle/Dockerfile` — Bundle container build
-- `bundle/bundle-patch.yaml` — Related image patches (80+ images)
-- `bundle/csv-patch.yaml` — CSV metadata patches
-- `bundle/additional-images-patch.yaml` — Non-ODH related images
-- `bundle/manifests/rhods-operator.clusterserviceversion.yaml` — Main CSV (2816 lines)
-- `bundle/tests/scorecard/config.yaml` — OLM scorecard tests (configured but never run)
-
-### Catalog
-- `catalog/v4.20/Dockerfile` — FBC catalog container build
-- `catalog/v4.20/rhods-operator/catalog.yaml` — Generated catalog
-- `catalog/catalog-patch.yaml` — Catalog patches
-- `catalog/catalog_build_args.map` — Build arguments
+### Build
+- `bundle/Dockerfile` — OLM operator bundle image
+- `catalog/v4.20/Dockerfile` — FBC catalog image
+- `bundle/bundle_build_args.map` — Bundle build arguments
+- `catalog/catalog_build_args.map` — Catalog build arguments
 
 ### Configuration
-- `config/build-config.yaml` — Build configuration (OCP versions, base images)
-- `.mergify.yml` / `mergify.yml` — Merge queue rules
-- `integration-tests/integration-test.yaml` — Enterprise Contract test (FBC only)
-- `CODEOWNERS` — Review requirements
-- `OWNERS` — Prow approval config
+- `config/build-config.yaml` — OCP version + base image config
+- `config/trustyai-pig-build-config.yaml` — TrustyAI PNC build config
+- `bundle/bundle-patch.yaml` — Bundle transformation patches
+- `bundle/csv-patch.yaml` — CSV transformation patches
+- `catalog/catalog-patch.yaml` — Catalog transformation patches
+- `pcc/catalog-v4.20.yaml` — PCC catalog package/channel definition
+
+### Manifests
+- `bundle/manifests/` — 30+ processed CRD and CSV manifests
+- `bundle/metadata/annotations.yaml` — Bundle annotations
+- `bundle/tests/scorecard/config.yaml` — OLM scorecard test configuration
+- `to-be-processed/bundle/` — Raw bundle input from opendatahub-operator
+
+### Merge Automation
+- `.mergify.yml` — Mergify rules for stable branch
+- `mergify.yml` — Mergify rules for stable + main branches
+- `CODEOWNERS` — GitHub code review assignments
+- `OWNERS` — Prow/OpenShift CI owners

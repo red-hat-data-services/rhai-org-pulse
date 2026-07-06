@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:51 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:26 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/openclaw</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#28a745"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="67.85834399999993"
+                                stroke-dashoffset="79.168068"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">8.8</div>
+                        <div class="score-value">8.6</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">~2,740 test files with Vitest, sharded parallel execution, coverage thresholds enforced (70% lines/functions/statements, 55% branches)</div>
+                            <div class="scorecard-status">2,730 test files with Vitest + V8 coverage; 70% line/branch/function thresholds enforced; sharded CI with parallelism</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">38 E2E tests, contract tests for plugins + channels, Docker-based E2E suite, multi-platform (macOS/Windows/Android/iOS)</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">36 E2E tests, 23 contract tests, 12 integration tests, 15 live tests; dedicated configs per test type</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">PR-time Docker image build + smoke test, CLI startup validation, extension build validation, multi-architecture support</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">PR-time build smoke, Docker image validation, CLI launcher smoke; multi-platform (macOS/Windows/Android/Linux)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Multi-Dockerfile builds validated in CI, install smoke tests, sandbox smoke tests, runtime CLI smoke verification</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">Docker image smoke tests with extension validation; multi-arch (amd64/arm64) OpenShift builds; no Trivy/Snyk scanning</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">V8 coverage provider with enforced thresholds (70/70/55/70), lcov output, iOS coverage gate at 43%</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">V8 coverage with 70% line/function/statement thresholds, 55% branches; lcov reports; enforced in vitest config</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
-                            <div class="scorecard-status">Sophisticated CI with docs-scope detection, changed-scope scoping, test sharding, concurrency control, 12 workflows</div>
+                            <div class="scorecard-status">Highly sophisticated CI with docs-scope detection, change-scope filtering, sharding, concurrency control, multi-platform matrix</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Comprehensive AGENTS.md (207 lines), CLAUDE.md symlink, .agents/skills/ with 5 specialized skills, .agent/workflows</div>
+                            <div class="scorecard-status">Comprehensive AGENTS.md (23KB), CODEOWNERS for security paths, multi-agent safety rules, testing guidelines, 6 custom skills</div>
                         </div>
                     </div>
                 </div>
@@ -410,36 +410,44 @@
                 <div class="section-content">
                     <ul class="items-list">
                         
-                        <li class="item-card medium">
-                            <div class="item-description">No container vulnerability scanning (Trivy/Snyk)</div>
-                            <p>Security vulnerabilities in base images or dependencies not caught before deployment</p>
+                        <li class="item-card high">
+                            <div class="item-description">No container vulnerability scanning (Trivy/Snyk/Grype)</div>
+                            <p>Vulnerabilities in base images and dependencies not detected before deployment</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No SBOM generation</div>
-                            <p>Cannot track software supply chain artifacts for compliance</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
                         <li class="item-card high">
-                            <div class="item-description">CodeQL only runs on workflow_dispatch (not PRs)</div>
-                            <p>Security vulnerabilities in code changes not caught during PR review</p>
+                            <div class="item-description">No SBOM generation or image signing</div>
+                            <p>Supply chain security gap; no attestation for container images pushed to Quay.io</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">CodeQL only runs on manual dispatch (workflow_dispatch)</div>
+                            <p>SAST analysis not automated on PRs or pushes; security bugs may go undetected</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
-                        <li class="item-card low">
-                            <div class="item-description">No external coverage reporting service (Codecov/Coveralls)</div>
-                            <p>No PR-level coverage diff reporting; coverage only enforced locally via thresholds</p>
+                        <li class="item-card medium">
+                            <div class="item-description">Extensions excluded from Oxlint and coverage thresholds</div>
+                            <p>648 extension test files exist but extensions get no lint enforcement or coverage gates</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">iOS CI disabled (if: false)</div>
+                            <p>iOS app builds and tests not validated in CI; regressions can ship undetected</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -457,34 +465,34 @@
                         
                         <li class="item-card ">
                             <div class="item-description">Enable CodeQL on pull_request trigger</div>
-                            <p>Catch security issues during PR review instead of only on-demand</p>
+                            <p>Automated SAST on every PR; catches security-relevant code issues before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to Docker release workflow</div>
-                            <p>Early detection of known CVEs in container images before deployment</p>
+                            <div class="item-description">Add Trivy container scanning to install-smoke or build-openshift-image workflow</div>
+                            <p>Detects known CVEs in Docker base images and installed packages</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Codecov integration for PR coverage reporting</div>
-                            <p>PR-level coverage diffs and automatic coverage regression detection</p>
+                            <div class="item-description">Enable Oxlint for extensions/ directory</div>
+                            <p>Consistent lint enforcement across 648 extension test files and extension source code</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add SBOM generation to Docker builds</div>
-                            <p>Supply chain transparency and compliance readiness</p>
+                            <div class="item-description">Add codecov/coveralls integration for PR coverage reporting</div>
+                            <p>PR-level coverage visibility; prevent coverage regressions in reviews</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +509,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Enable CodeQL on pull_request events to catch security issues at PR time</li><li>Add container image vulnerability scanning (Trivy) to Docker release workflow</li></ul>
+                            <ul><li>Add Trivy or Grype container vulnerability scanning to CI for both Dockerfile and Dockerfile.openshift images</li><li>Enable CodeQL to run on pull_request and push triggers instead of manual-only dispatch</li><li>Add SBOM generation (syft) and image signing (cosign) for production images pushed to Quay.io</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Integrate Codecov/Coveralls for PR-level coverage reporting and diff tracking</li><li>Add SBOM generation (syft/trivy) to Docker build pipelines</li><li>Add image signing/attestation for supply chain security</li></ul>
+                            <ul><li>Extend Oxlint coverage to extensions/ directory with appropriate rule configuration</li><li>Add codecov/coveralls integration for PR-level coverage delta reporting</li><li>Re-enable iOS CI job or document decision to defer iOS testing</li><li>Add Trivy filesystem scan for dependency vulnerabilities in pnpm-lock.yaml</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add performance regression testing beyond startup memory check</li><li>Consider adding fuzz testing for parser/protocol code</li><li>Add structured test documentation for the contract testing patterns</li></ul>
+                            <ul><li>Add performance regression CI gate (test:perf:budget exists but is not in CI workflow)</li><li>Add code duplication CI gate (dup:check script exists but is not in CI)</li><li>Consider adding pre-merge coverage threshold for extensions (currently exempt)</li></ul>
                         </div>
                     </div>
                 </div>

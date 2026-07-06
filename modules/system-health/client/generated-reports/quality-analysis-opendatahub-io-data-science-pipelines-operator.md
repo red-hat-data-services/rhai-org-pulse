@@ -1,410 +1,435 @@
 ---
 repository: "opendatahub-io/data-science-pipelines-operator"
-overall_score: 6.8
+overall_score: 7.5
 scorecard:
   - dimension: "Unit Tests"
-    score: 7.5
-    status: "Good unit test coverage with build-tag gating and testutil helpers, but no coverage enforcement"
+    score: 8.0
+    status: "Strong unit test coverage with 13 test files, build-tag isolation, and envtest integration"
   - dimension: "Integration/E2E"
-    score: 8.0
-    status: "Strong KinD-based integration suite with path-filtered PR triggers, multi-namespace testing, and upgrade workflows"
+    score: 8.5
+    status: "KinD-based integration tests on PRs, BYO-Argo variant, upgrade testing, and chaos engineering"
   - dimension: "Build Integration"
-    score: 5.0
-    status: "PR image builds exist but no PR-time Konflux simulation; Konflux pipeline only on push to main"
+    score: 7.0
+    status: "PR-time image build with multi-arch validation; Tekton/Konflux pipeline for production builds"
   - dimension: "Image Testing"
-    score: 4.5
-    status: "Multi-stage Dockerfile with FIPS support, but no runtime validation or startup testing"
+    score: 6.5
+    status: "Multi-arch image builds with architecture verification, but no runtime validation or startup tests"
   - dimension: "Coverage Tracking"
-    score: 3.0
-    status: "Cover.out generated locally but no Codecov/Coveralls integration or PR coverage gates"
+    score: 4.0
+    status: "Cover profile generated locally but no codecov/coveralls integration or enforcement"
   - dimension: "CI/CD Automation"
-    score: 8.0
-    status: "Well-organized 16 workflows with concurrency, path filters, nightly builds, release automation, and Go version consistency checks"
+    score: 8.5
+    status: "18 workflows with concurrency control, KinD actions, release automation, nightly tests"
   - dimension: "Agent Rules"
     score: 7.0
-    status: "Comprehensive CLAUDE.md with architecture, build commands, and test tags; no .claude/rules/ for test patterns"
+    status: "Comprehensive CLAUDE.md with architecture, build commands, and test tags; no .claude/rules/"
 critical_gaps:
   - title: "No coverage tracking or enforcement"
-    impact: "Cannot detect coverage regressions; PRs can reduce coverage without detection"
+    impact: "Coverage can silently regress without any CI gate or PR reporting"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No PR-time Konflux build simulation"
-    impact: "Konflux-specific build failures (SBOM, Clair scan, Snyk) only discovered after merge to main"
+  - title: "No container security scanning in GitHub Actions"
+    impact: "Vulnerabilities in dependencies or base images not caught until Konflux build"
     severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "No container runtime validation"
-    impact: "Image startup failures, missing config/internal directory, or entrypoint issues not caught until deployment"
-    severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No security scanning in GitHub CI"
-    impact: "Vulnerability scanning only happens in Konflux post-merge; no early feedback during PR review"
-    severity: "MEDIUM"
     effort: "2-4 hours"
-  - title: "Upgrade test is manual dispatch only"
-    impact: "Upgrade regressions can slip through without being caught in automated PR or nightly pipelines"
+  - title: "No image runtime validation"
+    impact: "Image startup failures or missing config not caught until deployment"
     severity: "MEDIUM"
     effort: "4-8 hours"
+  - title: "No SAST/CodeQL in CI"
+    impact: "Static analysis security issues discovered late or not at all"
+    severity: "MEDIUM"
+    effort: "2-3 hours"
 quick_wins:
-  - title: "Add Codecov integration to unit and functional test workflows"
-    effort: "2-4 hours"
-    impact: "Immediate visibility into coverage trends and PR-level coverage diffs"
-  - title: "Add Trivy container scan to PR workflow"
+  - title: "Add Codecov integration to unit test workflow"
+    effort: "2-3 hours"
+    impact: "Immediate PR-level coverage reporting and regression prevention"
+  - title: "Add Trivy container scanning workflow"
     effort: "1-2 hours"
-    impact: "Early detection of critical vulnerabilities before merge"
-  - title: "Add image startup validation step to KinD integration workflow"
+    impact: "Early detection of image vulnerabilities before Konflux build"
+  - title: "Add CodeQL/gosec workflow"
+    effort: "1-2 hours"
+    impact: "Automated security analysis on every PR"
+  - title: "Create .claude/rules/ test creation guidelines"
     effort: "2-3 hours"
-    impact: "Catch container startup failures and missing config files before merge"
-  - title: "Create .claude/rules/ for unit test patterns"
-    effort: "2-3 hours"
-    impact: "Improve AI-generated test quality with build-tag conventions and testutil patterns"
+    impact: "Consistent AI-generated tests following project's build-tag conventions"
 recommendations:
   priority_0:
-    - "Add Codecov integration with coverage thresholds (e.g., 60% minimum, no regression gate)"
-    - "Add container runtime validation to KinD integration test (image startup, health check)"
+    - "Implement Codecov integration with coverage thresholds (e.g., 70% minimum, no regression)"
+    - "Add container vulnerability scanning (Trivy) to PR workflow"
   priority_1:
-    - "Add Trivy or Snyk scanning to PR workflows for early vulnerability detection"
-    - "Add PR-time Konflux build simulation or at least a Tekton PipelineRun trigger on PRs"
-    - "Include upgrade test in nightly automation instead of manual dispatch only"
-    - "Create .claude/rules/ with unit-tests.md, functional-tests.md, and integration-tests.md"
+    - "Add CodeQL or gosec SAST scanning workflow"
+    - "Add image startup validation test in CI (build + run + health check)"
+    - "Create .claude/rules/ with unit-test.md and integration-test.md covering build tags"
   priority_2:
-    - "Add CodeQL or gosec SAST scanning to GitHub PR workflow"
-    - "Add webhook admission testing with envtest"
-    - "Add performance/benchmark tests for reconcile loop"
-    - "Add contract tests for DSPA API schema validation"
+    - "Add contract tests for API boundaries with data-science-pipelines"
+    - "Implement Testcontainers for operator image runtime validation"
+    - "Add performance/load testing for DSPA reconciliation under scale"
 ---
 
 # Quality Analysis: data-science-pipelines-operator
 
 ## Executive Summary
 
-- **Overall Score: 6.8/10**
+- **Overall Score: 7.5/10**
 - **Repository Type**: Kubernetes Operator (kubebuilder/controller-runtime)
-- **Primary Language**: Go
-- **Key Strengths**: Well-structured multi-tier test strategy (unit/functional/integration), KinD-based integration testing on PRs, comprehensive Konflux pipeline with Clair/Snyk/Coverity/ClamAV scanning on main, excellent CLAUDE.md documentation, release automation
-- **Critical Gaps**: No coverage tracking/enforcement, no PR-time security scanning, no container runtime validation, upgrade tests are manual-only
-- **Agent Rules Status**: CLAUDE.md present and comprehensive; no `.claude/rules/` for test patterns
+- **Primary Language**: Go 1.26
+- **Key Strengths**: Excellent multi-layer test strategy (unit → functional → integration → chaos), comprehensive KinD-based integration testing on PRs, chaos engineering with operator-chaos framework, multi-architecture image builds, well-organized release automation
+- **Critical Gaps**: No coverage tracking/enforcement, no container security scanning in GitHub Actions, no SAST/CodeQL integration
+- **Agent Rules Status**: Present (CLAUDE.md with comprehensive guidance) but no `.claude/rules/` directory for test creation patterns
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 7.5/10 | Good coverage with build-tag gating, testutil helpers, 15 test files, ~6300 lines of test code |
-| Integration/E2E | 8.0/10 | Strong KinD-based suite with 2 integration workflows, path-filtered triggers, multi-namespace |
-| Build Integration | 5.0/10 | PR image builds exist but Konflux pipeline only on push to main, no PR simulation |
-| Image Testing | 4.5/10 | Multi-stage Dockerfile with FIPS, but no runtime validation or startup testing |
-| Coverage Tracking | 3.0/10 | `cover.out` generated but no Codecov/Coveralls, no PR gates, no trending |
-| CI/CD Automation | 8.0/10 | 16 well-organized workflows, concurrency control, path filters, nightly, release automation |
-| Agent Rules | 7.0/10 | Excellent CLAUDE.md with architecture/commands/tags, but no .claude/rules/ |
+| Unit Tests | 8.0/10 | Strong coverage with 13 unit test files, build-tag isolation, envtest |
+| Integration/E2E | 8.5/10 | KinD integration on PRs, BYO-Argo, upgrade tests, chaos engineering |
+| **Build Integration** | **7.0/10** | **PR-time image builds with multi-arch; Tekton/Konflux for prod** |
+| Image Testing | 6.5/10 | Multi-arch builds + arch verification, but no runtime validation |
+| Coverage Tracking | 4.0/10 | coverprofile generated locally but no CI integration or enforcement |
+| CI/CD Automation | 8.5/10 | 18 workflows, concurrency control, release automation, nightly builds |
+| Agent Rules | 7.0/10 | Comprehensive CLAUDE.md but no `.claude/rules/` for test patterns |
 
 ## Critical Gaps
 
 ### 1. No Coverage Tracking or Enforcement
-- **Impact**: Coverage regressions go undetected; PRs can reduce coverage without any signal
+- **Impact**: Coverage can silently regress on any PR without anyone noticing
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: The Makefile generates `cover.out` files via `-coverprofile`, but there is no Codecov, Coveralls, or any other coverage reporting tool integrated. No coverage thresholds are configured. PRs are never annotated with coverage diffs.
+- **Details**: The Makefile generates `cover.out` via `-coverprofile` flag, but there is no Codecov, Coveralls, or any other coverage reporting tool integrated. No coverage thresholds are enforced in CI. No PR comments show coverage delta.
+- **Fix**: Add Codecov GitHub App + upload step to `unittests.yml` workflow
 
-### 2. No PR-time Konflux Build Simulation
-- **Impact**: The Konflux pipeline (`.tekton/odh-data-science-pipelines-operator-controller-push.yaml`) runs Clair scan, Snyk SAST, Coverity SAST, ClamAV, RPM signature scan, SBOM generation, and deprecated image checks -- but ONLY on push to main. PR authors get no feedback on these checks until after merge.
+### 2. No Container Security Scanning in GitHub Actions
+- **Impact**: Vulnerabilities in Go dependencies, base images (UBI9), or the built binary are not caught until the Konflux/Tekton pipeline runs post-merge
 - **Severity**: HIGH
-- **Effort**: 8-12 hours
-- **Details**: The Tekton PipelineRun is triggered by `event == "push" && target_branch == "main"`. There is no PR-triggered Konflux pipeline. This means a PR could introduce a vulnerable dependency or break SBOM generation and it won't be caught until after merge.
-
-### 3. No Container Runtime Validation
-- **Impact**: Image startup failures, missing `config/internal` directory, or entrypoint issues are not caught until deployment
-- **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: The KinD integration tests build and push the operator image, then deploy it via kustomize. However, there is no explicit validation that the container starts successfully, responds to health probes, or has all required config files. Failures are caught indirectly if the deployment times out, but the error signal is poor.
-
-### 4. No Security Scanning in GitHub CI
-- **Impact**: Vulnerabilities in Go dependencies are only flagged by Konflux post-merge
-- **Severity**: MEDIUM
 - **Effort**: 2-4 hours
-- **Details**: While Konflux provides comprehensive security scanning (Clair, Snyk, Coverity, ClamAV), the GitHub CI workflows have zero security scanning. Gitleaks is configured (`.gitleaks.toml`) but there's no GitHub workflow that runs it. The pre-commit hooks don't include Gitleaks either.
+- **Details**: While the Tekton pipeline includes SBOM generation (6 references to sbom/cosign/syft), there is zero vulnerability scanning in the 18 GitHub Actions workflows. No Trivy, Snyk, Grype, or any scanner runs on PRs.
+- **Fix**: Add a Trivy scan step to the `build-arm64.yml` or create a dedicated `security-scan.yml` workflow
 
-### 5. Upgrade Test is Manual Dispatch Only
-- **Impact**: Version upgrade regressions can slip through; the upgrade test (`upgrade-test.yml`) only runs on `workflow_dispatch` with manually specified version inputs
+### 3. No Image Runtime Validation
+- **Impact**: An image that builds successfully but fails to start (missing config, bad entrypoint, TLS issues) is not caught until deployment
 - **Severity**: MEDIUM
 - **Effort**: 4-8 hours
-- **Details**: The upgrade test is well-designed (deploys released version via OLM, runs tests, upgrades to candidate, runs tests again) but requires manual invocation. It should be included in nightly automation or triggered on release branches.
+- **Details**: The `build-arm64.yml` workflow builds the image and verifies the architecture via `podman inspect`, but never actually runs the container to verify it starts. The KinD integration tests deploy the operator from source, not from the built image.
+
+### 4. No SAST/CodeQL Integration
+- **Impact**: Static security analysis issues (injection, hardcoded secrets, unsafe operations) not caught by linting alone
+- **Severity**: MEDIUM
+- **Effort**: 2-3 hours
+- **Details**: Gitleaks is configured (`.gitleaks.toml`) for secret detection allowlisting, but there is no CodeQL, gosec, or Semgrep workflow. The `golangci-lint` config enables 8 linters but not security-focused ones like `gosec`.
 
 ## Quick Wins
 
-### 1. Add Codecov Integration (2-4 hours)
-Add Codecov upload to `unittests.yml` and `functests.yml`:
+### 1. Add Codecov Integration (2-3 hours)
+**Impact**: Immediate PR-level coverage reporting and regression prevention
+
+Add to `unittests.yml`:
 ```yaml
-- name: Upload coverage
+- name: Upload coverage to Codecov
   uses: codecov/codecov-action@v4
   with:
-    files: cover.out
+    file: ./cover.out
     flags: unittests
     token: ${{ secrets.CODECOV_TOKEN }}
 ```
 
-### 2. Add Trivy Container Scan (1-2 hours)
-Add Trivy to the PR workflow or as a new workflow:
+Create `.codecov.yml`:
+```yaml
+coverage:
+  status:
+    project:
+      default:
+        target: 70%
+    patch:
+      default:
+        target: 80%
+```
+
+### 2. Add Trivy Container Scanning (1-2 hours)
+**Impact**: Early detection of image vulnerabilities before Konflux build
+
 ```yaml
 - name: Run Trivy vulnerability scanner
   uses: aquasecurity/trivy-action@master
   with:
-    scan-type: 'fs'
-    scan-ref: '.'
+    image-ref: 'localhost/dspo:amd64'
+    format: 'sarif'
+    output: 'trivy-results.sarif'
     severity: 'CRITICAL,HIGH'
-    exit-code: '1'
 ```
 
-### 3. Add Image Startup Validation (2-3 hours)
-After deploying to KinD in the integration test, add explicit health checks:
-```bash
-kubectl wait -n opendatahub deployment/data-science-pipelines-operator-controller-manager \
-  --for=condition=Available=true --timeout=120s
-kubectl logs -n opendatahub deployment/data-science-pipelines-operator-controller-manager --tail=50
+### 3. Add CodeQL Analysis (1-2 hours)
+**Impact**: Automated security analysis on every PR
+
+```yaml
+name: CodeQL Analysis
+on: [push, pull_request]
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: go
+      - uses: github/codeql-action/analyze@v3
 ```
 
-### 4. Create .claude/rules/ for Test Patterns (2-3 hours)
-Create rules to guide AI-generated tests:
-- `unit-tests.md`: Build tag conventions (`//go:build test_all || test_unit`), testutil usage, table-driven patterns
-- `functional-tests.md`: envtest setup, TLS cert requirements, `test_functional` tag
-- `integration-tests.md`: KinD cluster requirements, DSPA resource creation, test suite structure
+### 4. Create Agent Test Rules (2-3 hours)
+**Impact**: Consistent AI-generated tests following the project's build-tag and envtest conventions
+
+Create `.claude/rules/unit-tests.md` and `.claude/rules/integration-tests.md` documenting the build tag requirements, test data conventions, and assertion patterns.
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows (16 total):**
+**Workflow Inventory (18 workflows)**:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `unittests.yml` | PR + push to main/stable | Unit tests (`make unittest`) |
-| `functests.yml` | PR + push to main/stable | Functional tests with envtest (`make functest`) |
-| `kind-integration.yml` | PR (path-filtered) + push | KinD integration tests |
-| `kind-integration-byoargo.yml` | PR (path-filtered) + push | KinD integration with external Argo |
-| `precommit.yml` | PR + push | Pre-commit checks (fmt, lint, yamllint) |
-| `go-version-consistency.yml` | PR (path-filtered) + push | Verifies Go version across go.mod and Dockerfiles |
-| `build-prs.yml` | PR trigger (via workflow_run) | Builds PR image and posts comment |
-| `build-main.yml` | Push to main | Builds and tags main branch image |
-| `build-tags.yml` | Tags | Builds release images |
-| `nightly_tests.yml` | Cron (daily) + dispatch | Runs build + unit + functional tests |
-| `upgrade-test.yml` | Manual dispatch only | Upgrade testing with OLM |
-| `stable-merge-check.yml` | PR to stable | Integration test verification gate |
-| `release_trigger.yaml` | PR closed (params.env changes) | Release automation |
-| `release_prep.yaml` | Release prep automation | Version bumping |
-| `release_create.yaml` | Release creation | GitHub release creation |
-| `build-prs-trigger.yaml` | PR events | Triggers PR image build workflow |
+| `unittests.yml` | PR + push | Unit tests with build tags |
+| `functests.yml` | PR + push | Functional tests (envtest) |
+| `kind-integration.yml` | PR + push | Full KinD integration tests |
+| `kind-integration-byoargo.yml` | PR + push | BYO Argo workflow engine |
+| `chaos-integration.yml` | PR + push | Chaos engineering tests in KinD |
+| `chaos-validate.yml` | PR + push | Offline chaos experiment validation |
+| `precommit.yml` | PR + push | Pre-commit hooks (lint, fmt, vet) |
+| `build-arm64.yml` | PR + push | Multi-arch image build + arch verification |
+| `build-prs-trigger.yaml` | PR | Trigger PR image builds |
+| `build-prs.yml` | workflow_run | Build images for PRs |
+| `build-main.yml` | push to main | Build + push main images |
+| `build-tags.yml` | workflow_call | Build from release tags |
+| `go-version-consistency.yml` | PR + push | Verify Go version across Dockerfile/go.mod |
+| `nightly_tests.yml` | cron (daily) | Nightly build + unit + functional tests |
+| `upgrade-test.yml` | dispatch | OLM-based upgrade testing |
+| `release_prep.yaml` | dispatch | Release branch preparation |
+| `release_trigger.yaml` | PR close | Trigger release on label |
+| `release_create.yaml` | workflow_run | Create release from trigger |
+| `stable-merge-check.yml` | PR to stable | Integration test gate for stable |
 
-**Strengths:**
-- Concurrency control on integration tests (`cancel-in-progress: true`)
-- Path filtering on integration tests (only runs when relevant files change)
-- Go version consistency check across Dockerfiles
-- PR image build with automated comment containing testing instructions
-- Release automation pipeline
+**Strengths**:
+- Excellent concurrency control on all workflows (`cancel-in-progress: true`)
+- Reusable composite actions (`.github/actions/kind`, `.github/actions/setup-go`)
+- Path-based filtering to avoid unnecessary runs
+- Comprehensive release automation pipeline
+- Nightly test runs for continuous validation
 
-**Weaknesses:**
-- No caching on unit/functional test workflows (only precommit has Go module caching)
-- Nightly test only runs unit + functional, not integration
-- No timeout on unit/functional test workflows
-- No test result publishing (JUnit XML)
-- Actions versions are pinned to `v3` (outdated; `v4` is current for checkout)
+**Weaknesses**:
+- Some workflows use old action versions (`actions/checkout@v3` vs `@v4`)
+- No workflow-level caching of Go modules (relies on setup-go action)
+- Upgrade test is dispatch-only (manual trigger)
 
 ### Test Coverage
 
-**Unit Tests (controllers/):**
-- 15 test files with `//go:build test_all || test_unit` tags
-- ~6,300 lines of test code across controller tests
-- Uses `testify/assert`, `testify/require`, and custom `testutil` package
-- Table-driven test patterns with comprehensive test cases
-- Good coverage of: API server, database, storage, MLMD, metrics, persistence agent, scheduled workflow, webhook, workspace validation, managed pipelines
+**Test Architecture** — 4-layer test pyramid with build tags:
 
-**Functional Tests (controllers/suite_test.go):**
-- Uses envtest (controller-runtime test framework)
-- Tests controller reconciliation with a real API server
-- Requires TLS certificates (`SSL_CERT_FILE`)
-- `//go:build test_all || test_functional` tag
+| Layer | Tag | Count | Description |
+|-------|-----|-------|-------------|
+| Unit | `test_unit` | 13 files | Controller logic, params extraction, validation |
+| Functional | `test_functional` | 3 files | envtest with real API server, manifest application |
+| Integration | `test_integration` | 6 files | Full KinD cluster, DSPA deployment, pipeline execution |
+| Chaos | `test_chaos` | 1 file | Operator resilience via operator-chaos SDK |
 
-**Integration Tests (tests/):**
-- 6 test files covering: pipelines, pipeline runs, experiments, artifacts, DSPA v2
-- Uses testify/suite for structured test organization
-- Runs against a real KinD cluster
-- Port-forwarding for API access
-- Multi-namespace testing (test-dspa, dspa-ext, test-k8s-dspa)
-- DSPA resource deployment and validation
+**Test-to-Code Ratio**: Excellent
+- Source files: 30 (.go, non-test)
+- Test files: 23 (.go, test)
+- Source LOC: 7,919
+- Test LOC: 7,067
+- **Ratio: 0.89** (near 1:1, very strong for an operator)
 
-**Test-to-Code Ratio:** 22 test files / 30 source files = 0.73 (good)
+**Testing Frameworks**:
+- `testing` (stdlib) + `testify` (assert/require/suite)
+- `envtest` (controller-runtime) for functional tests
+- `manifestival` for declarative test cases
+- `forwarder` for port-forwarding in integration tests
+- `operator-chaos` SDK for chaos experiments
 
-**Test Lines Ratio:** ~6,300 test lines / 9,405 controller source lines = 0.67 (adequate)
+**Chaos Testing** (standout feature):
+- Tiered experiments: Tier 1 (pod kills) and Tier 2 (config drift, network partition)
+- Knowledge model (`chaos/knowledge/dspo-default.yaml`) documents all components, managed resources, and steady-state conditions
+- 11 chaos experiments covering operator, apiserver, workflow-controller, mariadb, minio
+- Automated in CI via `chaos-integration.yml`
 
 ### Code Quality
 
-**Linting:**
-- `.golangci.yaml` configured with 8 linters: errcheck, gosimple, govet, ineffassign, staticcheck, typecheck, unused, revive
-- Exclusion for deprecated warnings in `dspipeline_params.go` (SA1019)
-- 5-minute timeout configured
+**Linting** (`.golangci.yaml`):
+- 8 linters enabled: errcheck, gosimple, govet, ineffassign, staticcheck, typecheck, unused, revive
+- Exclusion rules for deprecation warnings (SA1019) on specific files
+- Revive configured with dot-imports rule
+- Missing: gosec, dupl, gocyclo, funlen, gocritic
 
-**Pre-commit Hooks:**
-- `.pre-commit-config.yaml` with 12 hooks across 3 repos:
-  - `pre-commit-hooks`: trailing-whitespace, check-merge-conflict, end-of-file-fixer, check-added-large-files, check-case-conflict, check-json, check-symlinks, detect-private-key
-  - `yamllint`: YAML linting with custom config
-  - `pre-commit-golang`: go-fmt, golangci-lint, go-build, go-mod-tidy
-- **Note**: Hook versions are outdated (pre-commit-hooks v3.3.0, yamllint v1.25.0)
+**Pre-commit Hooks** (`.pre-commit-config.yaml`):
+- 10 hooks configured across 3 repos
+- Standard hooks: trailing-whitespace, check-merge-conflict, end-of-file-fixer, check-added-large-files, check-case-conflict, check-json, check-symlinks, detect-private-key
+- YAML linting via yamllint (strict mode)
+- Go hooks: go-fmt, golangci-lint, go-build, go-mod-tidy
+- Enforced in CI via `precommit.yml`
 
-**Secret Detection:**
-- `.gitleaks.toml` configured with allowlist for test TLS certificates
-- But no GitHub workflow runs Gitleaks
-
-**YAML Linting:**
-- `.yamllint.yaml` with relaxed rules (line-length disabled, truthy check-keys disabled)
+**Secret Detection**:
+- Gitleaks configured (`.gitleaks.toml`) with allowlist for test certificate files
+- detect-private-key hook in pre-commit
 
 ### Container Images
 
-**Dockerfile:**
-- Multi-stage build (builder + runtime)
-- UBI9 base images (go-toolset + ubi-minimal)
-- FIPS-compliant build support (`GOEXPERIMENT=strictfipsruntime`)
-- Pinned base image digests for reproducibility
+**Dockerfile Analysis**:
+- Multi-stage build: UBI9 go-toolset builder → UBI9 minimal runtime
+- FIPS-enabled build (`GOFIPS140=v1.0.0`)
+- Multi-architecture support: amd64 and arm64 via `BUILDER_ARCH` and `TARGETARCH` args
+- Pinned base images with SHA digests for reproducibility
+- Build caching with `--mount=type=cache`
 - Non-root user (65532)
-- Build cache optimization (go mod download before source copy)
-- Platform/architecture args for multi-arch support
+- `.dockerignore` present
 
-**Weaknesses:**
-- No `HEALTHCHECK` instruction
-- No Trivy/Snyk scanning in GitHub CI
-- No multi-architecture CI build (only `linux/amd64` default)
-- No image startup validation in integration tests
+**Build Verification**:
+- `build-arm64.yml` builds both amd64 (cross-compile) and arm64 (native) images
+- Architecture verification via `podman inspect` assertions
+- `go-version-consistency.yml` ensures Go version matches between Dockerfile and go.mod
+
+**Production Build (Tekton/Konflux)**:
+- `.tekton/` contains Konflux pipeline definition
+- SBOM generation included
+- Slack notification on build failure
+- Cosign signing configured
+
+**Gaps**:
+- No runtime validation (container never started in CI)
+- No Trivy/Grype scanning in GitHub Actions
+- No health endpoint testing
 
 ### Security
 
-**Konflux Pipeline (post-merge only):**
-- Clair vulnerability scanning
-- Snyk SAST check
-- Coverity SAST check (conditional on availability)
-- ClamAV malware scanning
-- Shell check (shellcheck)
-- Unicode check
-- RPM signature scan
-- SBOM generation (show-sbom)
-- Deprecated base image check
-- Ecosystem cert preflight checks
-- Slack notification on failure
+**Present**:
+- Gitleaks secret detection with allowlisting
+- detect-private-key pre-commit hook
+- Pinned action versions with SHA hashes (in newer workflows)
+- FIPS-enabled binary build
+- Non-root container user
+- Tekton pipeline with SBOM generation
 
-**GitHub CI:**
-- No security scanning at all
-- Gitleaks configured but not wired into any workflow
-- No CodeQL, no gosec, no dependency scanning
+**Missing**:
+- No CodeQL/SAST in GitHub Actions
+- No container vulnerability scanning in GitHub Actions
+- No dependency scanning (Dependabot/Renovate)
+- No gosec linter enabled
+- Security scanning only happens in Konflux post-merge
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status**: Present and well-documented
-- **CLAUDE.md**: Comprehensive 74-line file covering:
-  - Project description and purpose
-  - Build and test commands with examples
-  - Test build tag conventions (critical for correct test authoring)
-  - Architecture documentation (reconcile loop, key packages, manifest templating, operator config, cache optimization)
-- **AGENTS.md**: Symlink to CLAUDE.md
-- **No `.claude/` directory**: Missing `.claude/rules/` for test-specific guidance
+**Status**: Present (CLAUDE.md) — no `.claude/rules/` directory
 
-**Gaps:**
-- No `.claude/rules/unit-tests.md` explaining build tag requirements, testutil patterns
-- No `.claude/rules/functional-tests.md` for envtest setup requirements
-- No `.claude/rules/integration-tests.md` for KinD test authoring
-- No `.claude/skills/` for automated workflows
-- No agent guidance on Dockerfile changes, Kustomize overlays, or CRD modifications
+**CLAUDE.md Quality**: Excellent — comprehensive 4,500-character document covering:
+- Project purpose and architecture
+- Build and test commands with all Make targets
+- Build tag conventions (`test_unit`, `test_functional`, `test_integration`, `test_all`)
+- Architecture details (reconcile loop, key packages, manifest templating)
+- Operator configuration and cache optimization
 
-**Recommendation**: Use `/test-rules-generator` to create test automation rules
+**AGENTS.md**: Symlink to CLAUDE.md (good practice for multi-agent support)
+
+**Gaps**:
+- No `.claude/rules/` directory for specific test creation patterns
+- No rules for chaos experiment creation
+- No rules for template file conventions
+- CLAUDE.md doesn't document the chaos testing framework or the `test_chaos` build tag
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add coverage tracking with Codecov** (4-6 hours)
-   - Add codecov-action to `unittests.yml` and `functests.yml`
-   - Create `.codecov.yml` with minimum coverage threshold (e.g., 60%)
-   - Enable PR annotations for coverage diffs
-   - Track unit and functional coverage separately with flags
+1. **Implement Codecov integration with coverage thresholds**
+   - Add codecov upload to `unittests.yml` and `functests.yml`
+   - Set minimum coverage target (e.g., 70% project, 80% patch)
+   - Enable PR status checks for coverage regression
 
-2. **Add container runtime validation** (4-6 hours)
-   - After KinD deployment in integration test, verify operator pod starts
-   - Check container logs for startup errors
-   - Validate health/readiness probes
-   - Verify `config/internal` directory is present in running container
+2. **Add container vulnerability scanning to PR workflow**
+   - Integrate Trivy or Grype scanning of built images
+   - Set severity threshold (CRITICAL/HIGH)
+   - Upload results as SARIF to GitHub Security tab
 
 ### Priority 1 (High Value)
 
-3. **Add security scanning to PR workflow** (2-4 hours)
-   - Add Trivy filesystem scan for Go dependency vulnerabilities
-   - Wire Gitleaks into a GitHub workflow (config already exists)
-   - Consider adding gosec for Go-specific security issues
+3. **Add CodeQL or gosec SAST scanning**
+   - Create dedicated security scanning workflow
+   - Enable gosec linter in `.golangci.yaml`
+   - Consider Semgrep for Go-specific rules
 
-4. **Add Konflux PR trigger** (8-12 hours)
-   - Create a PipelineRun with `on-cel-expression: event == "pull_request"`
-   - Even a subset (Clair + Snyk) would provide early feedback
-   - Alternatively, add Snyk/Trivy to GitHub CI as a lighter-weight option
+4. **Add image startup validation in CI**
+   - After building the image, run it and verify `/healthz` or basic readiness
+   - Validate the entrypoint works and config/internal templates are accessible
 
-5. **Automate upgrade testing** (4-8 hours)
-   - Include upgrade test in nightly workflow
-   - Auto-detect latest release tag instead of manual input
-   - Or trigger on release branches
-
-6. **Create .claude/rules/ for test patterns** (2-3 hours)
-   - Document build tag requirements for each test type
-   - Include testutil package usage patterns
-   - Add examples of table-driven tests with testify
-   - Document envtest setup for functional tests
+5. **Create `.claude/rules/` test creation guidelines**
+   - `unit-tests.md`: Build tag requirements, testify patterns, mock vs. real
+   - `integration-tests.md`: KinD setup, DSPA deployment, assertion patterns
+   - `chaos-tests.md`: Knowledge model format, experiment YAML structure
+   - Document the `test_chaos` build tag in CLAUDE.md
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Add test result publishing** (2-3 hours)
-   - Convert Go test output to JUnit XML
-   - Upload as GitHub Actions artifact
-   - Enable test result annotations on PRs
+6. **Add contract tests for cross-repo API boundaries**
+   - Test compatibility with `data-science-pipelines` repo
+   - Verify DSPA CRD compatibility with `odh-operator`
 
-8. **Update pre-commit hook versions** (1 hour)
-   - pre-commit-hooks: v3.3.0 -> v5.x
-   - yamllint: v1.25.0 -> v1.35.x
-   - pre-commit-golang: update to latest
+7. **Add Dependabot/Renovate for dependency management**
+   - Automate Go module updates
+   - Track GitHub Actions version updates
 
-9. **Add webhook admission testing** (4-6 hours)
-   - Test DSPA validation webhook with envtest
-   - Ensure webhook TLS cert handling is tested
-
-10. **Add performance/benchmark tests** (4-8 hours)
-    - Benchmark reconcile loop performance
-    - Test with large numbers of DSPAs
-    - Track benchmark results over time
+8. **Add performance testing for reconcile loop**
+   - Benchmark reconciliation time under multiple DSPAs
+   - Detect performance regressions
 
 ## Comparison to Gold Standards
 
-| Dimension | DSPO | odh-dashboard | notebooks | kserve |
-|-----------|------|---------------|-----------|--------|
-| Unit Tests | 7.5 | 9.0 | 7.0 | 9.0 |
-| Integration/E2E | 8.0 | 9.0 | 8.0 | 9.0 |
-| Build Integration | 5.0 | 7.0 | 8.0 | 6.0 |
-| Image Testing | 4.5 | 6.0 | 9.0 | 7.0 |
-| Coverage Tracking | 3.0 | 8.0 | 5.0 | 9.0 |
-| CI/CD Automation | 8.0 | 9.0 | 8.0 | 9.0 |
-| Agent Rules | 7.0 | 9.0 | 4.0 | 5.0 |
-| **Overall** | **6.8** | **8.5** | **7.3** | **8.0** |
+| Practice | DSPO | odh-dashboard | notebooks | kserve |
+|----------|------|---------------|-----------|--------|
+| Multi-layer tests | ✅ 4-layer | ✅ 5-layer | ✅ 3-layer | ✅ 4-layer |
+| Coverage enforcement | ❌ None | ✅ Codecov | ⚠️ Partial | ✅ Codecov |
+| KinD integration | ✅ PR-triggered | ✅ | N/A | ✅ |
+| Multi-arch builds | ✅ amd64+arm64 | ❌ | ✅ | ⚠️ |
+| Container scanning | ❌ GH Actions | ⚠️ | ✅ Trivy | ⚠️ |
+| Chaos testing | ✅ Tiered | ❌ | ❌ | ❌ |
+| SAST/CodeQL | ❌ | ✅ | ❌ | ✅ |
+| Pre-commit hooks | ✅ 10 hooks | ✅ | ⚠️ | ⚠️ |
+| Agent rules | ✅ CLAUDE.md | ✅ Full rules | ❌ | ❌ |
+| Release automation | ✅ Full pipeline | ⚠️ | ⚠️ | ✅ |
+| Upgrade testing | ✅ OLM-based | ❌ | ❌ | ✅ |
+| Secret detection | ✅ Gitleaks | ⚠️ | ❌ | ❌ |
+| FIPS compliance | ✅ | ❌ | ❌ | ❌ |
+| Nightly tests | ✅ | ✅ | ✅ | ✅ |
 
-**Key Differentiators:**
-- DSPO's CLAUDE.md is among the better ones in the ODH ecosystem (architecture docs, build tag explanation)
-- DSPO has a unique advantage in upgrade testing infrastructure (OLM-based, version comparison)
-- DSPO's Konflux pipeline is comprehensive but lacks PR-time feedback loop
-- Coverage tracking is the single biggest gap vs. gold standards
+**DSPO Standout Features**:
+- **Chaos engineering**: Only ODH project with structured chaos testing using operator-chaos SDK
+- **4-layer test pyramid**: Unit → Functional (envtest) → Integration (KinD) → Chaos
+- **FIPS-enabled builds**: Compliant binary with `GOFIPS140`
+- **Comprehensive CLAUDE.md**: One of the best agent guidance documents in the ODH ecosystem
 
 ## File Paths Reference
 
-| Category | Path | Purpose |
-|----------|------|---------|
-| CI Workflows | `.github/workflows/*.yml` | 16 GitHub Actions workflows |
-| Tekton Pipeline | `.tekton/odh-...-push.yaml` | Konflux build pipeline (main only) |
-| Unit Tests | `controllers/*_test.go` | 15 unit test files with `test_unit` tag |
-| Functional Tests | `controllers/suite_test.go` | envtest-based functional tests |
-| Integration Tests | `tests/*_test.go` | 6 KinD-based integration test files |
-| Test Data | `controllers/testdata/` | 77 test fixture files (declarative cases, TLS certs) |
-| Test Utilities | `controllers/testutil/` | Shared test helpers |
-| Integration Resources | `tests/resources/` | DSPA manifests, pipelines for integration tests |
-| Linting | `.golangci.yaml` | 8 linters configured |
-| Pre-commit | `.pre-commit-config.yaml` | 12 hooks across 3 repos |
-| Secret Detection | `.gitleaks.toml` | Gitleaks config (not wired into CI) |
-| Dockerfile | `Dockerfile` | Multi-stage FIPS-capable build |
-| Agent Rules | `CLAUDE.md` | Comprehensive project documentation |
-| Makefile | `Makefile` | Build, test, deploy targets |
+### CI/CD
+- `.github/workflows/*.yml` — 18 workflow files
+- `.github/actions/kind/action.yml` — KinD cluster setup composite action
+- `.github/actions/setup-go/` — Go setup composite action
+- `.github/scripts/tests/tests.sh` — Integration test runner script
+- `.tekton/odh-data-science-pipelines-operator-controller-push.yaml` — Konflux pipeline
+
+### Testing
+- `controllers/*_test.go` — 16 unit/functional test files
+- `tests/*_test.go` — 6 integration test files
+- `controllers/testdata/` — Test fixtures (TLS certs, config)
+- `controllers/testutil/` — Test utilities
+- `chaos/knowledge/dspo-default.yaml` — Chaos knowledge model
+- `chaos/experiments/` — 11 chaos experiment definitions (tier1 + tier2)
+
+### Code Quality
+- `.golangci.yaml` — 8 linters enabled
+- `.pre-commit-config.yaml` — 10 hooks across 3 repos
+- `.gitleaks.toml` — Secret detection allowlist
+- `.yamllint.yaml` — YAML linting config
+
+### Container
+- `Dockerfile` — Multi-stage, multi-arch, FIPS-enabled
+- `.dockerignore` — Build context optimization
+
+### Agent Rules
+- `CLAUDE.md` — Comprehensive agent guidance (4,500 chars)
+- `AGENTS.md` — Symlink to CLAUDE.md

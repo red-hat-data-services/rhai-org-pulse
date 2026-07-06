@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:04 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 03:45 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/ai-helpers</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#fd7e14"
+                                stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="231.84934199999992"
+                                stroke-dashoffset="412.80492599999997"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">5.9</div>
+                        <div class="score-value">2.7</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">Only 1 test file for ~60 source files; no test coverage for scripts or skills</div>
+                            <div class="scorecard-status">Only 1 of ~30 Python scripts has tests (stream-claude.py); 3% test-to-code ratio</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No integration or E2E tests; no validation of skills, commands, or agents</div>
+                            <div class="scorecard-status">No integration or E2E tests; no skill validation tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">PR-time container build (dry-run) via build.yml; no runtime validation</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Container build on PR (path-filtered), multi-arch, SHA-pinned deps; no runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Multi-arch builds, nightly schedule, but no runtime smoke tests or vulnerability scanning</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">Containers built on PR but not validated; no scanning; Cursor image uses unpinned tag</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tooling, no codecov, no coverage thresholds</div>
+                            <div class="scorecard-status">No codecov, no coverage reporting, no coverage thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Well-organized workflows with skillsaw linting, ruff, shellcheck, Mergify auto-merge, stale PR management</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Well-organized workflows, Mergify, Dependabot, skillsaw, CodeRabbit</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Comprehensive AGENTS.md with contributor quality checklist, CodeRabbit review rules, skillsaw validation</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">AGENTS.md with quality checklist exists; no .claude/rules/ or test-specific rules</div>
                         </div>
                     </div>
                 </div>
@@ -411,40 +411,40 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Near-zero test coverage for Python scripts</div>
-                            <p>31 Python scripts and 30 shell scripts have only 1 test file (test_stream_claude.py). Script bugs reach production uncaught.</p>
+                            <div class="item-description">29 of 30 Python scripts have zero test coverage</div>
+                            <p>Script bugs (e.g., in validate_tools.py, build-website.py, skill scripts) are only caught in production</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No integration/E2E tests for skills or commands</div>
-                            <p>62 skills, 8 commands, and 1 agent have no automated validation beyond skillsaw structural linting</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">24-40 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No test coverage tracking</div>
-                            <p>Cannot measure test health, no enforcement of coverage thresholds, impossible to track regression</p>
+                            <div class="item-description">No coverage tracking or enforcement</div>
+                            <p>No visibility into coverage trends; PRs can regress coverage with no warning</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container vulnerability scanning</div>
-                            <p>Images pushed to GHCR without Trivy/Snyk scans; CVEs in dependencies go undetected</p>
+                            <div class="item-description">No container vulnerability scanning in CI</div>
+                            <p>Vulnerable base images or dependencies ship without detection</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">Semgrep rules exist but are not run in CI</div>
+                            <p>1800+ lines of security rules provide zero protection without a workflow to run them</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Cursor Containerfile uses unpinned :latest base image</div>
-                            <p>Non-reproducible builds, potential supply chain risk from mutable tag</p>
+                            <div class="item-description">Cursor Containerfile uses unpinned fedora:latest base image</div>
+                            <p>Non-reproducible builds; breaking changes or vulnerabilities from upstream</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1 hour</span>
@@ -464,35 +464,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to build.yml workflow</div>
-                            <p>Catch CVEs in container images before they reach GHCR</p>
+                            <div class="item-description">Add Semgrep CI workflow to run existing rules on PRs</div>
+                            <p>Activates 1800+ lines of security rules that currently sit unused</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add pytest-cov and codecov integration</div>
-                            <p>Visibility into test coverage, enforce minimum thresholds on PRs</p>
+                            <div class="item-description">Add codecov integration to test workflow</div>
+                            <p>Immediate visibility into coverage gaps and PR-level coverage reporting</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
+                            <div class="item-description">Add Trivy container scanning to build workflow</div>
+                            <p>Catch vulnerable packages in both container images before merge</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
                             <div class="item-description">Pin Cursor Containerfile base image by digest</div>
-                            <p>Reproducible builds, supply chain hardening</p>
+                            <p>Reproducible builds and controlled dependency updates via Dependabot</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add unit tests for scripts/ Python files</div>
-                            <p>Cover build-website.py, update_claude_settings.py, fetch_external_plugins.py, validate_tools.py</p>
+                            <div class="item-description">Add tests for validate_tools.py and build-website.py</div>
+                            <p>These are the most critical scripts; failures cause make update / make lint regressions</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add unit tests for all Python scripts in scripts/ directory — currently zero coverage</li><li>Add container image vulnerability scanning (Trivy) to build.yml before pushing images</li><li>Pin Cursor Containerfile base image by digest instead of :latest tag</li></ul>
+                            <ul><li>Add unit tests for all Python scripts in scripts/ (validate_tools.py, update_claude_settings.py, build-website.py, fetch_external_plugins.py)</li><li>Run Semgrep in CI using the existing semgrep.yaml rules file</li><li>Add container scanning (Trivy) to the build workflow for both images</li><li>Add codecov integration with PR coverage reporting and minimum thresholds</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Implement test coverage tracking with codecov and PR-level reporting</li><li>Add integration tests that validate skill SKILL.md files parse correctly and match expected schema</li><li>Add runtime smoke tests for container images (entrypoint starts, key binaries present)</li><li>Add shell script tests using BATS or shunit2 for critical scripts</li></ul>
+                            <ul><li>Add tests for Python scripts in helpers/skills/*/scripts/ (30+ scripts)</li><li>Pin Cursor Containerfile base image by digest and add to Dependabot</li><li>Add container runtime validation tests (image starts, entrypoint works, tools available)</li><li>Add concurrency control to lint and test workflows to avoid redundant runs</li><li>Create .claude/rules/ with test creation guidelines for contributors</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SBOM generation to container builds for supply chain transparency</li><li>Add periodic Semgrep CI scanning (rules already exist in semgrep.yaml but no CI integration)</li><li>Add Gitleaks CI integration (config exists but not wired into workflow)</li><li>Consider CodeQL or Semgrep for SAST in CI pipelines</li></ul>
+                            <ul><li>Add mypy or pyright type checking for Python code</li><li>Add SBOM generation to container builds</li><li>Add image signing/attestation with cosign</li><li>Add skill integration tests that validate skill metadata against agentskills.io spec programmatically</li><li>Add Python dependency scanning via Dependabot for pip/uv packages</li></ul>
                         </div>
                     </div>
                 </div>

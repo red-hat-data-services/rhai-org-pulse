@@ -1,152 +1,210 @@
 ---
 repository: "opendatahub-io/odh-platform-utilities"
-overall_score: 7.1
+overall_score: 6.8
 scorecard:
   - dimension: "Unit Tests"
-    score: 8.5
-    status: "Excellent test-to-code ratio (1.3:1 LOC), 39 test files for 57 source files, table-driven tests with t.Parallel()"
+    score: 7.0
+    status: "Strong root-module coverage (1.33 test-to-source ratio), framework module severely undertested (0.13 ratio)"
   - dimension: "Integration/E2E"
-    score: 3.0
-    status: "No integration or E2E tests; all tests use fake clients only — no envtest or real-cluster validation"
+    score: 5.0
+    status: "No integration or E2E tests — acceptable for a pure library, but envtest or fake-client integration suites would strengthen the framework module"
   - dimension: "Build Integration"
-    score: 1.0
-    status: "Pure library — no container image, no Konflux build, no PR-time build simulation needed or present"
+    score: 4.0
+    status: "No container images to build; CI validates lint+test+tidy+fmt but no Konflux or build simulation"
   - dimension: "Image Testing"
     score: 0.0
-    status: "N/A — shared Go library with no container image artifacts"
+    status: "N/A — pure Go library with no container images"
   - dimension: "Coverage Tracking"
-    score: 7.0
-    status: "Codecov integration on PRs with coverage file upload, but thresholds are informational-only (not enforced)"
+    score: 5.0
+    status: "Codecov integration exists but set to informational-only; no enforcement thresholds or PR gates"
   - dimension: "CI/CD Automation"
-    score: 8.0
-    status: "Well-structured CI with lint, test, verify jobs; pre-commit hooks; automated release workflow"
+    score: 7.5
+    status: "Clean PR pipeline (lint, test, verify-tidy, verify-fmt, codecov upload); release workflow validates tag+tests; lacks concurrency control and caching"
   - dimension: "Agent Rules"
     score: 9.0
-    status: "Comprehensive AGENTS.md at root and 6 package-level AGENTS.md files with detailed architecture, API, and testing guidance"
+    status: "Exceptional — root AGENTS.md + 7 package-level AGENTS.md files with architecture, conventions, and migration guides"
 critical_gaps:
-  - title: "No integration tests with envtest"
-    impact: "Controller-runtime utilities (deploy, GC, conditions) are only tested with fake clients; real API server behavior (SSA conflicts, admission, RBAC) is not validated"
+  - title: "Framework module test coverage is critically low"
+    impact: "52 source files / 7,798 LOC with only 6 test files / 1,038 test LOC (ratio 0.13) — reconciler, actions, predicates, handlers largely untested"
     severity: "HIGH"
-    effort: "16-24 hours"
-  - title: "Coverage thresholds are informational only"
-    impact: "Coverage can silently regress without failing CI — no enforcement gate"
-    severity: "MEDIUM"
-    effort: "1-2 hours"
-  - title: "22 source files have no corresponding test file"
-    impact: "Key packages like render/kustomize engine, apply, discovery, and template actions lack direct unit tests"
-    severity: "MEDIUM"
-    effort: "16-24 hours"
+    effort: "40-60 hours"
   - title: "No security scanning in CI"
-    impact: "Dependency vulnerabilities and code-level security issues (gosec) are not automatically detected"
-    severity: "MEDIUM"
+    impact: "Dependency vulnerabilities, secret leaks, and SAST issues go undetected until downstream consumers scan"
+    severity: "HIGH"
     effort: "2-4 hours"
+  - title: "Codecov thresholds not enforced"
+    impact: "Coverage can silently regress on any PR; informational-only status checks don't block merges"
+    severity: "MEDIUM"
+    effort: "1 hour"
+  - title: "No concurrency control on CI workflows"
+    impact: "Multiple CI runs for the same PR waste resources and can produce confusing status checks"
+    severity: "LOW"
+    effort: "30 minutes"
 quick_wins:
-  - title: "Enforce coverage thresholds in codecov.yml"
-    effort: "30 minutes"
-    impact: "Prevent silent coverage regression by failing PRs that drop below a baseline"
-  - title: "Add govulncheck to CI workflow"
-    effort: "1-2 hours"
-    impact: "Detect known vulnerabilities in Go dependencies on every PR"
-  - title: "Add gosec via golangci-lint"
-    effort: "30 minutes"
-    impact: "Catch common security anti-patterns (hardcoded creds, weak crypto) automatically"
-  - title: "Add .claude/rules/ directory with test creation rules"
+  - title: "Add CodeQL / gosec SAST scanning workflow"
     effort: "2-3 hours"
-    impact: "Guide AI agents to generate tests following the repo's established patterns (t.Parallel, table-driven, _test suffix)"
+    impact: "Catches security vulnerabilities and unsafe patterns in Go code before merge"
+  - title: "Enable Codecov enforcement thresholds"
+    effort: "30 minutes"
+    impact: "Prevent coverage regression by blocking PRs that drop below a baseline"
+  - title: "Add concurrency control to CI workflow"
+    effort: "15 minutes"
+    impact: "Cancel redundant CI runs on force-push, reducing resource waste"
+  - title: "Add dependency scanning (govulncheck or Dependabot)"
+    effort: "1-2 hours"
+    impact: "Automated alerts for known vulnerabilities in Go dependencies"
+  - title: "Add Go caching in CI"
+    effort: "15 minutes"
+    impact: "Faster CI runs by caching Go module downloads and build cache"
 recommendations:
   priority_0:
-    - "Add envtest-based integration tests for deploy, GC, and webhook packages to validate real API server behavior"
-    - "Enforce codecov coverage thresholds (e.g., 70% project, 60% patch) instead of informational-only"
+    - "Write unit tests for the framework module — reconciler, deploy actions, GC, conditions, predicates, handlers are all untested or minimally tested"
+    - "Add SAST scanning (CodeQL or gosec) to the CI pipeline"
+    - "Enforce Codecov coverage thresholds (e.g., 50% project minimum, no patch regression)"
   priority_1:
-    - "Add unit tests for the 22 untested source files, especially resources/apply.go, render/kustomize/engine.go, and template/funcmap.go"
-    - "Add govulncheck and gosec to CI pipeline for security scanning"
-    - "Add .claude/rules/ with explicit test creation patterns"
+    - "Add govulncheck or Dependabot for dependency vulnerability scanning"
+    - "Add Gitleaks or similar secret detection to pre-commit hooks and CI"
+    - "Consider envtest-based integration tests for framework reconciler and deploy actions"
   priority_2:
-    - "Add benchmark tests for performance-sensitive paths (resource hashing, sorting, Helm/Kustomize rendering)"
-    - "Add fuzz tests for decode and validation functions"
-    - "Consider adding CodeQL analysis workflow"
+    - "Add benchmark tests for performance-critical paths (deploy loop, hash computation, manifest rendering)"
+    - "Add CI concurrency control and Go module caching"
+    - "Create .claude/rules/ directory with test-pattern rules for each package"
 ---
 
 # Quality Analysis: odh-platform-utilities
 
 ## Executive Summary
 
-- **Overall Score: 7.1/10**
-- **Repository Type**: Shared Go library for Kubernetes module controller development
-- **Primary Language**: Go (100%)
-- **Framework**: Kubernetes controller-runtime, Helm, Kustomize
-- **Key Strengths**: Excellent unit test culture (1.3:1 test-to-code LOC ratio, t.Parallel everywhere), comprehensive agent documentation (7 AGENTS.md files), well-structured CI/CD, strong linting with nearly all golangci-lint v2 linters enabled
-- **Critical Gaps**: No integration tests (envtest), coverage not enforced, 22 source files untested, no security scanning
-- **Agent Rules Status**: Present and comprehensive — root AGENTS.md plus 6 package-level AGENTS.md files
+- **Overall Score: 6.8/10**
+- **Repository Type**: Shared Go library (two modules: root + framework)
+- **Primary Language**: Go 1.25
+- **Key Strengths**: Excellent agent documentation, strong root-module test coverage, comprehensive linting, well-structured CI pipeline
+- **Critical Gaps**: Framework module is severely undertested (0.13 test-to-source ratio), no security scanning whatsoever, codecov is informational-only
+- **Agent Rules Status**: Exceptional — best-in-class AGENTS.md with package-level documentation
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 8.5/10 | Excellent test ratio (1.3:1), 39 test files, table-driven + t.Parallel |
-| Integration/E2E | 3.0/10 | No envtest or real-cluster tests; only fake clients |
-| **Build Integration** | **1.0/10** | **N/A — pure library, no container builds** |
-| Image Testing | N/A | Not applicable — no container image artifacts |
-| Coverage Tracking | 7.0/10 | Codecov integrated but thresholds informational-only |
-| CI/CD Automation | 8.0/10 | Clean lint/test/verify pipeline; pre-commit hooks; release automation |
-| Agent Rules | 9.0/10 | 7 AGENTS.md files with detailed architecture, API docs, and testing patterns |
+| Unit Tests | 7.0/10 | Strong root-module coverage; framework module is a critical gap |
+| Integration/E2E | 5.0/10 | N/A for pure library, but framework could benefit from envtest |
+| Build Integration | 4.0/10 | No container images; CI validates code quality but no build simulation |
+| Image Testing | N/A | Pure Go library — no container images |
+| Coverage Tracking | 5.0/10 | Codecov present but informational-only; no enforcement |
+| CI/CD Automation | 7.5/10 | Clean pipeline with lint/test/verify; lacks concurrency and caching |
+| Agent Rules | 9.0/10 | Exceptional — root + 7 package-level AGENTS.md files |
 
 ## Critical Gaps
 
-### 1. No Integration Tests with envtest
-- **Impact**: The library provides controller-runtime utilities (deployer with SSA, GC collector, webhook validators, conditions manager) that interact with real Kubernetes API servers. Testing only with `fake.Client` misses SSA field ownership conflicts, admission webhook behavior, RBAC issues, and real API server error semantics.
+### 1. Framework Module Test Coverage Is Critically Low
 - **Severity**: HIGH
-- **Effort**: 16-24 hours
-- **Recommendation**: Add an envtest-based test suite for `pkg/deploy`, `pkg/controller/gc`, `pkg/webhook`, and `pkg/resources/apply.go`
+- **Impact**: The `framework/` module contains 52 source files (7,798 LOC) but only 6 test files (1,038 LOC) — a test-to-source ratio of 0.13. Critical components like the reconciler action pipeline, deploy actions, GC collector, condition manager, predicate library, and handler utilities are largely untested or have only superficial tests.
+- **Effort**: 40-60 hours
+- **Untested packages**:
+  - `framework/controller/actions/cacher/` — action-level caching
+  - `framework/controller/actions/deleteresource/` — resource deletion
+  - `framework/controller/actions/dynamicownership/` — dynamic watch registration
+  - `framework/controller/actions/errors/` — StopError sentinel
+  - `framework/controller/actions/gc/` — garbage collection action
+  - `framework/controller/actions/render/helm/` — Helm render action
+  - `framework/controller/actions/render/template/` — template render action
+  - `framework/controller/actions/resourcecacher/` — resource caching
+  - `framework/controller/actions/sanitycheck/` — pre-reconcile validation
+  - `framework/controller/actions/status/deployments/` — deployment status checks
+  - `framework/controller/conditions/` — condition manager
+  - `framework/controller/handlers/` — watch event handlers
+  - `framework/controller/predicates/` and all sub-packages
+  - `framework/cluster/` — CRD and API availability checks
+  - `framework/resources/` — resource helpers
+  - `framework/rules/` — RBAC rule evaluation
 
-### 2. Coverage Thresholds Not Enforced
-- **Impact**: `codecov.yml` sets both `project` and `patch` status to `informational: true`, meaning coverage can silently regress without failing CI checks. There is no minimum threshold gate.
-- **Severity**: MEDIUM
-- **Effort**: 1-2 hours
-- **Recommendation**: Set `informational: false` and add thresholds (e.g., `target: 70%` for project, `target: 60%` for patch)
-
-### 3. 22 Source Files Without Tests
-- **Impact**: Key functionality is untested:
-  - `pkg/resources/apply.go` — Server-side apply wrapper (the core deployment primitive)
-  - `pkg/resources/discovery.go` — API resource discovery
-  - `pkg/render/kustomize/engine.go` — Kustomize rendering engine
-  - `pkg/render/kustomize/filters.go`, `plugins.go`, `support.go` — Kustomize pipeline
-  - `pkg/render/helm/action.go`, `options.go` — Helm action pipeline
-  - `pkg/render/template/action.go`, `options.go` — Template action pipeline
-  - `pkg/render/cacher/cacher.go` — Cache base implementation
-  - `pkg/template/funcmap.go` — Template helper functions
-  - `pkg/deploy/metrics.go`, `pkg/controller/gc/metrics.go`, `pkg/render/metrics.go` — Prometheus metrics
-  - `pkg/metadata/annotations/annotations.go` — Annotation constants
-  - `pkg/cluster/types.go` — Type definitions
-- **Severity**: MEDIUM
-- **Effort**: 16-24 hours
-
-### 4. No Security Scanning
-- **Impact**: No `govulncheck`, `gosec`, CodeQL, or dependency scanning in CI. Vulnerabilities in Go dependencies or insecure code patterns will not be detected automatically.
-- **Severity**: MEDIUM
+### 2. No Security Scanning in CI
+- **Severity**: HIGH
+- **Impact**: No SAST (CodeQL, gosec), no dependency scanning (govulncheck, Dependabot), no secret detection (Gitleaks). Vulnerabilities go undetected until downstream consumers discover them.
 - **Effort**: 2-4 hours
+
+### 3. Codecov Thresholds Not Enforced
+- **Severity**: MEDIUM
+- **Impact**: `codecov.yml` sets both `project` and `patch` status to `informational: true`. Coverage can regress silently on any PR without blocking the merge.
+- **Effort**: 1 hour
+- **Current config**:
+  ```yaml
+  coverage:
+    status:
+      project:
+        default:
+          informational: true
+      patch:
+        default:
+          informational: true
+  ```
+
+### 4. No CI Concurrency Control
+- **Severity**: LOW
+- **Impact**: Multiple CI runs for the same PR run simultaneously when force-pushing, wasting GitHub Actions minutes.
+- **Effort**: 15 minutes
 
 ## Quick Wins
 
-### 1. Enforce Coverage Thresholds (30 minutes)
-Update `codecov.yml`:
+### 1. Add Concurrency Control to CI Workflow (15 minutes)
 ```yaml
+# Add to .github/workflows/ci.yaml after 'permissions:'
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+```
+
+### 2. Enable Codecov Enforcement (30 minutes)
+```yaml
+# codecov.yml
 coverage:
   status:
     project:
       default:
-        target: 70%
-        informational: false
+        target: 50%
+        threshold: 2%
     patch:
       default:
         target: 60%
-        informational: false
 ```
 
-### 2. Add govulncheck to CI (1-2 hours)
-Add a step to `ci.yaml`:
+### 3. Add Go Caching in CI (15 minutes)
+The `actions/setup-go@v5` action already caches Go modules by default when `go-version-file` is set. Verify caching is active (it should be), or add explicit cache step for build artifacts.
+
+### 4. Add CodeQL Scanning (2-3 hours)
 ```yaml
-  vuln-check:
+# .github/workflows/codeql.yaml
+name: CodeQL
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'
+
+permissions:
+  security-events: write
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: go
+      - uses: github/codeql-action/autobuild@v3
+      - uses: github/codeql-action/analyze@v3
+```
+
+### 5. Add Dependency Scanning (1 hour)
+```yaml
+# Add to ci.yaml or create .github/workflows/vulncheck.yaml
+  vulncheck:
     name: Vulnerability Check
     runs-on: ubuntu-latest
     steps:
@@ -154,224 +212,196 @@ Add a step to `ci.yaml`:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: Install govulncheck
-        run: go install golang.org/x/vuln/cmd/govulncheck@latest
-      - name: Run govulncheck
-        run: govulncheck ./...
+      - run: go install golang.org/x/vuln/cmd/govulncheck@latest
+      - run: govulncheck ./...
+      - run: cd framework && govulncheck ./...
 ```
-
-### 3. Enable gosec via golangci-lint (30 minutes)
-The repo already enables nearly all linters (`default: all` with selective disables). Simply verify `gosec` is not in the disable list (it isn't — it's already enabled). Consider also explicitly enabling `gocritic` security checks.
-
-### 4. Add .claude/rules/ for Test Patterns (2-3 hours)
-Create `.claude/rules/unit-tests.md` documenting:
-- Use `_test` package suffix for all tests
-- Always call `t.Parallel()` in test functions and subtests
-- Use table-driven tests for variations
-- Use `stretchr/testify` (assert/require) or Gomega
-- Use `fake.NewClientBuilder` for Kubernetes client mocking
-- Generate coverage with `make test`
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows**: 2 workflows (ci.yaml, release.yaml)
+**Workflow Inventory:**
 
-| Workflow | Trigger | Jobs |
-|----------|---------|------|
-| CI | PR + push to main | lint, test, verify |
-| Release | Tag push (v*) | validate tag, test, create release |
+| Workflow | Trigger | Jobs | Purpose |
+|----------|---------|------|---------|
+| `ci.yaml` | PR + push to main | lint, test, verify | Main quality gate |
+| `release.yaml` | Tag push (`v*`) | release | Semver tag validation + test + GitHub release |
 
-**Strengths**:
-- Clean separation of concerns: lint, test, verify as separate jobs
-- Go version pinned from `go.mod` (no hardcoded version)
-- Uses latest golangci-lint v2.5.0 with official action
-- Verify job checks `go mod tidy` and `gofmt` freshness
-- Release workflow validates semver tag format and runs tests before release
-- Pre-commit hooks configured for local development (gofmt, go vet, golangci-lint, tests on pre-push)
+**Strengths:**
+- Clean, minimal workflow design — 3 CI jobs run independently in parallel
+- Tests run with race detector (`-race`) on both modules
+- Verify step checks `go mod tidy` and `gofmt` formatting
+- Release workflow re-runs full test suite before creating a release
+- Codecov upload on PRs with separate coverage files for each module
+- Tag validation ensures semver compliance
 
-**Gaps**:
-- No concurrency control (`concurrency:` key) — duplicate PR runs possible
-- No Go module caching beyond setup-go defaults
-- No dependency review or license scanning
-- `fail_ci_if_error: false` on Codecov upload — upload failures are silent
+**Gaps:**
+- No concurrency control — redundant CI runs on force-push
+- No Go caching optimization (though `actions/setup-go@v5` may cache by default)
+- `fail_ci_if_error: false` on Codecov means upload failures are silently ignored
+- No CI for the `verify-generate` target (DeepCopy verification not in PR pipeline)
+- No separate workflow for periodic security scanning
 
 ### Test Coverage
 
-**Quantitative**:
-- 39 test files for 57 non-generated source files (68% file coverage)
-- 9,861 lines of test code vs 7,517 lines of source code (1.31:1 ratio — excellent)
-- 22 source files without corresponding test files
+**Root Module (`pkg/` + `api/`):**
+- 43 test files, 11,271 test LOC vs 8,453 source LOC (ratio: **1.33**)
+- All 16 `pkg/` subpackages with source code have corresponding test files
+- `api/common/` has both unit tests and validation tests
+- Uses `t.Parallel()` consistently
+- Table-driven tests with `gomega` assertions
+- Fake client testing via `sigs.k8s.io/controller-runtime/pkg/client/fake`
+- Error injection via custom wrapper clients (e.g., `erroringCRDClient`)
+- **Strong coverage** — this is well above average for Go libraries
 
-**Test Quality**:
-- 35/39 test files (90%) use `t.Parallel()` — excellent parallelism discipline
-- Table-driven tests used consistently (e.g., `pkg/cluster/detect_test.go`, `pkg/resources/types_test.go`)
-- Two assertion frameworks used: `stretchr/testify` (assert/require) and Gomega — slightly inconsistent but both are idiomatic
-- External test packages (`_test` suffix) used consistently — tests exercise the public API
-- 9 test files use `fake.NewClientBuilder` for Kubernetes client testing
+**Framework Module (`framework/`):**
+- Only 6 test files, 1,038 test LOC vs 7,798 source LOC (ratio: **0.13**)
+- Tested: reconciler actions, deploy merge monitoring, kustomize render, jq matchers
+- **Untested**: 30+ packages including all predicates, handlers, conditions manager, GC action, helm/template render actions, dynamic ownership, sanity check, status/deployments, and more
+- This is the most significant quality gap in the repository
 
-**Untested Areas** (22 files):
-- Most are option types, action adapters, metrics registrations, and type definitions
-- The most critical untested files are `resources/apply.go` (SSA wrapper) and `resources/discovery.go`
-- Render engine internals (kustomize engine, filters, plugins) are partially tested via the top-level `kustomize_test.go` but lack direct unit tests
+**Testing Patterns:**
+- Uses `github.com/stretchr/testify` (assert/require) and `github.com/onsi/gomega`
+- `_test` package suffix for public API testing (good practice)
+- No `envtest` usage — all Kubernetes interactions use fake clients
+- No benchmarks anywhere in the codebase
+- No integration test infrastructure
 
 ### Code Quality
 
-**Linting** (golangci-lint v2):
-- **Configuration**: `default: all` (enables all available linters) with only 11 selectively disabled
-- **Disabled linters**: depguard, exhaustruct, godox, ireturn, mnd, nlreturn, nonamedreturns, testpackage, varnamelen, wrapcheck, wsl
-- **Custom settings**: errcheck type assertion checking, exhaustive enum checking, govet all analyzers, import aliasing rules
-- **Formatters**: gofmt + goimports
-- **Issue limits**: `max-issues-per-linter: 0`, `max-same-issues: 0` (no suppression — all issues reported)
-- **Assessment**: 9/10 — one of the most comprehensive linting configurations seen
+**Linting:**
+- **golangci-lint v2** with `default: all` (enables all linters, then selectively disables)
+- Root module: 10 linters disabled — a very aggressive configuration
+- Framework module: 25 linters disabled — notably disables `staticcheck`, `paralleltest`, `govet`, `cyclop`, `funlen`, `gocognit` — significantly weaker than root
+- Both modules enable `errcheck` with type-assertion checking
+- `gofmt` and `goimports` formatters enabled
 
-**Pre-commit Hooks**:
-- trailing-whitespace, end-of-file-fixer, check-yaml, check-merge-conflict
-- gofmt, go vet, golangci-lint (on commit)
-- go test (on pre-push stage)
-- Well-configured with appropriate stage separation
+**Pre-commit Hooks:**
+- Configured with `pre-commit-config.yaml`
+- Hooks: trailing whitespace, end-of-file fixer, YAML check, merge conflict detection
+- Local hooks: `gofmt`, `go vet`, `golangci-lint`
+- `go test` runs on pre-push (not pre-commit — good ergonomics)
+
+**Static Analysis:**
+- No SAST tools (CodeQL, gosec, Semgrep) configured
+- No dependency scanning (govulncheck, Dependabot)
+- No secret detection (Gitleaks, TruffleHog)
 
 ### Container Images
 
-**N/A** — This is a pure Go library with no container image artifacts. No Dockerfile, Containerfile, or image-building infrastructure exists. This is by design.
-
-**Note**: For a shared library, the relevant "build integration" concern is that downstream consumers (odh-operator, module controllers) can successfully import and compile against the library. The CI `verify-tidy` and `verify-fmt` checks help ensure this.
+**N/A** — This is a pure Go library. There are no Dockerfiles, container images, or image-related infrastructure. This is appropriate for the repository's purpose.
 
 ### Security
 
-**Current State**: Minimal
-- No `govulncheck` in CI
-- No CodeQL analysis workflow
-- No dependency scanning (Dependabot, Renovate)
-- No secret detection (gitleaks, TruffleHog)
-- `gosec` is implicitly enabled via `default: all` in golangci-lint — this is a positive
-- No `.gitleaks.toml` or `.trivyignore`
+**Status: No security tooling configured.**
 
-**Mitigating Factors**: As a library (not a deployed service), the attack surface is smaller. However, dependency vulnerabilities can propagate to all downstream consumers, making scanning actually more important.
+| Tool | Status | Gap |
+|------|--------|-----|
+| CodeQL / SAST | ❌ Missing | No static application security testing |
+| gosec | ❌ Missing | No Go-specific security linter |
+| govulncheck | ❌ Missing | No known-vulnerability scanning for dependencies |
+| Dependabot | ❌ Missing | No automated dependency update PRs |
+| Gitleaks | ❌ Missing | No secret detection in commits |
+| Trivy | N/A | No container images |
+| SBOM | N/A | No container images |
+
+As a shared library imported by multiple operators across the ODH ecosystem, the lack of security scanning is a significant concern. A vulnerability in this library would propagate to all downstream consumers.
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status**: Present and comprehensive — among the best observed in the ODH ecosystem
+**Status: Exceptional — among the best in the ODH ecosystem**
 
-**Coverage**:
-| File | Lines | Content |
-|------|-------|---------|
-| `AGENTS.md` (root) | 197 | Architecture, package structure, key types, build commands, coding conventions, testing standards |
-| `pkg/cluster/AGENTS.md` | 142 | Two-layer detection model, API dependency strategy, error behavior, testing patterns |
-| `pkg/controller/conditions/AGENTS.md` | 94 | Condition management API, severity model, testing patterns |
-| `pkg/controller/gc/AGENTS.md` | 106 | GC collector architecture, RBAC authorization, predicates |
-| `pkg/deploy/AGENTS.md` | 53 | Deploy pipeline, merge strategies, conventions |
-| `pkg/metadata/AGENTS.md` | 130 | Label/annotation contract, lifecycle semantics |
-| `pkg/render/AGENTS.md` | 108 | Three rendering engines, caching behavior, namespace injection |
+**Root-level documentation:**
+- `CLAUDE.md` — points to `AGENTS.md` (correct pattern)
+- `AGENTS.md` — 338 lines of comprehensive documentation covering:
+  - Repository purpose and architecture context
+  - Two-module structure with package inventory
+  - Key types table with package locations
+  - Build/test/lint commands
+  - Coding conventions (error handling, naming, markers, testing)
+  - Dependency policy
+  - Versioning and breaking change policy
 
-**Quality Assessment**:
-- Architecture context is excellent (hub-and-spoke model, migration notes from operator)
-- Testing conventions are explicit (t.Parallel, table-driven, _test suffix, stretchr/testify)
-- Coding conventions are thorough (error handling, naming, kubebuilder markers)
-- Package-level AGENTS.md files provide granular, context-specific guidance
-- Migration notes help agents working on code that was extracted from the operator
+**Package-level AGENTS.md files (7 total):**
+| Package | AGENTS.md | Quality |
+|---------|-----------|---------|
+| `pkg/cluster` | ✅ | Excellent — two-layer model, API strategy, migration notes, testing patterns |
+| `pkg/deploy` | ✅ | Strong — key types, merge strategies, deploy loop outline |
+| `pkg/status` | ✅ | Present |
+| `pkg/render` | ✅ | Present |
+| `pkg/metadata` | ✅ | Present |
+| `pkg/controller/gc` | ✅ | Present |
+| `pkg/controller/conditions` | ✅ | Present |
 
-**Gaps**:
-- No `.claude/rules/` directory — agent rules exist only as AGENTS.md documentation
-- No explicit rules for test creation workflows or checklists
-- No rules for new file/package creation patterns
-- Could benefit from a `.claude/rules/unit-tests.md` with copy-pasteable test templates
+**Gaps:**
+- No `.claude/rules/` directory with formalized test creation rules
+- No `.claude/skills/` for custom skills
+- Framework module packages lack AGENTS.md files
+- No test pattern examples in agent documentation
+
+**Recommendation**: The existing agent documentation is outstanding. The next step would be generating formalized test rules with `/test-rules-generator` and adding AGENTS.md files to framework subpackages.
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add envtest integration tests** for packages that interact with real Kubernetes API servers:
-   - `pkg/deploy` — SSA apply, merge strategies, cache invalidation
-   - `pkg/controller/gc` — garbage collection with real RBAC and resource discovery
-   - `pkg/webhook` — admission webhook responses
-   - `pkg/resources/apply.go` — server-side apply behavior
-   
-2. **Enforce codecov coverage thresholds** — change `informational: true` to `false` and set minimum targets (70% project, 60% patch)
+1. **Write tests for the framework module** — Target the reconciler (`framework/controller/reconciler/`), deploy actions, GC collector, condition manager, and predicate library. These are the most-imported packages and directly affect controller correctness in downstream operators.
+
+2. **Add SAST scanning** — Add CodeQL and/or `gosec` to the CI pipeline. As a shared library, security issues here propagate to all consumers.
+
+3. **Enforce coverage thresholds** — Change `codecov.yml` from `informational: true` to enforcing minimum thresholds. Start with `target: 50%` for project and `target: 60%` for patch.
 
 ### Priority 1 (High Value)
 
-3. **Add unit tests for 22 untested files**, prioritizing:
-   - `pkg/resources/apply.go` (core deployment primitive)
-   - `pkg/render/kustomize/engine.go` (rendering engine)
-   - `pkg/template/funcmap.go` (template helpers)
-   - `pkg/render/cacher/cacher.go` (cache implementation)
+4. **Add dependency vulnerability scanning** — Add `govulncheck` to CI and/or enable Dependabot for automated dependency update PRs.
 
-4. **Add security scanning to CI**:
-   - `govulncheck` for Go vulnerability detection
-   - Consider Dependabot or Renovate for automated dependency updates
-   - Add a CodeQL analysis workflow
+5. **Add Gitleaks secret detection** — Add to pre-commit hooks and CI to prevent accidental credential exposure.
 
-5. **Create `.claude/rules/unit-tests.md`** with explicit test creation patterns, complementing the existing AGENTS.md documentation
+6. **Harmonize framework linter config** — The framework module disables 25 linters (including `staticcheck`!) vs. 10 in the root module. Aligning the framework config with the root module would catch more issues. At minimum, re-enable `staticcheck`.
+
+7. **Add `verify-generate` to CI** — The Makefile has a `verify-generate` target that checks DeepCopy methods are up to date, but it's not run in CI.
 
 ### Priority 2 (Nice-to-Have)
 
-6. **Add benchmark tests** for performance-sensitive paths:
-   - Resource hashing (`pkg/resources/hash.go`)
-   - Apply-order sorting (`pkg/resources/sort.go`)
-   - Helm/Kustomize rendering
-   - Deploy cache lookup
+8. **Add benchmark tests** — Performance-critical paths like deploy loop, hash computation, and manifest rendering should have benchmarks to catch regressions.
 
-7. **Add fuzz tests** for input-parsing functions:
-   - `pkg/resources/decode.go`
-   - `api/common/validation/validate.go`
+9. **Add CI concurrency control and Go caching** — Quick wins that improve developer experience and reduce resource waste.
 
-8. **Add CI concurrency control** to cancel stale PR runs:
-   ```yaml
-   concurrency:
-     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
-     cancel-in-progress: true
-   ```
+10. **Create `.claude/rules/` with test pattern rules** — Formalize the testing conventions documented in AGENTS.md into structured rules that AI agents can follow when generating tests.
 
-9. **Consider Dependabot/Renovate** for automated Go module dependency updates
+11. **Add AGENTS.md to framework subpackages** — The root `pkg/` packages have excellent package-level documentation; the framework module packages would benefit from the same treatment.
 
 ## Comparison to Gold Standards
 
-| Practice | odh-platform-utilities | odh-dashboard (gold) | notebooks (gold) | kserve (gold) |
-|----------|----------------------|---------------------|-------------------|---------------|
-| Unit tests | Strong (1.3:1 ratio) | Strong | Moderate | Strong |
-| Integration tests | None (fake only) | envtest + contract | Image-based | envtest |
-| E2E tests | N/A (library) | Cypress + Playwright | Multi-arch CI | Multi-version |
-| Coverage tracking | Codecov (informational) | Codecov (enforced) | N/A | Codecov (enforced) |
-| Coverage enforcement | No | Yes (thresholds) | N/A | Yes (thresholds) |
-| Linting | Excellent (all linters) | Strong | Moderate | Strong |
-| Pre-commit hooks | Yes (4 hooks) | Yes | No | Partial |
-| Security scanning | gosec only (via lint) | Trivy + Snyk | Trivy | Trivy + CodeQL |
-| Agent rules | 7 AGENTS.md files | CLAUDE.md + rules/ | None | None |
-| Container testing | N/A | Yes | 5-layer validation | Yes |
-| Contract testing | N/A | Yes | N/A | N/A |
-
-**Notable**: This repository has the **best agent documentation** in the ODH ecosystem, with 7 detailed AGENTS.md files. It is also one of the few repositories using golangci-lint v2 with nearly all linters enabled.
+| Dimension | odh-platform-utilities | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
+|-----------|----------------------|---------------------|------------------|---------------|
+| Unit Test Coverage | Mixed (root: 1.33, fw: 0.13) | High (multi-layer) | High | High with enforcement |
+| Integration Tests | None (fake client only) | Contract + integration | Image integration | envtest + multi-version |
+| Coverage Enforcement | Informational only | Enforced thresholds | Enforced | Enforced |
+| SAST / Security | None | CodeQL + secret detection | Trivy + scanning | CodeQL + scanning |
+| Linting | Excellent (default: all) | Strong | Strong | Strong |
+| Pre-commit Hooks | ✅ Comprehensive | ✅ | ✅ | ✅ |
+| Agent Rules | ✅ Exceptional (9/10) | ✅ Strong | Moderate | Moderate |
+| CI/CD Pipeline | Clean but basic | Advanced (multi-stage) | Advanced (5-layer) | Advanced |
+| Benchmarks | None | Performance tests | N/A | Performance tests |
 
 ## File Paths Reference
 
-### CI/CD
-- `.github/workflows/ci.yaml` — Main CI pipeline (lint, test, verify)
-- `.github/workflows/release.yaml` — Release automation on tag push
-- `Makefile` — Build targets (test, lint, fmt, verify, generate)
-
-### Testing
-- `*_test.go` files — 39 test files across all packages
-- `pkg/render/helm/testdata/` — Helm chart test fixtures
-
-### Code Quality
-- `.golangci.yml` — Linter config (v2 format, nearly all linters enabled)
-- `.pre-commit-config.yaml` — Pre-commit hooks (gofmt, vet, lint, test)
-- `codecov.yml` — Coverage reporting configuration
-
-### Agent Documentation
-- `AGENTS.md` — Root agent guide (architecture, types, conventions)
-- `pkg/cluster/AGENTS.md` — Cluster detection documentation
-- `pkg/controller/conditions/AGENTS.md` — Condition management
-- `pkg/controller/gc/AGENTS.md` — Garbage collection
-- `pkg/deploy/AGENTS.md` — Deploy pipeline
-- `pkg/metadata/AGENTS.md` — Labels and annotations
-- `pkg/render/AGENTS.md` — Manifest rendering engines
-
-### Documentation
-- `README.md` — Comprehensive project documentation
-- `CONTRIBUTING.md` — Contribution guidelines
-- `docs/platform-object-contract.md` — Platform contract specification
-- `docs/migration-from-operator.md` — Migration guide from ODH operator
-- `docs/VERSIONING.md` — Versioning policy
+| Purpose | Path |
+|---------|------|
+| CI workflow | `.github/workflows/ci.yaml` |
+| Release workflow | `.github/workflows/release.yaml` |
+| Root golangci-lint config | `.golangci.yml` |
+| Framework golangci-lint config | `framework/.golangci.yml` |
+| Pre-commit hooks | `.pre-commit-config.yaml` |
+| Codecov config | `codecov.yml` |
+| Agent guide (root) | `AGENTS.md` |
+| Claude pointer | `CLAUDE.md` |
+| Root Makefile | `Makefile` |
+| Framework Makefile | `framework/Makefile` |
+| Go module (root) | `go.mod` |
+| Go module (framework) | `framework/go.mod` |
+| Contributing guide | `CONTRIBUTING.md` |
+| Platform contract docs | `docs/platform-object-contract.md` |
+| Versioning policy | `docs/VERSIONING.md` |

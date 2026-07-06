@@ -4,368 +4,292 @@ overall_score: 1.2
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No unit tests exist — zero test files in repository"
+    status: "No test files, no testing framework, no test infrastructure"
   - dimension: "Integration/E2E"
-    score: 0.5
-    status: "Only a manual Jupyter notebook for ad-hoc Flask endpoint testing"
-  - dimension: "Build Integration"
     score: 0.0
-    status: "No CI/CD pipeline, no Dockerfile, no build automation of any kind"
+    status: "No integration or E2E tests; only manual notebook-based curl testing"
+  - dimension: "Build Integration"
+    score: 1.0
+    status: "S2I build relies entirely on OpenShift platform; no PR-time validation"
   - dimension: "Image Testing"
     score: 0.0
-    status: "No container image definition exists — relies entirely on S2I builder image"
+    status: "No Dockerfile, no container image testing, no runtime validation"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling, no codecov, no thresholds"
+    status: "No coverage tools, no codecov, no thresholds"
   - dimension: "CI/CD Automation"
-    score: 0.5
-    status: "No GitHub Actions, no Makefile, no automated workflows"
+    score: 1.0
+    status: "No CI/CD workflows; relies on OpenShift S2I webhook triggers"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent guidance"
+    status: "No CLAUDE.md, no .claude/ directory, no agent rules"
 critical_gaps:
-  - title: "Zero automated tests"
-    impact: "Any code change can silently break prediction endpoint or Flask routing with no detection"
+  - title: "No CI/CD pipeline of any kind"
+    impact: "No automated checks on PRs; broken code can be merged without detection"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "No CI/CD pipeline"
-    impact: "No automated validation on push/PR — broken code reaches production unchecked"
+  - title: "Zero test coverage — no test files exist"
+    impact: "Prediction logic, Flask routing, and gunicorn config are entirely untested"
+    severity: "HIGH"
+    effort: "4-6 hours"
+  - title: "No security scanning or dependency auditing"
+    impact: "Vulnerable dependencies (Flask, gunicorn) can ship undetected"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No Dockerfile or container build definition"
-    impact: "Image build relies entirely on S2I builder — no local reproducibility, no vulnerability scanning possible"
-    severity: "HIGH"
-    effort: "2-3 hours"
-  - title: "No dependency pinning"
-    impact: "requirements.txt lists Flask and gunicorn without versions — builds are non-reproducible"
-    severity: "HIGH"
-    effort: "1 hour"
-  - title: "No security scanning"
-    impact: "No dependency audit, no SAST, no secret detection — vulnerabilities accumulate silently"
-    severity: "HIGH"
-    effort: "2-3 hours"
-  - title: "No code quality tooling"
-    impact: "No linter, no formatter, no type checking — code quality relies entirely on manual review"
+  - title: "No container image definition or testing"
+    impact: "S2I builds are opaque; no local reproducibility or image validation"
+    severity: "MEDIUM"
+    effort: "4-6 hours"
+  - title: "Potential JSON injection in prediction endpoint"
+    impact: "wsgi.py uses json.loads on raw request data without validation or error handling"
     severity: "MEDIUM"
     effort: "1-2 hours"
 quick_wins:
-  - title: "Pin dependency versions in requirements.txt"
+  - title: "Add a GitHub Actions CI workflow with basic linting"
+    effort: "1-2 hours"
+    impact: "Catch syntax errors and style issues on every PR"
+  - title: "Add pytest with a unit test for the predict function"
+    effort: "1-2 hours"
+    impact: "Establish test infrastructure and catch regressions in prediction logic"
+  - title: "Add Dependabot for dependency updates"
     effort: "30 minutes"
-    impact: "Reproducible builds, protection against breaking upstream changes"
-  - title: "Add a basic pytest unit test for the predict function"
-    effort: "1-2 hours"
-    impact: "Establishes test infrastructure and catches prediction regressions"
-  - title: "Add a GitHub Actions CI workflow with linting and tests"
-    effort: "2-3 hours"
-    impact: "Automated quality gate on every PR"
-  - title: "Add a Dockerfile for local builds and scanning"
-    effort: "1-2 hours"
-    impact: "Local reproducibility, enables Trivy/security scanning"
+    impact: "Automated security patches for Flask and gunicorn"
+  - title: "Pin dependency versions in requirements.txt"
+    effort: "15 minutes"
+    impact: "Reproducible builds; prevent unexpected breakage from upstream releases"
 recommendations:
   priority_0:
-    - "Add pytest-based unit tests for prediction.py and wsgi.py (predict function, Flask routes)"
-    - "Create a GitHub Actions workflow that runs tests, linting, and security checks on PRs"
-    - "Pin all dependency versions in requirements.txt (e.g., Flask==3.0.0, gunicorn==21.2.0)"
+    - "Create a GitHub Actions CI pipeline with linting (ruff/flake8), testing (pytest), and dependency scanning"
+    - "Add unit tests for prediction.py and wsgi.py Flask routes"
+    - "Pin dependency versions in requirements.txt (Flask, gunicorn)"
   priority_1:
-    - "Add a Dockerfile to enable local container builds, vulnerability scanning, and image testing"
-    - "Add ruff or flake8 linting configuration"
-    - "Add Trivy or pip-audit for dependency vulnerability scanning"
+    - "Add a Dockerfile/Containerfile for local S2I image builds and testing"
+    - "Add input validation and error handling to the /predictions endpoint"
+    - "Integrate Trivy or Snyk for container/dependency vulnerability scanning"
+    - "Add codecov integration with a minimum coverage threshold"
   priority_2:
-    - "Create .claude/rules/ with test automation guidance for AI agents"
+    - "Create agent rules (.claude/rules/) for test patterns and contribution guidelines"
     - "Add pre-commit hooks for formatting and linting"
-    - "Add integration tests that start Flask and hit endpoints automatically"
+    - "Add integration tests that exercise the Flask app end-to-end with test client"
+    - "Add a Makefile with standard targets (test, lint, build, run)"
 ---
 
-# Quality Analysis: opendatahub-io/odh-s2i-project-simple
+# Quality Analysis: odh-s2i-project-simple
 
 ## Executive Summary
-- **Overall Score: 1.2/10**
-- **Repository Type**: Python Flask template for S2I deployment on OpenShift
-- **Primary Language**: Python (43 lines across 3 files)
-- **Key Strengths**: Clean, minimal template structure; clear README documentation; `.gitignore` is well-configured
-- **Critical Gaps**: Zero automated tests, no CI/CD pipeline, no Dockerfile, no security scanning, no dependency pinning, no code quality tooling
-- **Agent Rules Status**: Missing — no CLAUDE.md, no `.claude/` directory
 
-This is a project template repository with a single commit, designed for data scientists to use as a starting point for deploying prediction models via OpenShift S2I. It is intentionally minimal, but from a quality engineering perspective, it lacks every layer of automated quality assurance.
+- **Overall Score: 1.2/10**
+- **Repository Type**: Python Flask S2I template/starter project
+- **Primary Language**: Python (43 lines across 3 files)
+- **Framework**: Flask + Gunicorn, deployed via OpenShift S2I
+- **Key Strengths**: Clean, minimal template structure; good README documentation; instructional Jupyter notebooks
+- **Critical Gaps**: No CI/CD pipeline, no tests, no security scanning, no container image definition, no code quality tools
+- **Agent Rules Status**: Missing — no CLAUDE.md, no .claude/ directory
+
+This is a bare-minimum template repository designed for data scientists to deploy prediction models via OpenShift S2I. It has **zero quality infrastructure** — no CI/CD, no tests, no linting, no security scanning. While this is understandable for a simple template, the absence of even basic quality practices means any customization or extension is entirely unvalidated.
 
 ## Quality Scorecard
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 0/10 | No test files exist anywhere in the repository |
-| Integration/E2E | 0.5/10 | One Jupyter notebook for manual Flask endpoint testing |
-| Build Integration | 0/10 | No CI/CD pipeline, no Dockerfile, no build automation |
-| Image Testing | 0/10 | No container image definition — relies entirely on S2I |
-| Coverage Tracking | 0/10 | No coverage tooling of any kind |
-| CI/CD Automation | 0.5/10 | No GitHub Actions, no Makefile, no automated workflows |
-| Agent Rules | 0/10 | No agent guidance files present |
+
+| Dimension | Score | Weight | Status |
+|-----------|-------|--------|--------|
+| Unit Tests | 0/10 | 20% | No test files, no testing framework |
+| Integration/E2E | 0/10 | 25% | Only manual notebook-based curl commands |
+| Build Integration | 1/10 | — | S2I build is platform-managed; no PR validation |
+| Image Testing | 0/10 | 20% | No Dockerfile, no image testing |
+| Coverage Tracking | 0/10 | 15% | No coverage tooling at all |
+| CI/CD Automation | 1/10 | 20% | No workflows; only S2I webhook trigger |
+| Agent Rules | 0/10 | — | No agent configuration |
+
+**Weighted Overall: 1.2/10** (weighted by Unit=20%, Int/E2E=25%, Image=20%, Coverage=15%, CI/CD=20%)
 
 ## Critical Gaps
 
-### 1. Zero Automated Tests
-- **Impact**: Any code change can silently break the prediction endpoint or Flask routing with no detection. Users who fork this template inherit zero test infrastructure.
+### 1. No CI/CD Pipeline of Any Kind
 - **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Details**: The repository contains no `*_test.py`, `test_*.py`, or `tests/` directory. The only "testing" is `2_test_flask.ipynb`, a Jupyter notebook that requires manually starting Flask in another notebook and running curl commands. This is not automated testing.
+- **Impact**: No automated checks on pull requests. Broken code, syntax errors, and security vulnerabilities can be merged without any detection. The repository relies entirely on OpenShift S2I build triggers (webhook-based) which only validate that the application can start, not that it works correctly.
+- **Effort to Fix**: 4-8 hours
+- **Files Affected**: `.github/workflows/` (does not exist)
 
-### 2. No CI/CD Pipeline
-- **Impact**: No automated validation runs on push or pull request. Broken code reaches the S2I build with no quality gate.
+### 2. Zero Test Coverage
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: No `.github/workflows/` directory exists. No Makefile. No `tox.ini`. No `pyproject.toml`. There is no mechanism for automated checks of any kind.
+- **Impact**: The prediction function (`prediction.py`), Flask routing (`wsgi.py`), and gunicorn configuration (`gunicorn_config.py`) are entirely untested. There are no `*_test.py` files, no `tests/` directory, no pytest configuration. The only "testing" is manual execution via Jupyter notebooks (`2_test_flask.ipynb`) using curl commands.
+- **Effort to Fix**: 4-6 hours
+- **Files Affected**: No test files exist; need to create `tests/` directory and test files
 
-### 3. No Container Image Definition
-- **Impact**: Image build relies entirely on the S2I Python builder image. No local reproducibility, no vulnerability scanning, no control over base image. Users cannot test container builds locally.
+### 3. No Security Scanning or Dependency Auditing
 - **Severity**: HIGH
-- **Effort**: 2-3 hours
-- **Details**: No `Dockerfile`, `Containerfile`, or `docker-compose.yml`. The `.s2i/environment` file only configures `APP_CONFIG=gunicorn_config.py`. The entire container build is opaque to the developer.
+- **Impact**: Dependencies (`Flask`, `gunicorn`) are unpinned and have no automated vulnerability scanning. No Trivy, Snyk, CodeQL, Dependabot, or any security tool is configured. Vulnerable versions could be deployed without detection.
+- **Effort to Fix**: 2-4 hours
+- **Files Affected**: `requirements.txt` (unpinned), `.github/workflows/` (missing)
 
-### 4. No Dependency Pinning
-- **Impact**: `requirements.txt` lists only `Flask` and `gunicorn` without version constraints. Builds are non-reproducible — a new Flask major version could break the application silently.
-- **Severity**: HIGH
-- **Effort**: 1 hour
-- **Details**:
-  ```
-  Flask
-  gunicorn
-  ```
-  No lock file, no version pins, no constraints file.
-
-### 5. No Security Scanning
-- **Impact**: No dependency audit, no SAST, no secret detection. Vulnerable dependencies accumulate with no visibility.
-- **Severity**: HIGH
-- **Effort**: 2-3 hours
-- **Details**: No Trivy, Snyk, pip-audit, Bandit, CodeQL, Gitleaks, or any other security tool configured.
-
-### 6. No Code Quality Tooling
-- **Impact**: No linter, formatter, or type checker. Code quality relies entirely on manual review.
+### 4. No Container Image Definition
 - **Severity**: MEDIUM
-- **Effort**: 1-2 hours
-- **Details**: No `ruff.toml`, `.flake8`, `mypy.ini`, `.pylintrc`, `pyproject.toml`, or `.pre-commit-config.yaml`.
+- **Impact**: The project relies on OpenShift S2I builder images without providing a Dockerfile/Containerfile. This means builds are not reproducible locally, image contents are opaque, and there's no way to validate the built image before deployment.
+- **Effort to Fix**: 4-6 hours
+
+### 5. Potential Input Validation Issue in Prediction Endpoint
+- **Severity**: MEDIUM
+- **Impact**: `wsgi.py:16-17` uses `json.loads(data)` on raw request data with no try/except, no input validation, and no content-type enforcement. Malformed JSON will crash the endpoint with a 500 error. While Flask handles this somewhat gracefully, there's no structured error response.
+- **Effort to Fix**: 1-2 hours
 
 ## Quick Wins
 
-### 1. Pin Dependency Versions
-- **Effort**: 30 minutes
-- **Impact**: Reproducible builds, protection against breaking upstream changes
-- **Implementation**:
-  ```
-  # requirements.txt
-  Flask==3.0.3
-  gunicorn==22.0.0
-  ```
+### 1. Add a GitHub Actions CI Workflow (1-2 hours)
+Create `.github/workflows/ci.yml` with basic linting:
+```yaml
+name: CI
+on: [push, pull_request]
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install ruff
+      - run: ruff check .
+```
 
-### 2. Add Basic pytest Unit Tests
-- **Effort**: 1-2 hours
-- **Impact**: Establishes test infrastructure and catches prediction regressions
-- **Implementation**:
-  ```python
-  # test_prediction.py
-  from prediction import predict
+### 2. Add pytest with a Unit Test (1-2 hours)
+Create `tests/test_prediction.py`:
+```python
+from prediction import predict
 
-  def test_predict_returns_dict():
-      result = predict({"data": "hello"})
-      assert isinstance(result, dict)
-      assert "prediction" in result
+def test_predict_returns_dict():
+    result = predict({'key': 'value'})
+    assert isinstance(result, dict)
+    assert 'prediction' in result
+```
 
-  def test_predict_default():
-      result = predict({})
-      assert result == {"prediction": "not implemented"}
-  ```
-  ```python
-  # test_wsgi.py
-  from wsgi import application
+Create `tests/test_wsgi.py`:
+```python
+from wsgi import application
 
-  def test_status_endpoint():
-      client = application.test_client()
-      response = client.get("/status")
-      assert response.status_code == 200
-      assert response.json == {"status": "ok"}
+def test_status_endpoint():
+    client = application.test_client()
+    response = client.get('/status')
+    assert response.status_code == 200
+    assert response.json == {'status': 'ok'}
 
-  def test_predictions_endpoint():
-      client = application.test_client()
-      response = client.post("/predictions",
-                             json={"data": "test"},
-                             content_type="application/json")
-      assert response.status_code == 200
-      assert "prediction" in response.json
-  ```
+def test_predictions_endpoint():
+    client = application.test_client()
+    response = client.post('/predictions', json={'data': 'test'})
+    assert response.status_code == 200
+    assert 'prediction' in response.json
+```
 
-### 3. Add GitHub Actions CI Workflow
-- **Effort**: 2-3 hours
-- **Impact**: Automated quality gate on every PR
-- **Implementation**:
-  ```yaml
-  # .github/workflows/ci.yml
-  name: CI
-  on: [push, pull_request]
-  jobs:
-    test:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v4
-        - uses: actions/setup-python@v5
-          with:
-            python-version: "3.11"
-        - run: pip install -r requirements.txt pytest
-        - run: pytest -v
-  ```
+### 3. Add Dependabot (30 minutes)
+Create `.github/dependabot.yml`:
+```yaml
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+```
 
-### 4. Add a Dockerfile
-- **Effort**: 1-2 hours
-- **Impact**: Local reproducibility, enables security scanning
-- **Implementation**:
-  ```dockerfile
-  FROM python:3.11-slim
-  WORKDIR /app
-  COPY requirements.txt .
-  RUN pip install --no-cache-dir -r requirements.txt
-  COPY . .
-  EXPOSE 8080
-  CMD ["gunicorn", "--config", "gunicorn_config.py", "wsgi"]
-  ```
+### 4. Pin Dependency Versions (15 minutes)
+Update `requirements.txt`:
+```
+Flask>=3.0,<4.0
+gunicorn>=22.0,<23.0
+```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
-**Score: 0.5/10**
-
-There is no CI/CD pipeline whatsoever. The repository has:
-- No `.github/workflows/` directory
-- No Makefile with test/lint targets
-- No `tox.ini` or `nox` configuration
-- No GitLab CI, Jenkins, or any other CI system
-
-The only automation is OpenShift S2I's source-to-image build process, which is triggered externally (via webhook or manual build button). This does not validate code quality.
-
-**Files analyzed**: Root directory (no CI files found)
+- **Workflows**: None. No `.github/workflows/`, `.gitlab-ci.yml`, `Jenkinsfile`, or `Makefile`.
+- **Build Process**: Entirely delegated to OpenShift S2I. The `.s2i/environment` file sets `APP_CONFIG=gunicorn_config.py` to configure gunicorn.
+- **Triggers**: OpenShift webhook triggers (manual setup documented in README).
+- **Concurrency Control**: N/A — no CI system.
+- **Caching**: N/A.
 
 ### Test Coverage
-**Score: 0/10 (Unit) | 0.5/10 (Integration/E2E)**
-
-**Unit Tests**: None. Zero test files exist in the repository. No testing framework is listed in `requirements.txt`.
-
-**Integration/E2E**: The only testing artifact is `2_test_flask.ipynb`, a Jupyter notebook that:
-1. Requires manually starting Flask from `1_run_flask.ipynb`
-2. Runs `curl` commands against `localhost:5000`
-3. Uses `requests` library for a single POST test
-4. Is entirely manual and non-automated
-
-**Coverage**: No coverage tooling. No `.coveragerc`, no codecov integration, no thresholds.
-
-**Test-to-code ratio**: 0:43 (0 test lines to 43 source lines)
-
-**Files analyzed**: `prediction.py`, `wsgi.py`, `2_test_flask.ipynb`
+- **Unit Tests**: 0 test files. No testing framework in `requirements.txt`.
+- **Integration Tests**: None.
+- **E2E Tests**: None. The `2_test_flask.ipynb` notebook contains manual curl commands but this is not automated testing.
+- **Test-to-Code Ratio**: 0:43 (0% of 43 lines of Python code have corresponding tests)
+- **Coverage Tracking**: No codecov, coveralls, or any coverage tool.
+- **Notebook Testing**: The 3 Jupyter notebooks (`0_start_here.ipynb`, `1_run_flask.ipynb`, `2_test_flask.ipynb`) provide manual testing instructions but are not automated or CI-integrated.
 
 ### Code Quality
-**Score: 0/10**
-
-No code quality tooling is configured:
-- No linter (ruff, flake8, pylint)
-- No formatter (black, isort)
-- No type checker (mypy, pyright)
-- No pre-commit hooks
-- No `.editorconfig`
-
-The Python code itself is clean and readable but has minor issues:
-- `wsgi.py` uses `json.loads(data)` instead of `request.get_json()` (Flask idiom)
-- No input validation on prediction endpoint
-- No error handling for malformed JSON
-
-**Files analyzed**: `prediction.py`, `wsgi.py`, `gunicorn_config.py`
+- **Linting**: No linter configured (no ruff, flake8, pylint, mypy).
+- **Formatting**: No formatter configured (no black, autopep8).
+- **Pre-commit Hooks**: None.
+- **Static Analysis**: None (no CodeQL, Semgrep, gosec, bandit).
+- **Type Checking**: No type annotations, no mypy configuration.
 
 ### Container Images
-**Score: 0/10**
-
-No container image definition exists:
-- No Dockerfile or Containerfile
-- No docker-compose.yml
-- No multi-stage build
-- No base image specification (controlled by S2I builder)
-- No SBOM generation
-- No image signing
-
-The `.s2i/environment` file sets `APP_CONFIG=gunicorn_config.py`, which configures the S2I builder's gunicorn instance. The entire container build process is opaque and uncontrollable from this repository.
-
-**Files analyzed**: `.s2i/environment`
+- **Dockerfile**: None. Relies entirely on S2I builder images.
+- **Multi-architecture**: Not supported (platform-dependent on S2I builder).
+- **Runtime Testing**: None.
+- **Security Scanning**: None (no Trivy, Snyk, or equivalent).
+- **SBOM**: Not generated.
+- **Image Signing**: None.
 
 ### Security
-**Score: 0/10**
-
-No security practices are in place:
-- No SAST/CodeQL
-- No dependency scanning (pip-audit, safety, Snyk)
-- No container scanning (Trivy)
-- No secret detection (Gitleaks, TruffleHog)
-- No `SECURITY.md`
-- No dependency pinning (making supply chain attacks trivially easy)
-- Unpinned Flask and gunicorn could pull in compromised versions
-
-**Files analyzed**: `requirements.txt`, `.gitignore`
+- **Vulnerability Scanning**: None.
+- **Dependency Scanning**: None. Dependencies are unpinned (`Flask`, `gunicorn` without versions).
+- **Secret Detection**: None (no gitleaks, truffleHog).
+- **SAST**: None.
+- **Input Validation**: The `/predictions` endpoint accepts arbitrary JSON without validation.
+- **Gunicorn Config**: `forwarded_allow_ips = '*'` is permissive — allows any proxy to set forwarded headers. Acceptable for OpenShift internal use but should be documented.
 
 ### Agent Rules (Agentic Flow Quality)
-**Score: 0/10**
-
 - **Status**: Missing
-- **Coverage**: No test type rules
-- **Quality**: N/A
-- **Gaps**: No `CLAUDE.md`, no `AGENTS.md`, no `.claude/` directory, no `.claude/rules/`, no `.claude/skills/`
-- **Recommendation**: Generate rules with `/test-rules-generator` once baseline tests are established
+- **CLAUDE.md**: Not present
+- **.claude/ directory**: Not present
+- **Agent Rules**: No `.claude/rules/` directory
+- **Test Automation Guidance**: None
+- **Recommendation**: Create basic agent rules with `/test-rules-generator` if automated test creation is desired
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Add pytest-based unit tests** for `prediction.py` and `wsgi.py` — at minimum test the predict function and all Flask endpoints (status, predictions)
-2. **Create a GitHub Actions CI workflow** that runs tests on every push and PR
-3. **Pin all dependency versions** in `requirements.txt` with exact versions
-4. **Add a Dockerfile** to enable local container builds and security scanning
+1. **Create a GitHub Actions CI pipeline** — Add linting (ruff), testing (pytest), and dependency checks to run on every PR
+2. **Add unit tests** — Create `tests/` directory with pytest tests for `prediction.py` and `wsgi.py`
+3. **Pin dependency versions** — Specify version ranges in `requirements.txt` to prevent build breakage
 
 ### Priority 1 (High Value)
-1. **Add ruff** for Python linting and formatting (`ruff check`, `ruff format`)
-2. **Add pip-audit or safety** for dependency vulnerability scanning in CI
-3. **Add Trivy container scanning** once a Dockerfile exists
-4. **Add pytest-cov** for coverage reporting with a minimum threshold (e.g., 80%)
-5. **Add input validation** to the `/predictions` endpoint with proper error responses
+4. **Add a Dockerfile/Containerfile** — Enable local image building and testing independent of OpenShift
+5. **Add input validation** — Wrap `json.loads` in try/except, validate prediction input schema
+6. **Add security scanning** — Integrate Dependabot for dependency updates and Trivy for vulnerability scanning
+7. **Add codecov integration** — Track test coverage and enforce a minimum threshold (e.g., 80%)
 
 ### Priority 2 (Nice-to-Have)
-1. **Create `.claude/rules/`** with test automation guidance for AI-assisted development
-2. **Add `.pre-commit-config.yaml`** with ruff, trailing-whitespace, and end-of-file-fixer hooks
-3. **Add integration tests** that programmatically start the Flask app and test all endpoints
-4. **Add a `Makefile`** with `test`, `lint`, `build`, and `run` targets
-5. **Add type hints** to all Python functions and configure mypy
+8. **Create agent rules** — Add `.claude/rules/` with test patterns for Python/Flask projects
+9. **Add pre-commit hooks** — Configure ruff, black, and mypy for local developer feedback
+10. **Add a Makefile** — Standardize `make test`, `make lint`, `make run` targets
+11. **Add integration tests** — Use Flask test client for automated endpoint testing
+12. **Convert notebook tests to automated tests** — Extract curl-based tests from `2_test_flask.ipynb` into pytest
 
 ## Comparison to Gold Standards
 
-| Dimension | odh-s2i-project-simple | odh-dashboard | notebooks | kserve |
-|-----------|----------------------|---------------|-----------|--------|
-| Unit Tests | 0/10 - None | 9/10 - Comprehensive Jest suite | 7/10 - Pytest for utilities | 8/10 - Go testing framework |
-| Integration/E2E | 0.5/10 - Manual notebook only | 9/10 - Cypress E2E + contract tests | 8/10 - Image validation pipeline | 9/10 - Multi-version E2E |
-| Build Integration | 0/10 - None | 7/10 - PR-time builds | 8/10 - Multi-arch builds | 4/10 - Limited PR validation |
-| Image Testing | 0/10 - No image definition | 6/10 - Basic image builds | 9/10 - 5-layer validation | 6/10 - Basic validation |
-| Coverage Tracking | 0/10 - None | 8/10 - Codecov enforcement | 5/10 - Limited tracking | 8/10 - Codecov integration |
-| CI/CD Automation | 0.5/10 - S2I only | 9/10 - Multi-workflow automation | 8/10 - Periodic + PR jobs | 9/10 - Comprehensive workflows |
-| Agent Rules | 0/10 - None | 7/10 - Partial rules | 3/10 - Minimal | 2/10 - None |
-| **Overall** | **1.2/10** | **7.9/10** | **6.9/10** | **7.5/10** |
+| Dimension | odh-s2i-project-simple | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
+|-----------|----------------------|---------------------|------------------|---------------|
+| Unit Tests | None | Comprehensive Jest suite | Python unit tests | Go test with coverage |
+| Integration/E2E | Manual notebooks | Cypress E2E + contract tests | Multi-layer validation | Multi-version E2E |
+| Build Integration | S2I only | PR-time builds + validation | Image pipeline testing | Konflux integration |
+| Image Testing | None | Container validation | 5-layer image testing | Runtime validation |
+| Coverage Tracking | None | Codecov with enforcement | Coverage reporting | 80%+ threshold |
+| CI/CD | None | 20+ workflows | Comprehensive CI matrix | Multi-stage pipelines |
+| Security Scanning | None | CodeQL + Snyk | Trivy scanning | Multiple SAST tools |
+| Agent Rules | None | Comprehensive .claude/rules | Basic rules | N/A |
+| **Overall** | **1.2/10** | **9.0/10** | **8.5/10** | **8.8/10** |
 
 ## File Paths Reference
 
-| File | Purpose |
-|------|---------|
-| `wsgi.py` | Flask application with `/status` and `/predictions` endpoints |
-| `prediction.py` | Prediction function (stub returning `not implemented`) |
-| `gunicorn_config.py` | Gunicorn server configuration (workers, threads, bind) |
-| `requirements.txt` | Python dependencies (Flask, gunicorn — unpinned) |
-| `.s2i/environment` | S2I builder configuration |
-| `0_start_here.ipynb` | Instructional notebook for data scientists |
-| `1_run_flask.ipynb` | Notebook to start Flask locally |
-| `2_test_flask.ipynb` | Notebook for manual endpoint testing |
-| `.gitignore` | Standard Python gitignore |
-
-## Notes
-
-This repository is intentionally a minimal template — it is designed as a starting point for data scientists, not as a production-ready application. However, even templates benefit from quality infrastructure because:
-
-1. **Templates propagate patterns**: Every fork inherits the quality (or lack thereof) from the template. Adding test infrastructure here means every derived project starts with tests.
-2. **Templates set expectations**: A template without tests signals that tests are optional. A template with tests signals that tests are expected.
-3. **Templates are low-effort wins**: With only 43 lines of Python, achieving high test coverage requires minimal effort.
-
-The single most impactful change would be adding pytest tests and a CI workflow — this transforms the template from "code that might work" to "code that demonstrably works."
+| File | Purpose | Quality Notes |
+|------|---------|---------------|
+| `wsgi.py` | Flask application with status and prediction endpoints | No error handling, no input validation |
+| `prediction.py` | Prediction function stub | Placeholder only — returns hardcoded response |
+| `gunicorn_config.py` | Gunicorn server configuration | Permissive `forwarded_allow_ips = '*'` |
+| `requirements.txt` | Python dependencies | Unpinned versions (Flask, gunicorn) |
+| `.s2i/environment` | S2I builder configuration | Minimal — sets APP_CONFIG only |
+| `0_start_here.ipynb` | Instructional notebook | Good documentation but not automated |
+| `1_run_flask.ipynb` | Flask runner notebook | Manual process |
+| `2_test_flask.ipynb` | Manual test notebook | Could be converted to automated tests |
+| `.gitignore` | Git ignore rules | Standard Python gitignore — adequate |
+| `README.md` | Project documentation | Well-written with clear instructions |
