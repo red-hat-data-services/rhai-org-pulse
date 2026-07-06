@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:26 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:48 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/distributed-workloads</h2>
         </header>
 
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Limited unit tests — only support package tested; E2E-first test repo</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Unit tests only cover the shared support library; no unit tests for test logic or utilities</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Exceptional E2E suite: 175+ tests across 4 suites, tiered, GPU/multi-node coverage</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Comprehensive E2E test suites covering KFTO, Trainer v2, Ray, FMS across GPU/CPU variants</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Konflux PR builds on image changes; no PR-time Go test image build validation</div>
+                            <div class="scorecard-status">Tekton/Konflux PR pipelines for image builds; no PR-time integration deployment testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">39 Dockerfiles with Konflux variants; build-only validation, no runtime smoke tests</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
+                            <div class="scorecard-status">20+ Dockerfiles with multi-arch support and Konflux builds; limited runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No coverage tracking, no codecov, no thresholds</div>
+                            <div class="scorecard-status">No coverage generation, no codecov/coveralls integration, no coverage thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Good PR checks (vet, lint, imports); E2E tests are external/manual; strong lake-gate sync</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
+                            <div class="scorecard-status">GitHub Actions for unit tests/vet/imports; E2E tests run externally via Jenkins; Tekton for image builds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Comprehensive AGENTS.md with test patterns, namespace isolation, tags; no .claude/ rules directory</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Comprehensive AGENTS.md with test patterns, naming conventions, tagging, and detailed writing guidance</div>
                         </div>
                     </div>
                 </div>
@@ -412,34 +412,42 @@
                         
                         <li class="item-card high">
                             <div class="item-description">No code coverage tracking</div>
-                            <p>Cannot measure or enforce test coverage; regressions go undetected</p>
+                            <p>Cannot measure or enforce test coverage; regressions in support library go undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Unit tests cover only support package</div>
-                            <p>33 unit tests for 5000+ lines of support code; E2E test helpers have low unit coverage</p>
+                            <div class="item-description">Unit tests limited to support library only</div>
+                            <p>Test helpers, utilities, and resource generators in tests/ have no unit-level validation</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">8-16 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No PR-time E2E test execution</div>
+                            <p>E2E regressions discovered only after merge via external Jenkins runs</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No container runtime validation</div>
-                            <p>39 Dockerfiles are built but never smoke-tested; startup failures caught only in deployment</p>
+                            <div class="item-description">No container image runtime validation in CI</div>
+                            <p>Image startup and basic functionality issues not caught until downstream deployment</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">E2E tests run externally (Jenkins/manual), not in GitHub CI</div>
-                            <p>No automated E2E gate on PRs; test image built and pushed post-merge only</p>
+                            <div class="item-description">golangci-lint not enforced in CI workflows</div>
+                            <p>Only go vet runs on PRs; deeper static analysis linting not automated</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">16-24 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,16 +464,16 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Go coverage to unit test workflow</div>
-                            <p>Visibility into support package coverage; foundation for enforcement</p>
+                            <div class="item-description">Add codecov integration with coverage reporting</div>
+                            <p>Enables coverage tracking, PR comments with coverage deltas, and threshold enforcement</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Run golangci-lint in CI on PRs</div>
-                            <p>Makefile target exists but no GitHub workflow; catches lint issues earlier</p>
+                            <div class="item-description">Add golangci-lint to PR workflow</div>
+                            <p>Catches code quality issues (already configured in .golangci.yml) before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
@@ -473,18 +481,18 @@
                         </li>
                         <li class="item-card ">
                             <div class="item-description">Add Trivy container scanning to PR workflow</div>
-                            <p>Early CVE detection for runtime images beyond Snyk Dockerfile-only scan</p>
+                            <p>Supplements Snyk Dockerfile scan with runtime vulnerability detection in built images</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create .claude/rules/ for test patterns</div>
-                            <p>AI-assisted test creation follows the Tags/namespace/GenerateName conventions</p>
+                            <div class="item-description">Add basic image smoke test in CI</div>
+                            <p>Validates built test images can start and basic Go test binary executes</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +509,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add codecov integration with coverage thresholds for the support package</li><li>Expand unit tests for support package (currently 33 tests for 5000+ LOC)</li><li>Add container startup smoke tests for built images (at minimum a health check)</li></ul>
+                            <ul><li>Implement coverage tracking with codecov for the unit test suite (tests/common/support/)</li><li>Add golangci-lint as a required PR check (config already exists in .golangci.yml)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Run golangci-lint as a PR workflow (target exists in Makefile but missing from CI)</li><li>Add Trivy container image scanning beyond Snyk Dockerfile-only scanning</li><li>Create .claude/rules/ directory with test-type-specific rules mirroring AGENTS.md</li></ul>
+                            <ul><li>Expand unit test coverage beyond support library to test utilities and resource generators</li><li>Add container image runtime validation (smoke test built images in CI)</li><li>Implement PR-time lightweight E2E smoke tests using Kind/Minikube for basic operator validation</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add semgrep as a CI workflow (config exists in repo but no automation)</li><li>Upgrade pre-commit-config hooks to latest versions (currently pinned to v2.3.0 from 2020)</li><li>Add renovate/dependabot for Go dependency updates (renovate.json currently disabled)</li></ul>
+                            <ul><li>Add Trivy scanning alongside existing Snyk for defense-in-depth</li><li>Enable Renovate for automated dependency updates (currently disabled)</li><li>Add CodeQL or Semgrep to CI workflow (semgrep.yaml config exists but no CI integration)</li></ul>
                         </div>
                     </div>
                 </div>

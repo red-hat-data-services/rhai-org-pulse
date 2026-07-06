@@ -1,435 +1,380 @@
 ---
 repository: "red-hat-data-services/rhoai-konflux-tasks"
-overall_score: 2.3
+overall_score: 2.0
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No test files exist; complex bash scripts in tasks are completely untested"
+    status: "No tests exist - zero YAML validation, task schema, or script unit tests"
   - dimension: "Integration/E2E"
-    score: 1.0
-    status: "No integration test suite; PR PipelineRuns serve as only minimal build validation"
+    score: 0.0
+    status: "No pipeline execution tests or task run validation tests"
   - dimension: "Build Integration"
-    score: 5.0
-    status: "PR-time builds for container-build pipeline and rhoai-init; most tasks lack PR validation"
+    score: 6.0
+    status: "Good PAC self-testing with Konflux pipelines but no task content validation"
   - dimension: "Image Testing"
     score: 3.0
-    status: "Minimal test Dockerfile (UBI8 base only); no runtime or functional validation"
+    status: "Trivial test Dockerfile; strong security scanning in pipeline but no runtime validation"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tools, thresholds, or PR reporting configured"
+    status: "No coverage tracking of any kind"
   - dimension: "CI/CD Automation"
     score: 7.0
-    status: "Strong Konflux integration with security scanning, Slack notifications, and Renovate"
+    status: "Solid Konflux PAC integration, Renovate automerge, Slack notifications"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory; no test automation guidance"
+    status: "No CLAUDE.md, .claude/ directory, or agent rules"
 critical_gaps:
-  - title: "Zero test coverage for Tekton tasks and embedded bash scripts"
-    impact: "Complex logic in rhoai-init (semver comparison, CPE ID generation, Slack formatting) and GitHub API interactions in trigger-* tasks are completely untested. Bugs ship to production undetected."
+  - title: "Zero test coverage for Tekton tasks and pipelines"
+    impact: "Task regressions, broken parameters, and script bugs are only caught in production pipelines"
     severity: "HIGH"
     effort: "16-24 hours"
-  - title: "No YAML schema validation for Tekton task definitions"
-    impact: "Invalid Tekton task YAML (wrong parameter types, missing fields, incorrect apiVersions) discovered only at runtime on the cluster"
+  - title: "No YAML/Tekton linting or validation"
+    impact: "Malformed YAML or invalid Tekton resource definitions can be merged without detection"
     severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "Most tasks lack PR-time validation"
-    impact: "Only rhoai-init and container-build pipeline have PR triggers; changes to 7+ other tasks and 5 step actions have no pre-merge validation"
+    effort: "2-4 hours"
+  - title: "No local development validation tooling"
+    impact: "Contributors have no way to validate changes locally before pushing"
+    severity: "HIGH"
+    effort: "4-8 hours"
+  - title: "No task contract testing (parameters/results schema validation)"
+    impact: "Breaking changes to task interfaces go undetected until downstream pipelines fail"
     severity: "HIGH"
     effort: "8-12 hours"
-  - title: "No ShellCheck or linting for embedded bash scripts"
-    impact: "Bash scripts in tasks may contain syntax errors, unquoted variables, or unsafe patterns not caught until execution"
+  - title: "Embedded bash scripts in YAML have no shellcheck or unit testing"
+    impact: "Shell script bugs in tasks are invisible until runtime failures occur"
     severity: "MEDIUM"
-    effort: "2-4 hours"
+    effort: "6-10 hours"
 quick_wins:
-  - title: "Add ShellCheck CI validation for embedded bash scripts"
-    effort: "2-3 hours"
-    impact: "Catch common bash errors (unquoted variables, missing error handling) before merge"
-  - title: "Add Tekton YAML schema validation with tkn CLI or yamllint"
-    effort: "2-3 hours"
-    impact: "Ensure all task/pipeline definitions conform to Tekton API schema"
-  - title: "Add unit tests for rhoai-init semver_ge function"
-    effort: "2-3 hours"
-    impact: "Validate the most complex logic in the repo: version comparison affecting CPE IDs and RHEL version selection"
-  - title: "Create CLAUDE.md with repository guidelines and task patterns"
+  - title: "Add yamllint and tekton-lint to pre-commit hooks"
     effort: "1-2 hours"
-    impact: "Enable AI-assisted development with proper context about Tekton task conventions"
+    impact: "Catch YAML syntax errors and Tekton schema violations before merge"
+  - title: "Add ShellCheck CI step for embedded bash scripts"
+    effort: "2-3 hours"
+    impact: "Catch common shell scripting errors in Tekton task scripts"
+  - title: "Create a root README.md"
+    effort: "1 hour"
+    impact: "Improve discoverability and onboarding for contributors"
+  - title: "Add .pre-commit-config.yaml with yamllint and shellcheck"
+    effort: "1-2 hours"
+    impact: "Local validation for contributors before pushing"
 recommendations:
   priority_0:
-    - "Extract embedded bash scripts into standalone files and add comprehensive unit tests using bats-core or shunit2"
-    - "Add Tekton YAML validation (tkn task validate, tkn pipeline validate) as a PR check"
-    - "Add PR-time PipelineRun definitions for ALL tasks and step actions, not just rhoai-init and container-build"
+    - "Add YAML/Tekton linting (yamllint + tekton-lint) as a PR-time check and pre-commit hook"
+    - "Extract embedded bash scripts from YAML and add ShellCheck + unit tests (bats-core)"
+    - "Add task parameter/result contract tests to detect breaking API changes"
   priority_1:
-    - "Add ShellCheck linting for all embedded bash scripts in tasks and step actions"
-    - "Create integration tests that validate task behavior with mock environments (e.g., test trigger-group-testing with stubbed GitHub API)"
-    - "Add pre-commit hooks with yamllint and shellcheck"
-    - "Create CLAUDE.md and .claude/rules/ for task development patterns"
+    - "Add Tekton task execution tests using tkn or a test harness"
+    - "Create a Makefile with lint, test, and validate targets for local development"
+    - "Add agent rules (.claude/rules/) for test creation and task development patterns"
   priority_2:
-    - "Add BATS tests for step action scripts (secure-push-oci, secure-git-push, git-clone)"
-    - "Implement contract tests to validate task parameter schemas against consumer expectations"
-    - "Add version consistency checks across task versions (e.g., rhoai-init 0.1 vs 0.2 vs 0.3)"
+    - "Add task documentation generation from YAML annotations"
+    - "Implement version compatibility testing across rhoai-init 0.1/0.2/0.3"
+    - "Add Tekton catalog task compliance checking"
 ---
 
 # Quality Analysis: rhoai-konflux-tasks
 
 ## Executive Summary
-
-- **Overall Score: 2.3/10**
-- **Repository Type**: Tekton Tasks/Pipelines library for RHOAI Konflux CI/CD
-- **Primary Content**: YAML (Tekton definitions) with embedded Bash scripts
-- **Framework**: Tekton Pipelines, Konflux CI, Pipelines-as-Code
-
-### Key Strengths
-- Comprehensive security scanning pipeline (7 scan types: SAST, Snyk, Clair, ClamAV, RPM signatures, deprecated images, ecosystem cert)
-- LeakTK integration in step actions for credential scanning before push operations
-- Renovate configured for automated Tekton bundle reference updates
-- Slack failure notifications with configurable channel targeting
-- Trusted artifacts pattern for supply chain security
-
-### Critical Gaps
-- **Zero test coverage**: No unit tests, integration tests, or E2E tests exist in the repository
-- **Untested bash logic**: 100+ lines of complex bash (semver comparison, API calls, string manipulation) ship without any validation
-- **Limited PR validation**: Only 2 of 9+ tasks have PR-triggered pipeline runs
-- **No YAML linting**: Task definitions could contain schema errors undetected until cluster execution
-
-### Agent Rules Status: **Missing** - No CLAUDE.md, AGENTS.md, or `.claude/` directory
+- **Overall Score: 2.0/10**
+- **Repository Type**: Infrastructure / CI Tooling - Tekton Tasks, Pipelines, and StepActions for RHOAI Konflux CI/CD
+- **Primary Language**: YAML (Tekton definitions) with embedded Bash scripts
+- **Key Strengths**: Excellent pipeline-level security scanning (7+ checks), multi-platform build support, Renovate auto-updates, well-structured versioned tasks
+- **Critical Gaps**: Zero test coverage, no YAML linting, no local development tooling, no task contract validation
+- **Agent Rules Status**: Missing - No CLAUDE.md, .claude/ directory, or testing guidance
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0/10 | No test files exist; complex bash scripts completely untested |
-| Integration/E2E | 1/10 | No integration suite; PR PipelineRuns are only minimal validation |
-| **Build Integration** | **5/10** | **PR builds for container-build + rhoai-init only; most tasks unvalidated** |
-| Image Testing | 3/10 | Minimal test Dockerfile; no runtime or functional validation |
-| Coverage Tracking | 0/10 | No coverage tools, thresholds, or PR reporting |
-| CI/CD Automation | 7/10 | Strong Konflux integration with security scanning, Slack, Renovate |
-| Agent Rules | 0/10 | No AI development guidance or test automation rules |
+| Unit Tests | 0/10 | No tests exist - zero YAML validation, task schema, or script unit tests |
+| Integration/E2E | 0/10 | No pipeline execution tests or task run validation tests |
+| **Build Integration** | **6/10** | **Good PAC self-testing with Konflux but no task content validation** |
+| Image Testing | 3/10 | Trivial test Dockerfile; strong security scanning but no runtime validation |
+| Coverage Tracking | 0/10 | No coverage tracking of any kind |
+| CI/CD Automation | 7/10 | Solid Konflux PAC integration, Renovate automerge, Slack notifications |
+| Agent Rules | 0/10 | No CLAUDE.md, .claude/ directory, or agent rules |
 
 ## Critical Gaps
 
-### 1. Zero Test Coverage for Tekton Tasks
-- **Impact**: Complex logic in tasks ships to production without any testing. The `rhoai-init` task alone contains semver comparison, CPE ID generation, cluster validation, and Slack message formatting - all untested.
+### 1. Zero Test Coverage for Tekton Tasks and Pipelines
+- **Impact**: Task regressions, broken parameters, and script bugs are only caught when downstream production pipelines fail
 - **Severity**: HIGH
 - **Effort**: 16-24 hours
-- **Affected files**:
-  - `konflux-tekton-tasks/rhoai-init/0.3/rhoai-init.yaml` - 100+ lines of bash with `semver_ge()`, CPE ID logic
-  - `konflux-tekton-tasks/trigger-group-testing/0.1/trigger-group-testing.yaml` - GitHub API check-runs parsing
-  - `konflux-tekton-tasks/trigger-operator-build/0.1/trigger-operator-build.yaml` - GitHub commit comment API
-  - `konflux-tekton-tasks/generate-snapshot-for-group-testing/0.1/generate-snapshot-for-group-testing.yaml` - Quay API parsing, multi-arch handling
-  - `konflux-tekton-tasks/rhoai-inject-sealights-oci-ta/0.1/rhoai-inject-sealights-oci-ta.yaml` - cosign attestation parsing, sed replacements
+- **Details**: The repository contains 10 Tekton Tasks, 2 Pipelines, and 5 StepActions with zero test files of any kind. There are no YAML validation tests, no task parameter schema tests, no bash script unit tests, and no pipeline execution tests.
 
-### 2. No YAML Schema Validation
-- **Impact**: Invalid Tekton task YAML (wrong parameter types, missing fields, incorrect apiVersions) only discovered at runtime on the cluster, causing pipeline failures
+### 2. No YAML/Tekton Linting or Validation
+- **Impact**: Malformed YAML or invalid Tekton resource definitions can be merged undetected
 - **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Example**: `container-image-mirror/0.1/container-image-mirror.yaml` uses `apiVersion: tekton.dev/v1beta1` while all other tasks use `tekton.dev/v1` - potential compatibility issue
+- **Effort**: 2-4 hours
+- **Details**: No `yamllint`, `tekton-lint`, or custom schema validation is configured. The Konflux PR pipeline only builds a test container image -- it does not validate the Tekton YAML definitions themselves.
 
-### 3. Most Tasks Lack PR-Time Validation
-- **Impact**: Changes to 7+ tasks and 5 step actions have no pre-merge validation. Only `rhoai-init` (component-specific) and `container-build` pipeline have PR triggers.
+### 3. No Local Development Validation Tooling
+- **Impact**: Contributors have no way to validate changes locally before pushing
+- **Severity**: HIGH
+- **Effort**: 4-8 hours
+- **Details**: No Makefile, no pre-commit hooks, no CI/CD scripts for local development. The only validation path is to push a PR and wait for the Konflux pipeline.
+
+### 4. No Task Contract Testing
+- **Impact**: Breaking changes to task parameters or results go undetected until downstream pipelines fail
 - **Severity**: HIGH
 - **Effort**: 8-12 hours
-- **Tasks without PR validation**:
-  - `trigger-operator-build`
-  - `trigger-bundle-build`
-  - `trigger-group-testing`
-  - `rhoai-inject-sealights-oci-ta`
-  - `prefetch-operand-manifests-oci-ta`
-  - `container-image-mirror`
-  - `generate-snapshot-for-group-testing`
-  - `pull-request-comment` (v0.1, v0.2)
-  - All 5 step actions
+- **Details**: Tasks like `rhoai-init` have evolved through 3 versions (0.1, 0.2, 0.3) with parameter additions. There's no contract testing to verify backward compatibility or detect API breaking changes.
 
-### 4. No ShellCheck or Linting for Embedded Scripts
-- **Impact**: Bash scripts may contain unquoted variables, missing error handling, or syntax errors not caught until pipeline execution
+### 5. Embedded Bash Scripts Untested
+- **Impact**: Shell script bugs in tasks are invisible until runtime failures
 - **Severity**: MEDIUM
-- **Effort**: 2-4 hours
-- **Note**: Ironic gap - the pipeline itself runs `sast-shell-check` on built images, but the repo's own scripts aren't linted
+- **Effort**: 6-10 hours
+- **Details**: Significant bash logic is embedded in YAML (e.g., `rhoai-init` 0.3 has 100+ lines of bash including `semver_ge` function, CPE ID construction, and Slack message formatting). None of this is testable or lintable in its embedded form.
 
 ## Quick Wins
 
-### 1. Add ShellCheck CI validation (2-3 hours)
-Extract embedded bash scripts from YAML and lint them:
-```bash
-# Extract scripts from Tekton YAML and run ShellCheck
-for f in $(find . -name "*.yaml" -path "*/konflux-tekton-tasks/*" -o -name "*.yaml" -path "*/stepactions/*"); do
-  yq e '.spec.steps[].script' "$f" 2>/dev/null | shellcheck -s bash -
-done
+### 1. Add yamllint + tekton-lint Pre-commit Hooks
+- **Effort**: 1-2 hours
+- **Impact**: Catch YAML syntax errors and Tekton schema violations before merge
+- **Implementation**:
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: [-c, .yamllint.yml]
 ```
 
-### 2. Add Tekton YAML schema validation (2-3 hours)
-```bash
-# Validate all task/pipeline YAML with tkn CLI
-for f in $(find . -name "*.yaml" -path "*/konflux-tekton-tasks/*"); do
-  tkn task verify "$f" 2>&1
-done
-for f in $(find . -name "*.yaml" -path "*/pipelines/*"); do
-  tkn pipeline verify "$f" 2>&1
-done
-```
+### 2. Add ShellCheck for Embedded Bash
+- **Effort**: 2-3 hours
+- **Impact**: Catch common shell scripting errors in Tekton task scripts
+- **Implementation**: Extract scripts from YAML using `yq`, run `shellcheck` against them in CI.
 
-### 3. Add unit tests for rhoai-init semver_ge (2-3 hours)
-```bash
-#!/usr/bin/env bats
-# test_semver_ge.bats
+### 3. Create Root README.md
+- **Effort**: 1 hour
+- **Impact**: Improve discoverability and contributor onboarding
+- **Details**: The repository has no README.md at the root level.
 
-setup() {
-  source ./scripts/rhoai-init-functions.sh
-}
-
-@test "semver_ge: 2.20 >= 2.20 is true" {
-  run semver_ge "2.20" "2.20"
-  [ "$status" -eq 0 ]
-}
-
-@test "semver_ge: 2.19 >= 2.20 is false" {
-  run semver_ge "2.19" "2.20"
-  [ "$status" -eq 1 ]
-}
-
-@test "semver_ge: 3.0 >= 2.20 is true" {
-  run semver_ge "3.0" "2.20"
-  [ "$status" -eq 0 ]
-}
-```
-
-### 4. Create CLAUDE.md (1-2 hours)
-Document repository conventions for AI-assisted development: task versioning patterns, parameter naming conventions, trusted artifacts usage.
+### 4. Add .pre-commit-config.yaml
+- **Effort**: 1-2 hours
+- **Impact**: Local validation for contributors before pushing
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Tekton PipelineRuns (`.tekton/`)**:
-- `rhoai-konflux-tasks-pull-request.yaml` - Builds test container on PR (filtered to `pipelines/container-build.yaml` and `.tekton/` changes only)
-- `rhoai-init-pull-request.yaml` - Builds rhoai-init bundle on PR (filtered to `konflux-tekton-tasks/rhoai-init/0.1/***`)
-- `rhoai-init-push.yaml` - Pushes rhoai-init bundle on merge
-
-**Pipeline Definitions (`pipelines/`)**:
-- `container-build.yaml` - Comprehensive single-arch build pipeline with 13+ tasks including 7 security scans
-- `container-build-remote.yaml` - Multi-arch variant using `buildah-remote-oci-ta` with matrix strategy
-
 **Strengths**:
-- Cancel-in-progress for PR builds
-- max-keep-runs: 3 for housekeeping
-- CEL expressions for smart path-based filtering
-- Hermetic builds enabled by default
-- Slack failure notifications via webhook
+- **Pipelines as Code (PAC)** integration with Konflux - automated PR and push triggers
+- **Cancel-in-progress** for PR builds prevents resource waste
+- **Max-keep-runs: 3** keeps pipeline history manageable
+- **Slack failure notifications** via webhook in pipeline `finally` block
+- **Renovate** configured for automatic Tekton task version updates with automerge
+- **Hermetic builds** enabled by default for supply chain security
+- **Source image building** enabled for Red Hat compliance
+- **Multi-platform support** via `container-build-remote.yaml` using `buildah-remote-oci-ta`
+
+**Security Scanning (Excellent - 7+ checks)**:
+- `sast-shell-check` - Shell script SAST analysis
+- `sast-unicode-check` - Unicode/homoglyph attack detection
+- `sast-snyk-check` - Snyk vulnerability scanning
+- `clair-scan` - Container vulnerability scanning (per-platform for multi-arch)
+- `clamav-scan` - Malware scanning
+- `ecosystem-cert-preflight-checks` - Red Hat ecosystem certification
+- `deprecated-base-image-check` - Base image deprecation warnings
+- `rpms-signature-scan` - RPM package signature verification
+- `show-sbom` - SBOM generation in finally block
 
 **Weaknesses**:
-- No GitHub Actions workflows (all Tekton/Konflux-based)
-- No YAML linting pre-commit
-- Path filters on PR runs are narrow - many task changes go unvalidated
+- PR pipeline only validates the `container-build.yaml` pipeline and `rhoai-init` task changes -- most task changes have **no CI trigger**
+- No validation of Tekton YAML structure or schema
+- No test execution step in any pipeline
 
 ### Test Coverage
 
-**Current State: No tests exist.**
+**Zero tests found across the entire repository.**
 
-The repository contains zero test files of any kind:
-- No `*_test.sh`, `*_test.bats`, `*.spec.*` files
-- No `test/`, `tests/`, `e2e/`, `integration/` directories
-- No test framework configuration
-- No Makefile with test targets
+| Category | Count | Framework | Notes |
+|----------|-------|-----------|-------|
+| Unit tests | 0 | N/A | No test files of any kind |
+| Integration tests | 0 | N/A | No task execution tests |
+| E2E tests | 0 | N/A | No pipeline run tests |
+| YAML validation | 0 | N/A | No yamllint or schema tests |
+| Script tests | 0 | N/A | No bats-core or bash unit tests |
 
-**High-Risk Untested Logic**:
-
-1. **`rhoai-init` v0.3 `semver_ge()` function** (line 96-115): Semantic version comparison using bash arithmetic. Edge cases (non-numeric input, missing components, pre-release suffixes) are untested.
-
-2. **`trigger-group-testing` GitHub API logic** (line 80-140): Parses check-runs JSON, filters by name prefix, determines completion status. Fragile jq parsing on API responses could break silently.
-
-3. **`generate-snapshot-for-group-testing` Quay API logic** (line 40-160): Multi-arch image detection, label extraction from manifests, snapshot JSON construction. Complex error handling paths untested.
-
-4. **`rhoai-inject-sealights-oci-ta` cosign/sed logic** (line 47-108): Parses attestation JSON, extracts digest, performs sed replacements on CSV/catalog YAML. Regex matching could silently fail.
-
-5. **`prefetch-operand-manifests-oci-ta` manifest fetching** (line 139-250): Git sparse checkout, yq-based YAML parsing, directory copy operations. Branch resolution and commit SHA extraction untested.
+**Test-to-Code Ratio**: 0:1
 
 ### Code Quality
 
-**Linting**: None configured
-- No `.golangci.yaml` (not applicable - no Go code)
-- No `.eslintrc` (not applicable)
-- No `ruff.toml` or `.flake8` (minimal Python)
-- No `yamllint` configuration for YAML validation
-- No `shellcheck` configuration for bash scripts
-
-**Pre-commit Hooks**: None
-- No `.pre-commit-config.yaml`
-
-**Static Analysis**: None at repo level
-- The build pipelines include SAST scanning for built images, but the repo's own code isn't analyzed
-
-**Dependency Management**:
-- `renovate.json` configured for Tekton bundle auto-updates (good)
-- Auto-merge enabled for Tekton bundle updates
-- Searches `pipelineruns/**`, `pipelines/**`, `tasks/**` - but actual tasks are in `konflux-tekton-tasks/` and `stepactions/` (potential coverage gap in renovate paths)
+| Tool | Present | Notes |
+|------|---------|-------|
+| yamllint | No | No YAML linting configured |
+| tekton-lint | No | No Tekton-specific linting |
+| shellcheck | No | Only via SAST in pipeline, not local |
+| pre-commit | No | No pre-commit hooks |
+| Makefile | No | No local build/test targets |
+| EditorConfig | No | No editor consistency enforcement |
+| Renovate | Yes | Auto-updates Tekton task versions with automerge |
 
 ### Container Images
 
-**Test Build**: `test-build/Dockerfile.konflux` is a single-line UBI8 Python 3.12 base image:
-```dockerfile
-FROM registry.redhat.io/ubi8/python-312:1@sha256:...
-```
-This exists solely to validate the container-build pipeline works, not to test any application logic.
-
-**Task Images Referenced**:
-- `registry.access.redhat.com/ubi9/ubi:latest` - rhoai-init v0.3
-- `quay.io/rhoai-konflux/alpine:latest` - rhoai-init in pipelines
-- `quay.io/konflux-ci/konflux-test:stable` - trigger tasks
-- `quay.io/konflux-qe-incubator/konflux-qe-tools:latest` - step actions
-- `quay.io/rhoai/rhoai-task-toolset:latest` - prefetch-operand-manifests
-- `quay.io/redhat-appstudio/buildah:v1.31.0` - container-image-mirror
-
-**Gaps**:
-- No image pinning for `latest` tags (except in `.tekton/` bundle refs which use SHA digests)
-- No runtime validation of task images
-- No multi-arch testing
+- **test-build/Dockerfile.konflux**: Single-line Dockerfile (`FROM registry.redhat.io/ubi8/python-312`) - serves only as a build test target, not a meaningful container
+- **Pipeline images**: Tasks reference multiple images (quay.io/rhoai-konflux/alpine, quay.io/konflux-ci/konflux-test, quay.io/rhoai/rhoai-task-toolset, etc.) but none are tested
+- **Multi-arch**: Supported via `container-build-remote.yaml` pipeline with `buildah-remote-oci-ta`
+- **Image signing**: Enterprise Contract (EC) integration via Konflux trusted task policies
 
 ### Security
 
-**Strong - Pipeline Level**:
-| Scan Type | Tool | Status |
-|-----------|------|--------|
-| Shell script SAST | sast-shell-check-oci-ta | Active |
-| Unicode/homoglyph SAST | sast-unicode-check-oci-ta | Active |
-| Dependency SAST | sast-snyk-check-oci-ta | Active |
-| Container vulnerability | clair-scan | Active |
-| Malware | clamav-scan | Active |
-| RPM signatures | rpms-signature-scan | Active |
-| Deprecated base images | deprecated-image-check | Active |
-| Ecosystem cert | ecosystem-cert-preflight-checks | Active |
-| SBOM | show-sbom | Active (finally block) |
-| Credential scanning | leaktk-scanner | Active (step actions) |
+**Strong pipeline-level security** but missing local/developer security practices:
 
-**Weak - Repository Level**:
-- No `.gitleaks.toml` for the repository itself
-- No secret scanning configuration
-- No pre-commit hooks for sensitive data detection
-- `push.sh` contains raw `git push` with no safety checks
-- GitHub tokens referenced via Kubernetes secrets (good), but no rotation policy documented
-- One inconsistency: `container-image-mirror` uses `v1beta1` API version while everything else uses `v1`
+| Practice | Status | Notes |
+|----------|--------|-------|
+| SAST (Shell) | Pipeline | sast-shell-check-oci-ta in CI |
+| SAST (Unicode) | Pipeline | sast-unicode-check-oci-ta in CI |
+| Snyk | Pipeline | sast-snyk-check-oci-ta in CI |
+| Clair scanning | Pipeline | Container vulnerability scanning |
+| ClamAV | Pipeline | Malware scanning |
+| RPM signatures | Pipeline | rpms-signature-scan in CI |
+| Cert checks | Pipeline | ecosystem-cert-preflight-checks |
+| SBOM | Pipeline | show-sbom in finally block |
+| LeakTK | StepAction | Secret scanning in secure-git-push and secure-push-oci |
+| Gitleaks | No | Not configured locally |
+| Pre-commit security | No | No local secret detection |
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status**: Missing
-- No `CLAUDE.md` or `AGENTS.md` in repository root
-- No `.claude/` directory
-- No `.claude/rules/` for test creation guidance
-- No `.claude/skills/` for custom skills
-- No testing standards documentation
+- **Status**: Missing
+- **Coverage**: None - no test types have rules
+- **Quality**: N/A
+- **Gaps**: No CLAUDE.md, no .claude/ directory, no AGENTS.md, no testing documentation
+- **Recommendation**: Generate rules with `/test-rules-generator` for YAML validation, bash script testing, and Tekton task development patterns
 
-**Recommendation**: Generate rules with `/test-rules-generator` covering:
-- Tekton task YAML conventions
-- Bash script extraction and testing patterns
-- Parameter naming and versioning standards
-- Security scanning requirements for new tasks
+### Repository Structure
+
+```
+rhoai-konflux-tasks/
+├── .tekton/                          # PipelineRun definitions for self-CI
+│   ├── rhoai-konflux-tasks-pull-request.yaml
+│   ├── rhoai-init-pull-request.yaml
+│   └── rhoai-init-push.yaml
+├── konflux-tekton-tasks/             # Custom Tekton Tasks
+│   ├── container-image-mirror/0.1/
+│   ├── generate-snapshot-for-group-testing/0.1/
+│   ├── prefetch-operand-manifests-oci-ta/0.1/
+│   ├── pull-request-comment/0.1/, 0.2/
+│   ├── rhoai-init/0.1/, 0.2/, 0.3/
+│   ├── rhoai-inject-sealights-oci-ta/0.1/
+│   ├── trigger-bundle-build/0.1/
+│   ├── trigger-group-testing/0.1/
+│   └── trigger-operator-build/0.1/
+├── pipelines/                        # Tekton Pipeline definitions
+│   ├── container-build.yaml          # Standard buildah pipeline
+│   └── container-build-remote.yaml   # Multi-platform remote build pipeline
+├── stepactions/                      # Tekton StepActions
+│   ├── cleanup-git-repo/0.1/
+│   ├── git-clone/0.1/
+│   ├── pull-request-comment/0.1/
+│   ├── secure-git-push/0.1/
+│   └── secure-push-oci/0.1/
+├── test-build/
+│   └── Dockerfile.konflux            # Minimal test Dockerfile
+├── .gitignore
+├── LICENSE
+├── push.sh                           # Manual push script (should be removed)
+└── renovate.json                     # Renovate config for Tekton task updates
+```
+
+**Notable observations**:
+- Well-organized versioned task structure (0.1, 0.2, 0.3)
+- `push.sh` is listed in `.gitignore` but exists in the repo - appears to be accidentally committed
+- No root README.md
+- The `.gitignore` is a Python template despite this being a YAML/Tekton repo
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Extract and test embedded bash scripts**
-   - Extract `semver_ge()` and other functions from YAML into standalone `.sh` files in a `scripts/` directory
-   - Add bats-core test suite for all extracted functions
-   - Use `source` in Tekton task scripts to import shared functions
-   - Effort: 16-24 hours
+1. **Add YAML/Tekton linting as a PR-time check**
+   - Install `yamllint` and `tekton-lint` as pre-commit hooks and CI checks
+   - Validates YAML syntax and Tekton resource schema
+   - Effort: 2-4 hours
 
-2. **Add Tekton YAML validation CI**
-   - Install `tkn` CLI and `yamllint` in a CI validation step
-   - Validate all task/pipeline YAML on every PR
-   - Check for API version consistency
-   - Effort: 4-6 hours
+2. **Extract embedded bash scripts and add ShellCheck + unit tests**
+   - Use `yq` to extract scripts from YAML into standalone files
+   - Run `shellcheck` against extracted scripts
+   - Add `bats-core` tests for complex functions (e.g., `semver_ge` in rhoai-init 0.3)
+   - Effort: 6-10 hours
 
-3. **Expand PR-time validation coverage**
-   - Add PipelineRun definitions in `.tekton/` for all tasks and step actions
-   - Use path-based CEL filtering to trigger only relevant builds
+3. **Add task parameter/result contract tests**
+   - Validate task parameters, results, and workspace definitions match expected schemas
+   - Detect breaking changes when tasks evolve (e.g., rhoai-init 0.1 -> 0.3)
+   - Use JSON Schema or custom validation scripts
    - Effort: 8-12 hours
 
 ### Priority 1 (High Value)
 
-4. **Add ShellCheck linting**
-   - Extract embedded scripts and run ShellCheck on PR
-   - Configure severity thresholds (error-only initially, expand later)
+4. **Add Tekton task execution tests**
+   - Use `tkn` CLI or Tekton Test framework to run tasks in a test cluster
+   - At minimum, test `rhoai-init` which has the most complex logic
+   - Effort: 12-16 hours
+
+5. **Create a Makefile with development targets**
+   - `make lint` - yamllint + shellcheck
+   - `make validate` - tekton-lint + schema validation
+   - `make test` - run bats tests for extracted scripts
    - Effort: 2-4 hours
 
-5. **Create integration test framework**
-   - Use Kind or mock clusters to validate task execution
-   - Test GitHub API interactions with wiremock or stub responses
-   - Verify task results (Tekton results objects) match expectations
-   - Effort: 20-30 hours
-
-6. **Add pre-commit hooks**
-   - Configure yamllint for YAML validation
-   - Add shellcheck for embedded scripts
-   - Add gitleaks for secret detection
+6. **Add agent rules for test creation**
+   - Create `.claude/rules/` with guidelines for Tekton task development
+   - Include patterns for YAML validation tests, bash script tests
    - Effort: 2-3 hours
-
-7. **Create agent rules**
-   - Write CLAUDE.md with repo context and conventions
-   - Add `.claude/rules/` for task development patterns
-   - Document Tekton task testing requirements
-   - Effort: 4-6 hours
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add BATS tests for step actions**
-   - Test secure-push-oci leak detection logic
-   - Test git-clone sparse checkout behavior
-   - Test cleanup-git-repo error handling
-   - Effort: 8-12 hours
+7. **Add automated task documentation generation**
+   - Generate README from Tekton task annotations and parameter descriptions
+   - Effort: 4-6 hours
 
-9. **Contract tests for task parameters**
-   - Validate task parameter schemas match consumer PipelineRun expectations
-   - Detect breaking changes in task interfaces
-   - Effort: 8-12 hours
+8. **Version compatibility testing**
+   - Test that tasks across versions (rhoai-init 0.1, 0.2, 0.3) maintain expected behavior
+   - Effort: 6-8 hours
 
-10. **Version consistency checks**
-    - Verify rhoai-init v0.1/v0.2/v0.3 maintain backward compatibility
-    - Check that Renovate paths cover all task/pipeline directories
-    - Fix Renovate `includePaths` to include `konflux-tekton-tasks/` and `stepactions/`
-    - Effort: 2-4 hours
+9. **Expand PR trigger coverage**
+   - Current PR triggers only fire for `pipelines/container-build.yaml` and `rhoai-init` changes
+   - Most task changes (trigger-bundle-build, trigger-operator-build, etc.) have no CI trigger
+   - Effort: 2-4 hours
 
 ## Comparison to Gold Standards
 
-| Practice | rhoai-konflux-tasks | odh-dashboard | notebooks | kserve |
-|----------|-------------------|---------------|-----------|--------|
-| Unit tests | None | Jest + Cypress | pytest | Go test + envtest |
-| Integration tests | None | Contract tests | Image validation | Multi-version E2E |
-| Coverage tracking | None | Codecov + thresholds | Coverage reports | Codecov enforcement |
-| YAML validation | None | ESLint + TypeScript | yamllint | golangci-lint |
-| Pre-commit hooks | None | Husky + lint-staged | pre-commit | pre-commit |
-| Security scanning | 7 scan types (pipeline) | Snyk + CodeQL | Trivy | gosec + SAST |
-| Agent rules | None | Comprehensive | Partial | Partial |
-| CI automation | Konflux + Renovate | GitHub Actions | GitHub Actions | GitHub Actions + Prow |
-| PR validation | 2/9 tasks | All components | All images | All packages |
+| Dimension | rhoai-konflux-tasks | odh-dashboard | notebooks | kserve |
+|-----------|-------------------|---------------|-----------|--------|
+| Unit Tests | 0/10 | 9/10 | 6/10 | 9/10 |
+| Integration/E2E | 0/10 | 9/10 | 8/10 | 9/10 |
+| Build Integration | 6/10 | 8/10 | 7/10 | 8/10 |
+| Image Testing | 3/10 | 7/10 | 9/10 | 7/10 |
+| Coverage Tracking | 0/10 | 8/10 | 5/10 | 9/10 |
+| CI/CD Automation | 7/10 | 9/10 | 8/10 | 9/10 |
+| Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
+| **Security Scanning** | **9/10** | **6/10** | **7/10** | **7/10** |
+| **Overall** | **2.0** | **8.5** | **7.0** | **8.0** |
+
+**Notable**: While the overall score is low, the repository excels at pipeline-level security scanning (9/10) - significantly ahead of most gold standard repos. The gap is entirely in testing and validation of the Tekton definitions and scripts themselves.
 
 ## File Paths Reference
 
 ### CI/CD Configuration
-- `.tekton/rhoai-konflux-tasks-pull-request.yaml` - PR build for container-build pipeline
-- `.tekton/rhoai-init-pull-request.yaml` - PR build for rhoai-init task
-- `.tekton/rhoai-init-push.yaml` - Push build for rhoai-init task
-- `pipelines/container-build.yaml` - Single-arch build pipeline (13+ tasks)
-- `pipelines/container-build-remote.yaml` - Multi-arch build pipeline
+- `.tekton/rhoai-konflux-tasks-pull-request.yaml` - PR build trigger
+- `.tekton/rhoai-init-pull-request.yaml` - rhoai-init PR build
+- `.tekton/rhoai-init-push.yaml` - rhoai-init push build
+- `pipelines/container-build.yaml` - Standard build pipeline
+- `pipelines/container-build-remote.yaml` - Multi-platform build pipeline
+- `renovate.json` - Tekton task auto-update config
 
-### Tekton Tasks (9 tasks)
-- `konflux-tekton-tasks/rhoai-init/0.3/rhoai-init.yaml` - Latest init task (v0.3)
-- `konflux-tekton-tasks/trigger-operator-build/0.1/trigger-operator-build.yaml`
-- `konflux-tekton-tasks/trigger-bundle-build/0.1/trigger-bundle-build.yaml`
-- `konflux-tekton-tasks/trigger-group-testing/0.1/trigger-group-testing.yaml`
-- `konflux-tekton-tasks/rhoai-inject-sealights-oci-ta/0.1/rhoai-inject-sealights-oci-ta.yaml`
-- `konflux-tekton-tasks/prefetch-operand-manifests-oci-ta/0.1/prefetch-operand-manifests-oci-ta.yaml`
-- `konflux-tekton-tasks/container-image-mirror/0.1/container-image-mirror.yaml`
-- `konflux-tekton-tasks/generate-snapshot-for-group-testing/0.1/generate-snapshot-for-group-testing.yaml`
-- `konflux-tekton-tasks/pull-request-comment/0.2/pull-request-comment.yaml`
+### Key Tasks
+- `konflux-tekton-tasks/rhoai-init/0.3/rhoai-init.yaml` - Latest init task (188 lines, complex bash)
+- `konflux-tekton-tasks/trigger-group-testing/0.1/trigger-group-testing.yaml` - Group test orchestration
+- `konflux-tekton-tasks/trigger-operator-build/0.1/trigger-operator-build.yaml` - Operator build triggering
+- `konflux-tekton-tasks/prefetch-operand-manifests-oci-ta/0.1/prefetch-operand-manifests-oci-ta.yaml` - Manifest prefetching
+- `konflux-tekton-tasks/rhoai-inject-sealights-oci-ta/0.1/rhoai-inject-sealights-oci-ta.yaml` - Sealights injection
 
-### Step Actions (5 actions)
-- `stepactions/secure-push-oci/0.1/secure-push-oci.yaml`
-- `stepactions/secure-git-push/0.1/secure-git-push.yaml`
-- `stepactions/git-clone/0.1/git-clone.yaml`
-- `stepactions/cleanup-git-repo/0.1/cleanup-git-repo.yaml`
-- `stepactions/pull-request-comment/0.1/pull-request-comment.yaml`
-
-### Other
-- `test-build/Dockerfile.konflux` - Minimal test Dockerfile (UBI8 Python 3.12)
-- `renovate.json` - Tekton bundle auto-update configuration
-- `push.sh` - Raw git push script (not production-grade)
-- `.gitignore` - Python-centric gitignore (mismatched with YAML-centric repo)
+### StepActions
+- `stepactions/secure-git-push/0.1/secure-git-push.yaml` - LeakTK scanning + git push
+- `stepactions/secure-push-oci/0.1/secure-push-oci.yaml` - LeakTK scanning + OCI push
+- `stepactions/git-clone/0.1/git-clone.yaml` - Sparse checkout clone
+- `stepactions/cleanup-git-repo/0.1/cleanup-git-repo.yaml` - Artifact cleanup

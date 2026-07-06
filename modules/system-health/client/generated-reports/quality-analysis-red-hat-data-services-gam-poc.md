@@ -1,220 +1,255 @@
 ---
 repository: "red-hat-data-services/gam-poc"
-overall_score: 0.8
+overall_score: 0.6
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No source code or tests exist in the repository"
+    status: "No source code or tests exist in this repository"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests — no application code to test"
+    status: "No integration or E2E tests — repository contains no testable code"
   - dimension: "Build Integration"
     score: 0.0
-    status: "No build process — no Dockerfile, Makefile, or build configuration"
+    status: "No build pipeline, Dockerfile, or Makefile — nothing is built"
   - dimension: "Image Testing"
     score: 0.0
     status: "No container images built or tested"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tracking — no code to measure"
+    status: "No coverage tooling — no code to cover"
   - dimension: "CI/CD Automation"
-    score: 2.0
-    status: "Single workflow_dispatch workflow for testing GH CLI triggers; Renovate configured for dependency updates"
+    score: 3.0
+    status: "Single manual-dispatch workflow and Renovate config; no PR or push triggers"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
+    status: "No CLAUDE.md, .claude/ directory, or agent rules of any kind"
 critical_gaps:
-  - title: "No source code or application logic"
-    impact: "Repository is a skeleton PoC with no functional code to validate or test"
+  - title: "Repository is a skeleton with no application code"
+    impact: "No source code, libraries, or application logic to test, build, or deploy"
     severity: "HIGH"
-    effort: "N/A — architectural decision needed"
-  - title: "No README or documentation"
-    impact: "No context on purpose, setup, or usage for contributors"
+    effort: "N/A — depends on project scope"
+  - title: "No PR-triggered CI workflows"
+    impact: "No automated quality gates on pull requests; code can be merged unchecked"
     severity: "HIGH"
-    effort: "1-2 hours"
-  - title: "No CI/CD pipeline for code validation"
-    impact: "No automated quality gates — only a manual workflow_dispatch exists"
+    effort: "2-4 hours"
+  - title: "No test infrastructure of any kind"
+    impact: "Zero test coverage across all dimensions — unit, integration, E2E"
     severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "No container image build or testing"
-    impact: "No image build, scanning, or runtime validation"
+    effort: "4-8 hours (once code exists)"
+  - title: "No container build or image testing"
+    impact: "No Dockerfile, no image scanning, no SBOM generation"
     severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "Renovate configured but no code to manage dependencies for"
-    impact: "Renovate config references Dockerfile.konflux and Tekton pipelines that don't exist in the repo"
-    severity: "MEDIUM"
-    effort: "1 hour"
+    effort: "2-4 hours"
+  - title: "No security scanning"
+    impact: "No SAST, dependency scanning, secret detection, or vulnerability scanning"
+    severity: "HIGH"
+    effort: "2-3 hours"
 quick_wins:
-  - title: "Add a README.md with project purpose and status"
-    effort: "30 minutes"
-    impact: "Provides essential context for contributors and stakeholders"
-  - title: "Add CODEOWNERS file"
-    effort: "15 minutes"
-    impact: "Establishes ownership and review requirements"
-  - title: "Add a CLAUDE.md or AGENTS.md for AI-assisted development guidance"
+  - title: "Add a PR-triggered CI workflow with basic linting"
     effort: "1-2 hours"
-    impact: "Enables consistent AI-assisted contributions when code is added"
+    impact: "Establishes foundational quality gate for all future code contributions"
+  - title: "Add CLAUDE.md with project context and conventions"
+    effort: "1 hour"
+    impact: "Enables AI-assisted development with consistent patterns from day one"
+  - title: "Add .pre-commit-config.yaml"
+    effort: "30 minutes"
+    impact: "Catches formatting and basic issues before code reaches CI"
 recommendations:
   priority_0:
-    - "Determine if this PoC repo should graduate to a real project or be archived"
-    - "Add README.md documenting the Gated Auto Merger concept, current status, and roadmap"
+    - "Define the project's purpose, language, and architecture before adding quality tooling"
+    - "Add PR-triggered CI workflow with linting and basic checks"
+    - "Add a README.md documenting what gam-poc is and how to contribute"
   priority_1:
-    - "If continuing development: add application source code with unit tests from day one"
-    - "Add PR-triggered CI workflow with linting, testing, and build validation"
-    - "Add Dockerfile and container build pipeline"
+    - "Add a test framework matching the chosen language (pytest, go test, jest, etc.)"
+    - "Add Dockerfile with multi-stage build once application code exists"
+    - "Add codecov or coveralls integration with minimum threshold"
   priority_2:
-    - "Add agent rules (.claude/rules/) for consistent AI-assisted development"
-    - "Add pre-commit hooks for code quality enforcement"
-    - "Clean up Renovate config to match actual repository content"
+    - "Add Trivy scanning for container images"
+    - "Add CodeQL or Semgrep for SAST"
+    - "Create agent rules (.claude/rules/) for test creation standards"
 ---
 
-# Quality Analysis: gam-poc (Gated Auto Merger PoC)
+# Quality Analysis: gam-poc
 
 ## Executive Summary
 
-- **Overall Score: 0.8/10**
-- **Repository Type**: Proof of Concept (PoC) / Infrastructure Experiment
-- **Primary Language**: None (no application code)
-- **Framework**: GitHub Actions workflow_dispatch
-- **Agent Rules Status**: Missing
+- **Overall Score: 0.6/10**
+- **Repository Type**: Proof-of-concept / skeleton (GitHub Actions workflow + Renovate config only)
+- **Primary Language**: N/A — no application source code exists
+- **Key Strengths**: Renovate dependency management is pre-configured with Konflux-aware rules
+- **Critical Gaps**: No source code, no tests, no builds, no security scanning, no PR-triggered CI
+- **Agent Rules Status**: Missing — no CLAUDE.md, .claude/ directory, or any agent configuration
 
-The `gam-poc` repository is an extremely minimal proof-of-concept for a "Gated Auto Merger" pattern. It contains only **2 non-git files**: a single `workflow_dispatch` GitHub Actions workflow and a Renovate dependency management configuration. There is **no source code, no tests, no documentation, no container images, and no CI/CD pipeline** for code validation.
+## Repository Inventory
 
-The Renovate configuration is sophisticated and references Konflux Dockerfiles and Tekton pipelines, suggesting this repo may be intended to eventually contain build infrastructure, but none of that content exists today.
+This repository contains exactly **2 files** (excluding `.git`):
+
+| File | Purpose |
+|------|---------|
+| `.github/workflows/gated-auto-merger.yaml` | Manual-dispatch workflow that prints context and sleeps 60s |
+| `.github/renovate.json` | Renovate bot config for Dockerfile digest, Tekton, and RPM updates |
+
+There is **1 commit** on the `main` branch: `9c0bcdb add renovate config`.
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 0/10 | No source code or tests exist |
-| Integration/E2E | 0/10 | No integration or E2E tests |
-| **Build Integration** | **0/10** | **No build process — no Dockerfile, Makefile, or build config** |
-| Image Testing | 0/10 | No container images built or tested |
-| Coverage Tracking | 0/10 | No coverage tracking — no code to measure |
-| CI/CD Automation | 2/10 | Single workflow_dispatch + Renovate config |
-| Agent Rules | 0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory |
-
-## Repository Contents
-
-The entire repository (excluding `.git/`) consists of:
-
-```
-.github/workflows/gated-auto-merger.yaml   # Manual workflow_dispatch trigger
-.github/renovate.json                       # Renovate dependency management config
-```
-
-**Total files**: 2
-**Total lines of code**: ~160 (all configuration, no application code)
-**Test files**: 0
-**Source files**: 0
+| Dimension | Score | Weight | Status |
+|-----------|-------|--------|--------|
+| Unit Tests | 0/10 | 20% | No source code or tests exist |
+| Integration/E2E | 0/10 | 25% | No integration or E2E tests |
+| Build Integration | 0/10 | — | No build pipeline, Dockerfile, or Makefile |
+| Image Testing | 0/10 | 20% | No container images built or tested |
+| Coverage Tracking | 0/10 | 15% | No coverage tooling |
+| CI/CD Automation | 3/10 | 20% | Manual-dispatch workflow + Renovate; no PR triggers |
+| Agent Rules | 0/10 | — | No agent configuration of any kind |
+| **Overall** | **0.6/10** | | **Skeleton repository with minimal automation** |
 
 ## Critical Gaps
 
-### 1. No Source Code or Application Logic
+### 1. No Application Source Code
 - **Severity**: HIGH
-- **Impact**: Repository is a skeleton PoC with no functional code to validate, test, or build
-- **Details**: The repo name suggests a "Gated Auto Merger" tool, but no implementation exists
-- **Effort**: N/A — architectural decision needed on whether to develop or archive
+- **Impact**: There is literally nothing to test, build, or deploy. The repository is a proof-of-concept shell.
+- **Effort**: Depends entirely on project scope
+- **Details**: The name "gam-poc" suggests "Gated Auto-Merger Proof of Concept." The single workflow demonstrates a manual dispatch pattern but contains no merger logic.
 
-### 2. No README or Documentation
+### 2. No PR-Triggered CI Workflows
 - **Severity**: HIGH
-- **Impact**: No context on what GAM is, how it works, or what the PoC demonstrates
-- **Details**: Contributors and stakeholders have no way to understand the project's purpose
-- **Effort**: 1-2 hours
+- **Impact**: When code is eventually added, there are no quality gates — PRs can be merged without any checks.
+- **Effort**: 2-4 hours
+- **Details**: The only workflow (`gated-auto-merger.yaml`) is `workflow_dispatch` only. No `push` or `pull_request` triggers exist.
 
-### 3. No CI/CD Pipeline for Code Validation
+### 3. No Test Infrastructure
 - **Severity**: HIGH
-- **Impact**: No automated quality gates exist; the single workflow is a manual dispatch test
-- **Details**: The `gated-auto-merger.yaml` workflow only prints GitHub context and sleeps for 60 seconds — it's a test/debug workflow, not a quality gate
+- **Impact**: Zero test coverage across all dimensions.
 - **Effort**: 4-8 hours (once code exists)
+- **Details**: No test files, test frameworks, test configurations, or test directories found.
 
-### 4. No Container Image Build or Testing
+### 4. No Container Build or Image Testing
 - **Severity**: HIGH
-- **Impact**: No image build, scanning, or runtime validation despite Renovate being configured for Dockerfile.konflux updates
-- **Details**: Renovate config references `*Dockerfile.konflux*` files that don't exist in the repo
-- **Effort**: 4-6 hours
+- **Impact**: No Dockerfile, no image scanning, no SBOM generation. However, Renovate is pre-configured for Konflux Dockerfile digest updates, suggesting container images are planned.
+- **Effort**: 2-4 hours
 
-### 5. Renovate Config Misaligned with Repo Content
-- **Severity**: MEDIUM
-- **Impact**: Renovate is configured for Dockerfile, Tekton, and RPM managers but the repo has none of these files
-- **Details**: The config includes `includePaths: [".tekton/**"]` and `matchFileNames: ["*Dockerfile.konflux*"]` — all reference non-existent content
-- **Effort**: 1 hour to align or remove
+### 5. No Security Scanning
+- **Severity**: HIGH
+- **Impact**: No SAST (CodeQL, Semgrep), no dependency scanning, no secret detection (Gitleaks), no container scanning (Trivy).
+- **Effort**: 2-3 hours
 
 ## Quick Wins
 
-### 1. Add README.md
-- **Effort**: 30 minutes
-- **Impact**: Essential context for contributors and stakeholders
-- **Implementation**: Document the GAM concept, current PoC status, and next steps
+### 1. Add a PR-Triggered CI Workflow (1-2 hours)
+Establishes the foundational quality gate for all future contributions.
 
-### 2. Add CODEOWNERS
-- **Effort**: 15 minutes
-- **Impact**: Establishes ownership and review requirements
-- **Implementation**: `* @red-hat-data-services/gam-maintainers`
+```yaml
+# .github/workflows/pr-checks.yaml
+name: PR Checks
+on:
+  pull_request:
+    branches: [main]
 
-### 3. Add CLAUDE.md for AI Development Guidance
-- **Effort**: 1-2 hours
-- **Impact**: Sets up guardrails for AI-assisted development from the start
-- **Implementation**: Create `.claude/rules/` with test creation guidelines
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run linter
+        run: echo "Add language-specific linting here"
+```
+
+### 2. Add CLAUDE.md (1 hour)
+Enable AI-assisted development with consistent patterns from day one.
+
+```markdown
+# gam-poc
+
+## Overview
+Gated Auto-Merger proof of concept.
+
+## Development
+- Language: TBD
+- Test framework: TBD
+- Build: TBD
+```
+
+### 3. Add .pre-commit-config.yaml (30 minutes)
+Catches formatting and basic issues before code reaches CI.
+
+```yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflow: `gated-auto-merger.yaml`**
-- **Trigger**: `workflow_dispatch` only (manual)
-- **Purpose**: Test trigger using GitHub CLI — prints context, echoes actor, sleeps 60s, prints source URL
-- **Quality Value**: None — this is a debug/test workflow, not a quality gate
-- **Issues**:
-  - Hardcoded `sleep 60` with no purpose other than simulating work
-  - No actual merger logic implemented
-  - Single component option (`Dashboard`) hardcoded
+**Workflow Inventory:**
 
-**Renovate Configuration** (`.github/renovate.json`):
-- Well-structured Renovate config with multiple managers
-- Configured for: Dockerfile, Tekton, RPM
-- Auto-merge enabled with `ignoreTests: true`
-- Branch prefixes organized by type (`renovate/`, `konflux/mintmaker/`, `konflux/references/`)
-- **Issue**: All managed file types are absent from the repo — the config is aspirational, not functional
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `gated-auto-merger.yaml` | `workflow_dispatch` (manual) | Prints GitHub context, sleeps 60s, logs trigger source |
+
+**Analysis:**
+- The workflow accepts a `component` input (currently only "Dashboard") and records the triggering workflow's run ID
+- This appears to be a test harness for a gated auto-merge pattern, not a production workflow
+- The `sleep 60` step suggests it's simulating work to test workflow orchestration
+- No PR triggers, no test execution, no build steps
+
+**Renovate Configuration:**
+- Well-configured for Konflux ecosystem (Dockerfile digest pins, Tekton catalog updates, RPM updates)
+- Targets `main` and `rhoai-2.20` branches
+- Auto-merge enabled with PR-based merge type
+- `ignoreTests: true` — explicitly skips test validation (because none exist)
+- Manages: Dockerfile digests (Konflux only), Tekton pipeline references, RPM packages
 
 ### Test Coverage
 
-| Category | Count | Details |
-|----------|-------|---------|
-| Unit test files | 0 | No test files of any kind |
-| Integration tests | 0 | No integration test infrastructure |
-| E2E tests | 0 | No E2E test framework |
-| Test frameworks | None | No testing dependencies |
-| Coverage config | None | No coverage generation or reporting |
+| Test Type | Files Found | Framework | Coverage |
+|-----------|-------------|-----------|----------|
+| Unit Tests | 0 | N/A | 0% |
+| Integration Tests | 0 | N/A | 0% |
+| E2E Tests | 0 | N/A | 0% |
+| Contract Tests | 0 | N/A | 0% |
+
+No test files, test directories, or test configurations exist in this repository.
 
 ### Code Quality
 
-| Tool | Status | Details |
-|------|--------|---------|
-| Linting | Not present | No linter config (no code to lint) |
-| Pre-commit hooks | Not present | No `.pre-commit-config.yaml` |
-| Static analysis | Not present | No SAST tools configured |
-| Code formatters | Not present | No formatter configuration |
+| Tool | Status |
+|------|--------|
+| Linter | Not configured |
+| Pre-commit hooks | Not configured |
+| Static analysis | Not configured |
+| Code formatter | Not configured |
+| Type checking | Not configured |
 
 ### Container Images
 
-| Aspect | Status | Details |
-|--------|--------|---------|
-| Dockerfile | Not present | No Dockerfile or Containerfile |
-| Multi-stage builds | N/A | No build process |
-| Image scanning | Not present | No Trivy, Snyk, or other scanners |
-| SBOM generation | Not present | No SBOM tooling |
-| Image signing | Not present | No signing/attestation |
-| Multi-arch support | Not present | No platform configuration |
+| Aspect | Status |
+|--------|--------|
+| Dockerfile | Not present |
+| Multi-stage build | N/A |
+| Image scanning | Not configured |
+| SBOM generation | Not configured |
+| Multi-arch support | N/A |
+| Image signing | Not configured |
+
+Note: Renovate is pre-configured for `Dockerfile.konflux*` patterns, suggesting container builds are planned for the future.
 
 ### Security
 
-| Practice | Status | Details |
-|----------|--------|---------|
-| SAST/CodeQL | Not present | No security scanning |
-| Dependency scanning | Partial | Renovate configured but non-functional (no deps to scan) |
-| Secret detection | Not present | No Gitleaks or TruffleHog |
-| Vulnerability scanning | Not present | No container or dependency scanning |
+| Tool | Status |
+|------|--------|
+| CodeQL/SAST | Not configured |
+| Dependency scanning | Renovate handles updates, but no vulnerability scanning |
+| Secret detection | Not configured |
+| Container scanning | Not configured |
+| Supply chain (SLSA) | Not configured |
 
 ### Agent Rules (Agentic Flow Quality)
 
@@ -222,34 +257,39 @@ The entire repository (excluding `.git/`) consists of:
 - **CLAUDE.md**: Not present
 - **AGENTS.md**: Not present
 - **.claude/ directory**: Not present
-- **Coverage**: No test type rules exist
+- **Test creation rules**: None
+- **Coverage**: No test types have rules
 - **Quality**: N/A
-- **Gaps**: Everything — no agent guidance exists
-- **Recommendation**: When code is added, generate rules with `/test-rules-generator`
+- **Gaps**: Everything — no agent rules exist at all
+- **Recommendation**: Once source code is added, generate rules with `/test-rules-generator`
 
 ## Recommendations
 
-### Priority 0 (Critical — Decision Required)
+### Priority 0 (Critical)
 
-1. **Determine repository fate**: This PoC needs a decision — should it be developed into a real Gated Auto Merger tool, or archived?
-   - If developing: add source code, tests, CI/CD, and documentation
-   - If archiving: mark as archived in GitHub, add a README noting it's a completed PoC
+1. **Define the project scope and add source code** — The repository is currently an empty shell. Before any quality tooling can be meaningful, the project needs actual application logic.
 
-2. **Add README.md**: Regardless of the decision, document what GAM is and what this repo demonstrated
+2. **Add PR-triggered CI workflow** — Even for a POC, PRs should have at least basic checks (YAML validation, commit message format).
 
-### Priority 1 (High Value — If Continuing Development)
+3. **Add README.md** — Document what gam-poc is, its architecture, and how to contribute.
 
-1. **Add application source code with tests from day one**: Establish TDD practices from the start
-2. **Add PR-triggered CI workflow**: Include linting, testing, and build validation
-3. **Add Dockerfile**: If this tool will run as a container, add build infrastructure
-4. **Align Renovate config**: Remove or update references to non-existent files
+### Priority 1 (High Value)
+
+4. **Add test framework** — Once code exists, add the appropriate test framework (pytest for Python, go test for Go, jest for TypeScript).
+
+5. **Add Dockerfile with multi-stage build** — Renovate is already configured for Konflux Dockerfile digest management; add the actual Dockerfile.
+
+6. **Add codecov/coveralls integration** — Set a minimum coverage threshold from day one.
 
 ### Priority 2 (Nice-to-Have)
 
-1. **Add agent rules** (`.claude/rules/`): Establish test creation patterns early
-2. **Add pre-commit hooks**: Set up code quality enforcement from the start
-3. **Add CODEOWNERS**: Establish review requirements
-4. **Add security scanning**: CodeQL, dependency scanning, secret detection
+7. **Add Trivy scanning** — Container vulnerability scanning in CI.
+
+8. **Add CodeQL or Semgrep** — Static analysis for security issues.
+
+9. **Create agent rules** — `.claude/rules/` with test creation standards once the codebase matures.
+
+10. **Add Gitleaks** — Secret detection to prevent credential leaks.
 
 ## Comparison to Gold Standards
 
@@ -259,20 +299,22 @@ The entire repository (excluding `.git/`) consists of:
 | Integration/E2E | 0/10 | 9/10 | 8/10 | 9/10 |
 | Build Integration | 0/10 | 8/10 | 7/10 | 7/10 |
 | Image Testing | 0/10 | 7/10 | 9/10 | 6/10 |
-| Coverage Tracking | 0/10 | 8/10 | 5/10 | 8/10 |
-| CI/CD Automation | 2/10 | 9/10 | 8/10 | 9/10 |
+| Coverage Tracking | 0/10 | 8/10 | 6/10 | 9/10 |
+| CI/CD Automation | 3/10 | 9/10 | 8/10 | 9/10 |
 | Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
-| **Overall** | **0.8/10** | **8.4/10** | **6.9/10** | **7.4/10** |
+| **Overall** | **0.6/10** | **8.5/10** | **7.0/10** | **7.5/10** |
+
+## What's Positive
+
+Despite being a skeleton, the repository does show some forward-thinking:
+
+1. **Renovate is pre-configured** — Dependency management for Konflux ecosystem (Dockerfile digests, Tekton catalog, RPMs) is ready before code arrives
+2. **Branch strategy exists** — `main` and `rhoai-2.20` branches are defined in Renovate config, suggesting a release branch model is planned
+3. **Konflux awareness** — The Renovate config specifically targets `Dockerfile.konflux*` patterns and Konflux Tekton catalog references
 
 ## File Paths Reference
 
 | File | Purpose |
 |------|---------|
-| `.github/workflows/gated-auto-merger.yaml` | Manual workflow_dispatch trigger (debug/test) |
-| `.github/renovate.json` | Renovate dependency management (aspirational config) |
-
-## Summary
-
-The `gam-poc` repository scores **0.8/10** overall. It is a minimal proof-of-concept with no source code, no tests, no documentation, and no CI/CD pipeline. The only quality-relevant artifact is a Renovate configuration that references files not yet present in the repository. The single GitHub Actions workflow is a manual dispatch test with no quality gate functionality.
-
-**The primary recommendation is a strategic decision**: determine whether this PoC should graduate to a real project (and invest in all quality dimensions) or be archived as a completed experiment.
+| `.github/workflows/gated-auto-merger.yaml` | Manual-dispatch test workflow |
+| `.github/renovate.json` | Renovate dependency management configuration |

@@ -1,351 +1,362 @@
 ---
 repository: "openvinotoolkit/openvino.genai"
-overall_score: 7.2
+overall_score: 7.6
 scorecard:
   - dimension: "Unit Tests"
     score: 7.5
-    status: "Strong C++ unit tests with GTest; comprehensive Python pytest suite with markers; ~87 test files against ~404 source files"
+    status: "92 test files across Python/C++/JS with pytest, Google Test, and Jest; strong model coverage but no code coverage tracking"
   - dimension: "Integration/E2E"
-    score: 8.0
-    status: "Extensive sample-level E2E tests across LLM, Whisper, VLM, Image Gen, RAG, Video Gen; Smart CI selectively runs relevant suites"
+    score: 8.5
+    status: "Extensive model pipeline tests covering LLM, VLM, ASR, TTS, image/video generation across multiple transformer versions"
   - dimension: "Build Integration"
     score: 7.0
-    status: "Multi-platform PR builds (Linux, macOS, Windows, Manylinux); CMake + wheel builds; sample compilation validated; no Konflux simulation"
+    status: "Multi-platform PR builds (Linux/Mac/Windows) with Smart CI and sccache; no container image build or Konflux simulation"
   - dimension: "Image Testing"
-    score: 3.0
-    status: "No Dockerfiles in repo; no container image builds or runtime validation; relies on external pre-built Docker images"
-  - dimension: "Coverage Tracking"
     score: 2.0
-    status: "No codecov/coveralls integration; no coverage thresholds; no PR coverage reporting; no coverage generation in CI"
+    status: "No Dockerfile, no container image builds, no image runtime validation"
+  - dimension: "Coverage Tracking"
+    score: 1.0
+    status: "No codecov, coveralls, or any coverage measurement; no coverage thresholds"
   - dimension: "CI/CD Automation"
-    score: 8.5
-    status: "11 workflows with Smart CI, concurrency control, sccache/ccache, multi-Python matrix, Dependabot, proper OSSF permissions"
+    score: 9.0
+    status: "Excellent CI with Smart CI component-based filtering, concurrency control, sccache, cross-platform PR testing, automated rerunner"
   - dimension: "Agent Rules"
-    score: 0.0
-    status: "No CLAUDE.md, .claude/ directory, or AI agent guidance; no test creation rules for automated agents"
+    score: 1.0
+    status: "No CLAUDE.md, no .claude/ directory, no agent rules for test creation"
 critical_gaps:
   - title: "No code coverage tracking or enforcement"
-    impact: "Cannot measure test completeness; regressions in coverage go undetected; no visibility into untested code paths"
+    impact: "Cannot measure test effectiveness or prevent coverage regression; untested code paths unknown"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "No container image testing"
-    impact: "No Dockerfiles in repo means no reproducible build environment; runtime validation depends entirely on pre-built external images"
-    severity: "HIGH"
+  - title: "No container image testing pipeline"
+    impact: "Downstream consumers building container images get no upstream validation; runtime issues discovered late"
+    severity: "MEDIUM"
     effort: "8-16 hours"
-  - title: "No AI agent rules or test automation guidance"
-    impact: "AI-assisted development cannot leverage project-specific testing patterns; inconsistent AI-generated tests"
-    severity: "MEDIUM"
-    effort: "4-6 hours"
-  - title: "No SAST/CodeQL integration"
-    impact: "Missing automated security analysis for C++ code vulnerabilities; Coverity only runs daily/manual, not on every PR"
-    severity: "MEDIUM"
+  - title: "No CodeQL or SAST integration on PRs"
+    impact: "C++ security vulnerabilities and code quality issues not caught by static analysis"
+    severity: "HIGH"
     effort: "2-4 hours"
+  - title: "No agent rules for AI-assisted test creation"
+    impact: "AI-generated tests lack project-specific patterns, leading to inconsistent test quality"
+    severity: "LOW"
+    effort: "4-6 hours"
 quick_wins:
-  - title: "Add codecov integration with coverage generation"
-    effort: "4-6 hours"
-    impact: "Immediate visibility into test coverage; PR-level coverage delta reporting; coverage threshold enforcement"
-  - title: "Add CodeQL workflow for C++ and Python"
+  - title: "Add CodeQL analysis workflow for C++ and Python"
     effort: "2-3 hours"
-    impact: "Free automated SAST on every PR; catches security issues earlier than daily Coverity scans"
-  - title: "Create CLAUDE.md with test creation rules"
-    effort: "2-3 hours"
-    impact: "Guide AI agents to produce consistent, high-quality tests following project conventions"
-  - title: "Add Dockerfile for development/CI reproducibility"
+    impact: "Automated security vulnerability detection on every PR for C++ (primary language) and Python"
+  - title: "Add gcov/llvm-cov coverage collection and Codecov upload"
     effort: "4-6 hours"
-    impact: "Reproducible builds outside of OpenVINO's private Azure container registry"
+    impact: "Visibility into test coverage with PR-level coverage reporting"
+  - title: "Add Gitleaks secret detection to pre-commit"
+    effort: "1 hour"
+    impact: "Prevent accidental secret leaks in commits"
+  - title: "Create CLAUDE.md with test creation guidelines"
+    effort: "2-3 hours"
+    impact: "Enable AI agents to generate project-consistent tests"
 recommendations:
   priority_0:
-    - "Implement code coverage tracking with codecov/coveralls and enforce minimum thresholds on PRs"
-    - "Add CodeQL or similar SAST tool running on every PR for C++ and Python code"
+    - "Integrate code coverage measurement (gcov for C++, coverage.py for Python) and upload to Codecov with PR comments"
+    - "Add CodeQL workflow for C++ and Python SAST analysis on every PR"
   priority_1:
-    - "Create comprehensive CLAUDE.md and .claude/rules/ for AI-assisted test generation"
-    - "Add public Dockerfiles for local development and CI reproducibility"
-    - "Add C++ code coverage via gcov/llvm-cov integrated with the CMake build"
+    - "Add Gitleaks or TruffleHog secret scanning to pre-commit hooks"
+    - "Create agent rules (.claude/rules/) for test creation patterns across C++, Python, and JS"
+    - "Add SBOM generation for release artifacts"
   priority_2:
-    - "Add performance regression testing for inference latency benchmarks"
-    - "Add contract tests between Python/C++/JS API boundaries"
-    - "Consider adding fuzz testing for parser and tokenizer components"
+    - "Add container image build and validation workflow for downstream consumers"
+    - "Add performance regression benchmarking in CI"
+    - "Implement fuzz testing for parser and tokenizer components"
 ---
 
 # Quality Analysis: openvino.genai
 
 ## Executive Summary
 
-- **Overall Score: 7.2/10**
-- **Repository Type**: C++/Python/JS multi-language GenAI inference library
-- **Primary Languages**: C++ (core), Python (bindings + tests), JavaScript/Node.js (bindings)
-- **Build System**: CMake with py-build-cmake for Python wheels
-
-**Key Strengths**: Excellent multi-platform CI with Smart CI optimization, comprehensive test suites spanning multiple GenAI domains (LLM, VLM, Whisper, Image Generation, Video Generation, RAG), strong security posture with Trivy, Bandit, Coverity, dependency review, and Dependabot.
-
-**Critical Gaps**: Zero code coverage tracking/enforcement, no container images or Dockerfiles in the repository, no AI agent rules, and Coverity (the main SAST tool) runs only on schedule rather than every PR.
-
-**Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory exists.
+- **Overall Score: 7.6/10**
+- **Repository Type**: C++/Python library with Node.js bindings for Generative AI model pipelines on OpenVINO
+- **Primary Languages**: C++ (106K LOC), Python (22K test LOC), JavaScript/TypeScript (Node.js bindings)
+- **Key Strengths**: Exceptional CI/CD automation with Smart CI, comprehensive multi-model test matrix, cross-platform PR testing (Linux/Mac/Windows), Coverity static analysis, strong security hygiene (Bandit, Trivy, dependency review)
+- **Critical Gaps**: No code coverage tracking, no CodeQL/SAST on PRs, no container image testing, no agent rules
+- **Agent Rules Status**: Missing
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 7.5/10 | Strong C++ GTest suite + extensive Python pytest; ~87 test files for ~404 source files |
-| Integration/E2E | 8.0/10 | Comprehensive E2E coverage across 8+ GenAI domains with Smart CI |
-| Build Integration | 7.0/10 | Multi-platform CMake builds with wheel generation; no Konflux simulation |
-| Image Testing | 3.0/10 | No Dockerfiles; relies on external pre-built Azure container images |
-| Coverage Tracking | 2.0/10 | No coverage generation, no codecov, no thresholds |
-| CI/CD Automation | 8.5/10 | 11 workflows, Smart CI, sccache, concurrency control, Dependabot |
-| Agent Rules | 0.0/10 | No AI agent guidance whatsoever |
+| Unit Tests | 7.5/10 | 92 test files across Python/C++/JS with pytest, Google Test, Jest |
+| Integration/E2E | 8.5/10 | Extensive pipeline tests covering 30+ model architectures |
+| Build Integration | 7.0/10 | Multi-platform CMake builds with Smart CI, sccache; no container builds |
+| Image Testing | 2.0/10 | No Dockerfiles, no container image pipeline |
+| Coverage Tracking | 1.0/10 | No coverage measurement or enforcement |
+| CI/CD Automation | 9.0/10 | Excellent: Smart CI, concurrency, caching, cross-platform, auto-rerun |
+| Agent Rules | 1.0/10 | No CLAUDE.md, no .claude/ directory |
 
 ## Critical Gaps
 
 ### 1. No Code Coverage Tracking or Enforcement
-- **Impact**: Cannot measure test completeness; regressions go undetected
+- **Impact**: Cannot measure test effectiveness, cannot prevent coverage regression, untested code paths are unknown
 - **Severity**: HIGH
 - **Effort**: 4-8 hours
-- **Details**: Neither Python (pytest-cov) nor C++ (gcov/llvm-cov) coverage is generated. No codecov.yml, .coveragerc, or coverage CI steps exist. PRs merge with no coverage visibility.
+- **Details**: Despite having 92 test files and 33K lines of test code, there is no coverage measurement (gcov, coverage.py, c8) or reporting (Codecov, Coveralls). This means the team cannot quantify how much of the 106K LOC C++ codebase is actually tested.
 
-### 2. No Container Image Testing
-- **Impact**: No reproducible build environment available to contributors; runtime validation depends on private Azure-hosted images
+### 2. No CodeQL or SAST Integration on PRs
+- **Impact**: C++ security vulnerabilities and code quality issues not caught by automated static analysis on PRs
 - **Severity**: HIGH
-- **Effort**: 8-16 hours
-- **Details**: Zero Dockerfiles or Containerfiles exist in the repository. All CI jobs use pre-built images from `openvinogithubactions.azurecr.io` which are not publicly accessible. No image build, scan, or runtime validation occurs.
-
-### 3. No AI Agent Rules
-- **Impact**: AI-assisted development produces inconsistent tests; no project-specific conventions for automated agents
-- **Severity**: MEDIUM
-- **Effort**: 4-6 hours
-- **Details**: No CLAUDE.md, AGENTS.md, or .claude/ directory. No rules for unit test patterns, E2E test conventions, or testing framework usage.
-
-### 4. Coverity Not Running on Every PR
-- **Impact**: Static analysis findings are delayed; security issues may be merged before detection
-- **Severity**: MEDIUM
 - **Effort**: 2-4 hours
-- **Details**: Coverity workflow runs on `schedule` (daily) and `workflow_dispatch`, only processing PR changes to the workflow file itself. Adding CodeQL would provide free, per-PR SAST.
+- **Details**: While Coverity runs daily (not on PRs) and Bandit covers Python, there is no CodeQL or equivalent SAST tool analyzing the primary C++ codebase on every PR. For a library handling model data parsing (GGUF, tokenizers), this is a significant gap.
+
+### 3. No Container Image Testing Pipeline
+- **Impact**: No Dockerfiles exist in the repo; downstream consumers building container images get no upstream validation
+- **Severity**: MEDIUM
+- **Effort**: 8-16 hours
+- **Details**: The repository has no Dockerfiles, Containerfiles, or container build/test workflows. For a library increasingly used in containerized ML inference deployments, providing reference container images with runtime validation would be valuable.
+
+### 4. No Agent Rules for AI-Assisted Test Creation
+- **Impact**: AI-generated tests lack project-specific patterns, leading to inconsistent test quality
+- **Severity**: LOW
+- **Effort**: 4-6 hours
+- **Details**: No CLAUDE.md, AGENTS.md, or .claude/ directory exists. Test patterns (pytest markers, conftest usage, model caching strategies) are implicit rather than documented for AI agents.
 
 ## Quick Wins
 
-### 1. Add Codecov Integration (4-6 hours)
-- **Impact**: Immediate coverage visibility and PR delta reporting
-- **Implementation**:
-  - Add `pytest-cov` to Python test runs: `python -m pytest --cov=openvino_genai --cov-report=xml`
-  - Add `gcov` flags to CMake C++ builds: `-DCMAKE_CXX_FLAGS="--coverage"`
-  - Add codecov upload step after test jobs
-  - Create `.codecov.yml` with minimum coverage thresholds
+### 1. Add CodeQL Analysis Workflow (2-3 hours)
+- **Impact**: Automated security vulnerability detection for C++ and Python on every PR
+- **Implementation**: Add `.github/workflows/codeql.yml` with C++ and Python language analysis
 
-### 2. Add CodeQL Workflow (2-3 hours)
-- **Impact**: Free automated SAST on every PR for C++ and Python
-- **Implementation**: Add `.github/workflows/codeql.yml` targeting C++ and Python languages
+### 2. Add Coverage Collection and Codecov Upload (4-6 hours)
+- **Impact**: PR-level coverage reporting, coverage trend tracking
+- **Implementation**: Add `--coverage` flags to CMake builds, configure coverage.py for Python tests, add Codecov GitHub Action
 
-### 3. Create CLAUDE.md and Agent Rules (2-3 hours)
-- **Impact**: Guide AI agents to produce consistent, high-quality tests
-- **Implementation**: Create CLAUDE.md with project conventions, `.claude/rules/` with test creation rules for each test type (unit, integration, E2E, sample tests)
+### 3. Add Gitleaks Secret Detection (1 hour)
+- **Impact**: Prevent accidental credential/token leaks in commits
+- **Implementation**: Add `gitleaks` to `.pre-commit-config.yaml`
 
-### 4. Add Public Dockerfile (4-6 hours)
-- **Impact**: Enable local reproducible builds without access to private Azure registry
-- **Implementation**: Create a multi-stage Dockerfile that builds openvino.genai from source with all dependencies
+### 4. Create CLAUDE.md Test Guidelines (2-3 hours)
+- **Impact**: Enable consistent AI-generated test patterns
+- **Implementation**: Document pytest marker conventions, conftest patterns, model caching strategy
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows Inventory** (11 total):
+**Strengths (Score: 9.0/10)**:
+- **Smart CI**: Uses `openvinotoolkit/openvino/.github/actions/smart-ci` to detect affected components and skip irrelevant test jobs. This is a sophisticated component-based CI optimization that many projects lack.
+- **Cross-Platform Testing**: Full PR testing on Linux (Ubuntu 22.04), macOS 14, Windows (VS 2022), and Manylinux 2_28.
+- **Build Caching**: Excellent use of `sccache` (Linux) and `ccache` (Mac/Windows) with Azure blob storage backend for cross-run caching.
+- **Concurrency Control**: All workflows have `cancel-in-progress: true` concurrency groups.
+- **Automated Workflow Rerunner**: A dedicated `workflow_rerunner.yml` automatically reruns failed workflows with known transient errors, reducing CI flakiness.
+- **CI Doctor**: GitHub Copilot-powered CI failure analysis (`ci-doctor.lock.yml`) for automated root cause analysis.
+- **Multi-Python Testing**: Builds and tests across Python 3.10, 3.11, 3.12, and 3.13.
+- **Dependabot**: Comprehensive dependency update automation for GitHub Actions, npm, and pip.
 
+**Workflows Inventory**:
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `linux.yml` (1038 lines) | PR, merge_group, push | Full Linux build + test matrix |
-| `windows.yml` (1019 lines) | PR, merge_group, push | Full Windows build + test matrix |
-| `mac.yml` (775 lines) | PR, merge_group, push | Full macOS build + test matrix |
-| `manylinux_2_28.yml` (678 lines) | PR, merge_group, push | Manylinux wheel builds + tests |
-| `sdl.yml` (72 lines) | PR, push | Security: flake8, Bandit, Trivy, dependency review |
-| `lint.yml` (41 lines) | PR, push | Pre-commit linting on changed files |
-| `coverity.yml` (187 lines) | schedule (daily), dispatch | Coverity static analysis |
-| `cleanup_caches.yml` | schedule (weekdays), dispatch | HuggingFace cache cleanup |
-| `deploy_gh_pages.yml` | push to master | Documentation deployment |
-| `labeler.yml` | pull_request_target | Auto-labeling PRs |
-| `assign_issue.yml` | issue_comment | Issue assignment via `.take` |
-
-**Strengths**:
-- **Smart CI**: Uses `openvinotoolkit/openvino/.github/actions/smart-ci` to detect affected components and skip irrelevant test suites — excellent for a large repo
-- **Concurrency Control**: All major workflows use `concurrency` with `cancel-in-progress: true`
-- **Build Caching**: sccache for Linux, ccache for macOS/Windows with proper cache size limits (30GB sccache, 500Mi ccache)
-- **Multi-Python Support**: Builds wheels for Python 3.10, 3.11, 3.12, 3.13
-- **OSSF Scorecard Compliance**: All workflows use `permissions: read-all` with minimal escalation
-- **Pinned Actions**: Most actions use commit SHAs rather than mutable tags
-
-**Weaknesses**:
-- No code coverage generation in any test step
-- No merge queue enforcement beyond `merge_group` trigger
-- Coverity runs only on schedule, not on PRs
+| `linux.yml` | PR, push, merge_group | Full Linux build + ~30 test matrix jobs |
+| `mac.yml` | PR, push, merge_group | macOS build + tests |
+| `windows.yml` | PR, push, merge_group | Windows build + tests |
+| `manylinux_2_28.yml` | PR, push, merge_group | Portable Linux builds |
+| `lint.yml` | PR, push | Pre-commit hooks on changed files |
+| `sdl.yml` | PR, push | Security: flake8, Bandit, Trivy, dependency review |
+| `coverity.yml` | Daily schedule | Coverity static analysis |
+| `workflow_rerunner.yml` | On workflow failure | Auto-rerun known transient failures |
+| `ci-doctor.lock.yml` | On workflow failure | AI-powered failure analysis |
+| `cleanup_caches.yml` | Weekday schedule | HuggingFace cache cleanup |
+| `deploy_gh_pages.yml` | Push to master | Documentation deployment |
+| `stale.yml` | Weekly | Stale PR management |
 
 ### Test Coverage
 
-**Python Tests** (74 test files):
-- **Framework**: pytest with pytest markers (real_models, nightly, samples, llm, whisper, vlm, agent, rag, speech_generation, video_generation)
-- **Default Scope**: `addopts = -m "not real_models and not nightly"` — excludes heavy tests by default
-- **Test Categories**:
-  - LLM pipeline tests (static, dynamic)
-  - VLM pipeline tests (multiple models including MiniCPM-o-2_6)
-  - Whisper pipeline tests (static, dynamic)
-  - Image generation tests
-  - Video generation tests
-  - Continuous batching tests (including EAGLE3 speculative decoding)
-  - Structured output tests
-  - Tokenizer tests
-  - RAG tests
-  - KV cache eviction tests (split into 2 parts for parallelism)
-  - GGUF reader tests
-  - Sampling tests
-  - Text streamer tests
-  - Generation config tests
-- **Sample Tests** (31 files): Test C++, Python, and JS samples end-to-end by running compiled binaries
-- **Who-What-Benchmark Tests** (5 files): CLI tests for the benchmark tool
+**Strengths (Score: 7.5/10 Unit, 8.5/10 Integration/E2E)**:
+- **92 test files** across three languages:
+  - 69 Python test files (21K LOC) using pytest
+  - 7 C++ test files (12K LOC) using Google Test
+  - 16 JavaScript test files using Jest
+- **Comprehensive Model Coverage**: Tests cover 30+ model architectures including:
+  - LLM pipelines (Llama, Qwen, Gemma, etc.)
+  - VLM pipelines (MiniCPM, Qwen-VL, Gemma4, etc.)
+  - ASR (Whisper, Qwen3-ASR)
+  - TTS (Kokoro)
+  - Image generation (Stable Diffusion, FLUX)
+  - Video generation
+  - RAG components
+- **Multi-Version Transformer Testing**: Dedicated test jobs for different `transformers` library versions (4.48, 4.51, 4.55, 4.57, 5.2, 5.5, 5.8, 5.10)
+- **Test Markers**: Well-organized pytest markers for categorizing tests (llm, vlm, whisper, nightly, real_models, etc.)
+- **Smart Test Filtering**: Tests only run when their associated component is changed (via Smart CI)
+- **Sample Tests**: Dedicated sample tests validating C++, Python, and JavaScript sample code execution
 
-**C++ Tests** (18 test files):
-- **Framework**: Google Test (GTest)
-- **Components Tested**: block_allocator, block_hash_store, block_manager, cache_eviction, cache_manager, helper, kvcrush, logger, logit_filtering, parser, sampler, scheduler, sparse_attention, speculative_decoding, add_second_input_pass, cdpruner_dpp, json_container
-- **Executed via**: `tests_continuous_batching` binary in CI
+**Gaps**:
+- No coverage measurement (gcov, coverage.py)
+- No coverage reporting (Codecov, Coveralls)
+- No coverage thresholds or enforcement
+- No contract tests between C++/Python bindings
+- No fuzz testing for parser/tokenizer components
 
-**JavaScript Tests** (9 test files):
-- **Framework**: Node.js test runner (based on file naming `*.test.js`)
-- **Components Tested**: bindings, chatHistory, module, parsers, structuredOutput, textEmbeddingsPipeline, textRerankPipeline, tokenizer, vlmPipeline
-- **Lint**: npm run lint in CI
+### Code Quality
 
-**Test-to-Code Ratio**: ~87 test files / ~404 source files = **0.22** (adequate for a C++ library with Python/JS bindings)
+**Strengths**:
+- **Pre-commit Hooks**: Comprehensive `.pre-commit-config.yaml` with:
+  - Trailing whitespace, end-of-file fixer, merge conflict detection
+  - Private key detection
+  - YAML, JSON, TOML validation
+  - Large file prevention (1MB limit)
+  - Python formatting with `darker` + `ruff`
+- **C++ Formatting**: `.clang-format` configuration based on Google style
+- **Python Formatting**: `ruff` configured in `pyproject.toml` (line-length=120)
+- **Python Linting**: `flake8` for SDL checks on Python tools
+- **Bandit Security Scanning**: Comprehensive bandit configuration with IPAS-required security checks
 
-### Code Quality Tools
-
-| Tool | Status | Configuration |
-|------|--------|---------------|
-| **Pre-commit** | Active | `.pre-commit-config.yaml` — trailing-whitespace, end-of-file-fixer, merge conflict check, private key detection, large file check, YAML/TOML validation, Python AST check |
-| **Ruff** (Python formatter) | Active | Via `darker` pre-commit hook with ruff formatting; configured in `pyproject.toml` (line-length=120, target py310) |
-| **Clang-format** (C++) | Active | `.clang-format` present in root |
-| **Flake8** (Python linter) | Active | Runs in SDL workflow for WWB and LLM bench tools |
-| **Bandit** (Python SAST) | Active | Comprehensive config in `bandit.yml` with IPAS-required checkers |
-| **ESLint** (JS) | Active | `npm run lint` in Node.js test job |
-| **Coverity** (C++ SAST) | Partial | Daily schedule + manual dispatch; not per-PR |
-| **CodeQL** | Missing | Not configured |
-| **golangci-lint** | N/A | No Go code |
+**Gaps**:
+- No `clang-tidy` for C++ static analysis
+- No ESLint configuration visible for JavaScript (though `npm run lint` exists in JS test workflow)
+- No `mypy` or Python type checking
 
 ### Container Images
 
-- **Status**: No Dockerfiles/Containerfiles in the repository
-- **CI Images**: All CI jobs use pre-built images from `openvinogithubactions.azurecr.io`:
-  - `ov_build/ubuntu_22_04_x64:{docker_tag}` for builds
-  - `ov_test/ubuntu_22_04_x64:{docker_tag}` for tests
-  - `library/python:3.12-slim` for artifact packaging
-- **Docker tag**: Pulled from the main OpenVINO repo (`openvino/.github/dockerfiles/docker_tag`)
-- **No image scanning of built artifacts**: Trivy scans the filesystem, not built images
-- **No multi-arch image builds**: Only x86_64 Linux containers; macOS/Windows use bare runners
+**Score: 2.0/10**
+- No Dockerfiles or Containerfiles in the repository
+- No container image build workflows
+- No image scanning or SBOM generation
+- This is understandable for a library (vs. an application), but reference container images would benefit downstream users
 
 ### Security Practices
 
-| Practice | Status | Details |
-|----------|--------|---------|
-| **Trivy (filesystem scan)** | Active | Runs on every PR in `sdl.yml` |
-| **Bandit (Python SAST)** | Active | Comprehensive IPAS-required checkers |
-| **Coverity (C++ SAST)** | Partial | Daily schedule only, not per-PR |
-| **CodeQL** | Missing | Not configured |
-| **Dependency Review** | Active | Runs on PRs with license allowlist and vulnerability check |
-| **Dependabot** | Active | Daily updates for GitHub Actions, npm, and pip |
-| **Secret Detection** | Active | `detect-private-key` in pre-commit hooks |
-| **OSSF Permissions** | Active | `permissions: read-all` on all workflows |
-| **Action Pinning** | Strong | Most actions pinned to commit SHAs |
-| **SBOM Generation** | Missing | No SBOM generation |
-| **Image Signing** | Missing | N/A (no images built) |
+**Strengths**:
+- **Trivy Scanning**: Filesystem vulnerability scanning on every PR via `sdl.yml`
+- **Bandit**: Python security analysis with comprehensive IPAS-required checker configuration
+- **Dependency Review**: PR-level dependency review with license checking (`fail-on-severity: low`)
+- **Coverity**: Daily static analysis scans (commercial-grade SAST for C++)
+- **Dependabot**: Automated dependency updates for GitHub Actions, npm, and pip
+- **Private Key Detection**: Pre-commit hook for `detect-private-key`
+- **OSSF Scorecard Compliance**: Follows `permissions: read-all` pattern for all workflows
+- **SECURITY.md**: Security policy documented
+
+**Gaps**:
+- No CodeQL integration (the most common GitHub-native SAST tool)
+- Coverity runs daily/on-schedule, not on every PR
+- No Gitleaks or TruffleHog for comprehensive secret scanning
+- No SBOM generation for releases
+- No image signing or attestation
 
 ### Agent Rules (Agentic Flow Quality)
 
+**Score: 1.0/10**
 - **Status**: Missing
-- **CLAUDE.md**: Not present
-- **AGENTS.md**: Not present
-- **.claude/ directory**: Not present
-- **Coverage**: No test types have rules
-- **Quality**: N/A
-- **Gaps**: Complete absence of AI agent guidance
-- **Recommendation**: Generate comprehensive rules with `/test-rules-generator` covering:
-  - C++ GTest unit test patterns
-  - Python pytest conventions with markers
-  - JS test patterns
-  - Sample test creation guidelines
-  - Integration test patterns for GenAI pipelines
+- **Coverage**: No agent rules exist
+- **Details**: No `CLAUDE.md`, `AGENTS.md`, or `.claude/` directory. The repo has a `copilot-setup-steps.yml` for GitHub Copilot integration, but no test creation guidance for AI agents.
+- **Recommendation**: Generate test rules with `/test-rules-generator` covering:
+  - C++ Google Test patterns
+  - Python pytest patterns (markers, conftest, model caching)
+  - JavaScript Jest patterns for bindings tests
+  - Model download and caching strategies
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Implement code coverage tracking** — Add pytest-cov for Python and gcov/llvm-cov for C++ to generate coverage reports. Integrate with codecov for PR-level reporting and enforce minimum thresholds (e.g., 60% for new code).
+1. **Add code coverage measurement and reporting**
+   - Add `gcov`/`llvm-cov` for C++ coverage collection
+   - Add `coverage.py` for Python test coverage
+   - Integrate Codecov with PR comments and coverage gates
+   - Effort: 4-8 hours
 
-2. **Add CodeQL workflow** — Configure `.github/workflows/codeql.yml` for C++ and Python to get free, per-PR SAST analysis. This complements the daily Coverity scans with immediate feedback.
+2. **Add CodeQL workflow for C++ and Python SAST**
+   - Create `.github/workflows/codeql.yml` for automated security analysis on PRs
+   - Focus on C++ as the primary language with 106K LOC
+   - Effort: 2-4 hours
 
 ### Priority 1 (High Value)
 
-3. **Create AI agent rules** — Add CLAUDE.md and `.claude/rules/` with comprehensive test creation rules for all three languages (C++, Python, JS). Include framework-specific patterns, marker conventions, and fixture usage.
+3. **Add Gitleaks secret scanning**
+   - Add to `.pre-commit-config.yaml` and as a CI workflow
+   - Effort: 1-2 hours
 
-4. **Add public Dockerfiles** — Create Dockerfiles for build and test environments so contributors can reproduce CI locally without access to the private Azure container registry.
+4. **Create agent rules for test creation**
+   - Add `CLAUDE.md` with testing guidelines
+   - Create `.claude/rules/` with patterns for C++, Python, and JS tests
+   - Document model caching strategies and pytest marker conventions
+   - Effort: 4-6 hours
 
-5. **Enable C++ coverage with gcov** — Add `CMAKE_CXX_FLAGS="--coverage"` option and post-process with lcov/gcov to generate C++ coverage reports alongside Python coverage.
+5. **Add SBOM generation for release artifacts**
+   - Generate CycloneDX or SPDX SBOM for Python wheels and npm packages
+   - Effort: 2-4 hours
 
 ### Priority 2 (Nice-to-Have)
 
-6. **Add performance regression testing** — Create benchmarks for inference latency using the existing `llm_bench` tool and track regressions over time.
+6. **Add reference Dockerfile with runtime validation**
+   - Create reference container images for GenAI inference
+   - Add smoke tests for container startup
+   - Effort: 8-16 hours
 
-7. **Add contract tests for API boundaries** — Test Python-C++ binding contracts and JS-C++ binding contracts to catch API drift between language interfaces.
+7. **Add performance regression benchmarking**
+   - Track inference latency and throughput across PRs
+   - Alert on significant regressions
+   - Effort: 8-16 hours
 
-8. **Add fuzz testing** — The parser, tokenizer, and GGUF reader components would benefit from fuzz testing (e.g., libFuzzer for C++, Hypothesis for Python).
+8. **Add fuzz testing for parsers**
+   - GGUF reader, tokenizer, and model config parsers
+   - Use libFuzzer or AFL for C++ components
+   - Effort: 8-16 hours
 
-9. **Add SBOM generation** — Generate Software Bill of Materials for releases to improve supply chain security visibility.
+9. **Add clang-tidy to CI**
+   - Enable C++ static analysis checks beyond clang-format
+   - Effort: 4-6 hours
 
 ## Comparison to Gold Standards
 
 | Dimension | openvino.genai | odh-dashboard | notebooks | kserve |
 |-----------|---------------|---------------|-----------|--------|
 | Unit Tests | 7.5 | 9.0 | 7.0 | 9.0 |
-| Integration/E2E | 8.0 | 9.0 | 8.0 | 9.0 |
-| Build Integration | 7.0 | 8.0 | 7.0 | 8.0 |
-| Image Testing | 3.0 | 7.0 | 9.0 | 7.0 |
-| Coverage Tracking | 2.0 | 9.0 | 5.0 | 9.0 |
-| CI/CD Automation | 8.5 | 9.0 | 8.0 | 9.0 |
-| Agent Rules | 0.0 | 8.0 | 3.0 | 2.0 |
-| **Overall** | **7.2** | **8.7** | **7.2** | **8.1** |
+| Integration/E2E | 8.5 | 9.0 | 8.0 | 9.5 |
+| Build Integration | 7.0 | 8.5 | 8.0 | 8.0 |
+| Image Testing | 2.0 | 8.0 | 9.5 | 7.0 |
+| Coverage Tracking | 1.0 | 9.0 | 5.0 | 9.0 |
+| CI/CD Automation | 9.0 | 9.0 | 8.0 | 9.0 |
+| Agent Rules | 1.0 | 9.0 | 3.0 | 2.0 |
 
-**Key Takeaways vs Gold Standards**:
-- **Coverage tracking is the biggest gap** — odh-dashboard and kserve both enforce coverage thresholds; openvino.genai has zero coverage visibility
-- **CI/CD is near-gold-standard** — Smart CI, sccache, multi-platform, OSSF compliance are all excellent
-- **Test breadth is strong** — The diversity of test suites (LLM, VLM, Whisper, Image Gen, Video Gen, RAG) exceeds most comparable projects
-- **Agent rules are completely absent** — This is increasingly important as AI-assisted development grows
+**Key Takeaways**:
+- CI/CD automation is on par with gold standards due to Smart CI, cross-platform testing, and automated rerunner
+- Test breadth is excellent (30+ model architectures, multi-version transformer testing)
+- The biggest gap vs. gold standards is **coverage tracking** - the project has extensive tests but no way to measure their effectiveness
+- Image testing is low because this is a library, not an application; however, reference images would add value
+- Agent rules are a universal gap across most repositories
 
 ## File Paths Reference
 
-### CI/CD Configuration
-- `.github/workflows/linux.yml` — Main Linux CI (1038 lines)
-- `.github/workflows/windows.yml` — Windows CI (1019 lines)
-- `.github/workflows/mac.yml` — macOS CI (775 lines)
-- `.github/workflows/manylinux_2_28.yml` — Manylinux CI (678 lines)
-- `.github/workflows/sdl.yml` — Security/SDL checks
-- `.github/workflows/lint.yml` — Pre-commit linting
-- `.github/workflows/coverity.yml` — Coverity SAST (daily)
-- `.github/dependency_review.yml` — Dependency license/vuln config
-- `.github/dependabot.yml` — Automated dependency updates
-- `.github/components.yml` — Smart CI component definitions
-- `Jenkinsfile` — Jenkins integration (delegates to shared library)
+### CI/CD
+- `.github/workflows/linux.yml` - Primary Linux CI (build + 30+ test jobs)
+- `.github/workflows/mac.yml` - macOS CI
+- `.github/workflows/windows.yml` - Windows CI
+- `.github/workflows/manylinux_2_28.yml` - Portable Linux builds
+- `.github/workflows/lint.yml` - Pre-commit linting
+- `.github/workflows/sdl.yml` - Security testing (flake8, Bandit, Trivy, dependency review)
+- `.github/workflows/coverity.yml` - Daily Coverity static analysis
+- `.github/workflows/workflow_rerunner.yml` - Auto-rerun transient failures
+- `.github/workflows/ci-doctor.lock.yml` - AI-powered CI failure analysis
+- `.github/components.yml` - Smart CI component definitions
+- `.github/dependabot.yml` - Dependency update automation
 
-### Test Infrastructure
-- `tests/python_tests/` — Python test suite (74 files)
-- `tests/python_tests/pytest.ini` — Pytest configuration with markers
-- `tests/python_tests/requirements.txt` — Test dependencies
-- `tests/python_tests/samples/` — Sample E2E tests (31 files)
-- `tests/cpp/` — C++ GTest suite (18 files)
-- `src/js/tests/` — JavaScript test suite (9 files)
-- `tools/who_what_benchmark/tests/` — WWB CLI tests (5 files)
+### Testing
+- `tests/python_tests/` - Python test suite (69 files, 21K LOC)
+- `tests/cpp/` - C++ test suite (7 files, 12K LOC)
+- `src/js/tests/` - JavaScript binding tests (16 files)
+- `tests/python_tests/pytest.ini` - pytest configuration with markers
+- `tests/python_tests/conftest.py` - Test fixtures
+- `tools/who_what_benchmark/tests/` - WWB tool tests
 
 ### Code Quality
-- `.pre-commit-config.yaml` — Pre-commit hooks (trailing-whitespace, ruff, private key detection)
-- `pyproject.toml` — Ruff config, build config
-- `.clang-format` — C++ formatting rules
-- `bandit.yml` — Python security analysis configuration
+- `.pre-commit-config.yaml` - Pre-commit hooks (whitespace, secrets, formatting)
+- `.clang-format` - C++ formatting (Google-based)
+- `pyproject.toml` - Ruff Python formatter config
+- `bandit.yml` - Python security scanning config
 
-### Source Code
-- `src/cpp/` — C++ core library (173 .cpp/.c files)
-- `src/python/` — Python bindings (1 file)
-- `src/js/` — JavaScript/Node.js bindings (24 .js/.ts files)
-- `src/c/` — C API bindings
-- `samples/` — Usage samples (C++, Python, JS)
-- `tools/` — CLI tools (llm_bench, who_what_benchmark, continuous_batching)
+### Security
+- `.github/dependency_review.yml` - License and vulnerability review config
+- `.github/dependabot.yml` - Automated dependency updates
+- `SECURITY.md` - Security policy
+- `bandit.yml` - Bandit security scanner config
+
+### Build
+- `CMakeLists.txt` - Top-level CMake build
+- `pyproject.toml` - Python package build config (py-build-cmake)
+- `.github/actions/build_app/action.yml` - Reusable build action
+- `.github/actions/install_openvino/action.yml` - OpenVINO installation action

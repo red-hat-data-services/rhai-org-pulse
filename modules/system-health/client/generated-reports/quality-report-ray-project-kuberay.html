@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:15 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 03:36 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">ray-project/kuberay</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="180.95558400000002"
+                                stroke-dashoffset="147.026412"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">6.8</div>
+                        <div class="score-value">7.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">305 unit test functions across 30 files using envtest+Ginkgo; no coverage enforcement</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Excellent test-to-code ratio (0.94:1 LOC) with Ginkgo/Gomega + envtest for controller tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Exceptional E2E suite with 63 test functions across 8 domains (RayCluster, RayJob, RayService, autoscaler, upgrade)</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Comprehensive E2E suites across all CRDs — RayCluster, RayJob, RayService, RayCronJob — with upgrade and autoscaler testing via Buildkite</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">PR builds Docker images and runs unit tests; Helm chart-testing with Kind; no Konflux simulation</div>
+                            <div class="scorecard-status">PR builds Docker images but no Konflux simulation or container runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.5/10</div>
-                            <div class="scorecard-status">Docker images built on PR but no runtime validation, no vulnerability scanning, no SBOM</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
+                            <div class="scorecard-status">Multi-arch builds (amd64/arm64), distroless base images, but no runtime validation or startup testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">coverprofile generated locally but no codecov/coveralls integration, no thresholds, no PR reporting</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">Coverprofile generated locally via Makefile but no CI coverage upload, no codecov, no enforcement</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Well-structured workflows with matrix strategy for Helm; missing concurrency on main workflow, no caching</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Well-organized GitHub Actions + Buildkite pipelines with Helm chart testing, concurrency control, and codegen verification</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory — zero AI agent guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory — no AI agent guidance for test creation</div>
                         </div>
                     </div>
                 </div>
@@ -411,40 +411,48 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No coverage tracking or enforcement</div>
-                            <p>Coverage regressions go undetected; no visibility into test quality trends</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No security scanning in CI (Trivy, CodeQL, or equivalent)</div>
-                            <p>Container vulnerabilities and code security issues not caught before merge</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No container image runtime validation</div>
-                            <p>Image startup failures and runtime issues not caught until deployment</p>
+                            <div class="item-description">No coverage tracking or enforcement in CI</div>
+                            <p>Coverage regressions go undetected — new code can reduce test coverage without any gate</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Dashboard (React/Next.js) has zero tests</div>
-                            <p>Frontend regressions impossible to detect; entire UI component untested</p>
+                            <div class="item-description">No container security scanning (Trivy/Snyk/CodeQL)</div>
+                            <p>Vulnerability detection relies entirely on manual review and upstream distroless updates</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No image runtime validation in CI</div>
+                            <p>Built images never tested for startup/health — deployment failures only discovered in production</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">6-8 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">Dashboard has zero test files</div>
+                            <p>React/Next.js frontend (59 TS files) has no unit, integration, or component tests</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">E2E tests not automated in PR workflow</div>
-                            <p>Integration regressions only caught after merge or by manual dispatch</p>
+                            <div class="item-description">No SBOM generation or image signing</div>
+                            <p>Supply chain security gaps — provenance explicitly disabled in builds</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">E2E tests run only on Buildkite, not on PR workflows</div>
+                            <p>Contributors cannot verify E2E test impact without Buildkite access; regressions caught post-merge</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">8-12 hours</span>
@@ -464,8 +472,8 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Codecov integration to PR workflow</div>
-                            <p>Immediate visibility into coverage trends and PR-level regression detection</p>
+                            <div class="item-description">Add codecov integration with coverage upload in test-job.yaml</div>
+                            <p>Immediate visibility into coverage trends, PR-level coverage diffs</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -480,27 +488,27 @@
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add concurrency control to main CI workflow</div>
-                            <p>Avoid redundant CI runs on rapid pushes, reduce GitHub Actions cost</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add CodeQL/gosec workflow for SAST</div>
-                            <p>Automated detection of Go security anti-patterns</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create basic CLAUDE.md with testing standards</div>
-                            <p>Guide AI-assisted development toward project conventions</p>
+                            <div class="item-description">Enable provenance and add cosign signing to image-release workflow</div>
+                            <p>Supply chain attestation for all released images</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create basic .claude/rules/ for test patterns</div>
+                            <p>AI-assisted contributions follow established Ginkgo/Gomega patterns</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add basic Jest setup for dashboard</div>
+                            <p>Foundation for frontend testing of 59 TS/TSX files</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +525,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Integrate Codecov with coverage thresholds (e.g., 60% floor, no regression allowed)</li><li>Add Trivy or Grype container scanning to the PR workflow for all built images</li><li>Add CodeQL or gosec SAST scanning as a PR-required check</li></ul>
+                            <ul><li>Add codecov integration with minimum coverage thresholds (e.g., 60% overall, no decrease on PRs)</li><li>Add Trivy or Snyk container scanning to PR and release workflows</li><li>Add image startup validation (container health checks) to CI pipeline</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Automate E2E test execution on PRs (at least a subset via Kind)</li><li>Add frontend testing infrastructure for the Next.js dashboard (Jest + React Testing Library)</li><li>Add container runtime validation (startup probe, health check) for operator and apiserver images</li><li>Create comprehensive CLAUDE.md and .claude/rules/ for test automation guidance</li></ul>
+                            <ul><li>Set up Jest/React Testing Library for dashboard component testing</li><li>Enable provenance and cosign signing for released images</li><li>Create comprehensive .claude/rules/ for Ginkgo/Gomega test patterns and E2E test authoring</li><li>Add a subset of E2E tests to GitHub Actions PR workflow for contributor feedback</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SBOM generation (Syft) and image signing (Cosign) to release workflow</li><li>Add performance regression testing for Ray cluster operations</li><li>Add contract tests between apiserver, operator, and dashboard APIs</li><li>Add accessibility testing for dashboard</li></ul>
+                            <ul><li>Add SBOM generation (Syft or Docker buildx SBOM) to release pipeline</li><li>Add performance/benchmark regression tests (benchmark/ dir exists but isn&#x27;t CI-integrated)</li><li>Add Python client library tests to CI (currently untested in any workflow)</li></ul>
                         </div>
                     </div>
                 </div>

@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:37 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:55 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/jupyterhub-singleuser-profiles</h2>
         </header>
 
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">Only 2 trivial UI snapshot tests using deprecated Enzyme; zero Python tests for 1,363-line core library</div>
+                            <div class="scorecard-status">2 trivial snapshot tests in React UI; zero Python backend tests for 1,498 lines of code</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E tests exist anywhere in the repository</div>
+                            <div class="scorecard-status">No integration or E2E tests exist</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No PR-time build validation; only .aicoe-ci.yaml for PyPI release with empty check list</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No CI workflows, no PR build validation, no Konflux integration</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No Dockerfile/Containerfile in repository; no image build or runtime validation</div>
+                            <div class="scorecard-status">No Dockerfiles or container image testing present</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">Jest config has --collectCoverage flag but no enforcement, no codecov, no thresholds</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">Coverage collection disabled; all thresholds set to 0%</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No GitHub Actions workflows, no Makefile, no CI pipeline; only AICoE CI for PyPI publish</div>
+                            <div class="scorecard-status">Only AICoE release config; no test automation in CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance</div>
+                            <div class="scorecard-status">No .claude directory, no CLAUDE.md, no agent rules</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No CI/CD pipeline — zero automated checks on PRs</div>
-                            <p>Code merges without any automated validation; bugs, regressions, and security issues ship unchecked</p>
+                            <div class="item-description">Zero Python backend tests</div>
+                            <p>1,498 lines of Kubernetes/OpenShift interaction code with no test coverage — profile merging, GPU configuration, pod mutation, and API endpoints are all untested</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">40-60 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No CI/CD pipeline</div>
+                            <p>No automated testing, linting, or build validation on any PR or push — regressions go completely undetected</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No security scanning</div>
+                            <p>Uses yaml.load() without SafeLoader (deserialization vulnerability); no dependency scanning, SAST, or secret detection</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No Python unit tests for core library (1,363 LOC)</div>
-                            <p>Core JupyterHub profile logic, OpenShift API interactions, and user management are entirely untested</p>
+                            <div class="item-description">Repository appears unmaintained</div>
+                            <p>Last commit August 2022; no activity in nearly 4 years — likely superseded by odh-dashboard spawner</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">16-24 hours</span>
+                                <span class="meta-tag effort-tag">N/A</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">No integration or E2E tests</div>
-                            <p>OpenShift deployment flow, API endpoints, and UI-to-backend integration are never validated</p>
+                        <li class="item-card medium">
+                            <div class="item-description">No container image build or testing</div>
+                            <p>No Dockerfile, no image builds, no runtime validation of the packaged application</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">24-40 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No security scanning of any kind</div>
-                            <p>Dependency vulnerabilities (openshift, PyYAML, tornado, etc.) go undetected; no SAST, no secret detection</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">Repository appears abandoned (last commit Aug 2022)</div>
-                            <p>Dependencies are severely outdated; no active maintenance means known vulnerabilities remain unpatched</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">Ongoing</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">8-16 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,35 +464,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add GitHub Actions CI workflow with linting</div>
-                            <p>Establish baseline automated checks on PRs (Python linting with ruff, TypeScript lint, type-check)</p>
+                            <div class="item-description">Add PyYAML SafeLoader to fix deserialization vulnerability</div>
+                            <p>Eliminates arbitrary code execution risk via yaml.load()</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Dependabot or Renovate for dependency updates</div>
-                            <p>Surface outdated and vulnerable dependencies automatically</p>
+                            <div class="item-description">Add basic pytest suite for profile merging logic</div>
+                            <p>Covers the most critical business logic (merge_profiles, filter_by_username, GPU config)</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy or Snyk dependency scanning</div>
-                            <p>Detect known CVEs in Python and Node.js dependencies</p>
+                            <div class="item-description">Add GitHub Actions lint workflow</div>
+                            <p>Catches syntax errors and style issues on every PR</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Migrate UI tests from deprecated Enzyme to React Testing Library</div>
-                            <p>Fix broken test infrastructure; Enzyme has been unmaintained since 2018 and doesn&#x27;t support modern React</p>
+                            <div class="item-description">Enable Jest coverage collection</div>
+                            <p>Makes existing UI test coverage visible; change collectCoverage to true</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +509,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Evaluate whether this repository should be archived — last commit was August 2022 and it has no active CI</li><li>If still active: add GitHub Actions CI with Python linting (ruff), TypeScript lint/type-check, and basic test execution</li><li>Add Python unit tests for core modules (profiles.py, openshift.py, images.py, user.py) — these contain critical JupyterHub extension logic</li></ul>
+                            <ul><li>Evaluate whether this repository should be archived — no commits since August 2022 and likely superseded by odh-dashboard</li><li>Fix yaml.load() deserialization vulnerability in profiles.py (use yaml.safe_load())</li><li>Add unit tests for Python backend, especially profiles.py merge logic and API endpoints</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add integration tests for the Connexion-based REST API (api.py)</li><li>Add dependency vulnerability scanning (Trivy/Snyk) to catch CVEs in unmaintained dependencies</li><li>Replace deprecated Enzyme tests with React Testing Library and add meaningful UI component tests</li><li>Add pre-commit hooks for consistent code formatting and lint enforcement</li></ul>
+                            <ul><li>Create GitHub Actions CI pipeline with linting (ruff/flake8) and pytest</li><li>Add integration tests using mocked Kubernetes client for OpenShift interactions</li><li>Add Dockerfile and container image build process</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add Dockerfile and container image build/test pipeline</li><li>Create agent rules (.claude/rules/) for test patterns specific to this codebase</li><li>Add OpenShift integration tests to validate deployment manifests</li><li>Add API contract tests for the connexion/swagger-based API</li></ul>
+                            <ul><li>Add pre-commit hooks for Python and TypeScript linting</li><li>Replace deprecated Enzyme test library with React Testing Library</li><li>Add CodeQL or Semgrep SAST scanning</li><li>Create agent rules for test automation (.claude/rules/)</li></ul>
                         </div>
                     </div>
                 </div>

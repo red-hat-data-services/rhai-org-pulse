@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on May 28, 2026 at 09:48 PM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:38 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/vllm-tgis-adapter</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="214.88475599999998"
+                                stroke-dashoffset="203.57503199999996"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">6.2</div>
+                        <div class="score-value">6.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Good pytest suite covering core modules; decent test-to-code ratio</div>
+                            <div class="scorecard-status">Good pytest suite with 28 tests covering core modules, parameterized testing, async tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Live gRPC and HTTP server tests with multi-version vLLM matrix; no dedicated E2E suite</div>
+                            <div class="scorecard-status">Full gRPC/HTTP server integration tests with multi-version vLLM matrix</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">No PR-time container build validation; no Konflux simulation; image built externally in opendatahub-io/vllm</div>
+                            <div class="scorecard-status">No Dockerfile in repo, no PR-time image build validation, no Konflux simulation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No Dockerfile in repo; image built externally with no runtime validation in this repo</div>
+                            <div class="scorecard-status">No container image testing — image built externally in opendatahub-io/vllm repo</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Codecov integration with PR uploads; coverage config in pyproject.toml; no enforcement thresholds</div>
+                            <div class="scorecard-status">Codecov integration with branch coverage enabled, but no enforcement thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Well-structured nox-based CI with caching, concurrency, multi-version matrix; limited to one test workflow</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Well-organized workflows with concurrency control, matrix testing, caching, scheduled runs</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory present</div>
+                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules for test creation</div>
                         </div>
                     </div>
                 </div>
@@ -411,34 +411,42 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No container image build or test in this repository</div>
-                            <p>Image issues in opendatahub-io/vllm repo not caught here; adapter-level regressions in container context discovered late</p>
+                            <div class="item-description">No container image build or testing in this repository</div>
+                            <p>Image is built externally (opendatahub-io/vllm). No validation that adapter integrates correctly with the vLLM image before merge.</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">12-16 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No security scanning (SAST, dependency, container)</div>
-                            <p>Vulnerabilities in grpc/protobuf dependencies and adapter code not detected until downstream</p>
+                            <div class="item-description">No security scanning (SAST, dependency vulnerabilities, secrets)</div>
+                            <p>Known CVEs in grpcio/protobuf dependencies or leaked secrets could reach production undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No coverage enforcement thresholds</div>
-                            <p>Coverage can silently regress without blocking PRs</p>
+                            <div class="item-description">No codecov enforcement thresholds</div>
+                            <p>Coverage can silently decrease as new code is merged without adequate tests</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No agent rules for AI-assisted development</div>
-                            <p>AI agents lack context on test patterns, coding standards, and project-specific conventions</p>
+                        <li class="item-card high">
+                            <div class="item-description">No E2E tests against real GPU hardware</div>
+                            <p>All CI tests run on CPU-only vLLM builds; GPU-specific code paths (CUDA kernels, flash attention) are untested</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">40+ hours (requires GPU CI infrastructure)</span>
+                            </div>
+                        </li>
+                        <li class="item-card low">
+                            <div class="item-description">No agent rules for AI-assisted development</div>
+                            <p>AI-generated PRs lack project-specific test patterns, gRPC conventions, and quality standards</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-low">LOW</span>
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
@@ -456,35 +464,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add codecov.yml with coverage thresholds</div>
-                            <p>Prevent silent coverage regression on PRs</p>
+                            <div class="item-description">Add .codecov.yml with coverage thresholds</div>
+                            <p>Prevent coverage regressions on PRs with minimum patch and project targets</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Dependabot security alerts or CodeQL scanning</div>
-                            <p>Automated vulnerability detection for Python dependencies</p>
+                            <div class="item-description">Add Trivy/Snyk dependency scanning to PR workflow</div>
+                            <p>Catch known CVEs in grpcio, protobuf, and transitive dependencies before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add mypy to CI (already in dev dependencies)</div>
-                            <p>Type safety enforcement; mypy already configured in pyproject.toml but not run in CI</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1 hour</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create basic CLAUDE.md with project conventions</div>
-                            <p>Enable AI-assisted development with project-specific context</p>
+                            <div class="item-description">Add CodeQL or Semgrep SAST scanning</div>
+                            <p>Detect security anti-patterns in Python code (command injection in setup.py subprocess calls, etc.)</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create basic agent rules (.claude/rules/)</div>
+                            <p>Guide AI agents on pytest patterns, gRPC test conventions, and fixture usage</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add gitleaks secret detection pre-commit hook</div>
+                            <p>Prevent accidental commit of API keys or tokens</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add security scanning workflow (CodeQL or Semgrep for SAST, pip-audit for dependency scanning)</li><li>Add codecov.yml with minimum coverage thresholds (e.g., 70% project, 5% patch minimum)</li></ul>
+                            <ul><li>Add security scanning (Trivy for dependencies, CodeQL for SAST) to the PR workflow</li><li>Create .codecov.yml with project threshold (e.g., 70%) and patch threshold (e.g., 80%)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add container build smoke test to CI (build and startup check in test workflow)</li><li>Enable mypy in CI workflow (already configured, just needs nox session activation)</li><li>Create .claude/rules/ with unit test and integration test guidelines</li></ul>
+                            <ul><li>Add integration test that builds and validates the downstream vLLM container image with this adapter installed</li><li>Expand test coverage for untested modules: validation.py, logits_processors.py, structured_outputs.py, logs.py, scripts.py</li><li>Add gRPC proto backward-compatibility checks (buf breaking)</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add performance benchmarks for gRPC throughput and latency</li><li>Add contract tests for protobuf schema compatibility across vLLM versions</li><li>Add multi-architecture build testing</li></ul>
+                            <ul><li>Create agent rules for AI-assisted test generation (.claude/rules/)</li><li>Add GPU-based E2E test workflow (even if periodic/manual dispatch)</li><li>Add performance regression benchmarks for inference latency</li><li>Add mypy to CI (currently available via nox but not run in default CI)</li></ul>
                         </div>
                     </div>
                 </div>

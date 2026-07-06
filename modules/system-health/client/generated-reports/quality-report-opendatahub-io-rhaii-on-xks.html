@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:57 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:31 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/rhaii-on-xks</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="209.22989399999997"
+                                stroke-dashoffset="163.990998"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">6.3</div>
+                        <div class="score-value">7.1</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No unit tests — repo is infrastructure-only (Helm charts + shell scripts)</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">No unit tests — repo is infrastructure-as-code (Helm charts + shell scripts), no application code to unit-test</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Strong E2E with KinD cluster, mock vLLM, conformance suite, and preflight validation</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Excellent KinD-based E2E with mock vLLM, per-chart conformance tests, RHCL integration tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">PR-triggered helm lint/template/security checks for RHCL; E2E requires label gating</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
+                            <div class="scorecard-status">Helm lint + template validation on PR; no Konflux simulation; security checks verify image digests and registries</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Validation Containerfile with basic build; no vulnerability scanning or SBOM</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Mock vLLM image built and tested in E2E; validation Containerfile present; no Trivy/Snyk scanning</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No coverage tracking — no unit tests to measure</div>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">No coverage tooling — no codecov, no test-to-code ratio tracking</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">4 workflows covering lint, E2E, docs, and link-check; E2E is label-gated (not auto)</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">4 workflows (E2E mock, RHCL CI, link-check, docs); label-gated E2E; well-structured Makefile; shellcheck in lint target</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
+                            <div class="scorecard-status">No .claude/ directory, no CLAUDE.md, no AGENTS.md — zero AI agent guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No unit tests for shell scripts or Python validation code</div>
-                            <p>Regressions in conformance test logic or preflight checks go undetected</p>
+                            <div class="item-description">No container vulnerability scanning</div>
+                            <p>Security vulnerabilities in base images or dependencies go undetected until production</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container vulnerability scanning (Trivy/Snyk)</div>
-                            <p>Vulnerabilities in base images or dependencies shipped undetected</p>
+                            <div class="item-description">No SAST/CodeQL integration</div>
+                            <p>Static analysis gaps in Python validation scripts and shell scripts</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">E2E tests require manual label to trigger on PRs</div>
-                            <p>PRs can merge without E2E validation if maintainer forgets to label</p>
+                            <div class="item-description">No coverage tracking or enforcement</div>
+                            <p>Cannot measure test effectiveness or enforce minimum coverage thresholds</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">E2E tests are label-gated (manual trigger)</div>
+                            <p>E2E tests can be skipped on PRs — regressions may merge without validation</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No agent rules for AI-assisted development</div>
-                            <p>AI agents have no guidance on testing patterns, Helm chart conventions, or script standards</p>
+                        <li class="item-card low">
+                            <div class="item-description">No agent rules for test creation</div>
+                            <p>AI-assisted contributions lack guidance for test patterns and quality standards</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">3-5 hours</span>
+                                <span class="meta-tag severity-low">LOW</span>
+                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +464,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to RHCL CI workflow</div>
-                            <p>Detect vulnerabilities in rendered Helm images before merge</p>
+                            <div class="item-description">Add Trivy container scanning to RHCL CI workflow</div>
+                            <p>Catch CVEs in base images and dependencies before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add shellcheck to PR CI (currently local-only)</div>
-                            <p>Catch shell script bugs before merge — shellcheck is already in Makefile lint target</p>
+                            <div class="item-description">Add shellcheck to PR workflow</div>
+                            <p>Currently only in local make lint — adding to CI prevents shell script bugs</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add yamllint to PR CI</div>
-                            <p>Catch YAML formatting issues — yamllint already in Makefile lint target</p>
+                            <div class="item-description">Add yamllint to PR workflow</div>
+                            <p>Catch YAML formatting issues in Helm values files automatically</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create basic CLAUDE.md with testing and Helm chart conventions</div>
-                            <p>Guide AI agents on repo patterns, test creation, and chart structure</p>
+                            <div class="item-description">Pin all GitHub Actions by SHA in link-check and docs workflows</div>
+                            <p>link-check.yaml and docs.yml use @v5 tags instead of SHA pins — supply chain risk</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">30 minutes</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create basic CLAUDE.md with test contribution guidelines</div>
+                            <p>Guide AI-assisted PRs toward correct testing patterns</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add container vulnerability scanning (Trivy) to CI for rendered Helm chart images and the validation Containerfile</li><li>Promote shellcheck and yamllint from local-only lint target to a CI workflow that runs on all PRs</li></ul>
+                            <ul><li>Add container vulnerability scanning (Trivy) to CI — at minimum on the validation Containerfile and mock-vllm Dockerfile</li><li>Add CodeQL or Semgrep for SAST analysis on Python scripts and shell scripts</li><li>Pin all GitHub Action references by SHA (link-check.yaml and docs.yml currently use unpinned @v5 tags)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add unit tests for the Python preflight validation tool (llmd_xks_preflight.py) using pytest</li><li>Add unit tests for key shell script functions in the conformance test suite</li><li>Consider making E2E workflow auto-triggerable for trusted contributors (not just label-gated)</li><li>Create CLAUDE.md and .claude/rules/ for AI-assisted development guidance</li></ul>
+                            <ul><li>Promote shellcheck + yamllint from local-only make lint to a CI workflow that runs on PRs</li><li>Add pre-commit hooks (.pre-commit-config.yaml) for shellcheck, yamllint, and helm lint</li><li>Create comprehensive agent rules (.claude/rules/) for conformance test and chart test patterns</li><li>Add Gitleaks or TruffleHog for secret detection in CI</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SBOM generation for the validation container image</li><li>Add Helm chart unit tests using helm-unittest plugin</li><li>Consider adding pre-commit hooks (.pre-commit-config.yaml) for local development</li><li>Add a security scanning workflow (CodeQL or Semgrep) for Python code</li></ul>
+                            <ul><li>Add chart unit tests using helm-unittest for value permutations</li><li>Add coverage tracking for Python preflight validation scripts (pytest + codecov)</li><li>Consider making E2E tests auto-trigger on chart changes (not just label-gated)</li><li>Add SBOM generation for the validation container image</li></ul>
                         </div>
                     </div>
                 </div>

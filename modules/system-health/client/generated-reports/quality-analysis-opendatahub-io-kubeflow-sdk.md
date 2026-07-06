@@ -1,385 +1,364 @@
 ---
 repository: "opendatahub-io/kubeflow-sdk"
-overall_score: 7.4
+overall_score: 7.6
 scorecard:
   - dimension: "Unit Tests"
     score: 8.5
-    status: "Strong parametrized test suite with pytest, 20 test modules covering 46 source modules, test-to-source line ratio >1.0"
+    status: "303 test functions with 352 parametrized cases across 20 test files; pytest + coverage"
   - dimension: "Integration/E2E"
     score: 8.0
-    status: "Multi-version E2E with Kind clusters (K8s 1.32-1.35), Spark E2E with in-cluster runner, remote PR E2E dispatch"
+    status: "Multi-version K8s E2E (4 versions), Spark E2E with Kind, remote notebook E2E via dispatch"
   - dimension: "Build Integration"
     score: 3.0
-    status: "No PR-time package build validation, no Konflux simulation, no image build on PR"
+    status: "No container builds in repo — pure Python SDK; no Konflux simulation or image validation"
   - dimension: "Image Testing"
     score: 3.0
-    status: "Only one Dockerfile (Spark E2E runner), no runtime validation for SDK package, no multi-arch"
+    status: "Only hack/Dockerfile.spark-e2e-runner for test infra; no production image builds"
   - dimension: "Coverage Tracking"
-    score: 6.5
-    status: "Coveralls integration on PR, coverage report generation, but no enforcement thresholds or PR gates"
+    score: 7.0
+    status: "Coveralls integration on PRs with HTML/XML reports; no enforcement threshold"
   - dimension: "CI/CD Automation"
-    score: 8.5
-    status: "Well-organized 12 workflows with concurrency control, automated upstream sync, semantic PR titles, Dependabot"
+    score: 9.0
+    status: "12 workflows covering lint, unit tests, E2E, security scan, release, docs, dependabot"
   - dimension: "Agent Rules"
-    score: 8.0
-    status: "Comprehensive AGENTS.md with testing patterns, code style, security checklist; Copilot review instructions; missing .claude/rules/"
+    score: 8.5
+    status: "Comprehensive AGENTS.md with repo map, commands, testing patterns, and Copilot review instructions"
 critical_gaps:
-  - title: "No PR-time package build validation"
-    impact: "Build failures (broken imports, missing dependencies) discovered only after merge or during release"
+  - title: "No coverage enforcement threshold"
+    impact: "Coverage can silently regress without blocking PRs"
     severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No coverage enforcement thresholds"
-    impact: "Coverage can silently regress on merged PRs despite Coveralls integration"
-    severity: "HIGH"
-    effort: "2-3 hours"
-  - title: "Missing coverage for common/, optimizer/, hub/ modules"
-    impact: "Several source modules in common/ and optimizer/ have no corresponding test files"
-    severity: "MEDIUM"
-    effort: "8-16 hours"
-  - title: "No container image scanning on PR"
-    impact: "Snyk runs only on release and upstream sync, not on PR changes that add new dependencies"
-    severity: "MEDIUM"
     effort: "2-4 hours"
-quick_wins:
-  - title: "Add coverage threshold enforcement to Coveralls"
+  - title: "Single Python version in unit test matrix"
+    impact: "Only Python 3.11 tested; 3.10 and 3.12 are declared supported but untested in CI"
+    severity: "MEDIUM"
     effort: "1-2 hours"
-    impact: "Prevent coverage regressions on merged PRs with a minimum coverage gate"
-  - title: "Add uv build step to test-python workflow"
-    effort: "1-2 hours"
-    impact: "Catch packaging issues (missing modules, broken imports) before merge"
-  - title: "Add Snyk scan to PR workflow"
-    effort: "1-2 hours"
-    impact: "Detect new vulnerability introductions at PR time, not just release time"
-  - title: "Create .claude/rules/ for test creation patterns"
+  - title: "No SAST/CodeQL integration"
+    impact: "Static analysis limited to Snyk dependency scanning; no source code analysis"
+    severity: "MEDIUM"
     effort: "2-3 hours"
-    impact: "Standardize AI-generated tests to match existing TestCase dataclass pattern"
+  - title: "No .claude/rules/ directory for test creation rules"
+    impact: "AI agents lack structured test pattern guidance beyond AGENTS.md prose"
+    severity: "LOW"
+    effort: "3-4 hours"
+  - title: "No container image build or runtime validation"
+    impact: "SDK is a pure Python package — acceptable, but no PyPI package validation in CI"
+    severity: "LOW"
+    effort: "2-3 hours"
+quick_wins:
+  - title: "Add coverage threshold enforcement"
+    effort: "1-2 hours"
+    impact: "Prevent silent coverage regression with a minimum coverage gate"
+  - title: "Expand Python version matrix to 3.10, 3.11, 3.12"
+    effort: "30 minutes"
+    impact: "Verify SDK works on all declared supported Python versions"
+  - title: "Add CodeQL workflow for Python SAST"
+    effort: "1-2 hours"
+    impact: "Catch security issues in source code beyond dependency vulnerabilities"
+  - title: "Add package build verification to PR workflow"
+    effort: "1 hour"
+    impact: "Ensure 'uv build' succeeds before merge, catching packaging issues early"
 recommendations:
   priority_0:
-    - "Add PR-time package build validation (uv build + import smoke test) to test-python.yaml"
-    - "Configure Coveralls coverage threshold (e.g., minimum 70%, no regression >2%) in .coveralls.yml"
+    - "Add coverage enforcement threshold (e.g., 80%) to prevent silent regression"
+    - "Expand Python version matrix to cover all declared supported versions (3.10-3.12)"
   priority_1:
-    - "Add unit tests for common/utils.py, common/types.py, optimizer/api, and hub/api modules"
-    - "Add Snyk security scan as a reusable workflow step in PR checks"
-    - "Create .claude/rules/ directory with unit-tests.md and e2e-tests.md mirroring AGENTS.md patterns"
+    - "Add CodeQL or Semgrep for Python SAST analysis"
+    - "Add package build validation (uv build) to PR workflow"
+    - "Create .claude/rules/ with structured test creation guidance"
   priority_2:
-    - "Add multi-Python-version matrix testing (3.10, 3.11, 3.12) to PR workflow"
-    - "Add type-checking (ty/mypy) as a CI gate beyond just hub module"
-    - "Add integration test markers and separate CI job for integration vs unit tests"
+    - "Add mutation testing (mutmut) for test quality validation"
+    - "Add type checking (mypy/ty) to CI pipeline as a required check"
+    - "Consider adding contract tests for Kubernetes API client interactions"
 ---
 
-# Quality Analysis: kubeflow-sdk (opendatahub-io/kubeflow-sdk)
+# Quality Analysis: opendatahub-io/kubeflow-sdk
 
 ## Executive Summary
 
-- **Overall Score: 7.4/10**
-- **Repository Type**: Python SDK library (Kubeflow Trainer, Optimizer, Spark, Hub)
+- **Overall Score: 7.6/10**
+- **Repository Type**: Python SDK / Library (Kubeflow unified Python APIs)
 - **Primary Language**: Python 3.10+
-- **Package Manager**: uv with Hatchling build system
-- **Key Strengths**: Excellent test-to-code ratio (test lines exceed source lines), comprehensive E2E infrastructure with multi-version Kubernetes testing, well-structured AGENTS.md, automated upstream sync with conflict resolution
-- **Critical Gaps**: No PR-time package build validation, no coverage enforcement thresholds, Snyk scans only run at release/sync time
-- **Agent Rules Status**: Present (AGENTS.md + Copilot review instructions), but missing `.claude/rules/` directory for structured test creation rules
+- **Package Manager**: uv with Hatchling build
+- **Key Strengths**: Excellent test coverage with parametrized test cases, comprehensive E2E testing across 4 Kubernetes versions, strong agent documentation, mature CI/CD with security scanning
+- **Critical Gaps**: No coverage threshold enforcement, single Python version in test matrix, no source-code SAST
+- **Agent Rules Status**: Present and comprehensive (AGENTS.md), but no structured `.claude/rules/` directory
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 8.5/10 | Strong parametrized test suite, 20 test modules, test lines > source lines |
-| Integration/E2E | 8.0/10 | Multi-K8s-version E2E, Spark in-cluster testing, remote dispatch |
-| **Build Integration** | **3.0/10** | **No PR-time package build, no Konflux simulation** |
-| Image Testing | 3.0/10 | Only Spark E2E runner Dockerfile, no SDK package image validation |
-| Coverage Tracking | 6.5/10 | Coveralls integration but no enforcement thresholds |
-| CI/CD Automation | 8.5/10 | 12 well-organized workflows, concurrency control, Dependabot |
-| Agent Rules | 8.0/10 | Comprehensive AGENTS.md, Copilot instructions, missing .claude/rules/ |
+| Unit Tests | 8.5/10 | 303 test functions, 352 parametrized TestCases, pytest + coverage |
+| Integration/E2E | 8.0/10 | Multi-version K8s E2E (4 versions), Spark E2E, remote notebook E2E |
+| **Build Integration** | **3.0/10** | **Pure Python SDK — no container builds or Konflux relevance** |
+| Image Testing | 3.0/10 | Only test-infra Dockerfile; no production image testing (acceptable for SDK) |
+| Coverage Tracking | 7.0/10 | Coveralls integration, HTML/XML reports; no enforcement threshold |
+| CI/CD Automation | 9.0/10 | 12 workflows, concurrency control, caching, dependabot |
+| Agent Rules | 8.5/10 | Comprehensive AGENTS.md, Copilot instructions, TestCase patterns |
 
 ## Critical Gaps
 
-### 1. No PR-time Package Build Validation
-- **Impact**: Build failures (broken imports, missing `__init__.py`, dependency mismatches) are only discovered during release or manual testing
+### 1. No Coverage Enforcement Threshold
+- **Impact**: Coverage can silently regress without blocking PRs. Coveralls uploads results but no minimum gate is enforced
 - **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: The `test-python.yaml` workflow runs `make verify` (lint/format) and `make test-python` (unit tests with coverage), but never runs `uv build` to validate the package actually builds. The release workflow (`odh-release.yaml`) runs `uv build` only at release time.
-
-### 2. No Coverage Enforcement Thresholds
-- **Impact**: Coverage can silently regress on merged PRs. Coveralls uploads coverage data but doesn't gate PRs on minimum thresholds.
-- **Severity**: HIGH
-- **Effort**: 2-3 hours
-- **Details**: The `test-python.yaml` workflow uploads to Coveralls with `continue-on-error: true`, meaning even upload failures don't block the PR. No `.coveralls.yml` or `codecov.yml` with threshold configuration exists.
-
-### 3. Missing Test Coverage for Several Modules
-- **Impact**: Key modules like `common/utils.py`, `common/types.py`, `optimizer/api/optimizer_client.py` have no corresponding test files
-- **Severity**: MEDIUM
-- **Effort**: 8-16 hours
-- **Details**: 20 test modules cover 46 source modules (0.43 file ratio). While the trainer and spark modules are well-tested, common utilities and optimizer client lack dedicated tests.
-
-### 4. No Container/Dependency Scanning on PRs
-- **Impact**: New dependency vulnerabilities introduced in PRs aren't caught until the next upstream sync or release
-- **Severity**: MEDIUM
 - **Effort**: 2-4 hours
-- **Details**: Snyk scans run only as a reusable workflow called from `rebase-upstream.yaml` (informational) and `odh-release.yaml` (release gate). PR changes that modify `pyproject.toml` or `uv.lock` bypass security scanning.
+- **Fix**: Add `--fail-under=80` to `coverage report` in Makefile and CI, or configure Coveralls threshold
+
+### 2. Single Python Version in Unit Test Matrix
+- **Impact**: `pyproject.toml` declares `requires-python = ">=3.10"` and classifies 3.10, 3.11, 3.12, but CI only tests Python 3.11
+- **Severity**: MEDIUM
+- **Effort**: 1-2 hours
+- **Fix**: Expand `matrix.python-version` in `test-python.yaml` to `["3.10", "3.11", "3.12"]`
+
+### 3. No SAST/CodeQL Integration
+- **Impact**: Snyk scans dependencies but no static analysis of source code for security vulnerabilities
+- **Severity**: MEDIUM
+- **Effort**: 2-3 hours
+- **Fix**: Add GitHub CodeQL workflow for Python or use Semgrep
+
+### 4. No Structured Agent Test Rules
+- **Impact**: AGENTS.md has great prose but no `.claude/rules/` directory with machine-parseable test creation rules
+- **Severity**: LOW
+- **Effort**: 3-4 hours
+- **Fix**: Use `/test-rules-generator` to create structured rules from existing test patterns
+
+### 5. No Package Build Validation on PRs
+- **Impact**: `uv build` only runs in the release workflow; packaging issues (missing files, bad metadata) not caught until release
+- **Severity**: LOW
+- **Effort**: 1 hour
+- **Fix**: Add `uv build --check` step to `test-python.yaml`
 
 ## Quick Wins
 
-### 1. Add Coverage Threshold Enforcement (1-2 hours)
-Create a `.coveralls.yml` or add `--fail-under=70` to the `coverage report` command in the Makefile:
+### 1. Add Coverage Threshold (1-2 hours)
 ```yaml
-# .coveralls.yml
-coverage:
-  precision: 2
-  status:
-    project:
-      default:
-        target: 70%
-    patch:
-      default:
-        target: 80%
-```
-Or simpler, in `Makefile`:
-```makefile
-@uv run coverage report --omit='*_test.py' --skip-covered --skip-empty --fail-under=70
+# In Makefile test-python target, add:
+@uv run coverage report --omit='*_test.py' --skip-covered --skip-empty --fail-under=80
 ```
 
-### 2. Add Package Build Validation to PR Workflow (1-2 hours)
-Add a build step to `test-python.yaml`:
+### 2. Expand Python Version Matrix (30 minutes)
 ```yaml
-- name: Validate package build
-  run: |
-    uv build
-    pip install dist/*.whl
-    python -c "import kubeflow; print(kubeflow.__version__)"
+# In .github/workflows/test-python.yaml:
+matrix:
+  python-version: ["3.10", "3.11", "3.12"]
 ```
 
-### 3. Add Snyk Scan to PR Workflow (1-2 hours)
-Call the existing reusable `snyk-security-scan.yaml` from PR events:
+### 3. Add CodeQL Workflow (1-2 hours)
 ```yaml
-snyk-pr:
-  uses: ./.github/workflows/snyk-security-scan.yaml
-  with:
-    fail_on_cves: false  # informational on PRs
-  secrets:
-    SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+# .github/workflows/codeql.yaml
+name: CodeQL Analysis
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: python
+      - uses: github/codeql-action/analyze@v4
 ```
 
-### 4. Create .claude/rules/ for Test Patterns (2-3 hours)
-Extract the testing patterns from AGENTS.md into structured rule files:
-```
-.claude/rules/
-├── unit-tests.md      # TestCase dataclass pattern, pytest parametrize
-├── e2e-tests.md       # Kind cluster setup, Spark E2E patterns
-└── code-quality.md    # Ruff config, type hints, docstrings
+### 4. Add Package Build to PR CI (1 hour)
+```yaml
+# Add to test-python.yaml after test step:
+- name: Verify package builds
+  run: uv build
 ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflow Inventory** (12 workflows):
+**Workflows (12 total)**:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `test-python.yaml` | PR + push to main | Unit tests, lint, coverage upload to Coveralls |
-| `test-e2e.yaml` | PR | E2E notebook tests on Kind with K8s 1.32-1.35 |
-| `test-spark-examples.yaml` | PR + dispatch | Spark E2E with in-cluster runner on Kind |
-| `trigger-e2e-on-pr.yaml` | PR target + nightly + dispatch | Remote E2E dispatch to project-codeflare repo |
-| `check-pr-title.yaml` | PR target | Semantic PR title enforcement (feat/fix/chore/revert) |
-| `check-owners.yaml` | PR (OWNERS changes) + dispatch | OWNERS file sync validation with kubeflow/model-registry |
-| `docs.yaml` | PR + push (docs paths) | Sphinx documentation build + link checking |
-| `snyk-security-scan.yaml` | Reusable workflow | Snyk vulnerability scan with SARIF upload |
-| `odh-release.yaml` | Manual dispatch | Full release pipeline with security gate |
-| `rebase-upstream.yaml` | Weekly schedule + dispatch | Automated upstream sync from kubeflow/sdk |
-| `update-requirements.yaml` | Push to main (uv.lock) + dispatch | Auto-generate requirements.txt PR |
-| (None) | - | No CodeQL or Trivy workflow |
+| `test-python.yaml` | PR, push to main | Unit tests + Coveralls upload |
+| `test-e2e.yaml` | PR | E2E tests across K8s 1.32-1.35 |
+| `test-spark-examples.yaml` | PR | Spark E2E with Kind cluster |
+| `trigger-e2e-on-pr.yaml` | PR, nightly, manual | Remote notebook E2E via dispatch |
+| `snyk-security-scan.yaml` | Reusable (called) | Dependency vulnerability scanning |
+| `odh-release.yaml` | Manual dispatch | ODH release pipeline with security gate |
+| `rebase-upstream.yaml` | Weekly schedule | Sync from upstream kubeflow/sdk |
+| `check-pr-title.yaml` | PR | Conventional commit validation |
+| `check-owners.yaml` | PR | OWNERS file validation |
+| `docs.yaml` | PR, push | Documentation build |
+| `update-requirements.yaml` | Push to main | Auto-update requirements.txt from uv.lock |
+| `dependabot.yml` | Weekly | Dependency updates (uv + GitHub Actions) |
 
 **Strengths**:
-- All PR workflows use `concurrency` with `cancel-in-progress: true` to avoid redundant runs
-- Matrix testing across 4 Kubernetes versions (1.32.3, 1.33.1, 1.34.0, 1.35.0)
-- Automated upstream sync with intelligent conflict resolution and excluded path handling
-- Semantic PR title enforcement ensures clean changelogs
-- Dependabot configured for both Python (uv) and GitHub Actions dependencies with weekly cadence
+- All PR-triggered workflows use `concurrency` with `cancel-in-progress: true`
+- E2E tests span 4 Kubernetes versions (1.32.3, 1.33.1, 1.34.0, 1.35.0)
+- Snyk security scan is a reusable workflow, used as a release gate
+- Release workflow requires security scan to pass before proceeding
+- Dependabot configured for both Python deps and GitHub Actions
 
-**Weaknesses**:
-- Unit tests only run on Python 3.11, despite supporting 3.10-3.12
-- Coveralls integration uses `continue-on-error: true` — failures don't block
-- No CodeQL/SAST integration
-- No Gitleaks/secret detection in CI
+**Gaps**:
+- Unit tests only run on Python 3.11 despite supporting 3.10+
+- No caching configured in `test-python.yaml` (uses `actions/checkout@v4` not `v6`)
+- No package build validation on PRs
 
 ### Test Coverage
 
-**Unit Tests**:
-- **Framework**: pytest with pytest-mock
-- **Pattern**: TestCase dataclass with `pytest.mark.parametrize` — excellent structured approach
-- **Test files**: 20 test modules (21 including E2E)
-- **Source files**: 46 source modules (excluding test helpers)
-- **File ratio**: 0.43 (test files / source files)
-- **Line ratio**: 1.13 (15,786 test lines / 14,464 source lines) — test code exceeds source code
-- **Coverage tool**: `coverage` with HTML and XML report generation
-- **Fixtures**: Shared test helpers in `kubeflow/trainer/test/common.py` and `kubeflow/spark/test/common.py`
+**Unit Tests (20 files, 15,480 lines)**:
+- 303 test functions with 352 parametrized `TestCase` instances
+- Well-structured using `@dataclass TestCase` pattern with `name`, `expected_status`, `config`, `expected_output`
+- Coverage via `coverage run -m pytest` with HTML and XML report options
+- Coveralls integration for PR coverage reporting
+- Test-to-code ratio: ~0.88 (15,480 test lines / 17,517 source lines) — excellent
 
-**Well-Tested Modules**:
-- `kubeflow/trainer/backends/kubernetes/backend_test.py` (1,689 lines — very thorough)
-- `kubeflow/spark/backends/kubernetes/backend_test.py` (739 lines)
-- `kubeflow/hub/api/model_registry_client_test.py` (504 lines)
-- `kubeflow/trainer/rhai/` (3 test files covering transformers, traininghub, utils)
-
-**Coverage Gaps**:
-- `kubeflow/common/` — no tests for utils.py, types.py, constants.py
-- `kubeflow/optimizer/api/optimizer_client.py` — no dedicated test file
-- `kubeflow/trainer/backends/container/utils.py` — no test
-- `kubeflow/trainer/backends/localprocess/` — only backend_test.py, no tests for job.py, utils.py, types.py
+**Largest test files**:
+| File | Lines | Area |
+|------|-------|------|
+| `trainer/rhai/transformers_test.py` | 5,014 | RHAI transformers |
+| `trainer/backends/kubernetes/backend_test.py` | 1,689 | K8s backend |
+| `trainer/rhai/traininghub_test.py` | 1,415 | Training hub |
+| `trainer/backends/container/backend_test.py` | 1,124 | Container backend |
 
 **E2E Tests**:
-- Spark E2E: Kind cluster with Spark Operator, in-cluster runner image, `test_spark_examples.py`
-- Trainer E2E: Papermill notebook execution (mnist, distilbert, local-container, local-training)
-- Remote E2E: Dispatch to `project-codeflare/kubeflow-devx-post-merge-tests` with polling
+- **Kubernetes E2E**: Tests across K8s 1.32-1.35 using Papermill notebooks (PyTorch MNIST, DistilBERT fine-tuning, local container training)
+- **Spark E2E**: Full Kind cluster with Spark Operator, in-cluster test runner via custom Docker image
+- **Remote E2E**: Cross-repo dispatch to `project-codeflare/kubeflow-devx-post-merge-tests` for notebook E2E
+- E2E infrastructure well-organized in `hack/` with cluster setup script and custom Dockerfile
 
-**Pytest Markers**:
-- `integration` — Kind cluster required
-- `slow` — Long-running tests
-- `smoke` — CRD-only smoke test
-- `timeout` — Tests with timeout limits
-- `options` — Spark options pattern tests
+**Coverage Tracking**:
+- Coveralls badge in README (linked to upstream `kubeflow/sdk`)
+- Coverage report excludes test files (`--omit='*_test.py'`) and skips covered/empty files
+- No minimum threshold enforced — coverage can regress silently
 
 ### Code Quality
 
 **Linting**:
-- **Ruff** (v0.12.2+): Comprehensive rule set — pyflakes, pycodestyle, pyupgrade, pep8-naming, bugbear, comprehensions, simplify
+- **Ruff**: Comprehensive configuration in `pyproject.toml` with 9 rule categories (F, E, W, I, UP, N, B, C4, SIM)
 - Line length: 100, target Python 3.10
-- Isort integration with first-party `kubeflow` recognition
-- Format: Double quotes, space indent, docstring code formatting
+- Import sorting via ruff isort with `kubeflow` as first-party
+- `make verify` runs `uv lock --check`, `ruff check`, `ruff format --check`, and `ty check`
+
+**Pre-commit Hooks** (`.pre-commit-config.yaml`):
+- `check-yaml`, `end-of-file-fixer`, `trailing-whitespace`
+- `ruff-check` with `--fix` and `ruff-format`
+- Pinned to `v0.14.14` (recent)
 
 **Type Checking**:
-- **ty** (v0.0.11): Configured for Python 3.10 target, currently only checking `kubeflow/hub`
-- Mypy mentioned in AGENTS.md but not configured in CI as a gate
+- `ty check kubeflow/hub` in CI (partial coverage)
+- `uv run mypy kubeflow` documented but not enforced in CI
+- `py.typed` marker file present for PEP 561 compliance
 
-**Pre-commit Hooks**:
-- check-yaml, end-of-file-fixer, trailing-whitespace (pre-commit-hooks v5.0.0)
-- ruff-check with `--fix`, ruff-format (ruff-pre-commit v0.14.14)
-- Enforced in CI via `make verify`
-
-**Static Analysis**:
-- No CodeQL/SAST integration
-- No Gitleaks/TruffleHog for secret detection
-- No Semgrep or gosec equivalent
+**Dependency Management**:
+- Dependabot for weekly Python and GitHub Actions updates
+- Dependencies grouped (minor/patch together)
+- `uv.lock` with deterministic resolution
 
 ### Container Images
 
-**Dockerfiles**: Only `hack/Dockerfile.spark-e2e-runner` — a test infrastructure image, not a product artifact
+**N/A for SDK** — This is a pure Python package distributed via PyPI, not a container image. The only Dockerfile is `hack/Dockerfile.spark-e2e-runner` used for test infrastructure.
 
-**Assessment**:
-- This is a Python SDK library, not a containerized application — the absence of product Dockerfiles is expected
-- The Spark E2E runner uses `python:3.11-slim` base, installs the SDK with `pip install .[spark]`
-- No multi-architecture build support
-- No image scanning for the E2E runner image
-- No `.dockerignore` file
+Build Integration and Image Testing scores are lower (3.0/10) but this is **expected and acceptable** for a Python SDK. The relevant build artifact is the Python wheel, validated during the release workflow with `uv build`.
 
 ### Security
 
 **Strengths**:
-- Snyk vulnerability scanning with SARIF upload to GitHub Security tab
-- Snyk gates releases — `odh-release.yaml` won't proceed if High/Critical CVEs found (unless acknowledged)
-- Security checklist in AGENTS.md (no eval/exec, proper exception handling, no secrets in code)
-- Dependabot for both Python and GitHub Actions dependencies
+- Snyk dependency scanning as a reusable workflow
+- SARIF results uploaded to GitHub Security tab
+- Release workflow gates on Snyk scan (blocks on High/Critical CVEs)
+- Manual CVE acknowledgment option for false positives
+- Dependabot for automated dependency updates
 
-**Weaknesses**:
-- No Snyk scan on PRs — vulnerabilities from new dependencies not caught until sync/release
-- No CodeQL integration for SAST
+**Gaps**:
+- No CodeQL or source-code SAST (only dependency scanning)
 - No secret detection (Gitleaks/TruffleHog)
-- No SBOM generation
+- No `.gitleaks.toml` configuration
+- Copilot review instructions cover security but are advisory only
 
 ### Agent Rules (Agentic Flow Quality)
 
 **Status**: Present and comprehensive
 
 **What exists**:
-- `AGENTS.md` (316 lines) — repository map, environment setup, commands, development workflow, core principles
-- `CLAUDE.md` — symlink to `AGENTS.md`
-- `.github/copilot-instructions.md` — focused GitHub Copilot review instructions with priority areas
+- `AGENTS.md` (10,240 bytes) — extensive documentation covering:
+  - Agent behavior policy (atomic changes, local analysis first, no CI modification)
+  - Repository map with directory structure
+  - Environment and tooling setup
+  - All development commands (setup, verify, test, lint, format, type-check)
+  - Core development principles (stable APIs, code quality, testing, security, docs)
+  - TestCase dataclass pattern with examples
+  - Conventional commit enforcement
+- `CLAUDE.md` → symlink to `AGENTS.md`
+- `.github/copilot-instructions.md` — GitHub Copilot code review instructions with priority areas, skip list, and project-specific CI context
 
 **Quality Assessment**:
-- **Testing guidance**: Excellent — specific TestCase dataclass pattern, parametrize usage, reference to `backend_test.py`
-- **Code style**: Comprehensive — type hints required, naming conventions, import ordering, line length
-- **Security**: Security checklist with examples
-- **API stability**: Critical guidance on maintaining stable public interfaces
-- **Documentation**: Google-style docstring requirements with examples
+- AGENTS.md is **excellent** — one of the better agent rule files seen across ODH repos
+- Clear separation of agent behavior policy, commands, and development principles
+- TestCase pattern documented with full code examples
+- Security checklist included
+- Documentation standards with Google-style docstring examples
 
-**What's missing**:
-- `.claude/rules/` directory — patterns are in AGENTS.md but not structured as separate rule files
-- No E2E test creation rules
-- No integration test rules
-- No rule for mocking patterns or fixture usage
+**Gaps**:
+- No `.claude/` directory or `.claude/rules/` for structured, machine-parseable test rules
+- No `.claude/skills/` for custom skills
+- AGENTS.md is prose-based — great for reading but harder for agents to extract specific patterns programmatically
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add PR-time package build validation** — Add `uv build` and import smoke test to `test-python.yaml`. This catches packaging issues before merge, which is especially important for a library that gets published to PyPI.
+1. **Add coverage enforcement threshold** — Add `--fail-under=80` (or appropriate baseline) to `coverage report` in both the Makefile `test-python` target and CI. This prevents silent regression.
 
-2. **Configure coverage enforcement thresholds** — Add `--fail-under=70` to the coverage report command or configure `.coveralls.yml` with project/patch targets. The current Coveralls integration is informational only.
+2. **Expand Python version matrix** — Test on 3.10, 3.11, and 3.12 in `test-python.yaml`. The SDK declares support for these versions but only validates 3.11.
 
 ### Priority 1 (High Value)
 
-3. **Add unit tests for uncovered modules** — Focus on `common/utils.py`, `common/types.py`, `optimizer/api/optimizer_client.py`. These shared utilities and client APIs are used across the SDK.
+3. **Add CodeQL or Semgrep for Python SAST** — Snyk covers dependencies but not source code vulnerabilities. Add a CodeQL workflow for Python analysis.
 
-4. **Add Snyk scan to PR workflow** — Call the existing reusable workflow from PR events (informational mode). This catches new vulnerability introductions at PR time.
+4. **Add package build validation to PR CI** — Add `uv build` to `test-python.yaml` to catch packaging issues before merge. Currently only validated during release.
 
-5. **Create `.claude/rules/` directory** — Extract testing patterns from AGENTS.md into structured rule files for unit-tests.md and e2e-tests.md. This helps AI agents generate consistent, high-quality tests.
+5. **Create structured `.claude/rules/`** — Use `/test-rules-generator` to extract patterns from existing tests and create machine-parseable rules. The AGENTS.md prose is excellent but structured rules enable better agent code generation.
 
-6. **Expand Python version matrix** — Test on 3.10, 3.11, and 3.12 in CI since the library supports `>=3.10`.
+6. **Add type checking to CI** — `mypy` is documented but not enforced in CI. `ty check` only covers `kubeflow/hub`. Expand to full package.
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Add CodeQL/SAST analysis** — Integrate CodeQL for Python static analysis on PRs.
+7. **Add mutation testing** — Use `mutmut` or `cosmic-ray` to validate test quality beyond line coverage.
 
-8. **Add Gitleaks secret detection** — Prevent accidental secret commits with a pre-commit hook and CI check.
+8. **Add secret detection** — Add Gitleaks or TruffleHog to pre-commit hooks and CI.
 
-9. **Expand type checking to all modules** — Currently `ty` only checks `kubeflow/hub`. Expand to trainer, optimizer, and spark modules.
+9. **Update CI action versions** — `test-python.yaml` uses `actions/checkout@v4` and `actions/setup-python@v5` while other workflows use `@v6`. Standardize.
 
-10. **Separate integration and unit test CI jobs** — Use pytest markers to run fast unit tests first and integration tests as a separate, skippable job.
+10. **Add contract tests** — For Kubernetes API client interactions (`kubeflow_trainer_api`, `kubeflow_katib_api`), add contract tests to catch API drift early.
 
 ## Comparison to Gold Standards
 
 | Dimension | kubeflow-sdk | odh-dashboard | notebooks | kserve |
 |-----------|-------------|---------------|-----------|--------|
-| Unit Test Coverage | Good (8.5) | Excellent (9.5) | Moderate (6) | Excellent (9) |
-| Integration/E2E | Good (8.0) | Excellent (9) | Strong (8) | Excellent (9.5) |
-| Build Integration | Weak (3.0) | Strong (8) | Strong (8.5) | Moderate (6) |
-| Image Testing | Weak (3.0) | N/A (web app) | Excellent (9.5) | Strong (8) |
-| Coverage Tracking | Moderate (6.5) | Strong (8) | Moderate (5) | Strong (8.5) |
-| CI/CD Automation | Strong (8.5) | Excellent (9.5) | Strong (8) | Strong (8.5) |
-| Agent Rules | Strong (8.0) | Excellent (9) | Weak (3) | Moderate (5) |
-| Security Scanning | Moderate (6.0) | Strong (7.5) | Moderate (5.5) | Strong (8) |
+| Unit Tests | 8.5 (pytest, parametrized) | 9.0 (Jest, comprehensive) | 6.0 (limited) | 9.0 (Go testing) |
+| Integration/E2E | 8.0 (4 K8s versions) | 9.0 (Cypress, contract) | 7.0 (image validation) | 9.0 (multi-version) |
+| Build Integration | 3.0 (N/A for SDK) | 7.0 (webpack, MF) | 8.0 (image builds) | 7.0 (Docker builds) |
+| Image Testing | 3.0 (N/A for SDK) | 6.0 (basic) | 9.0 (5-layer) | 7.0 (runtime) |
+| Coverage | 7.0 (Coveralls, no threshold) | 9.0 (codecov, enforced) | 5.0 (limited) | 8.0 (codecov, enforced) |
+| CI/CD | 9.0 (12 workflows) | 9.0 (comprehensive) | 7.0 (adequate) | 9.0 (well-organized) |
+| Agent Rules | 8.5 (AGENTS.md, Copilot) | 9.0 (rules/, skills/) | 3.0 (minimal) | 4.0 (basic) |
+| Security | 7.0 (Snyk, release gate) | 7.0 (basic scanning) | 6.0 (Trivy) | 7.0 (CodeQL) |
+| **Overall** | **7.6** | **8.5** | **6.5** | **8.0** |
 
-**Key Takeaways**:
-- kubeflow-sdk excels at test quality (lines of test > lines of source) and CI/CD organization
-- The biggest gaps are PR-time build validation and coverage enforcement
-- Agent rules are among the best seen — AGENTS.md is a model for other repositories
-- Security scanning exists but should be shifted left to PR time
+**Key takeaway**: kubeflow-sdk is a well-maintained Python SDK with strong testing practices and excellent agent documentation. The main gaps (coverage threshold, Python version matrix, SAST) are all quick wins that would push the score to 8.5+.
 
 ## File Paths Reference
 
-### CI/CD
-- `.github/workflows/test-python.yaml` — Unit tests + Coveralls
-- `.github/workflows/test-e2e.yaml` — E2E notebook tests
-- `.github/workflows/test-spark-examples.yaml` — Spark E2E tests
-- `.github/workflows/trigger-e2e-on-pr.yaml` — Remote E2E dispatch
-- `.github/workflows/snyk-security-scan.yaml` — Reusable Snyk scan
-- `.github/workflows/odh-release.yaml` — Release pipeline
-- `.github/workflows/rebase-upstream.yaml` — Upstream sync
-- `.github/dependabot.yml` — Dependency updates
-
-### Testing
-- `kubeflow/trainer/backends/kubernetes/backend_test.py` — Reference test file (1,689 lines)
-- `kubeflow/trainer/test/common.py` — Shared test fixtures
-- `kubeflow/spark/test/common.py` — Spark test fixtures
-- `test/e2e/spark/test_spark_examples.py` — Spark E2E tests
-- `hack/e2e-setup-cluster.sh` — Kind cluster setup
-- `hack/Dockerfile.spark-e2e-runner` — In-cluster test runner
-
-### Code Quality
-- `pyproject.toml` — Ruff config, pytest markers, dependencies
-- `.pre-commit-config.yaml` — Pre-commit hooks
-- `Makefile` — Build and test targets
-
-### Agent Rules
-- `AGENTS.md` — Comprehensive development guidelines
-- `CLAUDE.md` — Symlink to AGENTS.md
-- `.github/copilot-instructions.md` — Copilot review instructions
+| Category | Files |
+|----------|-------|
+| CI/CD | `.github/workflows/*.yaml` (12 workflows) |
+| Unit Tests | `kubeflow/**/*_test.py` (20 files) |
+| E2E Tests | `test/e2e/spark/`, `hack/e2e-setup-cluster.sh` |
+| Linting | `pyproject.toml` (ruff config), `.pre-commit-config.yaml` |
+| Security | `.github/workflows/snyk-security-scan.yaml` |
+| Agent Rules | `AGENTS.md`, `CLAUDE.md` (symlink), `.github/copilot-instructions.md` |
+| Dependencies | `pyproject.toml`, `uv.lock`, `requirements.txt` |
+| Release | `.github/workflows/odh-release.yaml`, `Makefile` |
+| Documentation | `docs/`, `.readthedocs.yaml`, `.github/workflows/docs.yaml` |

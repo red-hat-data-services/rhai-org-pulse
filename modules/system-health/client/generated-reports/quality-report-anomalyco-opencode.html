@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 09:38 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 03:16 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">anomalyco/opencode</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="147.026412"
+                                stroke-dashoffset="135.71668799999998"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.4</div>
+                        <div class="score-value">7.6</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Extensive test suite with 439 test files across packages, strong 1:4 test-to-source ratio by file count</div>
+                            <div class="scorecard-status">675 test files across 30+ packages with bun:test, strong test-to-code ratio (1:3.3)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Playwright E2E on Linux and Windows with CI integration, but limited scenario coverage (4 spec files)</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">52 Playwright E2E specs with regression, smoke, and performance suites, cross-platform CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Storybook build check on PRs, Nix evaluation, but no container build validation on PRs</div>
+                            <div class="scorecard-status">Container builds only on push to dev, no PR-time image validation or multi-arch PR testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
-                            <div class="scorecard-status">Multi-arch Docker builds with startup validation (RUN opencode --version), but no runtime or security scanning</div>
+                            <div class="scorecard-status">Multi-arch Dockerfile with startup validation (RUN opencode --version), but no runtime testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">No code coverage tool integration (no codecov, coveralls, or threshold enforcement)</div>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">No codecov/coveralls integration, no coverage thresholds, no PR coverage reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">29 workflows with concurrency control, caching, JUnit reporting, multi-platform testing, AI-powered review</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">24+ workflows with concurrency control, Turbo caching, Blacksmith runners, multi-platform</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Comprehensive AGENTS.md with style guide and testing philosophy; .opencode/ directory with commands, skills, tools</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Comprehensive AGENTS.md with style guide, test patterns, commit conventions; .opencode/ with custom tools, agents, and skills</div>
                         </div>
                     </div>
                 </div>
@@ -411,34 +411,34 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No code coverage tracking or enforcement</div>
-                            <p>Cannot measure test adequacy, no regressions caught by coverage drops, unknown dead code</p>
+                            <div class="item-description">No test coverage tracking or enforcement</div>
+                            <p>Coverage regressions go undetected; no visibility into which code paths are untested</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No security scanning (SAST, container scanning, dependency audit)</div>
-                            <p>Vulnerabilities in dependencies and container images not detected until production</p>
+                            <div class="item-description">No security scanning in CI (no Trivy, CodeQL, or SAST)</div>
+                            <p>Vulnerabilities in dependencies and code are not detected before merge</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No PR-time container image build validation</div>
+                            <p>Image build failures discovered only after merge to dev branch</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Limited E2E scenario coverage</div>
-                            <p>Only 4 Playwright spec files covering session timeline - major features like file editing, provider config, permissions untested</p>
+                            <div class="item-description">No dependency vulnerability scanning</div>
+                            <p>Known CVEs in npm packages can ship without detection</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">20-40 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No container image security scanning</div>
-                            <p>Base images (alpine, ubuntu:24.04) and installed packages not audited for CVEs</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
@@ -456,32 +456,32 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to container build workflow</div>
-                            <p>Immediate visibility into container vulnerabilities across all 5+ Dockerfiles</p>
+                            <div class="item-description">Add codecov integration with bun:test coverage output</div>
+                            <p>Immediate visibility into test coverage trends and PR-level coverage delta reporting</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">3-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add GitHub CodeQL or Semgrep workflow</div>
+                            <p>Automated SAST catches injection, XSS, and prototype pollution in TypeScript</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add codecov integration to test workflow</div>
-                            <p>Track coverage trends, enforce minimum thresholds on PRs</p>
+                            <div class="item-description">Add npm audit / Snyk to PR workflow</div>
+                            <p>Block PRs that introduce dependencies with known critical vulnerabilities</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add npm audit / bun audit to CI</div>
-                            <p>Catch known vulnerabilities in 90+ dependencies</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1 hour</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add CodeQL or Semgrep SAST workflow</div>
-                            <p>Detect code-level security issues (XSS, injection) automatically on PRs</p>
+                            <div class="item-description">Add container build step to PR test workflow</div>
+                            <p>Catch Dockerfile and build script failures before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -501,15 +501,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add code coverage collection and enforcement - integrate codecov with minimum threshold (e.g., 60%)</li><li>Add security scanning pipeline - Trivy for containers, CodeQL/Semgrep for SAST, npm audit for dependencies</li></ul>
+                            <ul><li>Implement test coverage tracking with codecov or coveralls - bun:test supports coverage output, wire it into CI and set minimum thresholds</li><li>Add SAST scanning (CodeQL or Semgrep) to PR workflow for automated security analysis</li><li>Add dependency vulnerability scanning (npm audit, Snyk, or Dependabot) to catch known CVEs</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Expand E2E test coverage beyond session timeline to cover provider configuration, file operations, permissions, and plugin management</li><li>Add container image runtime validation in CI - test that built containers can serve requests, not just print version</li><li>Add dependency license scanning for compliance</li></ul>
+                            <ul><li>Add PR-time container image build validation to catch Dockerfile issues before merge</li><li>Add Trivy or Snyk container scanning to the containers workflow for image vulnerability detection</li><li>Add integration tests for the HTTP API server with full request-response lifecycle validation</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add performance regression testing (benchmark test suite exists but not in CI)</li><li>Add contract tests for SDK/API boundaries between packages</li><li>Add accessibility testing for web app (a11y)</li><li>Consider adding pre-commit hooks beyond pre-push typecheck</li></ul>
+                            <ul><li>Add accessibility testing (axe-core) to the Playwright E2E suite</li><li>Add visual regression testing with Playwright screenshot comparison</li><li>Consider adding mutation testing to validate test quality</li></ul>
                         </div>
                     </div>
                 </div>

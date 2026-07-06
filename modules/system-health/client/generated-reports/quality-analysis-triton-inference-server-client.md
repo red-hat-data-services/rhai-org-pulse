@@ -4,388 +4,432 @@ overall_score: 4.2
 scorecard:
   - dimension: "Unit Tests"
     score: 4.0
-    status: "Minimal unit tests across Python (495 LOC), C++ (3605 LOC), and Rust (380 LOC); no Java tests at all"
+    status: "Limited unit tests across Python, C++, and Rust; no Java tests; tests not run in CI"
   - dimension: "Integration/E2E"
     score: 3.0
-    status: "C++ integration tests require running Triton server; Rust has env-gated online tests; no automated E2E pipeline"
+    status: "C++ tests require running Triton server but no CI automation; Rust integration test present but untested in CI"
   - dimension: "Build Integration"
     score: 2.0
-    status: "No PR-time build validation, no image testing, no Konflux simulation"
+    status: "No PR-time build validation; CMake builds are manual; no container image testing"
   - dimension: "Image Testing"
     score: 1.0
-    status: "No Dockerfiles, no container image builds, no runtime validation in this repo"
+    status: "No Dockerfiles, no container image builds, no runtime validation"
   - dimension: "Coverage Tracking"
     score: 1.0
-    status: "No codecov, coveralls, or any coverage tracking configured"
+    status: "No coverage generation, no codecov integration, no coverage thresholds"
   - dimension: "CI/CD Automation"
     score: 4.0
-    status: "Only 2 workflows: pre-commit linting and CodeQL scanning; no test execution in CI"
+    status: "Only pre-commit and CodeQL workflows; no test execution, no build validation in CI"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory; no AI agent test guidance"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory; zero AI agent guidance"
 critical_gaps:
-  - title: "No tests execute in CI/CD"
-    impact: "Tests exist but never run automatically; regressions can be merged freely"
+  - title: "No test execution in CI/CD pipeline"
+    impact: "Tests exist but are never run automatically; regressions go undetected until manual testing"
     severity: "HIGH"
     effort: "8-12 hours"
   - title: "No coverage tracking or enforcement"
-    impact: "No visibility into what code is tested; coverage can silently degrade"
+    impact: "No visibility into which code paths are tested; coverage can silently degrade"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "Extremely low test-to-code ratio"
-    impact: "~4,600 lines of test code vs ~25,000+ lines of source across 4 languages; many untested paths"
+  - title: "No container image build or testing"
+    impact: "Client library packaging issues not caught; no validation that built artifacts work"
     severity: "HIGH"
-    effort: "40+ hours"
-  - title: "No container image testing"
-    impact: "Client libraries are distributed as pip wheels and C++ binaries but no build or packaging validation in CI"
+    effort: "8-16 hours"
+  - title: "No integration test automation"
+    impact: "C++ client tests require a running Triton server but CI never sets one up; integration failures are invisible"
+    severity: "HIGH"
+    effort: "16-24 hours"
+  - title: "Java client has zero tests"
+    impact: "Entire Java client library is completely untested"
     severity: "MEDIUM"
-    effort: "8-12 hours"
-  - title: "CodeQL only scans Python, not C++ or Java"
-    impact: "C++ code (gRPC/HTTP client) has no SAST coverage despite being security-sensitive network code"
-    severity: "HIGH"
+    effort: "8-16 hours"
+  - title: "No dependency vulnerability scanning beyond CodeQL"
+    impact: "Only Python CodeQL SAST; no Trivy/Snyk for container or dependency scanning"
+    severity: "MEDIUM"
     effort: "2-4 hours"
-  - title: "No agent rules for test automation"
-    impact: "AI-assisted development cannot leverage project-specific test patterns"
-    severity: "LOW"
-    effort: "2-3 hours"
 quick_wins:
   - title: "Add pytest execution to PR workflow"
     effort: "2-3 hours"
-    impact: "Ensure Python unit tests run on every PR; catch regressions immediately"
+    impact: "Python unit tests (shared memory, HTTP client) would run on every PR, catching regressions immediately"
   - title: "Add codecov integration for Python tests"
     effort: "2-3 hours"
-    impact: "Immediate visibility into Python test coverage with PR reporting"
-  - title: "Extend CodeQL to C++ and Java"
+    impact: "Immediate visibility into Python test coverage with PR-level reporting"
+  - title: "Extend CodeQL to cover C++ code"
     effort: "1-2 hours"
-    impact: "SAST coverage for security-sensitive gRPC/HTTP client code"
+    impact: "CodeQL currently only scans Python; enabling C++ catches memory safety issues in the C++ client"
   - title: "Add Trivy dependency scanning"
     effort: "1-2 hours"
-    impact: "Detect vulnerable dependencies in Python packages and Maven pom.xml"
-  - title: "Create basic agent rules for test patterns"
+    impact: "Detect known vulnerabilities in Python/Java/Rust dependencies before they ship"
+  - title: "Create basic CLAUDE.md with test patterns"
     effort: "2-3 hours"
-    impact: "Consistent AI-generated tests following project conventions"
+    impact: "Guide AI agents to produce consistent, correct tests following existing patterns"
 recommendations:
   priority_0:
-    - "Add CI workflow that executes Python pytest, C++ GoogleTest, and Rust cargo test on every PR"
-    - "Add codecov/coveralls integration with minimum coverage thresholds"
-    - "Extend CodeQL to scan C++ and Java in addition to Python"
+    - "Add GitHub Actions workflow to run Python unit tests (pytest) on every PR"
+    - "Add GitHub Actions workflow to run C++ tests via CMake/CTest with a Triton server container"
+    - "Implement coverage tracking with codecov for at least the Python client"
   priority_1:
-    - "Add integration test workflow that spins up a Triton server container and runs client tests against it"
-    - "Add pip wheel build validation in PR workflow to catch packaging issues"
-    - "Add Trivy or Snyk scanning for dependency vulnerabilities"
-    - "Increase Python unit test coverage for HTTP and gRPC client modules"
+    - "Add integration tests that spin up a Triton server container and validate client operations end-to-end"
+    - "Create JUnit tests for the Java HTTP client library"
+    - "Extend CodeQL scanning to include C++ in the language matrix"
+    - "Add Trivy or Snyk dependency scanning workflow"
   priority_2:
-    - "Add contract tests between client and server gRPC API"
-    - "Create agent rules for test automation (.claude/rules/)"
-    - "Add performance regression tests for client latency/throughput"
-    - "Add multi-platform build validation (Linux, macOS, Windows)"
+    - "Add comprehensive agent rules (.claude/rules/) for test creation patterns"
+    - "Add multi-architecture build validation for the client libraries"
+    - "Implement contract tests for the gRPC/HTTP API boundary"
+    - "Add performance regression tests for client throughput/latency"
 ---
 
 # Quality Analysis: triton-inference-server/client
 
 ## Executive Summary
+
 - **Overall Score: 4.2/10**
-- **Repository Type**: Multi-language client library (Python, C++, Java, Rust, Go)
-- **Primary Languages**: Python (79 files), C/C++ (40 files), Java (18 files), Rust (5 files)
-- **Framework**: Triton Inference Server client libraries for HTTP/REST and gRPC protocols
-- **Key Strengths**: Strong pre-commit hook configuration with multi-language formatting; CodeQL SAST for Python; well-structured codebase with clear separation by language
-- **Critical Gaps**: No tests run in CI; no coverage tracking; very low test-to-code ratio; CodeQL only covers Python; no container/image testing
-- **Agent Rules Status**: Missing
+- **Repository Type**: Multi-language client library (Python, C++, Java, Rust) for NVIDIA Triton Inference Server
+- **Primary Languages**: Python (~8,700 LOC), C++ (~7,100 LOC), Java (~2,500 LOC), Rust (~2,250 LOC)
+- **Key Strengths**: Good pre-commit hook configuration with comprehensive linting, CodeQL SAST on PRs, well-structured multi-language codebase
+- **Critical Gaps**: Tests exist but are never executed in CI; zero coverage tracking; no container image testing; Java has no tests at all
+- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
 
 ## Quality Scorecard
+
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 4.0/10 | Minimal unit tests across Python, C++, and Rust; no Java tests |
-| Integration/E2E | 3.0/10 | Server-dependent tests exist but no automated E2E pipeline |
-| **Build Integration** | **2.0/10** | **No PR-time build validation or packaging tests** |
-| Image Testing | 1.0/10 | No container images in this repo |
-| Coverage Tracking | 1.0/10 | No coverage tools configured |
-| CI/CD Automation | 4.0/10 | Only pre-commit and CodeQL workflows; no test execution |
-| Agent Rules | 0.0/10 | No agent rules or AI test guidance |
+| Unit Tests | 4.0/10 | Limited unit tests across Python, C++, Rust; Java untested; not run in CI |
+| Integration/E2E | 3.0/10 | C++ tests require live Triton server; no CI automation |
+| **Build Integration** | **2.0/10** | **No PR-time build validation; CMake builds manual; no container testing** |
+| Image Testing | 1.0/10 | No Dockerfiles, container builds, or runtime validation |
+| Coverage Tracking | 1.0/10 | No coverage generation, no codecov, no thresholds |
+| CI/CD Automation | 4.0/10 | Only pre-commit linting and CodeQL; no test execution in CI |
+| Agent Rules | 0.0/10 | No AI agent guidance of any kind |
 
 ## Critical Gaps
 
-### 1. No Tests Execute in CI/CD
-- **Impact**: Tests exist in `src/python/library/tests/`, `src/c++/tests/`, and `src/rust/triton-client/tests/` but NONE are run by any GitHub Actions workflow
+### 1. No Test Execution in CI/CD Pipeline
+- **Impact**: Tests exist across Python (16 test functions), C++ (41 test cases via GTest), and Rust (10 test functions) but **none are executed in CI**. The only two GitHub Actions workflows are `pre-commit.yml` (linting) and `codeql.yml` (Python SAST). Regressions can be merged without any automated test gate.
 - **Severity**: HIGH
 - **Effort**: 8-12 hours
-- **Details**: The repository has only 2 workflows:
-  - `pre-commit.yml` - Runs linting/formatting checks on PRs
-  - `codeql.yml` - Runs CodeQL SAST scanning on PRs
-  - Neither workflow executes any test suite
-  - Regressions can be merged without detection
+- **Evidence**: `.github/workflows/` contains only `codeql.yml` and `pre-commit.yml`; neither runs pytest, ctest, or cargo test.
 
 ### 2. No Coverage Tracking or Enforcement
-- **Impact**: No visibility into test coverage levels; no `.codecov.yml`, `.coveragerc`, or any coverage configuration
+- **Impact**: With no `.coveragerc`, `codecov.yml`, or any coverage configuration, there is zero visibility into test coverage. Coverage can silently degrade to zero without anyone noticing.
 - **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: Without coverage tracking, there's no way to know what percentage of the codebase is tested or to prevent coverage regression
+- **Effort**: 4-6 hours (add pytest-cov + codecov integration)
 
-### 3. Extremely Low Test-to-Code Ratio
-- **Impact**: Vast majority of code paths are untested
+### 3. No Container Image Build or Testing
+- **Impact**: The repository contains no Dockerfiles, Containerfiles, or docker-compose configurations. While the client libraries are distributed as pip packages and native libraries, there is no validation that built artifacts install and function correctly in containerized environments — which is how most Triton deployments consume these clients.
 - **Severity**: HIGH
-- **Effort**: 40+ hours
-- **Details**:
-  - **Python**: ~495 lines of test code vs ~16,945 lines of source (~2.9% ratio)
-    - 3 test files covering shared memory and HTTP client
-    - No tests for gRPC client, async clients, auth, plugin system, or utilities
-  - **C++**: ~3,605 lines of test code vs ~7,125 lines of library source (~50% ratio, but tests require running server)
-    - 4 test files: `cc_client_test`, `client_timeout_test`, `grpc_cancellation_test`, `memory_leak_test`
-    - Tests use GoogleTest but require both HTTP and gRPC enabled AND a running Triton server
-  - **Rust**: ~380 lines of test code with good offline/online separation
-    - Best-structured tests in the repo with env-gated online tests
-  - **Java**: 0 test files (only MemoryGrowthTest which is an example, not a test)
-  - **Go/JavaScript**: No tests (generated gRPC stubs only)
+- **Effort**: 8-16 hours
 
-### 4. CodeQL Only Scans Python
-- **Impact**: C++ gRPC/HTTP client code has no SAST analysis despite handling network data
+### 4. No Integration Test Automation
+- **Impact**: The C++ test suite (`cc_client_test.cc`, `grpc_cancellation_test.cc`) explicitly requires a running Triton server (comment: "This test must be run with a running Triton server, check L0_grpc in server repo for the setup"). CI never provisions this server, so these integration tests are effectively dead code in the CI context.
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: The `codeql.yml` workflow only configures `language: [ 'python' ]` despite the repo containing significant C++ and Java code that handles serialization, deserialization, and network communication
+- **Effort**: 16-24 hours (requires container orchestration in CI)
 
-### 5. No Container Image or Build Validation
-- **Impact**: Client wheel builds, C++ library compilation, and Java packaging not validated in CI
+### 5. Java Client Has Zero Tests
+- **Impact**: The Java HTTP client library (~2,500 LOC, 18 Java files) has no test directory, no test files, and no test dependencies. Any regression or API-breaking change is undetectable.
 - **Severity**: MEDIUM
-- **Effort**: 8-12 hours
-- **Details**: The CMake build system supports `TRITON_ENABLE_TESTS` but no CI workflow builds the project
+- **Effort**: 8-16 hours (create JUnit test suite from scratch)
+
+### 6. Limited Security Scanning Scope
+- **Impact**: CodeQL is configured but only scans Python (`language: ['python']`). The C++ code — which handles network protocols, memory management, and shared memory operations — is not scanned for memory safety issues.
+- **Severity**: MEDIUM
+- **Effort**: 2-4 hours (extend CodeQL matrix + add Trivy)
 
 ## Quick Wins
 
 ### 1. Add pytest Execution to PR Workflow (2-3 hours)
+Run the 16 existing Python unit tests on every PR:
+
 ```yaml
-# Add to .github/workflows/tests.yml
-name: Tests
+name: tests
 on: [pull_request]
 jobs:
   python-tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
-    - uses: actions/setup-python@v6
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
-    - run: pip install pytest numpy rapidjson geventhttpclient
-    - run: pytest src/python/library/tests/ -v
-```
-
-### 2. Add Codecov Integration (2-3 hours)
-```yaml
-    - run: pip install pytest-cov
+        python-version: '3.10'
+    - run: pip install -e "src/python/library[all]" pytest pytest-cov
     - run: pytest src/python/library/tests/ --cov=src/python/library/tritonclient --cov-report=xml
     - uses: codecov/codecov-action@v4
       with:
-        files: coverage.xml
+        file: coverage.xml
 ```
 
-### 3. Extend CodeQL to C++ and Java (1-2 hours)
+### 2. Add Codecov Integration (2-3 hours)
+Add `.codecov.yml` with coverage thresholds:
+
 ```yaml
-# In codeql.yml, update the matrix:
-strategy:
-  matrix:
-    language: [ 'python', 'cpp', 'java' ]
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: 80%
+comment:
+  layout: "reach, diff, flags"
+```
+
+### 3. Extend CodeQL to C++ (1-2 hours)
+Update the CodeQL workflow matrix:
+```yaml
+matrix:
+  language: ['python', 'cpp']
 ```
 
 ### 4. Add Trivy Dependency Scanning (1-2 hours)
 ```yaml
-  dependency-scan:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v5
-    - uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: 'fs'
-        scan-ref: '.'
-        severity: 'HIGH,CRITICAL'
+- name: Run Trivy vulnerability scanner
+  uses: aquasecurity/trivy-action@master
+  with:
+    scan-type: 'fs'
+    scan-ref: '.'
+    severity: 'CRITICAL,HIGH'
 ```
+
+### 5. Create Basic CLAUDE.md (2-3 hours)
+Document test patterns, build instructions, and testing expectations for AI agents.
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows Inventory:**
-| Workflow | Trigger | Purpose | Tests? |
-|----------|---------|---------|--------|
-| `pre-commit.yml` | PR | Linting, formatting, codespell | No |
-| `codeql.yml` | PR | SAST scanning (Python only) | No |
+**Workflow Inventory** (2 workflows total):
 
-**What's Missing:**
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `pre-commit.yml` | PR | Runs pre-commit hooks (isort, black, flake8, clang-format, codespell, mypy) |
+| `codeql.yml` | PR | Python-only SAST analysis |
+
+**Critical Missing**:
 - No test execution workflow
 - No build validation workflow
-- No release/packaging workflow
 - No periodic/nightly test runs
-- No concurrency control needed (only 2 lightweight workflows)
-- No caching needed (pre-commit and CodeQL handle their own)
+- No release automation
+- No concurrency control
+- No caching strategies
+- No matrix testing across Python versions
+
+**Pre-commit Hooks** (Strong):
+The `.pre-commit-config.yaml` is well-configured with 6 hook repositories:
+- **isort** (v5.12.0): Python import sorting
+- **black** (v23.1.0): Python code formatting
+- **flake8** (v7.3.0): Python linting
+- **clang-format** (v16.0.5): C/C++/CUDA/Proto/Java formatting
+- **codespell** (v2.2.4): Spell checking
+- **mypy** (v1.9.0): Python type checking (limited to genai-perf only)
+- **pre-commit-hooks** (v6.0.0): 8 general checks (merge conflict, JSON/TOML/YAML validation, etc.)
+
+**Note**: mypy is scoped only to `src/c++/perf_analyzer/genai-perf/` — the main Python client library (`tritonclient`) is not type-checked.
 
 ### Test Coverage
 
-**Python Tests (src/python/library/tests/):**
-- `test_inference_server_client.py` (117 lines) - Tests HTTP client error handling and response parsing using mocks
-- `test_shared_memory.py` (183 lines) - Tests POSIX shared memory lifecycle, set/get operations
-- `test_cuda_shared_memory.py` (168 lines) - Tests CUDA shared memory operations
-- Framework: `unittest` with `unittest.mock`
-- **Missing coverage**: gRPC client (`_client.py` - 1,936 lines), async HTTP/gRPC (`aio/`), authentication (`_auth.py`), plugin system (`_plugin.py`), request handling (`_request.py`), all utility functions
+**Python Tests** (3 test files, 16 test functions, 495 lines):
+- `test_inference_server_client.py`: 4 tests — HTTP client success/failure paths using unittest.mock
+- `test_shared_memory.py`: 7 tests — Shared memory lifecycle, offsets, duplicates, numpy bytes
+- `test_cuda_shared_memory.py`: 5 tests — CUDA shared memory DLPack and numpy operations (requires CUDA)
 
-**C++ Tests (src/c++/tests/):**
-- `cc_client_test.cc` (2,193 lines) - GoogleTest suite testing HTTP and gRPC client operations
-- `client_timeout_test.cc` (506 lines) - Tests client timeout behavior
-- `grpc_cancellation_test.cc` (582 lines) - Tests gRPC request cancellation
-- `memory_leak_test.cc` (324 lines) - Memory leak detection tests
-- Framework: GoogleTest
-- **Limitation**: ALL C++ tests require a running Triton Inference Server - they are effectively integration tests, not unit tests
-- **Missing**: Pure unit tests that mock the transport layer
+**C++ Tests** (4 test files, 41 test cases, 3,605 lines):
+- `cc_client_test.cc`: 30 GTest cases — HTTP/gRPC client operations, inference, streaming (requires live Triton server)
+- `grpc_cancellation_test.cc`: 11 GTest cases — gRPC request cancellation scenarios (requires live server)
+- `client_timeout_test.cc`: Manual timeout test (not GTest, no CI)
+- `memory_leak_test.cc`: Manual memory leak test (not GTest, no CI)
 
-**Rust Tests (src/rust/triton-client/tests/integration.rs):**
-- 380 lines with excellent test structure
-- Offline tests: ClientOptions, Error types, DataType parsing, InferInput/InferRequest builders, InferResponse round-trips
-- Online tests: Server health, metadata, repository index, model inference (gated by `TRITON_TEST_URL` env var)
-- **Best-structured tests in the entire repository** - good separation of concerns
+**Rust Tests** (1 test file, 10 test functions, 380 lines):
+- `integration.rs`: Integration tests for gRPC client operations (requires live Triton server)
 
-**Java Tests:**
-- **Zero test files** - Only `MemoryGrowthTest.java` exists but it's an example program, not a test
-- No JUnit or TestNG dependency in `pom.xml`
-- No `src/test/` directory
+**Java Tests**: **NONE** — Zero test files, zero test functions.
+
+**Test-to-Code Ratio**:
+| Language | Source LOC | Test LOC | Ratio |
+|----------|-----------|----------|-------|
+| Python | 8,709 | 495 | 5.7% |
+| C++ | 7,125 | 3,605 | 50.6% |
+| Rust | 2,252 | 380 | 16.9% |
+| Java | 2,499 | 0 | 0% |
+| **Total** | **20,585** | **4,480** | **21.8%** |
+
+The C++ test ratio looks healthy but is misleading — those tests require a running Triton server and never run in CI.
 
 ### Code Quality
 
-**Pre-commit Hooks (Excellent):**
-- `isort` - Python import sorting
-- `black` - Python formatting
-- `flake8` - Python linting (max-line-length=88)
-- `clang-format` - C/C++/CUDA/Java/proto formatting
-- `codespell` - Spell checking
-- `mypy` - Python type checking (limited to `genai-perf` directory only)
-- Multiple `pre-commit-hooks`: case conflict, executables, merge conflict, JSON/TOML/YAML validation, trailing whitespace
-- **Strength**: Comprehensive multi-language formatting enforced on PRs
+**Strengths**:
+- Comprehensive pre-commit hooks covering Python (isort, black, flake8), C++ (clang-format), and general hygiene
+- `.clang-format` with Google-based style for consistent C++ formatting
+- codespell for catching typos
+- JSON/TOML/YAML validation hooks
 
-**Static Analysis:**
-- CodeQL with `security-and-quality` queries (Python only)
-- mypy configured but only for genai-perf subdirectory
-- No gosec, Semgrep, or other SAST tools
-
-**Code Formatting:**
-- `.clang-format` - Google-based style for C++
-- `pyproject.toml` - isort and codespell configuration
-- Consistent formatting enforced across all languages via pre-commit
+**Weaknesses**:
+- mypy only covers `genai-perf` subdirectory, not the main Python client
+- No `ruff` adoption (modern Python linter that replaces flake8+isort+black)
+- No Rust linting (clippy, rustfmt) in pre-commit
+- No Java linting (checkstyle, spotbugs) in pre-commit
+- No `.editorconfig` for cross-editor consistency
 
 ### Container Images
 
-- **No Dockerfiles** in this repository
-- **No container image builds** or runtime validation
-- Client libraries are distributed as Python pip wheels (built via `build_wheel.py` through CMake)
-- C++ libraries built as static libraries via CMake
-- Java packaged as Maven JARs
-- Container images are likely built in the parent `triton-inference-server/server` repo
+**Status**: No container infrastructure whatsoever.
+- No Dockerfiles or Containerfiles in the repository
+- No docker-compose for local development
+- No multi-architecture build support
+- No image scanning (Trivy, Snyk)
+- No SBOM generation
+- No image signing
+
+**Note**: Container images for Triton clients are likely built in the parent `triton-inference-server/server` repo or via NGC, but this repo has no visibility into or control over that process.
 
 ### Security
 
-**Current:**
-- CodeQL scanning (Python only) with `security-and-quality` queries on PRs
-- Pre-commit hooks catch some issues (merge conflicts, executable permissions)
+**Present**:
+- CodeQL SAST on PRs (Python only, security-and-quality queries)
+- codespell for typo detection
 
-**Missing:**
+**Missing**:
+- C++ CodeQL scanning (significant gap for a library with shared memory operations)
 - No dependency scanning (Trivy, Snyk, Dependabot)
-- No secret detection (Gitleaks, TruffleHog)
-- No C++ or Java SAST analysis
+- No secret detection (gitleaks, TruffleHog)
+- No container scanning
 - No SBOM generation
-- No image signing (no images in this repo)
+- No supply chain security (Sigstore, SLSA)
 
 ### Agent Rules (Agentic Flow Quality)
 
-- **Status**: Missing
-- **Coverage**: No rules exist
-- **Quality**: N/A
-- **Gaps**:
-  - No `CLAUDE.md` or `AGENTS.md` in root
-  - No `.claude/` directory
-  - No `.claude/rules/` for test creation guidance
-  - No testing standards documentation
-- **Recommendation**: Generate test rules using `/test-rules-generator` covering:
-  - Python unittest patterns for HTTP/gRPC clients
-  - C++ GoogleTest patterns for client libraries
-  - Rust test patterns (offline vs server-dependent)
-  - Integration test setup with Triton server container
+**Status**: Missing
+- **No CLAUDE.md or AGENTS.md** in repository root
+- **No `.claude/` directory** — no rules, skills, or agent configuration
+- **No testing documentation** that could serve as agent guidance
+- **Impact**: AI agents generating code or tests for this repo have no guidance on patterns, frameworks, conventions, or testing expectations
+
+**Gaps**:
+- No unit test creation rules (Python unittest patterns, GTest patterns)
+- No integration test guidance (Triton server setup requirements)
+- No code style rules beyond what pre-commit enforces
+- No architecture documentation for AI agents
+
+**Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
+- Python unittest patterns (mock-based client testing)
+- C++ GTest patterns (template-based client testing)
+- Rust integration test patterns
+- Java JUnit test creation from scratch
+- Shared memory testing patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add CI test execution workflow** - Create a GitHub Actions workflow that runs Python pytest, and Rust cargo test on every PR. C++ tests require server infrastructure and should be addressed in Priority 1.
+1. **Add GitHub Actions workflow to run Python unit tests on every PR**
+   - 16 existing tests already pass without a Triton server
+   - Include pytest-cov for coverage reporting
+   - Estimated effort: 2-3 hours
 
-2. **Add coverage tracking** - Integrate codecov for Python tests immediately. Set an initial baseline and add minimum threshold enforcement.
+2. **Add GitHub Actions workflow for C++ build validation**
+   - At minimum, validate that CMake build succeeds
+   - Optionally, run GTest tests with a Triton server container
+   - Estimated effort: 4-8 hours
 
-3. **Extend CodeQL to all languages** - Add C++ and Java to the CodeQL matrix. The C++ client handles gRPC/HTTP network data and deserialization, making it a critical target for SAST.
+3. **Implement coverage tracking with codecov**
+   - Start with Python (easiest), expand to C++ with gcov/lcov
+   - Set coverage thresholds to prevent degradation
+   - Estimated effort: 4-6 hours
 
 ### Priority 1 (High Value)
 
-4. **Add integration test workflow with Triton server** - Create a workflow that starts a Triton server container and runs C++ and Python integration tests against it. This is needed because C++ tests are effectively integration tests.
+4. **Add integration test CI with Triton server container**
+   - Use `nvcr.io/nvidia/tritonserver` as a service container
+   - Run C++, Python, and Rust integration tests against it
+   - Estimated effort: 16-24 hours
 
-5. **Add pip wheel build validation** - Validate that the Python wheel builds correctly on PRs to catch packaging regressions.
+5. **Create JUnit tests for Java HTTP client**
+   - The Java client has 7 core classes with zero test coverage
+   - Mock HTTP responses for unit tests
+   - Estimated effort: 8-16 hours
 
-6. **Add dependency vulnerability scanning** - Add Trivy or Dependabot for Python (pip), Java (Maven), and Rust (Cargo) dependencies.
+6. **Extend CodeQL to C++ and add Trivy scanning**
+   - C++ handles shared memory and network protocols — critical for security scanning
+   - Add filesystem Trivy scan for dependency vulnerabilities
+   - Estimated effort: 2-4 hours
 
-7. **Increase Python unit test coverage** - Priority areas:
-   - gRPC client (`_client.py` - 1,936 lines, 0 tests)
-   - Async HTTP/gRPC clients (`aio/`)
-   - Authentication module (`_auth.py`)
-   - Plugin system (`_plugin.py`)
+7. **Add Rust CI with `cargo test` and `cargo clippy`**
+   - Rust client has good integration tests but no CI execution
+   - Estimated effort: 2-3 hours
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add contract tests** between client gRPC stubs and server protobuf definitions to detect API drift.
+8. **Create comprehensive CLAUDE.md and agent rules**
+   - Document testing patterns per language
+   - Add test creation rules for each test framework
+   - Estimated effort: 4-6 hours
 
-9. **Create agent rules** for test automation in `.claude/rules/` covering multi-language test patterns.
+9. **Add multi-architecture build validation**
+   - Validate builds for x86_64 and aarch64
+   - Estimated effort: 4-8 hours
 
-10. **Add performance regression tests** for client latency and throughput to detect performance regressions.
+10. **Implement contract tests for gRPC/HTTP API boundary**
+    - Ensure client and server agree on protobuf schemas
+    - Estimated effort: 8-12 hours
 
-11. **Add multi-platform CI** - Validate builds on Linux, macOS, and Windows (the CMake supports Windows conditional paths).
+11. **Add performance regression tests**
+    - Measure client throughput/latency across versions
+    - Estimated effort: 8-16 hours
+
+12. **Extend mypy coverage to main Python client library**
+    - Currently scoped only to genai-perf; main tritonclient package is unchecked
+    - Estimated effort: 4-8 hours
 
 ## Comparison to Gold Standards
 
-| Dimension | client (current) | odh-dashboard | notebooks | kserve |
-|-----------|-----------------|---------------|-----------|--------|
-| Unit Tests | 4/10 | 9/10 | 7/10 | 9/10 |
-| Integration/E2E | 3/10 | 9/10 | 8/10 | 9/10 |
-| Build Integration | 2/10 | 8/10 | 9/10 | 7/10 |
-| Image Testing | 1/10 | 7/10 | 10/10 | 8/10 |
-| Coverage Tracking | 1/10 | 8/10 | 6/10 | 9/10 |
-| CI/CD Automation | 4/10 | 9/10 | 9/10 | 9/10 |
-| Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
-| **Overall** | **4.2/10** | **8.5/10** | **7.5/10** | **8.0/10** |
-
-The largest delta is in CI/CD automation and coverage tracking. The Triton client repo has the foundational elements (pre-commit hooks, CodeQL) but is missing the core test execution infrastructure that gold-standard repos have.
+| Capability | triton-client | odh-dashboard | notebooks | kserve |
+|-----------|--------------|---------------|-----------|--------|
+| Unit Tests in CI | None | Comprehensive | Per-image | Extensive |
+| Integration Tests | Manual only | Automated | Automated | Automated |
+| Coverage Tracking | None | Codecov + enforcement | Per-component | Codecov |
+| Pre-commit Hooks | Strong (6 repos) | Strong | Moderate | Strong |
+| CodeQL/SAST | Python only | Multi-language | Yes | Yes |
+| Container Scanning | None | Trivy | Trivy + SBOM | Trivy |
+| E2E Testing | None | Cypress + Playwright | 5-layer validation | Kind cluster |
+| Agent Rules | None | Comprehensive | Moderate | Moderate |
+| Build Validation | None | PR-time | PR-time | PR-time |
+| Multi-arch Support | None | Yes | Yes | Yes |
 
 ## File Paths Reference
 
-### CI/CD Configuration
-- `.github/workflows/pre-commit.yml` - Pre-commit hook enforcement
-- `.github/workflows/codeql.yml` - CodeQL SAST scanning
+### CI/CD
+- `.github/workflows/pre-commit.yml` — Pre-commit hook execution
+- `.github/workflows/codeql.yml` — Python SAST analysis
+
+### Testing
+- `src/python/library/tests/test_inference_server_client.py` — Python HTTP client tests
+- `src/python/library/tests/test_shared_memory.py` — Python shared memory tests
+- `src/python/library/tests/test_cuda_shared_memory.py` — Python CUDA shared memory tests
+- `src/c++/tests/cc_client_test.cc` — C++ GTest client tests (30 cases)
+- `src/c++/tests/grpc_cancellation_test.cc` — C++ gRPC cancellation tests (11 cases)
+- `src/c++/tests/client_timeout_test.cc` — C++ timeout test (manual)
+- `src/c++/tests/memory_leak_test.cc` — C++ memory leak test (manual)
+- `src/rust/triton-client/tests/integration.rs` — Rust integration tests (10 functions)
 
 ### Code Quality
-- `.pre-commit-config.yaml` - Multi-language pre-commit hooks (isort, black, flake8, clang-format, codespell, mypy)
-- `.clang-format` - C++ formatting configuration (Google-based)
-- `pyproject.toml` - Python tool configuration (isort, codespell)
+- `.pre-commit-config.yaml` — Pre-commit hooks (isort, black, flake8, clang-format, codespell, mypy)
+- `.clang-format` — Google-based C++ formatting style
+- `pyproject.toml` — codespell and isort configuration
 
-### Build System
-- `CMakeLists.txt` - Root CMake build configuration
-- `src/c++/CMakeLists.txt` - C++ client build
-- `src/c++/tests/CMakeLists.txt` - C++ test build (GoogleTest)
-- `src/python/CMakeLists.txt` - Python client build and wheel packaging
-- `src/java/pom.xml` - Java Maven configuration
-- `src/rust/triton-client/Cargo.toml` - Rust package configuration
+### Build
+- `CMakeLists.txt` — Root CMake build (C++, Python, Java clients)
+- `src/c++/CMakeLists.txt` — C++ client build
+- `src/c++/tests/CMakeLists.txt` — C++ test targets (GTest)
+- `src/python/CMakeLists.txt` — Python client build
+- `src/java/CMakeLists.txt` — Java client build
+- `src/rust/triton-client/Cargo.toml` — Rust client build
 
-### Test Files
-- `src/python/library/tests/test_inference_server_client.py` - Python HTTP client tests
-- `src/python/library/tests/test_shared_memory.py` - Python shared memory tests
-- `src/python/library/tests/test_cuda_shared_memory.py` - Python CUDA shared memory tests
-- `src/c++/tests/cc_client_test.cc` - C++ client GoogleTest suite (2,193 lines)
-- `src/c++/tests/client_timeout_test.cc` - C++ timeout tests
-- `src/c++/tests/grpc_cancellation_test.cc` - C++ gRPC cancellation tests
-- `src/c++/tests/memory_leak_test.cc` - C++ memory leak tests
-- `src/rust/triton-client/tests/integration.rs` - Rust integration tests (best-structured in repo)
-
-### Source Libraries
-- `src/python/library/tritonclient/` - Python client library (HTTP, gRPC, utils)
-- `src/c++/library/` - C++ client library (HTTP, gRPC)
-- `src/java/src/main/java/triton/client/` - Java HTTP client
-- `src/rust/triton-client/src/` - Rust gRPC client
-- `src/grpc_generated/` - Generated gRPC stubs (Go, Java, JavaScript)
+### Source
+- `src/python/library/tritonclient/` — Python client library (~8,700 LOC)
+- `src/c++/library/` — C++ client library (~7,100 LOC)
+- `src/java/src/main/java/triton/client/` — Java HTTP client (~2,500 LOC)
+- `src/rust/triton-client/src/` — Rust gRPC client (~2,250 LOC)
+- `src/grpc_generated/` — Generated gRPC bindings (Go, Java, JavaScript)

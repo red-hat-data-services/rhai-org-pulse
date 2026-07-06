@@ -1,423 +1,391 @@
 ---
 repository: "opendatahub-io/agents"
-overall_score: 2.6
+overall_score: 2.8
 scorecard:
   - dimension: "Unit Tests"
     score: 4.0
-    status: "rfe-dedup plugin has strong pytest coverage (2,783 lines), but rest of repo has zero tests"
+    status: "Tests exist only for rfe-dedup plugin (12 test files, ~2900 LOC); remaining ~9000 LOC of Python and Go untested"
   - dimension: "Integration/E2E"
-    score: 0.5
-    status: "No integration or E2E test infrastructure; example test files are manual scripts, not automated tests"
+    score: 1.0
+    status: "No integration or E2E test suites; langchain tests are manual validation scripts, not automated tests"
   - dimension: "Build Integration"
     score: 0.0
-    status: "No CI/CD pipeline exists; no PR-time validation of any kind"
+    status: "No CI/CD pipelines exist; no PR checks, no automated builds, no Konflux integration"
   - dimension: "Image Testing"
     score: 0.0
-    status: "No Dockerfiles, no container builds, no image testing"
+    status: "No container images built; no Dockerfiles; single docker-compose.yml for one example only"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling (codecov, coveralls, etc.); no coverage thresholds"
+    status: "No coverage tooling; no codecov, coveralls, or any coverage measurement"
   - dimension: "CI/CD Automation"
-    score: 0.0
-    status: "No GitHub Actions workflows, no Makefile, no CI configuration whatsoever"
+    score: 0.5
+    status: "Only Dependabot for dependency updates; no workflows, no linting, no test automation"
   - dimension: "Agent Rules"
     score: 6.0
-    status: "CLAUDE.md and AGENTS.md exist with good project context, but no .claude/rules/ for test patterns"
+    status: "CLAUDE.md and AGENTS.md present with good context; plugin system with skills; no .claude/rules/ for test patterns"
 critical_gaps:
-  - title: "No CI/CD pipeline"
-    impact: "No automated checks on PRs - broken code, regressions, and quality issues merge freely"
+  - title: "No CI/CD pipelines at all"
+    impact: "Code merges with zero automated validation; broken code can land undetected"
     severity: "HIGH"
     effort: "4-8 hours"
   - title: "No automated test execution"
-    impact: "2,783 lines of rfe-dedup tests exist but never run automatically; regressions go undetected"
+    impact: "Existing unit tests (rfe-dedup) are never run in CI; regressions go unnoticed"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No coverage tracking"
-    impact: "Cannot measure or enforce test coverage; no visibility into untested code paths"
+  - title: "Most code has zero test coverage"
+    impact: "Examples, tools, and benchmarking code (~9000 LOC) have no tests at all"
     severity: "HIGH"
-    effort: "2-3 hours"
-  - title: "Most code has zero tests"
-    impact: "Benchmarking tools, examples, MCP tools have no tests; bugs ship silently"
-    severity: "MEDIUM"
-    effort: "16-24 hours"
-  - title: "No linting or static analysis"
-    impact: "Code quality inconsistencies, potential bugs, and style drift across contributors"
-    severity: "MEDIUM"
+    effort: "20-40 hours"
+  - title: "No linting or code quality enforcement"
+    impact: "No static analysis catches bugs, style violations, or type errors before merge"
+    severity: "HIGH"
     effort: "2-4 hours"
   - title: "No security scanning"
-    impact: "Dependency vulnerabilities and secrets in code go undetected"
-    severity: "MEDIUM"
+    impact: "Dependency vulnerabilities and secrets in code are never detected"
+    severity: "HIGH"
     effort: "2-3 hours"
 quick_wins:
   - title: "Add GitHub Actions workflow to run rfe-dedup pytest suite on PRs"
     effort: "1-2 hours"
-    impact: "Immediately protects the most mature component from regressions"
-  - title: "Add ruff linting to PR workflow"
+    impact: "Immediately validates the most tested component on every PR"
+  - title: "Add ruff linting for Python code"
+    effort: "1 hour"
+    impact: "Catch common bugs and enforce consistent style across all Python code"
+  - title: "Add Dependabot alerts + Trivy scanning workflow"
     effort: "1-2 hours"
-    impact: "Catches style issues and common bugs across all Python code"
-  - title: "Add Dependabot or Renovate for dependency updates"
-    effort: "30 minutes"
-    impact: "Automated security patches for Python and Go dependencies"
-  - title: "Add pre-commit hooks configuration"
+    impact: "Automated vulnerability detection for Python and Go dependencies"
+  - title: "Add pre-commit hooks for formatting and linting"
     effort: "1-2 hours"
-    impact: "Local quality checks before code reaches the repo"
+    impact: "Developers get immediate feedback before committing"
+  - title: "Add Go vet/staticcheck for Go examples"
+    effort: "1 hour"
+    impact: "Catch common Go issues in the 5 Go example files"
 recommendations:
   priority_0:
-    - "Create a GitHub Actions CI pipeline with pytest for agent-plugins/tests/"
-    - "Add ruff or flake8 linting for all Python files"
-    - "Enable Dependabot for security vulnerability scanning"
+    - "Create a basic GitHub Actions CI workflow that runs pytest for agent-plugins/tests on every PR"
+    - "Add ruff or flake8 linting to the CI workflow for all Python files"
+    - "Enable GitHub Dependabot security alerts"
   priority_1:
-    - "Add codecov integration with coverage thresholds for rfe-dedup plugin"
-    - "Add unit tests for benchmarking/significance-testing/ scripts"
-    - "Create .claude/rules/ with test automation guidance for contributors"
-    - "Add Go linting (golangci-lint) for example Go code"
+    - "Add unit tests for benchmarking/significance-testing scripts (bootstrap.py, bfcl_loader.py)"
+    - "Add integration tests for MCP tester tool"
+    - "Add coverage tracking with codecov or coveralls, starting with rfe-dedup"
+    - "Create .claude/rules/ with test creation guidelines for the pytest patterns used"
   priority_2:
-    - "Add notebook validation workflow (nbval or papermill) for Jupyter notebooks"
-    - "Add JSON schema validation for mcp-discovery-configmap/schema.json"
-    - "Add pre-commit hooks with ruff, mypy, and gitleaks"
-    - "Create integration tests for MCP examples using mock servers"
+    - "Add Go CI workflow for linting and building Go examples"
+    - "Create pre-commit-config.yaml with ruff, mypy, and go-vet hooks"
+    - "Add notebook validation (nbval or papermill) to verify Jupyter notebooks execute"
+    - "Add CODEOWNERS file for review requirements"
 ---
 
 # Quality Analysis: opendatahub-io/agents
 
 ## Executive Summary
 
-- **Overall Score: 2.6/10**
-- **Repository Type**: Experimental sandbox / examples repository
-- **Primary Languages**: Python 3.13+ (primary), Go 1.24 (secondary)
-- **Frameworks**: OpenAI SDK, LangChain/LangGraph, CrewAI, FastMCP, MLflow
-- **Key Strengths**: Excellent AGENTS.md/CLAUDE.md documentation; rfe-dedup plugin has professional-grade unit tests
-- **Critical Gaps**: Zero CI/CD pipeline, no automated test execution, no linting, no coverage tracking, no security scanning
-- **Agent Rules Status**: Partial (CLAUDE.md and AGENTS.md exist with project context, but no `.claude/rules/` directory for test automation patterns)
+- **Overall Score: 2.8/10**
+- **Repository Type**: Experimental sandbox / examples collection for agentic AI reasoning
+- **Primary Languages**: Python 3.13+ (~11,700 LOC), Go 1.22-1.25 (~350 LOC)
+- **Key Strengths**: Good documentation (CLAUDE.md, AGENTS.md, ADRs), well-structured rfe-dedup plugin with comprehensive unit tests, clear architectural decisions
+- **Critical Gaps**: Zero CI/CD pipelines, no linting, no security scanning, no coverage tracking, majority of code untested
+- **Agent Rules Status**: Partially present (CLAUDE.md/AGENTS.md at root, plugin system), but no `.claude/rules/` directory for test patterns
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 4.0/10 | rfe-dedup plugin has 2,783 lines of pytest tests; rest of repo untested |
-| Integration/E2E | 0.5/10 | No integration test infrastructure; 2 manual test scripts in examples |
-| **Build Integration** | **0.0/10** | **No CI/CD pipeline exists at all** |
-| Image Testing | 0.0/10 | No Dockerfiles or container builds (except docker-compose for MCP reporting) |
-| Coverage Tracking | 0.0/10 | No coverage tooling, thresholds, or reporting |
-| CI/CD Automation | 0.0/10 | No GitHub Actions, Makefile, or any CI configuration |
-| Agent Rules | 6.0/10 | CLAUDE.md/AGENTS.md provide good project context; no .claude/rules/ |
+| Unit Tests | 4.0/10 | Tests exist only for rfe-dedup plugin; rest of codebase untested |
+| Integration/E2E | 1.0/10 | No integration or E2E test suites; manual validation scripts only |
+| **Build Integration** | **0.0/10** | **No CI/CD pipelines; no PR checks whatsoever** |
+| Image Testing | 0.0/10 | No container images; no Dockerfiles |
+| Coverage Tracking | 0.0/10 | No coverage tools configured |
+| CI/CD Automation | 0.5/10 | Dependabot only; no workflows |
+| Agent Rules | 6.0/10 | CLAUDE.md/AGENTS.md with good context; plugin system; no test rules |
 
 ## Critical Gaps
 
-### 1. No CI/CD Pipeline
-- **Impact**: No automated checks on pull requests. Broken code, regressions, dependency issues, and quality problems can merge freely without any gate.
+### 1. No CI/CD Pipelines
+- **Impact**: Code merges with zero automated validation. There is no `.github/workflows/` directory at all. The only automation is Dependabot for dependency version bumps.
 - **Severity**: HIGH
-- **Effort**: 4-8 hours to establish a basic pipeline
-- **Details**: The repository has no `.github/workflows/` directory, no `Makefile`, no `.gitlab-ci.yml`, no `Jenkinsfile`. This is the most fundamental gap.
+- **Effort**: 4-8 hours to set up comprehensive CI
+- **Evidence**: `find .github/workflows` returns nothing; only CI-related config is Dependabot
 
 ### 2. No Automated Test Execution
-- **Impact**: The rfe-dedup plugin has 2,783 lines of well-written pytest tests across 11 test files, but they never run automatically. Regressions to this carefully tested code go completely undetected.
+- **Impact**: The rfe-dedup plugin has 12 well-written pytest test files (~2,885 LOC) covering 11 scripts, but these tests are never run in CI. Regressions can be introduced silently.
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: Tests exist at `agent-plugins/tests/rfe-dedup/` covering fetch, find, filter, form, merge, assemble, and more. These are professional-quality tests with fixtures, monkeypatching, and edge cases. They just need a CI trigger.
+- **Evidence**: No GitHub Actions, no Makefile test targets, no CI configuration of any kind
 
-### 3. No Coverage Tracking
-- **Impact**: Cannot measure test coverage, set thresholds, or enforce coverage on new contributions. Zero visibility into how much code is actually tested.
+### 3. Most Code Lacks Tests
+- **Impact**: ~9,000 lines of Python code outside the rfe-dedup tests directory have no test coverage. This includes the benchmarking tools (significance testing, bootstrap), all examples (langchain, CrewAI, kubernetes-mcp, etc.), and the MCP tester utility.
+- **Severity**: HIGH
+- **Effort**: 20-40 hours for meaningful coverage
+- **Test-to-Code Ratio**: Overall ~25% (2,885 test LOC / 11,676 total Python LOC), but concentrated entirely in one plugin
+
+### 4. No Linting or Code Quality Enforcement
+- **Impact**: No ruff, flake8, mypy, pylint, golangci-lint, or any static analysis tool is configured. No `pyproject.toml` at the repo root with tool configuration.
+- **Severity**: HIGH
+- **Effort**: 2-4 hours
+- **Evidence**: No `.pre-commit-config.yaml`, no root-level `pyproject.toml` with `[tool.ruff]`, no `.golangci.yaml`
+
+### 5. No Security Scanning
+- **Impact**: No dependency vulnerability scanning (beyond Dependabot version bumps), no SAST, no secret detection. Multiple files handle API keys and tokens.
 - **Severity**: HIGH
 - **Effort**: 2-3 hours
-
-### 4. Majority of Code Untested
-- **Impact**: The benchmarking tools (`significance_test.py`, `bootstrap.py`, `bfcl_loader.py`), all MCP example code, and utility scripts have no tests whatsoever. Bugs in these components ship silently.
-- **Severity**: MEDIUM
-- **Effort**: 16-24 hours for meaningful coverage
-
-### 5. No Linting or Static Analysis
-- **Impact**: No ruff, flake8, mypy, pylint, or golangci-lint. Code quality inconsistencies and potential bugs go undetected.
-- **Severity**: MEDIUM
-- **Effort**: 2-4 hours
-
-### 6. No Security Scanning
-- **Impact**: No Dependabot, Trivy, Snyk, CodeQL, or gitleaks. Dependency vulnerabilities and accidentally committed secrets go undetected.
-- **Severity**: MEDIUM
-- **Effort**: 2-3 hours
+- **Evidence**: No CodeQL, Trivy, Snyk, Gitleaks, or similar tools configured
 
 ## Quick Wins
 
-### 1. Add GitHub Actions CI for rfe-dedup Tests (1-2 hours)
+### 1. Add GitHub Actions CI for pytest (1-2 hours)
 ```yaml
 # .github/workflows/ci.yml
 name: CI
-on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
-
+on: [push, pull_request]
 jobs:
-  test-rfe-dedup:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v4
       - run: |
           cd agent-plugins
-          uv run --with pytest --with numpy pytest tests/rfe-dedup/ -v
+          uv pip install pytest numpy sentence-transformers faiss-cpu
+          pytest tests/ -v
 ```
 
-### 2. Add Ruff Linting (1-2 hours)
+### 2. Add ruff linting (1 hour)
+Create a root `pyproject.toml` with ruff configuration and add to CI:
+```toml
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+```
+
+### 3. Add Trivy scanning (1-2 hours)
 ```yaml
-  lint:
+# .github/workflows/security.yml
+name: Security
+on: [push, pull_request]
+jobs:
+  trivy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/ruff-action@v1
+      - uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
 ```
 
-### 3. Enable Dependabot (30 minutes)
-```yaml
-# .github/dependabot.yml
-version: 2
-updates:
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "gomod"
-    directory: "/examples/kubernetes-mcp"
-    schedule:
-      interval: "weekly"
-```
-
-### 4. Add Pre-commit Hooks (1-2 hours)
+### 4. Add pre-commit hooks (1-2 hours)
 ```yaml
 # .pre-commit-config.yaml
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.0
+    rev: v0.9.0
     hooks:
       - id: ruff
       - id: ruff-format
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.21.2
+    rev: v8.22.1
     hooks:
       - id: gitleaks
+```
+
+### 5. Add Go vet for Go examples (1 hour)
+```yaml
+  go-lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dir: [examples/github-mcp, examples/kubernetes-mcp, examples/slack-mcp, examples/servicenow-mcp, examples/gsuite-mcp]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+      - run: cd ${{ matrix.dir }} && go vet ./...
 ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Status**: Non-existent
+**Status: Non-existent**
 
-The repository has absolutely no CI/CD configuration:
-- No `.github/workflows/` directory
-- No `Makefile` with test targets
-- No `.gitlab-ci.yml` or `Jenkinsfile`
-- No task runner (Taskfile, justfile, etc.)
-
-This means:
-- PRs merge without any automated validation
-- Tests exist but never run automatically
-- No build verification of any kind
-- No automated linting or formatting checks
+- **No `.github/workflows/` directory** at all
+- No Makefile with test/lint targets
+- No GitLab CI, Jenkins, CircleCI, or other CI configuration
+- Dependabot is configured (evidenced by merge commit for `dependabot/pip/migration/legacy-agents/urllib3-2.7.0`) but only for dependency version bumps, not security alerts
+- No branch protection rules evident
+- No CODEOWNERS file
 
 ### Test Coverage
 
-**Test Files Found**: 13 files total
+**Status: Partial - concentrated in one component**
 
-| Component | Test Files | Test Lines | Source Lines | Ratio |
-|-----------|-----------|------------|--------------|-------|
-| rfe-dedup plugin | 11 (+ conftest.py) | 2,783 | 2,017 | 1.38:1 |
-| langchain examples | 2 | ~130 | ~450 | 0.29:1 |
-| benchmarking | 0 | 0 | ~600 | 0:1 |
-| MCP examples | 0 | 0 | ~350 (Go) | 0:1 |
-| tools | 0 | 0 | ~200 | 0:1 |
+#### rfe-dedup Plugin Tests (Strong)
+- **12 test files** in `agent-plugins/tests/rfe-dedup/`
+- **~2,885 lines** of test code covering 11 scripts (~2,017 lines)
+- **Test-to-code ratio**: 1.43:1 (excellent for this component)
+- **Framework**: pytest with fixtures, monkeypatching, and tmp_path
+- **Pattern**: Well-structured class-based tests (e.g., `TestBuildText`, `TestLuceneEscape`)
+- **Mocking strategy**: Heavy ML dependency mocking (faiss, sentence_transformers) with FakeIndex for FAISS inner-product search
+- **Shared fixtures**: `conftest.py` with `SAMPLE_RFE_A`, `SAMPLE_RFE_B`, and `patch_embedding_pipeline`
 
-**rfe-dedup Tests (Strong)**:
-- 11 test files covering all 11 scripts 1:1
-- Uses pytest with fixtures, monkeypatching, tmp_path
-- Tests edge cases: empty inputs, invalid JSON, path traversal, rate limiting
-- Mocks heavy ML dependencies (faiss, sentence_transformers) with FakeIndex
-- Good isolation using `monkeypatch.setattr` and `monkeypatch.setenv`
+#### Langchain/LangGraph Tests (Manual validation only)
+- `test_langchain_mcp.py` - Manual MCP connectivity test (requires running K8s MCP server)
+- `test_langchain_guardrails.py` - Manual guardrails test (requires running LLM)
+- These are **manual validation scripts**, not automated tests; they require live infrastructure
 
-**langchain-langgraph Tests (Weak)**:
-- `test_langchain_guardrails.py` and `test_langchain_mcp.py` are manual scripts, not pytest tests
-- They use `if __name__ == '__main__'` entry points
-- Require running infrastructure (Llama Stack, MCP servers, Ollama)
-- No assertions - just print output and catch exceptions
-- These are effectively demos, not tests
+#### Benchmarking Tests (None)
+- `significance_test.py` is a CLI tool, not a test file
+- `bootstrap.py` and `bfcl_loader.py` have no corresponding tests
 
-**Untested Components**:
-- `benchmarking/significance-testing/` - statistical testing scripts (bootstrap, BFCL loader) with no tests
-- All Go example code (5 files, ~350 lines)
-- `tools/mcp-tester/test-mcp-server.py` - despite the name, this is a diagnostic tool, not a test
-- All Jupyter notebooks (15 notebooks) - no notebook validation
+#### MCP Tester (None)
+- `test-mcp-server.py` is a diagnostic tool, not a test
+- No tests for the tool itself
+
+#### Notebooks (No validation)
+- 20 Jupyter notebooks with no nbval or papermill validation
+- Notebooks include training/evaluation workflows that could silently break
 
 ### Code Quality
 
-**Status**: No quality tooling configured
+**Status: No tools configured**
 
-- No `.golangci.yaml` or `.golangci.yml`
-- No `.eslintrc` or TypeScript config
-- No `ruff.toml`, `.flake8`, `mypy.ini`, or `pylint` config
-- No `.pre-commit-config.yaml`
-- No `Makefile` with lint targets
-- `.gitignore` is comprehensive (covers Python, JS, Go artifacts)
-- `pyproject.toml` files exist per-example but have no `[tool.ruff]` or `[tool.pytest]` sections
+- **Linting**: None. No ruff, flake8, pylint, mypy, or eslint configured
+- **Formatting**: No black, ruff-format, or prettier configured
+- **Static Analysis**: No CodeQL, Semgrep, or gosec
+- **Pre-commit Hooks**: No `.pre-commit-config.yaml`
+- **Type Checking**: No mypy.ini or pyright configuration
+- **Go Quality**: No golangci-lint, go vet in CI, or staticcheck
 
 ### Container Images
 
-**Status**: Not applicable (mostly)
+**Status: Not applicable**
 
-- No `Dockerfile` or `Containerfile` in the repository
-- One `docker-compose.yml` in `examples/mcp-project-reporting/` for running MCP servers
-- The repo is primarily examples and tools, not a deployable service
-- Llama Stack runs from pre-built images or venvs via `run.yaml`
+- This is an examples/tools repository, not a deployable service
+- No Dockerfiles or Containerfiles exist
+- Single `docker-compose.yml` in `examples/mcp-project-reporting/` for running an example
+- No container image building, testing, or scanning
 
 ### Security
 
-**Status**: No security tooling
+**Status: Minimal**
 
-- No Dependabot or Renovate configuration
-- No Trivy, Snyk, or vulnerability scanning
-- No CodeQL or SAST analysis
-- No gitleaks or secret detection
-- No `.trivyignore` or security policy
-- Dependencies are pinned in `pyproject.toml` (good practice) but never scanned
-- API keys and tokens are loaded from environment variables (good practice)
-- `fetch_rfes.py` validates HTTPS-only connections and sanitizes Jira keys with regex (good security hygiene)
+- **Dependency scanning**: Dependabot appears configured for version bumps only
+- **SAST**: None (no CodeQL, Semgrep)
+- **Secret detection**: None (no Gitleaks, TruffleHog)
+- **Concern**: Multiple files handle API keys (OPENAI_API_KEY, GITHUB_TOKEN, SLACK_MCP_TOKEN, etc.) with `os.getenv()`. While `.env` is in `.gitignore`, there's no automated secret detection to catch accidental commits.
+- **Concern**: Some files have hardcoded patterns like `"not applicable"` for API keys as defaults, which is acceptable but could mask configuration issues
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status**: Partial
+**Status: Partially Present**
 
-**Present**:
-- `CLAUDE.md` - Points to AGENTS.md (1 line)
-- `AGENTS.md` - Comprehensive 80-line document covering:
-  - Repository purpose and architecture
-  - Tech stack details (languages, frameworks, models)
-  - Important files index
-  - Common setup patterns with code examples
-  - Coding conventions
-  - Plugin development workflow
-- `CONTRIBUTING.md` - Plugin development guide
-- `adr/` directory with architectural decision records
+#### What's Present:
+- **CLAUDE.md**: Comprehensive 4,500+ word document covering:
+  - Tech stack and conventions
+  - Setup patterns for vLLM, Llama Stack, OpenAI, Ollama
+  - Agent plugin development workflow
+  - ADR references
+- **AGENTS.md**: Focused on agent plugin lifecycle:
+  - Plugin development instructions
+  - Reload/verification workflow
+  - Marketplace/plugin.json conventions
+- **Plugin System**: `agent-plugins/rfe-dedup/` with:
+  - Well-structured skill definition (SKILL.md)
+  - Plugin marketplace JSON
+  - Custom agent types (eval-pair, report-group)
 
-**Missing**:
-- No `.claude/` directory
-- No `.claude/rules/` for test automation guidance
-- No test creation rules (unit-tests.md, e2e-tests.md, etc.)
-- No testing standards documentation
-- No quality gates or checklists for contributions
+#### What's Missing:
+- **No `.claude/rules/` directory** for test creation guidelines
+- **No test pattern documentation** for how to write tests matching the pytest patterns used
+- **No `.claude/` directory** at all in the repository root
+- **No test automation guidance** for contributors
+- **No quality gates** defined in agent rules
 
-**Quality Assessment**:
-- AGENTS.md is well-structured and actionable - a model for project context
-- Conventions section establishes clear patterns (OpenAI SDK, LangGraph state, uv packaging)
-- Plugin development workflow is documented
-- Missing: test expectations, quality bars, coverage requirements
+#### Recommendation:
+Run `/test-rules-generator` to create `.claude/rules/` with:
+- `unit-tests.md` - pytest patterns matching the rfe-dedup style
+- `integration-tests.md` - MCP server integration testing patterns
+- `e2e-tests.md` - End-to-end validation patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Create GitHub Actions CI pipeline** (4-8 hours)
-   - Run rfe-dedup pytest suite on every PR
-   - Add ruff linting for all Python files
-   - Add Go build verification for example Go code
-   - Block merge on test failure
+1. **Create a GitHub Actions CI workflow** that runs the existing pytest suite on every PR. This is the single highest-ROI change — tests exist but never run automatically.
 
-2. **Enable Dependabot** (30 minutes)
-   - Configure for pip and gomod ecosystems
-   - Weekly security update checks
-   - Cover all `pyproject.toml` and `go.mod` locations
+2. **Add Python linting (ruff)** to catch common bugs and enforce consistent style. The repository has ~11,700 lines of Python with zero static analysis.
 
-3. **Add coverage tracking** (2-3 hours)
-   - Generate coverage reports with pytest-cov
-   - Integrate with codecov or coveralls
-   - Set minimum threshold (e.g., 80% for rfe-dedup, informational for rest)
+3. **Enable GitHub Dependabot security alerts** (not just version bumps) to catch known vulnerabilities in dependencies.
 
 ### Priority 1 (High Value)
 
-4. **Add unit tests for benchmarking scripts** (8-12 hours)
-   - `bootstrap.py` - test bootstrap resampling with known distributions
-   - `bfcl_loader.py` - test file loading and result alignment
-   - `significance_test.py` - test end-to-end with fixture data (example.json exists)
+4. **Add unit tests for benchmarking tools** — `bootstrap.py`, `bfcl_loader.py`, and `significance_test.py` are important data analysis tools that should have tests.
 
-5. **Create `.claude/rules/` for test automation** (2-3 hours)
-   - `unit-tests.md` - pytest patterns, fixture usage, monkeypatching
-   - `plugin-tests.md` - patterns for testing Claude Code plugin scripts
-   - `example-tests.md` - guidance for testable example code
+5. **Add coverage tracking** with codecov or coveralls, starting with the rfe-dedup plugin. Set a baseline and enforce non-regression.
 
-6. **Add Go linting** (1-2 hours)
-   - Add golangci-lint to CI for example Go code
-   - Enforce `go vet` and `staticcheck`
+6. **Create `.claude/rules/` test guidelines** to help contributors write consistent, high-quality tests following the patterns established in rfe-dedup.
 
-7. **Add pre-commit hooks** (1-2 hours)
-   - ruff (format + lint)
-   - gitleaks (secret detection)
-   - trailing whitespace, YAML validation
+7. **Add type checking** with mypy or pyright for at least the rfe-dedup scripts and benchmarking tools.
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Notebook validation** (4-6 hours)
-   - Add nbval or papermill to validate Jupyter notebooks don't have syntax errors
-   - Ensure notebooks have clean outputs or are properly cleared
+8. **Add Go CI workflow** for `go vet` and `go build` on the 5 Go example directories.
 
-9. **JSON schema validation** (1-2 hours)
-   - Validate `mcp-discovery-configmap/schema.json` against JSON Schema meta-schema
-   - Add schema validation to CI
+9. **Create `pre-commit-config.yaml`** with ruff, ruff-format, and gitleaks hooks.
 
-10. **Integration test framework for MCP examples** (8-16 hours)
-    - Create mock MCP servers for testing
-    - Verify example scripts can initialize and handle tool calls
-    - Test error handling paths
+10. **Add notebook validation** using nbval or papermill to verify the 20 Jupyter notebooks can execute without errors.
 
-11. **Add SECURITY.md and security policy** (1-2 hours)
-    - Define vulnerability reporting process
-    - Document security practices (env var usage, HTTPS enforcement)
+11. **Add a CODEOWNERS file** to require reviews from appropriate team members for different areas (examples, plugins, benchmarking).
+
+12. **Consider adding a root Makefile** with common targets (test, lint, format, clean) to standardize the developer workflow.
 
 ## Comparison to Gold Standards
 
-| Practice | agents | odh-dashboard | notebooks | kserve |
-|----------|--------|---------------|-----------|--------|
-| CI/CD Pipeline | None | Multi-workflow | Comprehensive | Multi-workflow |
-| Unit Tests | Partial (1 component) | Extensive | Moderate | Extensive |
-| Integration Tests | None | Contract tests | Image testing | Multi-version |
-| E2E Tests | None | Cypress suite | 5-layer validation | E2E suite |
-| Coverage Tracking | None | Codecov + thresholds | Basic | Codecov + enforcement |
-| Linting | None | ESLint + Prettier | Shell checks | golangci-lint |
-| Security Scanning | None | Dependabot + Snyk | Trivy | CodeQL + Trivy |
-| Pre-commit Hooks | None | Configured | N/A | Configured |
-| Agent Rules | AGENTS.md only | Comprehensive rules | N/A | N/A |
-| Container Testing | N/A | Build validation | 5-layer testing | Build + runtime |
+| Dimension | agents | odh-dashboard | notebooks | kserve |
+|-----------|--------|---------------|-----------|--------|
+| CI Workflows | 0 | 15+ | 10+ | 20+ |
+| Unit Tests | Partial (1 plugin) | Comprehensive | Comprehensive | Comprehensive |
+| Integration Tests | None | Contract + API | Image validation | Multi-version |
+| E2E Tests | None | Cypress + Playwright | 5-layer validation | KServe predict |
+| Coverage Tracking | None | Codecov enforced | Per-notebook | Codecov enforced |
+| Linting | None | ESLint + Prettier | shellcheck + hadolint | golangci-lint |
+| Security Scanning | None | Trivy + CodeQL | Trivy | Trivy + CodeQL |
+| Pre-commit Hooks | None | Yes | Yes | Yes |
+| Agent Rules | CLAUDE.md + AGENTS.md | Full .claude/rules/ | None | None |
 
-**Gap to Gold Standard**: The repository is an experimental sandbox, so some gaps are expected. However, the rfe-dedup plugin is production-quality code that deserves production-quality CI/CD. The most critical gap is the complete absence of any CI pipeline - even a minimal workflow running the existing tests would be a massive improvement.
+**Context**: The `agents` repository is an experimental sandbox, not a production service. This explains much of the gap, but as the rfe-dedup plugin demonstrates, high-quality testing is possible even in experimental code. The gold standards above are production repositories with dedicated CI/CD teams.
 
 ## File Paths Reference
 
 ### Key Configuration Files
-- `CLAUDE.md` - Root agent context (points to AGENTS.md)
-- `AGENTS.md` - Comprehensive project documentation for AI agents
-- `CONTRIBUTING.md` - Plugin development guide
-- `.gitignore` - Comprehensive Python/Go/JS ignore rules
-- `adr/minimal-sdk.md` - Key architectural decision (Option 8: no custom SDK)
+| File | Purpose |
+|------|---------|
+| `CLAUDE.md` | Agent rules and repository context |
+| `AGENTS.md` | Plugin development workflow |
+| `CONTRIBUTING.md` | Contributor guidelines |
+| `.gitignore` | Standard Python + Go ignores |
+| `adr/minimal-sdk.md` | Key architectural decision (Option 8) |
+| `mcp-discovery-configmap/schema.json` | MCP server discovery schema |
 
 ### Test Files
-- `agent-plugins/tests/rfe-dedup/conftest.py` - Shared fixtures and FakeIndex
-- `agent-plugins/tests/rfe-dedup/test_*.py` - 11 test modules (2,783 lines)
-- `examples/langchain-langgraph/test_langchain_guardrails.py` - Manual test script
-- `examples/langchain-langgraph/test_langchain_mcp.py` - Manual test script
+| File/Directory | Purpose |
+|----------------|---------|
+| `agent-plugins/tests/rfe-dedup/` | 12 pytest files for rfe-dedup plugin |
+| `agent-plugins/tests/rfe-dedup/conftest.py` | Shared fixtures and ML mocks |
+| `examples/langchain-langgraph/test_langchain_*.py` | Manual validation scripts |
+| `tools/mcp-tester/test-mcp-server.py` | MCP server diagnostic tool |
 
-### Source Code (rfe-dedup plugin)
-- `agent-plugins/rfe-dedup/skills/rfe.dedup/scripts/*.py` - 11 scripts (2,017 lines)
-- `agent-plugins/rfe-dedup/.claude-plugin/plugin.json` - Plugin manifest
-- `agent-plugins/rfe-dedup/agents/` - Agent definitions (eval-pair, report-group)
-
-### Examples
-- `examples/langchain-langgraph/` - LangGraph multi-agent workflow
-- `examples/ai_assistant_for_troubleshooting_apps/` - CrewAI multi-agent crew
-- `examples/kubernetes-mcp/` - Kubernetes MCP client (Python + Go)
-- `examples/github-mcp/` - GitHub MCP client (Python + Go)
-
-### Benchmarking
-- `benchmarking/significance-testing/significance_test.py` - BFCL comparison CLI
-- `benchmarking/significance-testing/bootstrap.py` - Bootstrap resampling
-- `benchmarking/significance-testing/bfcl_loader.py` - BFCL result loader
-
-### Schema
-- `mcp-discovery-configmap/schema.json` - MCP discovery ConfigMap schema
+### Source Code (Untested)
+| Directory | LOC | Purpose |
+|-----------|-----|---------|
+| `examples/` | ~5,000 | MCP agent examples (Python + Go) |
+| `benchmarking/` | ~1,000 | Statistical significance testing |
+| `tools/` | ~300 | MCP tester, vLLM setup, Llama Stack |
+| `validation-vllm/` | Notebooks | vLLM validation notebooks |
+| `migration/` | Notebook | Legacy agent migration |

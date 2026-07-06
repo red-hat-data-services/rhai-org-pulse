@@ -1,381 +1,382 @@
 ---
 repository: "opendatahub-io/agentic-ci"
-overall_score: 6.8
+overall_score: 7.9
 scorecard:
   - dimension: "Unit Tests"
     score: 8.5
-    status: "Excellent test-to-code ratio (65%), pytest with thorough mocking, edge cases covered"
+    status: "636 test functions across 28 test files with pytest; excellent test-to-code ratio (~0.91)"
   - dimension: "Integration/E2E"
-    score: 4.0
-    status: "E2E skill documented but manual; no automated integration tests against real backends"
+    score: 8.0
+    status: "Comprehensive E2E suite for podman, openshell, and multi-harness scenarios; automated in CI"
   - dimension: "Build Integration"
-    score: 2.0
-    status: "No container build, no Konflux simulation, no PR-time image validation"
+    score: 7.5
+    status: "PR-time image builds with shellcheck/ruff lint; no Konflux simulation but images build and E2E test on PR"
   - dimension: "Image Testing"
-    score: 1.0
-    status: "No Dockerfile, no container image testing — this is a pure Python library"
+    score: 7.0
+    status: "Image unit tests and E2E validation; no vulnerability scanning or SBOM generation"
   - dimension: "Coverage Tracking"
     score: 2.0
-    status: "No coverage generation, no codecov integration, no coverage thresholds"
+    status: "No coverage measurement, no codecov/coveralls, no coverage thresholds"
   - dimension: "CI/CD Automation"
-    score: 7.5
-    status: "Well-organized CI with multi-version matrix, lint, format, typecheck; publish workflow with trusted publishing"
+    score: 9.0
+    status: "Well-organized workflows, concurrency control, Mergify merge queue, multi-Python matrix, auto-merge for bots"
   - dimension: "Agent Rules"
-    score: 6.0
-    status: "AGENTS.md with architecture docs, conventions, and verification checklist; one E2E skill; no .claude/rules/"
+    score: 7.0
+    status: "Rich AGENTS.md with architecture docs; Claude skills for debug, release, and E2E; no .claude/rules/"
 critical_gaps:
-  - title: "No test coverage tracking or enforcement"
-    impact: "Coverage regressions go undetected; no visibility into untested code paths"
+  - title: "No code coverage tracking"
+    impact: "Cannot measure test coverage or enforce coverage thresholds; regressions may introduce untested code paths"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No automated integration/E2E tests"
-    impact: "Backend integration bugs (Podman, OpenShell) only caught by manual testing"
+  - title: "No container vulnerability scanning"
+    impact: "Security vulnerabilities in base images or dependencies not caught before deployment"
     severity: "HIGH"
-    effort: "8-16 hours"
-  - title: "cli.py, otel.py, skill.py, and stream.py (ClaudeCode) have no unit tests"
-    impact: "~1,395 lines of core source code with zero test coverage"
-    severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "No security scanning (Trivy, CodeQL, Gitleaks, Dependabot)"
-    impact: "Vulnerabilities in dependencies not detected until downstream consumers scan"
+    effort: "2-4 hours"
+  - title: "No SAST/CodeQL integration"
+    impact: "Code-level security vulnerabilities not automatically detected"
     severity: "MEDIUM"
-    effort: "2-4 hours"
+    effort: "2-3 hours"
+  - title: "No pre-commit hooks"
+    impact: "Developers can commit code that fails lint/format checks, wasting CI cycles"
+    severity: "LOW"
+    effort: "1-2 hours"
 quick_wins:
   - title: "Add pytest-cov and codecov integration"
-    effort: "2-3 hours"
-    impact: "Immediate visibility into test coverage gaps; PR-level coverage enforcement"
-  - title: "Add Dependabot or Renovate for dependency updates"
-    effort: "30 minutes"
-    impact: "Automated security patches for transitive dependencies"
-  - title: "Add unit tests for cli.py argument parsing"
-    effort: "2-3 hours"
-    impact: "Cover the main entry point and argument validation paths"
-  - title: "Add pre-commit hooks configuration"
+    effort: "2-4 hours"
+    impact: "Immediate visibility into test coverage gaps; enables coverage thresholds on PRs"
+  - title: "Add Trivy scanning to image build workflow"
+    effort: "1-2 hours"
+    impact: "Catches known CVEs in container images before deployment"
+  - title: "Add pre-commit hooks for ruff lint/format"
     effort: "1 hour"
-    impact: "Catch lint/format issues before commit, not just in CI"
+    impact: "Catches formatting and lint issues before code reaches CI"
+  - title: "Add CodeQL or Bandit scanning workflow"
+    effort: "2-3 hours"
+    impact: "Automated security analysis catches injection and other code-level vulnerabilities"
 recommendations:
   priority_0:
-    - "Add pytest-cov to tox.ini and integrate with Codecov for PR-level coverage reporting"
-    - "Write unit tests for cli.py, otel.py, skill.py, and stream.py (ClaudeCodeStreamProcessor)"
+    - "Add pytest-cov to tox config and integrate with codecov for PR coverage reporting and thresholds"
+    - "Add Trivy container scanning to images.yml and images-pr.yml workflows"
   priority_1:
-    - "Add GitHub Dependabot or Renovate for automated dependency updates"
-    - "Add CodeQL or Bandit scanning workflow for SAST"
-    - "Create automated integration smoke tests using Podman in CI (with mocked API)"
+    - "Add CodeQL or Bandit SAST workflow for Python security analysis"
+    - "Create .claude/rules/ directory with test pattern rules for unit tests, E2E tests, and mocking standards"
+    - "Add multi-architecture image builds (arm64) for broader deployment support"
   priority_2:
-    - "Add .claude/rules/ with unit-test and integration-test writing guidelines"
-    - "Add pre-commit configuration for ruff lint and format"
-    - "Add property-based testing (Hypothesis) for ADF conversion and verdict validation"
+    - "Add pre-commit hooks for ruff lint and format checks"
+    - "Add SBOM generation (Syft) to image build pipeline"
+    - "Add image signing with Cosign for supply chain security"
 ---
 
 # Quality Analysis: agentic-ci
 
+**Repository**: [opendatahub-io/agentic-ci](https://github.com/opendatahub-io/agentic-ci)
+**Type**: Python CLI tool / CI framework
+**Primary Language**: Python 3.10+
+**Framework**: CLI tool with pluggable backends (Podman, OpenShell) and harnesses (Claude Code, OpenCode)
+**Analysis Date**: 2026-07-06
+
 ## Executive Summary
 
-- **Overall Score: 6.8/10**
-- **Repository Type**: Python library/CLI tool for running AI coding agents in sandboxed CI environments
-- **Primary Language**: Python 3.10+ (5,977 source lines, 3,901 test lines)
-- **Key Strengths**: Excellent unit test coverage for tested modules (65% test-to-code ratio), clean CI pipeline with multi-version Python matrix testing, strong code quality tooling (ruff lint + format, mypy), comprehensive AGENTS.md
-- **Critical Gaps**: No coverage tracking/enforcement, several core modules completely untested (cli.py, otel.py, skill.py), no automated integration/E2E tests, no security scanning
-- **Agent Rules Status**: Present (AGENTS.md with architecture docs and conventions); no `.claude/rules/` directory
+- **Overall Score: 7.9/10**
+- **Key Strengths**: Exceptional unit test coverage (636 tests, ~0.91 test-to-code ratio), comprehensive E2E infrastructure testing across multiple backends and harnesses, well-organized CI/CD with Mergify merge queue, rich AGENTS.md documentation, and excellent dependency management via Dependabot + Renovate
+- **Critical Gaps**: No code coverage tracking/enforcement, no container vulnerability scanning, no SAST integration
+- **Agent Rules Status**: Present (AGENTS.md + 4 Claude skills) but incomplete (no `.claude/rules/` for test patterns)
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 8.5/10 | Excellent test-to-code ratio for covered modules; pytest with thorough mocking |
-| Integration/E2E | 4.0/10 | E2E test skill documented but fully manual; no automated integration tests |
-| **Build Integration** | **2.0/10** | **No container build, no Konflux simulation, no PR-time image validation** |
-| Image Testing | 1.0/10 | N/A — pure Python library, no container image to test |
-| Coverage Tracking | 2.0/10 | No coverage generation, no codecov, no thresholds |
-| CI/CD Automation | 7.5/10 | Well-organized CI with matrix testing; trusted PyPI publishing |
-| Agent Rules | 6.0/10 | Good AGENTS.md with architecture and conventions; one E2E skill; no rules directory |
+| Unit Tests | 8.5/10 | 636 test functions across 28 files; 7,605 test LOC vs 8,378 source LOC |
+| Integration/E2E | 8.0/10 | Automated E2E for podman + openshell + multi-harness; credential-gated |
+| **Build Integration** | **7.5/10** | **PR-time image builds + lint + E2E; no Konflux simulation** |
+| Image Testing | 7.0/10 | Image unit tests + entrypoint tests; no vulnerability scanning |
+| Coverage Tracking | 2.0/10 | No coverage measurement, no codecov, no thresholds |
+| CI/CD Automation | 9.0/10 | Multi-Python matrix, Mergify merge queue, concurrency control, auto-merge bots |
+| Agent Rules | 7.0/10 | Rich AGENTS.md, 4 Claude skills; no .claude/rules/ for test patterns |
 
 ## Critical Gaps
 
-### 1. No Test Coverage Tracking or Enforcement
-- **Impact**: Coverage regressions go undetected. No visibility into which code paths are tested.
+### 1. No Code Coverage Tracking
+- **Impact**: Cannot measure or enforce test coverage; untested code paths may ship without detection
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: `.gitignore` lists coverage artifacts (`.coverage`, `coverage.xml`, `htmlcov/`) suggesting coverage was considered, but no `pytest-cov` dependency exists in `pyproject.toml` or `tox.ini`, and no `--cov` flags are passed to pytest. No Codecov/Coveralls integration.
+- **Details**: Despite having 636 test functions, there is no `pytest-cov` in tox.ini, no `.codecov.yml`, no `--cov` flag anywhere, and no coverage reporting on PRs. The project cannot objectively track whether new code is tested.
 
-### 2. No Automated Integration/E2E Tests
-- **Impact**: Podman and OpenShell backend behavior only verified by manual E2E testing documented in `.claude/skills/test-e2e-podman/SKILL.md`.
+### 2. No Container Vulnerability Scanning
+- **Impact**: Security vulnerabilities in UBI base images or pip dependencies not detected before images ship
 - **Severity**: HIGH
-- **Effort**: 8-16 hours
-- **Details**: The E2E skill is thorough (4 sections × multiple steps, Vertex AI + API key + Claude + OpenCode combos) but requires a human operator with Podman installed and API credentials. No CI job runs these tests.
+- **Effort**: 2-4 hours
+- **Details**: The `images.yml` workflow builds 6 container images but runs zero vulnerability scans. No Trivy, Snyk, or Grype integration. The Containerfiles use `ubi10/ubi-minimal` with SHA-pinned tools (good), but known CVEs in transitive dependencies go undetected.
 
-### 3. Core Modules Without Unit Tests (~1,395 lines)
-- **Impact**: The most critical runtime code paths are untested.
-- **Severity**: HIGH
-- **Effort**: 8-12 hours
-- **Untested modules**:
-  - `cli.py` (251 lines) — Main entry point, argument parsing, subcommand dispatch
-  - `otel.py` (281 lines) — OTLP HTTP receiver, token/cost tracking, summary
-  - `skill.py` (307 lines) — Generic skill runner framework (SkillConfig, run_skill)
-  - `stream.py` ClaudeCodeStreamProcessor half (556 lines total, OpenCode tested) — Parsed stream output for Claude Code harness
-  - `backend.py` process_stream (124 lines) — Base class stream processing
-  - `backends/openshell/` gateway.py, sandbox.py, __init__.py (265 lines) — OpenShell lifecycle
-
-### 4. No Security Scanning
-- **Impact**: Vulnerabilities in `requests`, `tenacity`, and optional dependencies (`PyJWT`, `cryptography`) not detected.
+### 3. No SAST/Static Security Analysis
+- **Impact**: Code-level security vulnerabilities (injection, insecure deserialization, path traversal) not automatically caught
 - **Severity**: MEDIUM
-- **Effort**: 2-4 hours
-- **Details**: No CodeQL, Bandit, Snyk, Trivy, or Dependabot configuration. No `.gitleaks.toml` despite the project implementing gitleaks as a gate.
+- **Effort**: 2-3 hours
+- **Details**: No CodeQL, Bandit, or Semgrep integration. The project handles credentials, subprocess execution, network policies, and container orchestration -- all high-risk areas that benefit from automated security analysis.
+
+### 4. No Pre-commit Hooks
+- **Impact**: Developers waste CI cycles on lint/format failures that could be caught locally
+- **Severity**: LOW
+- **Effort**: 1-2 hours
+- **Details**: No `.pre-commit-config.yaml`. Ruff lint and format checks only run in CI via tox. A pre-commit hook would catch these instantly.
 
 ## Quick Wins
 
-### 1. Add pytest-cov and Codecov Integration (2-3 hours)
-Add `pytest-cov` to test dependencies and configure coverage collection:
+### 1. Add pytest-cov and Codecov Integration (2-4 hours)
 
-```toml
-# pyproject.toml
-[dependency-groups]
-dev = [
-    "pytest>=8.0",
-    "pytest-cov>=5.0",
-    "ruff>=0.11",
-]
-```
-
+**tox.ini change:**
 ```ini
-# tox.ini [testenv] section
+[testenv]
+deps =
+    pytest
+    pytest-cov
+    pyyaml
 commands = pytest --cov=agentic_ci --cov-report=xml {posargs:tests/}
 ```
 
-Add a `.codecov.yml`:
+**CI workflow addition to ci.yml:**
 ```yaml
-coverage:
-  status:
-    project:
-      default:
-        target: 70%
-    patch:
-      default:
-        target: 80%
+      - name: Upload coverage
+        if: matrix.tox_env == 'py313'
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage.xml
 ```
 
-### 2. Add Dependabot for Dependency Updates (30 minutes)
+### 2. Add Trivy Scanning to Image Builds (1-2 hours)
+
+Add a step after each image build in `images.yml`:
 ```yaml
-# .github/dependabot.yml
-version: 2
-updates:
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
+      - name: Scan image for vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ steps.meta.outputs.image }}'
+          format: 'sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
 ```
 
-### 3. Add Unit Tests for cli.py (2-3 hours)
-Test argument parsing, subcommand dispatch, and error handling. The module uses argparse which is highly testable with `parse_args()` calls.
+### 3. Add Pre-commit Hooks (1 hour)
 
-### 4. Add Pre-commit Configuration (1 hour)
 ```yaml
 # .pre-commit-config.yaml
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.0
+    rev: v0.15.17
     hooks:
       - id: ruff
         args: [--fix]
       - id: ruff-format
 ```
 
+### 4. Add CodeQL/Bandit Scanning (2-3 hours)
+
+```yaml
+# .github/workflows/security.yml
+name: Security
+on: [push, pull_request]
+jobs:
+  bandit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install bandit
+      - run: bandit -r src/ -c pyproject.toml
+```
+
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows (2 total)**:
+**Strengths:**
+- 5 well-organized workflows: `ci.yml`, `images-pr.yml`, `images.yml`, `publish.yml`, `docs.yml`
+- `ci.yml` runs on every push/PR with a 7-entry tox matrix: py310, py311, py312, py313, lint, check-format, typecheck
+- `images.yml` has excellent concurrency control (`cancel-in-progress` on non-main branches)
+- `images-pr.yml` provides lightweight PR checks (shellcheck + ruff lint + entrypoint tests) with path filtering
+- `images.yml` builds all 6 images on PRs with auto-expiring 3-day tags
+- E2E tests run after builds complete, pulling the freshly-built `ci-<sha>` images
+- `publish.yml` uses PyPI trusted publishing (id-token: write) for secure package releases
+- `docs.yml` builds MkDocs with `--strict` flag
+- Mergify merge queue with squash merge, differentiated rules for maintainers (1 review) vs others (2 reviews)
+- Bot auto-merge for Dependabot and Renovate PRs once CI passes
+- Path-aware Mergify rules that only require checks from workflows that actually trigger
 
-1. **`ci.yml`** — Triggered on push and pull_request
-   - Matrix strategy: `[py310, py311, py312, py313, lint, check-format, typecheck]`
-   - Uses `fedora-python/tox-github-action` for execution
-   - Runs on `ubuntu-latest`
-   - No concurrency control (multiple CI runs for same PR can overlap)
-   - No caching configured (tox environments rebuilt each run)
-
-2. **`publish.yml`** — Triggered on version tags (`[0-9]+.[0-9]+.[0-9]+`)
-   - Uses `uv build` for sdist and wheel
-   - Trusted publishing to PyPI via `pypa/gh-action-pypi-publish`
-   - Properly scoped permissions (`contents: read`, `id-token: write`)
-   - Repository owner check (`github.repository_owner == 'opendatahub-io'`)
-
-**Strengths**:
-- Multi-version Python testing (3.10, 3.11, 3.12, 3.13)
-- Separate lint, format-check, and typecheck envs
-- Action versions pinned to commit SHAs (supply chain security)
-- Trusted PyPI publishing (no API tokens stored)
-
-**Gaps**:
-- No concurrency control for PRs (stale runs may waste resources)
-- No dependency caching (tox env rebuild every time)
+**Weaknesses:**
 - No coverage reporting in CI
-- No security scanning workflow
+- No security scanning workflows
+- No caching of pip dependencies or tox environments
+- `ci.yml` lacks path filters (runs all tox envs even for docs-only changes)
 
 ### Test Coverage
 
-**Test files**: 18 test files (excluding `__init__.py`) covering 15 of ~22 source modules.
+**Strengths:**
+- 636 test functions across 28 test files (for 30 source modules)
+- Test-to-code ratio: ~0.91 (7,605 test LOC / 8,378 source LOC) -- excellent
+- Near 1:1 test file to source file mapping -- every major module has a dedicated test file
+- Tests use pytest with extensive use of `unittest.mock` (20/28 test files use mocking)
+- Largest test files: `test_forge_github.py` (68 tests), `test_harness.py` (61 tests), `test_forge_gitlab.py` (50 tests)
+- Tests cover all key subsystems: backends, harnesses, stream processing, plugins, forge, gates, skills, Jira, git, GCP, MLflow
 
-**Test-to-code ratio**: 3,901 test lines / 5,977 source lines = **65%** (strong)
-
-**Coverage by module**:
-
-| Source Module | Test File | Coverage Depth |
-|---------------|-----------|---------------|
-| `backends/__init__.py` | `test_backend.py` | Full (factory, params, errors) |
-| `backends/podman.py` | `test_podman.py` | Strong (credentials, env, volumes, API key) |
-| `backends/openshell/policy.py` | `test_policy.py` | Full (resolution priority) |
-| `harness.py` | `test_harness.py` | Excellent (both harnesses, auth modes, all methods) |
-| `gates.py` | `test_gates.py`, `test_gate_registry.py` | Excellent (all gates, registry, env validation) |
-| `verdict.py` | `test_verdict.py` | Full (valid, invalid, missing, malformed) |
-| `pipeline.py` | `test_pipeline.py` | Full (distribution, noop, generation, edge cases) |
-| `jira/client.py` | `test_jira_client.py` | Excellent (CRUD, retry, pagination, 429 handling) |
-| `jira/acli.py` | `test_acli_client.py` | Full (all operations, fallback to REST) |
-| `jira/adf.py` | `test_adf.py` | Full (markdown→ADF, ADF→text, roundtrip) |
-| `stream.py` (OpenCode) | `test_stream_opencode.py` | Excellent (all event types, formatting, edge cases) |
-| `git.py` | `test_git_credentials.py` | Partial (credential setup only) |
-| `forge/__init__.py` | `test_forge_init.py` | Full (detection, URL parsing) |
-| `forge/cli.py` | `test_forge_cli.py` | Excellent (all subcommands, token passthrough) |
-| `forge/github.py` | `test_forge_github.py` | Excellent (CRUD, GraphQL, pipeline status) |
-| `forge/gitlab.py` | `test_forge_gitlab.py` | Excellent (CRUD, threads, diff position) |
-| `forge/session.py` | `test_forge_session.py` | Full (adapters, auth, error extraction) |
-| **`cli.py`** | **None** | **0% — main entry point untested** |
-| **`otel.py`** | **None** | **0% — OTLP receiver untested** |
-| **`skill.py`** | **None** | **0% — skill runner framework untested** |
-| **`stream.py` (Claude)** | **None** | **0% — ClaudeCodeStreamProcessor untested** |
-| **`backend.py`** | **Partial** | **_process_stream helper untested** |
-| **`backends/openshell/`** | **None** | **0% — gateway, sandbox lifecycle untested** |
-
-**Testing Frameworks**: pytest (standard), unittest.mock (mocking), monkeypatch (env vars), tmp_path (temp files), capsys (stdout capture), caplog (log capture), parametrize (parameterized tests)
-
-**Testing Patterns**: Well-structured test classes grouped by feature, proper use of fixtures, consistent error testing with `pytest.raises`, good edge case coverage (empty inputs, missing keys, invalid formats).
+**Weaknesses:**
+- No coverage measurement -- the 0.91 ratio is LOC-based, not branch/statement coverage
+- No coverage enforcement on PRs
+- No integration tests that exercise real subprocess/container execution at the unit test level (mocks only)
+- E2E tests are bash scripts, not pytest tests -- harder to extend and maintain
 
 ### Code Quality
 
-**Linting**:
-- **Ruff**: Configured in `pyproject.toml` with `line-length = 100`
-- Selected rule sets: `F` (pyflakes), `E` (pycodestyle errors), `W` (warnings), `I` (isort), `N` (naming)
-- Could add: `S` (bandit/security), `B` (bugbear), `UP` (pyupgrade), `SIM` (simplify)
-- Runs in CI via `tox -e lint`
+**Strengths:**
+- `ruff` for lint and format with config in `pyproject.toml`
+- Strict lint rules: `select = ["F", "E", "W", "I", "N"]` (Pyflakes, pycodestyle, isort, pep8-naming)
+- Line length: 100 characters
+- `mypy` type checking with `allow_redefinition` and `warn_unused_ignores`
+- Multi-Python version testing (3.10, 3.11, 3.12, 3.13 in CI, 3.14 in tox)
+- Consistent conventions documented in AGENTS.md: top-level imports only, no `# noqa`, all tests in `tests/`
 
-**Formatting**:
-- Ruff format with CI check via `tox -e check-format`
-- Auto-fix available via `tox -e format`
-
-**Type Checking**:
-- mypy configured in `pyproject.toml` with `allow_redefinition = true`, `warn_unused_ignores = true`
-- Runs in CI via `tox -e typecheck`
-- Checks `src/` only (not tests)
-
-**Pre-commit Hooks**: None configured
-
-**Static Analysis**: No SAST tools (CodeQL, Bandit, Semgrep)
+**Weaknesses:**
+- No pre-commit hooks
+- No Ruff safety rules (S), bandit integration, or security-focused linting
+- Limited ruff rule selection (no UP, RUF, PTH, SIM, etc.)
 
 ### Container Images
 
-Not applicable — `agentic-ci` is a pure Python library/CLI tool distributed via PyPI. It does not build container images itself (it *uses* container images provided by consumers). No Dockerfile or Containerfile exists in the repository.
+**Strengths:**
+- 6 well-structured images: claude-runner, opencode-runner, ci-podman, claude-sandbox, opencode-sandbox, ci-openshell
+- Multi-stage base image strategy (shared `Containerfile.base` for runners, `Containerfile.openshell-base` for sandboxes)
+- SHA256 verification for all downloaded binaries (uv, shellcheck, gh, glab, claude)
+- UBI10 base images from Red Hat registry
+- `quay.expires-after=3d` labels on PR images for auto-cleanup
+- Version-pinned dependencies managed by Renovate with custom regex managers
+- 7-day cooldown on Renovate updates (supply chain protection)
+- Entrypoint script with credential setup
+- Non-root user (`agent-ci` uid 1000)
+
+**Weaknesses:**
+- No vulnerability scanning (Trivy, Snyk, Grype)
+- No SBOM generation
+- No image signing (Cosign)
+- Single architecture only (x86_64) -- no arm64 builds
+- No `.dockerignore` / `.containerignore` is present but not reviewed for completeness
 
 ### Security
 
-**Current State**:
-- No vulnerability scanning (Trivy, Snyk, Grype)
-- No SAST/CodeQL integration
-- No dependency scanning (Dependabot, Renovate)
-- No secret detection in repo (`.gitleaks.toml` absent)
-- Action versions pinned to commit SHAs (good practice)
-- Publish workflow uses trusted publishing (no stored API tokens)
-- Runtime dependencies are minimal (`requests`, `tenacity`)
+**Strengths:**
+- Dependabot for GitHub Actions with 3-day cooldown and security exemption
+- Renovate for container dependency versions with 7-day minimum release age
+- SHA256 checksum verification for all binary downloads in Containerfiles
+- Action versions pinned to SHA hashes (not tags)
+- `persist-credentials: false` in all checkout steps
+- Gitleaks installed in CI images (but not run as a workflow)
+- PR images auto-expire after 3 days
+- Fork PR guard on E2E tests (no secrets exposed)
+- Non-root container user
 
-**Irony**: The project *implements* a gitleaks gate for its consumers but doesn't run gitleaks on itself.
+**Weaknesses:**
+- No SAST workflow (CodeQL, Bandit, Semgrep)
+- No container vulnerability scanning workflow
+- Gitleaks is installed in CI images but no gitleaks scanning workflow in the repo itself
+- No SBOM generation or image attestation
+- No secret scanning in CI pipeline
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status**: Present and functional
+**Strengths:**
+- Comprehensive `AGENTS.md` with full architecture documentation, module-by-module descriptions, container image build instructions, CLI commands, verification checklist, and debugging guide
+- 4 Claude Code skills:
+  - `debug-agentic-ci`: Structured debugging with symptom catalog and RCA template
+  - `release-agentic-ci`: Automated release flow with cron-based approval waiting
+  - `test-e2e-podman`: Detailed E2E test guide for podman backend
+  - `test-e2e-openshell`: Detailed E2E test guide for openshell backend
+- Skill descriptions are detailed with exact commands, verification steps, and expected outputs
+- Debugging skill references a symptoms catalog for pattern matching
+- Mergify maintenance notes linked to workflow job names
 
-**AGENTS.md** (symlinked as `CLAUDE.md`):
-- Architecture overview with module descriptions
-- CLI commands for all development tasks (test, lint, format, typecheck)
-- Verification checklist: "run all four checks before reporting task as done"
-- Conventions section: Python 3.10+, ruff, pytest, no `# noqa`
-- Quality: **Good** — clear, actionable, covers development workflow
-
-**.claude/skills/**:
-- `test-e2e-podman/SKILL.md`: Comprehensive manual E2E test plan covering 4 sections (Claude+Vertex, Claude+API Key, OpenCode+Vertex, OpenCode+API Key)
-- Quality: **Excellent** — step-by-step instructions with verification criteria
-
-**Gaps**:
-- No `.claude/rules/` directory for test creation guidance
-- No unit test writing guidelines for AI agents
-- No integration test patterns documented
-- Missing rules for: mocking patterns, fixture usage, test naming conventions
+**Weaknesses:**
+- No `.claude/rules/` directory for test creation patterns
+- No unit test writing rules (naming conventions, mocking standards, fixture patterns)
+- No E2E test writing rules (bash test structure, assertion patterns)
+- Skills are primarily operational (debug, release, test-run) rather than development-guiding (write tests, add features)
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add test coverage tracking with enforcement** — Add `pytest-cov` to tox.ini, integrate Codecov with a 70% project target and 80% patch target. This will immediately reveal the ~40% of source code with zero tests.
+1. **Add pytest-cov and Codecov integration** -- The project has excellent test coverage by file count/LOC, but cannot prove or enforce it. Adding `pytest-cov` to tox and uploading to Codecov with a PR check takes 2-4 hours and immediately adds enforcement.
 
-2. **Write unit tests for untested core modules** — `cli.py` (argument parsing), `otel.py` (token tracking), `skill.py` (skill runner lifecycle), and `stream.py` ClaudeCodeStreamProcessor. These are the most critical runtime paths.
+2. **Add Trivy scanning to image build pipelines** -- 6 container images ship without any vulnerability scanning. Adding Trivy as a step in `images.yml` and `images-pr.yml` takes 1-2 hours and catches known CVEs before deployment.
 
 ### Priority 1 (High Value)
 
-3. **Add GitHub Dependabot** for automated dependency updates. The `cryptography` optional dependency is especially important to keep current.
+3. **Add SAST scanning** -- The codebase handles credentials, subprocess execution, and network policies. Adding Bandit or CodeQL catches injection and insecure patterns automatically.
 
-4. **Add CodeQL or Bandit SAST scanning** — Enable the `S` (bandit) rule set in ruff and/or add a CodeQL workflow for Python.
+4. **Create `.claude/rules/` for test patterns** -- The project has strong testing conventions (pytest, unittest.mock, consistent naming) that should be codified as agent rules so AI-generated tests match the project style. Use `/test-rules-generator` to bootstrap.
 
-5. **Create automated integration smoke tests** — Even without real API access, test the Podman backend's `setup()` command construction and subprocess argument building. Use `subprocess.run` mocking at a higher level than current unit tests.
+5. **Add multi-architecture image builds** -- Only x86_64 is currently built. Adding arm64 builds supports broader deployment scenarios (Apple Silicon dev, ARM cloud instances).
 
 ### Priority 2 (Nice-to-Have)
 
-6. **Add `.claude/rules/` directory** with guidelines for writing unit tests, integration tests, and mocking patterns specific to this codebase.
+6. **Add pre-commit hooks** -- A `.pre-commit-config.yaml` with ruff check + ruff format catches issues before they reach CI.
 
-7. **Add pre-commit hooks** with ruff lint and format to catch issues before CI.
+7. **Add SBOM generation** -- Use Syft to generate SBOM for each container image. Pairs well with Trivy for a complete supply chain security posture.
 
-8. **Add concurrency control** to CI workflow: `concurrency: { group: ci-${{ github.ref }}, cancel-in-progress: true }`
+8. **Add Cosign image signing** -- Sign container images to enable verification at deployment time.
 
-9. **Add tox environment caching** in CI to speed up builds.
+9. **Expand ruff rules** -- Add UP (pyupgrade), SIM (simplify), PTH (pathlib), RUF (ruff-specific) rules for broader code quality enforcement.
+
+10. **Add tox/pip caching to CI** -- Cache `.tox` and pip wheels in the ci.yml workflow to speed up builds.
 
 ## Comparison to Gold Standards
 
 | Practice | agentic-ci | odh-dashboard | notebooks | kserve |
 |----------|-----------|---------------|-----------|--------|
-| Unit test ratio | 65% (strong) | 70%+ | N/A | 60%+ |
-| Coverage enforcement | None | Codecov with thresholds | N/A | Codecov required |
-| E2E automation | Manual skill | Automated Cypress | Automated notebooks | Automated KServe |
-| Security scanning | None | Trivy + SAST | Container scanning | Multiple scanners |
-| Pre-commit hooks | None | Configured | N/A | Configured |
-| Type checking | mypy in CI | TypeScript strict | N/A | Go vet |
-| Multi-version testing | py310-313 | Node matrix | Image matrix | Go version matrix |
-| Agent rules | AGENTS.md + 1 skill | Comprehensive rules | N/A | N/A |
-| CI concurrency | None | Configured | Configured | Configured |
+| Unit test ratio | 0.91 (excellent) | ~0.8 | N/A | ~0.7 |
+| Multi-Python testing | py310-py314 | N/A (TS) | N/A | N/A (Go) |
+| E2E automation | Automated in CI | Automated | Automated | Automated |
+| Coverage tracking | None | Codecov | Limited | Codecov |
+| Coverage enforcement | None | PR checks | None | Thresholds |
+| Container scanning | None | None | Trivy | None |
+| SAST | None | ESLint security | None | gosec |
+| Pre-commit hooks | None | Husky | None | Yes |
+| Dependency updates | Dependabot + Renovate | Dependabot | None | Dependabot |
+| Merge queue | Mergify | Prow | Prow | Prow |
+| Agent rules | AGENTS.md + 4 skills | CLAUDE.md + rules | None | None |
+| Image signing | None | None | None | Cosign |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/ci.yml` — Main CI pipeline
-- `.github/workflows/publish.yml` — PyPI publish workflow
-- `tox.ini` — Test/lint/format/typecheck orchestration
-- `pyproject.toml` — Build system, dependencies, tool config
+- `.github/workflows/ci.yml` -- Python tests, lint, format, typecheck
+- `.github/workflows/images-pr.yml` -- PR-time image lint and tests
+- `.github/workflows/images.yml` -- Image builds, E2E tests, push
+- `.github/workflows/publish.yml` -- PyPI publishing
+- `.github/workflows/docs.yml` -- MkDocs build and deploy
+- `.github/dependabot.yml` -- GitHub Actions version updates
+- `renovate.json` -- Container dependency version updates
+- `.mergify.yml` -- Merge protection rules and merge queue
 
 ### Testing
-- `tests/` — All unit tests (18 test files)
-- `.claude/skills/test-e2e-podman/SKILL.md` — Manual E2E test plan
+- `tests/test_*.py` -- 28 unit test files (636 test functions)
+- `tests/e2e/e2e-claude-runner.sh` -- Claude runner E2E tests
+- `tests/e2e/e2e-opencode-runner.sh` -- OpenCode runner E2E tests
+- `tests/e2e/e2e-openshell-sandbox.sh` -- OpenShell sandbox E2E tests
+- `tests/images/test_entrypoint.sh` -- Entrypoint shell script tests
+- `tox.ini` -- Test orchestration
 
 ### Code Quality
-- `pyproject.toml` — Ruff lint/format config, mypy config
-- No `.pre-commit-config.yaml`
-- No `.codecov.yml`
+- `pyproject.toml` -- ruff config, mypy config, project metadata
+- `tox.ini` -- lint, format, typecheck envs
+
+### Container Images
+- `images/runner/shared/Containerfile.base` -- Runner base image
+- `images/runner/shared/Containerfile.openshell-base` -- Sandbox base image
+- `images/runner/claude-code/Containerfile` -- Claude runner
+- `images/runner/opencode/Containerfile` -- OpenCode runner
+- `images/ci/Containerfile.podman` -- CI podman image
+- `images/ci/Containerfile.openshell` -- CI OpenShell image
 
 ### Agent Rules
-- `AGENTS.md` (symlinked as `CLAUDE.md`) — Architecture, commands, conventions
-- `.claude/skills/test-e2e-podman/` — E2E test skill
-
-### Source Code
-- `src/agentic_ci/` — Main package (27 Python files, 5,977 lines)
-- `src/agentic_ci/cli.py` — Entry point
-- `src/agentic_ci/backends/` — Podman and OpenShell backends
-- `src/agentic_ci/forge/` — GitHub/GitLab forge abstraction
-- `src/agentic_ci/jira/` — Jira REST API client
+- `AGENTS.md` -- Root architecture documentation (also used as CLAUDE.md)
+- `.claude/skills/debug-agentic-ci/SKILL.md` -- Debugging skill
+- `.claude/skills/release-agentic-ci/SKILL.md` -- Release automation skill
+- `.claude/skills/test-e2e-podman/SKILL.md` -- E2E podman test guide
+- `.claude/skills/test-e2e-openshell/SKILL.md` -- E2E openshell test guide

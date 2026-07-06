@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on May 28, 2026 at 09:45 PM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:27 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/openvino_tokenizers</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="180.95558400000002"
+                                stroke-dashoffset="158.336136"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">6.8</div>
+                        <div class="score-value">7.2</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Extensive parametrized pytest suite covering 5 tokenizer families with 30+ models</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Comprehensive regression tests across 30+ tokenizer models with multilingual/emoji coverage</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Cross-platform CI builds (Linux/macOS/Windows) with TensorFlow layer tests</div>
+                            <div class="scorecard-status">Cross-platform CI with TensorFlow layer tests and multi-model validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Wheel build + test in PR, but no container image validation or Konflux simulation</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">PR-time builds on Linux/Windows/macOS with cpack and wheel artifacts</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No Dockerfile, no container image builds, no runtime image validation</div>
+                            <div class="scorecard-status">No Dockerfiles, no container image builds or runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Custom pass-rate tracking with regression detection but no codecov/coverage enforcement</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Custom pass-rate tracking via conftest.py but no codecov/coveralls integration</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Well-organized multi-platform CI with sccache, concurrency control, and artifact management</div>
+                            <div class="scorecard-status">Well-organized multi-platform CI with caching, concurrency, and artifact management</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory present</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No container image testing or Dockerfile</div>
-                            <p>No container-based distribution validation; downstream consumers (ODH/RHOAI) must validate image integration independently</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No code coverage tracking or enforcement</div>
-                            <p>Test pass-rate regression detection exists but actual line/branch coverage is unmeasured; blind spots in Python and C++ code</p>
+                            <div class="item-description">No coverage tracking or enforcement</div>
+                            <p>Cannot measure test coverage trends or enforce thresholds on PRs</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No agent rules for AI-assisted development</div>
-                            <p>AI-generated tests and code have no project-specific guidance, risking inconsistency and missed patterns</p>
+                            <div class="item-description">No container image testing pipeline</div>
+                            <p>Library is consumed as a wheel/cpack artifact but no container runtime validation exists</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">3-4 hours</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No pre-commit hooks configured</div>
-                            <p>Developers can commit code that fails lint/format checks, increasing CI feedback loop time</p>
+                            <div class="item-description">No agent rules for AI-assisted development</div>
+                            <p>AI agents have no guidance on test patterns, code conventions, or quality gates</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card low">
+                            <div class="item-description">No pre-commit hooks configured</div>
+                            <p>Linting and formatting checks only run in CI, not locally</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-low">LOW</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">C++ code has no dedicated unit tests</div>
+                            <p>C++ tokenizer implementations only tested indirectly through Python bindings</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -457,34 +465,34 @@
                         
                         <li class="item-card ">
                             <div class="item-description">Add codecov integration to PR workflow</div>
-                            <p>Measure actual Python test coverage and enforce minimum thresholds on PRs</p>
+                            <p>Visibility into test coverage trends and PR coverage deltas</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add .pre-commit-config.yaml with ruff + bandit</div>
-                            <p>Catch lint/security issues locally before CI, reducing PR feedback cycles</p>
+                            <div class="item-description">Add pre-commit hooks for ruff and bandit</div>
+                            <p>Catch linting and security issues before code reaches CI</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create CLAUDE.md with testing patterns</div>
-                            <p>Enable AI agents to generate consistent, project-appropriate tests and code</p>
+                            <div class="item-description">Create basic CLAUDE.md with test patterns</div>
+                            <p>Guide AI agents on tokenizer testing conventions and model fixtures</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy SARIF upload for CodeQL integration</div>
-                            <p>Security findings visible in GitHub Security tab, not just CI logs</p>
+                            <div class="item-description">Add SBOM generation to build workflows</div>
+                            <p>Supply chain visibility for downstream consumers</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +509,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add Python code coverage measurement (pytest-cov) and codecov integration with PR enforcement</li><li>Add C++ code coverage with gcov/lcov for the native extension code</li></ul>
+                            <ul><li>Add pytest-cov and codecov integration to enforce minimum coverage thresholds</li><li>Create C++ unit tests using GoogleTest for core tokenizer operations</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Create .pre-commit-config.yaml with ruff, bandit, and cmake-format hooks</li><li>Generate comprehensive agent rules (.claude/rules/) for test patterns</li><li>Add SARIF upload from Trivy for GitHub Security tab integration</li></ul>
+                            <ul><li>Add pre-commit hooks for ruff, bandit, and clang-format</li><li>Create agent rules (.claude/rules/) for test creation patterns</li><li>Add SBOM generation to release artifacts</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add container image build validation for downstream consumers</li><li>Add benchmark regression testing in CI (currently benchmark exists but not automated)</li><li>Add differential fuzzing to CI as a periodic workflow</li></ul>
+                            <ul><li>Add performance regression benchmarks to CI</li><li>Create container image builds for testing as OpenVINO plugin</li><li>Add CodeQL workflow for C++ static analysis</li></ul>
                         </div>
                     </div>
                 </div>

@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:58 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 05:16 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/odh-manifests</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="429.76951199999996"
+                                stroke-dashoffset="452.38896"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">2.4</div>
+                        <div class="score-value">2.0</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No unit tests exist — repo contains only Kustomize manifests with zero test code files</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No YAML validation, kustomize build checks, or schema validation for manifests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">15 bash-based smoke tests validate component deployments on live OpenShift clusters via OpenShift-CI</div>
+                            <div class="scorecard-status">15 bash smoke tests via OpenShift CI (Prow), but basic coverage only</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.5/10</div>
-                            <div class="scorecard-status">No PR-time CI workflows — no kustomize build validation, no manifest linting, no schema checks</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No PR-time kustomize build validation, no manifest linting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">Minimal Dockerfile packages manifests as tarball — no runtime validation or security scanning</div>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">Dockerfiles exist but no image scanning, runtime validation, or multi-arch</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tooling — no codecov, no coverage thresholds, no PR coverage reporting</div>
+                            <div class="scorecard-status">No coverage tracking of any kind</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">Zero GitHub Actions workflows — CI relies entirely on external OpenShift-CI (Prow) with no in-repo config</div>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">No in-repo CI/CD workflows; relies entirely on external OpenShift CI (Prow)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules or AI-assisted testing guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, .claude/ directory, or agent rules</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +411,51 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No PR-time CI validation at all</div>
-                            <p>Broken manifests, invalid YAML, and kustomize errors merge without detection — discovered only during downstream consumption</p>
+                            <div class="item-description">No in-repo CI/CD pipelines</div>
+                            <p>PRs merge without any automated validation; manifest errors caught only at deployment time</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Zero unit-level manifest validation</div>
-                            <p>No kustomize build verification, no YAML schema validation, no CRD conformance checks</p>
+                            <div class="item-description">No kustomize build validation</div>
+                            <p>Broken kustomize overlays can merge and break downstream consumers (opendatahub-operator)</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">6-8 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No security scanning of manifests or container images</div>
-                            <p>Vulnerable base images, leaked secrets in manifests, and insecure RBAC rules go undetected</p>
+                            <div class="item-description">No YAML schema validation (kubeconform/kubeval)</div>
+                            <p>Invalid Kubernetes manifests can merge without detection</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No security scanning on container images or manifests</div>
+                            <p>Vulnerable base images and insecure RBAC configurations ship without detection</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No coverage tracking or enforcement</div>
-                            <p>No way to measure which components have smoke tests vs which are untested</p>
+                            <div class="item-description">No manifest linting (yamllint, kube-linter)</div>
+                            <p>YAML formatting issues, deprecated API versions, and anti-patterns go uncaught</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">Repository appears stale — last commit Feb 2024</div>
-                            <p>Manifests may be outdated vs. upstream components, creating drift and deployment failures</p>
+                        <li class="item-card medium">
+                            <div class="item-description">No coverage or test tracking</div>
+                            <p>No visibility into which components have test coverage vs. which are untested</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">N/A</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,32 +472,40 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add kustomize build validation workflow</div>
-                            <p>Catch broken overlays, missing resources, and invalid patches before merge</p>
+                            <div class="item-description">Add kustomize build validation GitHub Action</div>
+                            <p>Catch broken overlays before merge; iterate all 144 kustomization.yaml files</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add YAML linting with yamllint</div>
-                            <p>Catch syntax errors, formatting inconsistencies, and YAML anti-patterns</p>
+                            <div class="item-description">Add kubeconform validation to PR workflow</div>
+                            <p>Validate all manifests against Kubernetes/OpenShift API schemas</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add yamllint configuration and CI check</div>
+                            <p>Enforce consistent YAML formatting across 641 YAML files</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add kubeconform or kubeval for schema validation</div>
-                            <p>Validate all manifests against Kubernetes and OpenShift API schemas</p>
+                            <div class="item-description">Add kube-linter for best practice checks</div>
+                            <p>Detect security misconfigurations, missing resource limits, and anti-patterns</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy filesystem scanning for IaC misconfigurations</div>
-                            <p>Detect insecure RBAC, missing security contexts, and misconfigurations in manifests</p>
+                            <div class="item-description">Add Trivy scanning for Dockerfiles</div>
+                            <p>Detect vulnerabilities in base images used by manifests</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
@@ -509,15 +525,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add GitHub Actions CI workflow with kustomize build validation for all 144 kustomization.yaml files</li><li>Add kubeconform/kubeval schema validation against OpenShift API schemas</li><li>Add YAML linting (yamllint) to catch syntax and formatting issues</li></ul>
+                            <ul><li>Add GitHub Actions workflow for PR validation with kustomize build, kubeconform, and yamllint</li><li>Implement kustomize build validation for all 144 kustomization.yaml files to prevent broken overlays</li><li>Add kubeconform or kubeval schema validation for all Kubernetes manifests</li><li>Add security scanning (Trivy, kube-linter) for container images and RBAC configurations</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add Trivy IaC scanning for Kubernetes manifest misconfigurations</li><li>Add kustomize overlay diff testing to catch unintended changes between base/overlay</li><li>Add Polaris or OPA/Gatekeeper policy checks for best practices enforcement</li><li>Create CLAUDE.md with contribution guidelines and agent rules</li></ul>
+                            <ul><li>Add kube-linter to enforce Kubernetes best practices (resource limits, security contexts)</li><li>Implement CODEOWNERS file to complement existing OWNERS files for GitHub-native review enforcement</li><li>Create component-level kustomize build tests to validate each component independently</li><li>Add deprecated API version detection to catch resources that need migration</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add Pluto to detect deprecated API versions</li><li>Add kube-score for manifest quality scoring</li><li>Implement automated component version tracking</li><li>Add pre-commit hooks for local validation</li></ul>
+                            <ul><li>Create agent rules (.claude/rules/) for manifest authoring and testing patterns</li><li>Add architecture decision records for new component onboarding standards</li><li>Implement automated changelog generation from PR labels</li><li>Add pre-commit hooks for local developer validation</li></ul>
                         </div>
                     </div>
                 </div>

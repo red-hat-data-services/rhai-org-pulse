@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:53 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:26 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/opencode</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="158.336136"
+                                stroke-dashoffset="118.75210199999997"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.2</div>
+                        <div class="score-value">7.9</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">378 test files across packages with Bun test runner; strong coverage in core opencode package (236 tests) and app (57 tests)</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Exceptional test suite with 549 test files across 25+ packages, extensive provider and tool coverage</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Playwright E2E infrastructure exists but only 1 placeholder spec; HttpApi exerciser provides API-level integration coverage</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Playwright E2E on Linux and Windows, smoke/regression suites, HttpApi exerciser gates</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Turborepo builds validated on PR; no PR-time container build or deployment testing</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">PR-time multi-arch container build validation, but no Konflux simulation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Multi-arch container builds with multi-stage Dockerfiles and UBI base; no runtime validation, scanning, or SBOM</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
+                            <div class="scorecard-status">Multi-arch UBI9 container builds with runtime smoke (opencode --version), no deeper image functional tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No codecov integration, no coverage thresholds, no PR coverage reporting</div>
+                            <div class="scorecard-status">No coverage tool integration (no codecov, coveralls, or coverage thresholds)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">29 workflows with concurrency control, caching, cross-platform testing (Linux/Windows), Nix eval, PR standards enforcement</div>
+                            <div class="scorecard-status">28 workflows with concurrency control, caching, multi-platform builds, code signing, auto-publish</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">AGENTS.md with comprehensive style guide and testing philosophy; no .claude/ directory or test-type-specific rules</div>
+                            <div class="scorecard-status">Comprehensive AGENTS.md with style guide, testing philosophy, and V2 session semantics</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +411,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No code coverage tracking or enforcement</div>
-                            <p>Cannot measure test coverage trends or enforce minimum thresholds; regressions go undetected</p>
+                            <div class="item-description">No test coverage tracking or enforcement</div>
+                            <p>Cannot measure test coverage trends, regressions go undetected, no PR-level coverage reporting</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">E2E test suite is a placeholder</div>
-                            <p>Playwright infrastructure exists but the only spec is a fixme todo; no real E2E validation runs on PRs</p>
+                            <div class="item-description">No security scanning in CI (SAST/container scanning)</div>
+                            <p>Vulnerabilities in dependencies or code not caught until production; no Trivy, Snyk, or CodeQL</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">16-24 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No container security scanning</div>
-                            <p>Container images published to GHCR without vulnerability scanning, SBOM generation, or image signing</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No PR-time container build validation</div>
-                            <p>Container build failures only discovered post-merge on dev branch push</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Multiple packages have zero test coverage</div>
-                            <p>sdk (43 src/0 tests), ui (178 src/5 tests), containers, plugin, web packages lack meaningful tests</p>
+                            <div class="item-description">No pre-commit hooks for code quality</div>
+                            <p>Only pre-push typecheck hook; no lint, format, or secret detection on commit</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">20-40 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No dependency scanning or secret detection</div>
+                            <p>Supply chain vulnerabilities and accidental secret commits not caught automatically</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">3-5 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,35 +456,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to containers workflow</div>
-                            <p>Catch CVEs in base images and dependencies before publishing to GHCR</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add codecov integration to test workflow</div>
-                            <p>Track coverage trends, enforce minimums on PRs, surface coverage in PR comments</p>
+                            <div class="item-description">Add codecov/coveralls integration to test workflow</div>
+                            <p>Immediate visibility into test coverage with PR-level reporting and trend tracking</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add container build step to PR workflow</div>
-                            <p>Catch Dockerfile/Containerfile build failures before merge</p>
+                            <div class="item-description">Add Trivy container scanning to build-openshift-image workflow</div>
+                            <p>Catch critical vulnerabilities in UBI9 container images before deployment</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add CodeQL or Semgrep SAST workflow</div>
+                            <p>Automated detection of security issues in TypeScript/JavaScript code</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create .claude/rules/ directory with test-type-specific rules</div>
-                            <p>Improve AI-generated test quality with framework-specific patterns (Bun test, Playwright, Effect)</p>
+                            <div class="item-description">Add Gitleaks secret detection to PR workflow</div>
+                            <p>Prevent accidental credential leaks in pull requests</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add pre-commit hook for oxlint</div>
+                            <p>Catch lint issues before they reach CI, faster feedback loop</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +509,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add codecov/coveralls integration with coverage thresholds and PR reporting</li><li>Implement real E2E test scenarios using existing Playwright infrastructure</li><li>Add Trivy or Snyk scanning to container image workflows</li></ul>
+                            <ul><li>Implement test coverage tracking with codecov integration and PR-level reporting</li><li>Add container image vulnerability scanning (Trivy) to the build-openshift-image workflow</li><li>Add SAST scanning (CodeQL or Semgrep) for TypeScript/JavaScript security analysis</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add PR-time container build validation (docker build --check or similar)</li><li>Write unit tests for under-covered packages (sdk, ui, web, plugin)</li><li>Create comprehensive .claude/rules/ with test pattern guidance for Bun test, Playwright, and Effect testing</li><li>Add SBOM generation and image signing for published container images</li></ul>
+                            <ul><li>Add dependency scanning (Dependabot or Renovate) for supply chain security</li><li>Add Gitleaks or TruffleHog secret detection to PR workflow</li><li>Add contract tests between SDK and server API boundaries</li><li>Enhance agent rules with specific test creation guidance per test type</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add pre-commit hooks for linting enforcement (currently only pre-push typecheck)</li><li>Consider adding CodeQL or Semgrep for SAST analysis</li><li>Add performance/benchmark testing for CLI startup and LLM interaction latency</li><li>Implement visual regression testing with Storybook</li></ul>
+                            <ul><li>Add performance regression testing (benchmark suite with tracking)</li><li>Add accessibility testing for web/desktop UI components</li><li>Add pre-commit hooks for lint, format, and secret detection</li><li>Add SBOM generation for container images</li></ul>
                         </div>
                     </div>
                 </div>

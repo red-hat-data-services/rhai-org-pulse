@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:47 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:20 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/odh-build-metadata</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="446.73409799999996"
+                                stroke-dashoffset="480.66326999999995"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">2.1</div>
+                        <div class="score-value">1.5</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No code exists in this repository - pure metadata/artifact storage with zero source files</div>
+                            <div class="scorecard-status">No source code or tests — pure metadata storage repo</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No test infrastructure - repository stores build metadata snapshots, not executable code</div>
+                            <div class="scorecard-status">No integration or E2E tests; no validation of manifest correctness</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Automated metadata commits from Konflux builds exist but no validation of manifest correctness</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No PR workflow; commits pushed directly by automation without validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No container images built - stores references to images built in upstream repos</div>
+                            <div class="scorecard-status">No container images built from this repo</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tooling - no code to measure coverage against</div>
+                            <div class="scorecard-status">No coverage tooling — nothing to cover</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Automated commit pipeline from Konflux, early-gate branch with test summaries, ci-artifacts branch</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">Automated commit pipeline exists upstream but no GitHub Actions in this repo</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, .claude/ directory, or agent rules present</div>
+                            <div class="scorecard-status">No CLAUDE.md, .claude/ directory, or agent rules</div>
                         </div>
                     </div>
                 </div>
@@ -412,7 +412,15 @@
                         
                         <li class="item-card high">
                             <div class="item-description">No manifest validation on commit</div>
-                            <p>Corrupt or malformed YAML manifests can be committed without detection, potentially breaking downstream operator builds</p>
+                            <p>Malformed YAML, broken kustomization references, or invalid CRDs can land without detection</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No GitHub Actions workflows at all</div>
+                            <p>Zero automated quality gates — every commit is trusted blindly from the upstream automation</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
@@ -420,42 +428,26 @@
                         </li>
                         <li class="item-card high">
                             <div class="item-description">No schema validation for manifests-config.yaml</div>
-                            <p>Missing or incorrect git commit references, broken URLs, or malformed config can propagate to operator builds</p>
+                            <p>Incorrect source repo URLs, missing commits, or malformed config could break downstream operator builds</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No drift detection between snapshot hashes</div>
-                            <p>No automated way to detect if manifest content has diverged from upstream source repos</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No early-gate test result aggregation or dashboarding</div>
-                            <p>Test results stored as YAML files in a branch with no visibility, trending, or alerting</p>
+                            <div class="item-description">No kustomize build verification</div>
+                            <p>Broken kustomization overlays not detected until downstream consumers (odh-operator) attempt to use them</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">8-16 hours</span>
                             </div>
                         </li>
-                        <li class="item-card low">
-                            <div class="item-description">No LICENSE file</div>
-                            <p>Repository has no license, creating legal ambiguity for downstream consumers</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">0.5 hours</span>
-                            </div>
-                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">No README or documentation on main branch</div>
-                            <p>New contributors have no guidance on repo purpose, structure, or contribution workflow</p>
+                            <div class="item-description">No branch protection or review requirements</div>
+                            <p>Automated commits bypass any human review; no safeguard against corrupted automation output</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -472,35 +464,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add YAML linting GitHub Action on push to main</div>
-                            <p>Catch malformed manifests before they reach downstream consumers</p>
+                            <div class="item-description">Add YAML lint workflow</div>
+                            <p>Catch malformed YAML before it lands in the repo</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add manifests-config.yaml JSON Schema validation</div>
-                            <p>Ensure all required fields (git.url, git.commit, src, dest) are present and valid</p>
+                            <div class="item-description">Add manifests-config.yaml schema validation</div>
+                            <p>Ensure every commit has valid config structure with valid git URLs and commit SHAs</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add a README.md to main branch</div>
-                            <p>Document repository purpose, structure, and automated commit pipeline</p>
+                            <div class="item-description">Add kustomize build smoke test</div>
+                            <p>Verify that kustomization overlays can be built successfully</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add LICENSE file</div>
-                            <p>Resolve legal ambiguity for downstream consumers</p>
+                            <div class="item-description">Enable branch protection on main</div>
+                            <p>Require status checks to pass before commits land</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">0.5 hours</span>
+                                <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +509,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add YAML lint + schema validation CI workflow to validate every commit to main</li><li>Add git.commit SHA verification (confirm referenced commits exist in upstream repos)</li></ul>
+                            <ul><li>Add a GitHub Actions workflow that validates YAML syntax for all changed files</li><li>Add schema validation for manifests-config.yaml (verify git URLs resolve, commit SHAs are valid hex)</li><li>Add kustomize build validation for changed component manifests</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Build early-gate test result dashboard/aggregation from ci-artifacts branch data</li><li>Add manifest diff reporting (show what changed between consecutive snapshots)</li><li>Create README documenting the automated pipeline and data schema</li></ul>
+                            <ul><li>Add branch protection requiring CI status checks before merge</li><li>Add a periodic job to verify upstream git commits referenced in manifests-config.yaml still exist</li><li>Add diff-size alerting for unexpectedly large metadata updates</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add Kustomize build validation for manifest directories</li><li>Create agent rules for manifest structure and validation patterns</li><li>Implement retention/cleanup policy for old snapshots (5,503 currently)</li></ul>
+                            <ul><li>Add CLAUDE.md with repo purpose documentation and contribution guidelines</li><li>Add a CODEOWNERS file for review routing</li><li>Consider adding Renovate/Dependabot-style freshness checks for pinned commits</li></ul>
                         </div>
                     </div>
                 </div>

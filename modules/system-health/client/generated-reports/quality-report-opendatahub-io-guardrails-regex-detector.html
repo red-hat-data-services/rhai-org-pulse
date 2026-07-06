@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on May 29, 2026 at 07:52 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 03:57 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/guardrails-regex-detector</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="407.15006399999993"
+                                stroke-dashoffset="497.62785599999995"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">2.8</div>
+                        <div class="score-value">1.2</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">Only 1 test for core regex_match function; no tests for built-in detectors, handler, or error paths</div>
+                            <div class="scorecard-status">Single test for security-critical PII detection logic; built-in detectors untested</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E tests; no HTTP endpoint testing</div>
+                            <div class="scorecard-status">No integration or E2E tests; HTTP endpoints untested</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No CI/CD workflows; Dockerfile runs tests/lint/fmt in build stages but no PR-time validation</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">Dockerfile has test/lint/format stages but no CI to trigger them on PRs</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Multi-stage Dockerfile with test/lint/format stages, but no runtime validation or scanning</div>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">Multi-stage Dockerfile with UBI9 base but no runtime validation or scanning</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tracking, no codecov/coveralls, no coverage thresholds</div>
+                            <div class="scorecard-status">No coverage tooling, no codecov, no thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No GitHub Actions, no CI/CD workflows of any kind</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">Zero CI/CD workflows; no PR checks, no periodic jobs</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude directory, no agent rules or test guidance</div>
+                            <div class="scorecard-status">No .claude directory, no CLAUDE.md, no agent rules</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No CI/CD pipeline</div>
-                            <p>No automated quality gates on PRs; tests, lint, and formatting only run if someone manually builds the Docker image</p>
+                            <div class="item-description">No CI/CD pipeline at all</div>
+                            <p>Code merges with zero automated checks — no tests, linting, or security validation on PRs</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Minimal test coverage (1 test for 212 LOC)</div>
-                            <p>Built-in detectors (email, SSN, credit card), the HTTP handler, error paths, and edge cases are completely untested</p>
+                            <div class="item-description">Security-critical PII detectors have almost no tests</div>
+                            <p>Email, SSN, credit card regex patterns could silently break with no test coverage catching regressions</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">6-8 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
                             <div class="item-description">No integration/E2E tests for HTTP API</div>
-                            <p>API contract, request validation, error responses, and multi-content handling are never verified</p>
+                            <p>Endpoint behavior (routing, error handling, response format) is completely untested</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">6-10 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No security scanning</div>
-                            <p>Dependency vulnerabilities and container image CVEs go undetected</p>
+                            <div class="item-description">No container vulnerability scanning</div>
+                            <p>Vulnerable dependencies or base image CVEs ship undetected to production</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No coverage tracking or enforcement</div>
+                            <p>No visibility into test coverage trends; regressions go unnoticed</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +464,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add GitHub Actions workflow with cargo test, clippy, and fmt</div>
-                            <p>Automated quality gates on every PR; catches regressions before merge</p>
+                            <div class="item-description">Add GitHub Actions CI workflow with cargo test, clippy, and fmt</div>
+                            <p>Catch test failures, lint violations, and format issues on every PR</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add unit tests for built-in detectors (email, SSN, credit card)</div>
-                            <p>Validates regex patterns that are the core product functionality</p>
+                            <div class="item-description">Add unit tests for all built-in PII detectors</div>
+                            <p>Validate email, SSN, and credit card patterns with positive and negative cases</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add cargo-tarpaulin for coverage tracking</div>
-                            <p>Visibility into test coverage; enables coverage thresholds</p>
+                            <div class="item-description">Add Trivy scanning to Dockerfile or CI</div>
+                            <p>Detect known vulnerabilities in dependencies and base image</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning</div>
-                            <p>Detect known vulnerabilities in base image and dependencies</p>
+                            <div class="item-description">Add cargo-tarpaulin for coverage reporting</div>
+                            <p>Visibility into test coverage with codecov integration</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +509,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Create GitHub Actions CI workflow with cargo test, clippy, fmt check on PRs</li><li>Add unit tests for all 3 built-in detectors and the handle_text_contents handler</li><li>Add integration tests that start the HTTP server and test the API endpoint</li></ul>
+                            <ul><li>Create GitHub Actions CI workflow with cargo test, cargo clippy, and cargo fmt --check on PRs</li><li>Add comprehensive unit tests for all 3 built-in PII detectors (email, SSN, credit card) with edge cases</li><li>Add Trivy container scanning to detect CVEs in dependencies and UBI9 base image</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add cargo-tarpaulin coverage tracking with codecov integration</li><li>Add Trivy or Snyk container scanning to CI pipeline</li><li>Add CODEOWNERS file for review enforcement</li><li>Create CLAUDE.md with test patterns and contribution guidelines</li></ul>
+                            <ul><li>Add integration tests for HTTP endpoints using axum::test or reqwest</li><li>Add cargo-tarpaulin coverage tracking with codecov integration and minimum threshold</li><li>Add .dockerignore to exclude unnecessary files from build context</li><li>Create agent rules (.claude/rules/) for test creation patterns</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add property-based testing (proptest) for regex detectors</li><li>Add benchmarks for regex performance</li><li>Add OpenAPI/Swagger spec for the API contract</li><li>Add pre-commit hooks for local development</li></ul>
+                            <ul><li>Add SBOM generation and image signing/attestation</li><li>Add pre-commit hooks for local development quality checks</li><li>Add fuzz testing for regex patterns to catch ReDoS vulnerabilities</li><li>Add multi-architecture image builds (amd64/arm64)</li></ul>
                         </div>
                     </div>
                 </div>

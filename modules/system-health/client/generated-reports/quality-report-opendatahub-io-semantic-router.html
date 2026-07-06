@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:04 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:34 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/semantic-router</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#28a745"
+                                stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="101.78751600000001"
+                                stroke-dashoffset="118.75210199999997"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">8.2</div>
+                        <div class="score-value">7.9</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Strong coverage with 160 test files across Go/Rust/Python/TypeScript; 35% test-to-source ratio</div>
+                            <div class="scorecard-status">Excellent coverage with 160 Go test files, 34 Rust tests, 19 Python tests, 11 TS specs across a polyglot codebase</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Exceptional E2E framework with 53 test cases across 18 profiles; Kind-based K8s testing automated on PRs</div>
+                            <div class="scorecard-status">Outstanding E2E framework with 18 profiles, Kind-based K8s testing, matrix-based change detection</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">PR-time Docker builds for 6 images (amd64); multi-arch on merge; no Konflux simulation</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">PR-time Docker builds for dashboard and images, multi-arch via buildx, but no Konflux simulation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Multi-stage cross-compiled Dockerfiles with PR-time build validation; no runtime image testing or vulnerability scanning</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
+                            <div class="scorecard-status">18 Dockerfiles with multi-stage builds and multi-arch support, but no runtime validation or vulnerability scanning</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Codecov only for operator subproject; no coverage tracking for core semantic-router</div>
+                            <div class="scorecard-status">Coverage only for operator (Codecov); no coverage for core Go, Rust, Python, or TypeScript packages</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
-                            <div class="scorecard-status">23 workflows with smart change detection, concurrency control, caching, and matrix-based parallel testing</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">25 workflows with smart path-based filtering, concurrency control, caching, performance benchmarks on PRs</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Comprehensive AGENTS.md with layered rule system, 35+ agent docs, playbooks, ADRs, and tech-debt tracking</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
+                            <div class="scorecard-status">Best-in-class agent harness with AGENTS.md, skill registry, task matrix, e2e profile map, architecture guardrails</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +411,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No coverage tracking for core semantic-router</div>
-                            <p>Cannot measure or enforce test coverage for the main Go codebase (272 source files)</p>
+                            <div class="item-description">No coverage tracking for core packages</div>
+                            <p>Cannot measure or enforce test coverage for 458 Go source files, 116 Rust files, or 170 Python files</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container security scanning (Trivy/Snyk/CodeQL)</div>
-                            <p>Vulnerability detection relies entirely on manual review; no automated supply chain security</p>
+                            <div class="item-description">No container vulnerability scanning</div>
+                            <p>18 Docker images built without Trivy/Snyk scanning; vulnerabilities reach production undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No SBOM generation or image signing</div>
-                            <p>No software bill of materials for supply chain compliance; images are unsigned</p>
+                        <li class="item-card high">
+                            <div class="item-description">No SAST/CodeQL integration</div>
+                            <p>No static application security testing despite handling PII, auth tokens, and security-sensitive classification</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No secret detection in CI</div>
-                            <p>Committed secrets or API keys could go undetected</p>
+                            <div class="item-description">No image runtime validation in CI</div>
+                            <p>Container images built but not smoke-tested for startup; failures caught only in E2E or production</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +456,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to PR workflow</div>
-                            <p>Immediate vulnerability detection for all 6 container images built on PRs</p>
+                            <div class="item-description">Add Trivy scanning to docker-publish workflow</div>
+                            <p>Detect CVEs in all 18 Docker images before they reach registries</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add codecov integration for core Go tests</div>
-                            <p>Coverage visibility and enforcement for 272 Go source files</p>
+                            <div class="item-description">Enable CodeQL analysis</div>
+                            <p>Catch security vulnerabilities in Go, Python, and TypeScript code automatically</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Gitleaks secret detection to pre-commit</div>
-                            <p>Prevent accidental secret commits across all languages</p>
+                            <div class="item-description">Add -coverprofile to test-semantic-router target</div>
+                            <p>Start tracking test coverage for the core Go package (458 source files)</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL/SAST workflow</div>
-                            <p>Automated static security analysis for Go, Rust, Python, and TypeScript</p>
+                            <div class="item-description">Add SBOM generation to docker-publish</div>
+                            <p>Supply chain transparency for all published container images</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +501,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add coverage tracking (codecov) for core semantic-router Go tests — currently only operator has it</li><li>Add container image vulnerability scanning (Trivy) to PR and nightly workflows</li></ul>
+                            <ul><li>Add coverage tracking across all languages (Go, Rust, Python, TypeScript) with Codecov integration and enforcement thresholds</li><li>Add container vulnerability scanning (Trivy) to docker-publish and PR build workflows</li><li>Enable CodeQL or Semgrep for SAST across Go, Python, and TypeScript</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add SBOM generation and image signing (Cosign/Sigstore) to Docker publish pipeline</li><li>Add CodeQL or gosec SAST scanning as a PR workflow</li><li>Add secret detection (Gitleaks) to pre-commit hooks and CI</li></ul>
+                            <ul><li>Add image runtime startup validation (health check probe) for all Dockerfiles in CI</li><li>Add SBOM generation and image signing (cosign) to the container publishing pipeline</li><li>Add secret detection (Gitleaks) to pre-commit and CI</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add dashboard frontend unit test coverage (currently only e2e specs)</li><li>Add Rust code coverage tracking for candle-binding/ml-binding/nlp-binding</li><li>Add contract tests between Go router and dashboard backend API</li></ul>
+                            <ul><li>Add contract tests for the OpenAI-compatible API boundaries</li><li>Add chaos engineering tests for Envoy extproc resilience</li><li>Add accessibility testing for the dashboard frontend</li></ul>
                         </div>
                     </div>
                 </div>

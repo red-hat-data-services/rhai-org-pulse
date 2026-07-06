@@ -1,132 +1,176 @@
 ---
 repository: "opendatahub-io/rhaii-on-xks"
-overall_score: 6.3
+overall_score: 7.1
 scorecard:
   - dimension: "Unit Tests"
-    score: 2.0
-    status: "No unit tests — repo is infrastructure-only (Helm charts + shell scripts)"
+    score: 3.0
+    status: "No unit tests — repo is infrastructure-as-code (Helm charts + shell scripts), no application code to unit-test"
   - dimension: "Integration/E2E"
-    score: 8.0
-    status: "Strong E2E with KinD cluster, mock vLLM, conformance suite, and preflight validation"
+    score: 8.5
+    status: "Excellent KinD-based E2E with mock vLLM, per-chart conformance tests, RHCL integration tests"
   - dimension: "Build Integration"
-    score: 6.0
-    status: "PR-triggered helm lint/template/security checks for RHCL; E2E requires label gating"
+    score: 6.5
+    status: "Helm lint + template validation on PR; no Konflux simulation; security checks verify image digests and registries"
   - dimension: "Image Testing"
-    score: 5.0
-    status: "Validation Containerfile with basic build; no vulnerability scanning or SBOM"
+    score: 6.0
+    status: "Mock vLLM image built and tested in E2E; validation Containerfile present; no Trivy/Snyk scanning"
   - dimension: "Coverage Tracking"
-    score: 1.0
-    status: "No coverage tracking — no unit tests to measure"
+    score: 2.0
+    status: "No coverage tooling — no codecov, no test-to-code ratio tracking"
   - dimension: "CI/CD Automation"
-    score: 7.0
-    status: "4 workflows covering lint, E2E, docs, and link-check; E2E is label-gated (not auto)"
+    score: 7.5
+    status: "4 workflows (E2E mock, RHCL CI, link-check, docs); label-gated E2E; well-structured Makefile; shellcheck in lint target"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
+    status: "No .claude/ directory, no CLAUDE.md, no AGENTS.md — zero AI agent guidance"
 critical_gaps:
-  - title: "No unit tests for shell scripts or Python validation code"
-    impact: "Regressions in conformance test logic or preflight checks go undetected"
-    severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "No container vulnerability scanning (Trivy/Snyk)"
-    impact: "Vulnerabilities in base images or dependencies shipped undetected"
+  - title: "No container vulnerability scanning"
+    impact: "Security vulnerabilities in base images or dependencies go undetected until production"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "E2E tests require manual label to trigger on PRs"
-    impact: "PRs can merge without E2E validation if maintainer forgets to label"
-    severity: "MEDIUM"
-    effort: "2-4 hours"
-  - title: "No agent rules for AI-assisted development"
-    impact: "AI agents have no guidance on testing patterns, Helm chart conventions, or script standards"
-    severity: "MEDIUM"
-    effort: "3-5 hours"
-quick_wins:
-  - title: "Add Trivy scanning to RHCL CI workflow"
-    effort: "1-2 hours"
-    impact: "Detect vulnerabilities in rendered Helm images before merge"
-  - title: "Add shellcheck to PR CI (currently local-only)"
-    effort: "1 hour"
-    impact: "Catch shell script bugs before merge — shellcheck is already in Makefile lint target"
-  - title: "Add yamllint to PR CI"
-    effort: "1 hour"
-    impact: "Catch YAML formatting issues — yamllint already in Makefile lint target"
-  - title: "Create basic CLAUDE.md with testing and Helm chart conventions"
+  - title: "No SAST/CodeQL integration"
+    impact: "Static analysis gaps in Python validation scripts and shell scripts"
+    severity: "HIGH"
     effort: "2-3 hours"
-    impact: "Guide AI agents on repo patterns, test creation, and chart structure"
+  - title: "No coverage tracking or enforcement"
+    impact: "Cannot measure test effectiveness or enforce minimum coverage thresholds"
+    severity: "MEDIUM"
+    effort: "4-6 hours"
+  - title: "E2E tests are label-gated (manual trigger)"
+    impact: "E2E tests can be skipped on PRs — regressions may merge without validation"
+    severity: "MEDIUM"
+    effort: "2-4 hours"
+  - title: "No agent rules for test creation"
+    impact: "AI-assisted contributions lack guidance for test patterns and quality standards"
+    severity: "LOW"
+    effort: "3-4 hours"
+quick_wins:
+  - title: "Add Trivy container scanning to RHCL CI workflow"
+    effort: "1-2 hours"
+    impact: "Catch CVEs in base images and dependencies before merge"
+  - title: "Add shellcheck to PR workflow"
+    effort: "1 hour"
+    impact: "Currently only in local make lint — adding to CI prevents shell script bugs"
+  - title: "Add yamllint to PR workflow"
+    effort: "1 hour"
+    impact: "Catch YAML formatting issues in Helm values files automatically"
+  - title: "Pin all GitHub Actions by SHA in link-check and docs workflows"
+    effort: "30 minutes"
+    impact: "link-check.yaml and docs.yml use @v5 tags instead of SHA pins — supply chain risk"
+  - title: "Create basic CLAUDE.md with test contribution guidelines"
+    effort: "2 hours"
+    impact: "Guide AI-assisted PRs toward correct testing patterns"
 recommendations:
   priority_0:
-    - "Add container vulnerability scanning (Trivy) to CI for rendered Helm chart images and the validation Containerfile"
-    - "Promote shellcheck and yamllint from local-only lint target to a CI workflow that runs on all PRs"
+    - "Add container vulnerability scanning (Trivy) to CI — at minimum on the validation Containerfile and mock-vllm Dockerfile"
+    - "Add CodeQL or Semgrep for SAST analysis on Python scripts and shell scripts"
+    - "Pin all GitHub Action references by SHA (link-check.yaml and docs.yml currently use unpinned @v5 tags)"
   priority_1:
-    - "Add unit tests for the Python preflight validation tool (llmd_xks_preflight.py) using pytest"
-    - "Add unit tests for key shell script functions in the conformance test suite"
-    - "Consider making E2E workflow auto-triggerable for trusted contributors (not just label-gated)"
-    - "Create CLAUDE.md and .claude/rules/ for AI-assisted development guidance"
+    - "Promote shellcheck + yamllint from local-only make lint to a CI workflow that runs on PRs"
+    - "Add pre-commit hooks (.pre-commit-config.yaml) for shellcheck, yamllint, and helm lint"
+    - "Create comprehensive agent rules (.claude/rules/) for conformance test and chart test patterns"
+    - "Add Gitleaks or TruffleHog for secret detection in CI"
   priority_2:
+    - "Add chart unit tests using helm-unittest for value permutations"
+    - "Add coverage tracking for Python preflight validation scripts (pytest + codecov)"
+    - "Consider making E2E tests auto-trigger on chart changes (not just label-gated)"
     - "Add SBOM generation for the validation container image"
-    - "Add Helm chart unit tests using helm-unittest plugin"
-    - "Consider adding pre-commit hooks (.pre-commit-config.yaml) for local development"
-    - "Add a security scanning workflow (CodeQL or Semgrep) for Python code"
 ---
 
 # Quality Analysis: rhaii-on-xks
 
 ## Executive Summary
-
-- **Overall Score: 6.3/10**
-- **Repository Type**: Infrastructure / Helm chart deployment repository
-- **Primary Languages**: YAML (Helm charts), Bash (scripts), Python (preflight validation)
-- **Key Strengths**: Excellent E2E test infrastructure with KinD + mock vLLM model, comprehensive conformance test suite (2100+ lines), strong RHCL CI pipeline with security checks, well-documented deployment guides
-- **Critical Gaps**: No unit tests, no vulnerability scanning, no coverage tracking, no agent rules
-- **Agent Rules Status**: Missing
+- **Overall Score: 7.1/10**
+- **Repository Type**: Infrastructure-as-Code — Helm charts for deploying Red Hat AI Inference Stack on Kubernetes (AKS, CoreWeave, OpenShift)
+- **Primary Languages**: Shell (bash), Python, YAML/Helm templates
+- **Key Strengths**: Excellent E2E testing with KinD + mock vLLM, comprehensive conformance test framework, strong RHCL CI with security checks, well-organized Makefile
+- **Critical Gaps**: No container vulnerability scanning, no SAST integration, no coverage tracking, unpinned GitHub Actions in some workflows
+- **Agent Rules Status**: Missing — no `.claude/` directory or `CLAUDE.md`
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 2/10 | No unit tests — repo is infrastructure-only |
-| Integration/E2E | 8/10 | Strong E2E with KinD, mock vLLM, conformance suite |
-| **Build Integration** | **6/10** | **RHCL lint/template/security on PRs; E2E is label-gated** |
-| Image Testing | 5/10 | Validation Containerfile exists; no vuln scanning |
-| Coverage Tracking | 1/10 | No coverage tracking at all |
-| CI/CD Automation | 7/10 | 4 workflows; E2E requires manual label |
-| Agent Rules | 0/10 | No AI agent guidance |
+| Unit Tests | 3.0/10 | No unit tests — repo is infrastructure (Helm charts + scripts), not application code |
+| Integration/E2E | 8.5/10 | KinD-based E2E with mock vLLM, per-chart conformance tests, RHCL integration tests |
+| Build Integration | 6.5/10 | Helm lint + template validation on PR; no Konflux sim; RHCL security checks are strong |
+| Image Testing | 6.0/10 | Mock vLLM image built and tested in E2E; validation Containerfile; no vuln scanning |
+| Coverage Tracking | 2.0/10 | No coverage tooling of any kind |
+| CI/CD Automation | 7.5/10 | 4 workflows, label-gated E2E, structured Makefile, shellcheck in lint target |
+| Agent Rules | 0.0/10 | No .claude/ directory, no CLAUDE.md, no AGENTS.md |
 
 ## Critical Gaps
 
-1. **No unit tests for shell scripts or Python code**
-   - Impact: The 2100-line conformance test script and 584-line Python preflight tool have zero unit tests. Logic regressions in profile detection, pod validation, or cloud provider detection go undetected.
-   - Severity: HIGH
-   - Effort: 8-12 hours
+### 1. No Container Vulnerability Scanning
+- **Impact**: CVEs in UBI base images, Python packages, or mock-vllm dependencies go undetected
+- **Severity**: HIGH
+- **Effort**: 2-4 hours
+- **Details**: Neither Trivy, Snyk, nor any scanning tool is integrated. The `validation/Containerfile` uses `ubi9/ubi-minimal:9.5` and installs packages via microdnf — these should be scanned. The `test/mock-vllm/Dockerfile` is also unscanned.
 
-2. **No container vulnerability scanning**
-   - Impact: The RHCL CI verifies images come from `registry.redhat.io` and use digest pinning (great!), but no Trivy/Snyk scan checks for CVEs in those images or in the validation container.
-   - Severity: HIGH
-   - Effort: 2-4 hours
+### 2. No SAST/CodeQL Integration
+- **Impact**: Static analysis gaps in `validation/llmd_xks_preflight.py` (584 lines), conformance scripts (2000+ lines of bash), and utility scripts
+- **Severity**: HIGH
+- **Effort**: 2-3 hours
+- **Details**: Python and shell scripts have no static analysis beyond local `make lint` (which runs shellcheck/flake8 only if installed locally).
 
-3. **E2E tests require manual label to trigger**
-   - Impact: The `e2e-mock-test.yml` workflow only runs when a maintainer adds the `run-e2e-test` label. PRs can merge without E2E validation.
-   - Severity: MEDIUM
-   - Effort: 2-4 hours
+### 3. No Coverage Tracking
+- **Impact**: No visibility into test effectiveness; no enforcement thresholds
+- **Severity**: MEDIUM
+- **Effort**: 4-6 hours
+- **Details**: No codecov, coveralls, or any coverage reporting. The Python preflight script could have pytest coverage; shell scripts could have bash coverage tooling.
 
-4. **No agent rules for AI-assisted development**
-   - Impact: No CLAUDE.md, AGENTS.md, or `.claude/` directory. AI agents have no guidance on Helm chart patterns, shell script conventions, or test creation.
-   - Severity: MEDIUM
-   - Effort: 3-5 hours
+### 4. E2E Tests Are Label-Gated
+- **Impact**: E2E tests require a maintainer to manually add the `run-e2e-test` label — regressions can merge without E2E validation
+- **Severity**: MEDIUM
+- **Effort**: 2-4 hours
+- **Details**: The `e2e-mock-test.yml` uses `pull_request_target` with label gating. While this is a reasonable security pattern (the test deploys infrastructure with secrets), it means E2E tests can be forgotten or skipped.
+
+### 5. Unpinned GitHub Actions in Some Workflows
+- **Impact**: Supply chain attack vector — unpinned actions could be hijacked
+- **Severity**: MEDIUM
+- **Effort**: 30 minutes
+- **Details**: `link-check.yaml` uses `actions/checkout@v5` and `lycheeverse/lychee-action@v2` (tag-based, not SHA-pinned). `docs.yml` uses `actions/checkout@v5`, `actions/setup-python@v5`, etc. In contrast, `e2e-mock-test.yml` and `rhcl-ci.yaml` correctly pin all actions by SHA.
 
 ## Quick Wins
 
-1. **Add Trivy scanning to CI** (1-2 hours)
-   - Scan rendered Helm chart images for known CVEs
-   - Add to `rhcl-ci.yaml` or create a dedicated security workflow
+### 1. Add Trivy Scanning to RHCL CI (1-2 hours)
+```yaml
+  trivy-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'HIGH,CRITICAL'
+```
 
-2. **Promote shellcheck/yamllint to CI** (1 hour each)
-   - The `make lint` target already includes shellcheck and yamllint
-   - Create a `lint.yaml` workflow that runs these on all PRs (not just RHCL-scoped)
+### 2. Add shellcheck + yamllint to CI (1 hour)
+Create a `lint.yaml` workflow that runs on PRs:
+```yaml
+name: Lint
+on:
+  pull_request:
+    paths: ['**/*.sh', '**/*.yaml', '**/*.yml']
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: shellcheck -x scripts/*.sh test/*.sh charts/*/test/*.sh
+  yamllint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install yamllint && yamllint -d '{extends: relaxed, rules: {line-length: {max: 200}}}' values.yaml charts/*/values.yaml
+```
 
-3. **Create basic CLAUDE.md** (2-3 hours)
-   - Document Helm chart conventions, testing patterns, and script standards
-   - Enable AI agents to contribute effectively
+### 3. Pin GitHub Actions by SHA (30 minutes)
+Replace tag-based action references in `link-check.yaml` and `docs.yml` with SHA-pinned versions matching the pattern already used in `e2e-mock-test.yml` and `rhcl-ci.yaml`.
+
+### 4. Create Basic CLAUDE.md (2 hours)
+Add test contribution guidelines so AI-assisted PRs follow the established patterns (conformance tests, chart tests, mock-based E2E).
 
 ## Detailed Findings
 
@@ -136,238 +180,208 @@ recommendations:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `e2e-mock-test.yml` | PR label `run-e2e-test` | Full E2E with KinD cluster, mock vLLM, conformance tests |
-| `rhcl-ci.yaml` | PR/push on `charts/rhcl/**` | Helm lint, template rendering (4 configs), security checks |
-| `link-check.yaml` | PR on `**/*.md` | Lychee link validation for documentation |
-| `docs.yml` | Push to main | Build and deploy GitHub Pages documentation |
+| `e2e-mock-test.yml` | PR label `run-e2e-test` | Full KinD E2E: build mock, deploy all, run conformance |
+| `rhcl-ci.yaml` | PR on `charts/rhcl/**` | Helm lint, template (K8s + OCP), security checks |
+| `link-check.yaml` | PR on `**/*.md` | Lychee broken link detection |
+| `docs.yml` | Push to main | Build and deploy docs to GitHub Pages |
 
 **Strengths:**
-- E2E workflow is impressively comprehensive: creates KinD cluster, deploys full infrastructure stack (cert-manager + Istio + LWS + KServe), deploys mock model, runs conformance tests
-- RHCL CI has excellent security checks: no hardcoded secrets, all images from `registry.redhat.io`, all images use digest pinning, CRD directory validation, security context verification
-- `pull_request_target` with label gating is a security-conscious design for E2E tests
-- Pinned action SHAs throughout (good supply chain security)
-- Debug info collection on E2E failure
+- E2E workflow is comprehensive: KinD cluster → deploy all operators → mock model → conformance tests → cleanup on failure with debug info collection
+- RHCL CI has excellent security checks: verifies no hardcoded secrets, all images from `registry.redhat.io`, digest pinning, CRDs in `crds/` directory, security contexts
+- E2E uses `pull_request_target` with label gating — secure pattern for workflows needing secrets
+- E2E removes the label on new pushes, forcing re-review before re-running
+- Action SHA pinning in `e2e-mock-test.yml` and `rhcl-ci.yaml` (but not in `link-check.yaml` and `docs.yml`)
 
 **Gaps:**
-- No general-purpose lint workflow for all PRs (shellcheck/yamllint only in local `make lint`)
-- E2E is label-gated — easy to forget, no automation for trusted contributors
-- No CI for the `validation/` Python tool
-- No Helm chart testing for charts other than RHCL (sail-operator, lws-operator, cert-manager-operator, maas)
-- No concurrency control on workflows (could queue multiple runs)
+- No dedicated lint CI workflow (shellcheck/yamllint only run locally via `make lint`)
+- No chart testing workflow for cert-manager, sail-operator, or lws-operator charts
+- No Dependabot or Renovate for dependency updates
+- `link-check.yaml` and `docs.yml` use tag-based action pinning (@v5) instead of SHA
 
 ### Test Coverage
 
-**Conformance Test Suite** (`test/conformance/verify-llm-d-deployment.sh` — 2125 lines):
-- Comprehensive deployment validation supporting 11 profiles (7 upstream, 4 KServe)
-- Auto-detection of cloud platform (AKS, EKS, GKE, OpenShift, CoreWeave)
-- Profile-specific validation (pod patterns, deployments, services, CRDs)
-- Inference readiness testing with auto-model detection
-- Monitoring stack validation (Prometheus, Grafana, ServiceMonitors)
-- Color-coded pass/fail/warn output with summary
+**Test Framework: Shell-based conformance + Python preflight**
 
-**Preflight Validation** (`validation/llmd_xks_preflight.py` — 584 lines):
-- Python-based cluster readiness checks
-- Instance type validation (Azure, CoreWeave)
-- GPU availability detection
-- CRD and operator deployment verification (cert-manager, sail, LWS, KServe, RHCL)
-- Containerized execution support
+The test infrastructure is well-designed for an infrastructure-as-code repo:
 
-**Mock vLLM Server** (`test/mock-vllm/server.py` — 113 lines):
-- Implements OpenAI-compatible API (completions, chat completions, models, health, metrics)
-- Supports HTTPS with certificates (matching KServe mTLS)
-- Enables GPU-free E2E testing
+1. **E2E Mock Tests** (`test/mock-vllm/`, `test/deploy-model.sh`)
+   - Custom mock vLLM server (Python, 114 lines) implementing OpenAI-compatible API
+   - Supports HTTPS with KServe mTLS behavior
+   - Deploy script creates LLMInferenceService with mock image, waits for ready, tests inference
+   - Runs in KinD cluster with full operator stack
 
-**RHCL Conformance Tests** (`test/conformance/test-rhcl-*.yaml` + `verify-rhcl-*.sh`):
-- Deployment verification scripts for RHCL components
-- DNS operator testing
+2. **Conformance Tests** (`test/conformance/verify-llm-d-deployment.sh`)
+   - 2,125 lines of comprehensive deployment validation
+   - 11 deployment profiles (7 upstream + 4 KServe) with profile-specific validations
+   - Auto-detection: cloud platform (AKS, EKS, GKE, OpenShift, CoreWeave), inference service, model
+   - Validates: cluster connectivity, operator health, pod status, InferencePool, HTTPRoute, Gateway, inference readiness, monitoring stack
+   - Supports both upstream Helm-based and KServe CRD-based deployments
 
-**Test-to-Code Ratio**: ~7 test files / 192 total files = ~3.6%. However, the conformance test script alone is 2125 lines — significant validation logic exists.
+3. **RHCL Integration Tests** (`test/conformance/verify-rhcl-deployment.sh`)
+   - Full integration test: deploys Gateway + HTTPRoute + AuthPolicy + RateLimitPolicy
+   - Tests: unauthenticated rejection (401/403), authenticated success (200), rate limiting (429)
+   - In-cluster curl pod for testing through Istio gateway
+   - Validates operator-created resources (AuthConfig, WasmPlugin)
 
-**Gaps:**
-- Zero unit tests for any component
-- No pytest tests for `llmd_xks_preflight.py`
-- No bats tests for shell scripts
-- No helm-unittest tests for Helm charts
-- No contract tests between components
+4. **RHCL DNS Tests** (`test/conformance/verify-rhcl-dns.sh`)
+   - DNS operator validation without cloud credentials
+
+5. **Per-Chart Tests:**
+   - cert-manager: self-signed certificate test, CA test
+   - sail-operator: operator readiness, CRD, injection tests
+   - lws-operator: ring topology test, network test
+
+6. **Preflight Validation** (`validation/llmd_xks_preflight.py`)
+   - 584-line Python script for pre-deployment cluster validation
+   - Tests: cloud provider detection, GPU availability, instance types, operator CRDs, deployment readiness
+   - Supports: Azure AKS, CoreWeave
+   - Containerized: runs via Containerfile with configargparse + kubernetes client
+
+**Test-to-Code Ratio:**
+- ~4,415 lines of test/validation scripts
+- ~2,500 lines of Helm templates/values/helmfile
+- ~500 lines of operational scripts
+- Ratio: ~1.5:1 (tests:code) — excellent for an infrastructure repo
 
 ### Code Quality
 
 **Linting:**
-- `make lint` target includes helm lint, yamllint, and shellcheck
-- These are local-only — not enforced in CI (except helm lint for RHCL)
+- `make lint` target runs: `helm lint` (all charts), `yamllint` (values files), `shellcheck` (scripts)
+- `validation/Makefile` has `flake8` and `autopep8` targets for Python
+- No CI enforcement — lint is local-only
 - `.lychee.toml` configures link checking with sensible exclusions
-- `validation/Makefile` has flake8 and autopep8 targets
 
 **Pre-commit Hooks:**
-- None (no `.pre-commit-config.yaml`)
+- None — no `.pre-commit-config.yaml`
 
 **Static Analysis:**
-- No SAST tools (CodeQL, Semgrep, gosec)
-- No dependency scanning
+- No SAST (CodeQL, gosec, Semgrep)
+- No dependency scanning (Dependabot, Renovate)
 - No secret detection (Gitleaks, TruffleHog)
 
 ### Container Images
 
-**Validation Container** (`validation/Containerfile`):
-- Based on `registry.access.redhat.com/ubi9/ubi-minimal:9.5`
-- Non-root user (1001)
-- Minimal package installation
-- No vulnerability scanning
+**Images Built:**
+1. `validation/Containerfile` — UBI9-minimal based preflight checker
+   - Non-root user (UID 1001)
+   - Minimal packages (python3 + kubernetes client)
+   - No vulnerability scanning
+
+2. `test/mock-vllm/Dockerfile` — Mock vLLM server for E2E testing
+   - No vulnerability scanning
+   - Built and loaded into KinD during E2E
+
+**Strengths:**
+- RHCL CI validates all chart images use `registry.redhat.io` and SHA256 digest pinning
+- RHCL CI checks security contexts (readOnlyRootFilesystem)
+
+**Gaps:**
+- No Trivy/Snyk scanning on any images
 - No SBOM generation
-
-**Mock vLLM Container** (`test/mock-vllm/Dockerfile`):
-- Used for E2E testing only
-- Built and loaded into KinD during CI
-
-**RHCL Chart Security (Excellent):**
-- All images verified from `registry.redhat.io` / `registry.access.redhat.com`
-- All images use SHA256 digest pinning (no floating tags)
-- Security contexts verified (readOnlyRootFilesystem)
-- No hardcoded secrets in values.yaml
+- No multi-architecture validation
+- No image signing/attestation
 
 ### Security
 
 **Strengths:**
-- Image digest pinning enforcement in CI
-- Secret detection in values.yaml
-- Security context validation
-- Pull request target with label gating (prevents untrusted code execution)
-- Pinned GitHub Action SHAs (supply chain security)
-- Helmfile checksum verification in E2E workflow
+- RHCL CI workflow has excellent security checks:
+  - No hardcoded secrets in values.yaml
+  - All images from trusted registries (registry.redhat.io)
+  - Image digest pinning enforcement
+  - Security context validation
+- E2E workflow uses `pull_request_target` with label gating (prevents untrusted code from accessing secrets)
+- E2E removes label on new pushes (forces re-review)
+- `permissions: {}` default in E2E workflow (least privilege)
+- Validation container runs as non-root user
 
 **Gaps:**
-- No Trivy/Snyk container scanning
-- No CodeQL/Semgrep for Python code
-- No Gitleaks/TruffleHog for secret detection
-- No dependency scanning for Python packages
+- No container vulnerability scanning
+- No SAST integration
+- No secret detection in CI
+- No dependency scanning
+- Some workflows use unpinned GitHub Actions
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: None — no CLAUDE.md, AGENTS.md, or `.claude/` directory
+- **Coverage**: None — no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
 - **Quality**: N/A
-- **Gaps**: No guidance for AI agents on:
-  - Helm chart conventions (values.yaml structure, template patterns)
-  - Shell script standards (set flags, error handling, logging)
-  - Python code style (flake8 config, type hints)
-  - Test creation patterns (conformance tests, preflight checks)
-  - Security requirements (digest pinning, registry restrictions)
-- **Recommendation**: Generate rules with `/test-rules-generator` covering:
-  - Helm chart testing patterns
-  - Shell script testing with bats
-  - Python preflight test patterns with pytest
+- **Gaps**: No guidance for AI-assisted test creation, chart development, or conformance test patterns
+- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
+  - Conformance test patterns (profile-based validation)
+  - Chart test patterns (helm lint, template, functional tests)
+  - Mock vLLM test patterns
+  - Python preflight test patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-
-1. **Add container vulnerability scanning to CI**
-   - Add Trivy scanning for rendered Helm chart images
-   - Scan the validation Containerfile
-   - Example workflow step:
-   ```yaml
-   - name: Scan rendered images
-     run: |
-       RENDERED=$(helm template rhcl charts/rhcl/ --set images.pullSecret.dockerConfigJson="e30=")
-       echo "$RENDERED" | grep -oP 'image: \K\S+' | sort -u | while read img; do
-         trivy image --severity HIGH,CRITICAL "$img" || exit 1
-       done
-   ```
-
-2. **Promote lint tools to CI**
-   - Create a `lint.yaml` workflow that runs shellcheck and yamllint on all PRs
-   - Currently only the `make lint` target exists (local-only)
-   ```yaml
-   name: Lint
-   on: [pull_request]
-   jobs:
-     lint:
-       runs-on: ubuntu-latest
-       steps:
-         - uses: actions/checkout@v4
-         - run: make lint
-   ```
+1. **Add container vulnerability scanning** — Integrate Trivy into CI for both the validation Containerfile and mock-vllm Dockerfile. Even a filesystem scan catches dependency CVEs.
+2. **Add SAST integration** — CodeQL for Python scripts, or Semgrep for broader shell + Python coverage.
+3. **Pin all GitHub Actions by SHA** — `link-check.yaml` and `docs.yml` currently use `@v5` tags. Follow the pattern already established in `e2e-mock-test.yml`.
 
 ### Priority 1 (High Value)
-
-3. **Add unit tests for Python preflight tool**
-   - Use pytest with mocked Kubernetes API
-   - Test cloud provider detection, CRD checks, GPU detection
-   - Effort: 4-6 hours
-
-4. **Add unit tests for shell script functions**
-   - Use bats (Bash Automated Testing System)
-   - Test profile loading, pod pattern matching, auto-detection
-   - Effort: 4-6 hours
-
-5. **Consider auto-triggering E2E for trusted contributors**
-   - Allow auto-trigger for PRs from repository collaborators
-   - Keep label-gating only for external contributors
-
-6. **Create CLAUDE.md and agent rules**
-   - Document Helm chart structure, testing patterns, security requirements
-   - Add `.claude/rules/` with conformance test and chart conventions
+1. **Promote lint checks to CI** — Create a dedicated lint workflow running shellcheck, yamllint, and helm lint on PRs.
+2. **Add pre-commit hooks** — `.pre-commit-config.yaml` with shellcheck, yamllint, helm-lint hooks.
+3. **Add secret detection** — Gitleaks or TruffleHog in CI to catch accidentally committed credentials.
+4. **Create agent rules** — `.claude/rules/` with conformance-test, chart-test, and mock-test patterns.
 
 ### Priority 2 (Nice-to-Have)
-
-7. **Add Helm chart unit tests** using `helm-unittest` plugin
-8. **Add SBOM generation** for the validation container
-9. **Add `.pre-commit-config.yaml`** with shellcheck, yamllint, and flake8 hooks
-10. **Add CodeQL or Semgrep** for Python static analysis
-11. **Add concurrency control** to CI workflows
-12. **Extend RHCL CI pattern to other charts** (sail-operator, lws-operator, cert-manager-operator, maas)
+1. **Add helm-unittest** — Chart unit tests for value permutations (e.g., verify template output with different `platform.type` values).
+2. **Add coverage tracking** — pytest for Python preflight scripts with codecov integration.
+3. **Auto-trigger E2E on chart changes** — Consider running a subset of E2E tests automatically when `charts/` or `test/` files change, rather than requiring manual label.
+4. **Add SBOM generation** — For the validation container image, generate SBOM during build.
+5. **Add Dependabot/Renovate** — Automated dependency updates for GitHub Actions and Python packages.
 
 ## Comparison to Gold Standards
 
 | Dimension | rhaii-on-xks | odh-dashboard | notebooks | kserve |
 |-----------|-------------|---------------|-----------|--------|
-| Unit Tests | None | Comprehensive (Jest) | N/A (image repo) | Extensive (Go) |
-| Integration/E2E | Strong (KinD + mock) | Multi-layer | 5-layer validation | Multi-version |
-| Coverage Tracking | None | Codecov enforced | N/A | Codecov enforced |
-| Image Testing | Basic | Contract tests | Gold standard | CRD validation |
-| Security Scanning | Digest pinning + registry check | Trivy + CodeQL | Trivy | CodeQL |
-| CI/CD | 4 workflows | 15+ workflows | 20+ workflows | 10+ workflows |
-| Agent Rules | None | Comprehensive | Basic | None |
-| Lint Enforcement | Local-only (make lint) | CI-enforced | CI-enforced | CI-enforced |
+| Unit Tests | 3/10 (N/A for infra) | 9/10 | 6/10 | 9/10 |
+| Integration/E2E | 8.5/10 | 9/10 | 8/10 | 9/10 |
+| Build Integration | 6.5/10 | 8/10 | 7/10 | 8/10 |
+| Image Testing | 6/10 | 7/10 | 9/10 | 7/10 |
+| Coverage Tracking | 2/10 | 9/10 | 5/10 | 9/10 |
+| CI/CD Automation | 7.5/10 | 9/10 | 8/10 | 9/10 |
+| Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
+| **Overall** | **7.1** | **8.6** | **7.0** | **8.1** |
 
-**Key Differences:**
-- This repo excels at **security-conscious Helm chart validation** (digest pinning, registry enforcement, secret detection) — a pattern other repos should adopt
-- The **conformance test suite** (2125 lines) is exceptionally thorough for infrastructure validation
-- Main gaps are around **unit testing** (expected for an infra repo) and **CI lint enforcement**
+**Note**: The low unit test score is expected for an infrastructure-as-code repo — the test architecture appropriately focuses on integration and conformance testing. The 8.5/10 E2E score reflects a genuinely strong testing strategy for this repo type.
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/e2e-mock-test.yml` — Full E2E with KinD cluster
-- `.github/workflows/rhcl-ci.yaml` — RHCL chart lint, template, security
+- `.github/workflows/e2e-mock-test.yml` — Full E2E with KinD + mock vLLM
+- `.github/workflows/rhcl-ci.yaml` — RHCL chart linting + security checks
 - `.github/workflows/link-check.yaml` — Markdown link validation
 - `.github/workflows/docs.yml` — GitHub Pages deployment
-- `Makefile` — Local lint, deploy, test targets
+- `Makefile` — Deploy, undeploy, test, lint targets
 
 ### Testing
-- `test/conformance/verify-llm-d-deployment.sh` — 2125-line conformance suite
-- `test/mock-vllm/server.py` — Mock vLLM server for E2E
+- `test/conformance/verify-llm-d-deployment.sh` — 2,125-line conformance test framework
+- `test/conformance/verify-rhcl-deployment.sh` — RHCL integration test
+- `test/conformance/verify-rhcl-dns.sh` — RHCL DNS operator test
+- `test/deploy-model.sh` — Mock model deployment for E2E
+- `test/mock-vllm/server.py` — OpenAI-compatible mock server
 - `test/mock-vllm/Dockerfile` — Mock server container
-- `test/deploy-model.sh` — Mock model deployment script
-- `test/conformance/verify-rhcl-deployment.sh` — RHCL conformance
-- `test/conformance/verify-rhcl-dns.sh` — RHCL DNS conformance
+- `charts/cert-manager-operator/test/` — cert-manager tests (self-signed, CA)
+- `charts/sail-operator/test/` — Sail operator tests (operator, CRD, injection)
+- `charts/lws-operator/test/` — LWS tests (ring, network)
 
 ### Validation
-- `validation/llmd_xks_preflight.py` — Python preflight checks
-- `validation/Containerfile` — Preflight container
-- `validation/pyproject.toml` — Python project config
-- `validation/Makefile` — Build/run/lint targets
-- `validation/rhcl-pre-deploy-check.sh` — RHCL pre-deploy validation
+- `validation/llmd_xks_preflight.py` — Pre-deployment cluster validation (584 lines)
+- `validation/Containerfile` — UBI9-minimal container for preflight
+- `validation/Makefile` — Build, run, lint targets for validation
 
-### Helm Charts
-- `charts/cert-manager-operator/` — cert-manager operator chart
-- `charts/sail-operator/` — Istio/Sail operator chart
-- `charts/lws-operator/` — LeaderWorkerSet operator chart
-- `charts/rhcl/` — Red Hat Connectivity Link chart
-- `charts/maas/` — Models as a Service chart
+### Charts
+- `charts/cert-manager-operator/` — cert-manager operator (v1.0.2)
+- `charts/sail-operator/` — Istio/Sail operator (v1.0.0)
+- `charts/lws-operator/` — LeaderWorkerSet operator (v1.0.0)
+- `charts/rhcl/` — Red Hat Connectivity Link (v1.2.0)
+- `charts/maas/` — Models as a Service (v0.1.0)
 
 ### Configuration
-- `helmfile.yaml.gotmpl` — Helmfile configuration
-- `values.yaml` — Global values
-- `.lychee.toml` — Link checker config
-- `zensical.toml` — Documentation site config
+- `helmfile.yaml.gotmpl` — Helmfile orchestrating all chart deployments
+- `values.yaml` — Default values for helmfile
+- `.lychee.toml` — Link checker configuration
+- `OWNERS` — Kubernetes-style code owners

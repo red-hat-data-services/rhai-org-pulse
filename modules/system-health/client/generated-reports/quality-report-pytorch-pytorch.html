@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on May 27, 2026 at 10:00 PM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 03:16 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">pytorch/pytorch</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#28a745"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="101.78751600000001"
+                                stroke-dashoffset="62.20348199999999"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">8.2</div>
+                        <div class="score-value">8.9</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -363,34 +363,39 @@
                     <div class="scorecard">
                         
                         <div class="scorecard-item">
-                            <h3>Testability</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">~1,188 Python + ~278 C++ test files; 509 OpInfo definitions; 163 files with device-agnostic tests; 142 CI workflows with LLM target determination</div>
+                            <h3>Unit Tests</h3>
+                            <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
+                            <div class="scorecard-status">Massive test suite with 1,700+ Python test files, 460+ test methods in test_torch.py alone, property-based testing with Hypothesis, parametrized tests across 321 files</div>
                         </div>
                         <div class="scorecard-item">
-                            <h3>Correctness</h3>
+                            <h3>Integration/E2E</h3>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Comprehensive distributed testing (320 files), multi-GPU/multi-node tests, inductor tests (192 files), export tests, cross-platform CI across Linux/macOS/Windows/ROCm/XPU</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Build Integration</h3>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">PR-triggered builds across multiple platforms, Docker CI images content-hashed for rebuild, LLM-powered target determination for test selection</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Centralized tolerance-aware assertEqual; gradcheck in 37 files; 210+ files with explicit rtol; assert_close adoption at 11% of files</div>
+                            <div class="scorecard-status">Extensive CI Docker images (40+ variants), content-hash-based rebuild triggers, but no explicit container runtime validation or SBOM generation</div>
                         </div>
                         <div class="scorecard-item">
-                            <h3>Completeness</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">~501 OpInfo operators; 686 autograd formulas; 287 Dynamo/Inductor test files; 313 distributed test files</div>
+                            <h3>Coverage Tracking</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Coverage infrastructure exists (.coveragerc with JIT plugin) but no codecov enforcement, no PR coverage gates, no coverage trend tracking</div>
                         </div>
                         <div class="scorecard-item">
-                            <h3>Maintainability</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Substantive CLAUDE.md + 15 .claude/skills/; industrial lintrunner stack; dual mypy + pyrefly; 1,400-line CONTRIBUTING.md</div>
+                            <h3>CI/CD Automation</h3>
+                            <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
+                            <div class="scorecard-status">143 GitHub Actions workflows, concurrency control, test sharding, target determination via LLM, retryBot, extensive platform matrix</div>
                         </div>
                         <div class="scorecard-item">
-                            <h3>Compatibility</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">PR BC linter on every PR; 5 BC test suites; Python 3.10-3.14; Linux/macOS/Windows/aarch64/s390x/RISC-V CI</div>
-                        </div>
-                        <div class="scorecard-item">
-                            <h3>Performance</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">TorchBench + operator benchmarks; PR-time microbenchmarks; 14-file profiler test suite; memory tracking</div>
+                            <h3>Agent Rules</h3>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Comprehensive CLAUDE.md and AGENTS.md, 15 custom Claude skills, dedicated PR review skill, issue triage automation, but no .claude/rules/ directory for test patterns</div>
                         </div>
                     </div>
                 </div>
@@ -406,35 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No PR-level coverage enforcement</div>
-                            <p>Coverage regressions can merge undetected; .coveragerc exists but no Codecov or fail_under threshold</p>
+                            <div class="item-description">No coverage enforcement or PR coverage gates</div>
+                            <p>Test coverage regressions can be merged without detection; no minimum threshold enforced</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">assert_close adoption only 11% of test files</div>
-                            <p>Stylistic inconsistency; legacy assertEqual dominates despite functional equivalence</p>
+                        <li class="item-card high">
+                            <div class="item-description">No container vulnerability scanning (Trivy/Snyk)</div>
+                            <p>40+ CI Docker images not scanned for CVEs; supply chain risk for the most widely-used ML framework</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No .claude/rules/ for test automation</div>
-                            <p>AI agents lack structured file-scoped guidance on test patterns</p>
+                            <div class="item-description">OSSF Scorecard workflow disabled (if: false)</div>
+                            <p>Supply chain security scoring not running; no visibility into security posture trends</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No SAST/CodeQL integration for Python/C++ code</div>
+                            <p>Static security analysis not automated; relies on manual review for security-sensitive code</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card low">
-                            <div class="item-description">48 unimplemented autograd formulas (~7%)</div>
-                            <p>Gradient computation unavailable for some ops (chunk, geqrf, zeta, in-place hyperbolic)</p>
+                            <div class="item-description">No .claude/rules/ directory for test creation patterns</div>
+                            <p>AI-generated tests may not follow PyTorch conventions consistently despite excellent CLAUDE.md guidance</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">16-24 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -451,35 +464,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add .claude/rules/ for test patterns</div>
-                            <p>Structured AI agent guidance for OpInfo, device-agnostic, gradcheck test patterns</p>
+                            <div class="item-description">Re-enable OSSF Scorecard workflow</div>
+                            <p>Restore supply chain security visibility and badge; simply change &#x27;if: false&#x27; to &#x27;if: github.repository == pytorch/pytorch&#x27;</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">30 minutes</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add Codecov integration to PR workflow</div>
+                            <p>Enable coverage tracking and PR-level coverage diff reporting</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add Trivy scanning to Docker build workflow</div>
+                            <p>Catch CVEs in CI Docker images before they reach CI runners</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create .claude/rules/ for test patterns</div>
+                            <p>Codify PyTorch test conventions (TestCase, run_tests, device-generic tests) for AI agents</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Integrate Codecov with PR coverage gates</div>
-                            <p>Automated coverage regression detection on every PR</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add AGENTS.md for broader agent compatibility</div>
-                            <p>Support non-Claude AI agents with project-level guidance</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Migrate assertEqual to assert_close in 5 core test files</div>
-                            <p>Set migration pattern for the rest of the test suite</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -496,15 +509,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Integrate Codecov with PR coverage gates and minimum thresholds</li><li>Create .claude/rules/ with test type rules (unit-tests.md, correctness-tests.md)</li></ul>
+                            <ul><li>Add Codecov/Coveralls integration with PR-level coverage reporting and minimum thresholds</li><li>Enable container vulnerability scanning (Trivy) for all 40+ CI Docker image builds</li><li>Re-enable the OSSF Scorecard workflow for supply chain security monitoring</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Migrate core test files (test_reductions, test_binary_ufuncs, test_linalg) to assert_close</li><li>Add AGENTS.md and optionally .cursor/rules/ for broader AI agent support</li><li>Expand PR-triggered TorchBench perf regression subset beyond path-filtered nightly</li></ul>
+                            <ul><li>Add CodeQL or Semgrep SAST scanning for Python and C++ code paths</li><li>Implement secret detection (Gitleaks) in the lint workflow</li><li>Create .claude/rules/ directory with test creation rules (unit-tests.md, distributed-tests.md, inductor-tests.md)</li><li>Add SBOM generation for release Docker images and wheel artifacts</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Accelerate torch.accelerator migration in torch/testing/_internal</li><li>Add .pre-commit-config.yaml or document git-hook-only preference</li><li>Consolidate Flake8 + Ruff into Ruff-only to reduce maintenance</li></ul>
+                            <ul><li>Add dependency scanning for supply chain risk in third_party/ and pip dependencies</li><li>Implement container image signing with Sigstore/cosign for release images</li><li>Add pre-commit hooks configuration (.pre-commit-config.yaml) as an alternative to lintrunner for external contributors</li></ul>
                         </div>
                     </div>
                 </div>

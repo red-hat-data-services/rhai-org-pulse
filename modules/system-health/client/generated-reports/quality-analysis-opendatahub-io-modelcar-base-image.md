@@ -1,159 +1,170 @@
 ---
 repository: "opendatahub-io/modelcar-base-image"
-overall_score: 4.6
+overall_score: 5.5
 scorecard:
   - dimension: "Unit Tests"
     score: 5.0
-    status: "Python unit tests exist but Go code has zero test coverage"
+    status: "Python tests exist for constants and OCI layout, but no Go tests at all"
   - dimension: "Integration/E2E"
-    score: 7.0
-    status: "Strong E2E with KServe on Kind cluster, tests both sidecar and initcontainer modes"
+    score: 8.0
+    status: "Strong E2E suite deploying KServe on Kind with real inference validation"
   - dimension: "Build Integration"
-    score: 5.0
-    status: "Multi-arch image build on PR but no Konflux simulation or startup validation"
+    score: 7.0
+    status: "PR builds multi-arch image and uploads as artifact; no Konflux simulation"
   - dimension: "Image Testing"
-    score: 4.0
-    status: "Image built and deployed in E2E but no standalone runtime validation or security scanning"
+    score: 6.0
+    status: "Image built on PR and used in E2E, but no standalone runtime validation or CVE scanning on PR"
   - dimension: "Coverage Tracking"
     score: 1.0
-    status: "No coverage tooling, no codecov, no thresholds"
+    status: "No coverage tool integration, no thresholds, no PR reporting"
   - dimension: "CI/CD Automation"
-    score: 6.0
-    status: "4 workflows covering build/E2E/publish, but no concurrency control or caching"
+    score: 7.0
+    status: "Good workflow set with build/e2e/publish, but no caching, no concurrency control"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude directory, no agent rules"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory present"
 critical_gaps:
-  - title: "Zero Go test coverage"
-    impact: "Core linking/waiting logic in link-model-and-wait.go has no unit tests; regressions go undetected"
+  - title: "No Go unit tests for the core link-model-and-wait binary"
+    impact: "The primary shipped artifact (Go binary) has zero test coverage; regressions in symlink creation or signal handling go undetected"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No container security scanning"
-    impact: "Vulnerabilities in base image or Go binary not caught before publish"
-    severity: "HIGH"
-    effort: "1-2 hours"
   - title: "No coverage tracking or enforcement"
-    impact: "Coverage can silently regress with no visibility"
-    severity: "MEDIUM"
+    impact: "Coverage can silently degrade; no visibility into what percentage of code is tested"
+    severity: "HIGH"
+    effort: "2-4 hours"
+  - title: "No security/vulnerability scanning in CI"
+    impact: "CVEs in base images or Go dependencies not detected until downstream consumers scan"
+    severity: "HIGH"
     effort: "2-3 hours"
-  - title: "No code quality / linting tools"
-    impact: "No golangci-lint, no ruff/flake8, no static analysis"
+  - title: "No linting or static analysis"
+    impact: "Code quality issues, potential bugs, and style inconsistencies go undetected"
     severity: "MEDIUM"
     effort: "2-3 hours"
 quick_wins:
-  - title: "Add Trivy scanning to PR workflow"
+  - title: "Add Go unit tests for link-model-and-wait"
+    effort: "3-4 hours"
+    impact: "Test the core shipped binary; cover checkIfEarlyReturn logic, symlink creation, error paths"
+  - title: "Add Trivy scanning to build workflow"
     effort: "1-2 hours"
-    impact: "Catch CVEs in the FROM-scratch image and Go binary before merge"
+    impact: "Catch CVEs in ubi8/go-toolset base image and Go dependencies before publish"
   - title: "Add golangci-lint to PR workflow"
     effort: "1-2 hours"
-    impact: "Catch Go code quality issues and potential bugs"
-  - title: "Add pytest coverage with codecov"
-    effort: "2-3 hours"
-    impact: "Track Python test coverage trends and enforce thresholds"
+    impact: "Catch code quality issues and potential bugs statically"
+  - title: "Add codecov/coverage reporting for Python tests"
+    effort: "1-2 hours"
+    impact: "Visibility into test coverage with PR annotations"
   - title: "Add concurrency control to workflows"
     effort: "30 minutes"
-    impact: "Cancel superseded PR workflow runs, save CI minutes"
+    impact: "Cancel redundant workflow runs on rapid pushes, save CI minutes"
 recommendations:
   priority_0:
-    - "Write unit tests for link-model-and-wait.go (checkIfEarlyReturn, doTheThing logic)"
-    - "Add container image vulnerability scanning (Trivy) to build.yaml workflow"
+    - "Write Go unit tests for link-model-and-wait.go covering all code paths"
+    - "Add container image vulnerability scanning (Trivy) to build and publish workflows"
+    - "Integrate coverage tracking (codecov) for Python tests with minimum thresholds"
   priority_1:
-    - "Add golangci-lint and ruff/mypy for Go and Python linting"
-    - "Add codecov integration with coverage thresholds"
-    - "Add cosign verification step to E2E workflow (verify signed images)"
-    - "Add image startup validation test (build image, run it, verify symlink creation)"
-  priority_2:
-    - "Create agent rules (.claude/rules/) for test patterns"
-    - "Add SBOM generation to publish workflow"
+    - "Add golangci-lint configuration and CI step"
+    - "Add CLAUDE.md and .claude/rules/ with test creation guidance"
+    - "Add concurrency control to all workflows"
     - "Add pre-commit hooks for formatting and linting"
-    - "Add workflow concurrency groups to cancel stale runs"
+  priority_2:
+    - "Add SBOM generation to published images"
+    - "Add Python linting with ruff"
+    - "Consider fuzz testing for the Go symlink logic"
+    - "Add image size regression tracking"
 ---
 
 # Quality Analysis: modelcar-base-image
 
 ## Executive Summary
 
-- **Overall Score: 4.6/10**
-- **Repository Type**: Container base image + Python library for KServe Modelcar sidecar
-- **Languages**: Go (core binary), Python (library/SDK), Shell (E2E scripts)
-- **Key Strengths**: Solid E2E testing with real KServe on Kind, multi-arch image builds, cosign image signing, Python package publishing with Sigstore
-- **Critical Gaps**: Zero Go unit tests, no security scanning, no coverage tracking, no linting, no agent rules
-- **Agent Rules Status**: Missing
+- **Overall Score: 5.5/10**
+- **Repository Type**: Minimal container base image + Python SDK for KServe ModelCar sidecar
+- **Primary Languages**: Go (core binary), Python (SDK/packaging), Shell (E2E scripts)
+- **Key Strengths**: Excellent E2E testing with real KServe + Kind deployment; multi-arch image builds; cosign image signing; Sigstore Python distribution signing
+- **Critical Gaps**: Zero Go unit tests for the core binary; no coverage tracking; no security scanning; no linting
+- **Agent Rules Status**: Missing - no CLAUDE.md, AGENTS.md, or .claude/ directory
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 5.0/10 | Python tests exist but Go code has zero coverage |
-| Integration/E2E | 7.0/10 | Strong E2E with KServe on Kind; tests both sidecar + initcontainer |
-| **Build Integration** | **5.0/10** | **Multi-arch build on PR but no Konflux simulation or startup validation** |
-| Image Testing | 4.0/10 | Image deployed in E2E but no standalone runtime validation or scanning |
-| Coverage Tracking | 1.0/10 | No coverage tooling at all |
-| CI/CD Automation | 6.0/10 | 4 workflows covering lifecycle but missing concurrency/caching |
-| Agent Rules | 0.0/10 | No CLAUDE.md, no .claude directory, no agent rules |
+| Unit Tests | 5.0/10 | Python tests exist for constants and OCI layout, but no Go tests at all |
+| Integration/E2E | 8.0/10 | Strong E2E suite deploying KServe on Kind with real inference validation |
+| **Build Integration** | **7.0/10** | **PR builds multi-arch image and uploads as artifact; no Konflux simulation** |
+| Image Testing | 6.0/10 | Image built on PR and used in E2E, but no standalone runtime validation or CVE scanning |
+| Coverage Tracking | 1.0/10 | No coverage tool integration, no thresholds, no PR reporting |
+| CI/CD Automation | 7.0/10 | Good workflow set with build/e2e/publish, but no caching, no concurrency control |
+| Agent Rules | 0.0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory present |
 
 ## Critical Gaps
 
-### 1. Zero Go Test Coverage
-- **Impact**: The core binary (`link-model-and-wait.go`, 59 lines) contains symlink creation logic and early-return detection with no unit tests. Regressions in symlink behavior or argument parsing would only be caught by the full E2E.
+### 1. No Go Unit Tests for Core Binary
+- **Impact**: The primary shipped artifact (`link-model-and-wait` Go binary, 59 LOC) has zero test coverage. The `checkIfEarlyReturn()` logic (InitContainer vs sidecar mode detection), `doTheThing()` symlink creation, and error handling paths are entirely untested.
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: Functions `checkIfEarlyReturn()` and `doTheThing()` are testable but currently untested. The `os.Exit(0)` in `checkIfEarlyReturn` makes testing harder without refactoring, but the logic can be extracted.
+- **Risk**: Regressions in symlink path construction (`/proc/{pid}/root/models` -> `/mnt/models`) or signal handling would not be caught.
 
-### 2. No Container Security Scanning
-- **Impact**: The final image is built `FROM scratch` (minimal attack surface) but the Go binary could contain vulnerable stdlib code. No Trivy, Snyk, or CodeQL scanning anywhere in CI.
+### 2. No Coverage Tracking or Enforcement
+- **Impact**: Coverage can silently degrade over time. No visibility into what percentage of code is tested; no PR gates prevent merging untested code.
 - **Severity**: HIGH
-- **Effort**: 1-2 hours
-- **Details**: While `FROM scratch` is a strong security posture, there's no automated scanning to verify this or catch Go stdlib vulnerabilities.
+- **Effort**: 2-4 hours (codecov integration + pytest-cov for Python; go test -cover for Go)
 
-### 3. No Coverage Tracking or Enforcement
-- **Impact**: No codecov, coveralls, or any coverage tool. Test coverage can regress silently.
+### 3. No Security/Vulnerability Scanning in CI
+- **Impact**: The base image (`ubi8/go-toolset:1.22`) and Go dependencies are not scanned for CVEs during PR or publish workflows. Vulnerabilities are only discovered when downstream consumers run their own scans.
+- **Severity**: HIGH
+- **Effort**: 2-3 hours (add Trivy step to build.yaml and publish.yaml)
+
+### 4. No Linting or Static Analysis
+- **Impact**: Code quality issues, unused variables, potential bugs, and style inconsistencies go undetected. No `golangci-lint`, no `ruff`/`flake8` for Python, no pre-commit hooks.
 - **Severity**: MEDIUM
 - **Effort**: 2-3 hours
-- **Details**: Python tests exist (pytest) but don't generate coverage reports. Go has no tests at all.
-
-### 4. No Code Quality / Linting Tools
-- **Impact**: No static analysis catches code smells, unused variables, or potential bugs.
-- **Severity**: MEDIUM
-- **Effort**: 2-3 hours
-- **Details**: No `.golangci.yaml`, no ruff/flake8/mypy config, no `.pre-commit-config.yaml`.
 
 ## Quick Wins
 
-### 1. Add Trivy Scanning to PR Workflow (1-2 hours)
-Add a vulnerability scanning step after the image build:
+### 1. Add Trivy Scanning to Build Workflow (1-2 hours)
+- **Impact**: Early detection of CVEs in base images and dependencies
+- **Implementation**:
 ```yaml
 - name: Run Trivy vulnerability scanner
   uses: aquasecurity/trivy-action@master
   with:
-    input: ${{ env.IMAGE_NAME }}.tar
-    severity: 'CRITICAL,HIGH'
+    image-ref: '${{ env.IMAGE_NAME }}:latest'
+    format: 'table'
     exit-code: '1'
+    severity: 'CRITICAL,HIGH'
 ```
 
 ### 2. Add golangci-lint to PR Workflow (1-2 hours)
+- **Impact**: Catch code quality issues statically
+- **Implementation**:
 ```yaml
-- name: golangci-lint
+- name: Run golangci-lint
   uses: golangci/golangci-lint-action@v6
   with:
     version: latest
 ```
 
-### 3. Add pytest Coverage with Codecov (2-3 hours)
-Update the Python Makefile test target:
-```makefile
-test:
-	uv run pytest -x -s -v --cov=modelcar_base_image --cov-report=xml
-```
-Add codecov upload step to E2E workflow.
-
-### 4. Add Concurrency Control (30 minutes)
-Add to each workflow:
+### 3. Add Concurrency Control (30 minutes)
+- **Impact**: Cancel redundant workflow runs on rapid pushes
+- **Implementation**: Add to each workflow:
 ```yaml
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 ```
+
+### 4. Add Coverage Reporting for Python Tests (1-2 hours)
+- **Impact**: PR-level coverage visibility
+- **Implementation**: Update Makefile test target:
+```makefile
+test:
+    uv run pytest -x -s -v --cov=src --cov-report=xml
+```
+Then add codecov upload step to e2e.yaml.
+
+### 5. Create Basic Agent Rules (2-3 hours)
+- **Impact**: Improve AI-generated test quality and consistency
+- **Implementation**: Create `CLAUDE.md` and `.claude/rules/` with test patterns
 
 ## Detailed Findings
 
@@ -161,216 +172,194 @@ concurrency:
 
 **Workflows (4 total)**:
 
-| Workflow | Triggers | Purpose |
-|----------|----------|---------|
-| `build.yaml` | push, PR, dispatch | Multi-arch container image build (amd64 + arm64) |
-| `e2e.yaml` | push (main), PR | KServe E2E tests on Kind + Python E2E tests |
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `build.yaml` | push, PR, dispatch | Build multi-arch container image, upload as artifact |
+| `e2e.yaml` | push (main), PR | Two E2E jobs: KServe on Kind + Python SDK tests |
 | `publish.yaml` | push (main) | Build, push to Quay, cosign sign |
-| `publish-python.yaml` | push (main), tags `py-v*` | Build Python wheel, publish to PyPI, GitHub release with Sigstore |
+| `publish-python.yaml` | push (main), tags | Build Python wheel, publish to PyPI, GitHub Release with Sigstore |
 
 **Strengths**:
-- Multi-arch builds (amd64 + arm64) using `redhat-actions/buildah-build`
-- Image signing with cosign (keyless, GitHub OIDC)
-- Python package signing with Sigstore
-- Build artifact uploaded for downstream use
-- OCI format enforced
+- Multi-arch builds (amd64, arm64) on all image workflows
+- OCI format enforced (`oci: true`)
+- Cosign keyless signing on published images
+- Sigstore signing on Python distributions
+- Build artifact upload enables image inspection without publishing
+- E2E runs on PRs (not just main)
 
 **Gaps**:
-- No concurrency control on any workflow
-- No caching (Go modules, Docker layers)
+- No concurrency control on any workflow - rapid pushes waste CI minutes
+- No dependency caching (Go modules, Python packages re-downloaded every run)
+- No test matrix (single Go version, single Python version)
+- Build workflow doesn't run tests (only builds)
 - No workflow status badges in README
-- Build and E2E are separate workflows with no dependency (E2E rebuilds the image independently)
 
 ### Test Coverage
 
-**Python Tests (2 test files, 54 lines)**:
-- `test_constants.py`: Tests that constants are defined and valid
-- `embedded_oci_layout_test.py`: Tests that embedded OCI layout can be extracted and matches source
+**Go (0 test files)**:
+- `link-model-and-wait.go` (59 LOC) has ZERO tests
+- No `*_test.go` files anywhere in the repository
+- Functions `checkIfEarlyReturn()` and `doTheThing()` are untested
+- Signal handling logic is untested
+- The entire shipped binary has no unit test coverage
+
+**Python (2 test files, 54 LOC)**:
+- `test_constants.py` (18 LOC): Tests constants are defined correctly
+- `embedded_oci_layout_test.py` (36 LOC): Tests OCI layout copy function with file verification
 - Framework: pytest with `uv run`
-- Strengths: Tests actual file I/O and directory comparison
-- Gaps: No coverage reporting, no edge case testing (permissions, missing files)
+- Test quality: Good - validates file content equality, uses `tmp_path` fixture
+- Test-to-source ratio: 54 test LOC / 75 source LOC = 0.72 (decent for Python)
 
-**Go Tests (0 test files)**:
-- `link-model-and-wait.go` (59 lines) has **zero** unit tests
-- Key untested logic:
-  - `checkIfEarlyReturn()`: Parses args for "sleep", calls `os.Exit(0)` if not found
-  - `doTheThing()`: Creates symlink from `/proc/{pid}/root/models` to `/mnt/models`, handles existing link removal
-- Both functions are testable but need refactoring to separate concerns from side effects
-
-**E2E Tests (strong)**:
-- Real KServe deployment on Kind cluster (v0.14.0)
-- Tests two deployment modes:
-  1. Standard Modelcar sidecar (`isvc-modelcar.yaml`)
-  2. Modelcar with InitContainer (`isvc-modelcar-with-initcontainer.yaml`)
-- Validates:
-  - OIP (Open Inference Protocol) model listing
-  - Inference predictions with multiple input payloads
-- Helper scripts: `repeat.sh` (retry loop), `enable-modelcar.sh` (KServe config)
-- Python E2E: Builds wheel, installs, verifies embedded OCI layout extraction, checks for uncommitted changes
-
-**Test-to-Code Ratio**:
-- Python: 54 test lines / 75 source lines = 0.72 (decent)
-- Go: 0 test lines / 59 source lines = 0.0 (critical gap)
-- Overall: 54 / 134 = 0.40
+**E2E (comprehensive)**:
+- Two E2E jobs in `e2e.yaml`:
+  1. **KServe E2E**: Builds image -> deploys Kind cluster -> installs KServe -> enables ModelCar -> deploys InferenceService -> validates inference predictions with curl
+  2. **Python E2E**: Runs pytest, builds wheel, installs it, validates embedded OCI layout
+- Tests both ModelCar modes: standard sidecar and InitContainer
+- Validates real inference responses (not just deployment success)
+- Checks for uncommitted file changes after build (ensures reproducibility)
 
 ### Code Quality
 
-- **Linting**: None configured (no golangci-lint, no ruff, no flake8, no mypy)
-- **Formatting**: None enforced (no gofmt check, no black/ruff format)
-- **Pre-commit Hooks**: None (`.pre-commit-config.yaml` absent)
-- **Static Analysis**: None (no CodeQL, no gosec, no Semgrep)
-- **Dependency Scanning**: None (no Dependabot, no Renovate)
-- **Secret Detection**: None (no Gitleaks, no TruffleHog)
+**Linting**: None configured
+- No `.golangci.yaml` or equivalent
+- No Python linting (ruff, flake8, mypy)
+- No pre-commit hooks
+- No `.editorconfig`
+
+**Static Analysis**: None
+- No CodeQL, gosec, or Semgrep
+- No SAST in any workflow
+
+**Formatting**: Not enforced
+- No `gofmt` check in CI
+- No `ruff format` or `black` for Python
 
 ### Container Images
 
-**Build Process**:
-- Multi-stage Containerfile: UBI8 Go toolset builder + `FROM scratch` runtime
-- Cross-compilation with `GOOS`/`GOARCH` for multi-arch
-- OCI format enforced (`oci: true`)
-- Minimal final image (~1MB) - excellent security posture
+**Containerfile** (main):
+- Multi-stage build: `ubi8/go-toolset:1.22` -> `scratch`
+- Pinned base image with SHA256 digest (excellent practice)
+- Cross-compilation with `BUILDPLATFORM`/`TARGETOS`/`TARGETARCH`
+- `CGO_ENABLED=0` for static binary
+- Final image from `scratch` (~1MB, minimal attack surface)
+- No HEALTHCHECK instruction (acceptable for sidecar pattern)
 
-**Strengths**:
-- `FROM scratch` eliminates virtually all OS-level CVEs
-- Go stdlib-only binary (no external dependencies)
-- Multi-arch (amd64 + arm64)
-- Cosign keyless signing with GitHub OIDC
-- OCI manifest format
-
-**Gaps**:
-- No image startup/smoke test outside of full E2E
-- No Trivy/vulnerability scanning
+**Security**:
+- Cosign keyless signing on published images (strong)
+- Image verification documented in README
+- No Trivy/vulnerability scanning in CI
 - No SBOM generation
-- No image size regression tracking
-- No `HEALTHCHECK` instruction (not applicable for scratch)
+- FROM scratch eliminates most CVE concerns in final image (only the Go binary)
 
-### Security
+**Multi-arch**: Full support (amd64, arm64) across all image builds
 
-**Strengths**:
-- `FROM scratch` base (minimal attack surface)
-- Zero Go dependencies (stdlib only) - minimal supply chain risk
-- Cosign image signing (publish workflow)
-- Sigstore signing for Python packages
-- OIDC-based authentication (no long-lived secrets for signing)
+### Security Practices
 
-**Gaps**:
-- No automated vulnerability scanning (Trivy, Snyk, CodeQL)
-- No Dependabot/Renovate for dependency updates (Go has none, but Python dev deps could use it)
-- No secret scanning (Gitleaks)
-- No SBOM generation
-- No image provenance attestation (SLSA)
+| Practice | Status |
+|----------|--------|
+| Image signing (cosign) | Present |
+| Python signing (Sigstore) | Present |
+| Pinned base image (SHA256) | Present |
+| Vulnerability scanning (Trivy) | Missing |
+| SAST/CodeQL | Missing |
+| Dependency scanning | Missing |
+| Secret detection | Missing |
+| SBOM generation | Missing |
+| Pre-commit hooks | Missing |
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: No rules for any test type
+- **Coverage**: No test type rules exist
 - **Quality**: N/A
-- **Gaps**: 
-  - No `CLAUDE.md` or `AGENTS.md` in repository root
-  - No `.claude/` directory
-  - No `.claude/rules/` with test creation rules
-  - No `.claude/skills/` with custom skills
-- **Recommendation**: Generate rules with `/test-rules-generator` covering:
-  - Go unit testing patterns (testing `os.Exit` behavior, symlink logic)
-  - Python pytest patterns
-  - E2E test patterns for KServe on Kind
-  - Container image build validation
+- **Gaps**: No CLAUDE.md, no AGENTS.md, no `.claude/` directory, no `.claude/rules/` for test creation patterns
+- **Recommendation**: Generate test automation rules with `/test-rules-generator` to provide guidance on:
+  - Go unit test patterns for the binary
+  - Python pytest patterns for the SDK
+  - E2E test patterns for KServe ModelCar validation
+  - Container image testing patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Write Go unit tests for `link-model-and-wait.go`**
-   - Refactor `checkIfEarlyReturn()` to return a boolean instead of calling `os.Exit`
-   - Test `doTheThing()` symlink logic with temp directories
-   - Target: 80%+ coverage on Go code
-   - Effort: 4-6 hours
+1. **Write Go unit tests for `link-model-and-wait.go`** - The core binary has zero tests. Cover:
+   - `checkIfEarlyReturn()`: test with various `os.Args` combinations (with/without "sleep")
+   - `doTheThing()`: test symlink creation, existing link removal, error paths
+   - Signal handling: verify SIGINT/SIGTERM graceful shutdown
+   
+2. **Add container image vulnerability scanning** - Add Trivy step to `build.yaml` (PR) and `publish.yaml` (publish). Even though the final image is FROM scratch, the build stage uses `ubi8/go-toolset` which should be scanned.
 
-2. **Add container vulnerability scanning**
-   - Add Trivy scanning to `build.yaml` after image build
-   - Scan the OCI archive artifact
-   - Fail on CRITICAL/HIGH severity
-   - Effort: 1-2 hours
+3. **Integrate coverage tracking** - Add `codecov` for Python tests (pytest-cov) and Go tests (go test -coverprofile). Set minimum coverage thresholds to prevent regression.
 
 ### Priority 1 (High Value)
 
-3. **Add linting and static analysis**
-   - `golangci-lint` for Go code
-   - `ruff` for Python code  
-   - Add both to PR workflow
-   - Effort: 2-3 hours
+4. **Add golangci-lint** - Create `.golangci.yaml` with standard linters enabled. Add CI step to `build.yaml` workflow.
 
-4. **Add coverage tracking**
-   - Python: `pytest-cov` + codecov upload
-   - Go: `go test -coverprofile` + codecov upload (once tests exist)
-   - Set minimum threshold (e.g., 70%)
-   - Effort: 2-3 hours
+5. **Add concurrency control** - All 4 workflows lack `concurrency` blocks. Rapid pushes create redundant runs.
 
-5. **Add standalone image validation test**
-   - Build the image, `docker run` it with test args, verify exit behavior
-   - Test both sidecar mode (with "sleep" arg) and init-container mode (without)
-   - Independent of full KServe E2E
-   - Effort: 2-3 hours
+6. **Add CLAUDE.md and `.claude/rules/`** - Create agent rules covering:
+   - Go test patterns (table-driven tests, error path testing)
+   - Python pytest patterns (fixtures, tmp_path usage)
+   - E2E patterns (Kind cluster setup, KServe deployment)
 
-6. **Add workflow concurrency control and caching**
-   - Concurrency groups to cancel stale PR runs
-   - Go module caching
-   - Docker layer caching
-   - Effort: 1-2 hours
+7. **Add pre-commit hooks** - Configure `.pre-commit-config.yaml` with gofmt, ruff, trailing whitespace, etc.
+
+8. **Add Go module caching** - Use `actions/setup-go` with `cache: true` to speed up builds.
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Create agent rules (`.claude/rules/`)**
-   - Go unit test patterns
-   - Python pytest patterns
-   - E2E KServe test patterns
-   - Effort: 3-4 hours
+9. **Add SBOM generation** - Generate and attach SBOM to published images using `anchore/sbom-action`.
 
-8. **Add SBOM generation to publish workflow**
-   - Use `syft` or `trivy` for SBOM
-   - Attach to Quay image
-   - Effort: 2-3 hours
+10. **Add Python linting with ruff** - Fast Python linter covering flake8 + more.
 
-9. **Add pre-commit hooks**
-   - `gofmt`, `ruff`, `trailing-whitespace`, `end-of-file-fixer`
-   - Effort: 1-2 hours
+11. **Add image size regression tracking** - Track the ~1MB image size to catch accidental bloat.
 
-10. **Add Dependabot configuration**
-    - Monitor GitHub Actions versions
-    - Monitor Python dev dependencies
-    - Effort: 30 minutes
+12. **Consider fuzz testing** - The `checkIfEarlyReturn()` argument parsing could benefit from fuzz testing to ensure robustness.
 
 ## Comparison to Gold Standards
 
-| Practice | modelcar-base-image | odh-dashboard | notebooks | kserve |
-|----------|-------------------|---------------|-----------|--------|
-| Unit Tests | Partial (Python only) | Comprehensive | Comprehensive | Comprehensive |
-| E2E Tests | Strong (KServe on Kind) | Multi-layer | Image validation | Multi-version |
-| Coverage Tracking | None | Codecov enforced | Present | Enforced |
-| Image Scanning | None | Trivy | Multi-layer | Trivy |
-| Linting | None | ESLint + strict | Configured | golangci-lint |
-| Image Signing | Cosign (strong) | Basic | None | None |
-| Agent Rules | None | Comprehensive | Partial | None |
-| Pre-commit | None | Configured | Configured | Configured |
-| Multi-arch | Yes (amd64 + arm64) | N/A | Yes | Partial |
-| SBOM | None | Present | Present | None |
+| Dimension | modelcar-base-image | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
+|-----------|-------------------|---------------------|-----------------|--------------|
+| Unit Tests | 5.0 - Python only, no Go | 9.0 - Comprehensive Jest | 7.0 - Notebook validation | 9.0 - Extensive Go tests |
+| Integration/E2E | 8.0 - KServe + Kind + inference | 9.0 - Cypress + contract | 8.0 - Multi-image validation | 9.0 - Multi-version E2E |
+| Build Integration | 7.0 - Multi-arch PR build | 8.0 - Module Federation | 8.0 - Image pipeline | 8.0 - Operator integration |
+| Image Testing | 6.0 - Built + used in E2E | 7.0 - Multi-layer | 9.0 - 5-layer validation | 7.0 - Image tests |
+| Coverage Tracking | 1.0 - None | 8.0 - Codecov enforced | 6.0 - Basic coverage | 9.0 - Coverage gates |
+| CI/CD Automation | 7.0 - 4 workflows, no caching | 9.0 - Optimized CI | 8.0 - Comprehensive CI | 9.0 - Full automation |
+| Agent Rules | 0.0 - None | 8.0 - Comprehensive rules | 3.0 - Minimal | 4.0 - Basic |
 
 ## File Paths Reference
 
-| File | Purpose |
-|------|---------|
-| `.github/workflows/build.yaml` | Multi-arch container image build |
-| `.github/workflows/e2e.yaml` | KServe E2E + Python E2E tests |
-| `.github/workflows/publish.yaml` | Build, push to Quay, cosign sign |
-| `.github/workflows/publish-python.yaml` | Python package publish to PyPI |
-| `Containerfile` | Multi-stage Go build, FROM scratch runtime |
-| `link-model-and-wait.go` | Core Go binary (symlink + wait) |
-| `go.mod` | Go module (stdlib only, no deps) |
-| `python/pyproject.toml` | Python package config (uv_build) |
-| `python/Makefile` | Python build/test targets |
-| `python/tests/` | Python unit tests (2 files) |
-| `python/src/modelcar_base_image/` | Python library source |
-| `e2e/` | E2E test manifests and scripts |
-| `e2e/Containerfile-modelcar` | E2E modelcar image definition |
-| `e2e/isvc-modelcar.yaml` | KServe InferenceService manifest |
-| `e2e/isvc-modelcar-with-initcontainer.yaml` | InitContainer variant manifest |
+### Source Files
+- `Containerfile` - Main multi-stage container build
+- `link-model-and-wait.go` - Core Go binary (59 LOC)
+- `go.mod` - Go module definition
+- `python/src/modelcar_base_image/` - Python SDK source
+- `python/pyproject.toml` - Python project configuration
+
+### CI/CD
+- `.github/workflows/build.yaml` - PR container image build
+- `.github/workflows/e2e.yaml` - E2E test suite
+- `.github/workflows/publish.yaml` - Image publish + cosign
+- `.github/workflows/publish-python.yaml` - PyPI publish + Sigstore
+
+### Test Files
+- `python/tests/test_constants.py` - Constants validation tests
+- `python/tests/embedded_oci_layout_test.py` - OCI layout copy tests
+
+### E2E Resources
+- `e2e/Containerfile-modelcar` - Test ModelCar image
+- `e2e/isvc-modelcar.yaml` - Standard ModelCar InferenceService
+- `e2e/isvc-modelcar-with-initcontainer.yaml` - InitContainer variant
+- `e2e/enable-modelcar.sh` - KServe ModelCar enablement
+- `e2e/repeat.sh` - Retry wrapper for kubectl operations
+- `e2e/data/` - Test inference input data
+
+### Missing (Recommended)
+- `.golangci.yaml` - Go linting configuration
+- `.pre-commit-config.yaml` - Pre-commit hooks
+- `.codecov.yml` - Coverage configuration
+- `CLAUDE.md` - Agent rules
+- `.claude/rules/` - Test creation rules
+- `*_test.go` - Go unit tests

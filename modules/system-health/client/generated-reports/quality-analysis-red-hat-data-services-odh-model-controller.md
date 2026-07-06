@@ -1,170 +1,171 @@
 ---
 repository: "red-hat-data-services/odh-model-controller"
-overall_score: 6.2
+overall_score: 7.0
 scorecard:
   - dimension: "Unit Tests"
-    score: 7.0
-    status: "Good envtest coverage with Ginkgo/Gomega; 8/9 controllers tested, but 7/10 reconcilers lack dedicated tests"
+    score: 8.5
+    status: "Strong unit/envtest coverage with 54 test files, 14.5k test LOC, Ginkgo+testify dual style"
   - dimension: "Integration/E2E"
-    score: 4.0
-    status: "E2E workflow exists but is disabled (manual dispatch only); multiple e2e targets in Makefile not wired to CI"
+    score: 7.0
+    status: "Three E2E suites (controller, server, KServe-OCP) but GitHub E2E is manual-dispatch only"
   - dimension: "Build Integration"
-    score: 5.0
-    status: "PR builds Docker images but no runtime validation or Konflux simulation at PR time"
+    score: 6.5
+    status: "PR builds both images with BuildKit caching; Konflux PR pipeline exists; no image startup test"
   - dimension: "Image Testing"
     score: 4.0
-    status: "Multi-arch builds on push; PR builds are amd64-only with no startup or runtime validation"
+    status: "Multi-arch push builds (4 platforms); no runtime validation, no Trivy, no SBOM"
   - dimension: "Coverage Tracking"
     score: 3.0
-    status: "coverprofile generated locally but no codecov/coveralls integration or PR coverage reporting"
+    status: "cover.out generated locally but no Codecov/Coveralls, no PR gate, no threshold"
   - dimension: "CI/CD Automation"
-    score: 7.0
-    status: "Well-structured workflows for lint, test, build, manifest validation; Tekton/Konflux pipeline with security scans"
+    score: 8.0
+    status: "Well-structured workflows with concurrency, caching, lint, manifest validation, release automation"
   - dimension: "Agent Rules"
-    score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules for test automation"
+    score: 8.0
+    status: "Excellent CLAUDE.md and AGENTS.md with project structure, test patterns, commands, and gotchas"
 critical_gaps:
-  - title: "E2E tests are manual-only (workflow_dispatch)"
-    impact: "Regressions in operator behavior are not caught until downstream testing or production"
-    severity: "HIGH"
-    effort: "4-8 hours"
   - title: "No coverage tracking or enforcement"
-    impact: "Coverage regressions go undetected; no PR-level coverage feedback"
+    impact: "Coverage can silently regress with no visibility into which code paths are untested"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "7 of 10 reconcilers have no dedicated test files"
-    impact: "Complex reconciliation logic (KEDA, auth policy, service account, model registry) is untested at the unit level"
+  - title: "No container security scanning"
+    impact: "Vulnerable base images or dependencies ship to production undetected"
     severity: "HIGH"
-    effort: "16-24 hours"
-  - title: "No container runtime validation at PR time"
-    impact: "Image startup failures, missing binaries, or incorrect entrypoints discovered only post-merge"
-    severity: "MEDIUM"
-    effort: "4-6 hours"
-  - title: "No security scanning in PR workflow"
-    impact: "Vulnerability introduction not caught until Konflux push pipeline runs post-merge"
-    severity: "MEDIUM"
     effort: "2-3 hours"
-  - title: "InferenceGraph controller has no test file"
-    impact: "New controller feature is entirely untested"
-    severity: "MEDIUM"
+  - title: "E2E tests not automated on PRs"
+    impact: "E2E regressions discovered only after merge or during manual QE cycles"
+    severity: "HIGH"
     effort: "4-8 hours"
+  - title: "No image runtime validation"
+    impact: "Image startup failures or missing binaries not caught until deployment"
+    severity: "MEDIUM"
+    effort: "3-4 hours"
 quick_wins:
-  - title: "Add Codecov integration to test workflow"
-    effort: "2-3 hours"
-    impact: "PR-level coverage reporting and regression detection with coverage gate"
-  - title: "Enable E2E workflow on PRs targeting incubating/main"
+  - title: "Add Codecov integration to test.yml"
     effort: "1-2 hours"
-    impact: "Automated E2E regression detection on every PR"
-  - title: "Add Trivy scanning to PR build workflow"
+    impact: "Immediate coverage visibility and PR-level regression detection"
+  - title: "Add Trivy container scanning to build.yaml"
     effort: "1-2 hours"
-    impact: "Early detection of vulnerabilities before merge, complementing Konflux post-merge scans"
-  - title: "Add image startup smoke test to PR build"
+    impact: "Catch CVEs in base images and dependencies before merge"
+  - title: "Add image startup smoke test to build.yaml"
     effort: "2-3 hours"
-    impact: "Catch image packaging errors before merge"
-  - title: "Create basic agent rules for test patterns"
-    effort: "2-3 hours"
-    impact: "Consistent AI-generated tests following project conventions (Ginkgo, envtest)"
+    impact: "Verify binary exists and starts cleanly in built container"
+  - title: "Enable E2E in PR workflow (at least Kind-based subset)"
+    effort: "3-4 hours"
+    impact: "Catch integration regressions before merge"
 recommendations:
   priority_0:
-    - "Enable E2E tests on PRs — uncomment push/pull_request triggers in test-e2e.yml"
-    - "Integrate Codecov with coverage thresholds to prevent coverage regressions"
-    - "Add unit tests for the 7 untested reconcilers (kserve_keda, auth_policy, model_registry, etc.)"
+    - "Add Codecov integration with coverage threshold (e.g., 60%) and PR commenting"
+    - "Add Trivy/Grype container scanning to PR and push workflows"
+    - "Automate Kind-based E2E tests on PRs (already exists as workflow, just needs trigger change)"
   priority_1:
-    - "Add Trivy or Snyk scanning to PR workflow for pre-merge vulnerability detection"
-    - "Add container image startup validation (docker run --entrypoint check) in build-pr job"
-    - "Add tests for inferencegraph_controller.go"
-    - "Create agent rules (.claude/rules/) for unit test, e2e test, and webhook test patterns"
+    - "Add image startup validation (docker run --entrypoint check) to PR build workflow"
+    - "Add secret detection (Gitleaks) to PR workflow"
+    - "Add SBOM generation to Konflux build pipeline"
+    - "Create .claude/rules/ directory with test creation rules for each test style"
   priority_2:
-    - "Add SBOM generation to GitHub Actions build (already present in Konflux pipeline)"
-    - "Add multi-arch PR build validation (currently amd64-only for PRs)"
-    - "Consider adding contract tests for KServe API boundaries"
-    - "Add performance/load testing for the model-serving-api server component"
+    - "Add CodeQL or gosec SAST scanning"
+    - "Add dependency vulnerability scanning (govulncheck or Dependabot)"
+    - "Add performance regression tests for reconciler throughput"
+    - "Add webhook admission latency benchmarks"
 ---
 
 # Quality Analysis: odh-model-controller
 
 ## Executive Summary
 
-- **Overall Score: 6.2/10**
-- **Repository Type**: Kubernetes Operator (Go) + API Server
-- **Language**: Go 1.25.8
-- **Framework**: controller-runtime (Kubebuilder-scaffolded), Ginkgo/Gomega test framework
-- **Key Strengths**: Strong linting setup (17 linters), well-structured Makefile with comprehensive targets, Konflux pipeline with extensive security scans (Clair, Snyk, Coverity, ClamAV), multi-arch image support, Kustomize manifest validation on PRs
-- **Critical Gaps**: E2E tests disabled in CI, no coverage tracking/enforcement, significant reconciler test gaps, no pre-merge security scanning
-- **Agent Rules Status**: Missing — no CLAUDE.md, no .claude/ directory
+- **Overall Score: 7.0/10**
+- **Repository Type**: Kubernetes operator (companion controller to KServe)
+- **Language**: Go 1.25, controller-runtime based
+- **Two binaries**: controller (cmd/main.go) + model-serving-api (server/main.go)
+- **Key Strengths**: Excellent test-to-code ratio (85% LOC), strong linting (20 linters), well-documented agent rules, multi-arch builds, Kustomize validation, release automation
+- **Critical Gaps**: No coverage tracking, no security scanning, E2E tests manual-only, no image runtime validation
+- **Agent Rules Status**: Present and comprehensive (CLAUDE.md + AGENTS.md)
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 7.0/10 | Good envtest coverage with Ginkgo/Gomega; 8/9 controllers tested, 7/10 reconcilers untested |
-| Integration/E2E | 4.0/10 | E2E workflow exists but disabled (manual dispatch only); rich Makefile targets not wired to CI |
-| Build Integration | 5.0/10 | PR builds Docker images but no runtime validation or Konflux simulation |
-| Image Testing | 4.0/10 | Multi-arch on push; PR builds amd64-only, no startup validation |
-| Coverage Tracking | 3.0/10 | coverprofile generated in Makefile but no CI integration or enforcement |
-| CI/CD Automation | 7.0/10 | Well-organized workflows: lint, test, build, manifest validation, release automation |
-| Agent Rules | 0.0/10 | No test automation guidance for AI agents |
+| Unit Tests | 8.5/10 | Strong coverage: 54 test files, 14.5k test LOC, dual style (testify + Ginkgo/envtest) |
+| Integration/E2E | 7.0/10 | Three E2E suites but GitHub E2E is workflow_dispatch only (not on PRs) |
+| Build Integration | 6.5/10 | PR builds both images with GHA caching; Konflux PR pipeline present; no startup test |
+| Image Testing | 4.0/10 | Multi-arch push (amd64/arm64/ppc64le/s390x); no runtime validation, no scanning, no SBOM |
+| Coverage Tracking | 3.0/10 | `cover.out` generated locally but no CI integration, no threshold, no PR reporting |
+| CI/CD Automation | 8.0/10 | Well-structured: lint, test, build, manifest validation, release automation, Konflux integration |
+| Agent Rules | 8.0/10 | Comprehensive CLAUDE.md + AGENTS.md covering project structure, test patterns, commands |
 
 ## Critical Gaps
 
-### 1. E2E Tests Disabled in CI
-- **Impact**: Operator-level regressions (CRD reconciliation, webhook behavior, Kind cluster interactions) are only caught in downstream testing or production
-- **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Details**: The `test-e2e.yml` workflow has `push` and `pull_request` triggers commented out — it's `workflow_dispatch` only. The Makefile defines multiple E2E targets (`test-e2e`, `test-e2e-server`, `test-e2e-controller`, `test-e2e-kserve-ocp`) but none are wired to CI
-
-### 2. No Coverage Tracking or Enforcement
-- **Impact**: Coverage regressions silently introduced; no PR-level feedback on coverage changes
+### 1. No Coverage Tracking or Enforcement
+- **Impact**: Coverage can silently regress; no visibility into which controllers/webhooks lack tests
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: The `make test` target generates `cover.out` via `-coverprofile`, but there's no `.codecov.yml`, no Codecov/Coveralls GitHub Action, and no coverage thresholds
+- **Details**: `make test` generates `cover.out` but it's never uploaded to Codecov/Coveralls. No coverage threshold, no PR commenting, no badge. Teams have no baseline to measure against.
 
-### 3. 7 of 10 Reconcilers Lack Dedicated Tests
-- **Impact**: Complex reconciliation logic is untested at the unit level
+### 2. No Container Security Scanning
+- **Impact**: Vulnerable UBI9 base images or Go dependency CVEs ship undetected
 - **Severity**: HIGH
-- **Effort**: 16-24 hours
-- **Untested Reconcilers**:
-  - `serviceaccount_reconciler.go`
-  - `model_registry_reconciler.go`
-  - `kserve_raw_inferenceservice_reconciler.go`
-  - `kserve_raw_clusterrolebinding_reconciler.go`
-  - `kserve_metrics_service_reconciler.go`
-  - `kserve_keda_reconciler.go`
-  - `kserve_authpolicy_reconciler.go` (LLM path)
-- **Tested Reconcilers**: `kserve_raw_route_reconciler`, `kserve_metrics_servicemonitor_reconciler`, `kserve_metrics_dashboard_reconciler`
-
-### 4. No Container Runtime Validation at PR Time
-- **Impact**: Image startup failures or packaging errors are discovered only post-merge
-- **Severity**: MEDIUM
-- **Effort**: 4-6 hours
-- **Details**: PR build job compiles the image but doesn't validate it starts or serves health checks
-
-### 5. No Security Scanning in PR Workflow
-- **Impact**: Vulnerabilities introduced in PRs are only caught by Konflux pipeline post-merge
-- **Severity**: MEDIUM
 - **Effort**: 2-3 hours
-- **Details**: Konflux pipeline includes Clair, Snyk, Coverity, and ClamAV scans, but these only run on push to `incubating`. GitHub Actions PR workflow has no scanning
+- **Details**: Neither the GitHub Actions workflows nor the Tekton/Konflux PR pipelines include Trivy, Snyk, Grype, or any vulnerability scanning. No `.trivyignore`, no CodeQL, no gosec. The Konflux pipeline may include built-in scanning, but the GitHub-side CI has zero security gates.
 
-### 6. InferenceGraph Controller Missing Tests
-- **Impact**: Newly added controller has zero test coverage
-- **Severity**: MEDIUM
+### 3. E2E Tests Not Automated on PRs
+- **Impact**: E2E regressions discovered only during manual QE or post-merge
+- **Severity**: HIGH
 - **Effort**: 4-8 hours
-- **Details**: `inferencegraph_controller.go` is the only controller without a corresponding test file
+- **Details**: The `test-e2e.yml` workflow exists with Kind cluster setup but triggers are commented out (`#  push:` / `#  pull_request:`). Only `workflow_dispatch` is active. The three E2E suites (controller, server, KServe-OCP) are all manual-run-only in CI.
+
+### 4. No Image Runtime Validation
+- **Impact**: Binary missing, wrong entrypoint, or crash-on-startup not caught until deployment
+- **Severity**: MEDIUM
+- **Effort**: 3-4 hours
+- **Details**: PR build workflow builds both images but doesn't validate they start. No `docker run --rm <img> --help` or healthcheck probe. Dockerfile.konflux uses `CGO_ENABLED=1` with FIPS, which can fail at runtime with missing symbols.
 
 ## Quick Wins
 
-### 1. Add Codecov Integration (2-3 hours)
-Upload the existing `cover.out` to Codecov in the test workflow:
+### 1. Add Codecov Integration (1-2 hours)
+Add to `test.yml` after `make test`:
 ```yaml
-- name: Upload coverage to Codecov
+- name: Upload coverage
   uses: codecov/codecov-action@v4
   with:
     files: cover.out
-    fail_ci_if_error: true
+    fail_ci_if_error: false
     token: ${{ secrets.CODECOV_TOKEN }}
 ```
+Create `.codecov.yml`:
+```yaml
+coverage:
+  status:
+    project:
+      default:
+        target: 60%
+    patch:
+      default:
+        target: 70%
+```
 
-### 2. Enable E2E on PRs (1-2 hours)
+### 2. Add Trivy Scanning (1-2 hours)
+Add to `build.yaml` after image build:
+```yaml
+- name: Run Trivy vulnerability scanner
+  uses: aquasecurity/trivy-action@master
+  with:
+    image-ref: odh-model-controller:latest
+    format: 'sarif'
+    severity: 'CRITICAL,HIGH'
+    exit-code: '1'
+```
+
+### 3. Add Image Startup Smoke Test (2-3 hours)
+```yaml
+- name: Validate controller image starts
+  run: |
+    docker load < /tmp/controller-image.tar
+    docker run --rm odh-model-controller:test --help || \
+      (echo "Controller image failed to start" && exit 1)
+```
+
+### 4. Enable E2E on PRs (3-4 hours)
 Uncomment the triggers in `test-e2e.yml`:
 ```yaml
 on:
@@ -174,240 +175,226 @@ on:
     branches: [incubating, main]
 ```
 
-### 3. Add Trivy Scanning to PR Workflow (1-2 hours)
-Add a Trivy step after the PR build:
-```yaml
-- name: Run Trivy vulnerability scanner
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: 'odh-model-controller:${{ github.sha }}'
-    format: 'sarif'
-    output: 'trivy-results.sarif'
-```
-
-### 4. Add Image Startup Smoke Test (2-3 hours)
-After building the image in the PR workflow, validate it starts:
-```yaml
-- name: Smoke test image
-  run: |
-    docker run --rm --entrypoint /manager odh-model-controller:test --help || \
-    echo "Image startup validation failed"
-```
-
-### 5. Create Basic Agent Rules (2-3 hours)
-Create `.claude/rules/unit-tests.md` with Ginkgo/envtest patterns used in this project.
-
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows Inventory** (10 total):
+**Workflows Inventory** (11 workflows):
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `test.yml` | push, PR | Unit tests (`make test`) |
+| `test.yml` | push, PR | Unit/integration tests with envtest |
 | `lint.yml` | push, PR | golangci-lint v2.11.3 |
-| `build.yaml` | push, PR, dispatch | Docker image build (PR: amd64 only; push: multi-arch) |
-| `test-e2e.yml` | **dispatch only** | E2E tests with Kind cluster |
+| `build.yaml` | push, PR, dispatch | Build controller + server images |
 | `validate-manifests.yml` | push, PR | Kustomize manifest validation |
-| `verify-odh-model-controller-img-tag.yaml` | PR (params.env changes) | Image tag consistency check |
-| `odh-release.yaml` | dispatch | Multi-repo release workflow |
-| `component-metadata-version-update.yml` | dispatch | Component version bumping |
-| `runtime-version-update.yml` | dispatch | Runtime template version bumping |
-| `prow-merge-incubating-with-main.yaml` | dispatch | Branch sync automation |
+| `verify-odh-model-controller-img-tag.yaml` | PR (params.env changes) | Image tag correctness check |
+| `test-e2e.yml` | **dispatch only** | Kind-based E2E tests |
+| `instant-merge.yaml` | PR opened | Auto-merge Konflux bot PRs |
+| `prow-merge-incubating-with-main.yaml` | dispatch | Sync incubating→main |
+| `odh-release.yaml` | dispatch | ODH release workflow |
+| `component-metadata-version-update.yml` | dispatch | Update component metadata |
+| `runtime-version-update.yml` | dispatch | Update runtime template versions |
 
 **Strengths**:
-- Well-organized workflow separation
-- Build caching with GitHub Actions cache (`type=gha`)
-- Concurrency control on manifest validation
-- Go module tidiness check (`go mod tidy && git diff --exit-code`)
-- Automated release process with Tekton pipeline rewriting
+- PR workflow runs tests, lint, build, and manifest validation in parallel
+- Build uses Docker BuildX with GHA caching (`cache-from/to: type=gha`)
+- Concurrency control on manifest validation (`cancel-in-progress: true`)
+- Release automation is sophisticated (params.env rewriting, Tekton pipeline rewriting, go.mod kserve dependency update)
+- Konflux PR pipeline present with multi-arch builds (x86_64, ppc64le, s390x, arm64)
 
-**Weaknesses**:
-- E2E tests not automated on PRs
-- No test parallelization or sharding
-- No concurrency groups on test/lint workflows (potential wasted runs)
-- No CodeQL or SAST in GitHub Actions
+**Gaps**:
+- E2E tests disabled on PRs
+- No test result reporting (JUnit XML)
+- No build time optimization metrics
+- `go mod tidy` check in test.yml (good) but not in a separate job
 
 ### Test Coverage
 
-**Statistics**:
-- Test files: 54
-- Source files: 108
-- Test-to-code ratio: 0.50 (test files per source file)
-- Test lines: 14,382
-- Source lines: 16,934
-- Line ratio: 0.85 (good)
+**Unit/Integration Tests**:
+- **54 test files**, 14,471 lines of test code
+- **109 source files**, 17,037 lines of source code
+- **Test-to-code ratio**: 85% by LOC (excellent)
+- **Frameworks**: Ginkgo v2 + Gomega for controller tests; testify for utility tests
+- **envtest**: Used extensively with shared `testing.Configure()` builder pattern
+- **Custom matchers**: `test/matchers/` directory with domain-specific Gomega matchers
+- **Test data**: `test/data/`, `internal/controller/testdata/` with fixtures
 
-**Unit Test Framework**: Ginkgo v2 + Gomega + controller-runtime envtest
-- Uses `KUBEBUILDER_ASSETS` for realistic API server testing
-- Custom matchers in `test/matchers/`
-- Shared test utilities in `test/utils/` and `internal/controller/testing/`
-- Test suites properly organized per package
+**Coverage by component**:
+| Component | Test Files | Coverage Quality |
+|-----------|-----------|-----------------|
+| Controller: serving (ISVC, SR) | 5 files, ~2.5k LOC | Strong - reconciler, reconcilers, keda |
+| Controller: nim | 6 files, ~2.8k LOC | Strong - handlers, account controller |
+| Controller: core | 3 files | Good - configmap, secret, pod controllers |
+| Controller: LLM | 4 files, ~1.8k LOC | Good - gateway, LLM ISVC, filter, MaaS |
+| Webhooks | 4 files | Good - all webhook types covered |
+| Server | 3 files | Adequate - gateway, middleware, certreloader |
+| Resources | 3 files | Good - authpolicy, envoyfilter, unit builders |
+| Comparators | 2 files | Adequate - envoyfilter, authpolicy |
+| Utils | 4 files | Good - certs, NIM, general utilities |
 
-**Controller Test Coverage**:
-- 8/9 controllers have test files (89%)
-- Missing: `inferencegraph_controller.go`
-- InferenceService controller: 25 specs (most comprehensive)
-- LLM InferenceService controller: 18 specs
-- Gateway controller: 14 specs
-
-**Reconciler Test Coverage**:
-- 3/10 reconcilers have test files (30%) — significant gap
-- Route, ServiceMonitor, and Dashboard reconcilers tested
-- KEDA, auth policy, model registry, service account reconcilers untested
-
-**Webhook Test Coverage**:
-- 4/4 webhooks have test files (100%) — strong
-- InferenceService, InferenceGraph, NIM Account, Pod webhooks all tested
-
-**Server Component**:
-- 5 test files with 1,447 test lines
-- Unit tests for handlers, gateway, middleware, common
-- E2E tests for server API (requires deployed server + OpenShift)
-
-**Coverage Generation**: `make test` produces `cover.out` with `-coverpkg=./...` but no CI upload
+**E2E Tests**:
+- **3 E2E suites**:
+  1. `test/e2e/` - Controller E2E on Kind (manager deployment, metrics, ModelRegistry)
+  2. `server/test/e2e/` - Model-serving-api E2E (requires OCP deployment)
+  3. `internal/controller/test/e2e/` - Controller E2E (requires gateway + Authorino)
+- Additional: `make test-e2e-kserve-ocp` runs upstream KServe E2E suite on OpenShift
+- **Gap**: All E2E suites are manual-dispatch only in CI
 
 ### Code Quality
 
-**Linting**: golangci-lint v2.11.3 with 17 linters enabled:
-- `copyloopvar`, `dupl`, `errcheck`, `ginkgolinter`, `goconst`, `gocyclo`, `govet`, `ineffassign`, `lll`, `misspell`, `nakedret`, `prealloc`, `revive`, `staticcheck`, `unconvert`, `unparam`, `unused`
-- Formatters: `gofmt`, `goimports`
-- Thoughtful exclusions: `lll` excluded for API types, `dupl` excluded for internal
-- Strong configuration compared to gold standards
+**Linting** (score: 9/10):
+- golangci-lint v2.11.3 with **20 linters** enabled:
+  `copyloopvar, dupl, errcheck, ginkgolinter, goconst, gocyclo, govet, ineffassign, lll, misspell, nakedret, prealloc, revive, staticcheck, unconvert, unparam, unused`
+- gofmt + goimports formatters enabled
+- Parallel runners enabled
+- Sensible exclusions (lll for API types, dupl for internal)
 
-**Pre-commit Hooks**:
-- golangci-lint hook
-- Prettier for non-Go files
-- Well-maintained with matching version (v2.11.3)
+**Pre-commit Hooks** (score: 7/10):
+- `.pre-commit-config.yaml` with golangci-lint v2.11.3 and prettier
+- Minimal but functional
+- Missing: gitleaks, go vet, go mod tidy checks
 
-**Static Analysis**: No CodeQL or gosec in GitHub Actions (present in Konflux pipeline via Snyk/Coverity)
+**Static Analysis**: No SAST tools configured (no CodeQL, gosec, Semgrep)
 
 ### Container Images
 
-**Build Infrastructure**:
-- Two images: `odh-model-controller` (Containerfile) and `odh-model-serving-api` (Containerfile.server)
-- Base: `registry.access.redhat.com/ubi9/go-toolset:1.25` (pinned with SHA digest)
-- Runtime: `ubi9/ubi-minimal`
-- Multi-stage builds
-- Non-root user (65532 for controller, 1000 for server)
-- Server image uses FIPS-compliant build (`GOEXPERIMENT=strictfipsruntime`)
+**Images produced**: 2 (controller + model-serving-api)
+**Container files**: 5 (Dockerfile, Dockerfile.konflux, Containerfile, Containerfile.server, Containerfile.server.konflux)
 
-**Multi-Architecture**: amd64, arm64, ppc64le, s390x on push (via Docker Buildx + QEMU)
+| Aspect | Status |
+|--------|--------|
+| Multi-stage builds | Yes - all Containerfiles use builder + runtime stages |
+| Base images | UBI9 go-toolset:1.25 (builder), ubi9/ubi-minimal (runtime) |
+| Image pinning | SHA256 digest pinning on builder images (good) |
+| Multi-arch | 4 platforms: amd64, arm64, ppc64le, s390x |
+| Non-root user | Yes - USER 65532:65532 or USER 2000 |
+| FIPS compliance | Konflux builds use `CGO_ENABLED=1 GOEXPERIMENT=strictfipsruntime` |
+| Labels | Konflux images have full Red Hat labels |
+| Vulnerability scanning | None |
+| SBOM generation | None |
+| Image signing | None |
+| Runtime validation | None |
 
-**PR Build**: amd64-only, build-only (no push, no runtime validation)
+### Security Practices
 
-**Konflux Pipeline** (`.tekton/odh-model-controller-push.yaml`):
-- SBOM generation (show-sbom task)
-- Clair vulnerability scan
-- Snyk SAST check
-- Coverity SAST check
-- Shell check
-- Unicode check
-- ClamAV malware scan
-- RPM signature scan
-- Ecosystem cert preflight checks
-- Deprecated base image check
-- Slack failure notifications
-- This is a strong Konflux setup but only runs post-merge
+| Practice | Status |
+|----------|--------|
+| Container scanning (Trivy/Snyk) | Not present |
+| SAST (CodeQL/gosec) | Not present |
+| Dependency scanning | Not present |
+| Secret detection (Gitleaks) | Not present |
+| SBOM generation | Not present |
+| Image signing/attestation | Not present |
+| FIPS compliance | Konflux builds only |
 
-### Security
-
-**In Konflux Pipeline** (post-merge):
-- Clair container scanning
-- Snyk SAST
-- Coverity SAST
-- ClamAV scan
-- RPM signature verification
-- Ecosystem certification preflight
-
-**In GitHub Actions** (PR-time): **None**
-
-**Other**:
-- No `.gitleaks.toml` or secret detection
-- No CodeQL configuration
-- No dependency scanning (Dependabot/Renovate)
+**Security is the weakest dimension.** There is zero security tooling in the GitHub Actions CI pipeline. Konflux may provide some scanning as part of its pipeline, but it's opaque from the GitHub side.
 
 ### Agent Rules (Agentic Flow Quality)
 
-- **Status**: Missing
-- **Coverage**: N/A — no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
-- **Quality**: N/A
-- **Gaps**: All test type rules missing
-- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
-  - Unit test patterns (Ginkgo + envtest)
-  - Webhook test patterns
-  - E2E test patterns (Kind cluster)
-  - Reconciler test patterns
-  - Server component test patterns
+**Status**: Present and comprehensive
+**Coverage**: Excellent
+
+| File | Quality | Content |
+|------|---------|---------|
+| `CLAUDE.md` | Stub | Points to AGENTS.md |
+| `AGENTS.md` | Excellent | Full project documentation |
+
+**AGENTS.md Analysis**:
+- **Project overview**: Clear description of what the controller does
+- **Constraints section**: 6 critical constraints (generated files, external CRDs, Makefile authority, kserve replace, RawDeployment-only, feature gating)
+- **Project structure**: Full directory tree with descriptions
+- **Commands**: All make targets with prerequisites
+- **Testing section**: Detailed dual-style guide (testify vs Ginkgo/envtest) with specific examples and patterns
+- **PR requirements**: Template, JIRA linking, squash commits
+- **Gotchas**: Label-filtered caches, optional CRDs, spec/status separation
+- **Architecture doc**: Links to comprehensive architecture.md
+
+**Gaps**:
+- No `.claude/rules/` directory with individual test rule files
+- No explicit rules for E2E test creation
+- No webhook test patterns documented as rules
+- No coverage enforcement guidance
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Enable E2E tests on PRs** — Uncomment triggers in `test-e2e.yml`. This is a one-line change that immediately adds operator-level regression detection
-2. **Integrate Codecov** — Add codecov-action to `test.yml`, create `.codecov.yml` with coverage thresholds (start at current baseline, ratchet up)
-3. **Add unit tests for untested reconcilers** — Priority order: `kserve_keda_reconciler`, `kserve_authpolicy_reconciler`, `model_registry_reconciler` (highest risk due to complexity)
+1. **Add Codecov integration** - Upload `cover.out` to Codecov in `test.yml`, set 60% project threshold and 70% patch threshold. This is the single highest-ROI improvement. (2-4 hours)
+
+2. **Add container vulnerability scanning** - Add Trivy to `build.yaml` for PR builds. Set exit-code=1 for CRITICAL+HIGH severity. Consider adding govulncheck for Go-specific dependency scanning. (2-3 hours)
+
+3. **Enable E2E tests on PRs** - Uncomment push/PR triggers in `test-e2e.yml`. The Kind-based E2E is already implemented; it just needs to be activated. Consider running it only on changes to `internal/`, `cmd/`, or `server/`. (3-4 hours)
 
 ### Priority 1 (High Value)
 
-4. **Add security scanning to PR workflow** — Add Trivy or Snyk step to `build.yaml` PR job for pre-merge vulnerability detection
-5. **Add image startup validation** — Run built image with `--help` or health check probe in PR build
-6. **Test InferenceGraph controller** — New, untested controller needs test coverage
-7. **Create agent rules** — `.claude/rules/` with Ginkgo patterns, envtest setup, webhook test conventions
+4. **Add image startup validation** - After building images in `build.yaml`, verify they start with `--help` or a health probe. Especially important for Konflux FIPS builds with CGO_ENABLED=1. (3-4 hours)
+
+5. **Add secret detection** - Add Gitleaks or TruffleHog to pre-commit hooks and CI. The repo handles API keys (NIM), pull secrets, and TLS certificates. (2-3 hours)
+
+6. **Create `.claude/rules/` directory** - Add individual rule files for unit tests, envtest tests, E2E tests, and webhook tests. The AGENTS.md is excellent but rules would provide structured, machine-readable guidance. Use `/test-rules-generator` to bootstrap. (2-3 hours)
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add SBOM generation to GitHub Actions** — Currently only in Konflux; having it in GH Actions provides earlier visibility
-9. **Multi-arch PR builds** — Currently amd64-only for PRs; consider at least validating arm64 builds
-10. **Contract tests for KServe API boundaries** — The `go.mod` has a `replace` directive for kserve; contract tests would catch API drift
-11. **Performance testing for model-serving-api** — The server handles gateway discovery and observability; load testing would catch regressions
-12. **Add Dependabot or Renovate** — Automated dependency updates for Go modules and GitHub Actions
+7. **Add CodeQL or gosec SAST scanning** - Go-specific static analysis for security issues. (2-3 hours)
+
+8. **Add govulncheck or Dependabot** - Automated dependency vulnerability scanning. The repo has many dependencies (KServe, KEDA, Kuadrant, Authorino). (1-2 hours)
+
+9. **Add JUnit test result reporting** - Convert Go test output to JUnit XML for better CI visibility. (1-2 hours)
+
+10. **Add reconciler throughput benchmarks** - Performance regression testing for critical reconcile loops. (4-8 hours)
 
 ## Comparison to Gold Standards
 
-| Dimension | odh-model-controller | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
-|-----------|---------------------|---------------------|-------------------|---------------|
-| Unit Tests | 7.0 — 89% controller coverage, 30% reconciler coverage | 9.0 — Multi-layer with Jest, Cypress component tests | 7.0 — Script-based validation | 9.0 — Comprehensive with multi-version |
-| Integration/E2E | 4.0 — Disabled in CI | 9.0 — Cypress E2E on every PR | 8.0 — Multi-layer image validation | 9.0 — E2E with multi-version KServe |
-| Build Integration | 5.0 — PR builds, no validation | 8.0 — Full build + lint + type check | 9.0 — 5-layer image validation | 7.0 — Image build + CRD validation |
-| Image Testing | 4.0 — Build-only, amd64 | 7.0 — Build + startup | 9.0 — Import, startup, functional, regression, security | 7.0 — Build + deploy test |
-| Coverage Tracking | 3.0 — Local only | 9.0 — Codecov with enforcement | 5.0 — Script-based | 9.0 — Codecov with thresholds |
-| CI/CD Automation | 7.0 — Well-organized, Konflux | 9.0 — Comprehensive GH Actions | 8.0 — Matrix builds | 8.0 — Prow + GH Actions |
-| Agent Rules | 0.0 — None | 8.0 — Comprehensive rules | 3.0 — Basic | 2.0 — Minimal |
-| Security Scanning | 6.0 — Strong in Konflux, none in PR | 7.0 — Snyk in CI | 8.0 — Trivy in CI | 7.0 — CodeQL + Snyk |
+| Dimension | odh-model-controller | odh-dashboard (gold) | notebooks (gold) | kserve (gold) |
+|-----------|---------------------|---------------------|-------------------|--------------|
+| Unit Tests | 8.5 | 9.0 | 7.0 | 9.0 |
+| Integration/E2E | 7.0 | 9.0 | 8.0 | 9.5 |
+| Build Integration | 6.5 | 8.0 | 7.0 | 7.5 |
+| Image Testing | 4.0 | 6.0 | 9.0 | 5.0 |
+| Coverage Tracking | 3.0 | 9.0 | 5.0 | 9.0 |
+| CI/CD Automation | 8.0 | 9.0 | 8.0 | 9.0 |
+| Agent Rules | 8.0 | 9.0 | 3.0 | 4.0 |
+| **Overall** | **7.0** | **8.5** | **7.0** | **8.0** |
+
+**Key differences from gold standards**:
+- vs. odh-dashboard: Missing coverage enforcement, contract tests, and E2E PR automation
+- vs. notebooks: Missing image security scanning and SBOM; better in unit tests and agent rules
+- vs. kserve: Missing coverage thresholds and multi-version E2E; better in agent rules and documentation
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/test.yml` — Unit tests
-- `.github/workflows/test-e2e.yml` — E2E tests (disabled)
-- `.github/workflows/lint.yml` — Linting
-- `.github/workflows/build.yaml` — Image builds
-- `.github/workflows/validate-manifests.yml` — Kustomize validation
-- `.github/workflows/verify-odh-model-controller-img-tag.yaml` — Image tag consistency
-- `.github/workflows/odh-release.yaml` — Release automation
-- `.tekton/odh-model-controller-push.yaml` — Konflux pipeline
+- `.github/workflows/test.yml` - Unit/integration tests
+- `.github/workflows/lint.yml` - Linting
+- `.github/workflows/build.yaml` - Image builds
+- `.github/workflows/test-e2e.yml` - E2E tests (dispatch-only)
+- `.github/workflows/validate-manifests.yml` - Kustomize validation
+- `.github/workflows/odh-release.yaml` - Release automation
+- `.tekton/odh-model-controller-pull-request.yaml` - Konflux PR pipeline
+- `.tekton/odh-model-serving-api-pull-request.yaml` - Konflux server PR pipeline
 
 ### Testing
-- `internal/controller/serving/*_test.go` — Controller unit tests
-- `internal/controller/serving/reconcilers/*_test.go` — Reconciler unit tests
-- `internal/webhook/**/*_test.go` — Webhook tests
-- `server/**/*_test.go` — Server component tests
-- `test/e2e/` — E2E test suite
-- `server/test/e2e/` — Server E2E tests
-- `internal/controller/test/e2e/` — Controller E2E tests
+- `internal/controller/serving/*_test.go` - ISVC/SR controller tests
+- `internal/controller/nim/*_test.go` - NIM controller tests
+- `internal/controller/serving/llm/*_test.go` - LLM/Gateway tests
+- `internal/webhook/**/*_test.go` - Webhook tests
+- `server/**/*_test.go` - Model-serving-api tests
+- `test/e2e/` - Controller E2E suite
+- `server/test/e2e/` - Server E2E suite
+- `internal/controller/test/e2e/` - Controller integration E2E
 
 ### Code Quality
-- `.golangci.yml` — 17 linters configured
-- `.pre-commit-config.yaml` — golangci-lint + prettier
+- `.golangci.yml` - 20 linters enabled, v2 config
+- `.pre-commit-config.yaml` - golangci-lint + prettier
+- `Makefile` - Build/test/lint targets
 
 ### Container Images
-- `Containerfile` — Controller image (multi-stage, UBI9)
-- `Containerfile.server` — Server image (multi-stage, UBI9, FIPS)
-- `Dockerfile` — Legacy duplicate of Containerfile
+- `Containerfile` / `Dockerfile` - Controller image
+- `Containerfile.server` - Server image
+- `Dockerfile.konflux` - FIPS-enabled controller (CGO_ENABLED=1)
+- `Containerfile.server.konflux` - FIPS-enabled server
 
-### Configuration
-- `Makefile` — Build, test, deploy targets
-- `go.mod` — Go module with kserve replace directive
-- `config/` — Kustomize overlays (base, crd, manager, rbac, webhook, server)
+### Agent Rules
+- `CLAUDE.md` - Stub pointing to AGENTS.md
+- `AGENTS.md` - Comprehensive project documentation
+- `architecture.md` - Detailed architecture documentation

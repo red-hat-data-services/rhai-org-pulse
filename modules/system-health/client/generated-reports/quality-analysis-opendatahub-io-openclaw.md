@@ -1,427 +1,500 @@
 ---
 repository: "opendatahub-io/openclaw"
-overall_score: 8.8
+overall_score: 8.6
 scorecard:
   - dimension: "Unit Tests"
     score: 9.0
-    status: "~2,740 test files with Vitest, sharded parallel execution, coverage thresholds enforced (70% lines/functions/statements, 55% branches)"
+    status: "2,730 test files with Vitest + V8 coverage; 70% line/branch/function thresholds enforced; sharded CI with parallelism"
   - dimension: "Integration/E2E"
-    score: 9.0
-    status: "38 E2E tests, contract tests for plugins + channels, Docker-based E2E suite, multi-platform (macOS/Windows/Android/iOS)"
+    score: 8.5
+    status: "36 E2E tests, 23 contract tests, 12 integration tests, 15 live tests; dedicated configs per test type"
   - dimension: "Build Integration"
-    score: 8.5
-    status: "PR-time Docker image build + smoke test, CLI startup validation, extension build validation, multi-architecture support"
-  - dimension: "Image Testing"
-    score: 8.5
-    status: "Multi-Dockerfile builds validated in CI, install smoke tests, sandbox smoke tests, runtime CLI smoke verification"
-  - dimension: "Coverage Tracking"
     score: 8.0
-    status: "V8 coverage provider with enforced thresholds (70/70/55/70), lcov output, iOS coverage gate at 43%"
+    status: "PR-time build smoke, Docker image validation, CLI launcher smoke; multi-platform (macOS/Windows/Android/Linux)"
+  - dimension: "Image Testing"
+    score: 7.5
+    status: "Docker image smoke tests with extension validation; multi-arch (amd64/arm64) OpenShift builds; no Trivy/Snyk scanning"
+  - dimension: "Coverage Tracking"
+    score: 8.5
+    status: "V8 coverage with 70% line/function/statement thresholds, 55% branches; lcov reports; enforced in vitest config"
   - dimension: "CI/CD Automation"
     score: 9.5
-    status: "Sophisticated CI with docs-scope detection, changed-scope scoping, test sharding, concurrency control, 12 workflows"
+    status: "Highly sophisticated CI with docs-scope detection, change-scope filtering, sharding, concurrency control, multi-platform matrix"
   - dimension: "Agent Rules"
     score: 9.0
-    status: "Comprehensive AGENTS.md (207 lines), CLAUDE.md symlink, .agents/skills/ with 5 specialized skills, .agent/workflows"
+    status: "Comprehensive AGENTS.md (23KB), CODEOWNERS for security paths, multi-agent safety rules, testing guidelines, 6 custom skills"
 critical_gaps:
-  - title: "No container vulnerability scanning (Trivy/Snyk)"
-    impact: "Security vulnerabilities in base images or dependencies not caught before deployment"
+  - title: "No container vulnerability scanning (Trivy/Snyk/Grype)"
+    impact: "Vulnerabilities in base images and dependencies not detected before deployment"
+    severity: "HIGH"
+    effort: "2-4 hours"
+  - title: "No SBOM generation or image signing"
+    impact: "Supply chain security gap; no attestation for container images pushed to Quay.io"
+    severity: "HIGH"
+    effort: "4-6 hours"
+  - title: "CodeQL only runs on manual dispatch (workflow_dispatch)"
+    impact: "SAST analysis not automated on PRs or pushes; security bugs may go undetected"
+    severity: "MEDIUM"
+    effort: "1 hour"
+  - title: "Extensions excluded from Oxlint and coverage thresholds"
+    impact: "648 extension test files exist but extensions get no lint enforcement or coverage gates"
+    severity: "MEDIUM"
+    effort: "4-8 hours"
+  - title: "iOS CI disabled (if: false)"
+    impact: "iOS app builds and tests not validated in CI; regressions can ship undetected"
     severity: "MEDIUM"
     effort: "2-4 hours"
-  - title: "No SBOM generation"
-    impact: "Cannot track software supply chain artifacts for compliance"
-    severity: "MEDIUM"
-    effort: "2-3 hours"
-  - title: "CodeQL only runs on workflow_dispatch (not PRs)"
-    impact: "Security vulnerabilities in code changes not caught during PR review"
-    severity: "HIGH"
-    effort: "1 hour"
-  - title: "No external coverage reporting service (Codecov/Coveralls)"
-    impact: "No PR-level coverage diff reporting; coverage only enforced locally via thresholds"
-    severity: "LOW"
-    effort: "2-3 hours"
 quick_wins:
   - title: "Enable CodeQL on pull_request trigger"
     effort: "30 minutes"
-    impact: "Catch security issues during PR review instead of only on-demand"
-  - title: "Add Trivy scanning to Docker release workflow"
+    impact: "Automated SAST on every PR; catches security-relevant code issues before merge"
+  - title: "Add Trivy container scanning to install-smoke or build-openshift-image workflow"
     effort: "1-2 hours"
-    impact: "Early detection of known CVEs in container images before deployment"
-  - title: "Add Codecov integration for PR coverage reporting"
+    impact: "Detects known CVEs in Docker base images and installed packages"
+  - title: "Enable Oxlint for extensions/ directory"
     effort: "2-3 hours"
-    impact: "PR-level coverage diffs and automatic coverage regression detection"
-  - title: "Add SBOM generation to Docker builds"
-    effort: "1 hour"
-    impact: "Supply chain transparency and compliance readiness"
+    impact: "Consistent lint enforcement across 648 extension test files and extension source code"
+  - title: "Add codecov/coveralls integration for PR coverage reporting"
+    effort: "1-2 hours"
+    impact: "PR-level coverage visibility; prevent coverage regressions in reviews"
 recommendations:
   priority_0:
-    - "Enable CodeQL on pull_request events to catch security issues at PR time"
-    - "Add container image vulnerability scanning (Trivy) to Docker release workflow"
+    - "Add Trivy or Grype container vulnerability scanning to CI for both Dockerfile and Dockerfile.openshift images"
+    - "Enable CodeQL to run on pull_request and push triggers instead of manual-only dispatch"
+    - "Add SBOM generation (syft) and image signing (cosign) for production images pushed to Quay.io"
   priority_1:
-    - "Integrate Codecov/Coveralls for PR-level coverage reporting and diff tracking"
-    - "Add SBOM generation (syft/trivy) to Docker build pipelines"
-    - "Add image signing/attestation for supply chain security"
+    - "Extend Oxlint coverage to extensions/ directory with appropriate rule configuration"
+    - "Add codecov/coveralls integration for PR-level coverage delta reporting"
+    - "Re-enable iOS CI job or document decision to defer iOS testing"
+    - "Add Trivy filesystem scan for dependency vulnerabilities in pnpm-lock.yaml"
   priority_2:
-    - "Add performance regression testing beyond startup memory check"
-    - "Consider adding fuzz testing for parser/protocol code"
-    - "Add structured test documentation for the contract testing patterns"
+    - "Add performance regression CI gate (test:perf:budget exists but is not in CI workflow)"
+    - "Add code duplication CI gate (dup:check script exists but is not in CI)"
+    - "Consider adding pre-merge coverage threshold for extensions (currently exempt)"
 ---
 
-# Quality Analysis: openclaw (opendatahub-io/openclaw)
+# Quality Analysis: OpenClaw (opendatahub-io/openclaw)
 
 ## Executive Summary
 
-- **Overall Score: 8.8/10**
-- **Repository Type**: TypeScript/Node.js application (CLI + gateway + multi-platform apps)
-- **Primary Language**: TypeScript (ESM), with Swift (macOS/iOS), Kotlin (Android), Python (skills)
-- **Key Strengths**: Exceptionally sophisticated CI/CD with intelligent change scoping, comprehensive multi-layer test strategy (unit + E2E + contract + Docker smoke), excellent agent rules and developer documentation
-- **Critical Gaps**: No container vulnerability scanning, CodeQL not running on PRs, no SBOM generation
-- **Agent Rules Status**: Excellent - comprehensive AGENTS.md with detailed coding standards, testing guidelines, and architectural boundaries
+- **Overall Score: 8.6/10**
+- **Repository Type**: Multi-platform TypeScript/Swift/Kotlin application (CLI, macOS app, iOS app, Android app, web UI, gateway server)
+- **Primary Language**: TypeScript (ESM) with Swift (macOS/iOS), Kotlin (Android)
+- **Framework**: Node.js CLI + Vitest testing + pnpm monorepo + multi-platform native apps
+- **Key Strengths**: Exceptionally mature CI/CD pipeline with intelligent change-scoping, comprehensive multi-layer test strategy (unit/contract/integration/e2e/live), strong agent rules documentation, enforced coverage thresholds
+- **Critical Gaps**: No container vulnerability scanning, CodeQL only on manual dispatch, extensions excluded from lint/coverage enforcement
+- **Agent Rules Status**: Present and comprehensive (23KB AGENTS.md with CLAUDE.md symlink, 6 custom skills, CODEOWNERS)
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 9.0/10 | ~2,740 test files, Vitest with sharding, enforced thresholds |
-| Integration/E2E | 9.0/10 | 38 E2E tests, contract tests, Docker E2E, multi-platform |
-| Build Integration | 8.5/10 | PR Docker build + smoke, CLI startup validation, extension builds |
-| Image Testing | 8.5/10 | 6 Dockerfiles validated, install smoke, sandbox smoke, runtime verification |
-| Coverage Tracking | 8.0/10 | V8 provider, 70% thresholds enforced, iOS 43% gate; no PR diff reporting |
-| CI/CD Automation | 9.5/10 | 12 workflows, intelligent scoping, sharding, concurrency control |
-| Agent Rules | 9.0/10 | 207-line AGENTS.md, 5 agent skills, workflow automation |
+| Unit Tests | 9.0/10 | 2,730 test files, Vitest + V8, 70% coverage thresholds enforced |
+| Integration/E2E | 8.5/10 | 36 E2E + 23 contract + 12 integration + 15 live tests |
+| **Build Integration** | **8.0/10** | **PR build smoke, Docker image validation, multi-platform CI** |
+| Image Testing | 7.5/10 | Docker smoke tests + extension validation; no vulnerability scanning |
+| Coverage Tracking | 8.5/10 | V8 coverage, 70% thresholds, lcov output; no PR delta reporting |
+| CI/CD Automation | 9.5/10 | Elite-tier CI with scope detection, sharding, multi-platform matrix |
+| Agent Rules | 9.0/10 | 23KB AGENTS.md, CODEOWNERS, 6 skills, multi-agent safety rules |
 
 ## Critical Gaps
 
-1. **CodeQL only runs on workflow_dispatch**
-   - Impact: Security analysis (SAST) not applied to PRs - vulnerabilities slip through review
-   - Severity: **HIGH**
-   - Effort: 30 minutes (add `pull_request:` trigger to `.github/workflows/codeql.yml`)
+### 1. No Container Vulnerability Scanning
+- **Impact**: CVEs in base images (node:24-bookworm, UBI9) and transitive dependencies not detected
+- **Severity**: HIGH
+- **Effort**: 2-4 hours
+- **Details**: Neither `Dockerfile` nor `Dockerfile.openshift` builds include Trivy, Snyk, or Grype scanning. The `install-smoke.yml` workflow builds and runs images but doesn't scan them. The `build-openshift-image.yml` workflow pushes multi-arch images to `quay.io/opendatahub/odh-openclaw-rhel9` without any vulnerability gate.
 
-2. **No container vulnerability scanning**
-   - Impact: Known CVEs in base images (node:24-bookworm, ubi9/nodejs-22) not detected before deployment
-   - Severity: **MEDIUM**
-   - Effort: 2-4 hours (add Trivy step to Docker release workflow)
+### 2. No SBOM Generation or Image Signing
+- **Impact**: Supply chain security gap for images pushed to production registries
+- **Severity**: HIGH
+- **Effort**: 4-6 hours
+- **Details**: Production images are pushed to Quay.io without SBOM attestation (syft) or signature verification (cosign/sigstore). This is a significant gap for enterprise/OpenShift deployments.
 
-3. **No SBOM generation or image signing**
-   - Impact: Supply chain compliance gaps; no attestation of image contents
-   - Severity: **MEDIUM**
-   - Effort: 2-3 hours (add syft/cosign to Docker workflows)
+### 3. CodeQL SAST Only on Manual Dispatch
+- **Impact**: Security-relevant code defects not automatically caught on PRs
+- **Severity**: MEDIUM
+- **Effort**: 1 hour
+- **Details**: The `codeql.yml` workflow is configured with `on: workflow_dispatch` only. It covers 5 languages (JS/TS, Actions, Python, Java/Kotlin, Swift) with `security-and-quality` queries, but only runs when manually triggered. This means PR authors must remember to run it.
 
-4. **No PR-level coverage reporting service**
-   - Impact: Coverage thresholds enforced only locally; no visual PR diff reporting
-   - Severity: **LOW**
-   - Effort: 2-3 hours (Codecov integration + upload step in CI)
+### 4. Extensions Excluded from Lint and Coverage
+- **Impact**: 648 extension test files and ~77 extension packages have no Oxlint enforcement or coverage thresholds
+- **Severity**: MEDIUM
+- **Effort**: 4-8 hours
+- **Details**: The `.oxlintrc.json` `ignorePatterns` includes `"extensions/"`. The `vitest.config.ts` coverage excludes `"extensions/**"`. Extensions are tested (via `test:extensions` and `test:channels`), but there's no lint or coverage gate.
+
+### 5. iOS CI Disabled
+- **Impact**: iOS app regressions not caught in CI
+- **Severity**: MEDIUM
+- **Effort**: 2-4 hours
+- **Details**: The `ios` job in `ci.yml` has `if: false` with the comment "ignore iOS in CI for now". The iOS build includes coverage gates (43% threshold), but none of this runs.
 
 ## Quick Wins
 
-1. **Enable CodeQL on PRs** (30 min)
-   - Add `pull_request:` trigger to `codeql.yml`
-   - Already has excellent multi-language matrix (JS/TS, Python, Java, Swift, Actions)
+### 1. Enable CodeQL on PR/Push Triggers (30 minutes)
+Change `codeql.yml` trigger from `workflow_dispatch` to include `pull_request` and `push`:
+```yaml
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'  # Weekly Monday scan
+```
 
-2. **Add Trivy container scanning** (1-2 hours)
-   - Add `aquasecurity/trivy-action` step after Docker build
-   - Set severity threshold (CRITICAL,HIGH)
+### 2. Add Trivy Container Scanning (1-2 hours)
+Add a Trivy scan step to `install-smoke.yml` after the image build:
+```yaml
+- name: Run Trivy vulnerability scanner
+  uses: aquasecurity/trivy-action@master
+  with:
+    image-ref: openclaw-dockerfile-smoke:local
+    format: 'table'
+    exit-code: '1'
+    severity: 'CRITICAL,HIGH'
+```
 
-3. **Codecov integration** (2-3 hours)
-   - Upload lcov output from `pnpm test:coverage`
-   - Add coverage comment to PRs
+### 3. Enable Oxlint for Extensions (2-3 hours)
+Remove `"extensions/"` from `.oxlintrc.json` `ignorePatterns` and address any resulting lint errors. This brings 77 extension packages under the same quality bar as core code.
 
-4. **SBOM generation** (1 hour)
-   - Add `anchore/sbom-action` to Docker release workflow
-   - Attach SBOM as build artifact
+### 4. Add Codecov Integration (1-2 hours)
+Add codecov upload to CI after test runs to get PR-level coverage delta reporting:
+```yaml
+- name: Upload coverage
+  uses: codecov/codecov-action@v5
+  with:
+    files: coverage/lcov.info
+    fail_ci_if_error: false
+```
 
 ## Detailed Findings
 
-### CI/CD Pipeline (9.5/10)
+### CI/CD Pipeline
 
-**Outstanding CI architecture.** The CI system is one of the most sophisticated I've analyzed:
+**Score: 9.5/10** — One of the most sophisticated CI setups analyzed.
 
-**12 Workflows:**
-- `ci.yml` - Main CI with intelligent scoping (docs-only detection, changed-scope detection)
-- `install-smoke.yml` - Docker image build + CLI smoke testing on PRs
-- `sandbox-common-smoke.yml` - Sandbox container validation
-- `build-openshift-image.yml` - OpenShift/UBI9 multi-arch builds (nightly + push)
-- `docker-release.yml` - Multi-arch Docker release (amd64 + arm64 native runners)
-- `codeql.yml` - Multi-language SAST (JS/TS, Python, Java, Swift, Actions)
-- `workflow-sanity.yml` - Actionlint + tab detection + composite action interpolation checks
-- `openclaw-npm-release.yml` - npm package release
-- `plugin-npm-release.yml` - Plugin npm release
-- `stale.yml` - Issue/PR lifecycle management
-- `labeler.yml` - Automatic labeling
-- `auto-response.yml` - Auto-response
+**Workflow Inventory (11 workflows)**:
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `ci.yml` | push/PR | Main CI: tests, lint, build, multi-platform |
+| `codeql.yml` | dispatch only | SAST analysis (5 languages) |
+| `install-smoke.yml` | push/PR | Docker image build + CLI smoke |
+| `build-openshift-image.yml` | push/schedule/PR | UBI9 multi-arch image builds |
+| `sandbox-common-smoke.yml` | push/PR (path-filtered) | Sandbox image validation |
+| `workflow-sanity.yml` | push/PR | actionlint + workflow hygiene |
+| `auto-response.yml` | - | Issue/PR auto-responses |
+| `docker-release.yml` | - | Docker image release |
+| `openclaw-npm-release.yml` | - | npm package release |
+| `plugin-npm-release.yml` | - | Plugin SDK release |
+| `labeler.yml` | - | PR auto-labeling |
+| `stale.yml` | - | Stale issue/PR management |
 
-**Advanced CI Features:**
-- Smart docs-only change detection to skip heavy jobs
-- Granular changed-scope detection (Node, macOS, Android, Python, Windows)
-- Test sharding (2 shards on Linux, 6 shards on Windows)
-- Concurrency control on all workflows
-- Custom GitHub Actions (4 reusable actions)
-- Blacksmith runners for performance (16-vCPU, 32-vCPU)
-- Cross-platform testing: Linux, macOS, Windows, Android, iOS
+**Strengths**:
+- **Intelligent scope detection**: Docs-only changes skip heavy jobs. `changed-scope` job detects which platforms (Node, macOS, Android, Windows, Python) are affected and only runs relevant CI.
+- **Changed extension detection**: Only runs extension tests for actually-changed extensions (dynamic matrix).
+- **Test sharding**: Core tests split into 2 shards on Linux, 6 shards on Windows.
+- **Concurrency control**: All workflows use `cancel-in-progress: true` with PR-scoped groups.
+- **Multi-platform matrix**: Linux (Blacksmith 16vCPU), macOS, Windows (32vCPU), Android.
+- **Node version compatibility**: Separate `compat-node22` job validates backward compatibility.
+- **Bun compatibility**: Separate Bun runtime lane (push-only, not PRs).
+- **Custom reusable actions**: `setup-node-env`, `setup-pnpm-store-cache`, `detect-docs-changes`, `ensure-base-commit`.
+- **Workflow sanity**: `actionlint` validation + tabs detection + composite action interpolation checks.
+- **Build artifact caching**: `build-artifacts` job shares `dist/` via upload/download artifacts.
 
-### Test Coverage (9.0/10)
+**Gaps**:
+- CodeQL not automated (manual dispatch only)
+- No Trivy/Snyk scanning in any workflow
+- No PR coverage delta reporting
+- Performance budget (`test:perf:budget`) exists but isn't in CI
+- Code duplication check (`dup:check`) exists but isn't in CI
 
-**Exceptional multi-layer test strategy:**
+### Test Coverage
 
-**Unit Tests (~2,740 files):**
-- Vitest framework with multiple configs (unit, e2e, extensions, channels, gateway, live)
-- Test-to-source ratio: ~0.95:1 (2,740 test files / 2,874 source files)
-- Parallel test execution via `scripts/test-parallel.mjs`
-- Worker isolation with `pool: "forks"`, `unstubEnvs`, `unstubGlobals`
-- Bun compatibility testing (on push to main)
-- Node 22 compatibility testing
+**Score: 9.0/10** — Exceptional test-to-code ratio and multi-layer strategy.
 
-**E2E Tests (38 files):**
-- Dedicated `vitest.e2e.config.ts` with process fork isolation
-- CLI smoke tests (launcher, JSON output, sandbox)
-- Gateway multi-instance tests
-- Plugin lifecycle E2E
-- Docker-based E2E suite with 8+ Docker test scripts
-- Platform-specific E2E (Parallels macOS/Linux/Windows)
+**Test Statistics**:
+| Area | Test Files | Source Files |
+|------|-----------|-------------|
+| `src/` | 1,999 | ~3,800 |
+| `extensions/` | 648 | ~600 |
+| `test/` | 15 | — |
+| `ui/` | 59 | ~100 |
+| **Total** | **2,730** | **~4,539** |
 
-**Contract Tests (~20 files):**
-- Plugin contracts: catalog, discovery, loader, provider, registry, runtime, shape, web-search-provider, wizard
-- Channel contracts: group-policy, inbound, outbound-payload, plugin, registry, session-binding, setup, status, surface, threading
-- Dedicated `pnpm test:contracts` command
+**Test-to-Code Ratio**: 0.60 (outstanding for a project of this size)
 
-**Coverage:**
-- V8 coverage provider with lcov reporter
-- Enforced thresholds: 70% lines, 70% functions, 55% branches, 70% statements
-- iOS coverage gate at 43% (xcresult + xccov)
-- Swift code coverage enabled in test builds
+**Test Types**:
+- **Unit tests**: 2,700+ files, colocated as `*.test.ts`, run via `pnpm test` with sharding
+- **Contract tests**: 23 files in `src/channels/plugins/contracts/` and `src/plugins/contracts/` — validate plugin API boundaries
+- **E2E tests**: 36 files covering CLI, agents, docker, gateway, extensions
+- **Integration tests**: 12 files for gateway, config, hooks, extensions
+- **Live tests**: 15 files for real-API testing (gated behind `OPENCLAW_LIVE_TEST=1`)
+- **Docker tests**: Dedicated scripts for gateway, onboarding, plugins, network
+- **Architecture smell tests**: Automated architecture boundary enforcement
+- **Boundary guard tests**: Plugin/extension import boundary validation
 
-### Code Quality (9.0/10)
+**Coverage Configuration** (vitest.config.ts):
+- Provider: V8
+- Reporters: text + lcov
+- Thresholds: 70% lines, 70% functions, 55% branches, 70% statements
+- Scope: `src/**/*.ts` only (extensions, apps, UI excluded)
+- Extensive exclusion list for integration-tested surfaces
 
-**Comprehensive linting and formatting:**
+**Vitest Configuration Variants** (7 configs):
+| Config | Purpose |
+|--------|---------|
+| `vitest.config.ts` | Base config with coverage thresholds |
+| `vitest.unit.config.ts` | Unit tests only |
+| `vitest.e2e.config.ts` | E2E tests with process forks |
+| `vitest.extensions.config.ts` | Extension tests |
+| `vitest.channels.config.ts` | Channel plugin tests |
+| `vitest.gateway.config.ts` | Gateway tests |
+| `vitest.live.config.ts` | Live API tests |
 
-**Linting/Formatting:**
-- Oxlint (type-aware) with plugins: unicorn, typescript, oxc
-- Oxfmt for formatting with import sorting
-- SwiftLint + SwiftFormat for Swift code
-- ShellCheck for shell scripts (error severity)
-- Actionlint for GitHub workflow validation
-- Zizmor for GitHub Actions security audit
-- Ruff for Python skills scripts
-- jscpd for code duplication detection
-- Knip for dead code detection
-- Markdownlint for documentation
+### Code Quality
 
-**Pre-commit Hooks (13 hooks):**
-- trailing-whitespace, end-of-file-fixer, check-yaml, check-added-large-files, check-merge-conflict
-- detect-private-key, detect-secrets (Yelp, with exclusion baseline)
-- shellcheck, actionlint, zizmor
-- ruff (Python), oxlint, oxfmt
-- pnpm-audit-prod, swiftlint, swiftformat, skills python tests
+**Score: 8.5/10** — Strong tooling with minor coverage gaps in extensions.
 
-**Security:**
-- detect-secrets with comprehensive baseline and exclusion patterns
-- zizmor for GitHub Actions security
-- pnpm audit --prod --audit-level=high
+**Linting**:
+- **Oxlint** (`oxlint --type-aware`): Fast Rust-based linter with TypeScript type-aware rules
+  - Plugins: unicorn, typescript, oxc
+  - Categories enforced: correctness (error), perf (error), suspicious (error)
+  - `no-explicit-any`: error (strict)
+  - Extensions excluded from lint scope
+- **Oxfmt**: Rust-based formatter (replaces Prettier)
+- **SwiftLint + SwiftFormat**: For macOS/iOS Swift code
+- **Ktlint**: For Android Kotlin code
+- **Ruff**: For Python skill scripts
+- **ShellCheck**: For shell scripts
+- **Markdownlint**: For documentation
+- **actionlint**: For GitHub workflow files
+- **zizmor**: GitHub Actions security auditor
+
+**Architecture Enforcement**:
+- 20+ custom boundary-check scripts in `scripts/`:
+  - Plugin/extension import boundaries
+  - Web search provider boundaries
+  - Channel-agnostic boundaries
+  - Plugin SDK export validation
+  - No-raw-window-open policy
+  - Webhook auth body order
+  - Architecture smell detection
+- All enforced in CI via the `check` job
+
+**Pre-commit Hooks** (`.pre-commit-config.yaml`):
+- Trailing whitespace, end-of-file fixer, YAML validation
+- Large file detection (500KB limit)
+- Merge conflict detection
 - Private key detection
-- CODEOWNERS enforcement for security-critical paths
+- `detect-secrets` with extensive baseline (433KB)
+- ShellCheck for shell scripts
+- zizmor for workflow security
+- pnpm audit for production dependencies
 
-**Architectural Boundary Guards (14+ custom lint scripts):**
-- Plugin/extension import boundaries
-- Plugin-SDK subpath export validation
-- Channel-agnostic boundary checks
-- Web search provider boundaries
-- Webhook auth body order validation
-- Extension relative import validation
+**Code Duplication Detection**:
+- jscpd configured (`.jscpd.json`) with min 12 lines / 80 tokens threshold
+- Available via `pnpm dup:check` but not enforced in CI
 
-### Container Images (8.5/10)
+### Container Images
 
-**Strong multi-image build pipeline:**
+**Score: 7.5/10** — Solid multi-stage builds; missing security scanning.
 
-**Dockerfiles (6):**
-- `Dockerfile` - Main multi-stage build with variant support (default/slim), extension build-args
-- `Dockerfile.openshift` - UBI9 multi-stage build for OpenShift deployment
-- `Dockerfile.sandbox` - Sandbox runtime container
-- `Dockerfile.sandbox-common` - Shared sandbox base
-- `Dockerfile.sandbox-browser` - Browser sandbox
-- `scripts/` - Additional smoke test Dockerfiles (install, non-root, e2e, QR import)
+**Dockerfiles**:
+| File | Purpose | Base Image |
+|------|---------|------------|
+| `Dockerfile` | Main CLI image | `node:24-bookworm` (pinned to SHA256) |
+| `Dockerfile.openshift` | OpenShift/UBI9 image | `registry.access.redhat.com/ubi9/nodejs-22` |
+| `Dockerfile.sandbox` | Sandbox runtime | Bookworm-slim |
+| `Dockerfile.sandbox-browser` | Browser sandbox | — |
+| `Dockerfile.sandbox-common` | Shared sandbox base | — |
 
-**Build Validation:**
-- PR-time Docker builds via `install-smoke.yml`
-- CLI startup smoke in Docker containers
-- Extension dependency validation in containers
-- Plugin discovery validation in containers
-- Non-root user validation
-- Sandbox setup script validation
+**Strengths**:
+- Multi-stage builds (ext-deps → build → runtime)
+- Base images pinned to SHA256 digests for reproducibility
+- Build-arg extensibility (`OPENCLAW_EXTENSIONS`, `OPENCLAW_VARIANT`)
+- Slim variant support (`bookworm-slim`)
+- Multi-architecture support (amd64/arm64) in OpenShift workflow
+- Healthcheck configured in docker-compose
+- Security hardening: `cap_drop`, `no-new-privileges`, `init: true`
 
-**Multi-Architecture:**
-- Native amd64 + arm64 builds (no QEMU emulation)
-- Multi-platform manifest creation
-- OpenShift builds also multi-arch
+**CI Image Testing**:
+- `install-smoke.yml`: Builds 3 images (root, extension, installer) and runs CLI smoke tests
+- `build-openshift-image.yml`: PR validation (amd64 build-only), production multi-arch push
+- `sandbox-common-smoke.yml`: Validates sandbox image user/permissions
 
-**Gaps:**
-- No Trivy/Snyk vulnerability scanning
-- No SBOM generation
-- No image signing/attestation (cosign)
-- Pinned digests for base images (good), but no automated digest update
+**Gaps**:
+- No Trivy/Snyk/Grype vulnerability scanning
+- No SBOM generation (syft)
+- No image signing (cosign/sigstore)
+- No runtime functional testing beyond CLI `--version` and `--help`
 
-### Security (7.5/10)
+### Security
 
-**Good foundations, some gaps:**
+**Score: 8.0/10** — Strong foundation; missing container scanning.
 
-**Strengths:**
-- CodeQL multi-language analysis (5 languages)
-- detect-secrets with comprehensive exclusion patterns
-- pnpm audit for dependency vulnerabilities
-- Private key detection in pre-commit
-- zizmor for GitHub Actions security
-- CODEOWNERS for security-critical paths
-- Docker image digest pinning
+**Strengths**:
+- **detect-secrets**: Comprehensive baseline (433KB) with extensive exclusion patterns
+- **Private key detection**: Pre-commit hook
+- **CODEOWNERS**: Security-sensitive paths require `@openclaw/secops` review (50+ path rules)
+- **CodeQL**: Configured for 5 languages with `security-and-quality` queries
+- **zizmor**: GitHub Actions security auditing
+- **Dependabot**: Daily updates for npm, GitHub Actions, Swift, Gradle, Docker
+- **pnpm audit**: Production dependency auditing in pre-commit
+- **SECURITY.md**: 22KB comprehensive security documentation
+- **Security hardening**: Docker `cap_drop`, `no-new-privileges`, healthchecks
 
-**Gaps:**
-- CodeQL only on `workflow_dispatch` (not triggered on PRs)
+**Gaps**:
+- CodeQL only runs on manual dispatch
 - No container image vulnerability scanning
-- No SBOM generation
-- No dependency review action on PRs
-- No image signing/attestation
+- No SBOM or image signing
+- zizmor has `unpinned-uses` and `excessive-permissions` checks disabled
 
-### Agent Rules (9.0/10)
+### Agent Rules (Agentic Flow Quality)
 
-**Excellent agent guidance:**
+**Score: 9.0/10** — Among the most comprehensive agent configurations analyzed.
 
-**AGENTS.md / CLAUDE.md (207 lines):**
-- Comprehensive project structure documentation
-- Module organization and import boundaries
-- Detailed coding style and naming conventions
-- Build/test/development commands
-- Documentation standards (Mintlify)
-- Operational guides (VM ops)
-- Security considerations (CODEOWNERS)
+**Status**: Present and highly detailed
 
-**Agent Skills (.agents/skills/):**
-- `openclaw-ghsa-maintainer` - GHSA maintenance
-- `openclaw-parallels-smoke` - Parallels smoke testing
-- `openclaw-pr-maintainer` - PR maintenance
-- `openclaw-release-maintainer` - Release management
-- `parallels-discord-roundtrip` - Discord roundtrip testing
+**AGENTS.md** (23KB, symlinked as CLAUDE.md):
+- Project structure and module organization
+- Import boundary rules with enforcement guidance
+- Docs linking conventions (Mintlify)
+- Build, test, and development commands
+- Coding style and naming conventions
+- Release/advisory workflows
+- Testing guidelines (framework, naming, coverage)
+- Commit and PR guidelines
+- Security and configuration tips
+- Local runtime/platform notes
+- Multi-agent safety rules (6 explicit rules)
+- Collaboration/safety notes
 
-**Agent Workflows (.agent/workflows/):**
-- `update_clawdbot.md` - Bot update automation
+**Custom Skills** (6):
+| Skill | Purpose |
+|-------|---------|
+| `openclaw-release-maintainer` | Release naming, versioning, changelog |
+| `openclaw-pr-maintainer` | PR triage, review, landing |
+| `openclaw-ghsa-maintainer` | Security advisory workflows |
+| `openclaw-parallels-smoke` | Cross-platform smoke testing |
+| `parallels-discord-roundtrip` | Discord integration testing |
+| `update_clawdbot` | Agent workflow |
 
-**Skills Directory (skills/):**
-- skill-creator (with Python tests)
-- openai-image-gen (with tests)
-- model-usage (with tests)
-- Python skills tested in CI via pytest
+**CODEOWNERS Integration**: Security-sensitive paths require secops team review.
 
-**Gaps:**
-- No explicit `.claude/rules/` directory with test-type-specific rules
-- Test automation guidance embedded in AGENTS.md rather than structured rule files
-- No explicit test creation templates or checklists
+**Copilot Instructions**: `.github/instructions/copilot.instructions.md` for GitHub Copilot alignment.
+
+**Gaps**:
+- No dedicated test creation rules (`.claude/rules/`) for specific test types
+- Skills focus on maintenance workflows rather than test pattern guidance
+- No agent rules for extension development testing patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Enable CodeQL on pull_request events**
-   - Currently only `workflow_dispatch` - PR changes go unscanned
-   - Simple fix: add `pull_request:` trigger
-   ```yaml
-   on:
-     pull_request:
-     workflow_dispatch:
-   ```
+1. **Add container vulnerability scanning** — Add Trivy scanning to `install-smoke.yml` and `build-openshift-image.yml`. For OpenShift images pushed to Quay.io, this is essential. Effort: 2-4 hours.
 
-2. **Add container vulnerability scanning**
-   - Add Trivy scanning to Docker release workflow
-   ```yaml
-   - name: Run Trivy vulnerability scanner
-     uses: aquasecurity/trivy-action@master
-     with:
-       image-ref: ${{ steps.tags.outputs.value }}
-       severity: 'CRITICAL,HIGH'
-       exit-code: '1'
-   ```
+2. **Enable CodeQL on automated triggers** — Change `codeql.yml` from `workflow_dispatch` to `pull_request`/`push`/`schedule`. The config already supports 5 languages; it just needs to run. Effort: 30 minutes.
+
+3. **Add SBOM and image signing for production images** — Add `syft` for SBOM generation and `cosign` for signing on `build-openshift-image.yml`. Required for enterprise supply chain security. Effort: 4-6 hours.
 
 ### Priority 1 (High Value)
 
-3. **Integrate Codecov for PR coverage reporting**
-   - Upload lcov from `test:coverage` to Codecov
-   - Get coverage diff comments on PRs
-   - Set coverage regression threshold
+4. **Extend Oxlint to extensions/** — Remove `"extensions/"` from `ignorePatterns` in `.oxlintrc.json`. Extensions are a large surface area (77 packages, 648 test files) currently ungated. Effort: 4-8 hours.
 
-4. **Add SBOM generation to Docker builds**
-   - Use `anchore/sbom-action` or `aquasecurity/trivy-action` with SBOM output
-   - Attach as build artifact
+5. **Add Codecov/Coveralls PR reporting** — Coverage thresholds exist but there's no PR-level delta reporting. Adding codecov upload gives reviewers visibility into coverage impact. Effort: 1-2 hours.
 
-5. **Add dependency review action on PRs**
-   - `actions/dependency-review-action` catches vulnerable new dependencies
+6. **Re-enable iOS CI** — The iOS job has coverage gates (43% threshold) and XCTest infrastructure but is disabled. Either re-enable or document the decision. Effort: 2-4 hours.
+
+7. **Add dependency vulnerability scanning** — Use Trivy filesystem mode or `pnpm audit` in CI (currently only in pre-commit) to gate PRs on known vulnerabilities. Effort: 1-2 hours.
 
 ### Priority 2 (Nice-to-Have)
 
-6. **Add structured agent test rules**
-   - Create `.claude/rules/` with explicit test-type rules
-   - Add templates for unit, e2e, contract tests
+8. **Add performance budget to CI** — `test:perf:budget` script exists but isn't in the CI workflow. Adding it prevents performance regressions. Effort: 1 hour.
 
-7. **Performance regression testing**
-   - Expand beyond `test:startup:memory` and `test:perf:budget`
-   - Add API latency benchmarks
+9. **Add code duplication gate to CI** — `dup:check` with jscpd is configured but not enforced. Effort: 1 hour.
 
-8. **Fuzz testing for protocol/parser code**
-   - Apply fuzzing to gateway protocol parsing
+10. **Add test creation agent rules** — Create `.claude/rules/` with specific test pattern guidance for unit, contract, e2e, and extension tests. The AGENTS.md has high-level testing guidelines but no file-level test creation rules. Effort: 2-3 hours.
+
+11. **Enable zizmor unpinned-uses check** — Currently disabled; pinning GitHub Actions to SHA hashes improves supply chain security. Effort: 4-8 hours (many action references to pin).
 
 ## Comparison to Gold Standards
 
-| Feature | openclaw | odh-dashboard | notebooks | kserve |
-|---------|----------|---------------|-----------|--------|
-| Unit Tests | Vitest + sharding | Jest + RTL | pytest | Go testing |
-| Contract Tests | Plugin + Channel | API contracts | N/A | N/A |
-| E2E Tests | Vitest + Docker | Cypress | N/A | envtest |
-| Coverage Thresholds | 70/70/55/70 | Enforced | N/A | ~80% |
-| Coverage Service | Local only | Codecov | N/A | Codecov |
-| Container Scanning | None | None | Trivy | N/A |
-| SBOM | None | None | Present | N/A |
-| Pre-commit | 13 hooks | Limited | N/A | golangci-lint |
-| Multi-arch | amd64 + arm64 | amd64 | Multi-arch | amd64 |
-| Agent Rules | 207-line AGENTS.md + skills | Comprehensive | None | None |
-| CI Sophistication | Exceptional (scoping, sharding) | Good | Basic | Good |
+| Dimension | OpenClaw | odh-dashboard | notebooks | kserve |
+|-----------|----------|---------------|-----------|--------|
+| Unit Tests | 9.0 | 9.0 | 7.0 | 8.0 |
+| Integration/E2E | 8.5 | 9.0 | 7.0 | 9.0 |
+| Build Integration | 8.0 | 7.0 | 8.0 | 7.0 |
+| Image Testing | 7.5 | 6.0 | 9.0 | 7.0 |
+| Coverage Tracking | 8.5 | 9.0 | 6.0 | 9.0 |
+| CI/CD Automation | 9.5 | 8.5 | 8.0 | 8.0 |
+| Agent Rules | 9.0 | 8.0 | 3.0 | 2.0 |
+| **Overall** | **8.6** | **8.1** | **6.9** | **7.3** |
+
+**Notable differentiators vs. gold standards**:
+- **CI/CD sophistication**: OpenClaw's change-scope detection, intelligent job skipping, and multi-platform matrix exceed all gold standards
+- **Agent rules**: Most comprehensive agent documentation analyzed (23KB AGENTS.md + 6 custom skills)
+- **Contract testing**: 23 contract tests for plugin API boundaries — a practice not seen in other analyzed repos
+- **Multi-platform**: Tests across Linux, macOS, Windows, Android — unique among analyzed repos
+- **Missing vs. gold standards**: No container vulnerability scanning (notebooks has 5-layer image validation), CodeQL not automated (kserve has automated SAST)
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/ci.yml` - Main CI (34KB, highly sophisticated)
-- `.github/workflows/install-smoke.yml` - Docker install smoke tests
-- `.github/workflows/sandbox-common-smoke.yml` - Sandbox validation
-- `.github/workflows/build-openshift-image.yml` - OpenShift multi-arch builds
-- `.github/workflows/docker-release.yml` - Docker release pipeline
-- `.github/workflows/codeql.yml` - CodeQL SAST (dispatch-only)
-- `.github/workflows/workflow-sanity.yml` - Actionlint + sanity checks
+- `.github/workflows/ci.yml` — Main CI (tests, lint, build, multi-platform)
+- `.github/workflows/codeql.yml` — CodeQL SAST (5 languages, manual dispatch)
+- `.github/workflows/install-smoke.yml` — Docker image build + smoke tests
+- `.github/workflows/build-openshift-image.yml` — Multi-arch OpenShift image
+- `.github/workflows/sandbox-common-smoke.yml` — Sandbox image validation
+- `.github/workflows/workflow-sanity.yml` — Workflow lint + hygiene
+- `.github/actions/` — 4 reusable composite actions
 
 ### Testing
-- `vitest.config.ts` - Base test config with coverage thresholds
-- `vitest.unit.config.ts` - Unit test config
-- `vitest.e2e.config.ts` - E2E test config
-- `vitest.extensions.config.ts` - Extension test config
-- `vitest.channels.config.ts` - Channel test config
-- `vitest.gateway.config.ts` - Gateway test config
-- `vitest.live.config.ts` - Live integration tests
-- `src/plugins/contracts/` - Plugin contract tests (10 files)
-- `src/channels/plugins/contracts/` - Channel contract tests (10+ files)
-- `scripts/test-parallel.mjs` - Parallel test runner
+- `vitest.config.ts` — Base test config with coverage thresholds
+- `vitest.unit.config.ts` — Unit test config
+- `vitest.e2e.config.ts` — E2E test config
+- `vitest.extensions.config.ts` — Extension test config
+- `vitest.channels.config.ts` — Channel test config
+- `vitest.gateway.config.ts` — Gateway test config
+- `vitest.live.config.ts` — Live API test config
+- `test/` — Top-level test files and helpers
+- `src/channels/plugins/contracts/` — Channel contract tests (12 files)
+- `src/plugins/contracts/` — Plugin contract tests (11 files)
 
 ### Code Quality
-- `.oxlintrc.json` - Oxlint config (type-aware, 3 plugins)
-- `.oxfmtrc.jsonc` - Oxfmt formatter config
-- `.pre-commit-config.yaml` - 13 pre-commit hooks
-- `.detect-secrets.cfg` - Secret detection exclusions
-- `.secrets.baseline` - Secret detection baseline
-- `.jscpd.json` - Code duplication config
-- `knip.config.ts` - Dead code detection
-- `zizmor.yml` - GitHub Actions security audit config
+- `.oxlintrc.json` — Oxlint configuration
+- `.oxfmtrc.jsonc` — Oxfmt formatter config
+- `.pre-commit-config.yaml` — Pre-commit hooks (7 hooks)
+- `.swiftlint.yml` — Swift lint rules
+- `.swiftformat` — Swift format config
+- `.jscpd.json` — Code duplication detection config
+- `.markdownlint-cli2.jsonc` — Markdown lint config
+- `.shellcheckrc` — Shell script lint config
+- `knip.config.ts` — Dead code detection config
 
 ### Container Images
-- `Dockerfile` - Main multi-stage build (default/slim variants)
-- `Dockerfile.openshift` - UBI9 OpenShift build
-- `Dockerfile.sandbox` / `Dockerfile.sandbox-common` / `Dockerfile.sandbox-browser`
-- `docker-compose.yml` - Development compose
+- `Dockerfile` — Main CLI image (multi-stage, bookworm)
+- `Dockerfile.openshift` — UBI9 image for OpenShift
+- `Dockerfile.sandbox` — Sandbox runtime
+- `Dockerfile.sandbox-browser` — Browser sandbox
+- `Dockerfile.sandbox-common` — Shared sandbox base
+- `docker-compose.yml` — Gateway deployment
+- `.dockerignore` — Docker build exclusions
+
+### Security
+- `.detect-secrets.cfg` — Secret detection config
+- `.secrets.baseline` — Secret detection baseline (433KB)
+- `SECURITY.md` — Security documentation (22KB)
+- `zizmor.yml` — GitHub Actions security audit config
+- `.github/codeql/codeql-javascript-typescript.yml` — CodeQL JS/TS config
+- `.github/CODEOWNERS` — Security-path ownership rules
+- `.github/dependabot.yml` — Dependency update config (6 ecosystems)
 
 ### Agent Rules
-- `AGENTS.md` - Comprehensive agent guidelines (207 lines)
-- `CLAUDE.md` - Symlink to AGENTS.md
-- `.agents/skills/` - 5 specialized agent skills
-- `.agent/workflows/` - Agent workflow automation
-- `skills/` - Python skills with tests
+- `AGENTS.md` — Comprehensive agent rules (23KB)
+- `CLAUDE.md` — Symlink to AGENTS.md
+- `.agents/skills/` — 5 custom maintainer skills
+- `.agent/workflows/` — Agent workflow definitions
+- `.github/instructions/copilot.instructions.md` — Copilot instructions
+- `.github/CODEOWNERS` — Security review requirements

@@ -4,150 +4,150 @@ overall_score: 0.6
 scorecard:
   - dimension: "Unit Tests"
     score: 1.0
-    status: "Only 2 trivial UI snapshot tests using deprecated Enzyme; zero Python tests for 1,363-line core library"
+    status: "2 trivial snapshot tests in React UI; zero Python backend tests for 1,498 lines of code"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests exist anywhere in the repository"
+    status: "No integration or E2E tests exist"
   - dimension: "Build Integration"
-    score: 1.0
-    status: "No PR-time build validation; only .aicoe-ci.yaml for PyPI release with empty check list"
+    score: 0.0
+    status: "No CI workflows, no PR build validation, no Konflux integration"
   - dimension: "Image Testing"
     score: 0.0
-    status: "No Dockerfile/Containerfile in repository; no image build or runtime validation"
+    status: "No Dockerfiles or container image testing present"
   - dimension: "Coverage Tracking"
-    score: 1.0
-    status: "Jest config has --collectCoverage flag but no enforcement, no codecov, no thresholds"
+    score: 0.0
+    status: "Coverage collection disabled; all thresholds set to 0%"
   - dimension: "CI/CD Automation"
     score: 1.0
-    status: "No GitHub Actions workflows, no Makefile, no CI pipeline; only AICoE CI for PyPI publish"
+    status: "Only AICoE release config; no test automation in CI"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance"
+    status: "No .claude directory, no CLAUDE.md, no agent rules"
 critical_gaps:
-  - title: "No CI/CD pipeline — zero automated checks on PRs"
-    impact: "Code merges without any automated validation; bugs, regressions, and security issues ship unchecked"
+  - title: "Zero Python backend tests"
+    impact: "1,498 lines of Kubernetes/OpenShift interaction code with no test coverage — profile merging, GPU configuration, pod mutation, and API endpoints are all untested"
+    severity: "HIGH"
+    effort: "40-60 hours"
+  - title: "No CI/CD pipeline"
+    impact: "No automated testing, linting, or build validation on any PR or push — regressions go completely undetected"
+    severity: "HIGH"
+    effort: "8-12 hours"
+  - title: "No security scanning"
+    impact: "Uses yaml.load() without SafeLoader (deserialization vulnerability); no dependency scanning, SAST, or secret detection"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "No Python unit tests for core library (1,363 LOC)"
-    impact: "Core JupyterHub profile logic, OpenShift API interactions, and user management are entirely untested"
+  - title: "Repository appears unmaintained"
+    impact: "Last commit August 2022; no activity in nearly 4 years — likely superseded by odh-dashboard spawner"
     severity: "HIGH"
-    effort: "16-24 hours"
-  - title: "No integration or E2E tests"
-    impact: "OpenShift deployment flow, API endpoints, and UI-to-backend integration are never validated"
-    severity: "HIGH"
-    effort: "24-40 hours"
-  - title: "No security scanning of any kind"
-    impact: "Dependency vulnerabilities (openshift, PyYAML, tornado, etc.) go undetected; no SAST, no secret detection"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "Repository appears abandoned (last commit Aug 2022)"
-    impact: "Dependencies are severely outdated; no active maintenance means known vulnerabilities remain unpatched"
-    severity: "HIGH"
-    effort: "Ongoing"
+    effort: "N/A"
+  - title: "No container image build or testing"
+    impact: "No Dockerfile, no image builds, no runtime validation of the packaged application"
+    severity: "MEDIUM"
+    effort: "8-16 hours"
 quick_wins:
-  - title: "Add GitHub Actions CI workflow with linting"
-    effort: "2-4 hours"
-    impact: "Establish baseline automated checks on PRs (Python linting with ruff, TypeScript lint, type-check)"
-  - title: "Add Dependabot or Renovate for dependency updates"
-    effort: "1 hour"
-    impact: "Surface outdated and vulnerable dependencies automatically"
-  - title: "Add Trivy or Snyk dependency scanning"
+  - title: "Add PyYAML SafeLoader to fix deserialization vulnerability"
+    effort: "30 minutes"
+    impact: "Eliminates arbitrary code execution risk via yaml.load()"
+  - title: "Add basic pytest suite for profile merging logic"
+    effort: "4-6 hours"
+    impact: "Covers the most critical business logic (merge_profiles, filter_by_username, GPU config)"
+  - title: "Add GitHub Actions lint workflow"
     effort: "1-2 hours"
-    impact: "Detect known CVEs in Python and Node.js dependencies"
-  - title: "Migrate UI tests from deprecated Enzyme to React Testing Library"
-    effort: "2-4 hours"
-    impact: "Fix broken test infrastructure; Enzyme has been unmaintained since 2018 and doesn't support modern React"
+    impact: "Catches syntax errors and style issues on every PR"
+  - title: "Enable Jest coverage collection"
+    effort: "30 minutes"
+    impact: "Makes existing UI test coverage visible; change collectCoverage to true"
 recommendations:
   priority_0:
-    - "Evaluate whether this repository should be archived — last commit was August 2022 and it has no active CI"
-    - "If still active: add GitHub Actions CI with Python linting (ruff), TypeScript lint/type-check, and basic test execution"
-    - "Add Python unit tests for core modules (profiles.py, openshift.py, images.py, user.py) — these contain critical JupyterHub extension logic"
+    - "Evaluate whether this repository should be archived — no commits since August 2022 and likely superseded by odh-dashboard"
+    - "Fix yaml.load() deserialization vulnerability in profiles.py (use yaml.safe_load())"
+    - "Add unit tests for Python backend, especially profiles.py merge logic and API endpoints"
   priority_1:
-    - "Add integration tests for the Connexion-based REST API (api.py)"
-    - "Add dependency vulnerability scanning (Trivy/Snyk) to catch CVEs in unmaintained dependencies"
-    - "Replace deprecated Enzyme tests with React Testing Library and add meaningful UI component tests"
-    - "Add pre-commit hooks for consistent code formatting and lint enforcement"
+    - "Create GitHub Actions CI pipeline with linting (ruff/flake8) and pytest"
+    - "Add integration tests using mocked Kubernetes client for OpenShift interactions"
+    - "Add Dockerfile and container image build process"
   priority_2:
-    - "Add Dockerfile and container image build/test pipeline"
-    - "Create agent rules (.claude/rules/) for test patterns specific to this codebase"
-    - "Add OpenShift integration tests to validate deployment manifests"
-    - "Add API contract tests for the connexion/swagger-based API"
+    - "Add pre-commit hooks for Python and TypeScript linting"
+    - "Replace deprecated Enzyme test library with React Testing Library"
+    - "Add CodeQL or Semgrep SAST scanning"
+    - "Create agent rules for test automation (.claude/rules/)"
 ---
 
 # Quality Analysis: jupyterhub-singleuser-profiles
 
 ## Executive Summary
 
-- **Overall Score: 0.6/10** — Critical quality deficits across every dimension
-- **Repository Status: Likely Abandoned** — Last commit August 8, 2022 (nearly 4 years ago)
-- **Key Strengths**: PR template with review checklist; UI has ESLint + Prettier + TypeScript type-checking configured
-- **Critical Gaps**: No CI/CD pipeline, no Python tests, no integration/E2E tests, no security scanning, no coverage enforcement
-- **Agent Rules Status**: Missing — No CLAUDE.md, no .claude/ directory
+- **Overall Score: 0.6/10**
+- **Repository Status: Likely Unmaintained** (last commit August 8, 2022)
+- **Key Strengths**: ESLint/Prettier configured for UI, decent documentation
+- **Critical Gaps**: No Python tests, no CI/CD pipeline, no security scanning, YAML deserialization vulnerability
+- **Agent Rules Status**: Missing
 
-## Repository Overview
-
-| Attribute | Value |
-|-----------|-------|
-| **Type** | Python library + React UI (JupyterHub extension) |
-| **Purpose** | Customize JupyterHub workspace deployments on OpenShift |
-| **Primary Languages** | Python (1,529 LOC), TypeScript/JavaScript (3,718 LOC) |
-| **Source Files** | 13 Python, 37 TS/JS/TSX |
-| **Last Commit** | August 8, 2022 |
-| **Default Branch** | master |
-| **Package** | PyPI (`jupyterhub-singleuser-profiles`) |
+This Python library + React UI manages JupyterHub singleuser server profiles on OpenShift. It has **1,498 lines of Python** backend code with **zero tests** and only 2 trivial snapshot tests for the React UI (20 lines). There are no GitHub Actions workflows, no container images, and no security scanning. The repository has had no commits since August 2022 and appears to be superseded by the odh-dashboard spawner UI.
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 1/10 | 2 trivial snapshot tests; zero Python tests |
-| Integration/E2E | 0/10 | None exist |
-| **Build Integration** | **1/10** | **No PR-time validation; empty AICoE CI checks** |
-| Image Testing | 0/10 | No Dockerfile; no image pipeline |
-| Coverage Tracking | 1/10 | Jest flag exists but unused/unenforced |
-| CI/CD Automation | 1/10 | No workflows, no PR checks |
-| Agent Rules | 0/10 | Nothing exists |
+| Unit Tests | 1/10 | 2 trivial UI snapshots; zero Python backend tests |
+| Integration/E2E | 0/10 | No integration or E2E tests |
+| **Build Integration** | **0/10** | **No CI workflows, no PR validation** |
+| Image Testing | 0/10 | No Dockerfiles or image testing |
+| Coverage Tracking | 0/10 | Coverage disabled; thresholds at 0% |
+| CI/CD Automation | 1/10 | Only AICoE release config |
+| Agent Rules | 0/10 | No .claude directory or rules |
 
-**Overall: 0.6/10** (weighted average of Unit Tests 20%, Integration/E2E 25%, Image Testing 20%, Coverage Tracking 15%, CI/CD 20%)
+**Weighted Overall: 0.6/10** (Unit 20%, Int/E2E 25%, Image 20%, Coverage 15%, CI/CD 20%)
 
 ## Critical Gaps
 
-### 1. No CI/CD Pipeline — Zero Automated Checks on PRs
-- **Severity**: HIGH
-- **Impact**: Code merges without any automated validation. No linting, no tests, no type-checking, no security scanning runs on pull requests.
-- **Evidence**: No `.github/workflows/` directory. `.aicoe-ci.yaml` has `check: []` (empty list) — only PyPI release is automated.
-- **Effort**: 4-8 hours to establish baseline
+### 1. Zero Python Backend Tests (HIGH)
+- **Impact**: 1,498 lines of Kubernetes/OpenShift interaction code completely untested
+- **Details**: Core business logic in `profiles.py` (374 lines), `openshift.py` (278 lines), `service.py` (169 lines), `images.py` (156 lines), `api/api.py` (135 lines) — all without any test coverage
+- **Risk**: Profile merging, GPU configuration, pod mutation, volume mounting, and API authentication could all have latent bugs
+- **Effort**: 40-60 hours for comprehensive coverage
 
-### 2. No Python Unit Tests for Core Library (1,363 LOC)
-- **Severity**: HIGH
-- **Impact**: The core library — `profiles.py` (374 LOC), `openshift.py` (278 LOC), `sizes.py` (86 LOC), `images.py` (156 LOC), `user.py` (115 LOC) — is entirely untested. This is the code that interacts with OpenShift APIs to configure JupyterHub workspaces.
-- **Evidence**: `find . -name "test_*.py" -o -name "*_test.py"` returns zero results
-- **Effort**: 16-24 hours
+### 2. No CI/CD Pipeline (HIGH)
+- **Impact**: No automated quality gates — any PR can be merged without tests, linting, or build verification
+- **Details**: No `.github/workflows/` directory. Only `.aicoe-ci.yaml` for AICoE release automation (PyPI upload) with empty `check: []` — explicitly no checks configured
+- **Effort**: 8-12 hours to set up basic GitHub Actions
 
-### 3. No Integration or E2E Tests
-- **Severity**: HIGH
-- **Impact**: The Connexion-based REST API (`api.py`), OpenShift deployment flow, and UI-to-backend integration are never validated.
-- **Evidence**: No `test/`, `tests/`, `e2e/`, or `integration/` directories
-- **Effort**: 24-40 hours
+### 3. YAML Deserialization Vulnerability (HIGH)
+- **Impact**: `yaml.load(fp)` in `profiles.py:83` without SafeLoader allows arbitrary code execution
+- **Details**: When loading profile YAML from files, the unsafe `yaml.load()` is used instead of `yaml.safe_load()`. This is a well-known Python security vulnerability (CWE-502)
+- **Effort**: 30 minutes to fix
 
-### 4. No Security Scanning
-- **Severity**: HIGH
-- **Impact**: Dependencies include `openshift`, `PyYAML`, `tornado`, `jinja2`, `connexion` — all with known CVE histories. No scanning means vulnerabilities ship silently.
-- **Evidence**: No Trivy, Snyk, CodeQL, Gitleaks, or any security tooling configured
-- **Effort**: 2-4 hours to add basic scanning
+### 4. Repository Appears Unmaintained (HIGH)
+- **Impact**: No commits since August 8, 2022 — nearly 4 years of inactivity
+- **Details**: The spawner UI functionality appears to have been absorbed into odh-dashboard. Dependencies are severely outdated (React 16, Webpack 4, Enzyme, Node 14)
+- **Recommendation**: Evaluate for archival
 
-### 5. Repository Appears Abandoned
-- **Severity**: HIGH
-- **Impact**: No commits for ~4 years. Dependencies are severely outdated (Node.js 14 EOL, PatternFly v4, deprecated Enzyme). Active CVEs likely exist.
-- **Evidence**: Last commit `2022-08-08`; no recent branches or tags
+### 5. No Container Image Build or Testing (MEDIUM)
+- **Impact**: No Dockerfile in the repository; deployment process is unclear
+- **Details**: OpenShift BuildConfig YAML exists (`openshift/api-build.yaml`) but no Containerfile for local or CI-based builds
+- **Effort**: 8-16 hours
 
 ## Quick Wins
 
-### 1. Add GitHub Actions CI Workflow (2-4 hours)
-Establish baseline automated PR checks:
+### 1. Fix YAML Deserialization Vulnerability (30 minutes)
+Replace `yaml.load(fp)` with `yaml.safe_load(fp)` in `profiles.py:83`.
+```python
+# Before (VULNERABLE)
+data = yaml.load(fp)
 
+# After (SAFE)
+data = yaml.safe_load(fp)
+```
+
+### 2. Enable Jest Coverage Collection (30 minutes)
+In `ui/jest.config.js`, change `collectCoverage: false` to `true`:
+```javascript
+collectCoverage: true,
+```
+
+### 3. Add Basic GitHub Actions Lint Workflow (1-2 hours)
 ```yaml
-name: CI
+name: Lint
 on: [pull_request]
 jobs:
   python-lint:
@@ -155,7 +155,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: '3.11' }
+        with:
+          python-version: '3.11'
       - run: pip install ruff
       - run: ruff check jupyterhub_singleuser_profiles/
   ui-lint:
@@ -163,188 +164,211 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '18' }
-      - run: cd jupyterhub_singleuser_profiles/ui && npm ci && npm run test:lint && npm run test:type-check
-```
-
-### 2. Add Dependabot (1 hour)
-```yaml
-# .github/dependabot.yml
-version: 2
-updates:
-  - package-ecosystem: pip
-    directory: /
-    schedule: { interval: weekly }
-  - package-ecosystem: npm
-    directory: /jupyterhub_singleuser_profiles/ui
-    schedule: { interval: weekly }
-```
-
-### 3. Add Trivy Dependency Scanning (1-2 hours)
-```yaml
-  security:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: aquasecurity/trivy-action@master
         with:
-          scan-type: fs
-          scan-ref: .
-          severity: CRITICAL,HIGH
+          node-version: '18'
+      - run: cd jupyterhub_singleuser_profiles/ui && npm ci && npm run test:lint
 ```
 
-### 4. Migrate Tests from Enzyme to React Testing Library (2-4 hours)
-Enzyme is unmaintained and incompatible with modern React. The 2 existing snapshot tests should be migrated to `@testing-library/react`.
+### 4. Add Pytest for Profile Merging Logic (4-6 hours)
+```python
+# tests/test_profiles.py
+import pytest
+from jupyterhub_singleuser_profiles.profiles import SingleuserProfiles
+
+class TestMergeProfiles:
+    def test_merge_empty_profiles(self):
+        result = SingleuserProfiles.merge_profiles(
+            SingleuserProfiles.empty_profile(),
+            SingleuserProfiles.empty_profile()
+        )
+        assert result['env'] == []
+
+    def test_merge_env_dict_to_list(self):
+        p1 = SingleuserProfiles.empty_profile()
+        p2 = {**SingleuserProfiles.empty_profile(), 'env': {'KEY': 'VALUE'}}
+        result = SingleuserProfiles.merge_profiles(p1, p2)
+        assert any(e['name'] == 'KEY' for e in result['env'])
+```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Status: Virtually non-existent**
+**Status: Critically Deficient**
 
-| File | Purpose | Findings |
-|------|---------|----------|
-| `.aicoe-ci.yaml` | AICoE CI config | `check: []` — no checks. Only `release: upload-pypi-sesheta` |
-| `.thoth.yaml` | Thoth version management | Only version bumping by bot, no quality checks |
-| `.github/PULL_REQUEST_TEMPLATE.md` | PR checklist | Manual checklist (squash, JIRA link, testing instructions) — no automated enforcement |
+| Aspect | Finding |
+|--------|---------|
+| GitHub Actions | None — no `.github/workflows/` directory |
+| AICoE CI | Release-only config (`check: []` — empty checks) |
+| Thoth | Dependency management only (version tracking) |
+| PR Checks | None — PRs can be merged without any validation |
+| Build Validation | None |
+| Concurrency Control | N/A |
+| Caching | N/A |
 
-The repository relies entirely on manual review with zero automated validation. The PR template asks for testing instructions but there is no CI to run them.
+The only CI configuration is `.aicoe-ci.yaml` which uploads to PyPI via Sesheta bot on release. The `check: []` line explicitly declares no checks should run.
 
 ### Test Coverage
 
-**Python Tests: None (0/1,363 LOC)**
+**Status: Near Zero**
 
-| Module | LOC | Test Coverage |
-|--------|-----|---------------|
-| `profiles.py` | 374 | None |
-| `openshift.py` | 278 | None |
-| `images.py` | 156 | None |
-| `ui_config.py` | 146 | None |
-| `service.py` | 169 | None |
-| `user.py` | 115 | None |
-| `api/api.py` | 135 | None |
-| `sizes.py` | 86 | None |
-| `utils.py` | 34 | None |
+#### Python Backend (0% coverage)
+- **Source files**: 11 Python files, 1,498 lines
+- **Test files**: 0
+- **Test framework**: None configured (no pytest, unittest, or tox)
+- **Key untested areas**:
+  - `profiles.py` — Profile merging, GPU configuration, pod mutation (374 lines)
+  - `openshift.py` — Kubernetes/OpenShift API interactions (278 lines)
+  - `service.py` — Service deployment/cleanup (169 lines)
+  - `images.py` — Image discovery and management (156 lines)
+  - `api/api.py` — Flask/Connexion REST API endpoints (135 lines)
+  - `user.py` — User configuration management (115 lines)
 
-**UI Tests: Minimal (2 files)**
+#### React UI (~0.1% meaningful coverage)
+- **Source files**: ~20 TypeScript/React components
+- **Test files**: 2 (App.test.js, Admin.test.js — 20 lines total)
+- **Test framework**: Jest + Enzyme (deprecated)
+- **Coverage**: Disabled (`collectCoverage: false`), thresholds all at 0%
+- **Quality**: Both tests are trivial shallow-render snapshot tests that verify components render without crashing — they test nothing meaningful
 
-| Test File | What It Tests | Quality |
-|-----------|--------------|---------|
-| `Admin.test.js` | Shallow snapshot of Admin component | Trivial; uses deprecated Enzyme |
-| `App.test.js` | Shallow snapshot of Spawner component | Trivial; uses deprecated Enzyme |
-
-Both tests are simple `shallow()` renders that check snapshots — they verify HTML structure but not behavior, interactions, or data flow.
-
-**Test-to-Code Ratio**: 2 test files / 40 source files = 5% (critical deficit)
+#### Integration/E2E Tests
+- None whatsoever
 
 ### Code Quality
 
-| Tool | Status | Notes |
-|------|--------|-------|
-| **ESLint (UI)** | Configured | Runs via `npm run test:lint`, covers `.json,.js,.ts,.jsx,.tsx` |
-| **Prettier (UI)** | Configured | Format script in package.json |
-| **TypeScript (UI)** | Configured | `tsc --noEmit` via `test:type-check` |
-| **Python Linting** | Missing | No ruff, flake8, pylint, mypy, or any Python linting |
-| **Pre-commit Hooks** | Missing | No `.pre-commit-config.yaml` |
-| **Static Analysis** | Missing | No CodeQL, gosec, Semgrep, or SAST tools |
+**Status: Partial (UI only)**
 
-The UI has adequate code quality tooling configured in `package.json`, but none of it runs automatically since there is no CI pipeline.
+| Tool | Python | React UI |
+|------|--------|----------|
+| Linting | None | ESLint (well configured) |
+| Formatting | None | Prettier |
+| Type Checking | None | TypeScript (tsconfig) |
+| Pre-commit Hooks | None | None |
+| SAST | None | None |
+
+The React UI has a well-configured ESLint setup with TypeScript parser, React hooks rules, and Prettier integration. However, the Python backend has zero quality tooling.
 
 ### Container Images
 
-**Status: Not applicable / Missing**
+**Status: Missing**
 
 - No `Dockerfile` or `Containerfile` in the repository
-- No `docker-compose.yml`
-- No `.dockerignore`
-- OpenShift build configs (`openshift/api-build.yaml`, `openshift/api-image.yaml`) suggest images were built via OpenShift's S2I (Source-to-Image) process
+- OpenShift BuildConfig YAMLs exist in `openshift/` for S2I-based builds, but no local build capability
 - No image scanning, SBOM generation, or runtime validation
+- No multi-architecture support
 
 ### Security
 
-**Status: No security practices in place**
+**Status: Critical Deficiencies**
 
-| Practice | Status |
-|----------|--------|
-| Container scanning (Trivy/Snyk) | Missing |
-| SAST/CodeQL | Missing |
-| Dependency scanning | Missing |
-| Secret detection (Gitleaks) | Missing |
-| Dependabot/Renovate | Missing |
-| Supply chain security (SBOM) | Missing |
+| Check | Status |
+|-------|--------|
+| YAML SafeLoader | MISSING — `yaml.load()` used without SafeLoader |
+| Dependency Scanning | None |
+| SAST/CodeQL | None |
+| Secret Detection | None |
+| Container Scanning | None |
+| SBOM | None |
 
-Dependencies include several packages with known CVE histories:
-- `PyYAML` — multiple deserialization vulnerabilities
-- `tornado` — HTTP header injection CVEs
-- `jinja2` — template injection vulnerabilities
-- `openshift` / `kubernetes` Python clients — various CVEs
-- Node.js 14 — end-of-life since April 2023
+**Critical Finding**: `profiles.py:83` uses `yaml.load(fp)` without specifying `Loader=yaml.SafeLoader`. This is a well-known deserialization vulnerability that can allow arbitrary code execution if an attacker controls the YAML content.
 
 ### Agent Rules (Agentic Flow Quality)
 
-- **Status**: Missing
-- **Coverage**: No test types have rules
-- **Quality**: N/A
-- **Gaps**: Everything — no CLAUDE.md, no .claude/ directory, no rules, no skills
-- **Recommendation**: If the repository remains active, generate rules with `/test-rules-generator` covering Python unit tests (pytest patterns), API integration tests, and React component tests
+**Status: Missing**
+
+- No `.claude/` directory
+- No `CLAUDE.md` or `AGENTS.md`
+- No test creation rules
+- No custom skills
+- No AI-assisted test automation guidance
+- **Recommendation**: If the repository is kept active, generate rules with `/test-rules-generator`
+
+### Build Integration
+
+**Status: Non-existent**
+
+- No PR-time build validation
+- No Konflux integration
+- No manifest validation
+- No image build in CI
+- OpenShift BuildConfig exists for S2I builds but is not validated in CI
 
 ## Recommendations
 
-### Priority 0 (Critical)
+### Priority 0 (Critical — Address Immediately)
 
-1. **Determine repository status** — If this repo is deprecated/archived, formally archive it on GitHub to prevent accidental usage. If it's still consumed by downstream projects, it needs urgent attention.
-2. **Add GitHub Actions CI workflow** — At minimum: Python linting, TypeScript lint/type-check, and test execution on PRs
-3. **Add Python unit tests for core modules** — Start with `profiles.py` and `openshift.py` which contain the most critical business logic
-4. **Add dependency vulnerability scanning** — Pin dependencies with versions and add Trivy/Snyk scanning
+1. **Evaluate repository for archival** — No commits since August 2022; functionality likely superseded by odh-dashboard. If still in use, proceed with P0 fixes below.
 
-### Priority 1 (High Value)
+2. **Fix YAML deserialization vulnerability** — Replace `yaml.load(fp)` with `yaml.safe_load(fp)` in `profiles.py:83`. This is a known security vulnerability (CWE-502).
 
-5. **Add integration tests for the REST API** — The Connexion/Swagger-based API in `api.py` should have request/response tests
-6. **Replace deprecated Enzyme with React Testing Library** — Enzyme is unmaintained; existing tests are likely broken with any React upgrade
-7. **Add pre-commit hooks** — Enforce linting and formatting before commits reach PR
-8. **Update dependencies** — Node.js 14 → 18+, PatternFly v4 → v5, update all Python packages
+3. **Add unit tests for critical Python backend logic** — Start with `profiles.py` (merge logic, GPU config, pod mutation) and `api/api.py` (endpoint behavior). Target 60%+ coverage of business logic.
+
+### Priority 1 (High Value — Next Sprint)
+
+4. **Create GitHub Actions CI pipeline** — Add workflows for:
+   - Python linting (ruff or flake8)
+   - Python type checking (mypy)
+   - pytest execution with coverage
+   - UI lint and test
+   - Dependency vulnerability scanning (pip-audit)
+
+5. **Add integration tests with mocked Kubernetes client** — Use `unittest.mock` or `kubernetes.client.api_client` mocking to test OpenShift interactions without a live cluster.
+
+6. **Add Dockerfile for local/CI builds** — Create a Containerfile for the API service with multi-stage build.
+
+7. **Update severely outdated dependencies** — React 16, Webpack 4, Enzyme (deprecated), Node 14 (EOL) all need updates.
 
 ### Priority 2 (Nice-to-Have)
 
-9. **Add Dockerfile for containerized deployment** — Enable consistent builds and testing
-10. **Create agent rules** — `.claude/rules/` with patterns for pytest, React Testing Library, and API tests
-11. **Add OpenShift integration tests** — Validate deployment manifests against a test cluster
-12. **Add API contract tests** — Validate the Connexion/Swagger spec matches actual behavior
+8. **Add pre-commit hooks** — Configure `.pre-commit-config.yaml` with ruff, mypy, and prettier.
+
+9. **Replace Enzyme with React Testing Library** — Enzyme is unmaintained and incompatible with React 17+.
+
+10. **Add CodeQL or Semgrep SAST** — Automated static analysis for security vulnerabilities.
+
+11. **Create agent rules** — If the repository remains active, add `.claude/rules/` with unit test and integration test patterns.
+
+12. **Add coverage tracking** — Enable codecov/coveralls integration with minimum thresholds.
 
 ## Comparison to Gold Standards
 
-| Dimension | This Repo | odh-dashboard | notebooks | kserve |
-|-----------|-----------|---------------|-----------|--------|
-| **Unit Tests** | 2 trivial snapshots | Comprehensive Jest suite | Python + shell tests | Go test with coverage |
-| **Integration/E2E** | None | Cypress E2E, contract tests | Multi-layer validation | envtest + E2E |
-| **Build Integration** | None | PR-time builds | Image builds on PR | Konflux simulation |
-| **Image Testing** | No Dockerfile | Multi-stage builds | 5-layer image validation | Image startup tests |
-| **Coverage Tracking** | None (flag only) | Codecov with thresholds | Coverage reporting | Enforced minimums |
-| **CI/CD** | None | 20+ workflows | Extensive matrix | Prow + GitHub Actions |
-| **Security** | None | Trivy, CodeQL | Vulnerability scanning | Multiple scanners |
-| **Agent Rules** | None | Comprehensive rules | Basic rules | N/A |
-| **Overall** | **0.6/10** | **~8.5/10** | **~8.0/10** | **~8.5/10** |
-
-## Key Risk Assessment
-
-This repository represents a **high-risk component** if it is still used in production:
-
-1. **No automated quality gates** means any PR could introduce regressions
-2. **No security scanning** on a codebase that interacts with OpenShift APIs and handles user data
-3. **4 years without updates** means known CVEs in dependencies are unpatched
-4. **No tests** means no safety net for any changes
-
-**Recommended immediate action**: Determine if this repository is still actively consumed. If yes, prioritize CI/CD and basic test coverage. If no, archive it.
+| Dimension | jupyterhub-singleuser-profiles | odh-dashboard (Gold) | notebooks (Gold) | Gap |
+|-----------|-------------------------------|---------------------|------------------|-----|
+| Unit Tests | 1/10 (2 trivial snapshots) | 9/10 (Jest + comprehensive) | 7/10 | Critical |
+| Integration/E2E | 0/10 (none) | 9/10 (Cypress E2E) | 8/10 | Critical |
+| Build Integration | 0/10 (none) | 8/10 (PR builds) | 7/10 | Critical |
+| Image Testing | 0/10 (no Dockerfile) | 7/10 (build validation) | 9/10 (5-layer) | Critical |
+| Coverage Tracking | 0/10 (disabled) | 8/10 (codecov) | 6/10 | Critical |
+| CI/CD Automation | 1/10 (release only) | 9/10 (comprehensive) | 8/10 | Critical |
+| Agent Rules | 0/10 (none) | 8/10 (comprehensive) | 3/10 | Critical |
+| **Overall** | **0.6/10** | **8.5/10** | **7.0/10** | **Critical** |
 
 ## File Paths Reference
 
-| Category | Files |
-|----------|-------|
-| **Python Source** | `jupyterhub_singleuser_profiles/*.py` (9 modules, 1,363 LOC) |
-| **API** | `jupyterhub_singleuser_profiles/api/api.py` (135 LOC) |
-| **UI Source** | `jupyterhub_singleuser_profiles/ui/src/` (27 files, 3,718 LOC) |
-| **UI Tests** | `jupyterhub_singleuser_profiles/ui/src/App/__tests__/` (2 files) |
-| **OpenShift Manifests** | `openshift/*.yaml` (9 files) |
-| **CI Config** | `.aicoe-ci.yaml`, `.thoth.yaml` |
-| **Package Config** | `setup.py`, `requirements.txt`, `jupyterhub_singleuser_profiles/ui/package.json` |
-| **PR Template** | `.github/PULL_REQUEST_TEMPLATE.md` |
+### Configuration
+- `.aicoe-ci.yaml` — AICoE CI config (release only, empty checks)
+- `.thoth.yaml` — Thoth dependency management
+- `setup.py` — Python package setup
+- `requirements.txt` — Python dependencies (12 packages)
+
+### Python Backend
+- `jupyterhub_singleuser_profiles/profiles.py` — Core profile management (374 lines)
+- `jupyterhub_singleuser_profiles/openshift.py` — K8s/OpenShift API layer (278 lines)
+- `jupyterhub_singleuser_profiles/service.py` — Service deployment (169 lines)
+- `jupyterhub_singleuser_profiles/images.py` — Image management (156 lines)
+- `jupyterhub_singleuser_profiles/api/api.py` — REST API endpoints (135 lines)
+- `jupyterhub_singleuser_profiles/user.py` — User config management (115 lines)
+
+### React UI
+- `jupyterhub_singleuser_profiles/ui/package.json` — UI dependencies
+- `jupyterhub_singleuser_profiles/ui/.eslintrc` — ESLint config
+- `jupyterhub_singleuser_profiles/ui/jest.config.js` — Jest config (coverage disabled)
+- `jupyterhub_singleuser_profiles/ui/src/App/__tests__/` — 2 test files (20 lines)
+
+### OpenShift Deployment
+- `openshift/api-build.yaml` — BuildConfig for S2I
+- `openshift/api-deploy.yaml` — DeploymentConfig
+- `openshift/api-service.yaml` — Service definition
+
+### Security Concern
+- `jupyterhub_singleuser_profiles/profiles.py:83` — Unsafe `yaml.load()` call

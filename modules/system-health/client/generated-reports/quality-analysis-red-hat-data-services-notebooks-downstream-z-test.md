@@ -3,68 +3,72 @@ repository: "red-hat-data-services/notebooks-downstream-z-test"
 overall_score: 7.6
 scorecard:
   - dimension: "Unit Tests"
-    score: 7.0
-    status: "Solid static validation tests with pytest subtests; no classical unit tests for CI scripts"
+    score: 6.5
+    status: "Solid pytest-based container tests with testcontainers, but no traditional unit tests for build/CI scripts"
   - dimension: "Integration/E2E"
-    score: 8.5
-    status: "Excellent multi-layer container testing with Testcontainers + Kubernetes + Playwright"
-  - dimension: "Build Integration"
     score: 8.0
-    status: "PR builds all changed images with matrix strategy; Konflux/Tekton pipelines present"
+    status: "Multi-layer image validation: testcontainers, Kubernetes deploy, Playwright browser, and papermill notebook execution"
+  - dimension: "Build Integration"
+    score: 8.5
+    status: "PR builds all changed images with matrix generation, Konflux/Tekton pipelines for production, FIPS check-payload"
   - dimension: "Image Testing"
-    score: 9.0
-    status: "5-layer validation: build, Testcontainers, Kubernetes deploy, FIPS check-payload, Trivy scan"
+    score: 8.5
+    status: "Comprehensive 5-layer validation: base image, workbench startup, runtime, JupyterLab, and browser tests"
   - dimension: "Coverage Tracking"
     score: 3.0
-    status: "No coverage tool (codecov/coveralls), no coverage thresholds, no PR coverage reporting"
+    status: "No code coverage tooling (codecov, coveralls), no coverage thresholds or PR reporting"
   - dimension: "CI/CD Automation"
     score: 8.5
-    status: "Well-organized workflows with caching, concurrency control, matrix builds, and AI-assisted review"
+    status: "Well-organized 25+ workflows, concurrency control, matrix builds, caching, AI-assisted PR reviews"
   - dimension: "Agent Rules"
     score: 0.0
     status: "No CLAUDE.md, no .claude/ directory, no agent rules for test automation"
 critical_gaps:
-  - title: "No test coverage tracking or enforcement"
-    impact: "Cannot measure or enforce coverage for CI scripts and test utilities; regressions go unnoticed"
+  - title: "No code coverage tracking or enforcement"
+    impact: "Cannot measure or enforce test coverage trends; regressions go undetected"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No agent rules for AI-assisted test creation"
-    impact: "AI agents generating tests have no project-specific guidance on patterns, frameworks, or conventions"
+  - title: "No agent rules for AI-assisted development"
+    impact: "AI agents (Claude, Copilot) have no guidance on test patterns, contributing guidelines, or repo conventions"
     severity: "MEDIUM"
     effort: "4-8 hours"
-  - title: "No unit tests for CI scripts and utilities"
-    impact: "Matrix generation, build input analysis, and security scanning scripts are untested"
+  - title: "Trivy PR scan requires manual label"
+    impact: "Security vulnerabilities in PR image builds are only scanned when trivy-scan label is applied manually"
     severity: "MEDIUM"
-    effort: "8-16 hours"
-  - title: "No secret detection in CI pipeline"
-    impact: "Credentials or tokens could accidentally be committed; git-crypt secrets are excluded from linting but no active scanning"
-    severity: "MEDIUM"
-    effort: "2-3 hours"
-quick_wins:
-  - title: "Add pytest-cov to existing test runs"
-    effort: "2-3 hours"
-    impact: "Instant visibility into test coverage for static tests and container test utilities"
-  - title: "Add Gitleaks secret scanning to PR workflow"
     effort: "1-2 hours"
-    impact: "Prevent accidental credential commits with automated detection"
-  - title: "Create basic CLAUDE.md with test patterns"
+  - title: "No secret detection tooling"
+    impact: "Encrypted secrets exist in ci/secrets/ but no automated secret leak detection (gitleaks, truffleHog)"
+    severity: "MEDIUM"
     effort: "2-3 hours"
-    impact: "Guide AI agents to use project-specific Testcontainers patterns and pytest conventions"
-  - title: "Add coverage badge to README"
+  - title: "Limited unit tests for build/CI Python scripts"
+    impact: "30+ Python scripts in ci/ and scripts/ have minimal test coverage"
+    severity: "MEDIUM"
+    effort: "8-12 hours"
+quick_wins:
+  - title: "Enable Trivy scan on all PRs (remove label requirement)"
+    effort: "1-2 hours"
+    impact: "Every PR image build gets automatic vulnerability scanning"
+  - title: "Add pytest-cov and codecov integration"
+    effort: "2-4 hours"
+    impact: "Track test coverage trends and enforce minimums on PRs"
+  - title: "Add gitleaks pre-commit hook"
     effort: "1 hour"
-    impact: "Visibility into test health for contributors"
+    impact: "Prevent accidental secret leaks in commits"
+  - title: "Create basic CLAUDE.md with testing conventions"
+    effort: "2-3 hours"
+    impact: "AI agents can generate tests matching existing patterns"
 recommendations:
   priority_0:
-    - "Add pytest-cov integration with codecov to track and enforce test coverage"
-    - "Add Gitleaks or TruffleHog secret scanning to PR workflow"
+    - "Add code coverage tracking (pytest-cov + codecov) with PR reporting and minimum thresholds"
+    - "Enable Trivy vulnerability scanning on all PR builds by default (not gated on label)"
   priority_1:
-    - "Write unit tests for CI scripts (gen_gha_matrix_jobs.py, sandbox.py, buildinputs)"
-    - "Create CLAUDE.md and .claude/rules/ with test automation patterns"
-    - "Add coverage thresholds that block PRs below minimum coverage"
+    - "Create agent rules (.claude/rules/) with test patterns for container tests, browser tests, and CI scripts"
+    - "Add secret detection (gitleaks) to pre-commit hooks and CI pipeline"
+    - "Add unit tests for CI utility scripts (ci/cached-builds/*.py, scripts/*.py)"
   priority_2:
-    - "Add SBOM generation for built images"
-    - "Add performance regression tests for image startup times"
-    - "Add contract tests for manifest schema validation"
+    - "Add SBOM generation for built images (Syft or similar)"
+    - "Add image signing and attestation (cosign)"
+    - "Add performance benchmarking for notebook startup times"
 ---
 
 # Quality Analysis: notebooks-downstream-z-test
@@ -72,318 +76,333 @@ recommendations:
 ## Executive Summary
 
 - **Overall Score: 7.6/10**
-- **Repository Type**: Container image build & test repository (Python, Go, TypeScript)
-- **Primary Language**: Python (tests, CI scripts), Go (build input analysis), TypeScript (browser tests)
-- **Framework**: Pytest + Testcontainers + Kubernetes + Playwright
-
-**Key Strengths**: This repository demonstrates **exemplary image testing practices** with a multi-layer validation pipeline that builds images on PRs, runs Testcontainers-based container tests, deploys to a real Kubernetes cluster (kubeadm + CRI-O), performs FIPS compliance checks via `check-payload`, runs Trivy vulnerability scans, and includes Playwright browser tests for code-server images. The CI/CD pipeline is well-organized with reusable workflow templates, build caching, matrix-based parallelization, and concurrency control.
-
-**Critical Gaps**: The primary weakness is the complete **absence of test coverage tracking** — there is no codecov/coveralls integration, no coverage thresholds, and no PR-level coverage reporting. Additionally, there are **no agent rules** (no CLAUDE.md, no .claude/ directory) to guide AI-assisted test creation, and the CI utility scripts lack unit test coverage.
-
-**Agent Rules Status**: Missing — no CLAUDE.md, no .claude/ directory, no agent rules for test automation.
+- **Repository Type**: Container image build system (Jupyter notebooks, runtimes, workbenches for OpenShift AI)
+- **Primary Languages**: Python (59 files), Go (5 files), TypeScript (9 files), Shell (37 files), YAML (160 files)
+- **Framework**: Notebook/workbench image builder with Kubernetes deployment
+- **Key Strengths**: Excellent multi-layer image testing with testcontainers, comprehensive CI/CD with 25+ workflows, Konflux/Tekton integration, FIPS compliance checking, AI-assisted PR reviews (CodeRabbit + Gemini)
+- **Critical Gaps**: No code coverage tracking, no agent rules, Trivy scanning gated behind labels, no secret detection
+- **Agent Rules Status**: Missing
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 7.0/10 | Solid static validation tests with pytest subtests; no classical unit tests for CI scripts |
-| Integration/E2E | 8.5/10 | Excellent multi-layer container testing with Testcontainers + Kubernetes + Playwright |
-| **Build Integration** | **8.0/10** | **PR builds all changed images with matrix strategy; Konflux/Tekton pipelines present** |
-| Image Testing | 9.0/10 | 5-layer validation: build, Testcontainers, Kubernetes deploy, FIPS check-payload, Trivy scan |
-| Coverage Tracking | 3.0/10 | No coverage tool, no thresholds, no PR reporting |
-| CI/CD Automation | 8.5/10 | Well-organized workflows with caching, concurrency, matrix builds, AI review |
-| Agent Rules | 0.0/10 | No CLAUDE.md, no .claude/ directory, no agent rules |
+| Unit Tests | 6.5/10 | Pytest-based container tests with testcontainers; limited coverage of build scripts |
+| Integration/E2E | 8.0/10 | Multi-layer: testcontainers, K8s deploy, Playwright browser, papermill execution |
+| **Build Integration** | **8.5/10** | **PR matrix builds, Konflux/Tekton pipelines, FIPS check-payload validation** |
+| Image Testing | 8.5/10 | 5-layer validation: base, workbench startup, runtime, JupyterLab, browser |
+| Coverage Tracking | 3.0/10 | No codecov, no coverage thresholds, no PR coverage reporting |
+| CI/CD Automation | 8.5/10 | 25+ workflows, concurrency control, caching, AI PR reviews |
+| Agent Rules | 0.0/10 | No CLAUDE.md, no .claude/ directory, no test automation guidance |
 
 ## Critical Gaps
 
-### 1. No Test Coverage Tracking or Enforcement
-- **Impact**: Cannot measure or enforce coverage for CI scripts and test utilities; regressions in test quality go unnoticed
+### 1. No Code Coverage Tracking or Enforcement
+- **Impact**: Cannot measure test coverage, no visibility into coverage trends, regressions go undetected
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: Despite having a solid test suite (~4,400 lines of test code across 28 Python test files), there is no `pytest-cov` configuration, no `.codecov.yml`, no coverage thresholds, and no PR-level coverage reporting. The `pyproject.toml` does not include `pytest-cov` in dev dependencies.
+- **Details**: Despite having extensive pytest-based tests, there is no `pytest-cov` integration, no `.codecov.yml`, and no coverage reporting on PRs. This means coverage could silently decrease with new changes.
 
-### 2. No Agent Rules for AI-Assisted Test Creation
-- **Impact**: AI agents (Claude, Gemini, etc.) generating tests have no project-specific guidance on patterns, frameworks, or conventions
+### 2. No Agent Rules for AI-Assisted Development
+- **Impact**: AI coding assistants have no context on test patterns, contribution guidelines, or repository conventions when generating code
 - **Severity**: MEDIUM
 - **Effort**: 4-8 hours
-- **Details**: No `CLAUDE.md`, no `.claude/` directory, no `AGENTS.md`. The repository has sophisticated Testcontainers patterns (e.g., `WorkbenchContainer`, `TestFrame`, fixture hierarchies) that AI agents would not discover without explicit rules.
+- **Details**: No `CLAUDE.md`, no `.claude/` directory, no `.claude/rules/` for test patterns. The repository has sophisticated test infrastructure (testcontainers, Playwright, papermill) but AI agents can't discover or replicate these patterns.
 
-### 3. No Unit Tests for CI Scripts and Utilities
-- **Impact**: Matrix generation logic (`gen_gha_matrix_jobs.py`), build sandbox (`sandbox.py`), security scanning, and other CI scripts are untested
+### 3. Trivy PR Scanning Requires Manual Label
+- **Impact**: Security vulnerabilities in PR-built images are only scanned when someone manually applies the `trivy-scan` label
 - **Severity**: MEDIUM
-- **Effort**: 8-16 hours
-- **Details**: The `ci/` directory contains critical Python scripts for matrix job generation, code generation, Dockerfile validation, and security scanning. Only `scripts/buildinputs/buildinputs_test.go` (Go) has a test file. The Python CI scripts have zero test coverage.
+- **Effort**: 1-2 hours
+- **Details**: In `.github/workflows/build-notebooks-TEMPLATE.yaml`, Trivy scanning on PRs is gated behind: `contains(fromJson(inputs.github).event.pull_request.labels.*.name, 'trivy-scan')`. The filesystem-level Trivy scan in `security.yaml` runs on all PRs, but the image-level scan does not.
 
-### 4. No Secret Detection in CI Pipeline
-- **Impact**: Credentials or tokens could be accidentally committed; `ci/secrets/` is excluded from yamllint but not actively scanned
+### 4. No Secret Detection Tooling
+- **Impact**: The repository contains encrypted secrets in `ci/secrets/` but has no automated secret leak detection
 - **Severity**: MEDIUM
 - **Effort**: 2-3 hours
-- **Details**: While git-crypt is used for secrets, there is no Gitleaks, TruffleHog, or similar secret detection tool in the PR workflow. The Trivy scan is filesystem-only (no secret scanning mode enabled).
+- **Details**: No `.gitleaks.toml`, no TruffleHog, no secret scanning in pre-commit hooks. While secrets are git-crypt encrypted, accidental exposure of credentials is not caught pre-commit.
+
+### 5. Limited Unit Tests for Build/CI Scripts
+- **Impact**: 30+ Python scripts in `ci/` and `scripts/` have minimal direct unit test coverage
+- **Severity**: MEDIUM
+- **Effort**: 8-12 hours
+- **Details**: Files like `ci/cached-builds/gen_gha_matrix_jobs.py`, `scripts/sandbox.py`, `scripts/dockerfile_fragments.py` are critical to the build pipeline but have limited or no unit tests. `ci/cached-builds/make_test.py` exists but covers only one module.
 
 ## Quick Wins
 
-### 1. Add pytest-cov to Existing Test Runs (2-3 hours)
-- Add `pytest-cov` to dev dependencies in `pyproject.toml`
-- Add `--cov=tests --cov=ci` flags to pytest in `code-quality.yaml`
-- Configure `.codecov.yml` with basic thresholds
-```yaml
-# .codecov.yml
-coverage:
-  status:
-    project:
-      default:
-        target: auto
-        threshold: 2%
-```
+### 1. Enable Trivy Scan on All PRs
+- **Effort**: 1-2 hours
+- **Impact**: Every PR image build automatically scanned for vulnerabilities
+- **Implementation**: Remove the label gate in `build-notebooks-TEMPLATE.yaml`:
+  ```yaml
+  # Change from:
+  if: ${{ fromJson(inputs.github).event_name == 'pull_request' && contains(...labels..., 'trivy-scan') }}
+  # To:
+  if: ${{ fromJson(inputs.github).event_name == 'pull_request' }}
+  ```
 
-### 2. Add Gitleaks Secret Scanning (1-2 hours)
-- Add a Gitleaks step to the `code-quality.yaml` workflow
-```yaml
-  secret-scanning:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-```
+### 2. Add pytest-cov and Codecov Integration
+- **Effort**: 2-4 hours
+- **Impact**: Track test coverage trends, report on PRs, enforce minimums
+- **Implementation**:
+  ```toml
+  # pyproject.toml
+  [tool.pytest.ini_options]
+  addopts = "--cov=ci --cov=scripts --cov=tests --cov-report=xml"
+  ```
+  ```yaml
+  # .codecov.yml
+  coverage:
+    status:
+      project:
+        default:
+          target: auto
+          threshold: 1%
+  ```
 
-### 3. Create Basic CLAUDE.md with Test Patterns (2-3 hours)
-- Document Testcontainers patterns (WorkbenchContainer, fixtures)
-- Specify pytest-subtests usage and marker conventions
-- Reference allure integration for issue tracking
+### 3. Add Gitleaks Pre-commit Hook
+- **Effort**: 1 hour
+- **Impact**: Prevent accidental secret leaks before they reach the repository
+- **Implementation**:
+  ```yaml
+  # .pre-commit-config.yaml
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.0
+    hooks:
+      - id: gitleaks
+  ```
 
-### 4. Add Coverage Badge to README (1 hour)
-- After codecov integration, add badge to `README.md`
+### 4. Create Basic CLAUDE.md
+- **Effort**: 2-3 hours
+- **Impact**: AI agents can generate tests matching existing patterns
+- **Implementation**: Document test patterns for testcontainers, Playwright, papermill, and the multi-layer image testing approach.
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflow Inventory** (24 workflows):
+**Workflows (25+ files in `.github/workflows/`)**:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `build-notebooks-pr.yaml` | pull_request | Build changed images on PRs (matrix, cached) |
-| `build-notebooks-pr-aipcc.yaml` | pull_request_target | Build from quay.io/aipcc bases |
-| `build-notebooks-pr-rhel.yaml` | pull_request_target | Build RHEL-subscription images |
-| `build-notebooks-push.yaml` | push, schedule, dispatch | Build + push all images (nightly at 2am) |
-| `build-notebooks-TEMPLATE.yaml` | workflow_call | Reusable template: build → test → scan → FIPS |
-| `code-quality.yaml` | push, pull_request | Pre-commit, pytest, yamllint, hadolint, kustomize |
-| `security.yaml` | push, pull_request | Trivy filesystem scan, SARIF upload |
-| `gemini-pr-review.yml` | pull_request_target, comments | AI-powered PR review via Gemini CLI |
-| `notebooks-digest-updater.yaml` | various | Automated digest updates |
-| `create-release.yaml` | various | Release automation |
+| `code-quality.yaml` | push, PR | Generated code check, pytest, yamllint, hadolint, JSON validation, kustomize |
+| `build-notebooks-pr.yaml` | PR | Matrix build of changed images (excludes RHEL) |
+| `build-notebooks-pr-rhel.yaml` | PR | Matrix build for RHEL subscription images |
+| `build-notebooks-pr-aipcc.yaml` | PR (pull_request_target) | Matrix build from AIPCC base images |
+| `build-notebooks-push.yaml` | push, schedule, dispatch | Full image builds on main/release branches |
+| `build-notebooks-TEMPLATE.yaml` | workflow_call | Reusable template: build, test, scan, push |
+| `security.yaml` | push, PR | Trivy filesystem scan with SARIF upload |
+| `gemini-pr-review.yml` | PR | AI-powered PR review via Gemini CLI |
+| `notebooks-release.yaml` | workflow_dispatch | Release workflow |
+| `notebook-digest-updater.yaml` | schedule, dispatch | Automated digest updates |
+| `piplock-renewal.yaml` | schedule, dispatch | Python lockfile renewal |
+| `software-versions.yaml` | schedule, dispatch | Software version tracking |
 
 **Strengths**:
-- Concurrency control with `cancel-in-progress: true` on PR builds
-- Smart change detection: `gen_gha_matrix_jobs.py` only builds images affected by changed files
-- Build caching via `--cache-from`/`--cache-to` with GHCR
-- Reusable workflow template (`build-notebooks-TEMPLATE.yaml`) shared across all build triggers
-- Multiple platform support: `linux/amd64`, `linux/arm64`, `linux/s390x`, `linux/ppc64le`
-- AI-assisted PR review with both Gemini CLI and CodeRabbit integration
+- Concurrency control on PR builds (`cancel-in-progress: true`)
+- Smart change detection: only builds images affected by changed files via `gen_gha_matrix_jobs.py`
+- Multi-architecture support (amd64, arm64, s390x, ppc64le)
+- Reusable template workflow pattern
+- Build caching with GHCR
+- AI-assisted PR reviews (CodeRabbit + Gemini)
 
-**Observations**:
-- Build process uses `sandbox.py` for Dockerfile isolation — a custom sandboxing approach
-- RHEL subscription handling is automated via GitHub secrets and activation keys
-- The template workflow is 737 lines — comprehensive but potentially difficult to maintain
+**Tekton/Konflux Pipelines (30 files in `.tekton/`)**:
+- Dedicated per-image pull-request and push pipelines
+- Multi-arch builds (x86_64, arm64, ppc64le, s390x)
+- Image expiry for PR builds (5 days)
+- Central pipeline reference via `konflux-central.git`
 
 ### Test Coverage
 
-**Test Files** (28 Python test files, 1 TypeScript spec, 1 Go test):
+**Test Files**: 14 Python test files, 1 TypeScript spec, 8 Jupyter notebook tests
 
-| Test Category | Files | Lines | Framework |
-|---------------|-------|-------|-----------|
-| Static validation | `tests/test_main.py` | 401 | pytest + subtests |
-| Container base | `tests/containers/base_image_test.py` | 260 | pytest + Testcontainers |
-| Workbench startup | `tests/containers/workbenches/workbench_image_test.py` | 254 | pytest + Testcontainers |
-| JupyterLab specific | `tests/containers/workbenches/jupyterlab/jupyterlab_test.py` | 124 | pytest + Testcontainers + allure |
-| Library validation | `tests/containers/workbenches/jupyterlab/libraries_test.py` | 47 | pytest + Testcontainers |
-| RStudio specific | `tests/containers/workbenches/rstudio/rstudio_test.py` | 218 | pytest + Testcontainers |
-| Runtime images | `tests/containers/runtimes/runtime_test.py` | 54 | pytest + Testcontainers |
-| Accelerator/GPU | `tests/containers/workbenches/accelerator_image_test.py` | 92 | pytest + kubernetes |
-| Browser tests | `tests/browser/tests/codeserver.spec.ts` | 99 | Playwright + Testcontainers |
-| Build inputs | `scripts/buildinputs/buildinputs_test.go` | ~50 | Go testing |
-| Test conftest | `tests/containers/conftest.py` | 303 | pytest fixtures |
+**Test Layers**:
 
-**Static Tests** (`tests/test_main.py`):
-- Validates `pyproject.toml` / `pylock.toml` consistency across all images
-- Checks imagestream manifest version alignment
-- Ensures dependency version consistency across images
-- Verifies files that should be identical are identical
-- Tests Makefile dry-run behavior
+1. **Base Image Tests** (`tests/containers/base_image_test.py`)
+   - ELF file linking validation
+   - Library dependency resolution
+   - Run as non-root user with group 0
 
-**Container Tests** (Testcontainers-based):
-- Image entrypoint startup validation (with/without IPv6, with/without sysctls)
-- ELF binary linking verification (checks all shared libraries can resolve)
-- `oc` and `skopeo` CLI availability
-- pip install functionality
-- Fake FIPS compliance testing
-- File permissions verification
-- JupyterLab spinner HTML validation
-- PDF export functionality
-- RStudio R markdown rendering
-- Library import testing inside containers
+2. **Workbench Image Tests** (`tests/containers/workbenches/workbench_image_test.py`)
+   - Container startup validation
+   - Web IDE port 8888 connectivity
+   - IPv6-only networking
+   - Sysctl variations (IPv6 disabled)
 
-**Kubernetes Tests**:
-- Full kubeadm cluster provisioned in CI
-- Makefile-based deploy/test cycle
-- CUDA/ROCm GPU tests (OpenShift marker)
-- Runtime image validation
+3. **JupyterLab Tests** (`tests/containers/workbenches/jupyterlab/`)
+   - Spinner HTML verification (RHOAIENG-11156)
+   - PDF export functionality (RHOAIENG-16568)
+   - DataScience-specific tests
+   - TrustyAI-specific tests
+   - Library availability validation
 
-**Browser Tests** (Playwright):
-- Code-server editor visibility
-- Terminal command execution
-- File creation and verification
+4. **Runtime Tests** (`tests/containers/runtimes/runtime_test.py`)
+   - pyzmq import and socket creation (especially for s390x)
 
-**Test Markers** (from pytest.ini):
-- `openshift`: Requires OpenShift cluster
-- `cuda`: Requires CUDA GPU
-- `rocm`: Requires ROCm GPU
+5. **Browser Tests** (`tests/browser/tests/codeserver.spec.ts`)
+   - Playwright-based CodeServer UI tests
+   - Testcontainers integration for container lifecycle
+
+6. **Notebook Execution Tests** (`jupyter/*/test/test_notebook.ipynb`)
+   - Papermill execution of test notebooks
+   - Framework-specific validation (PyTorch, TensorFlow, TrustyAI, etc.)
+
+7. **Makefile Deploy Tests**
+   - Kubernetes deployment via Kind + CRI-O
+   - Pod readiness and API endpoint validation
+
+**Testing Frameworks**:
+- pytest with pytest-subtests, allure-pytest
+- testcontainers (Python) for container lifecycle
+- Playwright (TypeScript) for browser tests
+- papermill for notebook execution
+- pydantic for schema validation
+- pyfakefs for filesystem mocking
+
+**Test-to-Code Ratio**: 19 test files / 31 source files = 0.61 (good for an image-focused project)
 
 ### Code Quality
 
-**Linting Stack (Excellent)**:
-- **Ruff**: 30+ rule categories enabled (B, C4, COM, E, W, F, FA, FLY, G, I, ISC, N, PERF, PGH, PIE, PL, PYI, Q, RET, RUF, S102, T10, TCH, TID, UP, YTT)
-- **Pyright**: Type checking with `reportMissingImports: error`, `reportUnboundVariable: error`
-- **Ruff formatter**: Consistent formatting with LF line endings, double quotes
-- **Hadolint**: Dockerfile linting with configuration
+**Static Analysis**:
+- **Ruff**: Comprehensive configuration in `pyproject.toml` with 25+ rule categories enabled, preview mode
+- **Pyright**: Type checking configured for `ci/` and `tests/` (mode: off, but key error checks enabled)
+- **Hadolint**: Dockerfile linting with custom configuration
 - **yamllint**: YAML validation with strict mode
 - **JSON validation**: Custom scripts for JSON syntax checking
 
-**Pre-commit Hooks**:
-- `uv-lock`: Ensures lock file consistency
-- `ruff`: Lint + auto-fix
-- `ruff-format`: Code formatting
-- `pyright`: Type checking
+**Pre-commit Hooks** (`.pre-commit-config.yaml`):
+- `uv-lock` - Dependency lock file consistency
+- `ruff` (lint + format) - Python linting and formatting
+- `pyright` - Type checking
 
-**Additional Quality Tools**:
-- CodeRabbit for automated PR review
-- Gemini CLI for AI-powered code review
-- EditorConfig for cross-editor consistency
+**Code Generation**:
+- Automated Dockerfile fragment generation (`scripts/dockerfile_fragments.py`)
+- Python lockfile sync (`scripts/sync-python-lockfiles.sh`)
+- Generated code freshness check in CI
 
 ### Container Images
 
-**Dockerfiles**: 46 Dockerfiles across multiple image variants:
-- JupyterLab: minimal, datascience, pytorch, tensorflow, trustyai, pytorch+llmcompressor
-- Runtimes: minimal, datascience, pytorch, tensorflow, pytorch+llmcompressor
-- RStudio: rhel9, c9s variants
-- Code-server: UBI9
-- Base images: CUDA, ROCm
-- **Konflux variants**: Separate `Dockerfile.konflux.*` files for Konflux builds
+**Scale**: 46 Dockerfiles (18 with Konflux variants)
 
-**Multi-Architecture**: linux/amd64, linux/arm64, linux/s390x, linux/ppc64le
+**Image Types**:
+- Base images (CUDA, ROCm)
+- Jupyter workbenches (minimal, datascience, pytorch, tensorflow, trustyai, rocm)
+- CodeServer workbench
+- RStudio workbench
+- Pipeline runtimes (minimal, datascience, pytorch, tensorflow)
 
-**Security Scanning**:
-- Trivy filesystem scan on PRs (with `trivy-scan` label) and nightly
-- Trivy image scan for built images
-- FIPS compliance via `openshift/check-payload`
-- SARIF upload to GitHub Security tab
-- Quay security analysis (`ci/security-scan/quay_security_analysis.py`)
+**Build Features**:
+- Multi-stage builds
+- Sandboxed build contexts (`scripts/sandbox.py` + Go `buildinputs` tool)
+- Automated vulnerability remediation (`dnf upgrade` fragment injection)
+- Build-args via config files
+- RHEL subscription management for entitled builds
 
-**Tekton/Konflux**: 30 Tekton pipeline definitions for Konflux builds (pull-request + push triggers)
+**Testing**:
+- PR builds via GitHub Actions with matrix generation
+- Testcontainers-based validation post-build
+- Kubernetes deployment testing (Kind + CRI-O)
+- FIPS compliance via `check-payload`
+- Trivy vulnerability scanning (label-gated on PRs, always on scheduled builds)
 
-### Security Practices
+### Security
 
-| Practice | Status | Notes |
-|----------|--------|-------|
-| Trivy filesystem scan | Present | Runs on push/PR, SARIF upload |
-| Trivy image scan | Present | On PR (with label) and nightly |
-| FIPS compliance | Present | check-payload scan on every image |
-| Secret management | Present | git-crypt for encrypted secrets |
-| Dependency scanning | Partial | Trivy catches CVEs, but no Dependabot/Renovate for updates |
-| Secret detection | Missing | No Gitleaks/TruffleHog |
-| SBOM generation | Missing | No SBOM generation for built images |
-| Image signing | Missing | No cosign/sigstore attestation |
-| Renovate | Present | `.github/renovate.json` for dependency updates |
+**Strengths**:
+- Trivy filesystem scanning on all PRs (`security.yaml` - SARIF to GitHub Security tab)
+- Trivy image scanning in build template (scheduled + labeled PRs)
+- FIPS compliance checking via `check-payload`
+- Git-crypt for encrypted secrets
+- RHEL subscription management with activation keys
+- CodeRabbit AI review for security patterns
+- Hadolint Dockerfile linting
+
+**Gaps**:
+- No secret detection (gitleaks/TruffleHog) in pre-commit or CI
+- No SBOM generation
+- No image signing or attestation (cosign)
+- Trivy image scanning on PRs requires manual `trivy-scan` label
+- No explicit `.trivyignore` for known/accepted vulnerabilities
+- `exit-code: '0'` in security.yaml means Trivy findings don't fail the build
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: None — no CLAUDE.md, AGENTS.md, or .claude/ directory
+- **Coverage**: No test types have rules
 - **Quality**: N/A
-- **Gaps**:
-  - No guidance for AI agents on Testcontainers patterns
-  - No rules for fixture hierarchy (image → workbench_image → jupyterlab_image → jupyterlab_datascience_image)
-  - No documentation of allure integration for issue tracking
-  - No guidance on test marker usage (openshift, cuda, rocm)
-  - No rules for when to use Kubernetes tests vs Testcontainers tests
-- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
-  - Container test patterns with Testcontainers
-  - Pytest subtests and marker usage
-  - Fixture hierarchy and parametrization
-  - Allure issue tracking annotations
-  - Kubernetes test setup and teardown
+- **Gaps**: No `CLAUDE.md`, no `.claude/` directory, no `.claude/rules/`, no agent-facing documentation
+- **AI Review Tools**: CodeRabbit (`.coderabbit.yaml`) and Gemini CLI are configured for PR review, but no rules for code generation
+- **Recommendation**: Generate comprehensive rules with `/test-rules-generator` covering:
+  - Container test patterns (testcontainers, non-root user, group 0)
+  - Browser test patterns (Playwright, CodeServer)
+  - Notebook execution patterns (papermill)
+  - CI script patterns (matrix generation, build sandboxing)
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Add pytest-cov with codecov integration** — The repository has ~4,400 lines of test code but no visibility into what the tests actually cover. Add `pytest-cov` to dev dependencies, configure coverage in CI, and add codecov SARIF reporting.
-2. **Add secret detection scanning** — With git-crypt secrets and RHEL subscription keys in the repo, add Gitleaks or TruffleHog to prevent accidental credential leaks.
+
+1. **Add code coverage tracking** - Integrate pytest-cov with codecov for PR coverage reporting and threshold enforcement. The test infrastructure is strong but invisible without metrics.
+
+2. **Enable Trivy image scanning on all PRs** - Remove the `trivy-scan` label requirement from `build-notebooks-TEMPLATE.yaml` so every PR build gets scanned automatically.
 
 ### Priority 1 (High Value)
-3. **Write unit tests for CI scripts** — `ci/cached-builds/gen_gha_matrix_jobs.py`, `scripts/sandbox.py`, `ci/security-scan/quay_security_analysis.py` and other CI utilities are critical but have zero test coverage.
-4. **Create CLAUDE.md and .claude/rules/** — Document Testcontainers patterns, fixture hierarchy, marker conventions, and allure integration to guide AI-assisted test creation.
-5. **Add coverage thresholds** — Once coverage tracking is in place, set minimum coverage thresholds for PRs to prevent regression.
+
+3. **Create agent rules** - Add `.claude/rules/` with test patterns for testcontainers, Playwright, papermill, and CI scripts. The repository has uniquely sophisticated test infrastructure that AI agents should replicate.
+
+4. **Add secret detection** - Integrate gitleaks in pre-commit hooks and CI. The repository handles RHEL subscriptions and git-crypt secrets, making leak prevention critical.
+
+5. **Add unit tests for CI scripts** - The `ci/cached-builds/` and `scripts/` directories contain critical pipeline logic (matrix generation, sandbox builds, Dockerfile fragments) with minimal unit test coverage.
 
 ### Priority 2 (Nice-to-Have)
-6. **Add SBOM generation** — Generate SBOMs for all built images using Syft or Trivy SBOM mode for supply chain transparency.
-7. **Add image signing with cosign** — Sign images after build for tamper detection in the supply chain.
-8. **Add performance regression tests** — Track image startup times across builds to catch performance regressions.
-9. **Add contract tests for manifest schemas** — Formalize the imagestream manifest schema validation beyond the current ad-hoc checks.
+
+6. **Add SBOM generation** - Use Syft or similar to generate SBOMs for all built images, supporting supply chain security requirements.
+
+7. **Add image signing** - Integrate cosign for image signing and attestation in the build pipeline.
+
+8. **Add notebook startup benchmarking** - Track image startup times across releases to detect performance regressions in workbench images.
 
 ## Comparison to Gold Standards
 
-| Practice | notebooks-downstream-z-test | odh-dashboard | notebooks (upstream) | Kubernetes Best Practice |
-|----------|---------------------------|---------------|---------------------|-------------------------|
-| Unit Tests | Static validation, no CI script tests | Multi-layer with mocks | Image validation | Comprehensive with envtest |
-| Integration/E2E | Testcontainers + kubeadm | Cypress E2E | Testcontainers | Kind/envtest |
-| Build Integration | PR matrix builds, Konflux | PR builds | PR builds | PR builds |
-| Image Testing | 5-layer (build→container→k8s→FIPS→scan) | N/A | 5-layer validation | Image validation |
-| Coverage | None | Codecov enforced | Partial | Codecov enforced |
-| CI/CD | Excellent (template, matrix, cache) | Comprehensive | Well-organized | Standard |
-| Security | Trivy + FIPS + git-crypt | CodeQL + Trivy | Trivy | CodeQL + Trivy + signing |
-| Agent Rules | None | Comprehensive | None | N/A |
-| AI Review | Gemini CLI + CodeRabbit | None | None | N/A |
+| Dimension | This Repo | odh-dashboard | notebooks (upstream) | kserve |
+|-----------|-----------|---------------|---------------------|--------|
+| Unit Tests | 6.5 - Testcontainers-based | 9.0 - Jest + RTL | 7.0 - pytest | 8.5 - Go testing |
+| Integration/E2E | 8.0 - Multi-layer | 9.0 - Cypress + contracts | 8.0 - Makefile deploy | 9.0 - envtest |
+| Build Integration | 8.5 - Konflux + GHA | 7.0 - PR builds only | 8.0 - GHA matrix | 7.0 - Makefile |
+| Image Testing | 8.5 - 5 layers | N/A | 8.5 - 5 layers | 6.0 - Basic |
+| Coverage | 3.0 - None | 8.0 - Codecov | 3.0 - None | 8.0 - Codecov |
+| CI/CD | 8.5 - 25+ workflows | 9.0 - Comprehensive | 8.0 - Template-based | 8.5 - Prow |
+| Agent Rules | 0.0 - None | 8.0 - Comprehensive | 0.0 - None | 2.0 - Basic |
+| Security | 7.0 - Trivy + FIPS | 6.0 - Basic | 7.0 - Trivy | 7.0 - CodeQL |
 
 ## File Paths Reference
 
-### CI/CD
-- `.github/workflows/build-notebooks-pr.yaml` — PR build trigger
-- `.github/workflows/build-notebooks-TEMPLATE.yaml` — Reusable build template (737 lines)
-- `.github/workflows/code-quality.yaml` — Static analysis, pytest, linting
-- `.github/workflows/security.yaml` — Trivy filesystem scan
-- `.github/workflows/gemini-pr-review.yml` — AI-powered PR review
+### CI/CD Configuration
+- `.github/workflows/` - 25+ GitHub Actions workflows
+- `.github/workflows/build-notebooks-TEMPLATE.yaml` - Core reusable build template (34K lines)
+- `.github/workflows/code-quality.yaml` - Static analysis and test execution
+- `.github/workflows/security.yaml` - Trivy filesystem scanning
+- `.github/workflows/gemini-pr-review.yml` - AI-powered PR review
+- `.tekton/` - 30 Konflux/Tekton pipeline definitions
+- `Makefile` - Build, deploy, test, and validate targets
+- `ci/` - CI scripts (matrix generation, caching, security scanning)
 
-### Testing
-- `tests/test_main.py` — Static validation tests (pyproject, manifest, version alignment)
-- `tests/containers/` — Testcontainers-based image tests
-- `tests/containers/conftest.py` — Fixtures: image, workbench_image, jupyterlab_image, etc.
-- `tests/containers/base_image_test.py` — ELF linking, oc/skopeo, pip install, FIPS
-- `tests/containers/workbenches/workbench_image_test.py` — Container startup, IPv6, OpenShift
-- `tests/containers/workbenches/jupyterlab/jupyterlab_test.py` — Spinner, PDF export, mongocli
-- `tests/containers/runtimes/runtime_test.py` — Runtime image pyzmq validation
-- `tests/browser/tests/codeserver.spec.ts` — Playwright browser tests
-- `scripts/buildinputs/buildinputs_test.go` — Go unit test for build input analysis
+### Test Infrastructure
+- `tests/containers/` - Testcontainers-based image tests
+- `tests/browser/` - Playwright browser tests for CodeServer
+- `tests/pytest_tutorial/` - Test examples/tutorials
+- `jupyter/*/test/test_notebook.ipynb` - Papermill notebook tests
+- `pytest.ini` - Pytest configuration with markers (openshift, cuda, rocm)
+- `pyproject.toml` - Full dev dependency specification
 
-### Code Quality
-- `pyproject.toml` — Ruff (30+ rules), Pyright, project config
-- `.pre-commit-config.yaml` — uv-lock, ruff, ruff-format, pyright
-- `ci/hadolint-config.yaml` — Dockerfile linting rules
-- `ci/yamllint-config.yaml` — YAML validation rules
-- `.editorconfig` — Cross-editor consistency
+### Build System
+- `scripts/sandbox.py` - Sandboxed build context manager
+- `scripts/buildinputs/` - Go tool for Dockerfile dependency analysis
+- `scripts/dockerfile_fragments.py` - Automated Dockerfile fragment injection
+- `ci/cached-builds/gen_gha_matrix_jobs.py` - PR change-based matrix generation
 
-### Container Images
-- `jupyter/*/Dockerfile.*` — JupyterLab image Dockerfiles
-- `runtimes/*/Dockerfile.*` — Runtime image Dockerfiles
-- `rstudio/*/Dockerfile.*` — RStudio image Dockerfiles
-- `codeserver/*/Dockerfile.*` — Code-server Dockerfiles
-- `.tekton/` — 30 Tekton pipeline definitions for Konflux
-
-### Security
-- `.github/workflows/security.yaml` — Trivy + SARIF
-- `ci/security-scan/` — Quay security analysis scripts
-- `ci/secrets/` — git-crypt encrypted secrets
-- `.github/renovate.json` — Dependency update automation
+### Quality Tools
+- `.pre-commit-config.yaml` - ruff, pyright, uv-lock hooks
+- `pyproject.toml` - ruff (25+ rule categories), pyright config
+- `ci/hadolint-config.yaml` - Dockerfile linting rules
+- `ci/yamllint-config.yaml` - YAML validation rules
+- `.coderabbit.yaml` - AI code review configuration
+- `.editorconfig` - Editor consistency settings

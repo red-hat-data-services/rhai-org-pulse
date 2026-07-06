@@ -1,225 +1,157 @@
 ---
 repository: "opendatahub-io/odh-build-metadata"
-overall_score: 2.1
+overall_score: 1.5
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No code exists in this repository - pure metadata/artifact storage with zero source files"
+    status: "No source code or tests — pure metadata storage repo"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No test infrastructure - repository stores build metadata snapshots, not executable code"
+    status: "No integration or E2E tests; no validation of manifest correctness"
   - dimension: "Build Integration"
-    score: 3.0
-    status: "Automated metadata commits from Konflux builds exist but no validation of manifest correctness"
+    score: 1.0
+    status: "No PR workflow; commits pushed directly by automation without validation"
   - dimension: "Image Testing"
     score: 0.0
-    status: "No container images built - stores references to images built in upstream repos"
+    status: "No container images built from this repo"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling - no code to measure coverage against"
+    status: "No coverage tooling — nothing to cover"
   - dimension: "CI/CD Automation"
-    score: 4.0
-    status: "Automated commit pipeline from Konflux, early-gate branch with test summaries, ci-artifacts branch"
+    score: 3.0
+    status: "Automated commit pipeline exists upstream but no GitHub Actions in this repo"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, .claude/ directory, or agent rules present"
+    status: "No CLAUDE.md, .claude/ directory, or agent rules"
 critical_gaps:
   - title: "No manifest validation on commit"
-    impact: "Corrupt or malformed YAML manifests can be committed without detection, potentially breaking downstream operator builds"
+    impact: "Malformed YAML, broken kustomization references, or invalid CRDs can land without detection"
+    severity: "HIGH"
+    effort: "8-12 hours"
+  - title: "No GitHub Actions workflows at all"
+    impact: "Zero automated quality gates — every commit is trusted blindly from the upstream automation"
     severity: "HIGH"
     effort: "4-8 hours"
   - title: "No schema validation for manifests-config.yaml"
-    impact: "Missing or incorrect git commit references, broken URLs, or malformed config can propagate to operator builds"
+    impact: "Incorrect source repo URLs, missing commits, or malformed config could break downstream operator builds"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No drift detection between snapshot hashes"
-    impact: "No automated way to detect if manifest content has diverged from upstream source repos"
-    severity: "MEDIUM"
-    effort: "8-12 hours"
-  - title: "No early-gate test result aggregation or dashboarding"
-    impact: "Test results stored as YAML files in a branch with no visibility, trending, or alerting"
+  - title: "No kustomize build verification"
+    impact: "Broken kustomization overlays not detected until downstream consumers (odh-operator) attempt to use them"
     severity: "MEDIUM"
     effort: "8-16 hours"
-  - title: "No LICENSE file"
-    impact: "Repository has no license, creating legal ambiguity for downstream consumers"
-    severity: "LOW"
-    effort: "0.5 hours"
-  - title: "No README or documentation on main branch"
-    impact: "New contributors have no guidance on repo purpose, structure, or contribution workflow"
+  - title: "No branch protection or review requirements"
+    impact: "Automated commits bypass any human review; no safeguard against corrupted automation output"
     severity: "MEDIUM"
-    effort: "2-4 hours"
-quick_wins:
-  - title: "Add YAML linting GitHub Action on push to main"
     effort: "1-2 hours"
-    impact: "Catch malformed manifests before they reach downstream consumers"
-  - title: "Add manifests-config.yaml JSON Schema validation"
+quick_wins:
+  - title: "Add YAML lint workflow"
+    effort: "1-2 hours"
+    impact: "Catch malformed YAML before it lands in the repo"
+  - title: "Add manifests-config.yaml schema validation"
     effort: "2-3 hours"
-    impact: "Ensure all required fields (git.url, git.commit, src, dest) are present and valid"
-  - title: "Add a README.md to main branch"
-    effort: "1 hour"
-    impact: "Document repository purpose, structure, and automated commit pipeline"
-  - title: "Add LICENSE file"
-    effort: "0.5 hours"
-    impact: "Resolve legal ambiguity for downstream consumers"
+    impact: "Ensure every commit has valid config structure with valid git URLs and commit SHAs"
+  - title: "Add kustomize build smoke test"
+    effort: "3-4 hours"
+    impact: "Verify that kustomization overlays can be built successfully"
+  - title: "Enable branch protection on main"
+    effort: "30 minutes"
+    impact: "Require status checks to pass before commits land"
 recommendations:
   priority_0:
-    - "Add YAML lint + schema validation CI workflow to validate every commit to main"
-    - "Add git.commit SHA verification (confirm referenced commits exist in upstream repos)"
+    - "Add a GitHub Actions workflow that validates YAML syntax for all changed files"
+    - "Add schema validation for manifests-config.yaml (verify git URLs resolve, commit SHAs are valid hex)"
+    - "Add kustomize build validation for changed component manifests"
   priority_1:
-    - "Build early-gate test result dashboard/aggregation from ci-artifacts branch data"
-    - "Add manifest diff reporting (show what changed between consecutive snapshots)"
-    - "Create README documenting the automated pipeline and data schema"
+    - "Add branch protection requiring CI status checks before merge"
+    - "Add a periodic job to verify upstream git commits referenced in manifests-config.yaml still exist"
+    - "Add diff-size alerting for unexpectedly large metadata updates"
   priority_2:
-    - "Add Kustomize build validation for manifest directories"
-    - "Create agent rules for manifest structure and validation patterns"
-    - "Implement retention/cleanup policy for old snapshots (5,503 currently)"
+    - "Add CLAUDE.md with repo purpose documentation and contribution guidelines"
+    - "Add a CODEOWNERS file for review routing"
+    - "Consider adding Renovate/Dependabot-style freshness checks for pinned commits"
 ---
 
 # Quality Analysis: odh-build-metadata
 
 ## Executive Summary
 
-- **Overall Score: 2.1/10**
-- **Repository Type**: Pure metadata/artifact storage (no source code)
-- **Purpose**: Stores Konflux build metadata snapshots for the ODH operator, including Kubernetes manifests, kustomization files, and component version pinning
-- **Key Strengths**: Automated metadata pipeline from Konflux builds, early-gate testing infrastructure with structured test summaries, CI artifacts storage
-- **Critical Gaps**: No validation of committed metadata, no schema enforcement, no documentation, no license
-- **Agent Rules Status**: Missing - no `.claude/` directory or agent rules
+- **Overall Score: 1.5/10**
+- **Repository Type**: Automated metadata storage (no source code)
+- **Primary Language**: YAML (Kubernetes manifests)
+- **Key Strengths**: Consistent automated commit structure; clear manifest-to-source mapping via `manifests-config.yaml`
+- **Critical Gaps**: Zero CI/CD workflows, no validation of any kind, no branch protection, no agent rules
+- **Agent Rules Status**: Missing
 
-## Repository Profile
+### Repository Nature
 
-| Attribute | Value |
-|-----------|-------|
-| **Created** | 2025-12-11 |
-| **Last Updated** | 2026-06-03 |
-| **Total Commits** | ~5,509 |
-| **Primary Language** | None (YAML manifests only) |
-| **Disk Usage** | ~24 GB |
-| **Total Files** | 8,074,426 |
-| **Stars/Forks** | 0 / 0 |
-| **Open Issues** | 0 |
-| **Open PRs** | 0 |
-| **License** | None |
-| **Branches** | main, ci-artifacts, early-gate |
+`odh-build-metadata` is **not a traditional software project**. It is a machine-generated metadata repository that stores versioned snapshots of Kubernetes manifests for the OpenDataHub operator. Each commit is produced by an upstream automation pipeline that:
 
-## Architecture
+1. Builds an operator image from [opendatahub-io/opendatahub-operator](https://github.com/opendatahub-io/opendatahub-operator)
+2. Collects all component manifests (dashboard, kserve, notebooks, training-operator, etc.)
+3. Stores them in a content-addressed directory under `components/odh-operator/<sha256>/`
+4. Records source repository URLs and commit SHAs in `manifests-config.yaml`
 
-This repository is a **build metadata store** used by the Konflux/RHOAI build pipeline:
-
-```
-odh-build-metadata/
-├── main branch
-│   └── components/
-│       └── odh-operator/
-│           └── {sha256-hash}/           # ~5,503 snapshots
-│               ├── manifests-config.yaml  # Component version pinning
-│               └── manifests/             # ~1,485 Kubernetes manifests per snapshot
-│                   ├── dashboard/
-│                   ├── kserve/
-│                   ├── datasciencepipelines/
-│                   ├── workbenches/
-│                   ├── ray/
-│                   ├── trustyai/
-│                   ├── trainer/
-│                   └── ... (18+ component areas)
-├── early-gate branch
-│   ├── README.md ("Early Gate Infra")
-│   └── {component}/{pr-number}/
-│       └── early-gate-test-summary.yaml
-├── ci-artifacts branch
-│   └── test-artifacts/
-│       └── {test-group}-{run-id}/
-│           └── e2e-{test-type}.tar.gz
-```
-
-### Component Coverage (manifests-config.yaml)
-
-The metadata tracks **18 primary components** with manifest sources and **47 additional components** with commit references:
-
-**Primary (with manifests)**: notebooks, kserve, kubeflow, data-science-pipelines-operator, kuberay, trustyai, odh-model-controller, workload-variant-autoscaler, model-registry-operator, odh-dashboard, training-operator, feast, llama-stack-k8s-operator, trainer, mlflow-operator, models-as-a-service, spark-operator
-
-**Additional metadata**: distributed-workloads images, notebook images, kserve sub-components, guardrails, pipeline runtimes, and more
-
-### Early Gate Testing
-
-The `early-gate` branch stores structured test summaries for PR validation:
-
-```yaml
-# Example: kserve PR #1539
-job_url: "/job/devops/job/early-gate-tests/51/"
-correlation_id: "eg-1779775411"
-fbc_tag: "odh-pr-1539-kserve"
-test_summary:
-  Failed: 0
-  Passed: 12
-  Skipped: 0
-  Total: 12
-```
-
-Components with early-gate data: feast, kserve, model-registry-operator, opendatahub-operator
-
-### CI Artifacts
-
-The `ci-artifacts` branch stores ~2,894 test artifact tarballs across test groups:
-- ai-gateway, feast, feast-nightly, feast-pr, kserve, maas, odh-pr
+The repo contains **12.7 million files** across **7,990 versioned snapshots**, consisting almost entirely of YAML Kubernetes manifests.
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0/10 | No code exists - pure metadata storage |
-| Integration/E2E | 0/10 | No test infrastructure in this repo |
-| **Build Integration** | **3/10** | **Automated Konflux commits but no validation** |
-| Image Testing | 0/10 | No images built here - references only |
-| Coverage Tracking | 0/10 | No code to cover |
-| CI/CD Automation | 4/10 | Automated pipeline exists but no GitHub Actions |
-| Agent Rules | 0/10 | No agent rules or documentation |
+| Unit Tests | 0/10 | No source code or tests — pure metadata storage |
+| Integration/E2E | 0/10 | No validation of manifest correctness |
+| **Build Integration** | **1/10** | **No PR workflow; direct automated commits without validation** |
+| Image Testing | 0/10 | No container images built from this repo |
+| Coverage Tracking | 0/10 | Nothing to cover |
+| CI/CD Automation | 3/10 | Upstream automation exists but zero in-repo workflows |
+| Agent Rules | 0/10 | No CLAUDE.md, .claude/ directory, or agent rules |
 
-**Note**: Traditional code quality metrics are not directly applicable to this metadata-only repository. The scores reflect the gap between current practices and what a well-managed metadata repository should have.
+### Score Justification
+
+The low score reflects the complete absence of quality gates **within this repository**. While the upstream build pipeline that generates commits may have its own validation, this repo has no independent verification that the data it receives is correct. For a repository that serves as the source-of-truth for operator manifest composition, this is a significant risk.
+
+The CI/CD score of 3 acknowledges that an external automation pipeline exists (evidenced by the consistent commit pattern "build-meta for operator image <sha>"), but the repo itself has no GitHub Actions, no branch protection, and no validation.
 
 ## Critical Gaps
 
 ### 1. No Manifest Validation on Commit
-- **Impact**: Corrupt or malformed YAML manifests can be committed without detection, potentially breaking downstream operator builds that consume this data
+- **Impact**: Malformed YAML, broken kustomization references, or invalid CRDs can land without detection
+- **Severity**: HIGH
+- **Effort**: 8-12 hours
+- **Details**: With 12.7M files and no YAML linting, a single corrupted manifest could propagate to all downstream consumers. The `manifests-config.yaml` maps to 18+ upstream repositories — any misconfiguration silently breaks the chain.
+
+### 2. No GitHub Actions Workflows
+- **Impact**: Zero automated quality gates — every commit is trusted blindly
 - **Severity**: HIGH
 - **Effort**: 4-8 hours
-- **Details**: Every commit to main is an automated build-metadata push. There is no GitHub Actions workflow, pre-commit hook, or any validation that the committed YAML is syntactically valid or structurally correct.
+- **Details**: `gh api repos/.../actions/workflows` returns `total_count: 0`. No CI, no CD, no scheduled jobs, no security scanning. The repo has zero `.github/workflows/` files.
 
-### 2. No Schema Validation for manifests-config.yaml
-- **Impact**: Missing required fields (git.url, git.commit, src, dest), broken URLs, or incorrect commit SHAs can propagate to operator builds without detection
+### 3. No Schema Validation for manifests-config.yaml
+- **Impact**: Incorrect source repo URLs, missing commits, or malformed config could break downstream operator builds
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: The manifests-config.yaml file pins 65+ upstream components by git commit SHA. There is no schema enforcement to ensure all required fields are present, URLs are valid, or commit SHAs are well-formed.
+- **Details**: The `manifests-config.yaml` is the critical mapping between component source repos and their manifest destinations. It contains git URLs and commit SHAs for 18 primary components and 60+ additional metadata entries. No validation ensures these are well-formed or that referenced commits actually exist.
 
-### 3. No Drift Detection Between Snapshots
-- **Impact**: No automated way to detect unexpected manifest changes, removed components, or version regressions between consecutive snapshots
-- **Severity**: MEDIUM
-- **Effort**: 8-12 hours
-- **Details**: With 5,503 snapshots and growing, there is no tooling to compare consecutive snapshots, detect regressions, or identify unexpected changes.
-
-### 4. No Early-Gate Result Aggregation
-- **Impact**: Test results in the early-gate branch are stored as individual YAML files with no dashboard, trending, or alerting
+### 4. No Kustomize Build Verification
+- **Impact**: Broken kustomization overlays not detected until downstream consumers attempt to use them
 - **Severity**: MEDIUM
 - **Effort**: 8-16 hours
-- **Details**: Early-gate test summaries for feast, kserve, model-registry-operator, and opendatahub-operator exist but have no aggregation or visibility.
+- **Details**: Each snapshot contains complex kustomization hierarchies (base, overlays for odh/rhoai/addon/onprem). These are never tested — a missing resource reference or broken patch would only surface when the operator tries to deploy.
 
-### 5. No Documentation
-- **Impact**: New contributors have zero guidance on repository purpose, data schema, or contribution workflow
+### 5. No Branch Protection
+- **Impact**: Automated commits bypass any human review; no safeguard against corrupted automation
 - **Severity**: MEDIUM
-- **Effort**: 2-4 hours
-- **Details**: The main branch has no README.md, no CONTRIBUTING.md, no documentation of any kind. Only the early-gate branch has a one-line README ("Early Gate Infra").
-
-### 6. No License File
-- **Impact**: Legal ambiguity for all downstream consumers
-- **Severity**: LOW
-- **Effort**: 0.5 hours
+- **Effort**: 1-2 hours
+- **Details**: The `main` branch has no protection rules. While commits are automated, there's no guard against the automation producing invalid output.
 
 ## Quick Wins
 
-### 1. Add YAML Linting GitHub Action (1-2 hours)
-Validate all YAML files on push to main:
+### 1. Add YAML Lint Workflow (1-2 hours)
+Catch malformed YAML before it lands.
+
 ```yaml
-name: Validate YAML
+# .github/workflows/yaml-lint.yml
+name: YAML Lint
 on:
   push:
     branches: [main]
@@ -229,140 +161,224 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
-          sparse-checkout: |
-            components/odh-operator
-          sparse-checkout-cone-mode: false
-      - uses: ibiqlik/action-yamllint@v3
+          fetch-depth: 2
+      - name: Get changed files
+        id: changed
+        run: |
+          echo "files=$(git diff --name-only HEAD~1 -- '*.yaml' '*.yml' | tr '\n' ' ')" >> $GITHUB_OUTPUT
+      - name: Lint changed YAML
+        if: steps.changed.outputs.files != ''
+        uses: ibiqlik/action-yamllint@v3
         with:
-          file_or_dir: components/
+          file_or_dir: ${{ steps.changed.outputs.files }}
           config_data: |
             extends: default
             rules:
-              line-length: disable
-              document-start: disable
+              line-length:
+                max: 500
+              truthy:
+                check-keys: false
 ```
 
 ### 2. Add manifests-config.yaml Schema Validation (2-3 hours)
-Create a JSON Schema and validate on every commit:
+Validate structure, git URLs, and SHA format.
+
 ```yaml
-# schema/manifests-config-schema.json
-{
-  "type": "object",
-  "required": ["map"],
-  "properties": {
-    "map": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "object",
-        "required": ["src", "dest", "git.url", "git.commit"],
-        "properties": {
-          "src": { "type": "string" },
-          "dest": { "type": "string" },
-          "git.url": { "type": "string", "format": "uri" },
-          "git.commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
-        }
-      }
-    }
-  }
-}
+# .github/workflows/validate-config.yml
+name: Validate Config
+on:
+  push:
+    branches: [main]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Find changed configs
+        id: configs
+        run: |
+          echo "configs=$(git diff --name-only HEAD~1 -- '**/manifests-config.yaml' | head -1)" >> $GITHUB_OUTPUT
+      - name: Validate manifests-config
+        if: steps.configs.outputs.configs != ''
+        run: |
+          python3 -c "
+          import yaml, sys, re
+          with open('${{ steps.configs.outputs.configs }}') as f:
+              config = yaml.safe_load(f)
+          errors = []
+          for section in ['map', 'additional_meta']:
+              if section not in config:
+                  continue
+              for name, entry in config[section].items():
+                  url = entry.get('git.url', '')
+                  sha = entry.get('git.commit', '')
+                  if not url.startswith('https://github.com/'):
+                      errors.append(f'{name}: invalid git.url: {url}')
+                  if not re.match(r'^[0-9a-f]{40}$', sha):
+                      errors.append(f'{name}: invalid git.commit SHA: {sha}')
+          if errors:
+              print('Validation errors:')
+              for e in errors:
+                  print(f'  - {e}')
+              sys.exit(1)
+          print('manifests-config.yaml is valid')
+          "
 ```
 
-### 3. Add README.md (1 hour)
-Document the repository purpose, structure, data schema, and automated pipeline.
+### 3. Add Kustomize Build Smoke Test (3-4 hours)
+Verify kustomization overlays can be built.
 
-### 4. Add LICENSE file (0.5 hours)
-Add Apache 2.0 license to match other opendatahub-io repositories.
+```yaml
+# .github/workflows/kustomize-build.yml
+name: Kustomize Build
+on:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Install kustomize
+        run: |
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+      - name: Find changed component
+        id: component
+        run: |
+          DIR=$(git diff --name-only HEAD~1 | head -1 | cut -d/ -f1-3)
+          echo "dir=$DIR" >> $GITHUB_OUTPUT
+      - name: Build kustomize overlays
+        if: steps.component.outputs.dir != ''
+        run: |
+          find "${{ steps.component.outputs.dir }}/manifests" -name kustomization.yaml -execdir kustomize build . \; > /dev/null
+```
+
+### 4. Enable Branch Protection (30 minutes)
+Require status checks before commits land on main.
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
-- **GitHub Actions**: None (0 workflows)
-- **Automated Pipeline**: Commits are made by an automated Konflux build system that pushes build metadata directly to main
-- **Branch Strategy**: main (metadata), early-gate (test summaries), ci-artifacts (test tarballs)
-- **Commit Pattern**: All 5,509 commits follow the pattern "build-meta for operator image {sha256}"
-- **No PR Workflow**: Automated pushes go directly to main with no PR review
-- **No Branch Protection**: Unable to verify (403), but the automated push pattern suggests no protection
+- **Workflows**: None (`0` workflows via GitHub Actions API)
+- **Triggers**: N/A
+- **Concurrency**: N/A
+- **Caching**: N/A
+- **External Automation**: An upstream pipeline commits directly to `main` with messages like `build-meta for operator image <sha256>`. Commits are frequent (multiple per day, 10+ commits on 2026-07-06 alone).
+- **Branches**: `main` (primary), `ci-artifacts`, `early-gate`
 
 ### Test Coverage
-- **Unit Tests**: Not applicable - no source code
-- **Integration Tests**: Not applicable
-- **E2E Tests**: Not applicable
-- **Early-Gate Tests**: Test summaries stored in early-gate branch for 4 components (feast, kserve, model-registry-operator, opendatahub-operator)
-- **CI Artifacts**: ~2,894 test artifact archives stored in ci-artifacts branch across 7 test groups
+- **Unit Tests**: 0 test files across 12.7M total files
+- **Integration Tests**: None
+- **E2E Tests**: None
+- **Test-to-Code Ratio**: N/A (no source code)
+- **Coverage Tracking**: None
 
 ### Code Quality
-- **Linting**: None
-- **Pre-commit Hooks**: None
+- **Linting**: No YAML linters, no pre-commit hooks
 - **Static Analysis**: None
 - **Formatters**: None
+- **Pre-commit Hooks**: No `.pre-commit-config.yaml`
 
 ### Container Images
-- Not applicable - this repository references container images built in upstream repos but does not build any
+- **Dockerfiles**: None in this repo
+- **Image Builds**: Not applicable — this repo stores metadata, not source
+- **Scanning**: None
+- **SBOM**: None
 
 ### Security
-- **Container Scanning**: Not applicable
-- **SAST/CodeQL**: None
+- **SAST/CodeQL**: Not configured
 - **Dependency Scanning**: Not applicable (no dependencies)
-- **Secret Detection**: None (commit SHAs and git URLs could potentially leak internal references)
+- **Secret Detection**: None (risk: commit SHAs and URLs could theoretically be tampered with)
+- **Branch Protection**: Not enabled
+- **Signed Commits**: Not enforced
 
 ### Agent Rules (Agentic Flow Quality)
 - **Status**: Missing
+- **Coverage**: No agent rules of any kind
 - **CLAUDE.md**: Not present
 - **AGENTS.md**: Not present
 - **.claude/ directory**: Not present
-- **Coverage**: No test type rules
-- **Recommendation**: Generate basic rules for manifest validation patterns with `/test-rules-generator`
+- **Recommendation**: For a metadata repo, agent rules could guide:
+  - How to interpret the `manifests-config.yaml` structure
+  - How to trace a component's manifests back to its source repo
+  - How to validate a new metadata snapshot
+  - How to debug manifest issues across the ODH component ecosystem
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Add YAML lint + schema validation CI workflow** to validate every automated commit to main
-2. **Add git.commit SHA verification** - confirm that referenced commits actually exist in the upstream repos (prevents stale/broken references)
-3. **Add LICENSE file** (Apache 2.0 to match org standard)
+1. **Add YAML lint workflow** — Validate all changed YAML files on every push to catch syntax errors
+2. **Add manifests-config.yaml schema validation** — Ensure git URLs are valid and commit SHAs are well-formed 40-character hex strings
+3. **Add kustomize build validation** — Run `kustomize build` on changed overlays to catch broken references
 
 ### Priority 1 (High Value)
-1. **Build early-gate test result dashboard** from the structured YAML data in the early-gate branch
-2. **Add manifest diff reporting** - show what changed between consecutive operator image snapshots
-3. **Create comprehensive README** documenting the automated pipeline, data schema, branch strategy, and downstream consumers
-4. **Add Kustomize build validation** - verify that `kustomize build` succeeds on manifest directories
+4. **Enable branch protection on main** — Require CI status checks before commits can land
+5. **Add periodic upstream commit verification** — Scheduled job to verify all referenced git commits still exist in their source repos
+6. **Add diff-size alerting** — Flag unusually large or small metadata updates that could indicate automation failures
+7. **Add a README with architecture documentation** — Explain the repo's purpose, the commit automation pipeline, and how downstream consumers use the data
 
 ### Priority 2 (Nice-to-Have)
-1. **Implement snapshot retention/cleanup policy** - 5,503 snapshots with ~1,485 files each = 8M+ files, growing daily
-2. **Create agent rules** for manifest structure and validation patterns
-3. **Add component dependency graph** visualization from manifests-config.yaml
-4. **Implement automated upstream commit existence verification**
+8. **Add CLAUDE.md** — Document repo structure and purpose for AI-assisted development
+9. **Add CODEOWNERS** — Route reviews to the build infrastructure team
+10. **Add commit signature verification** — Ensure only the authorized automation bot can push
+11. **Consider freshness monitoring** — Alert when component pinned commits fall behind their source repo's HEAD by more than N days
+12. **Add Kubernetes manifest validation** — Use `kubeconform` or `kubeval` to validate CRDs and resources against OpenAPI schemas
 
 ## Comparison to Gold Standards
 
-| Dimension | odh-build-metadata | odh-dashboard | notebooks | Best Practice |
-|-----------|--------------------|---------------|-----------|---------------|
-| **Unit Tests** | N/A (no code) | Comprehensive Jest + RTL | N/A | Framework-appropriate |
-| **Integration/E2E** | N/A | Cypress E2E, contract tests | Multi-layer validation | Automated on PR |
-| **Build Validation** | No validation | PR-time builds | 5-layer image testing | Schema + lint |
-| **Coverage** | N/A | Codecov enforcement | N/A | Threshold gates |
-| **CI/CD** | Automated commits only | Multi-workflow CI | Comprehensive | Validation + reporting |
-| **Documentation** | None | Comprehensive | Good | README + contributing |
-| **Agent Rules** | None | Comprehensive .claude/ rules | None | Full test type coverage |
+| Dimension | odh-build-metadata | odh-dashboard | notebooks | kserve |
+|-----------|-------------------|---------------|-----------|--------|
+| CI/CD Workflows | 0 | 15+ | 10+ | 20+ |
+| Test Files | 0 | 2000+ | 100+ | 500+ |
+| Coverage Tracking | None | Codecov | Per-image | Codecov |
+| YAML Validation | None | ESLint | yamllint | golangci |
+| Kustomize Testing | None | N/A | N/A | envtest |
+| Security Scanning | None | Snyk | Trivy | CodeQL |
+| Branch Protection | None | Yes | Yes | Yes |
+| Agent Rules | None | Comprehensive | None | None |
 
-**Key Insight**: This repository is fundamentally different from code repositories. The gold standard comparison should focus on **data quality practices** rather than traditional code quality:
-- Schema validation (like OpenAPI spec validation)
-- Data integrity checks (like database constraint enforcement)
-- Drift detection (like infrastructure-as-code drift detection)
+### Context
+
+This comparison must be read in context: `odh-build-metadata` is fundamentally different from the gold standard repos — it is not a software project but a machine-generated data store. However, even data stores that serve as critical infrastructure should have validation. The comparison highlights that this repo has **none** of the quality gates that peer repos employ, despite being a critical link in the ODH build chain.
 
 ## File Paths Reference
 
-| Path | Description |
-|------|-------------|
-| `components/odh-operator/{hash}/manifests-config.yaml` | Component version pinning (18 primary + 47 additional) |
-| `components/odh-operator/{hash}/manifests/` | Kubernetes manifests (~1,485 files per snapshot) |
-| `early-gate/{component}/{pr}/early-gate-test-summary.yaml` | PR test results |
-| `ci-artifacts/test-artifacts/{group}-{id}/` | E2E test artifact tarballs |
+| File | Purpose |
+|------|---------|
+| `components/odh-operator/<sha>/manifests-config.yaml` | Maps component source repos to manifest destinations |
+| `components/odh-operator/<sha>/manifests/` | Kubernetes manifests for all ODH components |
+| `components/odh-operator/<sha>/manifests/dashboard/` | ODH Dashboard manifests (kustomize overlays for odh/rhoai) |
+| `components/odh-operator/<sha>/manifests/kserve/` | KServe manifests |
+| `components/odh-operator/<sha>/manifests/workbenches/` | Notebook controller manifests |
+| `components/odh-operator/<sha>/manifests/datasciencepipelines/` | DS Pipelines operator manifests |
+| `components/odh-operator/<sha>/manifests/ray/` | KubeRay operator manifests |
+| `components/odh-operator/<sha>/manifests/trustyai/` | TrustyAI manifests |
+| `components/odh-operator/<sha>/manifests/modelcontroller/` | Model controller manifests |
+| `components/odh-operator/<sha>/manifests/trainer/` | Trainer manifests |
 
-## Summary
+### Components Tracked (18 primary + 60+ additional)
 
-`odh-build-metadata` is a **pure metadata repository** that serves as the artifact store for Konflux-built operator image snapshots. It has a well-defined automated pipeline for committing build metadata but lacks any validation, documentation, or quality gates on the data it stores.
-
-The most impactful improvement would be **adding YAML schema validation** to catch malformed metadata before it reaches downstream consumers. The second priority should be **documentation** to make the repository's purpose and structure discoverable.
-
-Given the repository's nature as a data store (not a code repository), traditional code quality metrics are not directly applicable. Instead, focus on **data quality practices**: schema validation, integrity checking, drift detection, and observability of the early-gate test results already being collected.
+The repo tracks manifests from these upstream repositories:
+- opendatahub-io/notebooks (workbenches, pipeline runtimes)
+- opendatahub-io/kserve (model serving)
+- opendatahub-io/kubeflow (notebook controllers)
+- opendatahub-io/data-science-pipelines-operator
+- opendatahub-io/kuberay (Ray)
+- opendatahub-io/trustyai-service-operator
+- opendatahub-io/odh-model-controller
+- opendatahub-io/model-registry-operator
+- opendatahub-io/odh-dashboard
+- opendatahub-io/training-operator
+- opendatahub-io/feast (Feast operator)
+- opendatahub-io/llama-stack-k8s-operator
+- opendatahub-io/trainer
+- opendatahub-io/mlflow-operator
+- opendatahub-io/models-as-a-service
+- opendatahub-io/spark-operator
+- opendatahub-io/workload-variant-autoscaler
+- opendatahub-io/distributed-workloads (training images)

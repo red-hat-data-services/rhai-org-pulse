@@ -1,156 +1,180 @@
 ---
 repository: "opendatahub-io/opendatahub-community"
-overall_score: 2.5
+overall_score: 2.8
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "N/A - Documentation-only repository with no source code"
+    status: "N/A — no source code; pure governance/documentation repository"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "N/A - No executable code to test"
+    status: "N/A — no source code to test"
   - dimension: "Build Integration"
     score: 0.0
-    status: "N/A - No build artifacts or container images"
+    status: "N/A — no build artifacts produced"
   - dimension: "Image Testing"
     score: 0.0
-    status: "N/A - No container images produced"
+    status: "N/A — no container images"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "N/A - No code coverage applicable"
+    status: "N/A — no code coverage applicable"
   - dimension: "CI/CD Automation"
     score: 2.0
-    status: "No CI/CD workflows; only GitHub issue templates exist"
+    status: "Issue templates exist but no CI workflows for linting, link checking, or YAML validation"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, .claude/ directory, or agent rules present"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
+  - dimension: "Documentation Quality"
+    score: 8.0
+    status: "Comprehensive governance, onboarding, feature-dev requirements, and community membership docs"
+  - dimension: "Process Maturity"
+    score: 7.0
+    status: "Well-defined SIG structure, feature lifecycle, and component onboarding with Jira templates"
 critical_gaps:
   - title: "No CI/CD workflows at all"
-    impact: "No automated validation of YAML schemas, markdown linting, or link checking on PRs"
-    severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No markdown linting or link validation"
-    impact: "Broken links, inconsistent formatting, and stale references go undetected"
+    impact: "Broken links, stale references, YAML syntax errors, and formatting issues go undetected"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "Stale governance data in sigs.yaml"
-    impact: "SIG leadership uses placeholder names (ABC, XYZ) with placeholder URLs, undermining the governance directory's purpose"
+  - title: "No automated link checking"
+    impact: "Dead URLs accumulate in governance docs read by the entire ODH community"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No automated OWNERS file validation"
-    impact: "OWNERS files could become stale without automated checks against org membership"
-    severity: "MEDIUM"
-    effort: "4-8 hours"
-  - title: "No CODEOWNERS file for PR routing"
-    impact: "PRs to SIG-specific directories are not automatically routed to SIG chairs"
-    severity: "MEDIUM"
     effort: "1-2 hours"
-  - title: "Contributing guide testing section is incomplete"
-    impact: "Testing guidance has a TODO placeholder with no actual content"
+  - title: "No YAML validation for sigs.yaml and membership.yaml"
+    impact: "Schema drift or typos in structured governance data go unnoticed"
     severity: "MEDIUM"
-    effort: "2-4 hours"
-quick_wins:
-  - title: "Add markdownlint CI workflow"
-    effort: "1-2 hours"
-    impact: "Catch formatting inconsistencies and broken markdown on every PR"
-  - title: "Add link-checker CI workflow"
-    effort: "1-2 hours"
-    impact: "Detect broken internal and external links automatically"
-  - title: "Add CODEOWNERS file for automated PR routing"
-    effort: "30 minutes"
-    impact: "Ensure SIG chairs and WG leads are auto-requested for reviews on their directories"
-  - title: "Populate sigs.yaml with real data"
     effort: "2-3 hours"
-    impact: "Make the governance directory actually useful for community navigation"
+  - title: "Placeholder data still present in sigs.yaml"
+    impact: "SIG leadership contacts show 'abc' and 'XYZ' instead of real names; meeting URLs show 'https://url.here'"
+    severity: "HIGH"
+    effort: "1 hour"
+  - title: "No PR review automation"
+    impact: "No CODEOWNERS, no auto-labeling, no required reviewers for governance changes"
+    severity: "MEDIUM"
+    effort: "2-3 hours"
+quick_wins:
+  - title: "Add markdownlint workflow"
+    effort: "1 hour"
+    impact: "Catch formatting inconsistencies across all governance docs automatically"
+  - title: "Add link checker workflow (lychee or markdown-link-check)"
+    effort: "1-2 hours"
+    impact: "Prevent dead links in community-facing documentation"
+  - title: "Add CODEOWNERS file"
+    effort: "30 minutes"
+    impact: "Auto-assign reviewers for governance doc changes, prevent unreviewed modifications"
+  - title: "Fix placeholder data in sigs.yaml"
+    effort: "1 hour"
+    impact: "Make SIG directory actually useful for community members seeking contacts"
+  - title: "Add YAML schema validation workflow"
+    effort: "2 hours"
+    impact: "Prevent malformed membership or SIG config from merging"
 recommendations:
   priority_0:
-    - "Add CI workflows for markdown linting (markdownlint-cli2) and link checking (lychee or markdown-link-check)"
-    - "Populate sigs.yaml with real SIG chair names, meeting URLs, and subproject OWNERS links"
-    - "Complete the TODO section in contributing.md about testing guidelines"
+    - "Add CI workflows for markdown linting, link checking, and YAML validation"
+    - "Fix placeholder/template data in sigs.yaml (leadership names, meeting URLs, slack channels)"
   priority_1:
-    - "Add CODEOWNERS file mapping SIG/WG directories to their respective chairs"
-    - "Add YAML schema validation for sigs.yaml, membership.yaml, and issue templates"
-    - "Create a PR template with checklist for governance document changes"
-    - "Add DCO (Developer Certificate of Origin) sign-off check"
+    - "Add CODEOWNERS file mapping governance docs to steering committee members"
+    - "Add PR template for governance change proposals"
+    - "Create a spell-check CI job for community-facing documentation"
   priority_2:
-    - "Add agent rules (CLAUDE.md) with guidelines for governance document contributions"
-    - "Set up GitHub Pages or redirect to render governance docs as a browsable site"
-    - "Add automated stale issue/PR management with actions/stale"
-    - "Consider adding a SECURITY.md file for vulnerability reporting"
+    - "Add agent rules (CLAUDE.md) for documentation contribution patterns"
+    - "Automate stale-issue/stale-PR labeling and cleanup"
+    - "Add a table-of-contents generator for longer docs"
 ---
 
 # Quality Analysis: opendatahub-community
 
 ## Executive Summary
 
-- **Overall Score: 2.5/10**
-- **Repository Type**: Community governance and documentation (no source code)
-- **Primary Language**: Markdown (100% documentation)
-- **Key Strengths**: Comprehensive feature development lifecycle documentation, well-structured governance model modeled after Kubernetes community, structured issue templates for bug reports and release tracking
-- **Critical Gaps**: Zero CI/CD automation, no markdown/link validation, stale placeholder data in sigs.yaml, incomplete contributing guidelines
-- **Agent Rules Status**: Missing
+- **Overall Score: 2.8/10** (weighted by standard software dimensions)
+- **Repository Type**: Pure governance/documentation — no source code, no builds, no tests
+- **Primary Language**: Markdown (2,355 lines across 31 files) + YAML (2 structured config files)
+- **Key Strength**: Comprehensive governance documentation with well-defined feature maturity lifecycle (Dev Preview → Tech Preview → GA), detailed community membership ladder, and structured component onboarding process with Jira templates
+- **Critical Gap**: Zero CI/CD automation — no workflows exist to lint markdown, validate YAML, check links, or enforce any quality gate on PRs
+- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
 
-This repository serves as the **governance hub** for the Open Data Hub (ODH) project. It defines SIG structures, community membership requirements, contribution guidelines, and feature development lifecycle requirements (Dev Preview -> Tech Preview -> GA). It contains **no source code, no tests, no build files, and no CI/CD pipelines**.
+### Important Context
 
-While the standard quality dimensions (unit tests, E2E, image testing) are not applicable, the repository has significant quality gaps in **documentation validation, automation, and data freshness** that undermine its role as the authoritative governance reference.
+This repository is the **community governance hub** for the entire Open Data Hub project. It defines policies and processes that affect all ODH/RHOAI component repos. The standard code-quality dimensions (unit tests, image testing, coverage) are not applicable. The relevant quality dimensions are **documentation quality**, **process maturity**, and **CI/CD automation for documentation**.
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0/10 | N/A - Documentation-only repository with no source code |
-| Integration/E2E | 0/10 | N/A - No executable code to test |
-| **Build Integration** | **0/10** | **N/A - No build artifacts or container images** |
-| Image Testing | 0/10 | N/A - No container images produced |
-| Coverage Tracking | 0/10 | N/A - No code coverage applicable |
-| CI/CD Automation | 2/10 | No workflows; only GitHub issue templates provide structure |
-| Agent Rules | 0/10 | No CLAUDE.md, .claude/ directory, or agent rules present |
-
-**Note**: This is a governance/documentation repository. The standard code quality dimensions are structurally inapplicable. The overall score reflects documentation quality, automation, and governance completeness rather than code testing metrics.
+| Unit Tests | 0/10 | N/A — no source code |
+| Integration/E2E | 0/10 | N/A — no source code |
+| **Build Integration** | **0/10** | **N/A — no build artifacts** |
+| Image Testing | 0/10 | N/A — no container images |
+| Coverage Tracking | 0/10 | N/A — no code coverage applicable |
+| CI/CD Automation | 2/10 | Issue templates exist but no CI workflows whatsoever |
+| Agent Rules | 0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory |
+| **Documentation Quality** | **8/10** | **Comprehensive governance, onboarding, and feature lifecycle docs** |
+| **Process Maturity** | **7/10** | **Well-defined SIG structure, Jira templates, component onboarding** |
 
 ## Critical Gaps
 
-### 1. No CI/CD Workflows
-- **Impact**: No automated validation occurs on any PR. Markdown formatting errors, broken links, YAML syntax issues, and inconsistent document structure can be merged without any checks.
-- **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: The `.github/` directory contains only issue templates. There is no `.github/workflows/` directory at all. For a governance repository that defines standards for dozens of downstream repos, this sets a poor example.
+### 1. No CI/CD Workflows (Severity: HIGH)
 
-### 2. Stale Placeholder Data in sigs.yaml
-- **Impact**: The `sigs.yaml` file — intended as the canonical directory of SIG leadership, meeting schedules, and subproject ownership — contains placeholder values throughout: `github: abc`, `name: ABC`, `url: https://url.here`, `slack: slack-channel-here`. This renders the governance directory non-functional.
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: Both `sig-ml-developer-experience` and `sig-platform` entries use identical placeholder templates. The file appears to have been created from a template but never populated with real data.
+The `.github/workflows/` directory does not exist. This means:
 
-### 3. No Markdown Linting or Link Validation
-- **Impact**: The repository has ~2,355 lines of markdown across 30+ files, with numerous external links to Google Docs, Jira, GitHub repos, and Red Hat Spaces. None of these links are validated — broken links to moved Jira issues or archived pages go undetected.
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
+- **No markdown linting** — formatting inconsistencies, broken headers, and style violations go unchecked
+- **No link checking** — dead URLs in governance docs accumulate silently (multiple external links to Google Docs, Jira, Slack, Red Hat internal pages)
+- **No YAML validation** — `sigs.yaml` and `membership.yaml` have no schema enforcement
+- **No spell checking** — typos in community-facing governance documents persist
+- **No PR checks** — any change merges without automated validation
 
-### 4. Incomplete Contributing Guide
-- **Impact**: The `contributing.md` file has a `TODO: Add information about how to submit tests and viewing results` placeholder in the Testing section. For a repository that defines community standards, an incomplete contributing guide undermines credibility.
-- **Severity**: MEDIUM
-- **Effort**: 2-4 hours
+**Impact**: This is the governance hub for 14+ component repositories. Broken links or stale information misdirect contributors across the entire ODH ecosystem.
 
-### 5. No CODEOWNERS File
-- **Impact**: PRs modifying SIG-specific directories (e.g., `sig-ml-ops/`) are not automatically routed to the SIG chairs or relevant reviewers. This slows down review and risks changes being merged without appropriate oversight.
-- **Severity**: MEDIUM
-- **Effort**: 1-2 hours
+**Effort**: 2-4 hours to set up basic linting, link-checking, and YAML validation workflows.
 
-### 6. No PR Template
-- **Impact**: Contributors can open PRs without a structured description or checklist, leading to inconsistent PR quality for governance document changes.
-- **Severity**: LOW
-- **Effort**: 1 hour
+### 2. Placeholder Data in sigs.yaml (Severity: HIGH)
+
+The `sigs.yaml` file contains template/placeholder data that was never filled in:
+- SIG leadership: `github: abc`, `name: ABC`, `github: XYZ`, `name: XYZ`
+- Meeting URLs: `https://url.here`
+- Mailing lists: `https://url.here`
+- Slack channels: `slack-channel-here`
+- Mission statements: `Mission statement goes here.`
+
+**Impact**: Community members looking for SIG contacts, meeting links, or mission context get useless placeholder text. This undermines the purpose of having a structured SIG directory.
+
+**Effort**: 1 hour — fill in actual data or remove placeholder entries.
+
+### 3. No CODEOWNERS File (Severity: MEDIUM)
+
+No `CODEOWNERS` or equivalent exists. Governance documents that affect the entire project can be modified without requiring review from steering committee members or SIG chairs.
+
+**Impact**: Critical policy changes (membership requirements, feature maturity standards) could merge without appropriate oversight.
+
+**Effort**: 30 minutes.
+
+### 4. No PR Review Automation (Severity: MEDIUM)
+
+- No auto-labeling (e.g., `kind/governance`, `sig/*`)
+- No required reviewers
+- No PR templates for governance changes
+- No stale-issue bot
+
+**Impact**: Governance PRs lack structure; contributors don't know what reviewers expect.
+
+**Effort**: 2-3 hours.
+
+### 5. Testing Documentation is Incomplete (Severity: MEDIUM)
+
+The `contributing.md` Testing section says:
+> *TODO: Add information about how to submit tests and viewing results*
+
+This TODO has apparently been present since the file was created. For a governance repo that defines testing requirements across the ODH ecosystem, this is a significant gap.
+
+**Effort**: 2-4 hours to document cross-project testing standards.
 
 ## Quick Wins
 
-### 1. Add Markdownlint CI Workflow (1-2 hours)
-Catch formatting inconsistencies automatically on every PR.
+### 1. Add Markdown Linting Workflow (1 hour)
 ```yaml
-# .github/workflows/lint.yml
+# .github/workflows/lint-markdown.yml
 name: Lint Markdown
 on: [pull_request]
 jobs:
-  lint:
+  markdownlint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -159,210 +183,204 @@ jobs:
           globs: '**/*.md'
 ```
 
-### 2. Add Link Checker CI Workflow (1-2 hours)
-Detect broken internal and external links automatically.
+### 2. Add Link Checker Workflow (1-2 hours)
 ```yaml
-# .github/workflows/links.yml
+# .github/workflows/check-links.yml
 name: Check Links
 on:
   pull_request:
   schedule:
     - cron: '0 9 * * 1'  # Weekly on Monday
 jobs:
-  check:
+  links:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: lycheeverse/lychee-action@v2
         with:
-          args: '--verbose --no-progress **/*.md'
+          args: --verbose --no-progress '**/*.md'
+          fail: true
 ```
 
-### 3. Add CODEOWNERS File (30 minutes)
-Auto-assign reviewers based on directory ownership.
+### 3. Add CODEOWNERS (30 minutes)
 ```
-# CODEOWNERS
-/sig-ml-developer-experience/ @sig-ml-dev-exp-chairs
-/sig-ml-ops/                  @sig-ml-ops-chairs
-/sig-platform/                @sig-platform-chairs
-/proposal/                    @steering-committee
-*.md                          @community-maintainers
+# .github/CODEOWNERS
+# Steering committee reviews all governance changes
+*.md @shgriffi @LaVLaS @jkoehler-redhat
+sigs.yaml @shgriffi @LaVLaS @jkoehler-redhat
+membership.yaml @shgriffi @LaVLaS @jkoehler-redhat
 ```
 
-### 4. Add YAML Validation (1 hour)
-Validate schema for `sigs.yaml` and `membership.yaml`.
+### 4. Fix sigs.yaml Placeholder Data (1 hour)
+
+Replace all placeholder entries (`abc`, `XYZ`, `url.here`, `slack-channel-here`, `Mission statement goes here`) with actual SIG data or remove unfilled entries.
+
+### 5. Add YAML Validation Workflow (2 hours)
 ```yaml
 # .github/workflows/validate-yaml.yml
 name: Validate YAML
 on: [pull_request]
 jobs:
-  validate:
+  yaml-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: |
-          pip install yamllint
-          yamllint sigs.yaml membership.yaml .github/ISSUE_TEMPLATE/*.yaml
+      - uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: '*.yaml'
+          strict: true
 ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Status: Non-existent**
+**Status**: Effectively absent.
 
-There are **zero CI/CD workflows** in this repository. The `.github/` directory contains only:
-- `.github/ISSUE_TEMPLATE/bug_report.yaml` — Structured bug report template with component dropdown (ODH Operator, Dashboard, Notebook Controller, etc.)
-- `.github/ISSUE_TEMPLATE/release_tracker.yaml` — Release tracking template with component checklist and structured comment format for automation
-
-The bug report template is well-structured with component selection dropdown, but the component list may need periodic updates as the ODH ecosystem evolves. The release tracker template shows some automation thinking with its structured comment format (`#Release#` markers), suggesting there may be external automation consuming this data.
-
-**Missing workflows that should exist for a governance repo:**
-- Markdown linting (markdownlint)
-- Link checking (lychee, markdown-link-check)
-- YAML validation (yamllint)
-- DCO sign-off verification
-- Spell checking
-- Stale issue management
+- **Workflows**: None. The `.github/workflows/` directory does not exist.
+- **Issue Templates**: 2 issue templates exist (bug report, release tracker) — these are well-structured YAML-based templates with dropdowns, checkboxes, and validation.
+  - `bug_report.yaml` — covers ODH component selection, current/expected behavior, reproduction steps, version info
+  - `release_tracker.yaml` — structured release tracking with component checklist and comment-based automation format
+- **No PR Template**: No `.github/pull_request_template.md` exists.
+- **No Auto-labeling**: No labeler configuration.
+- **No Stale Bot**: No stale issue/PR automation.
 
 ### Test Coverage
 
-**Status: Not Applicable**
+**Not applicable** — this is a documentation-only repository. No source code exists.
 
-This repository contains no source code in any programming language. It is 100% markdown documentation, YAML configuration, and image assets. There are no test files, test frameworks, or testing infrastructure of any kind.
+However, the `feature-development-requirements.md` document defines comprehensive testing requirements for component repos:
+- Unit Tests
+- Functional Tests
+- Integration Tests
+- Regression Tests
+- End-to-End Tests
+- Disconnected environment testing
+- Multi-architecture support validation
+- Security architecture review
 
-**File breakdown:**
-- 30+ Markdown files (~2,355 lines total)
-- 2 YAML configuration files (`sigs.yaml`, `membership.yaml`)
-- 2 YAML issue templates
-- 7 image files (PNG, JPG)
-- 5 OWNERS files (Kubernetes-style ownership)
+This is a strength — the governance repo defines the testing bar even though it doesn't contain tests itself.
 
 ### Code Quality
 
-**Status: No tooling configured**
+**Not applicable** for code linting. No linting tools are configured for the documentation content:
 
-- No `.pre-commit-config.yaml`
-- No linting configuration for markdown or YAML
-- No `.editorconfig` for consistent formatting
-- No spell-check dictionary or configuration
-
-**Documentation Quality Assessment:**
-- `feature-development-requirements.md` (332 lines) is the standout document — comprehensive, well-structured with clear maturity levels, Jira template references, and detailed workflow steps
-- `community-membership.md` (217 lines) is thorough and mirrors Kubernetes community membership patterns
-- `governance.md` is well-organized with clear SIG/steering committee structure
-- `contributing.md` has an incomplete testing section (TODO placeholder)
-- `odh-repositories.md` clearly defines repository tiers (Associated, SIG, Core) with rules for each
+- No markdownlint configuration (`.markdownlint.yaml` / `.markdownlint-cli2.yaml`)
+- No spell checker (`cspell`, `typos`)
+- No YAML linter (`yamllint`)
+- No pre-commit hooks
 
 ### Container Images
 
-**Status: Not Applicable**
-
-No Dockerfiles, Containerfiles, or container-related configuration exists. This is expected for a governance repository.
+**Not applicable** — no Dockerfiles, Containerfiles, or build configurations.
 
 ### Security
 
-**Status: Minimal**
+- No CodeQL (no code to scan)
+- No secret detection (no `.gitleaks.toml`)
+- No dependency scanning (no dependencies)
 
-- No `SECURITY.md` for vulnerability disclosure
-- No CodeQL, Trivy, or other scanning (not applicable for docs-only repo)
-- No secret detection configuration
-- Code of Conduct is present (`CODE_OF_CONDUCT.md`)
-- License is present (`LICENSE` — GNU GPL v3.0)
+However, the `feature-development-requirements.md` defines security requirements for component repos:
+- Security architecture review with ProdSec
+- Konflux integration
+- FIPS compliance ("Designed for FIPS")
+- Snyk scanning
+- CVE SLA management
+- Threat modeling with SDElement
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: None — no CLAUDE.md, AGENTS.md, or `.claude/` directory
+- **Coverage**: No agent rules exist at all
 - **Quality**: N/A
-- **Gaps**: Complete absence of agent rules. For a governance repo, agent rules could guide AI-assisted contributions to governance documents, proposal writing, and SIG charter updates.
-- **Recommendation**: Create a CLAUDE.md with guidelines for:
-  - Document formatting standards
-  - SIG charter template usage
-  - Proposal document structure
-  - Links to referenced Jira templates and external docs
+- **Gaps**: No CLAUDE.md, AGENTS.md, or `.claude/` directory
+- **Recommendation**: Create a `CLAUDE.md` with documentation contribution patterns, governance change procedures, and style guidelines. Use `/test-rules-generator` for any future code additions.
+
+### Documentation Quality (Bonus Dimension)
+
+This is where the repository excels:
+
+**Strengths:**
+- **Feature Development Requirements** (`feature-development-requirements.md`) — exceptionally detailed 332-line document covering Dev Preview → Tech Preview → GA lifecycle with Jira template references, security requirements, packaging requirements, and acceptance criteria
+- **Community Membership** (`community-membership.md`) — clear role ladder (Member → Reviewer → Approver → Subproject Owner) with specific requirements and responsibilities
+- **Contributing Guide** (`contributing.md`) — PR workflow, code review expectations, best practices
+- **Repository Guidelines** (`odh-repositories.md`) — tiered repo system (Associated → SIG → Core) with rules for creation and removal
+- **Component Guidelines** (`GuidelinesForNewComponents.md`) — proposal-to-PR process for new components
+- **Governance** (`governance.md`) — SIG structure, steering committee, cross-project coordination
+- **7 Proposals** — detailed architecture proposals for components (kserve, distributed workloads, model registry, etc.)
+
+**Weaknesses:**
+- `sigs.yaml` full of placeholder data
+- Testing section in `contributing.md` has a TODO
+- No table of contents in longer documents
+- Some inconsistency in document structure (some docs have clear headers, others less organized)
+- `feature-development-requirements.md` references internal Red Hat tools/docs (Jira templates, Google Docs, Confluence) that may not be accessible to community contributors
+
+### Process Maturity (Bonus Dimension)
+
+**Strengths:**
+- Structured component onboarding with Jira templates (Dev Preview: RHOAIENG-31244, Tech Preview: RHOAIENG-31290, GA: RHOAIENG-31303)
+- Clear maturity progression: Dev Preview → Tech Preview → GA → Obsolete/Deprecated
+- SIG-based organization with charters, leadership roles, and subprojects
+- Working Group (WG) structure for cross-cutting concerns (6 WGs defined)
+- Deprecation process defined with grounds for removal
+- Release tracker issue template with structured comment format for automation
+
+**Weaknesses:**
+- SIG directory (`sigs.yaml`) contains only placeholder data — the process exists but the data doesn't
+- No evidence of automated enforcement of any governance processes
+- No metrics or health checks on SIG activity
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-
-1. **Add CI workflows for markdown linting and link checking** — A governance repository that defines standards for 15+ downstream code repositories should itself have automated quality checks. Without them, broken links and formatting errors erode trust in the governance documentation.
-
-2. **Populate sigs.yaml with real data** — The SIG directory is the primary discovery mechanism for new contributors. With placeholder values, it fails its core purpose. Update with actual GitHub handles, meeting URLs, Slack channels, and subproject OWNERS links.
-
-3. **Complete the TODO in contributing.md testing section** — The contributing guide explicitly acknowledges a gap: `TODO: Add information about how to submit tests and viewing results`. This should reference the comprehensive `feature-development-requirements.md` for testing standards by feature level.
+1. **Add CI/CD workflows** — markdownlint, link checker, YAML validation. Zero automation for a repo that defines standards for 14+ component repos is a significant risk.
+2. **Fix sigs.yaml placeholder data** — replace `abc`, `XYZ`, `url.here` with real contacts or remove the entries. The file currently provides zero useful information.
+3. **Complete the TODO in contributing.md** — the testing section says "TODO: Add information about how to submit tests and viewing results."
 
 ### Priority 1 (High Value)
-
-1. **Add CODEOWNERS file** — Map SIG directories to their respective chairs for automatic PR review assignment.
-
-2. **Add YAML schema validation** — Validate `sigs.yaml` and `membership.yaml` against schemas to prevent structural regressions.
-
-3. **Create a PR template** — Add `.github/PULL_REQUEST_TEMPLATE.md` with a checklist for governance document changes (e.g., "Updated sigs.yaml if SIG ownership changed", "Verified all links work").
-
-4. **Add DCO sign-off enforcement** — As a project under GPL v3.0 that accepts contributions, enforce Developer Certificate of Origin sign-off on commits.
-
-5. **Add SECURITY.md** — Even for a docs-only repo, having a security policy (pointing to the main ODH security reporting channel) is good practice.
+4. **Add CODEOWNERS** — governance docs affecting the entire ODH ecosystem should require steering committee review.
+5. **Add PR template** — standardize governance change proposals with required fields (scope, impact, stakeholders notified).
+6. **Add spell-check CI** — community-facing documentation should be error-free.
+7. **Add auto-labeling** — label PRs by SIG, WG, or doc type for easier triage.
 
 ### Priority 2 (Nice-to-Have)
-
-1. **Add agent rules (CLAUDE.md)** — Provide AI contribution guidelines for governance document editing, proposal formatting, and SIG charter structure.
-
-2. **Set up GitHub Pages** — Render governance docs as a browsable site for easier community navigation.
-
-3. **Add automated stale management** — Use `actions/stale` to manage old issues and PRs automatically.
-
-4. **Add spell-checking CI** — Use cspell or similar to catch typos in governance documents.
-
-5. **Consider migrating from `master` branch references** — The CODE_OF_CONDUCT.md still references `master` branch while the repo uses `main`.
+8. **Create CLAUDE.md** — agent rules for documentation contribution patterns, style guidelines, and governance change procedures.
+9. **Add stale-bot** — auto-close inactive issues/PRs with reminders.
+10. **Add table-of-contents generation** — for longer docs like `feature-development-requirements.md` (already has one manually maintained).
+11. **Add a doc-site generator** — consider publishing governance docs via GitHub Pages (Jekyll/Hugo) for better discoverability.
 
 ## Comparison to Gold Standards
 
-| Dimension | opendatahub-community | kubernetes/community (Gold Standard) | Gap |
-|-----------|----------------------|--------------------------------------|-----|
-| CI/CD Workflows | None | markdownlint, link-check, YAML validation, verify scripts | Critical |
-| CODEOWNERS | Missing | Comprehensive per-SIG CODEOWNERS | High |
-| SIG Directory | Placeholder data | Fully populated with real data, auto-generated | Critical |
-| PR Templates | Missing | Structured templates for different change types | Medium |
-| Bot Automation | Release tracker template only | Prow, sig-label-bot, triage-party | High |
-| Documentation | Strong content, no validation | Strong content + automated validation | Medium |
-| Issue Templates | 2 templates (bug, release) | Multiple templates (feature, bug, membership, etc.) | Low |
-| Governance Docs | Comprehensive | Comprehensive | Parity |
-| Feature Lifecycle | Excellent (Dev Preview -> TP -> GA) | Well-defined KEP process | Parity |
-
-The kubernetes/community repository serves as the gold standard for governance repos. While opendatahub-community has strong *content* (especially the feature-development-requirements.md), it lacks the *automation and tooling* that makes governance documentation reliable and maintainable.
+| Dimension | opendatahub-community | kubernetes/community (Gold Standard) |
+|-----------|----------------------|--------------------------------------|
+| CI/CD for docs | None | markdownlint, link check, spell check, YAML validation |
+| CODEOWNERS | Missing | Comprehensive, per-SIG ownership |
+| SIG directory | Placeholder data | Real contacts, meeting links, Slack channels |
+| PR templates | Missing | Structured templates for KEPs, SIG changes |
+| Issue templates | 2 (good quality) | Comprehensive set with auto-labeling |
+| Governance docs | Strong content, no enforcement | Strong content with automated enforcement |
+| Proposals | 7 proposals (good) | KEP process with structured lifecycle |
+| Stale management | None | Stale bot with labeled exemptions |
+| Agent rules | None | N/A (not yet common) |
 
 ## File Paths Reference
 
-### Governance
-- `governance.md` — Top-level governance structure
-- `sig-governance.md` — Detailed SIG operating mechanics
-- `sig-charter-template.md` — Template for new SIG charters
-- `sig-charter-guide.md` — Guide for creating SIG charters
-- `community-membership.md` — Membership roles and requirements
-- `feature-development-requirements.md` — Feature lifecycle standards (Dev Preview/TP/GA)
-
-### SIG Directories
-- `sig-ml-developer-experience/` — Charter, README, OWNERS
-- `sig-ml-ops/` — Charter, README, OWNERS
-- `sig-platform/` — Charter, README, OWNERS
-
-### Working Group Directories
-- `wg-distributed-workloads/`, `wg-model-registry/`, `wg-on-prem/`
-- `wg-release-engineering/`, `wg-serving-integration/`, `wg-xai/`
-
-### Configuration
-- `sigs.yaml` — SIG directory (placeholder data)
-- `membership.yaml` — Membership request template schema
-- `.github/ISSUE_TEMPLATE/bug_report.yaml` — Bug report template
-- `.github/ISSUE_TEMPLATE/release_tracker.yaml` — Release tracking template
-
-### Contributing
-- `contributing.md` — Contribution guidelines
-- `contributor-cheatsheet.md` — Quick reference for contributors
-- `GuidelinesForNewComponents.md` — New component submission process
-- `odh-repositories.md` — Repository tier system and rules
-
-### Proposals
-- `proposal/kserve-serving.md`, `proposal/model-registry.md`, `proposal/distributed-workloads.md`
-- `proposal/modelmesh-serving.md`, `proposal/pachyderm.md`, `proposal/release-engineering.md`, `proposal/xskipper.md`
+| File | Purpose |
+|------|---------|
+| `README.md` | Project overview and entry point |
+| `governance.md` | SIG structure and steering committee |
+| `community-membership.md` | Role ladder and requirements |
+| `contributing.md` | PR and review workflow |
+| `feature-development-requirements.md` | Dev Preview/TP/GA lifecycle requirements |
+| `GuidelinesForNewComponents.md` | Component proposal process |
+| `odh-repositories.md` | Repository tiers and management |
+| `sigs.yaml` | SIG directory (placeholder data) |
+| `membership.yaml` | Membership request template |
+| `sig-governance.md` | SIG operating mechanics |
+| `sig-charter-template.md` | Template for new SIG charters |
+| `.github/ISSUE_TEMPLATE/bug_report.yaml` | Bug report template |
+| `.github/ISSUE_TEMPLATE/release_tracker.yaml` | Release tracking template |
+| `proposal/*.md` | Component proposals (7 files) |
+| `sig-*/` | SIG directories with charters and OWNERS |
+| `wg-*/` | Working group directories |

@@ -1,133 +1,142 @@
 ---
 repository: "red-hat-data-services/mlmd-bazel-dist"
-overall_score: 1.0
+overall_score: 1.2
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No test files exist; repository contains only build artifacts and Dockerfiles"
+    status: "No tests exist - repository is a Bazel cache/dependency bundle"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests; no test infrastructure of any kind"
+    status: "No integration or E2E tests of any kind"
   - dimension: "Build Integration"
     score: 1.0
-    status: "Dockerfiles present but no automated PR-time build validation"
+    status: "Dockerfiles present but no CI workflow validates them"
   - dimension: "Image Testing"
-    score: 0.5
-    status: "Multi-stage Dockerfile builds image but no runtime validation, scanning, or SBOM"
+    score: 0.0
+    status: "No image testing, scanning, or runtime validation"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling, no codecov, no thresholds"
+    status: "No coverage tracking - no code to cover"
   - dimension: "CI/CD Automation"
-    score: 0.0
-    status: "No CI/CD workflows, no GitHub Actions, no Makefile, no automation"
+    score: 1.0
+    status: "No CI/CD workflows - no .github/workflows directory"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules"
+    status: "No agent rules, CLAUDE.md, or .claude/ directory"
 critical_gaps:
   - title: "No CI/CD pipeline at all"
-    impact: "No automated quality gates; all changes are unvalidated before merge"
+    impact: "No automated validation of any kind — Dockerfile changes could break downstream ml-metadata builds silently"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "No tests of any kind"
-    impact: "No verification that Bazel cache artifacts are valid or that Dockerfiles build correctly"
+  - title: "No container image build validation"
+    impact: "Dockerfiles may drift from upstream ml-metadata changes and break without notice"
     severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "No security scanning"
-    impact: "Container images and vendored dependencies are never scanned for vulnerabilities"
+    effort: "4-6 hours"
+  - title: "No security scanning on committed Bazel artifacts"
+    impact: "15GB of vendored binary artifacts with no vulnerability scanning — potential supply chain risk"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No image runtime validation"
-    impact: "Built images may fail at startup without detection"
+  - title: "No dependency update automation"
+    impact: "Bazel 5.3.0 is pinned with no mechanism to detect or adopt newer versions"
     severity: "MEDIUM"
-    effort: "4-6 hours"
-quick_wins:
-  - title: "Add a basic GitHub Actions workflow for Dockerfile lint and build validation"
     effort: "2-3 hours"
-    impact: "Ensures Dockerfiles remain syntactically valid and buildable on every PR"
-  - title: "Add Trivy container scanning"
-    effort: "1-2 hours"
-    impact: "Catches known CVEs in base images and vendored dependencies"
-  - title: "Add hadolint for Dockerfile linting"
+  - title: "Single commit, stale repository"
+    impact: "Repository appears unmaintained — only 1 commit on main, unknown if still in active use"
+    severity: "MEDIUM"
     effort: "1 hour"
-    impact: "Enforces Dockerfile best practices and catches common mistakes"
-  - title: "Add CODEOWNERS file"
+quick_wins:
+  - title: "Add a basic GitHub Actions workflow to validate Dockerfile syntax"
+    effort: "1-2 hours"
+    impact: "Catches Dockerfile syntax errors on PR, prevents broken builds"
+  - title: "Add Trivy scan on the committed Bazel artifacts and Dockerfiles"
+    effort: "1-2 hours"
+    impact: "Detects known vulnerabilities in vendored dependencies"
+  - title: "Add Dependabot or Renovate for base image updates"
+    effort: "1 hour"
+    impact: "Automatic PRs when UBI base images have security patches"
+  - title: "Add a CODEOWNERS file"
     effort: "30 minutes"
-    impact: "Ensures PRs get reviewed by the right people"
+    impact: "Ensures PRs get reviewed by the right team"
 recommendations:
   priority_0:
-    - "Create a basic CI/CD pipeline with GitHub Actions to validate Dockerfile builds on PRs"
-    - "Add container image vulnerability scanning (Trivy) to catch CVEs in base images and cached dependencies"
-    - "Add Dockerfile linting (hadolint) to enforce best practices"
+    - "Add a minimal CI/CD workflow that builds the Docker image on PRs to validate Dockerfile integrity"
+    - "Add Trivy or Grype scanning on the Bazel artifact tree to detect supply chain vulnerabilities"
+    - "Evaluate whether this repository is still needed — single commit, very specific purpose, may be obsolete"
   priority_1:
-    - "Add a smoke test that builds the image and verifies the metadata_store_server binary starts successfully"
-    - "Add Git LFS validation to CI to ensure large files are properly tracked"
-    - "Add SBOM generation for the built container image"
+    - "Add image startup validation (build + run metadata_store_server --help) in CI"
+    - "Pin and validate base image digests (UBI 9.3) for reproducible builds"
+    - "Add .dockerignore to exclude .git and unnecessary files from build context"
   priority_2:
-    - "Create agent rules (.claude/rules/) for contribution guidelines"
-    - "Add documentation for the build regeneration process as CI validation"
-    - "Consider automating the bazel cache regeneration workflow described in README"
+    - "Add CLAUDE.md with repository purpose documentation"
+    - "Add Hadolint for Dockerfile linting"
+    - "Consider multi-architecture support if needed for ARM/s390x"
 ---
 
 # Quality Analysis: mlmd-bazel-dist
 
 ## Executive Summary
 
-- **Overall Score: 1.0/10**
-- **Repository Type**: Build artifact distribution / Bazel cache vendor repo
-- **Primary Language**: N/A (Dockerfiles + vendored Bazel artifacts)
-- **Key Strengths**: Multi-stage Dockerfile with clear purpose; README documents manual regeneration workflow
-- **Critical Gaps**: No CI/CD, no tests, no security scanning, no quality tooling of any kind
+- **Overall Score: 1.2/10**
+- **Repository Type**: Infrastructure / Dependency Vendoring
+- **Primary Language**: Dockerfile / Bazel (no application code)
+- **Key Strengths**: Multi-stage Dockerfile with clear separation of build and runtime
+- **Critical Gaps**: No CI/CD, no tests, no security scanning, no automation of any kind
 - **Agent Rules Status**: Missing
 
-This repository (`red-hat-data-services/mlmd-bazel-dist`) is a specialized build artifact repository that vendors Bazel external dependencies and cache for offline builds of [ml-metadata](https://github.com/opendatahub-io/ml-metadata). It contains only 4 non-git files: `README.md`, `Dockerfile`, `Dockerfile.deps`, and `.gitattributes`. The `_bazel_root/` directory contains ~15GB of vendored Bazel artifacts tracked via Git LFS.
+This repository (`red-hat-data-services/mlmd-bazel-dist`) is a single-purpose infrastructure repository that vendors Bazel cache and external dependencies to enable disconnected builds of the [ml-metadata](https://github.com/opendatahub-io/ml-metadata) project. It contains only 2 Dockerfiles, a README, a `.gitattributes` (for Git LFS), and a `_bazel_root/` directory with vendored Bazel artifacts.
 
-Due to its nature as a pure build-artifact distribution repo, it has essentially no quality infrastructure. While the scope of testing possible is limited, there are still critical gaps that should be addressed.
+The repository has **no CI/CD pipeline, no tests, no security scanning, and no quality tooling** of any kind. It has a single commit on the `main` branch and appears to be minimally maintained.
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0/10 | No test files exist |
+| Unit Tests | 0/10 | No tests — repository has no application code |
 | Integration/E2E | 0/10 | No integration or E2E tests |
-| **Build Integration** | **1/10** | **Dockerfiles present but no automated validation** |
-| Image Testing | 0.5/10 | Multi-stage build exists but no runtime validation |
-| Coverage Tracking | 0/10 | No coverage tooling |
-| CI/CD Automation | 0/10 | No CI/CD workflows at all |
-| Agent Rules | 0/10 | No agent rules or contribution guidance |
+| **Build Integration** | **1/10** | **Dockerfiles exist but no CI validates them** |
+| Image Testing | 0/10 | No image testing, scanning, or runtime validation |
+| Coverage Tracking | 0/10 | No coverage — no code to cover |
+| CI/CD Automation | 1/10 | No `.github/workflows/` directory at all |
+| Agent Rules | 0/10 | No CLAUDE.md, .claude/, or agent guidance |
 
 ## Critical Gaps
 
 ### 1. No CI/CD Pipeline
-- **Impact**: All changes to vendored artifacts and Dockerfiles are merged without any automated validation
+- **Impact**: No automated validation — Dockerfile changes, Bazel cache updates, or dependency changes are entirely unvalidated
 - **Severity**: HIGH
 - **Effort**: 4-8 hours
-- **Detail**: There are no GitHub Actions workflows, no Makefile, no Jenkinsfile, no `.gitlab-ci.yml`. The repository has zero automation. Any PR that modifies the Dockerfiles or Bazel artifacts goes through with only human review.
+- **Details**: The repository has no `.github/workflows/` directory. Any PR could introduce broken Dockerfiles, corrupt Bazel artifacts, or security vulnerabilities without detection.
 
-### 2. No Tests of Any Kind
-- **Impact**: No verification that vendored Bazel cache is valid or that container images build and function correctly
+### 2. No Container Image Build Validation
+- **Impact**: Dockerfiles may drift from upstream ml-metadata changes and break silently
 - **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Detail**: The repository contains zero test files. There are no unit tests, integration tests, E2E tests, smoke tests, or build validation tests. The manual regeneration workflow described in the README is entirely manual.
+- **Effort**: 4-6 hours
+- **Details**: `Dockerfile` references CPaaS-specific variables (`REMOTE_SOURCE`, `REMOTE_SOURCE_DIR`) and builds `metadata_store_server` via Bazel in offline mode. No CI validates that these builds succeed.
 
-### 3. No Security Scanning
-- **Impact**: Vendored dependencies (cached in `_bazel_root/`) and base images are never scanned for known vulnerabilities
+### 3. No Security Scanning on Vendored Artifacts
+- **Impact**: ~15GB of vendored binary Bazel artifacts with zero vulnerability scanning — significant supply chain risk
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Detail**: No Trivy, Snyk, CodeQL, or any other security scanning is configured. The repository vendors a large number of external dependencies in the Bazel cache without any vulnerability assessment. Base images (`ubi9/ubi:9.3`, `ubi9/ubi-minimal:9.3`) are pinned to specific versions that may become outdated.
+- **Details**: The `_bazel_root/` directory contains pre-built Java JARs, compiled tools, and cached external dependencies stored via Git LFS. None are scanned for known CVEs.
 
-### 4. No Image Runtime Validation
-- **Impact**: Built metadata_store_server image may fail at startup without any pre-merge detection
+### 4. No Dependency Update Mechanism
+- **Impact**: Bazel 5.3.0 is hardcoded with no Dependabot, Renovate, or manual update process
 - **Severity**: MEDIUM
-- **Effort**: 4-6 hours
-- **Detail**: While the Dockerfile includes a multi-stage build that compiles `metadata_store_server`, there is no test that actually starts the resulting image and verifies the gRPC server initializes correctly.
+- **Effort**: 2-3 hours
+- **Details**: Both Dockerfiles pin Bazel 5.3.0. UBI base images are pinned to 9.3 in one Dockerfile and `latest` in the other (inconsistency).
+
+### 5. Repository Appears Stale
+- **Impact**: Unknown if repository is still actively used or has been superseded
+- **Severity**: MEDIUM
+- **Effort**: 1 hour investigation
+- **Details**: Only 1 commit exists on `main`. The README documents a manual workflow involving `docker cp`. No indication of when the Bazel cache was last refreshed.
 
 ## Quick Wins
 
-### 1. Add Dockerfile Linting with hadolint (1 hour)
-Add a basic GitHub Actions workflow that lints Dockerfiles:
-
+### 1. Add Dockerfile Validation Workflow (1-2 hours)
 ```yaml
-name: Lint Dockerfiles
+# .github/workflows/validate.yml
+name: Validate Dockerfiles
 on: [pull_request]
 jobs:
   hadolint:
@@ -143,16 +152,17 @@ jobs:
 ```
 
 ### 2. Add Trivy Scanning (1-2 hours)
-Scan Dockerfiles and the repository for CVEs:
-
 ```yaml
+# .github/workflows/security.yml
 name: Security Scan
-on: [pull_request]
+on: [pull_request, push]
 jobs:
   trivy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
       - uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
@@ -160,9 +170,18 @@ jobs:
           severity: 'CRITICAL,HIGH'
 ```
 
-### 3. Add CODEOWNERS (30 minutes)
-Ensure the right team reviews changes to this critical build infrastructure:
+### 3. Add Base Image Update Automation (1 hour)
+Create `.github/dependabot.yml`:
+```yaml
+version: 2
+updates:
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+```
 
+### 4. Add CODEOWNERS (30 minutes)
 ```
 # .github/CODEOWNERS
 * @red-hat-data-services/mlmd-maintainers
@@ -171,101 +190,103 @@ Ensure the right team reviews changes to this critical build infrastructure:
 ## Detailed Findings
 
 ### CI/CD Pipeline
-- **Workflows**: None. Zero CI/CD configuration files found.
-- **PR validation**: None. No automated checks run on pull requests.
-- **Periodic jobs**: None.
-- **Build automation**: The only build instructions are manual Docker commands in README.md.
+- **Status**: Non-existent
+- **Workflows**: None (no `.github/workflows/` directory)
+- **Build triggers**: None
 - **Concurrency control**: N/A
-- **Caching**: N/A (though the repo itself IS a cache)
+- **Caching**: N/A
+- **Assessment**: The repository has zero CI/CD infrastructure. This is the single largest quality gap.
 
 ### Test Coverage
-- **Unit tests**: 0 test files found (excluding vendored `_bazel_root/`)
-- **Integration tests**: None
-- **E2E tests**: None
-- **Test-to-code ratio**: 0:1
-- **Coverage tracking**: None (no `.codecov.yml`, no coverage generation)
+- **Unit Tests**: None (no application code to test)
+- **Integration Tests**: None
+- **E2E Tests**: None
+- **Test files found**: Only Bazel embedded test tools (not repo-specific tests)
+- **Assessment**: Given this is a dependency-vendoring repo, unit tests are not applicable. However, there should be at minimum:
+  - A smoke test that builds the Docker image
+  - A validation that the Bazel cache structure is correct
+  - A check that `metadata_store_server` starts successfully in the built image
 
 ### Code Quality
-- **Linting**: No linting configuration (no `.golangci.yaml`, `.eslintrc`, `ruff.toml`, etc.)
-- **Pre-commit hooks**: No `.pre-commit-config.yaml`
-- **Static analysis**: No SAST tools configured
-- **Formatters**: None configured
+- **Linting**: No linters configured (no Hadolint for Dockerfiles)
+- **Pre-commit hooks**: None
+- **Static analysis**: None
+- **Formatters**: None
+- **Assessment**: Minimal, but the repository has very little code to lint — just 2 Dockerfiles.
 
 ### Container Images
-- **Dockerfiles**: 2 files (`Dockerfile`, `Dockerfile.deps`)
-- **Multi-stage build**: Yes, `Dockerfile` uses a builder stage (UBI9) → minimal runtime stage (UBI9-minimal)
-- **Base images**: `registry.redhat.io/ubi9/ubi:9.3` (builder), `registry.redhat.io/ubi9/ubi-minimal:9.3` (runtime)
+- **Dockerfiles**: 2 (`Dockerfile` for production build, `Dockerfile.deps` for cache generation)
+- **Multi-stage build**: Yes — `Dockerfile` uses a builder stage (UBI9) and a minimal runtime stage (UBI9 minimal)
+- **Base images**: `registry.redhat.io/ubi9/ubi:9.3` (builder), `registry.redhat.io/ubi9/ubi-minimal:9.3` (runtime), `registry.access.redhat.com/ubi9/ubi:latest` (deps)
+- **Base image inconsistency**: `Dockerfile.deps` uses `:latest` while `Dockerfile` pins `:9.3`
 - **Security scanning**: None
 - **SBOM generation**: None
 - **Image signing**: None
-- **Multi-arch support**: No (x86_64 only, Bazel installer is x86_64-specific)
 - **Runtime validation**: None
-- **Vulnerability thresholds**: None
+- **Assessment**: The multi-stage build is good practice, but there's no validation, scanning, or signing.
 
 ### Security
-- **Container scanning**: Not configured
-- **SAST/CodeQL**: Not configured
-- **Dependency scanning**: Not configured (critical given the large vendored dependency cache)
-- **Secret detection**: Not configured
-- **Base image updates**: Pinned to `9.3`, no automated update mechanism
+- **Container scanning**: None (no Trivy, Snyk, or Grype)
+- **SAST**: None (no CodeQL, gosec, or Semgrep)
+- **Dependency scanning**: None
+- **Secret detection**: None (no Gitleaks, TruffleHog)
+- **Supply chain risk**: HIGH — ~15GB of vendored Bazel artifacts (JARs, compiled tools) stored via Git LFS with no provenance or scanning
+- **Assessment**: The vendored artifacts represent a significant supply chain attack surface with zero mitigation.
 
 ### Agent Rules (Agentic Flow Quality)
 - **Status**: Missing
 - **CLAUDE.md**: Not present
 - **AGENTS.md**: Not present
-- **.claude/ directory**: Not present
-- **.claude/rules/**: Not present
-- **Coverage**: No test types have rules
-- **Quality**: N/A
-- **Gaps**: Everything is missing. No guidance for AI agents contributing to this repository.
-- **Recommendation**: Given the repo's limited scope, a minimal `CLAUDE.md` with Dockerfile modification guidelines would be sufficient.
+- **`.claude/` directory**: Not present
+- **`.claude/rules/`**: Not present
+- **Assessment**: No agent rules or AI-assisted development guidance exists. Given the repository's simplicity, basic rules documenting the Bazel cache regeneration workflow would be beneficial.
+
+### Build Integration
+- **PR build validation**: None — no CI workflows exist
+- **Konflux simulation**: None
+- **Image startup testing**: None
+- **Assessment**: Builds are entirely manual. The README describes a manual `docker build` + `docker cp` workflow with no automation.
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Create a basic CI/CD pipeline** — Add a GitHub Actions workflow that at minimum validates Dockerfile syntax (hadolint) and runs a `docker build` dry-run on PRs.
-2. **Add container vulnerability scanning** — Integrate Trivy to scan for CVEs in the base images and the vendored Bazel artifacts. This is especially important given the repo vendors ~15GB of external dependencies.
-3. **Add Dockerfile linting** — Use hadolint to enforce Dockerfile best practices and catch issues like unpinned package installs.
+1. **Add a minimal CI/CD workflow** that validates Dockerfile syntax and attempts an image build on PRs
+2. **Add security scanning** (Trivy filesystem scan) on the vendored Bazel artifacts to detect known CVEs
+3. **Evaluate repository necessity** — determine if this repo is still actively used or has been superseded by a different build approach
 
 ### Priority 1 (High Value)
-4. **Add image build smoke test** — Create a CI job that builds the Docker image and verifies the `metadata_store_server` binary starts (even if just checking `--help` output or a gRPC health check).
-5. **Add Git LFS validation** — Verify that LFS pointers are valid and files are properly tracked, preventing broken clones.
-6. **Add SBOM generation** — Generate a Software Bill of Materials for the built image to track vendored dependencies.
-7. **Pin and automate base image updates** — Set up Dependabot or Renovate to track UBI9 base image updates.
+1. **Add image startup validation** — build the image and run `metadata_store_server --help` to verify it starts
+2. **Pin base image digests** consistently across both Dockerfiles for reproducible builds
+3. **Add `.dockerignore`** to exclude `.git/` and reduce build context size
+4. **Add Dependabot** for automated base image security updates
 
 ### Priority 2 (Nice-to-Have)
-8. **Create minimal agent rules** — Add a `CLAUDE.md` with guidelines for modifying Dockerfiles and regenerating the Bazel cache.
-9. **Automate cache regeneration** — Convert the manual README workflow into a GitHub Actions workflow (dispatch-triggered) to reduce human error.
-10. **Add documentation validation** — Ensure README stays in sync with actual Dockerfile and workflow changes.
+1. **Add CLAUDE.md** documenting repository purpose, the Bazel cache regeneration process, and build requirements
+2. **Add Hadolint** for Dockerfile best practice linting
+3. **Document Bazel cache refresh cadence** — how often should the cache be regenerated?
+4. **Consider multi-architecture support** if downstream consumers need ARM or s390x builds
 
 ## Comparison to Gold Standards
 
 | Dimension | mlmd-bazel-dist | odh-dashboard | notebooks | kserve |
 |-----------|----------------|---------------|-----------|--------|
-| Unit Tests | None | Comprehensive Jest suite | N/A (image repo) | Go testing + coverage |
-| Integration/E2E | None | Cypress E2E, contract tests | Image validation suite | Multi-version E2E |
-| Build Integration | Manual only | PR-time builds, multi-mode | PR image builds | PR operator builds |
-| Image Testing | None | N/A | 5-layer validation | Deployment testing |
-| Coverage Tracking | None | Codecov with enforcement | N/A | Codecov + thresholds |
-| CI/CD Automation | None | Multi-workflow, caching | Automated pipelines | Comprehensive CI |
-| Agent Rules | None | Comprehensive .claude/rules/ | Minimal | Minimal |
+| CI/CD Pipeline | None | Comprehensive | Strong | Comprehensive |
+| Unit Tests | None | Extensive (Jest) | Varied | Go testing |
+| Integration/E2E | None | Cypress E2E | Image boot tests | Multi-version E2E |
+| Image Testing | None | Build validation | 5-layer validation | Image scanning |
+| Coverage Tracking | None | Codecov enforced | Partial | Codecov enforced |
+| Security Scanning | None | Trivy + CodeQL | Trivy | Trivy + CodeQL |
+| Agent Rules | None | Comprehensive | Partial | Partial |
+| **Overall** | **1.2/10** | **9/10** | **8/10** | **8.5/10** |
 
-**Note**: `mlmd-bazel-dist` is structurally different from these gold standards — it's a build artifact cache, not an application. However, even for its limited scope, the complete absence of CI/CD is a critical gap. The `notebooks` repository is the closest comparison (also image-focused) and demonstrates how even artifact-oriented repos can have meaningful quality automation.
+**Note**: Direct comparison is somewhat unfair — mlmd-bazel-dist is a dependency-vendoring repo, not an application. However, even infrastructure repos should have basic CI validation and security scanning.
 
 ## File Paths Reference
 
 | File | Purpose |
 |------|---------|
 | `Dockerfile` | Production multi-stage build for metadata_store_server |
-| `Dockerfile.deps` | Dependency fetcher image for Bazel cache generation |
-| `.gitattributes` | Git LFS tracking rules for large Bazel artifacts |
-| `README.md` | Manual regeneration workflow documentation |
-| `_bazel_root/` | Vendored Bazel cache and external dependencies (~15GB via LFS) |
-
-## Repository Characteristics
-
-- **Single commit**: Repository has only 1 commit (`3f00e42 Added bazel external deps dir (1)`)
-- **Single branch**: Only `main` branch exists
-- **Size**: ~15GB total (mostly LFS-tracked Bazel artifacts)
-- **Active development**: Appears to be a low-churn repository set up for offline build support
-- **Purpose**: Enables disconnected/air-gapped builds of ml-metadata by vendoring all Bazel dependencies
+| `Dockerfile.deps` | Generates Bazel cache by cloning ml-metadata and running `bazel sync` |
+| `.gitattributes` | Configures Git LFS for large Bazel artifacts |
+| `_bazel_root/` | Vendored Bazel cache, external dependencies, and build tools (~15GB via LFS) |
+| `README.md` | Documents manual cache regeneration workflow |

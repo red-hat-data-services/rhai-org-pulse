@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on May 29, 2026 at 08:02 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:55 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/guardrails-detectors</h2>
         </header>
 
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Good per-component test coverage with pytest, well-structured test classes, parametrized tests, and mock-based testing for external dependencies</div>
+                            <div class="scorecard-status">Good test coverage with pytest, 16 test files covering all 3 detector types</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Basic FastAPI TestClient integration tests exist but no true E2E tests against running containers or deployed services</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">Basic integration test for HF detector lifespan only; no E2E or contract tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">No PR-time Docker image build validation; Konflux builds are comment/label-triggered only, not automatic on PR</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.5/10</div>
+                            <div class="scorecard-status">Konflux/Tekton builds on PR (comment/label-triggered), but no PR-time image validation or smoke tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.5/10</div>
-                            <div class="scorecard-status">No container runtime validation, no image startup testing, no healthcheck verification in CI</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">5 Dockerfiles exist but no runtime validation, no startup tests, no image scanning in PR workflow</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.5/10</div>
-                            <div class="scorecard-status">pytest-cov generates terminal reports but no codecov integration, no coverage thresholds, no PR coverage gating</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">pytest-cov generates terminal reports but no codecov/coveralls integration, no thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Well-organized per-component workflows with path filtering, caching, and shared composite action; security scanning is strong</div>
+                            <div class="scorecard-status">Well-structured component-specific workflows with path filters, reusable composite action, caching, and Trivy scanning</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules or AI-assisted test guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, .claude/ directory, or agent rules of any kind</div>
                         </div>
                     </div>
                 </div>
@@ -411,51 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No container image runtime validation in CI</div>
-                            <p>Image startup failures, missing dependencies, and runtime errors not caught until deployment</p>
+                            <div class="item-description">No integration or E2E test suite</div>
+                            <p>API contract violations and detector interoperability issues not caught until deployment</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">6-8 hours</span>
+                                <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No coverage tracking or enforcement</div>
-                            <p>Coverage can silently decrease with each PR; no visibility into coverage trends</p>
+                            <div class="item-description">No coverage enforcement or reporting</div>
+                            <p>Coverage can silently regress; no visibility in PRs</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No PR-time Docker build validation</div>
-                            <p>Dockerfile changes can break builds that are only discovered when Konflux builds are manually triggered</p>
+                            <div class="item-description">No container image runtime validation</div>
+                            <p>Image startup failures, missing dependencies, or broken endpoints not caught until deployment</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">Missing LLM Judge Dockerfile for Konflux</div>
+                            <p>LLM Judge component lacks a Konflux build pipeline; only builtIn and HF have Konflux Dockerfiles</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">No E2E tests for detector services</div>
-                            <p>API contract regressions, inter-component integration issues, and deployment failures not caught before merge</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">16-24 hours</span>
-                            </div>
-                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">No pre-commit configuration</div>
-                            <p>Code style and quality inconsistencies; linting step in CI is a no-op (checks for .pre-commit-config.yaml which doesn&#x27;t exist)</p>
+                            <div class="item-description">No pre-commit enforcement</div>
+                            <p>Linting runs in CI with continue-on-error: true; code quality issues can merge freely</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No agent rules for AI-assisted development</div>
-                            <p>AI code assistants lack project-specific context for testing patterns, API contracts, and detector architecture</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">3-4 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -473,34 +465,42 @@
                         
                         <li class="item-card ">
                             <div class="item-description">Add codecov integration and coverage thresholds</div>
-                            <p>Immediate visibility into coverage trends; prevent regressions with PR gating</p>
+                            <p>Immediate visibility into coverage trends and regressions on every PR</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create .pre-commit-config.yaml with ruff, mypy, and basic hooks</div>
-                            <p>Consistent code quality; existing CI step already checks for this file</p>
+                            <div class="item-description">Enforce pre-commit linting (remove continue-on-error)</div>
+                            <p>Prevent code style/quality issues from merging</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add PR-time Docker build smoke test</div>
-                            <p>Catch Dockerfile breakages before merge; especially critical for multi-arch HF detector</p>
+                            <div class="item-description">Add container startup smoke test to CI</div>
+                            <p>Catch Dockerfile/dependency issues before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add basic agent rules (.claude/rules/)</div>
-                            <p>Better AI-assisted test generation aligned with project patterns</p>
+                            <div class="item-description">Create basic agent rules for unit test patterns</div>
+                            <p>Improve AI-generated test quality and consistency</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add Dockerfile hadolint linting</div>
+                            <p>Catch Dockerfile best-practice violations early</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add codecov.yml with coverage thresholds (e.g., 80%) and PR checks</li><li>Add PR-time Docker build validation for all 3 detector images</li><li>Create .pre-commit-config.yaml with ruff linter, mypy type checking, and standard hooks</li></ul>
+                            <ul><li>Add codecov.yml and upload coverage reports to Codecov with a minimum threshold (e.g., 70%)</li><li>Create integration/E2E tests that start each detector service and verify API contracts</li><li>Add container image startup validation tests for all 3 detector types</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add E2E tests that build and start detector containers, send requests, and verify responses</li><li>Add container healthcheck endpoint testing in CI</li><li>Create comprehensive agent rules for unit test patterns, integration test patterns, and detector architecture</li><li>Add API contract tests to verify request/response schema compliance</li></ul>
+                            <ul><li>Create Dockerfile.konflux.judge for LLM Judge to match builtIn and HF patterns</li><li>Add contract tests verifying detector API schema compliance with the Orchestrator interface</li><li>Create .claude/rules/ with test creation guidance for all detector types</li><li>Enforce pre-commit hooks by removing continue-on-error from the composite action</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add load/performance testing with locust (dependency already exists in requirements-dev.txt)</li><li>Add image vulnerability scanning with severity thresholds that fail the build</li><li>Add SBOM generation for container images</li><li>Add multi-version Python testing (3.11 + 3.12)</li></ul>
+                            <ul><li>Add multi-architecture image build testing in CI (not just Konflux)</li><li>Add performance regression testing with benchmarks for built-in detectors</li><li>Implement SBOM generation and image signing</li><li>Add Makefile with standard targets (test, lint, build, run)</li></ul>
                         </div>
                     </div>
                 </div>

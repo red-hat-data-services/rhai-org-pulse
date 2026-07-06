@@ -1,368 +1,415 @@
 ---
 repository: "red-hat-data-services/credit-fraud-detection-demo"
-overall_score: 1.0
+overall_score: 1.4
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
     status: "No test files exist anywhere in the repository"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests; no test infrastructure"
+    status: "No integration or end-to-end tests"
   - dimension: "Build Integration"
-    score: 0.0
-    status: "No CI/CD pipelines; no PR-time build validation"
+    score: 0.5
+    status: "Two basic Dockerfiles present, no CI build validation"
   - dimension: "Image Testing"
-    score: 1.0
-    status: "Two Dockerfiles present but no image testing, scanning, or validation"
+    score: 0.5
+    status: "Dockerfiles exist but no runtime validation, scanning, or multi-arch support"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling, no codecov/coveralls integration"
+    status: "No coverage tooling or reporting configured"
   - dimension: "CI/CD Automation"
     score: 0.0
-    status: "No GitHub Actions, no Makefile, no CI/CD of any kind"
+    status: "No CI/CD pipelines of any kind (no GitHub Actions, GitLab CI, Jenkins, or Makefile)"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
-  - title: "Zero test coverage across entire repository"
-    impact: "No automated verification of application logic, model training, or predictions — regressions go undetected"
+  - title: "No CI/CD pipeline exists"
+    impact: "Changes are merged without any automated validation — no tests, no linting, no build checks"
+    severity: "HIGH"
+    effort: "4-8 hours"
+  - title: "Zero test coverage"
+    impact: "No unit, integration, or E2E tests — regressions are invisible until runtime failures"
     severity: "HIGH"
     effort: "8-16 hours"
-  - title: "No CI/CD pipeline"
-    impact: "No automated checks on PRs; broken code can be merged freely"
-    severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "No container image security scanning"
-    impact: "Images built from python:3.10.4 base (2+ years old) with no vulnerability scanning — known CVEs likely present"
+  - title: "No container security scanning"
+    impact: "Known vulnerabilities in base images and dependencies go undetected; outdated packages (TensorFlow 2.10, Gradio 3.13) may have CVEs"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "Severely outdated and pinned dependencies"
-    impact: "tensorflow==2.10, gradio==3.13.0, mlflow==2.0.1 are years behind current versions with known security vulnerabilities"
+  - title: "Dockerfile security: containers run as root"
+    impact: "No USER directive in either Dockerfile — containers run with root privileges, violating container security best practices"
     severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "No code quality or linting enforcement"
-    impact: "No style consistency, no static analysis, potential bugs go uncaught"
+    effort: "1-2 hours"
+  - title: "Dependencies partially unpinned and outdated"
+    impact: "model/requirements.txt has 6/9 packages unpinned; all pinned versions are significantly outdated (TensorFlow 2.10 released Oct 2022, Gradio 3.13 released Dec 2022)"
     severity: "MEDIUM"
     effort: "2-4 hours"
-  - title: "Hardcoded prediction threshold with no validation"
-    impact: "The 0.995 fraud threshold is hardcoded with no evaluation justifying it; model performance is untested"
+  - title: "No .dockerignore files"
+    impact: "Build context includes unnecessary files (data CSV, images, .git) increasing build time and image size"
     severity: "MEDIUM"
-    effort: "4-8 hours"
-quick_wins:
-  - title: "Add a basic GitHub Actions CI workflow"
-    effort: "2-3 hours"
-    impact: "Automated linting and dependency checking on every PR"
-  - title: "Add Trivy scanning to Dockerfiles"
-    effort: "1-2 hours"
-    impact: "Detect known CVEs in base images and dependencies before deployment"
-  - title: "Add unit tests for the predict() functions"
-    effort: "2-3 hours"
-    impact: "Validate core fraud detection logic with known inputs/outputs"
-  - title: "Update base image from python:3.10.4 to a current version"
-    effort: "1-2 hours"
-    impact: "Patch known vulnerabilities in the base image"
-  - title: "Add .pre-commit-config.yaml with ruff linter"
     effort: "1 hour"
-    impact: "Enforce consistent code style and catch common Python errors"
+quick_wins:
+  - title: "Add a basic GitHub Actions CI workflow with linting and Dockerfile build validation"
+    effort: "2-4 hours"
+    impact: "Catches syntax errors, broken imports, and Dockerfile build failures before merge"
+  - title: "Add non-root USER to Dockerfiles"
+    effort: "30 minutes"
+    impact: "Eliminates running containers as root — a critical container security practice"
+  - title: "Add .dockerignore files"
+    effort: "30 minutes"
+    impact: "Reduces build context size and prevents leaking unnecessary files into images"
+  - title: "Pin all dependencies in model/requirements.txt"
+    effort: "1 hour"
+    impact: "Ensures reproducible builds and prevents surprise breakages from upstream updates"
+  - title: "Add Trivy or Snyk scanning to CI"
+    effort: "1-2 hours"
+    impact: "Automatically detects known CVEs in base images and Python packages"
+  - title: "Add basic unit tests for predict functions"
+    effort: "2-3 hours"
+    impact: "Validates prediction logic (threshold, input/output format) without requiring a running model server"
 recommendations:
   priority_0:
-    - "Add unit tests for predict() functions in both application variants"
-    - "Create a GitHub Actions CI workflow with linting, testing, and image build validation"
-    - "Update the python:3.10.4 base image and all pinned dependencies to current, supported versions"
-    - "Add Trivy or Snyk container scanning to detect CVEs"
+    - "Create a GitHub Actions workflow with at minimum: Python linting (ruff/flake8), Dockerfile build validation, and dependency vulnerability scanning"
+    - "Add unit tests for the predict() functions in both application variants — test the threshold logic, input validation, and error handling"
+    - "Add non-root USER directives to both Dockerfiles and add .dockerignore files"
+    - "Pin all dependencies to specific versions and update to current releases (TensorFlow 2.x latest, Gradio 4.x or 5.x, MLFlow 2.x latest)"
   priority_1:
-    - "Add integration tests that validate the Gradio app starts and serves predictions"
-    - "Add model validation tests to verify ONNX export produces correct predictions"
-    - "Add codecov integration with minimum coverage thresholds"
-    - "Create CLAUDE.md with agent rules for test patterns"
+    - "Add integration tests that validate the Gradio app starts and responds to health checks"
+    - "Add Trivy container scanning to CI workflow"
+    - "Add pre-commit hooks for Python linting and formatting"
+    - "Add a Makefile with standard targets (lint, test, build, run)"
+    - "Implement multi-stage Docker builds to reduce image size"
   priority_2:
-    - "Add model performance benchmarking (accuracy, precision, recall on test data)"
-    - "Add multi-architecture Docker builds (amd64/arm64)"
-    - "Add notebook execution validation in CI (papermill)"
-    - "Implement data validation checks for the training CSV"
+    - "Add CLAUDE.md with repository context and contribution guidelines"
+    - "Add notebook validation (nbval or papermill) to CI to ensure model.ipynb runs cleanly"
+    - "Add SBOM generation for container images"
+    - "Add multi-architecture (amd64/arm64) image builds"
+    - "Consider adding model validation tests (accuracy thresholds, data schema checks)"
 ---
 
 # Quality Analysis: credit-fraud-detection-demo
 
 ## Executive Summary
+- Overall Score: 1.4/10
+- Key Strengths: Clear tutorial documentation with step-by-step instructions; working Dockerfiles for two application variants; proper use of .gitignore to exclude sensitive files
+- Critical Gaps: No CI/CD pipeline, zero test coverage, no security scanning, containers run as root, outdated and partially unpinned dependencies
+- Agent Rules Status: Missing
 
-- **Overall Score: 1.0/10**
-- **Repository Type:** ML demo application (Python, Jupyter Notebook, Gradio UI)
-- **Primary Language:** Python
-- **Key Strengths:** Clear documentation/README with step-by-step instructions; two deployment variants (RHODS Model Serving + MLFlow serving)
-- **Critical Gaps:** Zero tests, zero CI/CD, no security scanning, severely outdated dependencies, no code quality tooling
-- **Agent Rules Status:** Missing — no CLAUDE.md, no `.claude/` directory
+This is a **demo/tutorial repository** for Credit Card Fraud Detection using MLFlow and Red Hat OpenShift Data Science (RHODS). It contains a Jupyter notebook for model training, two Gradio-based inference applications (RHODS Model Serving and MLFlow Serving variants), and a sample dataset. The repository has **no quality infrastructure** — no CI/CD, no tests, no linting, no security scanning, and no agent rules.
 
-This repository is a **demo/tutorial** for credit card fraud detection using Red Hat OpenShift Data Science and MLFlow. It contains approximately 100 lines of Python application code, a Jupyter notebook for model training, and two Dockerfiles. There is **no quality infrastructure whatsoever** — no tests, no CI/CD, no linting, no security scanning, and no coverage tracking.
+## Repository Profile
+- **Type**: Demo / Tutorial application
+- **Primary Language**: Python
+- **Frameworks**: TensorFlow/Keras (ML), MLFlow (experiment tracking), Gradio (web UI), ONNX (model export)
+- **Size**: 41 files, ~150 lines of application code
+- **License**: GPL v3
+- **Last Activity**: Repository appears to be in maintenance mode
 
 ## Quality Scorecard
-
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0/10 | No test files exist anywhere in the repository |
-| Integration/E2E | 0/10 | No integration or E2E tests; no test infrastructure |
-| **Build Integration** | **0/10** | **No CI/CD pipelines; no PR-time build validation** |
-| Image Testing | 1/10 | Two Dockerfiles present but no image testing, scanning, or validation |
-| Coverage Tracking | 0/10 | No coverage tooling, no codecov/coveralls integration |
-| CI/CD Automation | 0/10 | No GitHub Actions, no Makefile, no CI/CD of any kind |
-| Agent Rules | 0/10 | No CLAUDE.md, no .claude/ directory, no agent rules |
-
-**Weighted Overall: 1.0/10**
+| Unit Tests | 0.0/10 | No test files exist anywhere in the repository |
+| Integration/E2E | 0.0/10 | No integration or end-to-end tests |
+| **Build Integration** | **0.5/10** | **Two basic Dockerfiles present, no CI build validation** |
+| Image Testing | 0.5/10 | Dockerfiles exist but no runtime validation, scanning, or multi-arch support |
+| Coverage Tracking | 0.0/10 | No coverage tooling or reporting configured |
+| CI/CD Automation | 0.0/10 | No CI/CD pipelines of any kind |
+| Agent Rules | 0.0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory |
 
 ## Critical Gaps
 
-### 1. Zero Test Coverage (Severity: HIGH)
-- **Impact:** No automated verification of application logic, model training, or predictions — regressions go completely undetected
-- **Details:** The repository contains zero test files (`*_test.py`, `test_*.py`, `*_spec.py`). The two `predict()` functions in `application/model_application.py` and `application_mlflow_serving/model_application_mlflow_serve.py` have no unit tests. The model training notebook has no validation tests.
-- **Effort:** 8-16 hours for baseline coverage
+1. **No CI/CD pipeline exists**
+   - Impact: Changes are merged without any automated validation — no tests, no linting, no build checks
+   - Severity: HIGH
+   - Effort: 4-8 hours
+   - Details: No `.github/workflows/`, no `.gitlab-ci.yml`, no `Jenkinsfile`, no `Makefile`. PRs are merged on trust alone.
 
-### 2. No CI/CD Pipeline (Severity: HIGH)
-- **Impact:** No automated checks on PRs; broken code, syntax errors, and dependency conflicts can be merged without detection
-- **Details:** No `.github/workflows/`, no `.gitlab-ci.yml`, no `Jenkinsfile`, no `Makefile`. There is literally no automation.
-- **Effort:** 4-8 hours for a basic GitHub Actions pipeline
+2. **Zero test coverage**
+   - Impact: No unit, integration, or E2E tests — regressions are invisible until runtime failures
+   - Severity: HIGH
+   - Effort: 8-16 hours
+   - Details: No `*_test.py`, `test_*.py`, `*_spec.py`, or `tests/` directory. The `predict()` functions in both application files are untested. The notebook has no validation.
 
-### 3. No Container Image Security Scanning (Severity: HIGH)
-- **Impact:** Both Dockerfiles use `python:3.10.4` (released April 2022, 2+ years old) as base image. This image almost certainly contains known CVEs. No Trivy, Snyk, or any scanning is configured.
-- **Details:** 
-  - `application/Dockerfile` — uses `FROM python:3.10.4`
-  - `application_mlflow_serving/Dockerfile` — uses `FROM python:3.10.4`
-  - No `.trivyignore`, no vulnerability thresholds, no SBOM generation
-- **Effort:** 2-4 hours
+3. **No container security scanning**
+   - Impact: Known vulnerabilities in base images and dependencies go undetected
+   - Severity: HIGH
+   - Effort: 2-4 hours
+   - Details: No Trivy, Snyk, or any scanning tool. Base image `python:3.10.4` is over 3 years old and likely has known CVEs. TensorFlow 2.10 (Oct 2022) has known security advisories.
 
-### 4. Severely Outdated Dependencies (Severity: HIGH)
-- **Impact:** `tensorflow==2.10` (Sept 2022), `gradio==3.13.0` (Dec 2022), `mlflow==2.0.1` (Nov 2022), `numpy==1.23.5` (Nov 2022) all have known security vulnerabilities and are multiple major versions behind
-- **Details:** Both `application/requirements.txt` and `application_mlflow_serving/requirements.txt` pin to identical ancient versions. The `model/requirements.txt` uses unpinned versions for some deps but pins `tensorflow==2.10`.
-- **Effort:** 4-8 hours (may require code changes for API compatibility)
+4. **Dockerfile security: containers run as root**
+   - Impact: No USER directive in either Dockerfile — containers run with root privileges
+   - Severity: HIGH
+   - Effort: 1-2 hours
+   - Details: Both `application/Dockerfile` and `application_mlflow_serving/Dockerfile` lack a `USER` directive. They also use `/tmp` as WORKDIR, which is unconventional and can conflict with system temp files.
 
-### 5. No Code Quality or Linting (Severity: MEDIUM)
-- **Impact:** No enforcement of Python code style, no static analysis, potential bugs uncaught
-- **Details:** No `.flake8`, `ruff.toml`, `mypy.ini`, `pyproject.toml`, `.pre-commit-config.yaml`, or any linting configuration
-- **Effort:** 2-4 hours
+5. **Dependencies partially unpinned and significantly outdated**
+   - Impact: Non-reproducible builds; potential security vulnerabilities in old packages
+   - Severity: MEDIUM
+   - Effort: 2-4 hours
+   - Details: `model/requirements.txt` has 6 of 9 packages unpinned (`numpy`, `pandas`, `matplotlib`, `sklearn`, `seaborn`, `mlflow`, `tf2onnx`, `onnxruntime`). All pinned versions are 2+ years old: TensorFlow 2.10 (Oct 2022), Gradio 3.13 (Dec 2022), MLFlow 2.0.1 (Dec 2022), NumPy 1.23.5 (Nov 2022).
 
-### 6. Hardcoded Prediction Threshold (Severity: MEDIUM)
-- **Impact:** The fraud detection threshold of `0.995` is hardcoded in both applications with no evaluation metrics justifying this choice. No tests verify that model predictions are reasonable for known fraud/non-fraud cases.
-- **Effort:** 4-8 hours for model validation suite
+6. **No .dockerignore files**
+   - Impact: Build context includes unnecessary files — `data/card_transdata.csv` (sample data), `img/` directory (30 PNG files), `.git/` directory
+   - Severity: MEDIUM
+   - Effort: 1 hour
 
 ## Quick Wins
 
-### 1. Add Basic GitHub Actions CI (2-3 hours)
-```yaml
-# .github/workflows/ci.yml
-name: CI
-on: [push, pull_request]
-jobs:
-  lint-and-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-      - run: pip install ruff pytest
-      - run: ruff check .
-      - run: pytest tests/ -v
-```
+1. **Add a basic GitHub Actions CI workflow** (2-4 hours)
+   - Impact: Catches syntax errors, broken imports, and Dockerfile build failures before merge
+   - Implementation:
+   ```yaml
+   # .github/workflows/ci.yml
+   name: CI
+   on: [push, pull_request]
+   jobs:
+     lint:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+         - uses: actions/setup-python@v5
+           with:
+             python-version: '3.10'
+         - run: pip install ruff
+         - run: ruff check application/ application_mlflow_serving/
+     build:
+       runs-on: ubuntu-latest
+       strategy:
+         matrix:
+           app: [application, application_mlflow_serving]
+       steps:
+         - uses: actions/checkout@v4
+         - run: docker build -t test-${{ matrix.app }} ${{ matrix.app }}/
+   ```
 
-### 2. Add Trivy Scanning (1-2 hours)
-```yaml
-# Add to CI workflow
-  scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build image
-        run: docker build -t credit-fraud:test application/
-      - name: Trivy scan
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'credit-fraud:test'
-          severity: 'CRITICAL,HIGH'
-          exit-code: '1'
-```
+2. **Add non-root USER to Dockerfiles** (30 minutes)
+   - Impact: Eliminates running containers as root
+   - Implementation:
+   ```dockerfile
+   RUN useradd -m appuser
+   USER appuser
+   WORKDIR /home/appuser
+   ```
 
-### 3. Add Unit Tests for predict() (2-3 hours)
-```python
-# tests/test_predict.py
-import numpy as np
+3. **Add .dockerignore files** (30 minutes)
+   - Impact: Reduces build context size significantly
+   - Implementation:
+   ```
+   # .dockerignore (root level)
+   .git
+   data/
+   img/
+   model/
+   *.md
+   LICENSE
+   ```
 
-def test_predict_non_fraud():
-    """Known non-fraud input should return 'Not fraud'"""
-    result = predict(15.69, 175.99, 0.86, 1.0, 0.0, 0.0, 1.0)
-    assert result == "Not fraud"
+4. **Pin all dependencies in model/requirements.txt** (1 hour)
+   - Impact: Ensures reproducible notebook execution
+   - Run `pip freeze` in a working environment and capture exact versions
 
-def test_predict_fraud():
-    """Known fraud input should return 'Fraud'"""
-    result = predict(57.88, 0.31, 1.95, 1.0, 1.0, 0.0, 0.0)
-    # Would need a mock model or test against threshold
-    assert result in ["Fraud", "Not fraud"]
-```
+5. **Add Trivy scanning to CI** (1-2 hours)
+   - Impact: Automatically detects known CVEs
+   - Implementation:
+   ```yaml
+   - name: Run Trivy
+     uses: aquasecurity/trivy-action@master
+     with:
+       image-ref: 'test-${{ matrix.app }}'
+       severity: 'CRITICAL,HIGH'
+   ```
 
-### 4. Update Base Image (1-2 hours)
-```dockerfile
-# Change FROM python:3.10.4 to:
-FROM python:3.12-slim
-```
+6. **Add basic unit tests for predict functions** (2-3 hours)
+   - Impact: Validates prediction logic without requiring a running model server
+   - Implementation:
+   ```python
+   # tests/test_predict.py
+   import pytest
+   from unittest.mock import patch, MagicMock
 
-### 5. Add Pre-commit Config (1 hour)
-```yaml
-# .pre-commit-config.yaml
-repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.0
-    hooks:
-      - id: ruff
-      - id: ruff-format
-```
+   def test_predict_returns_fraud_above_threshold():
+       with patch('requests.post') as mock_post:
+           mock_post.return_value.json.return_value = {
+               'outputs': [{'data': [0.999]}]
+           }
+           # Import and test predict function
+           # Should return "Fraud" for values >= 0.995
+
+   def test_predict_returns_not_fraud_below_threshold():
+       with patch('requests.post') as mock_post:
+           mock_post.return_value.json.return_value = {
+               'outputs': [{'data': [0.5]}]
+           }
+           # Should return "Not fraud" for values < 0.995
+   ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
-**Score: 0/10**
+**Status: Non-existent**
 
-There is **no CI/CD automation** in this repository:
+No CI/CD configuration was found anywhere in the repository:
 - No `.github/workflows/` directory
 - No `.gitlab-ci.yml`
 - No `Jenkinsfile`
 - No `Makefile`
 - No build scripts
 
-The repository has only 1 merge commit in its history, suggesting very low development activity. PRs can be merged with zero automated validation.
+This means:
+- No automated linting or formatting checks
+- No automated testing
+- No Docker image build validation
+- No dependency vulnerability checking
+- No notebook validation
 
 ### Test Coverage
-**Score: 0/10**
+**Status: Zero coverage**
 
-**Zero test files exist.** There are:
-- 0 test files (`test_*.py`, `*_test.py`)
-- 0 test directories (`tests/`, `test/`)
-- 0 test configuration files (`pytest.ini`, `tox.ini`, `setup.cfg`, `pyproject.toml`)
-- 0 test dependencies in any requirements.txt
-- No pytest, unittest, or any testing framework referenced anywhere
+No test files of any type were found:
+- No `*_test.py` or `test_*.py` files
+- No `tests/` or `test/` directories
+- No `pytest.ini`, `setup.cfg`, or `pyproject.toml` with test configuration
+- No `tox.ini`
+- No coverage configuration (`.coveragerc`, `codecov.yml`)
 
-The application code is trivially testable — the `predict()` functions in both apps are pure functions (given a model) that take 7 numeric inputs and return "Fraud" or "Not fraud".
+**Untested code paths:**
+- `application/model_application.py:predict()` — constructs inference payload and parses response; threshold logic at 0.995
+- `application_mlflow_serving/model_application_mlflow_serve.py:predict()` — loads model from MLFlow and runs prediction
+- Gradio interface initialization and configuration
+- Error handling (none exists — `response.json()['outputs'][0]['data'][0]` will crash on non-200 responses)
 
 ### Code Quality
-**Score: 0/10**
+**Status: No tooling**
 
-No quality tooling exists:
-- No linter configuration (ruff, flake8, pylint)
-- No type checking (mypy, pyright)
-- No formatter (black, ruff format)
+- No linting configuration (no ruff, flake8, pylint, mypy)
 - No pre-commit hooks
-- No static analysis (bandit, semgrep)
-- No `.editorconfig`
+- No code formatting (no black, isort)
+- No type hints in any Python file
+- No static analysis tools (no CodeQL, bandit, semgrep)
+- No editor configuration (.editorconfig)
 
-Code observations:
-- Inconsistent spacing and formatting
-- No type hints on any functions
-- No docstrings (except inline comments)
-- Magic numbers (e.g., threshold `0.995`, shape `[1, 7]`)
+**Code quality observations:**
+- Application code is clean and readable (~50 lines each)
+- No input validation on the predict function parameters
+- No error handling for failed API responses
+- Hardcoded model name and version (`"DNN-credit-card-fraud"`, version `1`)
+- Environment variables accessed without defaults or validation (`os.getenv()` returns None if unset, `int(None)` would crash)
 
 ### Container Images
-**Score: 1/10**
+**Status: Minimal**
 
-Two Dockerfiles exist (`application/Dockerfile` and `application_mlflow_serving/Dockerfile`) with significant issues:
+Two Dockerfiles found:
+- `application/Dockerfile` — Gradio app calling RHODS Model Serving
+- `application_mlflow_serving/Dockerfile` — Gradio app calling MLFlow directly
 
-| Issue | Details |
-|-------|---------|
-| Outdated base image | `python:3.10.4` — released April 2022 |
-| Full image, not slim | Uses `python:3.10.4` instead of `python:3.10-slim`, resulting in unnecessarily large images |
-| No multi-stage build | Single-stage build includes pip and build dependencies in final image |
-| WORKDIR is /tmp | Uses `/tmp` as working directory, which is a security anti-pattern |
-| No health check | No `HEALTHCHECK` instruction |
-| No .dockerignore | No `.dockerignore` file to exclude unnecessary files |
-| No security scanning | No Trivy, Snyk, or any scanner |
-| No SBOM generation | No SBOM or attestation |
-| No multi-arch | Single architecture only |
-| Runs as root | No `USER` instruction; container runs as root |
+**Issues identified:**
+| Issue | Severity | Details |
+|-------|----------|---------|
+| Running as root | HIGH | No `USER` directive in either Dockerfile |
+| Outdated base image | HIGH | `python:3.10.4` is from April 2022; current is 3.10.x or 3.12.x |
+| No multi-stage build | MEDIUM | Full Python image (~1GB) used instead of slim variant |
+| WORKDIR /tmp | LOW | Unconventional; may conflict with system temp file usage |
+| No health check | LOW | No HEALTHCHECK directive for container orchestration |
+| No .dockerignore | MEDIUM | Build context includes data, images, and .git |
 
-### Security
-**Score: 0/10**
-
-No security practices are implemented:
-- No container scanning (Trivy, Snyk, Grype)
-- No SAST (CodeQL, Bandit, Semgrep)
-- No dependency scanning (Dependabot, Renovate)
-- No secret detection (Gitleaks, TruffleHog)
+**No container testing:**
+- No image startup validation
+- No Trivy/Snyk scanning
 - No SBOM generation
 - No image signing
-- The `.gitignore` does exclude `.env`, which is positive
-- Outdated dependencies with known CVEs (tensorflow 2.10 has multiple known vulnerabilities)
+- No multi-architecture support
+
+### Security
+**Status: Minimal**
+
+**Positive findings:**
+- `.gitignore` excludes `.env` files (prevents secret leakage)
+- No hardcoded secrets in code
+
+**Negative findings:**
+- No SAST/DAST tools
+- No dependency scanning (Dependabot, Snyk, etc.)
+- No secret detection (Gitleaks, TruffleHog)
+- No container scanning
+- `sklearn` import is deprecated — should use `scikit-learn`
+- No input validation on inference endpoint (potential for injection via malicious payload)
+- INFERENCE_ENDPOINT from environment variable used directly in `requests.post()` without validation (SSRF risk)
 
 ### Agent Rules (Agentic Flow Quality)
-**Score: 0/10**
+**Status: Missing**
 
-- **Status:** Missing
-- **Coverage:** None — no test type rules, no coding standards, no testing guidelines
-- **Quality:** N/A
-- **Gaps:** Everything — no `CLAUDE.md`, no `.claude/` directory, no agent rules of any kind
-- **Recommendation:** Generate comprehensive agent rules with `/test-rules-generator` if this repository is to be actively developed
+- No `CLAUDE.md` in repository root
+- No `AGENTS.md`
+- No `.claude/` directory
+- No `.claude/rules/` test creation rules
+- No `.claude/skills/` custom skills
+- No testing documentation in `docs/`
 
-### Model Quality / ML-Specific Concerns
-
-While not a standard quality dimension, several ML-specific issues are notable:
-
-1. **No model validation tests** — The training notebook has no automated validation that the model performs above a minimum threshold
-2. **Hardcoded threshold** — `0.995` fraud threshold appears in both applications with no justification or evaluation
-3. **No data validation** — No checks that `card_transdata.csv` has expected schema, ranges, or distributions
-4. **No model versioning tests** — No verification that MLFlow model registry operations succeed
-5. **Training data included in repo** — `data/card_transdata.csv` is committed directly (currently empty/0 bytes in shallow clone, but tracked in git)
-6. **No notebook execution validation** — The Jupyter notebook is never executed in CI; could have broken cells
+**Recommendation:** Generate test creation rules using `/test-rules-generator` to establish:
+- Unit test patterns for Python ML applications
+- Gradio application testing patterns
+- MLFlow integration test patterns
+- Notebook validation patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-
-1. **Add unit tests for predict() functions** in both application variants — these are the core business logic and are trivially testable
-2. **Create a GitHub Actions CI workflow** with linting (ruff), testing (pytest), and Docker build validation
-3. **Update python:3.10.4 base image** to a current, supported version (e.g., `python:3.12-slim`)
-4. **Update all pinned dependencies** — tensorflow, gradio, mlflow, numpy are all years behind with known CVEs
-5. **Add Trivy or Snyk container scanning** to detect vulnerabilities in images
+- Create a GitHub Actions workflow with at minimum: Python linting (ruff/flake8), Dockerfile build validation, and dependency vulnerability scanning
+- Add unit tests for the `predict()` functions in both application variants — test the threshold logic, input validation, and error handling
+- Add non-root USER directives to both Dockerfiles and add .dockerignore files
+- Pin all dependencies to specific versions and update to current releases (TensorFlow 2.x latest, Gradio 4.x or 5.x, MLFlow 2.x latest)
 
 ### Priority 1 (High Value)
-
-1. **Add integration tests** that validate the Gradio app starts and serves predictions correctly
-2. **Add model validation tests** to verify the ONNX export produces correct predictions on known inputs
-3. **Add codecov integration** with minimum coverage thresholds (even 50% would be an improvement)
-4. **Create CLAUDE.md** with agent rules for test patterns and coding standards
-5. **Add Dependabot/Renovate** for automated dependency updates
-6. **Fix Dockerfile security issues** — add `USER`, use slim base, add health check, fix WORKDIR
+- Add integration tests that validate the Gradio app starts and responds to health checks
+- Add Trivy container scanning to CI workflow
+- Add pre-commit hooks for Python linting and formatting
+- Add a Makefile with standard targets (lint, test, build, run)
+- Implement multi-stage Docker builds to reduce image size
+- Add input validation and error handling to predict functions
 
 ### Priority 2 (Nice-to-Have)
-
-1. **Add model performance benchmarking** — automated accuracy, precision, recall metrics on test data
-2. **Add multi-architecture Docker builds** (amd64/arm64)
-3. **Add notebook execution validation** in CI using papermill
-4. **Implement data validation checks** for the training CSV (schema, ranges, class distribution)
-5. **Add pre-commit hooks** for consistent developer experience
-6. **Add `.dockerignore`** to exclude images, data, and notebook from Docker context
+- Add CLAUDE.md with repository context and contribution guidelines
+- Add notebook validation (nbval or papermill) to CI to ensure model.ipynb runs cleanly
+- Add SBOM generation for container images
+- Add multi-architecture (amd64/arm64) image builds
+- Consider adding model validation tests (accuracy thresholds, data schema checks)
+- Add type hints to Python code
+- Replace deprecated `sklearn` import with `scikit-learn`
 
 ## Comparison to Gold Standards
 
-| Dimension | credit-fraud-detection-demo | odh-dashboard | notebooks | kserve |
-|-----------|:--:|:--:|:--:|:--:|
-| Unit Tests | 0/10 | 9/10 | 7/10 | 9/10 |
-| Integration/E2E | 0/10 | 9/10 | 8/10 | 9/10 |
-| Build Integration | 0/10 | 8/10 | 7/10 | 8/10 |
-| Image Testing | 1/10 | 7/10 | 9/10 | 7/10 |
-| Coverage Tracking | 0/10 | 8/10 | 6/10 | 9/10 |
-| CI/CD Automation | 0/10 | 9/10 | 8/10 | 9/10 |
-| Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
-| **Overall** | **1.0** | **8.5** | **7.0** | **8.0** |
-
-This repository falls dramatically short of gold standards across every dimension. As a demo/tutorial repository, some gaps are expected, but the complete absence of any CI/CD or testing makes it unsuitable as a reference for production ML workflows.
+| Capability | credit-fraud-detection-demo | odh-dashboard | notebooks | kserve |
+|---|---|---|---|---|
+| CI/CD Pipeline | None | Multi-workflow | Comprehensive | Extensive |
+| Unit Tests | None | Jest + Go testing | Python tests | Go testing |
+| Integration Tests | None | Cypress E2E | Image validation | envtest |
+| Coverage Tracking | None | Codecov + thresholds | Per-image | Codecov |
+| Container Scanning | None | Trivy + Snyk | Trivy | Trivy |
+| Multi-arch Builds | None | Yes | Yes | Yes |
+| Pre-commit Hooks | None | ESLint + Prettier | Yes | golangci-lint |
+| Agent Rules | None | Comprehensive .claude/ | Partial | None |
+| Dependency Pinning | Partial | Full (lockfile) | Full | go.mod |
+| Non-root Container | No | Yes | Yes | Yes |
 
 ## File Paths Reference
 
-| File | Purpose |
-|------|---------|
-| `application/model_application.py` | Gradio app using RHODS Model Serving inference |
-| `application/Dockerfile` | Container build for RHODS variant |
-| `application/requirements.txt` | Python deps for RHODS variant |
-| `application_mlflow_serving/model_application_mlflow_serve.py` | Gradio app using MLFlow model serving |
-| `application_mlflow_serving/Dockerfile` | Container build for MLFlow variant |
-| `application_mlflow_serving/requirements.txt` | Python deps for MLFlow variant |
-| `model/model.ipynb` | Jupyter notebook for model training |
-| `model/requirements.txt` | Python deps for model training |
-| `data/card_transdata.csv` | Training dataset (credit card transactions) |
-| `README.md` | Comprehensive setup/usage documentation |
-| `.gitignore` | Git ignore rules (excludes .env, mlruns) |
+### Application Code
+- `application/model_application.py` — Gradio app using RHODS Model Serving
+- `application_mlflow_serving/model_application_mlflow_serve.py` — Gradio app using MLFlow serving
+
+### Container Images
+- `application/Dockerfile` — RHODS serving variant
+- `application_mlflow_serving/Dockerfile` — MLFlow serving variant
+
+### Dependencies
+- `application/requirements.txt` — App dependencies (mostly pinned)
+- `application_mlflow_serving/requirements.txt` — App dependencies (mostly pinned)
+- `model/requirements.txt` — Notebook dependencies (partially unpinned)
+
+### Data & Model
+- `data/card_transdata.csv` — Training dataset
+- `model/model.ipynb` — Model training notebook (20 cells, Python 3.9 kernel)
+
+### Configuration
+- `.gitignore` — Excludes flagged/, mlruns/, mlflow.db, .env
+- `LICENSE` — GPL v3

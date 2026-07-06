@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:41 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:59 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/kuberay</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="197.92016999999996"
+                                stroke-dashoffset="180.95558400000002"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">6.5</div>
+                        <div class="score-value">6.8</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Strong unit test coverage with envtest and Ginkgo; 104 test files vs 220 source files (0.47 ratio)</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Excellent 1:1 test-to-source ratio with envtest for controllers and webhooks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Comprehensive E2E suites for RayJob, RayCluster, RayService, autoscaler, and upgrade; PR-time runs a subset, full suite runs post-merge</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">7 E2E suites covering core, autoscaler, service, upgrade, and kubectl plugin</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">PR builds Docker images and deploys to Kind; no PR-time Konflux simulation; RHOAI Dockerfile not validated on PR</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">PR builds Docker + deploys to Kind; Konflux on label/comment not auto; chaos testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.5/10</div>
-                            <div class="scorecard-status">Multiple Dockerfiles (standard, RHOAI, Konflux, buildx) but no runtime validation, vulnerability scanning, or SBOM</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Multi-arch Dockerfiles but no vulnerability scanning, SBOM, or runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Local coverprofile generated via Makefile but no CI coverage upload, no codecov/coveralls integration, no enforcement</div>
+                            <div class="scorecard-status">coverprofile generated but no codecov integration, thresholds, or PR reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Well-structured workflows with concurrency control, Kind-based E2E, Helm chart testing, consistency checks, fast-forward release automation</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">15 workflows with concurrency control, chaos testing, and consistency checks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory — zero AI agent guidance</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Comprehensive CLAUDE.md but no .claude/rules/ for test creation patterns</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +411,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No security scanning in CI</div>
-                            <p>Vulnerabilities in dependencies and container images go undetected until production</p>
+                            <div class="item-description">No coverage tracking or enforcement</div>
+                            <p>Coverage can silently regress; no PR-level feedback on untested code paths</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No coverage tracking or enforcement in CI</div>
-                            <p>Coverage regressions go unnoticed; coverprofile generated locally but never uploaded</p>
+                            <div class="item-description">No container vulnerability scanning</div>
+                            <p>CVEs in base images and dependencies go undetected until downstream</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">RHOAI/Konflux Dockerfile not validated on PRs</div>
-                            <p>Build failures in Dockerfile.rhoai and Dockerfile.konflux discovered only post-merge</p>
+                        <li class="item-card medium">
+                            <div class="item-description">No image runtime validation</div>
+                            <p>Broken images (startup crashes, missing deps) not caught until deployment</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No container image runtime validation</div>
-                            <p>Image startup failures and runtime issues not caught before merge</p>
+                            <div class="item-description">Konflux build not automatic on PRs</div>
+                            <p>Multi-arch and hermetic build failures discovered late, after label/comment trigger</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">6-8 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">E2E upgrade tests currently disabled on push</div>
-                            <p>Upgrade regressions can be introduced without detection</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,35 +456,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to PR workflow</div>
-                            <p>Catch known CVEs in base images and dependencies before merge</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add codecov integration to test-job workflow</div>
-                            <p>Track coverage trends, enforce minimum thresholds, PR coverage comments</p>
+                            <div class="item-description">Add Codecov integration to test-job workflow</div>
+                            <p>Immediate visibility into coverage trends and PR-level regression alerts</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add RHOAI Dockerfile build step to PR workflow</div>
-                            <p>Catch downstream build failures before merge instead of post-merge</p>
+                            <div class="item-description">Add Trivy container scan to PR workflow</div>
+                            <p>Catch CVEs in UBI9 and dependency images before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create basic CLAUDE.md with testing patterns</div>
-                            <p>Improve AI-generated test quality and consistency for contributions</p>
+                            <div class="item-description">Create .claude/rules/ for test patterns</div>
+                            <p>Consistent AI-generated tests following envtest, Ginkgo, and E2E patterns</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Make Konflux pipeline trigger automatically on PRs</div>
+                            <p>Catch multi-arch and hermetic build failures before merge</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +501,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add Trivy or Snyk scanning for container images in PR and push workflows</li><li>Integrate codecov with the test-job workflow — upload cover.out and set minimum thresholds</li><li>Validate Dockerfile.rhoai and Dockerfile.konflux builds on every PR</li></ul>
+                            <ul><li>Add Codecov integration with coverage thresholds (e.g., 60% minimum, no regression)</li><li>Add Trivy or Grype container scanning to the PR workflow for all Dockerfiles</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add container runtime validation (startup check, health probe) for built images in CI</li><li>Re-enable E2E upgrade tests on push to dev branch</li><li>Add CodeQL or gosec SAST scanning as a PR-required check</li><li>Create comprehensive agent rules (.claude/rules/) for test automation guidance</li></ul>
+                            <ul><li>Add image startup validation (build → run → health check) for operator images</li><li>Make Konflux builds automatic on PRs instead of label/comment-gated</li><li>Create .claude/rules/ with unit-tests.md, e2e-tests.md, and controller-tests.md</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SBOM generation for container images (Syft or Trivy)</li><li>Add multi-architecture PR-time build validation for Dockerfile.buildx</li><li>Implement performance regression testing for operator reconciliation loops</li><li>Add contract tests between operator API and ray-operator SDK</li></ul>
+                            <ul><li>Add SBOM generation (Syft) and image signing (Cosign) to release workflow</li><li>Add CodeQL or Semgrep SAST analysis to PR workflow</li><li>Add Dependabot or Renovate for automated dependency updates</li></ul>
                         </div>
                     </div>
                 </div>

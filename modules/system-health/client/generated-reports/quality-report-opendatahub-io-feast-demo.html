@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:17 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 03:54 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/feast-demo</h2>
         </header>
 
@@ -365,17 +365,17 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No source code or tests present — documentation-only repository</div>
+                            <div class="scorecard-status">No source code or tests present - documentation-only repository</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E tests — no testable code exists</div>
+                            <div class="scorecard-status">No integration or E2E tests - repository contains no executable code</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No build system, Makefile, or container build configuration</div>
+                            <div class="scorecard-status">No build system, Dockerfile, or build configuration present</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
@@ -385,17 +385,17 @@
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tracking — no code to measure</div>
+                            <div class="scorecard-status">No code to cover - no coverage tracking applicable</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No CI/CD workflows configured at all</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No CI/CD workflows configured (.github/workflows/ does not exist)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
+                            <div class="scorecard-status">No CLAUDE.md, .claude/ directory, or agent configuration present</div>
                         </div>
                     </div>
                 </div>
@@ -411,32 +411,32 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Repository is documentation-only with no testable code</div>
-                            <p>No software quality practices can be applied to a README-only repo</p>
+                            <div class="item-description">Repository is documentation-only with no source code</div>
+                            <p>No testable, buildable, or deployable artifacts exist in this repository</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">N/A — requires fundamental scope change</span>
+                                <span class="meta-tag effort-tag">N/A - architectural decision</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No CI/CD pipelines configured</div>
-                            <p>No automated validation of any kind — even link checking or markdown linting</p>
+                            <div class="item-description">No CI/CD pipeline of any kind</div>
+                            <p>No automated validation of even the README links or YAML snippets</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No security scanning or dependency management</div>
-                            <p>YAML manifests embedded in README are not validated or scanned</p>
+                            <div class="item-description">No linting or validation for embedded YAML/shell snippets</div>
+                            <p>Users may copy broken YAML or shell commands from README without warning</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Demo instructions reference external repos without pinned versions</div>
-                            <p>Demo can break silently when upstream repositories change</p>
+                            <div class="item-description">No link checking for external URLs</div>
+                            <p>External links (feast-dev/feast, accorvin/feast-credit-score-local-tutorial) may rot without detection</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
@@ -456,35 +456,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add markdown linting CI workflow</div>
-                            <p>Catch broken links, formatting issues, and typos automatically</p>
+                            <div class="item-description">Add a GitHub Actions workflow for link checking</div>
+                            <p>Catch broken links to external repositories and documentation automatically</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add YAML linting for embedded code blocks</div>
+                            <p>Validate that YAML snippets in README are syntactically correct</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CODEOWNERS file</div>
-                            <p>Ensure PR reviews are routed to the right people</p>
+                            <div class="item-description">Add a CODEOWNERS file</div>
+                            <p>Ensure PRs are reviewed by the right team members</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Pin external resource references to specific commits or tags</div>
-                            <p>Prevent demo breakage from upstream changes</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1 hour</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add a link-checker GitHub Action</div>
-                            <p>Detect broken URLs in README before they reach users</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">15 minutes</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +493,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Decide if this repo should contain demo code (scripts, notebooks, Dockerfiles) or remain doc-only</li><li>If doc-only: add markdown linting, link checking, and spell-check CI</li><li>If code-bearing: migrate demo commands into executable scripts with tests</li></ul>
+                            <ul><li>Decide whether this repo should contain executable demo code or remain documentation-only</li><li>If documentation-only: add link-checking CI and YAML validation for embedded snippets</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add a GitHub Actions workflow for at minimum markdown linting and link validation</li><li>Pin all external raw.githubusercontent.com references to specific commits or tags</li><li>Add a CODEOWNERS file for review routing</li></ul>
+                            <ul><li>Add a CI workflow to validate README links and embedded YAML/shell syntax</li><li>Consider adding a Makefile or script that automates the demo setup steps</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add a CLAUDE.md or AGENTS.md with contribution and testing guidelines</li><li>Consider adding a Makefile or script to automate the demo setup steps</li><li>Add a CONTRIBUTING.md describing how to update the demo</li></ul>
+                            <ul><li>Add agent rules (CLAUDE.md) to guide contributors on documentation standards</li><li>Consider adding a Containerfile to package the demo as a reproducible environment</li></ul>
                         </div>
                     </div>
                 </div>

@@ -1,417 +1,399 @@
 ---
 repository: "trustyai-explainability/vllm-orchestrator-gateway"
-overall_score: 3.5
+overall_score: 3.4
 scorecard:
   - dimension: "Unit Tests"
-    score: 2.0
-    status: "Only 4 tests in config.rs; no tests for main.rs or api.rs (0 of 3 source files have meaningful coverage)"
+    score: 2.5
+    status: "Only 4 tests in config.rs, 0 tests for main.rs (547 LOC) or api.rs (109 LOC)"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests exist; only a manual curl.sh script for ad-hoc testing"
+    status: "No integration or E2E tests exist; no test infrastructure for HTTP endpoints"
   - dimension: "Build Integration"
     score: 3.0
-    status: "Dockerfile has test/lint/fmt stages but they are not executed in CI; no PR-time image build validation"
+    status: "Dockerfile has multi-stage with test/lint/format stages but no PR-time image build or Konflux simulation"
   - dimension: "Image Testing"
-    score: 2.0
-    status: "Multi-stage Dockerfile with UBI9 base, but no runtime validation, no startup testing, no image scanning in CI"
+    score: 1.5
+    status: "No container runtime validation, no startup testing, no image scanning in CI"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage generation, no codecov/coveralls, no thresholds, no PR reporting"
+    status: "No coverage generation, no codecov/coveralls integration, no coverage thresholds"
   - dimension: "CI/CD Automation"
-    score: 5.0
-    status: "Two workflows (tests + security scan) with cargo caching, clippy, fmt checks, and Trivy filesystem scan"
+    score: 6.0
+    status: "Two workflows (tests + Trivy) with caching and clippy, but no image build, no release automation"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory; zero AI-assisted development guidance"
+    status: "No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance"
 critical_gaps:
-  - title: "Minimal unit test coverage — only config validation tested"
-    impact: "Core gateway logic (routing, streaming, detection handling, TLS) is completely untested"
+  - title: "No tests for main.rs (547 LOC) - the core gateway logic"
+    impact: "Chat completions routing, streaming, mTLS client setup, and detector orchestration are completely untested"
     severity: "HIGH"
     effort: "16-24 hours"
-  - title: "No integration or E2E tests"
-    impact: "Cannot verify gateway correctly proxies to orchestrator, handles detections, or applies fallback messages"
+  - title: "No integration/E2E tests for HTTP API"
+    impact: "Route registration, request forwarding, header propagation, detection fallbacks, and SSE streaming are never validated end-to-end"
     severity: "HIGH"
-    effort: "24-40 hours"
-  - title: "No code coverage tracking"
-    impact: "Cannot measure test quality or enforce minimum thresholds; regression risk unknown"
+    effort: "20-30 hours"
+  - title: "No coverage tracking or enforcement"
+    impact: "Cannot measure test adequacy or prevent coverage regression; current effective coverage near 0%"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No container image build/test in CI"
-    impact: "Dockerfile issues (build failures, missing deps, runtime errors) only discovered during deployment"
+  - title: "No container image build or validation in CI"
+    impact: "Dockerfile build failures (including the test/lint/format stages) not caught until post-merge"
     severity: "MEDIUM"
-    effort: "4-8 hours"
-  - title: "Trivy scan has exit-code 0 — vulnerabilities never block PRs"
-    impact: "Security scan is informational only; critical CVEs can be merged without review"
-    severity: "MEDIUM"
-    effort: "1 hour"
-quick_wins:
-  - title: "Set Trivy exit-code to 1 for CRITICAL/HIGH vulnerabilities"
-    effort: "30 minutes"
-    impact: "Immediately blocks PRs with critical security vulnerabilities"
-  - title: "Add cargo-tarpaulin coverage to CI with codecov upload"
-    effort: "2-4 hours"
-    impact: "Visibility into current coverage baseline and trend tracking"
-  - title: "Add unit tests for get_orchestrator_detectors() and check_payload_detections()"
+    effort: "4-6 hours"
+  - title: "No agent rules for AI-assisted development"
+    impact: "AI agents contributing code have no guidance on test patterns, architecture, or quality standards"
+    severity: "LOW"
     effort: "2-3 hours"
-    impact: "Cover the two pure functions in main.rs that have no external dependencies"
-  - title: "Add .dockerignore file"
-    effort: "15 minutes"
-    impact: "Faster Docker builds by excluding target/, .git/, and unnecessary files"
-  - title: "Add basic CLAUDE.md with project context and test patterns"
+quick_wins:
+  - title: "Add cargo-tarpaulin coverage to CI and integrate with Codecov"
+    effort: "2-3 hours"
+    impact: "Immediate visibility into test coverage gaps; enables coverage enforcement on PRs"
+  - title: "Add Dockerfile build step to PR workflow"
     effort: "1-2 hours"
-    impact: "Enable AI-assisted development with consistent quality standards"
+    impact: "Catch container build failures before merge; validate multi-stage test/lint/format stages"
+  - title: "Add unit tests for get_orchestrator_detectors()"
+    effort: "2-3 hours"
+    impact: "Cover the core detector routing logic that maps config to orchestrator request format"
+  - title: "Add CLAUDE.md with test patterns and architecture overview"
+    effort: "1-2 hours"
+    impact: "Enable AI agents to contribute higher-quality code and tests"
+  - title: "Pin Trivy action to a release tag instead of commit SHA"
+    effort: "30 minutes"
+    impact: "Improve auditability; current SHA pin is good practice but tag aliases aid readability"
 recommendations:
   priority_0:
-    - "Add unit tests for all pure functions: get_orchestrator_detectors(), check_payload_detections(), build_orchestrator_client() error paths"
-    - "Add integration tests using mockall or wiremock-rs to test HTTP handler behavior without real orchestrator"
-    - "Enable coverage tracking with cargo-tarpaulin and codecov integration"
-    - "Set Trivy exit-code to 1 to block merges with critical vulnerabilities"
+    - "Add comprehensive unit tests for main.rs: get_orchestrator_detectors(), check_payload_detections(), build_orchestrator_client(), URL construction logic"
+    - "Implement integration tests using axum::test for the HTTP API endpoints with mock orchestrator backend"
+    - "Add cargo-tarpaulin coverage generation and enforce a minimum threshold (start at 50%, ramp to 80%)"
   priority_1:
-    - "Add container image build and startup validation to PR workflow"
-    - "Add E2E tests with a mock orchestrator server testing full request/response flow"
-    - "Create CLAUDE.md and .claude/rules/ for test automation guidance"
-    - "Add contract tests validating the API schema against the FMS Guardrails Orchestrator"
-  priority_2:
-    - "Add performance/load testing for streaming endpoints"
-    - "Add .dockerignore to optimize builds"
-    - "Add pre-commit hooks for local developer experience"
+    - "Add Dockerfile build step to the PR workflow to catch build failures pre-merge"
+    - "Add container startup validation test (build image, run it, health-check)"
+    - "Create agent rules (.claude/rules/) covering unit test patterns, integration test patterns, and code review standards"
     - "Add dependabot or renovate for automated dependency updates"
+  priority_2:
+    - "Add performance/load testing for streaming SSE endpoint"
+    - "Add contract tests validating the orchestrator API schema compatibility"
+    - "Add SBOM generation and image signing to the release process"
+    - "Add pre-commit hooks for rustfmt and clippy"
 ---
 
 # Quality Analysis: vllm-orchestrator-gateway
 
 ## Executive Summary
 
-- **Overall Score: 3.5/10**
-- **Repository Type**: Rust HTTP gateway service (axum-based)
-- **Primary Language**: Rust (893 lines across 3 source files)
-- **Purpose**: Proxy gateway for FMS Guardrails Orchestrator that enforces detector pipelines on chat completions endpoints
+- **Overall Score: 3.4/10**
+- **Repository Type**: Rust HTTP gateway service (Axum framework)
+- **Primary Language**: Rust (893 LOC across 3 source files)
+- **Purpose**: Proxy gateway enforcing FMS Guardrails Orchestrator detector pipelines on OpenAI-compatible chat completions endpoints
 
-**Key Strengths:**
-- Clean CI with clippy + rustfmt enforcement on PRs
-- Trivy filesystem security scanning in place
-- Well-structured multi-stage Dockerfile using UBI9 base image
+### Key Strengths
+- Well-structured CI with cargo fmt, clippy, and Trivy filesystem scanning
+- Multi-stage Dockerfile with separate test, lint, and format stages
 - Cargo dependency caching in CI
+- Clean code organization (config, API types, main gateway logic separated)
 
-**Critical Gaps:**
-- Only 4 unit tests exist (all in config.rs) — core gateway logic is completely untested
-- Zero integration or E2E tests
-- No coverage tracking or enforcement
-- Trivy scan never blocks PRs (exit-code: 0)
-- No agent rules or AI-assisted development guidance
+### Critical Gaps
+- **Severely undertested**: Only 4 unit tests (all in config.rs), zero tests for the 547-line main.rs containing all gateway logic
+- **No integration or E2E tests**: HTTP endpoint routing, streaming, mTLS, header forwarding are completely untested
+- **No coverage tracking**: No measurement, no enforcement, no visibility
+- **No container image CI**: Dockerfile never built in PR workflow despite having test/lint stages
+- **No agent rules**: No AI development guidance
 
-**Agent Rules Status:** Missing — No CLAUDE.md, AGENTS.md, or .claude/ directory
+### Agent Rules Status: **Missing**
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 2/10 | Only 4 tests in config.rs; main.rs and api.rs completely untested |
-| Integration/E2E | 0/10 | No integration or E2E tests; only a manual curl.sh script |
-| **Build Integration** | **3/10** | **Dockerfile has test stages but they are unused in CI** |
-| Image Testing | 2/10 | Multi-stage Dockerfile but no runtime validation or CI image builds |
+| Unit Tests | 2.5/10 | Only 4 tests in config.rs; main.rs and api.rs have zero tests |
+| Integration/E2E | 0/10 | No integration or E2E test infrastructure exists |
+| **Build Integration** | **3.0/10** | **Multi-stage Dockerfile exists but is not exercised in CI** |
+| Image Testing | 1.5/10 | No runtime validation, no startup testing, no image scanning |
 | Coverage Tracking | 0/10 | No coverage generation, no thresholds, no reporting |
-| CI/CD Automation | 5/10 | Two workflows with caching; Trivy scan; clippy/fmt; but gaps in enforcement |
-| Agent Rules | 0/10 | No agent rules, no test automation guidance |
+| CI/CD Automation | 6.0/10 | Good PR checks (fmt, clippy, test, Trivy) but no image build or release automation |
+| Agent Rules | 0/10 | No CLAUDE.md, .claude/ directory, or agent rules |
 
 ## Critical Gaps
 
-### 1. Minimal Unit Test Coverage
-- **Impact**: Core gateway logic — routing, streaming SSE handling, detection processing, TLS client building, header forwarding — is entirely untested
+### 1. Core Gateway Logic is Untested (HIGH)
+- **Impact**: The entire request lifecycle - route registration, detector mapping, orchestrator request construction, streaming SSE parsing, mTLS client setup, header forwarding - has zero test coverage
 - **Severity**: HIGH
 - **Effort**: 16-24 hours
-- **Details**: Only `config.rs` has tests (4 tests, all `#[should_panic]` validation tests). The 547-line `main.rs` containing all business logic has zero tests. `api.rs` (109 lines of data structures) has no serialization/deserialization tests.
-- **Current test-to-code ratio**: 126 test lines / 893 source lines = 14% (but tests only cover config validation)
+- **Details**: `main.rs` (547 LOC) contains 8 functions including the critical `handle_chat_completions()`, `handle_streaming_generation()`, `handle_non_streaming_generation()`, `orchestrator_post_request()`, `orchestrator_streaming_request()`, and `build_orchestrator_client()`. None have tests.
 
-### 2. No Integration or E2E Tests
-- **Impact**: Cannot verify the gateway works end-to-end with the FMS Guardrails Orchestrator
+### 2. No Integration Tests for HTTP API (HIGH)
+- **Impact**: Route-level behavior cannot be validated. The gateway's primary function (proxying requests with injected detectors) is never tested as a system.
 - **Severity**: HIGH
-- **Effort**: 24-40 hours
-- **Details**: The only way to test the gateway is with the manual `curl.sh` script, which requires spinning up the full stack (orchestrator, detector, vLLM). There are no mock-based integration tests that could run in CI.
+- **Effort**: 20-30 hours
+- **Details**: Axum provides `axum::test` utilities and `tower::ServiceExt` for testing routes without a live server. A mock orchestrator backend could validate the full request/response cycle.
 
-### 3. No Code Coverage Tracking
-- **Impact**: No visibility into what code is tested; no ability to enforce coverage thresholds or track regressions
+### 3. No Coverage Tracking (HIGH)
+- **Impact**: Cannot measure test adequacy or prevent coverage regression. With only 4 tests across 893 LOC, effective coverage is likely under 15%.
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: No `cargo-tarpaulin` or `cargo-llvm-cov` configuration. No codecov/coveralls integration. No coverage reporting on PRs.
+- **Details**: `cargo-tarpaulin` or `llvm-cov` can generate coverage reports. Integration with Codecov/Coveralls is straightforward via GitHub Actions.
 
-### 4. Trivy Scan is Informational Only
-- **Impact**: Critical and high-severity vulnerabilities can be merged without blocking
+### 4. Container Image Not Built in CI (MEDIUM)
+- **Impact**: The Dockerfile includes test, lint, and format stages that are never exercised in CI. Build failures are discovered post-merge.
 - **Severity**: MEDIUM
-- **Effort**: 1 hour
-- **Details**: The security-scan workflow uses `exit-code: '0'`, which means the Trivy scan always passes. Results are uploaded to the GitHub Security tab but never prevent a merge.
+- **Effort**: 4-6 hours
+- **Details**: The multi-stage Dockerfile is well-designed with separate `tests`, `lint`, and `format` stages, but no CI workflow builds the image.
 
-### 5. No Container Image Build in CI
-- **Impact**: Dockerfile issues are only discovered during production deployment
-- **Severity**: MEDIUM
-- **Effort**: 4-8 hours
-- **Details**: The Dockerfile has dedicated test, lint, and format stages (`FROM gateway-builder AS tests`, etc.) but these are not used in CI. The PR workflow only runs `cargo test` directly — it doesn't build or validate the container image.
+### 5. No Agent Rules (LOW)
+- **Impact**: AI agents contributing to this repo have no guidance on architecture, test patterns, or quality standards.
+- **Severity**: LOW
+- **Effort**: 2-3 hours
 
 ## Quick Wins
 
-### 1. Set Trivy exit-code to 1 (30 minutes)
-Change `exit-code: '0'` to `exit-code: '1'` in `.github/workflows/security-scan.yaml` and optionally limit to `severity: 'HIGH,CRITICAL'` for blocking.
+### 1. Add Coverage Tracking (2-3 hours)
+**Effort**: Low | **Impact**: High
+
+Add `cargo-tarpaulin` to the test workflow:
 
 ```yaml
-- name: Run Trivy filesystem scan
-  uses: aquasecurity/trivy-action@v0.35.0
-  with:
-    scan-type: 'fs'
-    scan-ref: '.'
-    format: 'sarif'
-    output: 'trivy-fs-results.sarif'
-    severity: 'HIGH,CRITICAL'
-    exit-code: '1'  # Block PRs with critical vulnerabilities
-    ignore-unfixed: true
-    vuln-type: 'os,library'
-```
-
-### 2. Add cargo-tarpaulin Coverage (2-4 hours)
-Add a coverage step to the test workflow:
-
-```yaml
-- name: Install cargo-tarpaulin
-  run: cargo install cargo-tarpaulin
-
 - name: Generate coverage
-  run: cargo tarpaulin --out xml --output-dir coverage/
+  run: |
+    cargo install cargo-tarpaulin
+    cargo tarpaulin --out xml --output-dir coverage/
 
-- name: Upload coverage to Codecov
+- name: Upload coverage
   uses: codecov/codecov-action@v4
   with:
     files: coverage/cobertura.xml
-    fail_ci_if_error: true
+    fail_ci_if_error: false
 ```
 
-### 3. Test Pure Functions (2-3 hours)
-`get_orchestrator_detectors()` and `check_payload_detections()` are pure functions with no external dependencies — they can be unit tested immediately:
+### 2. Add Dockerfile Build to PR Workflow (1-2 hours)
+**Effort**: Low | **Impact**: High
 
-```rust
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_get_orchestrator_detectors_splits_input_output() {
-        // Test that detectors are correctly split into input/output maps
-    }
-
-    #[test]
-    fn test_check_payload_detections_returns_fallback() {
-        // Test fallback message is returned when detections exist
-    }
-
-    #[test]
-    fn test_check_payload_detections_returns_none_without_detections() {
-        // Test None is returned when no detections
-    }
-}
+```yaml
+- name: Build Docker image
+  run: docker build --target gateway-release -t vllm-orchestrator-gateway:test .
 ```
 
-### 4. Add .dockerignore (15 minutes)
-```
-target/
-.git/
-.github/
-*.md
-curl.sh
-```
+### 3. Unit Tests for get_orchestrator_detectors() (2-3 hours)
+**Effort**: Low | **Impact**: High
 
-### 5. Add CLAUDE.md (1-2 hours)
-Create basic agent rules with project context, testing patterns, and contribution guidelines.
+This pure function maps detector configs to orchestrator request format. Test cases:
+- Empty detectors list
+- Input-only detector
+- Output-only detector
+- Both input and output
+- Detector without params (should be skipped)
+- Custom server name override
+
+### 4. Add CLAUDE.md (1-2 hours)
+**Effort**: Low | **Impact**: Medium
+
+Create basic agent rules documenting:
+- Architecture overview (gateway -> orchestrator proxy pattern)
+- Test patterns (unit tests with `#[cfg(test)]`, integration tests with axum::test)
+- Key config structures and their validation logic
+
+### 5. Dependabot Configuration (30 minutes)
+**Effort**: Very Low | **Impact**: Medium
+
+```yaml
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows Found: 2**
-
+**Workflow Inventory**:
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `tests.yaml` | push + PR (main, incubation, stable) | Rust fmt, clippy, test, release build |
-| `security-scan.yaml` | PR only (main, incubation, stable) | Trivy filesystem scan |
+| `tests.yaml` ("Tier 1 - Unit tests") | push + PR to main/incubation/stable | fmt check, clippy, cargo test, release build |
+| `security-scan.yaml` ("Tier 1 - Security scan") | PR to main/incubation/stable | Trivy filesystem scan with SARIF upload |
 
-**Strengths:**
-- Cargo registry/git/target caching with hash-based keys
-- Clippy with `-D warnings` (treats warnings as errors)
-- `rustfmt --check` enforcement
-- Pinned Rust toolchain version (1.84.0 in CI)
-- Release build verification (`cargo build --release`)
+**Strengths**:
+- Good tiered naming convention ("Tier 1")
+- Cargo registry/git/target caching with lock file hash key
+- Clippy with `-D warnings` (treat warnings as errors)
+- `rustfmt` check enforced
+- Trivy scan results uploaded to GitHub Security tab via SARIF
+- Multi-branch support (main, incubation, stable)
 
-**Weaknesses:**
-- No concurrency control (duplicate runs on push + PR)
-- No container image build in CI
-- Trivy scan never fails (exit-code: 0)
-- No branch protection enforcement visible
-- Rust toolchain version mismatch: CI uses 1.84.0, `rust-toolchain.toml` specifies 1.86.0
+**Gaps**:
+- No concurrency control (concurrent PRs can stack CI runs)
+- No Docker image build in CI
+- No release/deploy workflow
+- No dependency update automation (dependabot/renovate)
+- Trivy only does filesystem scan, not image scan
+- No SBOM generation
+- No artifact caching between jobs
 
 ### Test Coverage
 
-**Unit Tests: 4 total (all in config.rs)**
+**Unit Tests**: 4 tests in `config.rs` only
+| Test | Purpose |
+|------|---------|
+| `test_validate_registered_detectors` | Validates panic on missing detector |
+| `test_validate_multiple_same_server_input_detectors` | Validates panic on duplicate input server |
+| `test_validate_multiple_same_server_output_detectors` | Validates panic on duplicate output server |
+| `test_validate_multiple_same_server_detectors` | Validates valid config with split input/output |
 
-| Test | Type | What It Tests |
-|------|------|---------------|
-| `test_validate_registered_detectors` | `#[should_panic]` | Panics when route references non-existent detector |
-| `test_validate_multiple_same_server_input_detectors` | `#[should_panic]` | Panics on duplicate input server |
-| `test_validate_multiple_same_server_output_detectors` | `#[should_panic]` | Panics on duplicate output server |
-| `test_validate_multiple_same_server_detectors` | Success case | Validates different input/output servers on same server name |
+**What's NOT Tested** (critical gaps):
+- `get_orchestrator_detectors()` - Core detector mapping logic
+- `check_payload_detections()` - Fallback message logic
+- `handle_chat_completions()` - Request dispatch (streaming vs non-streaming)
+- `handle_non_streaming_generation()` - Full non-streaming request lifecycle
+- `handle_streaming_generation()` - SSE streaming with detection fallbacks
+- `build_orchestrator_client()` - mTLS client construction
+- `orchestrator_post_request()` - HTTP request with header forwarding
+- `orchestrator_streaming_request()` - SSE chunk parsing
+- `read_config()` - YAML config deserialization
+- All API types in `api.rs` - Serialization/deserialization
 
-**Untested Code (Critical):**
-- `get_orchestrator_detectors()` — detector routing logic
-- `check_payload_detections()` — fallback message logic
-- `handle_chat_completions()` — request dispatch (streaming vs. non-streaming)
-- `handle_non_streaming_generation()` — full non-streaming flow
-- `handle_streaming_generation()` — SSE streaming flow
-- `build_orchestrator_client()` — TLS/mTLS client construction
-- `orchestrator_post_request()` — HTTP request handling
-- `orchestrator_streaming_request()` — streaming request handling
-- `main()` — router setup, config loading
-- All data structures in `api.rs` — serialization/deserialization
+**Test-to-Code Ratio**: ~126 lines of test code / 893 total LOC = **14%** (poor; target is 50-100%)
+
+**Coverage**: Not tracked. Estimated effective coverage: **<15%** of source lines
 
 ### Code Quality
 
-**Linting:**
-- Clippy enabled with `-D warnings` ✅
-- rustfmt enforced ✅
-- Pinned toolchain in `rust-toolchain.toml` ✅
+**Linting**: Clippy with all targets, all features, warnings-as-errors - **Good**
+**Formatting**: rustfmt check enforced in CI - **Good**
+**Rust Toolchain**: Pinned to 1.86.0 in `rust-toolchain.toml` (1.84.0 in CI workflow - **mismatch!**)
 
-**Missing:**
-- No pre-commit hooks
-- No additional static analysis (cargo-audit, cargo-deny)
-- No dependency vulnerability checking (only Trivy filesystem scan)
-- No code complexity analysis
+**Issues Found**:
+- **Toolchain version mismatch**: `rust-toolchain.toml` specifies 1.86.0 but CI uses `toolchain: 1.84.0`. The `rust-toolchain.toml` should take precedence but this is confusing.
+- Several `.unwrap()` calls in production code (main.rs lines 233, 475, 132, 135) that could panic
+- `read_config()` uses `expect()` which panics on invalid config rather than returning Result
+- No pre-commit hooks configured
 
 ### Container Images
 
-**Dockerfile Analysis:**
-- Multi-stage build ✅ (rust-builder → gateway-builder → tests/lint/format → gateway-release)
-- UBI9-minimal base image ✅ (Red Hat certified)
-- Dedicated test/lint/format build stages ✅ (but unused in CI)
-- `cargo install` for binary installation ✅
+**Dockerfile Quality**:
+- Multi-stage build with separate builder, test, lint, format, and release stages - **Well-designed**
+- Uses UBI9 minimal base image (Red Hat standard) - **Good**
+- Installs `compat-openssl11` for TLS support - **Appropriate**
+- Creates non-root user capability via `shadow-utils` but doesn't actually switch to non-root - **Gap**
 
-**Missing:**
-- No `.dockerignore` file — entire repo context sent to Docker daemon
-- No health check (`HEALTHCHECK` directive)
+**Gaps**:
+- No image build in CI
+- No container runtime testing
+- No image vulnerability scanning (Trivy only does filesystem scan)
 - No multi-architecture support
-- No container image scanning in CI (only filesystem scan)
 - No SBOM generation
-- No image signing or attestation
-- Test/lint/format stages in Dockerfile are dead code (never targeted in CI)
+- No image signing/attestation
+- Release stage doesn't run as non-root user
+- No health check endpoint defined
 
 ### Security
 
-**Present:**
-- Trivy filesystem scan on PRs ✅
-- Results uploaded to GitHub Security tab ✅
-- Pinned action versions ✅
+**Strengths**:
+- Trivy filesystem scanning on PRs with SARIF upload to GitHub Security tab
+- Severity filtering: MEDIUM, HIGH, CRITICAL
+- Proper permissions scoping (contents: read, security-events: write)
 
-**Missing:**
-- Trivy exit-code is 0 — scan never blocks merges ❌
-- No CodeQL/SAST analysis ❌
-- No secret detection (Gitleaks, TruffleHog) ❌
-- No cargo-audit for Rust advisory database checking ❌
-- No dependency review action ❌
-- No container image scanning (only filesystem) ❌
+**Gaps**:
+- No container image scanning
+- No SAST/CodeQL integration
+- No secret detection (Gitleaks, TruffleHog)
+- No dependency audit (`cargo audit`)
+- mTLS implementation not tested
+- `danger_accept_invalid_hostnames(true)` used for localhost - documented but risky pattern
+- Trivy `exit-code: '0'` means vulnerabilities don't fail the build
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: None — no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
+- **Coverage**: No test types have agent rules
 - **Quality**: N/A
-- **Gaps**: Complete absence of AI-assisted development guidance
-- **Recommendation**: Generate rules with `/test-rules-generator` covering:
-  - Rust unit testing patterns (axum handler testing, mock HTTP clients)
-  - Integration test setup with wiremock-rs
-  - Config validation test patterns
-  - Streaming SSE test patterns
+- **Gaps**: No CLAUDE.md, no `.claude/` directory, no `.claude/rules/`, no test automation guidance
+- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
+  - Rust unit test patterns (`#[cfg(test)]` modules)
+  - Integration test patterns (axum::test, mock servers)
+  - Error handling standards (Result vs panic)
+  - Config validation testing patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add unit tests for pure functions** (2-3 hours)
-   - Test `get_orchestrator_detectors()` with various detector configurations
-   - Test `check_payload_detections()` with/without detections and fallback messages
-   - These require no mocking and are the fastest path to meaningful coverage
+1. **Add unit tests for main.rs gateway logic**
+   - `get_orchestrator_detectors()`: Pure function, easy to test with various config combinations
+   - `check_payload_detections()`: Test fallback message behavior with/without detections
+   - URL construction logic in `handle_non_streaming_generation()` and `handle_streaming_generation()`
+   - `build_orchestrator_client()`: Test HTTP vs HTTPS scheme selection
 
-2. **Add integration tests with wiremock-rs** (8-16 hours)
-   - Mock the orchestrator backend with `wiremock` crate
-   - Test the full axum handler pipeline for both streaming and non-streaming
-   - Verify header forwarding, error handling, and detection processing
+2. **Implement integration tests with axum::test**
+   - Use `tower::ServiceExt::oneshot()` to test routes
+   - Mock orchestrator backend with `wiremock` or `httpmock` crate
+   - Test streaming and non-streaming paths
+   - Validate header forwarding (Authorization, X-Forwarded-*)
+   - Test detection fallback behavior
 
-3. **Enable coverage tracking** (2-4 hours)
-   - Add `cargo-tarpaulin` to CI workflow
-   - Integrate with codecov for PR-level coverage reporting
-   - Set initial threshold at measured baseline, increase over time
-
-4. **Fix Trivy exit-code** (30 minutes)
-   - Change exit-code from 0 to 1
-   - Consider limiting blocking to HIGH,CRITICAL severity
+3. **Add coverage tracking**
+   - Integrate `cargo-tarpaulin` or `cargo-llvm-cov`
+   - Upload to Codecov
+   - Start with 50% threshold, ramp to 80%
+   - Add coverage badge to README
 
 ### Priority 1 (High Value)
 
-5. **Add container image build to CI** (4-8 hours)
-   - Build the Docker image on PRs to catch Dockerfile issues early
-   - Use the existing test/lint/format stages in the Dockerfile
-   - Add Trivy image scanning after build
+4. **Add Docker image build to PR workflow**
+   - Build all stages (test, lint, format, release)
+   - Add startup validation test
+   - Consider adding image scanning with Trivy
 
-6. **Add E2E tests** (16-24 hours)
-   - Create a mock orchestrator server in Rust
-   - Test full request/response cycle including SSE streaming
-   - Test TLS/mTLS configuration paths
-   - Test config loading and validation
+5. **Fix Rust toolchain version mismatch**
+   - Align CI workflow (1.84.0) with `rust-toolchain.toml` (1.86.0)
+   - Use `rust-toolchain.toml` as the single source of truth
 
-7. **Create agent rules** (2-4 hours)
-   - Add `CLAUDE.md` with project context
-   - Create `.claude/rules/` with Rust testing patterns
-   - Document axum handler testing strategies
+6. **Add `cargo audit` to CI**
+   - Check for known vulnerability advisories in dependencies
+   - Fail CI on critical advisories
 
-8. **Add cargo-audit** (1-2 hours)
-   - Check dependencies against the RustSec advisory database
-   - Run in CI alongside or instead of Trivy for Rust-specific vulnerabilities
+7. **Create agent rules**
+   - `.claude/rules/unit-tests.md` - Rust test patterns, `#[cfg(test)]` modules
+   - `.claude/rules/integration-tests.md` - axum::test patterns, mock servers
+   - `CLAUDE.md` - Architecture overview and contribution guidelines
 
 ### Priority 2 (Nice-to-Have)
 
-9. **Add pre-commit hooks** (1-2 hours)
-    - Run `cargo fmt`, `cargo clippy`, and `cargo test` locally before push
-
-10. **Fix toolchain version mismatch** (30 minutes)
-    - CI uses 1.84.0, `rust-toolchain.toml` specifies 1.86.0 — align these
-
-11. **Add .dockerignore** (15 minutes)
-    - Exclude `target/`, `.git/`, `.github/`, `*.md`, `curl.sh`
-
-12. **Add dependabot/renovate** (1-2 hours)
-    - Automate Cargo dependency updates and security patches
-
-13. **Add health check endpoint** (1-2 hours)
-    - Add a `/healthz` or `/readyz` endpoint for Kubernetes probes
-    - Add `HEALTHCHECK` to Dockerfile
+8. **Add health check endpoint** (`/health` or `/readyz`)
+9. **Run container as non-root user** in Dockerfile
+10. **Add contract tests** validating compatibility with FMS Guardrails Orchestrator API
+11. **Add pre-commit hooks** for rustfmt and clippy
+12. **Add performance testing** for streaming SSE throughput
+13. **Add SBOM generation** and image signing for supply chain security
+14. **Add concurrency control** to GitHub Actions workflows
 
 ## Comparison to Gold Standards
 
-| Dimension | vllm-orchestrator-gateway | odh-dashboard | notebooks | kserve |
-|-----------|--------------------------|---------------|-----------|--------|
-| Unit Tests | 2/10 (4 tests, 1 file) | 9/10 | 7/10 | 9/10 |
-| Integration/E2E | 0/10 | 9/10 | 8/10 | 9/10 |
-| Build Integration | 3/10 | 8/10 | 9/10 | 8/10 |
-| Image Testing | 2/10 | 7/10 | 10/10 | 7/10 |
-| Coverage Tracking | 0/10 | 8/10 | 6/10 | 9/10 |
-| CI/CD Automation | 5/10 | 9/10 | 9/10 | 9/10 |
-| Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
-| **Overall** | **3.5/10** | **8.5/10** | **7.5/10** | **8.0/10** |
+| Dimension | vllm-orchestrator-gateway | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
+|-----------|--------------------------|---------------------|-------------------|---------------|
+| Unit Tests | 2.5 - 4 tests only | 9.0 - Comprehensive Jest suite | 7.0 - Python test suites | 9.0 - Extensive Go tests |
+| Integration/E2E | 0.0 - None | 9.0 - Cypress E2E + API contracts | 8.0 - Multi-layer validation | 9.0 - envtest + Kind |
+| Build Integration | 3.0 - Multi-stage Dockerfile unused | 8.0 - Full PR build validation | 9.0 - Image pipeline testing | 7.0 - Build verification |
+| Image Testing | 1.5 - No validation | 7.0 - Container validation | 9.0 - 5-layer image testing | 7.0 - Image verification |
+| Coverage | 0.0 - Not tracked | 8.0 - Codecov enforcement | 6.0 - Basic tracking | 9.0 - Coverage gates |
+| CI/CD | 6.0 - Good basics | 9.0 - Comprehensive pipeline | 8.0 - Multi-arch builds | 9.0 - Full automation |
+| Agent Rules | 0.0 - None | 8.0 - Comprehensive rules | 3.0 - Minimal | 2.0 - Minimal |
 
 ## File Paths Reference
 
 | File | Purpose |
 |------|---------|
-| `.github/workflows/tests.yaml` | CI test workflow (fmt, clippy, test, build) |
-| `.github/workflows/security-scan.yaml` | Trivy filesystem security scan |
-| `Dockerfile` | Multi-stage build with UBI9 base |
-| `src/main.rs` | Core gateway logic (547 lines, 0 tests) |
-| `src/config.rs` | Configuration parsing and validation (237 lines, 4 tests) |
-| `src/api.rs` | API data structures (109 lines, 0 tests) |
+| `src/main.rs` | Core gateway logic (547 LOC) - routes, handlers, mTLS, streaming |
+| `src/config.rs` | Config parsing and validation (237 LOC) - **only file with tests** |
+| `src/api.rs` | API type definitions (109 LOC) - request/response structs |
+| `Cargo.toml` | Dependencies and build config |
+| `rust-toolchain.toml` | Rust 1.86.0 pinning |
 | `config/config.yaml` | Sample gateway configuration |
-| `rust-toolchain.toml` | Rust toolchain specification (1.86.0) |
-| `Cargo.toml` | Rust project dependencies |
-| `curl.sh` | Manual testing script |
+| `Dockerfile` | Multi-stage build (builder, test, lint, format, release) |
+| `.github/workflows/tests.yaml` | PR/push CI: fmt, clippy, test, build |
+| `.github/workflows/security-scan.yaml` | PR CI: Trivy filesystem scan |

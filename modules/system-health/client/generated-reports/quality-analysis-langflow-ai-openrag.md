@@ -1,443 +1,418 @@
 ---
 repository: "langflow-ai/openrag"
-overall_score: 7.2
+overall_score: 7.4
 scorecard:
   - dimension: "Unit Tests"
-    score: 7.5
-    status: "90 unit test files covering backend with pytest; good coverage of services, utils, and APIs but no coverage enforcement"
-  - dimension: "Integration/E2E"
     score: 8.0
-    status: "Strong multi-layer integration tests (core, SDK-Python, SDK-TypeScript) plus Playwright E2E; all automated in CI on PRs"
+    status: "132 unit tests across well-organized directories with pytest, pytest-asyncio, pytest-mock"
+  - dimension: "Integration/E2E"
+    score: 8.5
+    status: "3-suite integration matrix (core, sdk-python, sdk-typescript) + Playwright E2E with full docker-compose stack"
   - dimension: "Build Integration"
     score: 7.0
-    status: "PR-triggered Docker builds in integration tests; operator CI validates manifests and Docker build; no Konflux simulation"
+    status: "PR builds all 4 Docker images with caching; no Konflux simulation but strong image caching strategy"
   - dimension: "Image Testing"
     score: 6.5
-    status: "Multi-stage Dockerfiles with non-root users; multi-arch (amd64/arm64) release builds; no container scanning in CI"
+    status: "PR-time image builds validated, multi-arch nightly builds, but no runtime startup validation or Trivy scanning"
   - dimension: "Coverage Tracking"
     score: 3.0
-    status: "pytest-cov in dev dependencies but no codecov integration, no coverage thresholds, no PR coverage reporting"
+    status: "pytest-cov in dev deps and Go coverprofile generated, but no codecov integration, no thresholds, no PR reporting"
   - dimension: "CI/CD Automation"
-    score: 8.5
-    status: "27 well-organized workflows with concurrency control, caching, path-filtered triggers, autofix, and nightly builds"
+    score: 9.0
+    status: "25 workflows covering lint, test, build, release, nightly, dependency audit, autofix; concurrency control and caching"
   - dimension: "Agent Rules"
     score: 5.0
-    status: "CLAUDE.md and AGENTS.md present with skill references (install, SDK); no test-specific agent rules or .claude/rules/"
+    status: "CLAUDE.md, AGENTS.md, and 2 skills present (install, sdk) but no test automation rules or .claude/rules/"
 critical_gaps:
   - title: "No coverage tracking or enforcement"
-    impact: "Test coverage can silently regress; no visibility into which code paths are untested"
+    impact: "Coverage regressions go undetected; no visibility into test gaps across PRs"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No container vulnerability scanning in CI"
-    impact: "CVEs in container images go undetected until production; only periodic dependency audits exist"
+  - title: "No container vulnerability scanning"
+    impact: "CVEs in base images or dependencies not detected until production"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "Frontend has only 2 E2E specs for 254 source files"
-    impact: "Frontend regressions caught only through manual testing or downstream E2E failures"
-    severity: "HIGH"
-    effort: "20-40 hours"
-  - title: "No test-specific agent rules"
-    impact: "AI-generated tests lack consistency; no guardrails for test patterns, mocking strategies, or fixtures"
+  - title: "No image runtime validation in CI"
+    impact: "Image startup failures (missing env vars, broken entrypoints) not caught until deployment"
     severity: "MEDIUM"
     effort: "4-6 hours"
+  - title: "Python SDK has no tests"
+    impact: "Python SDK regressions shipped to PyPI without detection"
+    severity: "HIGH"
+    effort: "8-12 hours"
+  - title: "No test automation agent rules"
+    impact: "AI-generated tests lack consistency and miss project-specific patterns"
+    severity: "MEDIUM"
+    effort: "2-3 hours"
 quick_wins:
-  - title: "Add Codecov integration with PR reporting"
+  - title: "Add codecov integration with PR reporting"
     effort: "2-4 hours"
-    impact: "Immediate visibility into coverage trends; enable coverage regression detection on every PR"
-  - title: "Add Trivy container scanning to PR workflow"
+    impact: "Immediate visibility into coverage changes per PR"
+  - title: "Add Trivy scanning to nightly-build workflow"
     effort: "1-2 hours"
-    impact: "Catch CVEs in container images before merge; complement existing dependency audit"
-  - title: "Add coverage threshold to pytest configuration"
+    impact: "Catch CVEs in all 4 container images before release"
+  - title: "Add image startup smoke test to test-ci.yml"
+    effort: "2-3 hours"
+    impact: "Verify all images start and respond to health checks"
+  - title: "Generate agent test rules with /test-rules-generator"
     effort: "1-2 hours"
-    impact: "Prevent coverage regressions by failing CI when coverage drops below baseline"
-  - title: "Create .claude/rules/ with test automation guidance"
-    effort: "3-4 hours"
-    impact: "Standardize AI-generated test patterns across unit, integration, and E2E layers"
+    impact: "Consistent AI-generated tests following project patterns"
+  - title: "Expand Dependabot to npm and pip ecosystems"
+    effort: "30 minutes"
+    impact: "Automated dependency update PRs across all ecosystems"
 recommendations:
   priority_0:
-    - "Integrate Codecov or Coveralls with coverage thresholds and PR annotations"
-    - "Add Trivy or Snyk container scanning to Docker build workflows"
-    - "Expand frontend E2E test coverage from 2 specs to cover critical user flows"
+    - "Add codecov/coveralls integration with coverage thresholds and PR gating"
+    - "Add Trivy container scanning to PR and nightly workflows"
+    - "Write Python SDK integration tests (parity with TypeScript SDK)"
   priority_1:
-    - "Create comprehensive .claude/rules/ with test creation guidelines per test type"
-    - "Add contract tests for backend API boundaries (OpenSearch, Langflow, SDKs)"
-    - "Add operator envtest integration tests beyond the existing 3 controller tests"
+    - "Add container runtime startup validation (health check smoke tests) in CI"
+    - "Create .claude/rules/ test automation rules for unit, integration, and E2E patterns"
+    - "Expand Dependabot config to cover npm (frontend, sdks/typescript) and pip ecosystems"
+    - "Add SBOM generation to release workflow"
   priority_2:
-    - "Add performance regression testing for search and ingest endpoints"
-    - "Add SBOM generation to release builds"
-    - "Add Gitleaks scanning to PR workflow (complement existing detect-secrets pre-commit hook)"
+    - "Add performance regression tests for search and ingestion endpoints"
+    - "Add frontend unit tests with Vitest (currently 0 frontend unit tests)"
+    - "Add contract tests for SDK-to-backend API boundaries"
+    - "Consider adding golangci-lint config file for operator (currently using defaults)"
 ---
 
 # Quality Analysis: OpenRAG (langflow-ai/openrag)
 
 ## Executive Summary
 
-- **Overall Score: 7.2/10**
-- **Repository Type**: Full-stack RAG platform (Python FastAPI backend, Next.js frontend, Kubernetes operator, SDKs)
-- **Primary Languages**: Python (backend), TypeScript (frontend), Go (operator)
-- **Key Strengths**: Comprehensive CI/CD with 27 workflows, strong integration testing with multi-suite strategy, multi-arch Docker builds, automated code formatting
-- **Critical Gaps**: No coverage tracking/enforcement, no container vulnerability scanning, extremely thin frontend test coverage
-- **Agent Rules Status**: Present (CLAUDE.md + AGENTS.md) but focused on installation/SDK skills, not test automation
+- **Overall Score: 7.4/10**
+- **Repository Type**: Full-stack RAG platform (Python backend + Next.js frontend + Kubernetes operator + SDKs)
+- **Primary Languages**: Python 3.13, TypeScript, Go
+- **Key Strengths**: Excellent CI/CD automation with 25 workflows, comprehensive integration test matrix with real docker-compose infrastructure, multi-arch image builds, automated code formatting
+- **Critical Gaps**: No coverage tracking or enforcement, no container vulnerability scanning, Python SDK ships without tests
+- **Agent Rules Status**: Partial — CLAUDE.md and AGENTS.md exist with 2 install/SDK skills, but no test automation rules
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 7.5/10 | 90 test files, pytest + pytest-asyncio, good service/util coverage |
-| Integration/E2E | 8.0/10 | Multi-suite CI (core, SDK-Python, SDK-TypeScript, Playwright E2E) |
-| Build Integration | 7.0/10 | PR-time Docker builds for integration tests; operator CI validates manifests |
-| Image Testing | 6.5/10 | Multi-stage Dockerfiles, multi-arch; no vulnerability scanning |
-| Coverage Tracking | 3.0/10 | pytest-cov available but unused in CI; no codecov/thresholds |
-| CI/CD Automation | 8.5/10 | 27 workflows, concurrency control, caching, autofix, nightly builds |
-| Agent Rules | 5.0/10 | CLAUDE.md + AGENTS.md with install/SDK skills; no test rules |
+| Unit Tests | 8.0/10 | 132 unit tests with pytest, well-organized by domain |
+| Integration/E2E | 8.5/10 | 3-suite CI matrix + Playwright E2E with full stack |
+| **Build Integration** | **7.0/10** | **PR builds all images with caching; no Konflux sim** |
+| Image Testing | 6.5/10 | Multi-arch builds, no runtime validation or scanning |
+| Coverage Tracking | 3.0/10 | pytest-cov available but no integration or enforcement |
+| CI/CD Automation | 9.0/10 | 25 workflows with concurrency control, caching, autofix |
+| Agent Rules | 5.0/10 | CLAUDE.md + AGENTS.md + 2 skills, no test rules |
 
 ## Critical Gaps
 
 ### 1. No Coverage Tracking or Enforcement
-- **Impact**: Test coverage can silently regress with no visibility into untested code paths
+- **Impact**: Coverage regressions go undetected; team has no visibility into which PRs reduce coverage
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: `pytest-cov` is listed in dev dependencies but no CI workflow generates coverage reports. No `.codecov.yml`, no coverage thresholds, no PR annotations. The operator CI does generate `cover.out` via `go test -coverprofile` but doesn't upload or enforce it.
-- **Fix**: Add `--cov=src --cov-report=xml` to pytest invocations in CI, integrate Codecov/Coveralls, set a baseline threshold (e.g., 50%)
+- **Details**: `pytest-cov` is in dev dependencies and the Go operator generates `cover.out`, but there's no codecov/coveralls integration, no coverage thresholds, and no PR coverage reporting. Coverage data is generated and discarded.
+- **Implementation**:
+  ```yaml
+  # Add to test-ci.yml after pytest runs:
+  - name: Upload coverage
+    uses: codecov/codecov-action@v4
+    with:
+      token: ${{ secrets.CODECOV_TOKEN }}
+      fail_ci_if_error: true
+  ```
 
 ### 2. No Container Vulnerability Scanning
-- **Impact**: CVEs in base images and dependencies go undetected; only periodic `pip-audit` and `npm audit` exist
+- **Impact**: CVEs in UBI10 base images, Python packages, or Node.js dependencies not detected until production
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: The project has 5 Dockerfiles (opensearch, backend, frontend, langflow, operator) with no Trivy, Snyk, or Grype scanning in any CI workflow. The `dependency-audit.yml` runs npm/pip audit on a schedule but doesn't scan built container images.
-- **Fix**: Add Trivy scan step after Docker build in `test-integration.yml` and `operator-ci.yml`
+- **Details**: The project builds 4 container images (backend, frontend, langflow, opensearch) without any scanning. No Trivy, Snyk, or Grype integration. The `dependency-audit.yml` catches npm/pip issues but misses container-layer vulnerabilities.
+- **Implementation**:
+  ```yaml
+  - name: Trivy scan
+    uses: aquasecurity/trivy-action@master
+    with:
+      image-ref: langflowai/openrag-backend:${{ env.CI_IMAGE_TAG }}
+      severity: CRITICAL,HIGH
+      exit-code: 1
+  ```
 
-### 3. Frontend Test Coverage is Negligible
-- **Impact**: 254 frontend TypeScript source files with only 2 Playwright E2E specs; regressions caught only through manual testing
+### 3. Python SDK Ships Without Tests
+- **Impact**: Regressions in the Python SDK (`openrag_sdk`) are published to PyPI without detection
 - **Severity**: HIGH
-- **Effort**: 20-40 hours
-- **Details**: The frontend has zero unit tests (no Jest/Vitest) and only 2 Playwright specs (`onboarding.spec.ts`, `tasks-unified-panel.spec.ts`). No component testing, no accessibility testing.
-- **Fix**: Add Vitest for component unit tests, expand Playwright specs to cover critical flows (document management, search, settings, chat)
+- **Effort**: 8-12 hours
+- **Details**: The TypeScript SDK has a comprehensive `integration.test.ts` with document CRUD, search, chat, and error handling. The Python SDK has only an empty `tests/__init__.py`. The `publish-sdk-python.yml` workflow publishes without running any tests.
 
-### 4. No Test-Specific Agent Rules
-- **Impact**: AI-generated tests lack consistency and may not follow project patterns
+### 4. No Image Runtime Validation
+- **Impact**: Broken entrypoints, missing env vars, or startup crashes discovered only in deployment
 - **Severity**: MEDIUM
 - **Effort**: 4-6 hours
-- **Details**: AGENTS.md focuses on install/SDK skills. No `.claude/rules/` directory with test creation guidance. AI agents won't know about pytest-asyncio patterns, fixture conventions, or integration test infrastructure requirements.
+- **Details**: The CI builds all images on PR but only runs them through docker-compose for integration/E2E tests. There's no dedicated health check validation that verifies each image starts independently and responds correctly. The docker-compose startup is an implicit integration test but doesn't isolate image-level failures.
+
+### 5. No Test Automation Agent Rules
+- **Impact**: AI-generated tests miss project-specific patterns (conftest fixtures, RBAC setup, async patterns)
+- **Severity**: MEDIUM
+- **Effort**: 2-3 hours
+- **Details**: The `.claude/skills/` directory contains install and SDK skills but no test creation rules. Given the complex test infrastructure (session-scoped async fixtures, RBAC enforcement, OpenSearch client setup), agent-generated tests without rules will miss critical patterns.
 
 ## Quick Wins
 
 ### 1. Add Codecov Integration (2-4 hours)
-- Add `--cov=src --cov-report=xml` to `test-unit` and `test-integration` pytest runs
-- Add Codecov upload step to CI workflows
-- Create `.codecov.yml` with baseline thresholds
-```yaml
-# .codecov.yml
-coverage:
-  status:
-    project:
-      default:
-        target: 50%
-    patch:
-      default:
-        target: 80%
-```
+- Add `codecov/codecov-action@v4` to `test-ci.yml` after unit tests run
+- Create `.codecov.yml` with thresholds (e.g., 60% project, patch must not decrease)
+- Add coverage badge to README
+- **Impact**: Immediate visibility into coverage trends per PR
 
-### 2. Add Trivy Container Scanning (1-2 hours)
-```yaml
-- name: Scan backend image with Trivy
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: 'langflowai/openrag-backend:${{ env.CI_IMAGE_TAG }}'
-    format: 'sarif'
-    output: 'trivy-results.sarif'
-    severity: 'CRITICAL,HIGH'
-```
+### 2. Add Trivy Scanning (1-2 hours)
+- Add `aquasecurity/trivy-action` step after image builds in `nightly-build.yml`
+- Set severity to CRITICAL,HIGH with exit-code 1
+- Consider adding `.trivyignore` for accepted risks
+- **Impact**: Catch CVEs before images reach DockerHub
 
-### 3. Coverage Threshold in pytest (1-2 hours)
-```toml
-# pyproject.toml addition
-[tool.pytest.ini_options]
-addopts = "--cov=src --cov-fail-under=50"
-```
+### 3. Add Image Startup Smoke Test (2-3 hours)
+- After docker-compose up, verify each service health endpoint
+- Add a simple `curl --retry 10 --retry-delay 3 http://localhost:8000/health` step
+- Already partially done in E2E setup, but could be more explicit and isolated
+- **Impact**: Faster feedback on image startup issues
 
-### 4. Create Agent Test Rules (3-4 hours)
-- Create `.claude/rules/unit-tests.md` with pytest patterns, fixture usage, async test conventions
-- Create `.claude/rules/integration-tests.md` with infrastructure requirements, conftest patterns
-- Create `.claude/rules/e2e-tests.md` with Playwright patterns and page object model
+### 4. Generate Agent Test Rules (1-2 hours)
+- Run `/test-rules-generator` against the repository
+- Creates `.claude/rules/` with patterns for pytest-asyncio, conftest fixtures, RBAC setup
+- **Impact**: Consistent AI-generated tests matching project conventions
+
+### 5. Expand Dependabot Coverage (30 minutes)
+- Current config only covers `github-actions` ecosystem
+- Add `npm` for `frontend/`, `sdks/typescript/`, `docs/`
+- Add `pip` for root and `sdks/python/`
+- **Impact**: Automated dependency update PRs across all package managers
 
 ## Detailed Findings
 
-### CI/CD Pipeline (Score: 8.5/10)
+### CI/CD Pipeline
 
-**Strengths:**
-- 27 well-organized GitHub Actions workflows covering linting, testing, building, releasing
-- Smart path-filtering on all workflows (e.g., `lint-backend.yml` only triggers on `src/**/*.py` changes)
-- Concurrency control with `cancel-in-progress: true` on lint and autofix workflows
-- Automated code formatting via `autofix.ci` (Ruff safe fixes + format) and `biome-autofix.yml` (frontend)
-- Nightly builds with multi-arch Docker images and PyPI publishing
-- Self-hosted ARM64 runners for integration and E2E tests
-- PR title validation with conventional commits (`semantic-pull-request`)
-- Operator CI with manifest generation verification, Helm lint, and Docker build check
+**Strengths (9.0/10)**:
+- **25 workflows** covering the full development lifecycle
+- **Path-based filtering** — lint-backend only runs on `src/**/*.py` changes, operator-ci only on `kubernetes/operator/**`
+- **Concurrency control** — `lint-backend`, `autofix.ci` use `cancel-in-progress: true`
+- **Image caching** — PR builds use `actions/cache@v4` with content-hash keys per image
+- **Automated formatting** — `autofix.ci.yml` applies ruff fixes via the autofix.ci App
+- **Change detection** — `dorny/paths-filter@v3` skips E2E/integration for docs-only changes
+- **Semantic PR titles** — `action-semantic-pull-request@v6.1.1` enforces conventional commits
+- **Nightly builds** with PEP 440-compliant versioning and PyPI publishing
+- **Multi-arch builds** — amd64 + arm64 for all 4 images with manifest creation
+- **Test matrix** — integration tests split into 3 suites (core, sdk-python, sdk-typescript) running in parallel
 
-**Workflow Inventory:**
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `pr-checks.yml` | PR | Conventional commit title validation |
-| `lint-backend.yml` | PR (Python) | Ruff lint + mypy on changed files |
-| `lint-frontend.yml` | PR (frontend) | Biome lint + TypeScript type check |
-| `autofix.ci.yml` | PR (Python) | Auto-apply Ruff fixes |
-| `biome-autofix.yml` | Push (frontend) | Auto-apply Biome fixes |
-| `test-integration.yml` | PR | Build images, run core + SDK integration tests |
-| `test-e2e.yml` | PR | Full-stack Playwright E2E tests |
-| `codeql.yml` | PR + Schedule | CodeQL SAST for Python and JavaScript |
-| `operator-ci.yml` | PR (operator) | Go fmt/vet/lint, manifest check, test, Helm lint, Docker build |
-| `dependency-audit.yml` | Schedule | npm audit + pip-audit across all packages |
-| `build-multiarch.yml` | Manual | Multi-arch release builds + PyPI publish |
-| `nightly-build.yml` | Schedule | Nightly multi-arch Docker + PyPI |
-| `add-labels.yml` | PR | Auto-labeling by file paths |
-| `community-label.yml` | PR | Community contributor labeling |
-| `conventional-labels.yml` | PR | Labels from conventional commit types |
-| `auto-delete-branch.yml` | PR merge | Clean up merged branches |
-| `deploy-docs-draft.yml` | PR | Draft docs deployment |
-| `deploy-gh-pages.yml` | Push (main) | Deploy docs to GitHub Pages |
+**Gaps**:
+- No `workflow_call` reuse between similar jobs (some duplication in build steps)
+- Dependabot only covers `github-actions`, not `npm` or `pip`
+- No manual approval gates for production releases
 
-**Minor Gaps:**
-- No workflow-level dependency caching for Python (uv has built-in caching but explicit cache key would be more reliable)
-- Integration test workflow could benefit from test result upload (JUnit XML)
+### Test Coverage
 
-### Test Coverage (Score: 7.5/10 Unit, 8.0/10 Integration/E2E)
+**Unit Tests (8.0/10)**:
+- 132 Python unit test files across well-organized subdirectories
+- Tests cover: services, API endpoints, connectors, config, dependencies, utilities, database migrations
+- Uses pytest + pytest-asyncio + pytest-mock
+- Domain-specific test fixtures with session-scoped async setup
+- 5 Go operator controller tests (~2,500 lines)
 
-**Backend Unit Tests (90 files, ~16K lines):**
-- Framework: pytest + pytest-asyncio + pytest-mock
-- Test-to-code ratio: 0.30 (16,357 test lines / 54,893 source lines) — adequate
-- Well-organized in `tests/unit/` with subdirectories: `api/`, `config/`, `connectors/`, `db/migrations/`, `dependencies/`, `services/`, `utils/`
-- Shared `conftest.py` with test fixtures
-- Good coverage areas: encryption, ACL, JWT, OpenSearch security, document processing, task service, settings, connectors
+**Integration Tests (8.5/10)**:
+- 8 core integration tests against real docker-compose stack (OpenSearch, Langflow, backend)
+- TypeScript SDK integration tests with document CRUD, search, chat, error handling
+- 11 Python SDK integration tests (auth, chat, documents, e2e, errors, filters, models, search, settings)
+- CI builds all images from source on PRs before running tests
+- Test isolation with temp SQLite databases and env var overrides
 
-**Backend Integration Tests (19 files):**
-- Core integration suite (7 tests): API endpoints, startup ingest, group ACL/DLS, MCP URL ingest, onboarding, runtime migration
-- SDK integration suite (9 tests): auth, chat, documents, e2e, errors, filters, models, search, settings
-- Infrastructure: Full Docker Compose stack (OpenSearch, Langflow, backend, frontend, docling)
-- CI matrix strategy: `core`, `sdk-python`, `sdk-typescript` suites run in parallel
+**E2E Tests (7.0/10)**:
+- Playwright-based with chromium, 2 spec files (onboarding, tasks-unified-panel)
+- Full infrastructure setup via `scripts/setup-e2e.sh`
+- 5-minute timeout, retry on CI, HTML reporter
+- Artifact upload on failure (service logs, Playwright report)
+- **Gap**: Only 2 E2E test files — limited UI test coverage for a full-featured application
 
-**E2E Tests:**
-- Playwright-based with 2 specs (onboarding, tasks-unified-panel)
-- Runs against full Docker Compose stack
-- CI retries (2x), artifact upload for reports
-- Good failure diagnostics: service log collection on failure
+**Coverage Tracking (3.0/10)**:
+- `pytest-cov` in dev dependencies but no CI integration
+- Go operator generates `cover.out` via `go test -coverprofile` but doesn't upload
+- No `.codecov.yml` or coveralls config
+- No coverage thresholds or PR checks
+- No coverage badges or reporting
 
-**Operator Tests (3 files):**
-- Go test with race detection and coverage profile
-- Controller test, env tests, env example tests
-- Uses envtest (controller-runtime test framework)
+### Code Quality
 
-**SDK Tests:**
-- Python SDK: integrated via pytest in `tests/integration/sdk/`
-- TypeScript SDK: npm test with separate integration test file
+**Linting (8.5/10)**:
+- **Python**: Ruff with E, F, I, B, UP rules; mypy with Python 3.13 targeting
+- **TypeScript**: Biome for linting + formatting; TypeScript strict type checking
+- **Go**: golangci-lint v2.11.4 in operator CI (using defaults, no config file)
+- **Frontend**: React Doctor score check (minimum threshold: 40)
+- Auto-fix pipeline: ruff check --fix + ruff format via autofix.ci App on PRs
 
-### Code Quality (Score: 8.0/10)
+**Pre-commit Hooks**:
+- `detect-secrets` (Yelp v1.5.0) with baseline file
+- Only one hook configured — no formatting, linting, or type checking pre-commit
+- Husky configured in frontend for lint-staged
 
-**Backend (Python):**
-- **Ruff**: Configured with `E`, `F`, `I`, `B`, `UP` rule sets; line-length 100; Python 3.13 target
-- **mypy**: Configured with `ignore_missing_imports`, `warn_unused_ignores`; per-module overrides for FastAPI return types
-- **autofix.ci**: Auto-applies safe Ruff fixes (excluding F401) and formatting on PRs
-- **Isort**: Custom section ordering to keep bootstrap import first
+**Static Analysis (7.0/10)**:
+- CodeQL for Python and JavaScript on push/PR/weekly schedule
+- No SAST beyond CodeQL (no gosec, Semgrep, or Bandit)
+- `dependency-audit.yml` runs npm audit and pip-audit on schedule (Mon/Thu 9AM UTC)
 
-**Frontend (TypeScript):**
-- **Biome**: Lint and format checking on PRs
-- **TypeScript**: Strict type checking via `tsc --noEmit`
-- **Biome autofix**: Auto-applies formatting on push to non-main branches
-- **Knip**: Dead code detection configured
+### Container Images
 
-**Operator (Go):**
-- **golangci-lint**: v2.11.4 with golangci-lint-action
-- **gofmt**: Enforced in CI
-- **go vet**: Standard Go static analysis
+**Build Process (7.5/10)**:
+- 4 specialized Dockerfiles (backend, frontend, langflow, opensearch)
+- Backend uses multi-stage build with UBI10 base (`registry.access.redhat.com/ubi10/python-314-minimal`)
+- Non-root user (uid 1000) in production stage
+- `--mount=type=cache` for uv/pip layer caching
+- Separate builder and runtime stages minimize final image size
 
-**Pre-commit:**
-- `detect-secrets` hook for secret detection (Yelp/detect-secrets v1.5.0)
-- `.secrets.baseline` with comprehensive plugin list (AWS, Azure, GitHub, GitLab, etc.)
+**Multi-Architecture (9.0/10)**:
+- amd64 + arm64 for all 4 images
+- Separate build jobs per arch with GHA cache
+- Multi-arch manifests created via `docker buildx imagetools create`
+- Self-hosted ARM64 runners with 40GB ephemeral storage
 
-### Build Integration (Score: 7.0/10)
-
-**Strengths:**
-- Integration test workflow builds all 4 Docker images (`ci-build-images`) on PR
-- Operator CI does a Docker build check (no push) on PR
-- Operator CI validates generated manifests (CRD, RBAC, deepcopy, typed client) are up-to-date
-- Helm chart lint and template validation
-- CRD symlink verification
-
-**Gaps:**
-- No Konflux simulation or production build pipeline testing on PR
-- No image startup validation (container health check testing)
-- No multi-arch build testing on PR (only release workflow builds multi-arch)
-
-### Container Images (Score: 6.5/10)
-
-**Strengths:**
-- Multi-stage Dockerfiles for backend (3 stages: base → builder → runtime)
-- Non-root user in all images (opensearch user, appuser, node user)
-- Multi-arch support (amd64 + arm64) in release and nightly builds
-- Efficient layer caching with BuildKit cache mounts (`--mount=type=cache`)
-- UBI9 base image for OpenSearch (OpenShift compatible)
-- Graceful shutdown handling (entrypoint wrapper)
-- gosu for privilege dropping in backend
-
-**Gaps:**
-- No Trivy/Snyk/Grype scanning in any CI workflow
+**Security Scanning (2.0/10)**:
+- **No Trivy, Snyk, or Grype scanning**
+- No vulnerability thresholds
 - No SBOM generation
 - No image signing or attestation
-- No `.trivyignore` configuration
-- CVE patching is manual (e.g., `patch-netty.sh` for Netty CVE-2025-58056)
+- Dependency audit (npm/pip) covers packages but not container layers
 
-### Security (Score: 7.0/10)
+### Security Practices
 
-**Strengths:**
-- CodeQL SAST scanning for Python and JavaScript (PR + weekly schedule)
-- `detect-secrets` pre-commit hook with comprehensive baseline
-- Dependency audit workflow (npm audit + pip-audit) on Mon/Thu schedule
-- SECURITY.md with responsible disclosure policy
-- JWT-based authentication with RSA key management
-- RBAC system (opt-in) with permission caching
-- OAuth/OIDC integration with OpenSearch
+**Strengths**:
+- CodeQL on Python + JavaScript with weekly schedule
+- Dependabot for GitHub Actions updates
+- `detect-secrets` pre-commit hook with baseline
+- SECURITY.md with responsible disclosure process and 5-day SLA
+- Non-root container user
+- JWT key generation with RSA
+- RBAC enforcement system (opt-in, tested in CI)
 
-**Gaps:**
+**Gaps**:
 - No container image scanning
-- No Gitleaks in CI (only detect-secrets in pre-commit)
-- Dependency audit runs only on schedule, not on PRs
-- No DAST or runtime security testing
-- No secret rotation testing
+- No SAST beyond CodeQL (missing gosec for Go operator)
+- Dependabot only covers github-actions ecosystem
+- No Gitleaks in CI (only pre-commit)
 
-### Agent Rules (Score: 5.0/10)
+### Agent Rules (Agentic Flow Quality)
 
-**Strengths:**
-- `CLAUDE.md` present (points to AGENTS.md)
-- `AGENTS.md` with comprehensive operational constraints documentation
-- Two agent skills: `openrag_install` (installation) and `openrag_sdk` (SDK integration)
-- Skills properly symlinked from `.claude/skills/` to `plugins/openrag/skills/`
-- Plugin architecture supports Claude Code, Claude Agent SDK, and generic agents
+**Status**: Partial
+- **CLAUDE.md**: Present — points to AGENTS.md
+- **AGENTS.md**: Present — documents 2 skills (install, SDK), operational constraints, dev-local setup
+- `.claude/skills/`: Contains `install/` and `sdk/` skills for OpenRAG setup and SDK integration
+- **No `.claude/rules/`**: Missing test automation rules entirely
+- **No test patterns documented**: Complex pytest-asyncio patterns (session fixtures, RBAC monkeypatch, temp DB setup) not captured for agent use
 
-**Gaps:**
-- No `.claude/rules/` directory
-- No test creation rules for any test type (unit, integration, E2E)
-- No testing standards documentation for AI agents
-- Skills focus on installation/SDK, not quality or testing
-- No guidance on mocking strategies, fixture patterns, or async test conventions
-- `AGENTS.md` operational constraints are helpful but don't address test automation
+**Coverage**: Install and SDK guidance only — no test creation rules
+**Quality**: Existing skills are well-written with YAML frontmatter and agent-neutral instructions
+**Gaps**:
+- No unit test rules (pytest patterns, async fixtures, mock setup)
+- No integration test rules (docker-compose setup, client initialization, SDK test patterns)
+- No E2E test rules (Playwright patterns, onboarding flow, test data)
+- No operator test rules (Go envtest, controller reconciliation patterns)
+
+**Recommendation**: Run `/test-rules-generator` to generate comprehensive test rules
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Integrate coverage tracking with enforcement**
-   - Add `pytest-cov` to CI pytest invocations with XML report output
-   - Set up Codecov/Coveralls with PR annotations and coverage thresholds
-   - Start with 50% project target, 80% patch target
-   - Estimated effort: 4-6 hours
+1. **Add codecov/coveralls integration with coverage thresholds and PR gating**
+   - Install `codecov/codecov-action@v4` in test-ci.yml
+   - Set minimum coverage thresholds (project: 60%, patch: 70%)
+   - Add coverage badge to README.md
+   - Upload Go operator coverage from `cover.out`
 
-2. **Add container vulnerability scanning**
-   - Add Trivy scanning step after Docker image builds in integration test and operator CI
-   - Upload SARIF results to GitHub Security tab
-   - Set severity threshold: fail on CRITICAL/HIGH
-   - Estimated effort: 2-4 hours
+2. **Add Trivy container scanning to PR and nightly workflows**
+   - Scan all 4 images after build
+   - Set `severity: CRITICAL,HIGH` with `exit-code: 1`
+   - Add `.trivyignore` for accepted risks (document justifications)
 
-3. **Expand frontend test coverage**
-   - Add Vitest for component unit testing (hooks, contexts, lib utilities)
-   - Expand Playwright E2E specs for critical user flows: document upload, search, chat, settings
-   - Target: at least 10-15 E2E specs covering golden paths
-   - Estimated effort: 20-40 hours
+3. **Write Python SDK integration tests (parity with TypeScript SDK)**
+   - Mirror TypeScript SDK test coverage: document CRUD, search, chat, error handling
+   - Add to CI test matrix alongside existing sdk-python suite
+   - Gate `publish-sdk-python.yml` on test passage
 
 ### Priority 1 (High Value)
 
-4. **Create comprehensive agent test rules**
-   - Create `.claude/rules/unit-tests.md` with pytest/pytest-asyncio patterns
-   - Create `.claude/rules/integration-tests.md` with Docker infrastructure and conftest patterns
-   - Create `.claude/rules/e2e-tests.md` with Playwright best practices
-   - Use `/test-rules-generator` skill to bootstrap
-   - Estimated effort: 4-6 hours
+4. **Add container runtime startup validation in CI**
+   - After image build, run each image with minimal config
+   - Verify health endpoints respond correctly
+   - Detect broken entrypoints, missing dependencies
 
-5. **Add contract tests for API boundaries**
-   - Backend ↔ OpenSearch query/response contracts
-   - Backend ↔ Langflow API contracts
-   - SDK ↔ Backend API contracts (beyond current integration tests)
-   - Estimated effort: 12-16 hours
+5. **Create `.claude/rules/` test automation rules**
+   - Document pytest-asyncio patterns, conftest fixtures, RBAC setup patterns
+   - Add Playwright E2E test conventions
+   - Add Go operator test patterns (envtest, controller reconciliation)
 
-6. **Expand operator test coverage**
-   - Only 3 Go test files; add tests for reconciliation logic, status updates, error handling
-   - Add envtest integration tests for CRD validation and webhook testing
-   - Estimated effort: 8-12 hours
+6. **Expand Dependabot to npm and pip ecosystems**
+   - Add `npm` entries for `frontend/`, `sdks/typescript/`, `docs/`
+   - Add `pip` entry for root project and `sdks/python/`
+
+7. **Add SBOM generation to release workflow**
+   - Use `anchore/sbom-action` or `docker/build-push-action` SBOM output
+   - Attach SBOMs as release artifacts
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Add SBOM generation to release builds**
-   - Use Syft or `docker buildx build --sbom` in release workflow
-   - Attach SBOMs to GitHub releases
-   - Estimated effort: 2-3 hours
+8. **Add performance regression tests for search and ingestion endpoints**
+   - Measure latency for document ingestion, search queries, and chat responses
+   - Set baseline thresholds and fail on regression
 
-8. **Add performance regression testing**
-   - Benchmark search latency and ingest throughput
-   - Compare against baseline in CI
-   - Estimated effort: 8-12 hours
+9. **Add frontend unit tests with Vitest**
+   - Currently 0 frontend unit tests (only 2 Playwright E2E specs)
+   - Add component tests for critical UI paths
 
-9. **Move dependency audit to PR trigger**
-   - Add `pip-audit` and `npm audit` to PR workflows (in addition to schedule)
-   - Fail on HIGH/CRITICAL vulnerabilities
-   - Estimated effort: 2-3 hours
+10. **Add contract tests for SDK-to-backend API boundaries**
+    - Use Pact or similar to validate SDK expectations match backend API
 
-10. **Add Gitleaks to CI**
-    - Complement pre-commit detect-secrets with CI-level Gitleaks scanning
-    - Catch secrets that bypass pre-commit hooks
-    - Estimated effort: 1-2 hours
+11. **Add golangci-lint config file for operator**
+    - Currently using defaults — enable additional linters (errcheck, gocritic, revive)
 
 ## Comparison to Gold Standards
 
-| Practice | OpenRAG | odh-dashboard | notebooks | kserve |
-|----------|---------|---------------|-----------|--------|
-| Unit Test Coverage | 90 files, no threshold | Extensive + enforced | N/A | Enforced (80%+) |
-| Integration Tests | Multi-suite in CI | Contract + integration | Image validation | Multi-version |
-| E2E Tests | 2 Playwright specs | Comprehensive Cypress | N/A | E2E suite |
-| Coverage Enforcement | None | Codecov + thresholds | N/A | Codecov enforced |
-| Container Scanning | None | Trivy | Trivy + SBOM | Trivy |
-| Multi-arch | amd64 + arm64 | Single arch | Multi-arch | Multi-arch |
-| Code Quality | Ruff + mypy + Biome | ESLint + TS strict | Linters | golangci-lint |
-| SAST | CodeQL | CodeQL | N/A | gosec |
-| Agent Rules | Skills only | Full rules + skills | N/A | N/A |
-| Pre-commit | detect-secrets | Multiple hooks | N/A | Multiple hooks |
-| CI Organization | 27 workflows, path-filtered | Well-organized | Comprehensive | Well-organized |
+| Dimension | OpenRAG | odh-dashboard | notebooks | kserve |
+|-----------|---------|---------------|-----------|--------|
+| Unit Tests | 8.0 — 132 tests, well-organized | 9.0 — Comprehensive Jest suite | 7.0 — Script-based | 9.0 — envtest + mock |
+| Integration/E2E | 8.5 — 3-suite matrix + Playwright | 9.5 — Contract tests + Cypress | 6.0 — Manual | 8.5 — Multi-version |
+| Build Integration | 7.0 — PR image builds, no Konflux | 7.0 — PR builds, no Konflux | 8.0 — Multi-layer validation | 7.0 — Prow-based |
+| Image Testing | 6.5 — Multi-arch, no scanning | 7.0 — Basic validation | 9.5 — 5-layer validation | 7.0 — Startup tests |
+| Coverage Tracking | 3.0 — No integration | 9.0 — Codecov + enforcement | 4.0 — Limited | 9.0 — PR gating |
+| CI/CD Automation | 9.0 — 25 workflows, autofix | 9.0 — Comprehensive | 8.0 — Good automation | 9.0 — Prow + GHA |
+| Agent Rules | 5.0 — Install/SDK skills only | 8.0 — Test rules + skills | 3.0 — None | 2.0 — None |
 
 ## File Paths Reference
 
-### CI/CD Configuration
-- `.github/workflows/lint-backend.yml` - Backend linting (Ruff + mypy)
-- `.github/workflows/lint-frontend.yml` - Frontend linting (Biome + TypeScript)
-- `.github/workflows/test-integration.yml` - Integration test suite
-- `.github/workflows/test-e2e.yml` - Playwright E2E tests
-- `.github/workflows/codeql.yml` - CodeQL SAST scanning
-- `.github/workflows/operator-ci.yml` - Operator CI (Go lint/test/manifest validation)
-- `.github/workflows/dependency-audit.yml` - Periodic dependency audit
-- `.github/workflows/build-multiarch.yml` - Multi-arch release builds
-- `.github/workflows/nightly-build.yml` - Nightly Docker + PyPI builds
-- `.github/workflows/autofix.ci.yml` - Ruff autofix
-- `.github/workflows/biome-autofix.yml` - Biome autofix
+### CI/CD Workflows
+- `.github/workflows/test-ci.yml` — Main test pipeline (integration + E2E)
+- `.github/workflows/lint-backend.yml` — Ruff + mypy on changed files
+- `.github/workflows/lint-frontend.yml` — Biome + TypeScript + React Doctor
+- `.github/workflows/operator-ci.yml` — Go fmt/vet/lint/test + Helm lint + Docker build
+- `.github/workflows/codeql.yml` — CodeQL for Python + JavaScript
+- `.github/workflows/autofix.ci.yml` — Ruff autofix via autofix.ci App
+- `.github/workflows/dependency-audit.yml` — npm audit + pip-audit (Mon/Thu)
+- `.github/workflows/nightly-build.yml` — Nightly multi-arch builds + PyPI publish
+- `.github/workflows/build-multiarch.yml` — Release multi-arch builds
 
 ### Testing
-- `tests/unit/` - 90 backend unit test files (pytest)
-- `tests/integration/core/` - 7 core integration test files
-- `tests/integration/sdk/` - 9 SDK integration test files
-- `frontend/tests/` - 2 Playwright E2E specs
-- `kubernetes/operator/internal/controller/*_test.go` - 3 operator tests
+- `tests/unit/` — 125 Python unit tests
+- `tests/integration/core/` — 8 core integration tests
+- `tests/integration/sdk/` — 11 SDK integration tests
+- `frontend/tests/core/` — 2 Playwright E2E specs
+- `kubernetes/operator/internal/controller/*_test.go` — 5 Go operator tests
+- `sdks/typescript/tests/integration.test.ts` — TypeScript SDK tests
 
 ### Code Quality
-- `pyproject.toml` - Ruff, mypy, pytest configuration
-- `.pre-commit-config.yaml` - detect-secrets hook
-- `.secrets.baseline` - Secret detection baseline
+- `pyproject.toml` — Ruff, mypy, pytest config
+- `.pre-commit-config.yaml` — detect-secrets only
+- `frontend/package.json` — Biome config
+- `.github/dependabot.yml` — GitHub Actions only
 
 ### Container Images
-- `Dockerfile` - OpenSearch (multi-stage, UBI9)
-- `Dockerfile.backend` - Backend (3-stage, Python 3.13-slim)
-- `Dockerfile.frontend` - Frontend (Node 25.9-slim)
-- `Dockerfile.langflow` - Langflow
-- `kubernetes/operator/Dockerfile` - Operator
+- `Dockerfile.backend` — Multi-stage UBI10 backend image
+- `Dockerfile.frontend` — Next.js frontend image
+- `Dockerfile.langflow` — Langflow service image
+- `Dockerfile` — OpenSearch custom image
+- `kubernetes/operator/Dockerfile` — Go operator image
 
 ### Agent Rules
-- `CLAUDE.md` - Points to AGENTS.md
-- `AGENTS.md` - Agent instructions with operational constraints
-- `.claude/skills/` - Symlinks to install and SDK skills
-- `plugins/openrag/skills/install/SKILL.md` - Installation skill
-- `plugins/openrag/skills/sdk/SKILL.md` - SDK integration skill
+- `CLAUDE.md` — Points to AGENTS.md
+- `AGENTS.md` — Agent instructions and skill documentation
+- `.claude/skills/install/` — OpenRAG installation skill
+- `.claude/skills/sdk/` — SDK integration skill

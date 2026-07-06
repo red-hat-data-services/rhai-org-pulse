@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 12:24 PM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 05:35 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/spark-operator</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="118.75210199999997"
+                                stroke-dashoffset="130.06182599999997"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.9</div>
+                        <div class="score-value">7.7</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Strong unit test coverage with Ginkgo/Gomega + testify; 42 test files covering controllers, webhooks, schedulers, and utilities (9,280+ lines of test code)</div>
+                            <div class="scorecard-status">60 test files for 133 source files (45% ratio); Ginkgo + envtest for controllers, standard go testing elsewhere</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Exceptional E2E: dual install paths (Helm + Kustomize), 9 Kubernetes versions matrix, OpenShift E2E with SparkConnect, ScheduledSpark, Prometheus metrics, and Spark UI tests</div>
+                            <div class="scorecard-status">Multi-layer E2E: Helm + Kustomize on KIND across 4-9 K8s versions; OpenShift integration tests; drift detection; Helm chart unit tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">PR-time Docker build + Helm chart testing + Minikube install; Konflux build via Tekton but not simulated at PR time</div>
+                            <div class="scorecard-status">Konflux Dockerfile present; Kustomize lint + drift check on PRs; no PR-time Konflux simulation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">Multi-arch Konflux builds (x86_64, arm64, ppc64le, s390x); KIND image loading validates startup; no explicit image runtime tests</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Multi-stage Dockerfiles with build caching; no container vulnerability scanning, no SBOM, no runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Codecov integration with separate unit/e2e flags, auto-threshold with 1% tolerance, PR coverage reporting</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Codecov with unit and e2e-kustomize flags; auto threshold + 1% tolerance; no hard minimum gate</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">17 workflows with concurrency control, path-based triggers, reusable workflows, custom composite actions, comprehensive PR checks</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">21 workflows with concurrency control; comprehensive PR checks; multi-K8s version matrix; scorecard supply-chain</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Detailed CLAUDE.md with project structure, build/test/lint commands, key files, and debugging guidance; no .claude/rules/ directory for test-specific patterns</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">CLAUDE.md exists with project structure, build/test/debug commands; no .claude/rules/ or test-type-specific guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No PR-time Konflux build simulation</div>
-                            <p>Konflux build failures (RPM deps, FIPS compliance, multi-arch) discovered only post-merge in Tekton pipelines</p>
+                            <div class="item-description">No container image vulnerability scanning</div>
+                            <p>CVEs in base images or dependencies go undetected until production deployment</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No container image runtime validation</div>
-                            <p>Image startup or entrypoint issues not caught until deployment; operator may build but fail to run</p>
+                        <li class="item-card high">
+                            <div class="item-description">No SBOM generation or image signing</div>
+                            <p>Cannot verify supply chain integrity; fails SLSA Level 2+ requirements</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Trivy scanning is scheduled-only, not PR-triggered</div>
-                            <p>Vulnerability-introducing PRs merge without security feedback; weekly scan means up to 7-day exposure window</p>
+                            <div class="item-description">No PR-time Konflux build simulation</div>
+                            <p>Konflux build failures discovered only post-merge; Dockerfile.konflux has complex ODH dependencies that may diverge from standard Dockerfile</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No test-type-specific agent rules (.claude/rules/)</div>
+                            <p>AI-generated tests lack consistency with existing patterns; miss envtest setup, Ginkgo conventions, and fixture patterns</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No SAST in PR workflow</div>
-                            <p>Semgrep rules exist but no CI workflow runs them; security issues may be committed</p>
+                            <div class="item-description">No hard coverage enforcement gate</div>
+                            <p>Coverage can regress without blocking PR merge; current auto threshold with 1% tolerance is too lenient</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +464,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to PR workflow</div>
-                            <p>Catch CVEs before merge instead of weekly; immediate security posture improvement</p>
+                            <div class="item-description">Add Trivy container scanning to PR workflow</div>
+                            <p>Catch CVEs in base images and dependencies before merge; blocks HIGH/CRITICAL vulnerabilities</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create .claude/rules/ for unit and e2e test patterns</div>
+                            <p>Ensure AI-generated tests follow Ginkgo conventions, envtest setup, and existing fixture patterns</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Semgrep to PR workflow</div>
-                            <p>Leverage existing 60+ rule semgrep.yaml for automated SAST on every PR</p>
+                            <div class="item-description">Set minimum coverage threshold in codecov.yml</div>
+                            <p>Prevent coverage regression by requiring minimum 50-60% project coverage</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">30 minutes</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add Cosign image signing to release workflow</div>
+                            <p>Enable supply chain verification for released images; aligns with SLSA framework</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add .claude/rules/ with test creation patterns</div>
-                            <p>Standardize AI-generated tests to match existing Ginkgo/envtest patterns</p>
+                            <div class="item-description">Expand golangci-lint with security linters (gosec, gocritic)</div>
+                            <p>Catch additional code quality and security issues at lint time</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">3-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add e2e-test target to PR workflow with coverage upload</div>
-                            <p>PR-time E2E coverage reporting matches existing Kustomize E2E coverage</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">3-4 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add Konflux build simulation to PR workflow (Dockerfile.konflux build with hermetic mode)</li><li>Move Trivy image scanning from weekly schedule to PR trigger</li><li>Add Semgrep CI workflow using existing semgrep.yaml rules</li></ul>
+                            <ul><li>Add Trivy or Grype container vulnerability scanning to the integration.yaml PR workflow</li><li>Generate SBOM (syft/trivy) and sign images (Cosign) in release workflows</li><li>Set a hard minimum coverage threshold (e.g., 50%) in .codecov.yml to prevent regression</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add container runtime validation (image startup + entrypoint test in KIND)</li><li>Create .claude/rules/ directory with test patterns for unit, e2e, webhook, and scheduler tests</li><li>Add CRD validation testing (apply generated CRDs to cluster, verify schema)</li><li>Add pre-commit hooks for Go linting and code generation (currently only has helm-docs)</li></ul>
+                            <ul><li>Add PR-time Konflux build simulation to validate Dockerfile.konflux before merge</li><li>Create .claude/rules/ with unit-tests.md (envtest patterns), e2e-tests.md (Ginkgo/Kind patterns), and integration-tests.md (OpenShift patterns)</li><li>Add image startup validation test (build image, start container, verify health endpoint)</li><li>Expand golangci-lint to include gosec, gocritic, errorlint, and nilerr linters</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SBOM generation and attestation to release workflow</li><li>Add Gitleaks to PR workflow (config exists but no CI integration)</li><li>Add performance regression testing for SparkApplication reconciliation</li><li>Add OSSF Scorecard to PR workflow (currently only runs on push to master)</li></ul>
+                            <ul><li>Add multi-architecture image builds (amd64/arm64) to PR validation</li><li>Add performance regression testing for Spark job submission latency</li><li>Add contract tests between the webhook and controller components</li><li>Consolidate OpenShift and upstream E2E test suites under test/ directory</li></ul>
                         </div>
                     </div>
                 </div>

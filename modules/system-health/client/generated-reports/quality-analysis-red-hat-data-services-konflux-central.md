@@ -1,383 +1,394 @@
 ---
 repository: "red-hat-data-services/konflux-central"
-overall_score: 6.4
+overall_score: 6.8
 scorecard:
   - dimension: "Unit Tests"
-    score: 7.0
-    status: "Solid pytest-based PipelineRun validation suite (9 checks, 1211 LOC), but no tests for utility scripts"
+    score: 7.5
+    status: "Strong pytest-based PipelineRun validation suite (9 checks, 1211 LOC) with parametrized test cases"
   - dimension: "Integration/E2E"
-    score: 5.0
-    status: "Canary builds validate pipeline changes on PRs via Tekton, but no integration tests for sync/replicator workflows"
-  - dimension: "Build Integration"
     score: 7.0
-    status: "Canary builds validate pipeline definitions; cross-branch validation catches regressions; no Konflux simulation"
+    status: "PR dry-run workflows validate Renovate configs against live repos; canary builds validate pipeline changes on Konflux"
+  - dimension: "Build Integration"
+    score: 8.0
+    status: "Canary build pipelines in .tekton/ validate pipeline changes on PRs; cross-branch validation for release branches"
   - dimension: "Image Testing"
-    score: 3.0
-    status: "Minimal canary Dockerfile exists but no runtime validation, no vulnerability scanning in repo CI"
+    score: 7.0
+    status: "Comprehensive Tekton pipeline security scanning (Clair, Snyk, ClamAV, RPM signature, SBOM) for downstream images"
   - dimension: "Coverage Tracking"
-    score: 1.0
-    status: "No coverage tracking, no codecov integration, no coverage thresholds"
+    score: 2.0
+    status: "No coverage measurement, no codecov integration, no coverage thresholds"
   - dimension: "CI/CD Automation"
     score: 9.0
-    status: "Excellent workflow automation: sync, replication, validation, z-stream, renovate, cross-branch checks"
+    status: "11 well-organized GitHub Actions workflows with matrix strategies, dry-run modes, and PR comment reporting"
   - dimension: "Agent Rules"
     score: 6.0
-    status: "Comprehensive CLAUDE.md with repository context, but no .claude/rules/ for test creation guidance"
+    status: "Has CLAUDE.md with comprehensive repo documentation but no .claude/rules/ directory or test-specific agent guidance"
 critical_gaps:
-  - title: "No test coverage for utility scripts"
-    impact: "Shell scripts (rhoai_pipelinerun_manager.sh, seed-pipelineruns.sh) and Python scripts (generate_pipelinerun_sync_config.py, generate-effective-config.py) have zero test coverage — bugs ship silently"
+  - title: "No test coverage measurement or enforcement"
+    impact: "Cannot track whether validation test suite covers all PipelineRun configurations or script code paths"
     severity: "HIGH"
-    effort: "12-16 hours"
-  - title: "No coverage tracking or enforcement"
-    impact: "No visibility into what percentage of validation logic is actually exercised; no quality gate prevents regression"
+    effort: "4-6 hours"
+  - title: "No linting or static analysis for Python scripts"
+    impact: "Script bugs may go undetected; no type checking, no ruff/flake8, no pre-commit hooks"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No vulnerability scanning in repo CI"
-    impact: "While downstream pipelines scan built images, the repo's own canary builds and dependencies are not scanned in GH Actions"
+  - title: "No unit tests for utility scripts"
+    impact: "11 Python/Shell scripts (4014 LOC) beyond the validation suite have zero test coverage"
+    severity: "MEDIUM"
+    effort: "12-20 hours"
+  - title: "No secret detection or dependency scanning"
+    impact: "Secrets in YAML configs or vulnerable Python dependencies could be committed undetected"
     severity: "MEDIUM"
     effort: "2-3 hours"
-  - title: "No integration tests for sync workflows"
-    impact: "Sync and replication workflows are tested only by manual dry-run — errors in matrix generation, branch detection, or commit logic are not caught automatically"
-    severity: "HIGH"
-    effort: "16-24 hours"
 quick_wins:
-  - title: "Add codecov integration to validation workflow"
+  - title: "Add ruff linting to CI"
+    effort: "1-2 hours"
+    impact: "Catch Python style issues, potential bugs, and import errors in 13 scripts before merge"
+  - title: "Add pre-commit hooks"
+    effort: "1-2 hours"
+    impact: "Enforce YAML validation, trailing whitespace, secret detection locally before push"
+  - title: "Add pytest-cov to validation workflow"
+    effort: "1-2 hours"
+    impact: "Track test coverage for the validation test suite and set minimum thresholds"
+  - title: "Create .claude/rules/ for PipelineRun authoring"
     effort: "2-3 hours"
-    impact: "Immediate visibility into test coverage; enables coverage gates on PRs"
-  - title: "Add Trivy scan for canary build Dockerfile"
-    effort: "1-2 hours"
-    impact: "Catches vulnerability issues in base images before they propagate to downstream pipelines"
-  - title: "Add shellcheck linting for shell scripts"
-    effort: "1-2 hours"
-    impact: "Catches common shell scripting bugs in rhoai_pipelinerun_manager.sh and rhoai_utils.sh"
-  - title: "Add pytest tests for generate_pipelinerun_sync_config.py"
-    effort: "3-4 hours"
-    impact: "Most critical Python utility — errors here affect sync to 48+ downstream repos"
+    impact: "Guide AI agents to correctly author PipelineRuns following naming conventions and required annotations"
 recommendations:
   priority_0:
-    - "Add unit tests for shell scripts (rhoai_pipelinerun_manager.sh, rhoai_utils.sh) using bats-core or shunit2"
-    - "Add codecov integration with minimum 70% coverage threshold on the Python test suite"
-    - "Add unit tests for generate_pipelinerun_sync_config.py — errors propagate to all 48+ component repos"
+    - "Add Python linting (ruff) and YAML linting (yamllint) to the CI pipeline to catch script and config errors before merge"
+    - "Add coverage tracking (pytest-cov + codecov) to the validate-pipelineruns workflow"
   priority_1:
-    - "Add integration tests for sync workflow logic using act or workflow mocking"
-    - "Add Trivy vulnerability scanning step to PR workflows"
-    - "Create .claude/rules/ with test creation guidance for PipelineRun validation patterns"
-    - "Add shellcheck linting as a PR check for all .sh files"
+    - "Add unit tests for utility scripts (generate-renovate-matrix.py, rhoai_pipelinerun_manager.sh, etc.)"
+    - "Add pre-commit hooks with yamllint, ruff, gitleaks for local development quality"
+    - "Create .claude/rules/ with PipelineRun authoring guidelines and validation check reference"
   priority_2:
-    - "Add pre-commit hooks (.pre-commit-config.yaml) for YAML linting, Python formatting, shellcheck"
-    - "Add type hints and mypy checking to Python scripts"
-    - "Add Renovate config validation tests to catch JSON5/JSON syntax errors before sync"
+    - "Add dependency scanning for Python packages used in CI workflows"
+    - "Add ShellCheck CI step for shell scripts (rhoai_pipelinerun_manager.sh, run-renovate.sh, etc.)"
+    - "Consider adding a Makefile with common development tasks (lint, test, validate)"
 ---
 
 # Quality Analysis: konflux-central
 
 ## Executive Summary
 
-- **Overall Score: 6.4/10**
-- **Repository Type**: CI/CD configuration repository (Tekton pipelines/pipelineruns management)
-- **Primary Languages**: Python, Bash, YAML (Tekton), Go (minimal canary)
-- **Key Strengths**: Excellent CI/CD automation with 9 well-designed workflows; strong PipelineRun validation suite with 9 structural checks and sophisticated PR comment reporting; comprehensive CLAUDE.md documentation
-- **Critical Gaps**: No tests for utility scripts; no coverage tracking; no vulnerability scanning in repo CI; no integration tests for sync workflows
-- **Agent Rules Status**: CLAUDE.md present with comprehensive context; no `.claude/rules/` directory for test creation guidance
+- **Overall Score: 6.8/10**
+- **Repository Type**: CI/CD configuration repository (Tekton pipelines + Renovate configs)
+- **Primary Languages**: Python (scripts), YAML (pipelines/configs), Shell (automation), Go (canary build)
+- **Key Strengths**: Excellent CI/CD automation with 11 workflows, sophisticated pytest-based PipelineRun validation (9 checks), comprehensive Tekton pipeline security scanning, good documentation with CLAUDE.md
+- **Critical Gaps**: No coverage tracking, no linting/static analysis for Python scripts, no tests for utility scripts, no pre-commit hooks
+- **Agent Rules Status**: CLAUDE.md present with comprehensive documentation; no `.claude/rules/` directory
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 7.0/10 | Solid pytest validation suite (9 checks, 1211 LOC), but utility scripts untested |
-| Integration/E2E | 5.0/10 | Canary builds validate pipelines; no integration tests for sync workflows |
-| **Build Integration** | **7.0/10** | **Canary builds + cross-branch validation; no Konflux build simulation** |
-| Image Testing | 3.0/10 | Minimal canary Dockerfile, no runtime validation or scanning in repo CI |
-| Coverage Tracking | 1.0/10 | No coverage generation, no codecov, no thresholds |
-| CI/CD Automation | 9.0/10 | 9 workflows covering sync, replication, validation, z-stream, renovate |
-| Agent Rules | 6.0/10 | Excellent CLAUDE.md; no .claude/rules/ for test patterns |
+| Unit Tests | 7.5/10 | Strong pytest-based PipelineRun validation suite (9 checks, 1211 LOC) |
+| Integration/E2E | 7.0/10 | PR dry-run workflows validate Renovate against live repos; canary builds on Konflux |
+| **Build Integration** | **8.0/10** | **Canary build pipelines validate pipeline changes; cross-branch validation** |
+| Image Testing | 7.0/10 | Comprehensive Tekton pipeline scanning (Clair, Snyk, ClamAV, RPM, SBOM) |
+| Coverage Tracking | 2.0/10 | No coverage measurement, no codecov, no thresholds |
+| CI/CD Automation | 9.0/10 | 11 well-organized workflows with matrix strategies, dry-run, PR commenting |
+| Agent Rules | 6.0/10 | CLAUDE.md present, no .claude/rules/ or test-specific guidance |
 
 ## Critical Gaps
 
-1. **No test coverage for utility scripts**
-   - Impact: Shell scripts (`rhoai_pipelinerun_manager.sh` at 386 LOC, `rhoai_utils.sh` at 252 LOC, `seed-pipelineruns.sh` at 135 LOC) and Python scripts (`generate_pipelinerun_sync_config.py`, `generate-effective-config.py`, `update-sync-pipelinerun-workflow-repository-list.py`) have zero test coverage
-   - Severity: HIGH
-   - Effort: 12-16 hours
-   - These scripts are critical path — `rhoai_pipelinerun_manager.sh` handles release branch creation and z-stream updates; `generate_pipelinerun_sync_config.py` generates sync matrices for 48+ repos
+### 1. No Test Coverage Measurement or Enforcement
+- **Impact**: Cannot track whether the validation test suite covers all PipelineRun configurations or Python script code paths
+- **Severity**: HIGH
+- **Effort**: 4-6 hours
+- **Details**: The `validate-pipelineruns.yml` workflow runs pytest but does not generate coverage reports. No codecov integration, no coverage thresholds, no PR coverage gates. With 119 PipelineRun YAML files across 65 components, understanding test coverage of the validation logic is critical.
 
-2. **No coverage tracking or enforcement**
-   - Impact: The pytest validation suite has 1211 LOC across 2 files but no coverage report generation, no codecov integration, no PR coverage comments
-   - Severity: HIGH
-   - Effort: 2-4 hours
-   - Easy win: add `--cov` to pytest invocation and upload to codecov
+### 2. No Linting or Static Analysis for Python Scripts
+- **Impact**: Script bugs, type errors, and style inconsistencies go undetected; 13 Python/Shell scripts totaling ~4000 LOC have no quality gates
+- **Severity**: HIGH
+- **Effort**: 2-4 hours
+- **Details**: No ruff, flake8, mypy, pylint, or ShellCheck configuration. No `.pre-commit-config.yaml`. Python scripts use `urllib.request` directly and have complex logic for matrix generation, config parsing, and API interactions — all without static analysis.
 
-3. **No vulnerability scanning in repo CI**
-   - Impact: Canary build uses UBI9 base images but no Trivy/Snyk scan in GitHub Actions; while downstream Konflux pipelines scan (Clair, Snyk, ClamAV), the repo's own CI doesn't validate before merge
-   - Severity: MEDIUM
-   - Effort: 2-3 hours
+### 3. No Unit Tests for Utility Scripts
+- **Impact**: Scripts that generate sync configs, renovate matrices, and manage pipelineruns are untested. Bugs in these scripts could cause incorrect syncs across 65+ component repositories.
+- **Severity**: MEDIUM
+- **Effort**: 12-20 hours
+- **Details**: The following scripts have zero test coverage:
+  - `generate_pipelinerun_sync_config.py` — generates sync configuration for 65+ repos
+  - `generate-renovate-matrix.py` — builds CI matrix for Renovate runs
+  - `rhoai_pipelinerun_manager.sh` — creates/updates PipelineRuns for releases
+  - `detect-affected-renovate-repos.py` — determines which repos need Renovate dry-runs
+  - `update-sync-pipelinerun-workflow-repository-list.py` — auto-updates workflow repo lists
+  - `extract-renovate-dry-run-results.py` — parses Renovate logs for PR reporting
+  - `run-renovate.sh` — orchestrates Renovate container runs
 
-4. **No integration tests for sync workflows**
-   - Impact: The sync-pipelineruns workflow (handles 48+ repos), pipelinerun-replicator, and apply-z-stream-changes are only tested manually via dry-run
-   - Severity: HIGH
-   - Effort: 16-24 hours
+### 4. No Secret Detection or Dependency Scanning
+- **Impact**: Secrets in YAML configs or vulnerable Python dependencies could be committed undetected
+- **Severity**: MEDIUM
+- **Effort**: 2-3 hours
+- **Details**: No gitleaks, trufflehog, or GitHub secret scanning configuration. Python dependencies are installed inline in workflows (`pip install pyyaml json5`) without pinned versions or vulnerability scanning.
 
 ## Quick Wins
 
-1. **Add codecov integration to validation workflow**
-   - Effort: 2-3 hours
-   - Impact: Immediate coverage visibility
-   - Implementation:
-   ```yaml
-   - name: Validate PipelineRuns
-     run: |
-       uv run --with pyyaml --with pytest --with pytest-cov \
-         pytest script/test_validate_pipelineruns.py \
-         --pipelinerun-dir pipelineruns/ \
-         --cov=script --cov-report=xml \
-         -v
-   - name: Upload coverage
-     uses: codecov/codecov-action@v4
-     with:
-       file: coverage.xml
-   ```
+### 1. Add ruff Linting to CI (1-2 hours)
+Add a simple ruff check step to the `validate-pipelineruns.yml` workflow or create a new linting workflow:
+```yaml
+- name: Lint Python scripts
+  run: uv run --with ruff ruff check script/
+```
 
-2. **Add Trivy scan for canary build**
-   - Effort: 1-2 hours
-   - Impact: Catches base image vulnerabilities before downstream propagation
-   - Implementation: Add `aquasecurity/trivy-action@master` step after canary build
+### 2. Add Pre-commit Hooks (1-2 hours)
+Create `.pre-commit-config.yaml` with:
+- `yamllint` for YAML validation
+- `ruff` for Python linting
+- `shellcheck` for shell script analysis
+- `gitleaks` for secret detection
+- `trailing-whitespace` and `end-of-file-fixer` for hygiene
 
-3. **Add shellcheck linting**
-   - Effort: 1-2 hours
-   - Impact: Catches common shell scripting bugs in 773 lines of bash
-   - Implementation:
-   ```yaml
-   - name: ShellCheck
-     uses: ludeeus/action-shellcheck@master
-     with:
-       scandir: './script'
-   ```
+### 3. Add pytest-cov to Validation Workflow (1-2 hours)
+```yaml
+- name: Validate PipelineRuns
+  run: |
+    uv run --with pyyaml --with pytest --with pytest-cov \
+      pytest script/test_validate_pipelineruns.py \
+      --pipelinerun-dir pipelineruns/ \
+      --cov=script --cov-report=xml -v
+```
 
-4. **Add pytest tests for `generate_pipelinerun_sync_config.py`**
-   - Effort: 3-4 hours
-   - Impact: Most critical utility — generates sync matrix for all component repos
+### 4. Create .claude/rules/ for PipelineRun Authoring (2-3 hours)
+Create rules that guide AI agents to:
+- Follow naming conventions (`{component}-{version}-{trigger}`)
+- Include required annotations (`on-cel-expression`, `build.appstudio.openshift.io/repo`)
+- Use correct output-image patterns for PR vs. push PipelineRuns
+- Reference validation checks from `test_validate_pipelineruns.py`
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Score: 9.0/10** — Exceptional workflow automation
+**Score: 9.0/10** — Excellent workflow organization and automation.
 
-The repository has **9 GitHub Actions workflows** with well-defined responsibilities:
+The repository has **11 GitHub Actions workflows** covering the full lifecycle:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `validate-pipelineruns.yml` | PR (auto) | Structural validation of PipelineRun YAML |
-| `validate-release-branches.yml` | PR to main (auto) | Cross-branch regression testing |
-| `post-validation-comment.yml` | workflow_run (auto) | Posts validation results as PR comment |
-| `sync-pipelineruns.yml` | Push (auto) + dispatch | Syncs PipelineRuns to 48+ component repos |
-| `sync-renovate-configs.yml` | Dispatch (manual) | Syncs Renovate configs to component repos |
-| `update-repository-list.yml` | Push (auto) | Keeps sync workflow repo list current |
-| `pipelinerun-replicator.yml` | Dispatch (manual) | Creates new release branches |
-| `apply-z-stream-changes.yml` | Dispatch (manual) | Version bumps for z-stream releases |
-| `retrigger-builds.yml` | Dispatch (manual) | Re-triggers Konflux builds |
+| `validate-pipelineruns.yml` | PR (main, rhoai-*) | Validates PipelineRun YAML structure and correctness |
+| `validate-release-branches.yml` | PR (main) | Cross-branch validation when validator scripts change |
+| `post-validation-comment.yml` | workflow_run | Posts validation results as PR comment (fork-safe) |
+| `sync-pipelineruns.yml` | Push (rhoai-*) | Syncs PipelineRuns to 65+ component repos |
+| `update-repository-list.yml` | Push (main, rhoai-*) | Auto-updates workflow dropdown lists |
+| `pipelinerun-replicator.yml` | Manual dispatch | Creates new release branches from existing ones |
+| `apply-z-stream-changes.yml` | Manual dispatch | Bumps patch versions across release branches |
+| `retrigger-builds.yml` | Manual dispatch | Retriggers Konflux builds with timestamp changes |
+| `run-renovate.yml` | Manual dispatch | On-demand Renovate runs with matrix strategy |
+| `renovate-dry-run.yml` | PR (main) | Dry-run validation for Renovate config changes |
+| `post-renovate-dry-run-comment.yml` | workflow_run | Posts dry-run results as PR comment |
 
-**Strengths:**
-- Automatic PR validation with rich comment reporting (grouped by check, file links, YAML snippets)
-- Cross-branch validation: when validator scripts change on main, they're tested against release branch pipelineruns
-- Two-workflow pattern for PR comments works with forks
-- Dry-run support on all destructive workflows
-- `[skip-sync]` escape hatch in commit messages
-- GitHub App tokens for cross-repo operations (not PATs)
+**Strengths**:
+- Matrix-based strategies for parallel processing across 65+ repos
+- Dry-run modes on all destructive workflows
+- Two-workflow pattern for fork-safe PR commenting
+- `[skip-sync]` commit message flag to prevent unintended syncs
+- GitHub App tokens for cross-repo operations
+- Job summaries with rich markdown formatting
+- Concurrency control via `cancel-in-progress` on PR pipelines
 
-**Gaps:**
-- Commented-out Slack notifications in sync and renovate workflows
-- No concurrency control on sync workflows (could race on parallel pushes)
+**Gaps**:
 - No caching of Python dependencies in workflows
+- Some workflows still use `actions/checkout@v3` (should update to v4)
+- Commented-out Slack notifications in sync workflows
+- No workflow to validate the validation workflow itself (meta-testing)
 
 ### Test Coverage
 
-**Score: 7.0/10** — Strong validation suite, but utility scripts untested
+**Score: 7.5/10** — Strong validation test suite, but limited scope.
 
-**PipelineRun Validation Suite (test_validate_pipelineruns.py + conftest.py):**
-- 9 structural checks implemented as pytest test cases
-- Parametrized over all discovered PipelineRun YAML files
-- External API integration: Quay registry catalog check, GitHub API for Dockerfile existence
-- Session-scoped caching for API calls
-- Sophisticated reporting: GitHub Actions annotations, PR comments with YAML snippets
-- Well-documented: dedicated `docs/validate-pipelineruns.md`
+**PipelineRun Validation Suite** (`test_validate_pipelineruns.py` + `conftest.py`):
+- **1,211 lines** of well-structured pytest code
+- **9 distinct validation checks** covering:
+  1. YAML linting and schema validation
+  2. Name convention enforcement
+  3. Name consistency with component labels
+  4. Branch and repo targeting correctness
+  5. CEL expression self-reference validation
+  5b. CEL pathChanged() file existence verification
+  6. Quay repository existence (with API integration)
+  7. Quay naming convention compliance
+  8. Dockerfile context path validation (with GitHub API)
+  9. Prefetch input JSON/YAML validation
+- **Session-scoped fixtures** for Quay catalog and GitHub API caching
+- **Parametrized test discovery** — automatically discovers all YAML files in `pipelineruns/`
+- **Rich PR reporting** — generates markdown comments with snippets, links, and collapsible sections
+- **Cross-branch validation** — tests run against release branch pipelineruns when validator scripts change
+- **Excellent documentation** — `docs/validate-pipelineruns.md` provides detailed check descriptions and usage
 
-**Test-to-Code Ratio:**
-- Test code: 1,211 LOC (test_validate_pipelineruns.py + conftest.py)
-- Utility scripts: 2,305 LOC (Python + Bash)
-- Ratio: ~0.53 (tests only cover validation, not utility scripts)
-
-**Untested Code:**
-| File | LOC | Risk |
-|------|-----|------|
-| `rhoai_pipelinerun_manager.sh` | 386 | HIGH — handles release branch creation |
-| `rhoai_utils.sh` | 252 | HIGH — shared utility functions |
-| `seed-pipelineruns.sh` | 135 | MEDIUM — seeding script |
-| `generate_pipelinerun_sync_config.py` | 48 | HIGH — generates sync matrix for 48+ repos |
-| `generate-effective-config.py` | 78 | MEDIUM — Renovate config generator |
-| `update-sync-pipelinerun-workflow-repository-list.py` | 70 | MEDIUM — updates workflow repo list |
-| `multi-arch-tracking/generate-table.py` | 671 | LOW — reporting utility |
-| `multi-arch-tracking/export-to-smartsheet.py` | 596 | LOW — reporting utility |
+**Gaps**:
+- No coverage reporting (`pytest-cov` not used)
+- No tests for the 11 utility scripts (generators, managers, extractors)
+- No mutation testing or property-based testing
+- Test data (PipelineRun files) is the real data, not synthetic fixtures — good for accuracy but makes it harder to test edge cases
 
 ### Code Quality
 
-**Linting/Formatting:** None configured
-- No `.golangci.yaml` (only canary Go code, minimal concern)
-- No Python linting (ruff, flake8, mypy)
-- No shellcheck configuration
-- No `.pre-commit-config.yaml`
-- No `.editorconfig`
+**Score: 4.0/10** — No linting, no static analysis, no pre-commit hooks.
 
-**Static Analysis:**
-- No SAST tools configured in GitHub Actions
-- No CodeQL workflow
-- No secret detection (Gitleaks, TruffleHog)
-
-**Code Quality Assessment:**
-- Python code is well-structured: proper use of pytest fixtures, parametrization, and hooks
-- Shell scripts use functions and are reasonably organized but could benefit from shellcheck
-- YAML files follow consistent patterns
+- **No `.pre-commit-config.yaml`** — nothing enforces quality locally
+- **No Python linting** — no ruff, flake8, pylint, mypy, or pyright
+- **No YAML linting** — no yamllint (beyond the pytest validation suite)
+- **No ShellCheck** — 4 shell scripts (~800 LOC) unchecked
+- **No type annotations** — Python scripts lack type hints
+- **No Makefile** — no standardized development commands
+- **gitignore** is comprehensive (Python-specific) ✓
 
 ### Container Images
 
-**Score: 3.0/10** — Minimal canary build only
+**Score: 7.0/10** — Excellent downstream scanning, minimal local image testing.
 
-- **Canary Dockerfile** (`canary-build/Dockerfile.konflux`): 10-line multi-stage build using UBI9
-- Used exclusively as a validation tool for pipeline changes (not a production artifact)
-- No runtime validation (the canary just prints "canary build ok")
-- No vulnerability scanning in the repo's own CI
+The Tekton pipelines define a comprehensive security scanning suite for downstream component images:
 
-**However**, the pipelines defined here include comprehensive security scanning for **downstream** builds:
+| Scan | Tool | Purpose |
+|------|------|---------|
+| Vulnerability | Clair | Container vulnerability scanning |
+| SAST | Snyk | Static application security testing |
+| Malware | ClamAV | Malware detection in images |
+| RPM Integrity | rpms-signature-scan | RPM signature validation |
+| Shell | sast-shell-check | Shell script static analysis |
+| Unicode | sast-unicode-check | Unicode character validation |
+| Base Image | deprecated-base-image-check | Base image deprecation check |
+| Certification | ecosystem-cert-preflight-checks | Red Hat certification compliance |
+| SBOM | show-sbom | Software bill of materials generation |
+
+**Canary Build**: The repository includes a minimal Go binary (`canary-build/`) with a multi-stage UBI 9 Dockerfile. This serves as a canary to validate pipeline changes on PRs before they affect real components. Both single-arch and multi-arch canary builds run on PRs.
+
+**Gaps**:
+- No local image build testing (e.g., `docker build` in GitHub Actions)
+- No image startup validation in CI
+- Canary build is minimal (`fmt.Println("canary build ok")`) — doesn't exercise complex build patterns like npm prefetch, gomod hermetic builds, or multi-context builds
+
+### Security
+
+**Score: 5.5/10** — Strong downstream scanning via Tekton, weak on the repo itself.
+
+**Strong (Downstream)**:
 - Clair vulnerability scanning
 - Snyk SAST
 - ClamAV malware scanning
 - RPM signature validation
-- Deprecated base image checks
-- Shell script SAST
-- Unicode check
-- Red Hat ecosystem certification
+- Red Hat ecosystem certification checks
+- Hermetic builds with network isolation
+- All task bundles pinned by SHA digest for reproducibility
 
-This is a notable design: the security scanning lives in the pipeline definitions, not in this repo's CI.
-
-### Security
-
-- **Downstream security scanning**: Comprehensive (7 distinct security tasks in pipelines)
-- **Repo-level security**: Weak — no CodeQL, no secret detection, no Dependabot/Renovate for Python deps
-- **Token management**: Good — uses GitHub App tokens for cross-repo operations
-- **Hermetic builds**: All downstream builds use `hermetic: true` for network isolation
-- **SBOM**: Generated via show-sbom task in downstream pipelines
+**Weak (This Repo)**:
+- No secret detection (gitleaks, trufflehog)
+- No dependency scanning for Python packages
+- No CodeQL or SAST on Python scripts
+- Python dependencies installed without version pinning (`pip install pyyaml json5`)
+- GitHub App tokens used correctly with scoped permissions ✓
+- Fork-safe PR commenting pattern prevents token exposure ✓
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Score: 6.0/10** — Good foundation, missing test-specific rules
+**Score: 6.0/10** — Good foundation with CLAUDE.md, but incomplete.
 
-- **CLAUDE.md**: Present and comprehensive (198 lines)
-  - Detailed repository structure documentation
-  - Pipeline architecture explained (single-arch, multi-arch)
-  - PipelineRun configuration patterns documented
-  - Workflow descriptions and usage
-  - Common conventions documented
-- **`.claude/` directory**: Not present
-- **`.claude/rules/`**: Not present — no test creation guidance for AI agents
-- **AGENTS.md**: Not present
+**Status**: Present (CLAUDE.md)
 
-**Gaps:**
-- No rules for writing new validation checks (test patterns, fixture usage)
-- No rules for shell script testing conventions
-- No rules for PipelineRun YAML authoring best practices
-- No guidance on how to extend the conftest.py hooks
+**What Exists**:
+- `CLAUDE.md` at repository root with comprehensive documentation:
+  - Repository structure and purpose
+  - Pipeline architecture (single-arch, multi-arch, FBC)
+  - PipelineRun configuration details (triggers, parameters, labels)
+  - Custom RHOAI tasks and their usage
+  - GitHub Actions workflow descriptions
+  - Common parameters and conventions
+  - Hermetic build and prefetch configuration
+  - Architecture support table generator usage
 
-**Recommendation:** Generate rules with `/test-rules-generator` covering:
-- PipelineRun validation check patterns (pytest parametrization, `_load()` usage, severity levels)
-- Shell script testing patterns for bash utilities
-- YAML linting and structural validation conventions
+**What's Missing**:
+- No `.claude/` directory
+- No `.claude/rules/` with test-specific guidance
+- No agent rules for PipelineRun authoring (naming conventions, required annotations)
+- No agent rules for validation check development (adding new checks)
+- No agent rules for Renovate configuration authoring
+- No `AGENTS.md`
+
+**Recommendation**: Create `.claude/rules/` with:
+- `pipelinerun-authoring.md` — naming conventions, required annotations, parameter patterns
+- `validation-checks.md` — how to add new validation checks to the test suite
+- `renovate-config.md` — how to author and test Renovate configurations
+- `release-management.md` — branch structure, z-stream process, replication workflow
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add unit tests for shell scripts** using bats-core or shunit2
-   - Focus on `rhoai_pipelinerun_manager.sh` (create/update modes, version parsing)
-   - Test `rhoai_utils.sh` validation functions independently
-   - Effort: 12-16 hours
+1. **Add Python linting (ruff) to CI** — The 13 Python scripts totaling ~3200 LOC have no static analysis. Add a `ruff check script/` step to catch bugs, unused imports, and style issues before merge.
 
-2. **Add codecov integration** with minimum 70% coverage threshold
-   - Add `--cov` to pytest invocation
-   - Configure `.codecov.yml` with coverage target
-   - Add coverage report to PR comments
-   - Effort: 2-4 hours
-
-3. **Add unit tests for `generate_pipelinerun_sync_config.py`**
-   - This script generates the sync matrix for all 48+ component repos
-   - Test matrix generation, edge cases, error handling
-   - Effort: 3-4 hours
+2. **Add coverage tracking to validation workflow** — The PipelineRun validation suite is the repo's primary quality gate. Add `pytest-cov` with codecov integration and a minimum threshold (e.g., 80%) to ensure validation logic is well-tested.
 
 ### Priority 1 (High Value)
 
-1. **Add Trivy vulnerability scanning** to PR workflow for canary build
-2. **Add shellcheck linting** as a PR check for all `.sh` files
-3. **Create `.claude/rules/`** with test creation guidance
-4. **Add pre-commit hooks** (`.pre-commit-config.yaml`) for YAML linting, Python formatting, shellcheck
-5. **Add concurrency control** to sync-pipelineruns workflow to prevent race conditions
+3. **Add unit tests for utility scripts** — Scripts like `generate-renovate-matrix.py` and `rhoai_pipelinerun_manager.sh` manage configuration for 65+ repos. Bugs in these scripts have high blast radius. Start with the matrix generators and sync config generators.
+
+4. **Add pre-commit hooks** — Create `.pre-commit-config.yaml` with yamllint, ruff, shellcheck, and gitleaks. This catches issues locally before push, reducing CI failures.
+
+5. **Create .claude/rules/ for PipelineRun authoring** — Guide AI agents to correctly create PipelineRuns following all 9 validation checks. Include naming patterns, required annotations, and common parameter configurations.
 
 ### Priority 2 (Nice-to-Have)
 
-1. **Add type hints and mypy** to Python scripts
-2. **Add CodeQL analysis** for Python code
-3. **Add Renovate config validation tests** before sync
-4. **Re-enable Slack notifications** (currently commented out in sync and renovate workflows)
-5. **Add integration tests** for sync workflow using act or workflow mocking
+6. **Add dependency scanning** — Pin Python package versions in a `requirements.txt` and add vulnerability scanning. Currently, `pip install pyyaml json5` in workflows uses latest versions without security checks.
+
+7. **Add ShellCheck to CI** — The 4 shell scripts (`rhoai_pipelinerun_manager.sh`, `run-renovate.sh`, `seed-pipelineruns.sh`, `rhoai_utils.sh`) should be linted with ShellCheck.
+
+8. **Add a Makefile** — Standardize common development tasks (`make lint`, `make test`, `make validate`) to reduce onboarding friction.
+
+9. **Update GitHub Actions versions** — Several workflows use `actions/checkout@v3` and `actions/setup-python@v4`. Update to latest versions for security patches and features.
 
 ## Comparison to Gold Standards
 
 | Dimension | konflux-central | odh-dashboard | notebooks | kserve |
 |-----------|----------------|---------------|-----------|--------|
-| Unit Tests | Pytest validation suite (9 checks) | Multi-layer Jest/Cypress | Image-specific tests | Go testing + coverage |
-| Integration/E2E | Canary builds only | Full Cypress E2E | 5-layer image validation | Multi-version E2E |
-| Coverage Tracking | None | Codecov enforcement | N/A (config repo) | Codecov with thresholds |
-| CI/CD Automation | 9 workflows (excellent) | Comprehensive | Comprehensive | Comprehensive |
-| Security Scanning | In pipeline definitions only | Trivy + Snyk in CI | Trivy in CI | CodeQL + Trivy |
-| Agent Rules | CLAUDE.md only | CLAUDE.md + rules | N/A | N/A |
-| Pre-commit | None | Configured | N/A | golangci-lint |
+| Unit Tests | 7.5 (strong validation suite) | 9.0 (multi-layer) | 7.0 | 9.0 |
+| Integration/E2E | 7.0 (dry-run + canary) | 9.0 (Cypress E2E) | 8.0 | 9.0 |
+| Build Integration | 8.0 (canary builds) | 7.0 | 6.0 | 7.0 |
+| Image Testing | 7.0 (Tekton scanning) | 6.0 | 9.0 (5-layer) | 7.0 |
+| Coverage Tracking | 2.0 (none) | 8.0 (codecov) | 5.0 | 9.0 (enforced) |
+| CI/CD Automation | 9.0 (11 workflows) | 9.0 | 8.0 | 8.0 |
+| Agent Rules | 6.0 (CLAUDE.md only) | 8.0 (rules/) | 3.0 | 4.0 |
 
-**Key Differentiator:** konflux-central is a *configuration repository* — it doesn't produce application code. Its quality model should focus on:
-1. Structural validation of YAML configurations (strong — 7/10)
-2. Reliability of automation scripts (weak — untested)
-3. Safety of cross-repo sync operations (moderate — dry-run only)
+**Notable**: konflux-central's CI/CD automation is among the best in the RHOAI ecosystem. The matrix-based sync strategy, dry-run modes, and PR comment reporting set a high bar. The PipelineRun validation suite is a novel approach — using pytest to validate Tekton configs against live APIs (Quay, GitHub) is sophisticated and effective. The main gap is the lack of quality tooling for the repo's own scripts and the absence of coverage tracking.
 
 ## File Paths Reference
 
-### CI/CD
+### CI/CD Workflows
 - `.github/workflows/validate-pipelineruns.yml` — PR validation
 - `.github/workflows/validate-release-branches.yml` — Cross-branch validation
 - `.github/workflows/post-validation-comment.yml` — PR comment posting
 - `.github/workflows/sync-pipelineruns.yml` — PipelineRun sync to component repos
-- `.github/workflows/sync-renovate-configs.yml` — Renovate config sync
+- `.github/workflows/run-renovate.yml` — On-demand Renovate runs
+- `.github/workflows/renovate-dry-run.yml` — Renovate dry-run on PRs
+- `.github/workflows/post-renovate-dry-run-comment.yml` — Dry-run comment posting
 - `.github/workflows/pipelinerun-replicator.yml` — Release branch creation
 - `.github/workflows/apply-z-stream-changes.yml` — Z-stream version bumps
-- `.github/workflows/retrigger-builds.yml` — Build retriggering
+- `.github/workflows/retrigger-builds.yml` — Build retrigger
 - `.github/workflows/update-repository-list.yml` — Repo list maintenance
 
-### Testing
-- `script/test_validate_pipelineruns.py` — 9 PipelineRun validation checks (715 LOC)
-- `script/conftest.py` — Pytest configuration, fixtures, PR comment generation (496 LOC)
-- `docs/validate-pipelineruns.md` — Validation documentation
-
-### Utility Scripts
-- `script/rhoai_pipelinerun_manager.sh` — Release branch creation & z-stream updates (386 LOC)
-- `script/rhoai_utils.sh` — Shared bash utilities (252 LOC)
-- `script/seed-pipelineruns.sh` — PipelineRun seeding (135 LOC)
-- `script/generate_pipelinerun_sync_config.py` — Sync matrix generation (48 LOC)
-- `script/generate-effective-config.py` — Renovate config processing (78 LOC)
-- `script/update-sync-pipelinerun-workflow-repository-list.py` — Repo list updater (70 LOC)
+### Test Files
+- `script/test_validate_pipelineruns.py` — 9 validation checks (715 LOC)
+- `script/conftest.py` — Pytest config, fixtures, PR comment generation (496 LOC)
 
 ### Pipeline Definitions
-- `pipelines/container-build.yaml` — Single-arch pipeline (17 tasks including 7 security scans)
-- `pipelines/multi-arch-container-build.yaml` — Multi-arch pipeline
-- `pipelines/fbc-fragment-build.yaml` — FBC fragment pipeline
-- `.tekton/container-build-pull-request.yaml` — Canary build for PRs
-- `.tekton/multi-arch-container-build-pull-request.yaml` — Multi-arch canary
+- `pipelines/container-build.yaml` — Single-arch build pipeline
+- `pipelines/multi-arch-container-build.yaml` — Multi-arch build pipeline
+- `pipelines/fbc-fragment-build.yaml` — FBC fragment build pipeline
+
+### Canary Build
+- `.tekton/container-build-pull-request.yaml` — PR canary build trigger
+- `.tekton/multi-arch-container-build-pull-request.yaml` — Multi-arch PR canary
+- `canary-build/Dockerfile.konflux` — Minimal multi-stage Dockerfile
+- `canary-build/main.go` — Canary Go binary
 
 ### Configuration
-- `config.yaml` — Renovate sync configuration (48+ repos)
-- `renovate/` — Renovate config templates
-- `CLAUDE.md` — AI agent documentation (198 LOC)
+- `config.yaml` — Renovate sync configuration (65+ repos)
+- `.github/renovate.json` — Renovate self-config
+- `renovate/*.json5` — Renovate config templates
+
+### Documentation
+- `CLAUDE.md` — Agent guidance and repo documentation
+- `README.md` — Repository overview
+- `docs/validate-pipelineruns.md` — Validation check documentation
+- `docs/renovate-workflows.md` — Renovate workflow documentation

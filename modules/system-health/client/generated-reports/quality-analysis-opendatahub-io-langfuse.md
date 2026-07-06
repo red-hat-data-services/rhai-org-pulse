@@ -1,394 +1,412 @@
 ---
 repository: "opendatahub-io/langfuse"
-overall_score: 8.1
+overall_score: 7.4
 scorecard:
   - dimension: "Unit Tests"
-    score: 8.5
-    status: "201 test files across web (Jest) and worker (Vitest) with strong domain coverage"
-  - dimension: "Integration/E2E"
     score: 7.5
-    status: "Server integration tests with real DB/ClickHouse, Playwright E2E on PR, but E2E coverage is thin (3 specs)"
+    status: "190+ test files across web (Jest) and worker (Vitest) with good domain coverage"
+  - dimension: "Integration/E2E"
+    score: 8.5
+    status: "Multi-mode CI matrix (Postgres 12/15, Azure, Redis-cluster), Playwright E2E, server E2E, sharded test runs"
   - dimension: "Build Integration"
     score: 8.0
-    status: "PR-time Docker build with health checks, multi-deploy-mode matrix, but no Konflux simulation"
+    status: "PR-time Docker build with health checks, docker-compose integration, multi-arch support on release"
   - dimension: "Image Testing"
-    score: 7.0
-    status: "Docker compose build test with health checks on PR, Snyk scanning post-merge only"
+    score: 6.5
+    status: "Docker build + health check validation in CI but no Trivy/vulnerability scanning on PR"
   - dimension: "Coverage Tracking"
     score: 3.0
-    status: "No codecov/coveralls integration, no coverage thresholds, no PR coverage reporting"
+    status: "Worker has vitest coverage command but no CI enforcement, no codecov, no PR coverage gates"
   - dimension: "CI/CD Automation"
-    score: 9.0
-    status: "Excellent pipeline with concurrency control, caching, matrix testing, Slack alerts, merge-group support"
+    score: 8.5
+    status: "Comprehensive pipeline with smart skip-checks, concurrency control, turbo caching, Slack notifications"
   - dimension: "Agent Rules"
-    score: 8.0
-    status: "Comprehensive CLAUDE.md, AGENTS.md, .claude/ with hooks/skills/agents, plus .cursor/rules/"
+    score: 9.0
+    status: "Extensive CLAUDE.md, AGENTS.md, REVIEW.md, .claude/skills/, .cursor/rules/, web/.agents/ with detailed patterns"
 critical_gaps:
-  - title: "No coverage tracking or enforcement"
-    impact: "Cannot detect coverage regressions on PRs; no visibility into untested code paths"
+  - title: "No coverage tracking or enforcement in CI"
+    impact: "Cannot detect coverage regressions; untested code merges without visibility"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "Snyk container scanning runs post-merge only"
-    impact: "Vulnerable images can be merged to main before detection"
+  - title: "No container vulnerability scanning on PRs"
+    impact: "Snyk only runs on push to main/production, not on PRs - vulnerabilities discovered post-merge"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "Thin Playwright E2E test suite"
-    impact: "Only 3 spec files (auth, create-project, API) covering a feature-rich application; UI regressions likely undetected"
+  - title: "No shared package tests"
+    impact: "Core shared library (types, schemas, DB queries) has zero dedicated test files"
+    severity: "HIGH"
+    effort: "16-24 hours"
+  - title: "No pre-commit-config.yaml for standardized hooks"
+    impact: "Husky hooks only check formatting; no lint, type-check, or secret detection at commit time"
     severity: "MEDIUM"
-    effort: "20-40 hours"
-  - title: "No Konflux/RHOAI build simulation on PR"
-    impact: "Downstream Red Hat build issues discovered only post-merge"
+    effort: "2-3 hours"
+  - title: "No secret detection tooling"
+    impact: "No gitleaks/trufflehog integration; relying on .gitignore and developer discipline"
     severity: "MEDIUM"
-    effort: "8-12 hours"
-quick_wins:
-  - title: "Add codecov integration to CI pipeline"
-    effort: "2-4 hours"
-    impact: "Immediate visibility into test coverage and PR-level coverage diff reporting"
-  - title: "Move Snyk scanning to PR workflow"
     effort: "1-2 hours"
-    impact: "Catch container vulnerabilities before merge rather than after"
-  - title: "Add coverage threshold enforcement"
-    effort: "2-3 hours"
-    impact: "Prevent coverage regressions by failing PRs that drop below a baseline"
-  - title: "Add .claude/rules/ for test creation patterns"
-    effort: "2-3 hours"
-    impact: "Ensure AI-generated tests follow repo conventions (servertest vs clienttest vs unit test patterns)"
+quick_wins:
+  - title: "Add codecov integration to pipeline.yml"
+    effort: "2-4 hours"
+    impact: "Enables coverage tracking, PR annotations, and regression detection"
+  - title: "Add Trivy scanning to PR workflow"
+    effort: "1-2 hours"
+    impact: "Catch container vulnerabilities before merge instead of only on main/production"
+  - title: "Add gitleaks secret detection to CI"
+    effort: "1-2 hours"
+    impact: "Prevent accidental secret commits with automated scanning"
+  - title: "Add coverage thresholds to vitest and jest configs"
+    effort: "1-2 hours"
+    impact: "Enforce minimum coverage standards on new code"
 recommendations:
   priority_0:
-    - "Implement codecov/coveralls integration with coverage thresholds and PR comments"
-    - "Move Snyk container scanning to PR-triggered workflow to block vulnerable merges"
+    - "Implement codecov/coveralls integration with PR coverage gates and minimum thresholds"
+    - "Move Snyk container scanning to PR-time (not just push to main/production)"
+    - "Add dedicated tests for packages/shared (DB queries, schemas, queue contracts)"
   priority_1:
-    - "Expand Playwright E2E suite to cover core user journeys (tracing, evals, prompt management)"
-    - "Add .claude/rules/ with test-type-specific guidance (servertest, clienttest, worker unit tests)"
-    - "Add Konflux build simulation to PR workflow for Red Hat downstream validation"
+    - "Add gitleaks/trufflehog secret detection to PR workflow"
+    - "Add pre-commit hooks for lint, typecheck, and secret scanning"
+    - "Add SBOM generation to Docker image builds"
   priority_2:
-    - "Add performance/load testing for ingestion endpoints"
-    - "Add accessibility testing for the web UI"
-    - "Consider contract testing between web and worker via shared queue schemas"
+    - "Add performance regression testing for API endpoints"
+    - "Add contract tests between web/worker via shared queue schemas"
+    - "Add accessibility testing for web frontend (axe-core)"
 ---
 
 # Quality Analysis: opendatahub-io/langfuse
 
 ## Executive Summary
 
-- **Overall Score: 8.1/10**
-- **Repository Type**: Full-stack web application (LLM observability platform)
-- **Tech Stack**: Next.js 14 (Pages Router) + Express.js worker, pnpm + Turbo monorepo
-- **Languages**: TypeScript throughout
-- **Key Strengths**: Exceptionally well-organized CI/CD pipeline with matrix testing across PostgreSQL versions and deploy modes, strong unit/integration test culture with 201 test files, comprehensive agent rules (CLAUDE.md + AGENTS.md + hooks), PR-time Docker build validation with health checks
-- **Critical Gaps**: No coverage tracking or enforcement, Snyk scanning only runs post-merge, thin Playwright E2E suite for a feature-rich application
-- **Agent Rules Status**: Present and comprehensive
+- **Overall Score: 7.4/10**
+- **Repository Type**: TypeScript monorepo (pnpm + Turbo) - LLM observability platform
+- **Primary Language**: TypeScript (Node 24)
+- **Architecture**: Next.js 14 web app + Express.js worker + shared packages
+- **Key Strengths**: Exceptionally mature CI/CD pipeline with multi-mode testing matrix, comprehensive agent rules ecosystem, PR-time Docker build validation with health checks
+- **Critical Gaps**: No coverage tracking/enforcement, no PR-time vulnerability scanning, zero tests for shared package
+- **Agent Rules Status**: Excellent - comprehensive CLAUDE.md, AGENTS.md, REVIEW.md, plus .claude/skills/ and .cursor/rules/
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 8.5/10 | 201 test files across web (Jest) and worker (Vitest) |
-| Integration/E2E | 7.5/10 | Server integration tests with real DBs, thin Playwright E2E (3 specs) |
-| **Build Integration** | **8.0/10** | **PR-time Docker build + health checks, no Konflux simulation** |
-| Image Testing | 7.0/10 | Docker compose build validation on PR, Snyk post-merge only |
-| Coverage Tracking | 3.0/10 | No codecov, no thresholds, no PR reporting |
-| CI/CD Automation | 9.0/10 | Excellent pipeline with concurrency, caching, matrix, Slack alerts |
-| Agent Rules | 8.0/10 | CLAUDE.md + AGENTS.md + .claude/ directory with hooks, skills, agents |
+| Unit Tests | 7.5/10 | 190+ test files across web (Jest) and worker (Vitest) with good domain coverage |
+| Integration/E2E | 8.5/10 | Multi-mode CI matrix (PG 12/15, Azure, Redis-cluster), Playwright E2E, server E2E, sharded runs |
+| **Build Integration** | **8.0/10** | **PR-time Docker build with health checks, docker-compose integration, multi-arch on release** |
+| Image Testing | 6.5/10 | Docker build + health check validation in CI; no PR-time vulnerability scanning |
+| Coverage Tracking | 3.0/10 | Worker has vitest coverage command but no CI enforcement, no codecov, no PR gates |
+| CI/CD Automation | 8.5/10 | Comprehensive pipeline with smart skip-checks, concurrency, turbo caching, Slack notifications |
+| Agent Rules | 9.0/10 | Extensive CLAUDE.md, AGENTS.md, REVIEW.md, .claude/skills/, .cursor/rules/, web/.agents/ |
 
 ## Critical Gaps
 
-### 1. No Coverage Tracking or Enforcement
-- **Impact**: Cannot detect coverage regressions on PRs; no visibility into which code paths are untested
+### 1. No Coverage Tracking or Enforcement in CI
+- **Impact**: Cannot detect coverage regressions; untested code merges without visibility
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: Neither `web` (Jest) nor `worker` (Vitest) has codecov/coveralls integration. The worker `package.json` has a `coverage` script (`vitest run --coverage`) but it's never invoked in CI. No `.codecov.yml` or `.coveragerc` exists. PRs can freely reduce test coverage without any signal.
+- **Details**: Worker has a `coverage` script in package.json (`vitest run --coverage`) but it's never invoked in CI. No codecov.yml, no coverage upload steps, no PR annotations. Web (Jest) has no coverage configuration at all. Teams have no visibility into what percentage of code is tested.
 
-### 2. Snyk Container Scanning Runs Post-Merge Only
-- **Impact**: Vulnerable container images are merged to `main`/`production` before detection
+### 2. No Container Vulnerability Scanning on PRs
+- **Impact**: Snyk only runs on push to main/production - vulnerabilities discovered post-merge
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: `snyk-web.yml` and `snyk-worker.yml` only trigger on `push` to `production` and `main`. They also use `continue-on-error: true`, meaning even when they run, vulnerabilities don't block the pipeline.
+- **Details**: `snyk-web.yml` and `snyk-worker.yml` only trigger on `push` to `production` and `main` branches. PRs have no vulnerability scanning at all. This means a PR introducing a vulnerable dependency merges before Snyk flags it.
 
-### 3. Thin Playwright E2E Test Suite
-- **Impact**: Only 3 spec files (707 lines total) covering auth, project creation, and one API test for a feature-rich application with tracing, evaluations, prompt management, datasets, and more
-- **Severity**: MEDIUM
-- **Effort**: 20-40 hours
-- **Details**: The E2E suite has `auth.spec.ts` (193 lines), `create-project.spec.ts` (199 lines), and `api.servertest.ts` (315 lines). Core user flows like trace exploration, evaluation configuration, prompt versioning, and dashboard analytics have no E2E coverage.
+### 3. No Shared Package Tests
+- **Impact**: Core shared library (types, schemas, DB queries, queue contracts) has zero dedicated test files
+- **Severity**: HIGH
+- **Effort**: 16-24 hours
+- **Details**: `packages/shared/` contains Prisma schemas, ClickHouse migrations, queue contracts, and shared utilities used by both web and worker. Zero test files exist in this package. While some shared code is indirectly tested via web/worker tests, there's no isolated testing of the shared layer.
 
-### 4. No Konflux/RHOAI Build Simulation
-- **Impact**: Red Hat downstream build issues discovered only after merge
+### 4. Husky Hooks Only Check Formatting
+- **Impact**: No lint, type-check, or secret detection at commit time
 - **Severity**: MEDIUM
-- **Effort**: 8-12 hours
-- **Details**: This is the `opendatahub-io` fork, which will be consumed by Konflux/RHOAI builds. There is no PR-time simulation of Konflux build constraints.
+- **Effort**: 2-3 hours
+- **Details**: Pre-commit hook runs only `pnpm run format:check` (Prettier). No linting, no type checking, no secret scanning. Pre-push hook only confirms intent when pushing to main.
+
+### 5. No Secret Detection Tooling
+- **Impact**: Relying on .gitignore and developer discipline to prevent secret commits
+- **Severity**: MEDIUM
+- **Effort**: 1-2 hours
+- **Details**: No gitleaks, trufflehog, or similar secret detection in CI or pre-commit hooks. Given the extensive use of API keys (OpenAI, Anthropic, Azure, Bedrock, etc. in CI secrets), this is a notable gap.
 
 ## Quick Wins
 
 ### 1. Add Codecov Integration (2-4 hours)
-- Add `--coverage` flag to Jest and Vitest CI runs
-- Add codecov upload action to `pipeline.yml`
-- Create `.codecov.yml` with coverage targets
+Add coverage generation and upload to `pipeline.yml`:
+```yaml
+- name: Generate coverage
+  run: pnpm --filter=worker run coverage
+- name: Upload coverage
+  uses: codecov/codecov-action@v4
+  with:
+    token: ${{ secrets.CODECOV_TOKEN }}
+    files: ./worker/coverage/lcov.info
+```
 
-### 2. Move Snyk to PR Workflow (1-2 hours)
-- Add `pull_request` trigger to `snyk-web.yml` and `snyk-worker.yml`
-- Remove `continue-on-error: true` to make it a blocking check
-- Or add Trivy scanning as a lighter-weight alternative on PRs
+### 2. Add Trivy Scanning to PR Workflow (1-2 hours)
+Add a Trivy scan step after the Docker build in the `test-docker-build` job:
+```yaml
+- name: Run Trivy vulnerability scanner
+  uses: aquasecurity/trivy-action@master
+  with:
+    scan-type: 'fs'
+    scan-ref: '.'
+    severity: 'CRITICAL,HIGH'
+    exit-code: '1'
+```
 
-### 3. Add Coverage Threshold Enforcement (2-3 hours)
-- Configure Jest `coverageThreshold` in `jest.config.mjs`
-- Configure Vitest `coverage.thresholds` in worker config
-- Start with current baseline and ratchet up over time
+### 3. Add Gitleaks Secret Detection (1-2 hours)
+Add a workflow or step for secret scanning:
+```yaml
+- name: Run gitleaks
+  uses: gitleaks/gitleaks-action@v2
+  env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
 
-### 4. Add .claude/rules/ for Test Patterns (2-3 hours)
-- Create rules for servertest, clienttest, and worker unit test conventions
-- Document the Jest project selection (server vs client vs e2e-server)
-- Reference existing `.cursor/rules/tests.mdc` patterns
+### 4. Add Coverage Thresholds (1-2 hours)
+Configure vitest.config.ts with coverage thresholds:
+```typescript
+coverage: {
+  provider: 'v8',
+  thresholds: {
+    lines: 60,
+    branches: 50,
+    functions: 60,
+    statements: 60
+  }
+}
+```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Score: 9.0/10** - Excellent
+**Score: 8.5/10** - Exceptionally well-organized pipeline with sophisticated features.
 
-The `pipeline.yml` is a best-in-class CI workflow:
-
-- **Concurrency control**: `cancel-in-progress` on PRs prevents wasted resources
-- **Duplicate skip**: Uses `fkirc/skip-duplicate-actions@v5` to avoid re-running unchanged code
-- **Path filtering**: `dorny/paths-filter@v3` selectively triggers LLM connection tests only when relevant files change
-- **Matrix testing**: Tests against PostgreSQL 12 and 15, three deploy modes (default, Azure, Redis cluster), and 3 shards for parallelization
-- **Turbo cache**: Both Turbo remote cache and Next.js build cache are persisted across runs
-- **Docker build validation**: Full compose build + health checks on every PR
-- **Merge group support**: `merge_group` event enabled for merge queue compatibility
-- **Gate job**: `all-ci-passed` aggregation job provides single status check for branch protection
-- **Slack notifications**: Failure alerts on push to main/tags
-
-**Workflows inventory (15 files)**:
+**Workflow Inventory** (16 workflow files):
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `pipeline.yml` | PR, push, merge_group | Main CI (lint, test, build, e2e) |
-| `codeql.yml` | PR, push, weekly | SAST analysis |
-| `codespell.yml` | PR, push | Spelling checks |
-| `validate-pr-title.yml` | PR | Conventional commits enforcement |
-| `licencecheck.yml` | PR, push, merge_group | License compliance |
-| `snyk-web.yml` | push (main, production) | Container vulnerability scan (web) |
-| `snyk-worker.yml` | push (main, production) | Container vulnerability scan (worker) |
-| `deploy.yml` | push (main, production) | ECS deployment |
-| `release.yml` | tag push | Docker image publish |
-| `promote-main-to-production.yml` | manual | Production promotion |
-| `sdk-api-spec.yml` | push (main) | SDK/API spec generation |
-| `stale_issues.yml` | cron (daily) | Stale issue management |
-| `dependabot-rebase-stale.yml` | push (main) | Dependabot PR maintenance |
+| `pipeline.yml` | PR, push, merge_group | Main CI: lint, prettier, tests, Docker build, E2E |
+| `codeql.yml` | PR, push, schedule | CodeQL SAST scanning (JavaScript/TypeScript) |
+| `codespell.yml` | PR, push, merge_group | Spell checking |
+| `deploy.yml` | push main/production, dispatch | ECS deployment (staging, prod-eu/us/hipaa) |
+| `snyk-web.yml` | push main/production | Snyk container scanning (web) |
+| `snyk-worker.yml` | push main/production | Snyk container scanning (worker) |
+| `licencecheck.yml` | PR, push, merge_group | License compliance (blocks copyleft) |
+| `validate-pr-title.yml` | PR events | Conventional commits enforcement |
+| `sdk-api-spec.yml` | push main (fern/**) | SDK spec generation |
+| `release.yml` | tag push (v3.*) | Promote main to production |
+| `promote-main-to-production.yml` | manual dispatch | Force-push main to production |
+| `stale_issues.yml` | cron (daily) | Auto-close stale issues |
+| `dependabot-rebase-stale.yml` | push main | Rebase stale Dependabot PRs |
+| `_deploy_ecs_service.yml` | reusable workflow | ECS deployment helper |
+| `ci.yml.template` | N/A | Template for CI workflow |
+
+**Strengths**:
+- Smart duplicate action skipping (`fkirc/skip-duplicate-actions`)
+- Path-based filtering (LLM connection tests only run when relevant files change)
+- Concurrency control with PR cancellation
+- Turbo build caching (`actions/cache` for `.turbo`)
+- Next.js build caching
+- Test sharding (web tests split 3 ways)
+- Multi-mode testing matrix (default, Azure, Redis-cluster)
+- Multi-Postgres version testing (12, 15)
+- Docker build health check validation on PRs
+- Failure diagnostics (docker logs, container inspect, host listeners)
+- Slack notifications on CI failure
+- Branch protection via `all-ci-passed` gate job
+- Dependabot with grouped updates (prisma, next, lodash, observability, radix-ui)
+
+**Gaps**:
+- No coverage upload or reporting step
+- Snyk not running on PRs
+- No artifact caching for Docker layers (only turbo/nextjs cache)
 
 ### Test Coverage
 
-**Score: 8.5/10 (Unit) / 7.5/10 (Integration/E2E)**
+**Unit Tests (7.5/10)**:
+- **190+ test files total** (77 worker, 113 web)
+- **Test-to-code ratio**: ~10.3% (190 test files / 1,853 source files) - moderate
+- **Worker tests**: Vitest framework, well-organized in `__tests__/` with domain subfolders (chatml adapters, evaluation, ingestion, experiments)
+- **Web tests**: Jest framework with two projects (server, client)
+  - Server tests (`*.servertest.ts`): ~70 files covering APIs, tRPC routes, query builders, integrations
+  - Client tests (`*.clienttest.ts`): ~15 files covering UI utilities, chart utils, table views
+- **Shared package**: Zero test files - significant gap given it contains core DB logic
+- **Notable test domains**: MCP tools, OTEL ingestion, evaluation pipelines, batch processing, encryption, webhooks, Slack integration
 
-**Test files breakdown**:
-- `*.servertest.ts`: 90 files (server-side integration tests with real DB)
-- `*.test.ts`: 75 files (unit tests across web and worker)
-- `*.clienttest.ts`: 34 files (React component/client-side tests)
-- `*.spec.ts`: 2 files (Playwright E2E)
-- **Total**: 201 test files
-- **Source files**: ~1,872 TS/TSX files (non-test, non-generated)
-- **Test-to-code ratio**: ~10.7% (201/1872)
-
-**Testing frameworks**:
-- **Web**: Jest with separate project configs for `server`, `client`, and `e2e-server` test types
-- **Worker**: Vitest with `--pool=forks --singleFork` for isolation
-- **E2E**: Playwright for browser tests
-
-**Test infrastructure quality**:
-- Server tests run against real PostgreSQL + ClickHouse + Redis + MinIO (not mocked)
-- Matrix testing across PostgreSQL 12 & 15
-- Multi-deploy-mode testing (default, Azure, Redis cluster)
-- Test sharding (3 shards) for parallelization
-- LLM connection tests are conditionally triggered and use real API keys
-- Worker has separate test commands for excluding/including LLM tests
-
-**Weaknesses**:
-- Only 2 Playwright spec files + 1 E2E server test
-- No coverage reporting or tracking
-- No coverage thresholds
+**Integration/E2E Tests (8.5/10)**:
+- **Playwright E2E**: 2 spec files (`auth.spec.ts`, `create-project.spec.ts`) - minimal browser E2E
+- **Server E2E**: Dedicated `e2e-server-tests` job that starts full app and runs tests against it
+- **Multi-mode testing**: Tests run across 3 deployment modes (default, Azure storage, Redis cluster)
+- **Multi-database testing**: Tests run against Postgres 12 and 15
+- **Infrastructure**: Full docker-compose with Postgres, ClickHouse, Redis, MinIO
+- **Test isolation**: Good test independence (CLAUDE.md explicitly mentions no `pruneDatabase`, tests must run concurrently)
 
 ### Code Quality
 
-**Score: 8.0/10**
+**Linting & Formatting (7.5/10)**:
+- ESLint with shared base config (JS recommended + TypeScript plugin + Prettier + Turbo)
+- Prettier with config file and format-on-PR check (changed files only)
+- TypeScript strict mode enabled
+- Codespell for spelling checks
+- Conventional commits enforced via PR title validation
+- No pre-commit-config.yaml (uses Husky instead, format-only)
 
-- **ESLint**: Configured per-package (`web/eslint.config.mjs`, `worker/eslint.config.mjs`, `packages/shared/eslint.config.mjs`, `ee/eslint.config.mjs`) with shared config package
-- **Prettier**: `prettier.config.cjs` with format checking on changed files in CI
-- **Husky pre-commit**: Runs `format:check` on every commit, with protection prompt for `main` branch
-- **Husky pre-push**: Protection prompt for direct pushes to `main`
-- **Codespell**: Spell checking in CI on PRs and pushes
-- **PR title validation**: Conventional commits enforcement via `amannn/action-semantic-pull-request@v6`
-- **License checking**: Automated license compliance verification
-- **No pre-commit-config.yaml**: Uses Husky instead (adequate for this project type)
+**Static Analysis**:
+- CodeQL enabled for JavaScript/TypeScript (PR + push + weekly schedule)
+- Snyk container scanning (but only on main/production push)
+- Dependabot with daily npm updates and grouped PRs
+- License compliance checking (blocks copyleft licenses)
+- No gosec equivalent for TypeScript
+- No SBOM generation
 
 ### Container Images
 
-**Score: 7.0/10**
-
-**Dockerfile quality (web)**:
-- Multi-stage build (alpine base → pruner → builder → runner)
-- `turbo prune --scope=web --docker` for minimal install footprint
-- Non-root user (`nextjs:nodejs`)
+**Build Process (8.0/10)**:
+- Well-designed multi-stage Dockerfiles for both web and worker
+- `turbo prune --scope=<app> --docker` for minimal build context
+- Non-root user (`nextjs`/`expressjs` with UID 1001)
 - `dumb-init` for proper signal handling
-- Platform-aware build (`TARGETPLATFORM`)
-- Security: `apk upgrade --no-cache libcrypto3 libssl3` for CVE mitigation
-- Standalone output tracing for minimal image size
+- Base image security updates (`apk upgrade --no-cache libcrypto3 libssl3`)
+- Multi-architecture support (amd64 + arm64 on tagged releases)
+- Frozen lockfile installs (`pnpm install --frozen-lockfile`)
+- Healthchecks defined in docker-compose
+- **CI Docker build test**: PR job builds both images and validates health endpoints
 
-**Build validation**:
-- `test-docker-build` job in CI: builds both web and worker images, starts full compose stack, validates health endpoints
-- Health check curls for both web (`/api/public/health`) and worker (`/api/health`)
-- Failure diagnostics: captures container logs, compose state, docker events on failure
-
-**Weaknesses**:
-- Snyk scanning runs post-merge only, not on PRs
-- No Trivy scanning
+**Runtime Testing (6.5/10)**:
+- Health endpoint validation (`/api/health`, `/api/public/health`)
+- Docker compose integration test with service dependencies
+- Failure diagnostics capture (logs, inspect, network state)
+- No Trivy/Snyk on PR-time builds
 - No SBOM generation
 - No image signing/attestation
-- Multi-architecture builds (amd64 + arm64) only on tagged releases, not tested on PRs
 
 ### Security
 
-**Score: 7.5/10**
-
-- **CodeQL**: Enabled on PRs and pushes to main/production, with weekly scheduled scans
-- **Snyk**: Container scanning for both web and worker images (but post-merge only)
-- **License checking**: Automated compliance verification on PRs
-- **Secrets handling**: `.env.*.example` files with proper gitignore, `SECURITY.md` for vulnerability reporting
-- **No Gitleaks/TruffleHog**: No secret detection in CI
-- **No dependency scanning**: No Dependabot security updates configured (only rebase automation)
+**Score: 6.0/10**:
+- CodeQL SAST on PRs and pushes (strong)
+- Snyk container scanning on main/production only (not PRs)
+- Dependabot daily updates with smart grouping
+- License compliance checking
+- No secret detection (gitleaks/trufflehog)
+- No SBOM generation
+- Non-root Docker users
+- `SECURITY.md` present but minimal (points to docs page)
+- No `.trivyignore` or vulnerability threshold configuration
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Score: 8.0/10**
+**Score: 9.0/10** - One of the most comprehensive agent rule ecosystems observed.
 
-**Status**: Present and comprehensive
+**Status**: Excellent - multi-layered guidance across multiple AI coding tools
 
-**CLAUDE.md** (root):
-- Comprehensive project overview, architecture, and repo structure
-- Development commands with clear instructions
-- Technology stack documentation
-- Testing guidelines per package (Jest for web, Vitest for worker)
-- Code conventions and TypeScript best practices
-- Frontend tips (basePath handling)
-- Linear MCP integration guidance
+**Coverage**:
+- `CLAUDE.md` (root): 9KB comprehensive project guide covering architecture, dev commands, testing, code conventions, TypeScript best practices
+- `AGENTS.md` (root): 5.8KB monorepo-level guide with dependency graph, verification matrix, testing guidelines
+- `REVIEW.md` (root): Detailed code review checklist (ClickHouse, Postgres, Redis, environment variables, security)
+- `.claude/settings.json`: Permission configuration and hooks
+- `.claude/hooks/`: Skill activation and post-tool-use tracking hooks
+- `.claude/skills/`: 4 skills (add-model-price, backend-dev-guidelines, skill-developer, skill-rules)
+- `.claude/agents/`: changelog-writer agent
+- `.cursor/rules/`: 8 rule files covering authorization, RBAC, entitlements, frontend, public API, tests, general info, global settings
+- `web/.agents/skills/`: Vercel composition patterns and React best practices with 50+ detailed rule files
 
-**AGENTS.md** (root):
-- Monorepo-level architectural guidance
-- Dependency direction rules (`web → shared, ee`; `worker → shared`)
-- Minimum verification matrix by change scope
-- Coding style and naming conventions
-- Commit and PR guidelines (conventional commits)
-- Release channel documentation
-- Maintenance contract (update AGENTS.md when guidance changes)
-- Cross-references to package-level AGENTS.md files
-
-**.claude/ directory**:
-- `agents/changelog-writer.md` - Specialized changelog generation agent
-- `skills/` - 3 custom skills (add-model-price, backend-dev-guidelines, skill-developer) + skills rules
-- `hooks/` - 3 hooks (error-handling-reminder, post-tool-use-tracker, skill-activation-prompt)
-- `settings.json` - Permissions, MCP servers, hook configuration
-
-**.cursor/rules/**:
-- 8 rule files covering authorization/RBAC, entitlements, frontend features, public API, tests, global conventions, and banner positioning
+**Quality Assessment**:
+- Rules are highly actionable with specific code examples (TypeScript patterns, single-param objects)
+- Verification matrix maps change scope to minimum verification commands
+- Dependency direction explicitly documented and enforced
+- Testing guidelines are specific (no `pruneDatabase`, test independence, test-then-fix workflow)
+- Code review rules cover domain-specific concerns (ClickHouse cluster replication, Redis call patterns)
+- Multi-tool support (Claude Code, Cursor, Codex) with distinct rule files
 
 **Gaps**:
-- No `.claude/rules/` directory (test creation rules in `.cursor/rules/tests.mdc` instead)
-- Cursor test rules are minimal (just 2 bullet points: test independence and no pruneDatabase)
-- No framework-specific test creation rules (e.g., how to write servertests vs clienttests vs worker unit tests)
-- No rule for Playwright E2E test patterns
+- No explicit integration/E2E test writing rules
+- No performance testing guidelines
+- Package-specific AGENTS.md files referenced but not in shallow clone scope
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Implement coverage tracking with enforcement**
-   - Add `--coverage` to Jest and Vitest CI runs
-   - Integrate codecov with coverage upload
-   - Set minimum coverage thresholds (start at current baseline)
-   - Enable PR-level coverage diff comments
-
-2. **Move Snyk container scanning to PR-triggered workflow**
-   - Add `pull_request` trigger to both Snyk workflows
-   - Remove `continue-on-error: true` to make failures blocking
-   - Or add Trivy as a lightweight alternative for PR-time scanning
+1. **Implement codecov/coveralls integration** with PR coverage gates and minimum thresholds. Worker already has a coverage script; add it to CI and configure upload. Add Jest coverage to web tests.
+2. **Move Snyk container scanning to PR-time**. Currently only runs on push to main/production. Add scanning to the `test-docker-build` job or create a dedicated PR workflow.
+3. **Add dedicated tests for packages/shared**. This package contains Prisma schemas, ClickHouse query builders, queue contracts, and shared utilities. At minimum, test schema validation, queue contract serialization, and critical shared utilities.
 
 ### Priority 1 (High Value)
 
-3. **Expand Playwright E2E test suite**
-   - Add specs for core user flows: trace exploration, evaluation setup, prompt management, dataset operations
-   - Target 10-15 spec files covering the main feature areas
-   - Consider visual regression testing with Playwright screenshots
-
-4. **Add .claude/rules/ for test creation patterns**
-   - Migrate and expand `.cursor/rules/tests.mdc` to `.claude/rules/`
-   - Create separate rules for: servertest patterns, clienttest patterns, worker unit test patterns
-   - Include test file naming conventions, project selection, and fixture patterns
-
-5. **Add Konflux build simulation for downstream validation**
-   - Create a PR workflow job that simulates Konflux build constraints
-   - Validate that the Dockerfile builds under Red Hat base image restrictions
+4. **Add gitleaks/trufflehog secret detection** to the PR workflow. Given the numerous API keys used in CI (OpenAI, Anthropic, Azure, Bedrock, Google AI), preventing accidental commits is critical.
+5. **Enhance pre-commit hooks** to include linting and type-checking, not just formatting. Consider adopting `.pre-commit-config.yaml` for standardized hook management.
+6. **Add SBOM generation** to Docker image builds. Use `syft` or `docker buildx --sbom` for software bill of materials.
+7. **Expand Playwright E2E coverage**. Only 2 spec files (auth, create-project) for a feature-rich platform. Add E2E tests for core workflows (tracing, evaluation, prompt management).
 
 ### Priority 2 (Nice-to-Have)
 
-6. **Add performance testing for ingestion endpoints**
-   - The worker handles high-volume trace ingestion; load testing would catch performance regressions
-   
-7. **Add secret detection to CI**
-   - Integrate Gitleaks or TruffleHog to prevent credential leaks
-
-8. **Add accessibility testing**
-   - Integrate axe-core with Playwright for automated accessibility checks
-
-9. **Consider contract testing for web-worker boundary**
-   - Queue payload schemas in `packages/shared/src/server/queues.ts` could be validated with contract tests
+8. **Add performance regression testing** for API endpoints (ingestion, query builder, dashboard metrics).
+9. **Add contract tests** between web and worker via shared queue payload schemas.
+10. **Add accessibility testing** (axe-core/pa11y) for the web frontend.
+11. **Add image signing/attestation** with cosign for supply chain security.
 
 ## Comparison to Gold Standards
 
-| Feature | langfuse | odh-dashboard | notebooks | kserve |
-|---------|----------|---------------|-----------|--------|
-| Unit Tests | 201 files (Jest+Vitest) | Extensive (Jest) | N/A | Extensive (Go) |
-| Integration Tests | 90 server tests w/ real DB | Contract tests | N/A | envtest |
-| E2E Tests | 3 Playwright specs | Cypress suite | N/A | Multi-version |
-| Coverage Tracking | None | Codecov | N/A | Codecov + thresholds |
-| CI Matrix | PG12/15 x 3 deploy modes x 3 shards | Multi-env | Multi-arch | Multi-version |
-| Docker Build on PR | Yes + health checks | Yes | Yes (5-layer) | Yes |
-| Security Scanning | CodeQL + Snyk (post-merge) | Trivy on PR | Trivy | Trivy + gosec |
-| Agent Rules | CLAUDE.md + AGENTS.md + .claude/ | CLAUDE.md + rules | None | None |
-| Pre-commit Hooks | Husky (format check) | Husky | Pre-commit | Pre-commit |
-| License Check | Yes (CI) | No | No | No |
+| Dimension | langfuse | odh-dashboard | notebooks | kserve |
+|-----------|---------|---------------|-----------|--------|
+| Unit Tests | 7.5 | 9.0 | 7.0 | 9.0 |
+| Integration/E2E | 8.5 | 9.5 | 7.0 | 9.0 |
+| Build Integration | 8.0 | 8.5 | 7.0 | 7.5 |
+| Image Testing | 6.5 | 7.0 | 9.5 | 7.0 |
+| Coverage Tracking | 3.0 | 9.0 | 5.0 | 9.0 |
+| CI/CD Automation | 8.5 | 9.0 | 8.0 | 8.5 |
+| Agent Rules | 9.0 | 9.0 | 3.0 | 4.0 |
+
+**Summary**: Langfuse excels in CI/CD automation and agent rules but significantly lags in coverage tracking. The multi-mode testing matrix (Postgres versions, deployment modes) and Docker build validation are strong. The main area for improvement is adding coverage measurement and enforcement to match kserve/odh-dashboard standards.
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/pipeline.yml` - Main CI pipeline
+- `.github/workflows/pipeline.yml` - Main CI/CD pipeline
 - `.github/workflows/codeql.yml` - CodeQL SAST
-- `.github/workflows/snyk-web.yml` / `snyk-worker.yml` - Container scanning
+- `.github/workflows/snyk-web.yml` - Snyk web container scan
+- `.github/workflows/snyk-worker.yml` - Snyk worker container scan
 - `.github/workflows/deploy.yml` - ECS deployment
-- `.github/workflows/release.yml` - Docker image publish
+- `.github/workflows/codespell.yml` - Spell checking
+- `.github/workflows/licencecheck.yml` - License compliance
 - `.github/workflows/validate-pr-title.yml` - Conventional commits
+- `.github/dependabot.yml` - Dependency updates
 
 ### Testing
-- `web/jest.config.mjs` - Jest configuration (3 projects: server, client, e2e-server)
-- `web/playwright.config.ts` - Playwright E2E configuration
-- `web/src/__tests__/` - Web test files (servertests + clienttests)
-- `web/src/__e2e__/` - Playwright E2E specs
-- `worker/src/__tests__/` - Worker unit/integration tests
+- `web/src/__tests__/server/` - Web server tests (Jest, ~70 files)
+- `web/src/__tests__/*.clienttest.ts` - Web client tests (Jest, ~15 files)
+- `web/src/__e2e__/` - Playwright E2E tests (2 spec files)
+- `worker/src/__tests__/` - Worker tests (Vitest, ~65 files)
+- `worker/src/features/` - Feature-specific tests
+- `web/playwright.config.ts` - Playwright configuration
 
 ### Code Quality
-- `web/eslint.config.mjs` - Web ESLint config
-- `worker/eslint.config.mjs` - Worker ESLint config
+- `packages/config-eslint/base.js` - Shared ESLint config
+- `packages/config-typescript/base.json` - Shared TypeScript config
 - `prettier.config.cjs` - Prettier configuration
-- `.husky/pre-commit` - Pre-commit hook (format check)
-- `.codespellrc` - Spell check configuration
+- `.codespellrc` - Codespell configuration
+- `.husky/pre-commit` - Pre-commit hook (format check only)
+- `turbo.json` - Turbo monorepo configuration
 
 ### Container Images
-- `web/Dockerfile` - Web application Docker image
-- `worker/Dockerfile` - Worker Docker image
-- `docker-compose.build.yml` - Full stack build validation
-- `.dockerignore` - Docker build exclusions
+- `web/Dockerfile` - Web app multi-stage Docker build
+- `worker/Dockerfile` - Worker multi-stage Docker build
+- `docker-compose.build.yml` - CI Docker build test
+- `docker-compose.dev.yml` - Development infrastructure
+- `.dockerignore` - Docker ignore patterns
 
 ### Agent Rules
-- `CLAUDE.md` - Root project guide for Claude Code
-- `AGENTS.md` - Monorepo-level agent guidance
-- `.claude/settings.json` - Claude Code settings
-- `.claude/agents/changelog-writer.md` - Changelog agent
-- `.claude/skills/` - Custom skills
-- `.claude/hooks/` - Custom hooks
-- `.cursor/rules/tests.mdc` - Test writing rules (Cursor)
+- `CLAUDE.md` - Main Claude Code instructions
+- `AGENTS.md` - Codex/multi-agent guidelines
+- `REVIEW.md` - Code review checklist
+- `.claude/settings.json` - Claude Code permissions
+- `.claude/skills/` - Claude Code skills (4 skills)
+- `.claude/agents/` - Claude Code agents
+- `.claude/hooks/` - Claude Code hooks
+- `.cursor/rules/` - Cursor AI rules (8 files)
+- `web/.agents/skills/` - Vercel/React best practice rules
+
+### Security
+- `SECURITY.md` - Security policy
+- `.github/dependabot.yml` - Dependency update configuration

@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:19 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 03:57 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/feast</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="158.336136"
+                                stroke-dashoffset="197.92016999999996"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.2</div>
+                        <div class="score-value">6.5</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Extensive Python unit tests (123 files), Go operator tests (40 files), UI tests, multi-version Python matrix</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Strong Python/Go/Operator unit coverage; UI testing is a critical gap (3 tests for 220+ source files)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Comprehensive integration suite across 15+ data backends, operator E2E with KIND, REST API tests, upgrade/previous-version testing</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Comprehensive multi-store integration, operator E2E with Kind, RHOAI-specific tests, label-gated for security</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Konflux PR builds for both operator and feature-server, group testing pipeline, docker smoke tests on PR</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Konflux PR builds for operator and feature-server, Docker smoke tests on PRs, group testing via Tekton</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Docker smoke tests with multi-arch (amd64/arm64), health check validation, but limited runtime functional testing</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Docker smoke tests with health validation and multi-arch (amd64/arm64), but no vulnerability scanning or SBOM</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Go coverage target exists in Makefile but not enforced in CI; no Python coverage tracking, no codecov integration</div>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">pytest-cov listed in deps but unused in CI; operator generates cover.out but does not upload; no codecov integration</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">31 workflows, excellent concurrency control, Konflux/Tekton integration, nightly status monitoring, label-gated security</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">30+ workflows, smart path-based test skipping, label gating, nightly CI, release automation, Konflux/Tekton integration</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">AGENTS.md + CLAUDE.md + .claude/rules + 4 skills (architecture, dev, testing, user-guide), but rules focus on components not test patterns</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Excellent AGENTS.md, 4 custom skills, .claude/rules + .cursor/rules mirrored, component-specific guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +411,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No code coverage tracking or enforcement</div>
-                            <p>Cannot measure test effectiveness, no coverage regression detection, no PR coverage gates</p>
+                            <div class="item-description">No coverage tracking or enforcement</div>
+                            <p>Test coverage can silently regress; no visibility into which code paths are untested</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">UI test coverage critically low (3 tests for 220+ source files)</div>
+                            <p>Frontend regressions go undetected; feature store web UI changes are essentially untested</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">20-40 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
                             <div class="item-description">No container vulnerability scanning in CI</div>
-                            <p>Container images built and published without security scanning; vulnerabilities reach production</p>
+                            <p>CVEs in base images or dependencies go undetected until downstream consumption</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Many integration tests are label-gated and only run on upstream feast-dev/feast</div>
-                            <p>PRs to opendatahub-io/feast fork may not trigger integration tests; tests only run with ok-to-test/approved labels</p>
+                            <div class="item-description">No dependency update automation (Dependabot/Renovate)</div>
+                            <p>Known vulnerabilities in transitive dependencies persist indefinitely</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No Python type checking in CI (mypy not in workflow)</div>
-                            <p>Type errors can be merged; mypy target exists but is not enforced in CI</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +456,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add codecov/coveralls integration for Python tests</div>
-                            <p>Immediate visibility into test coverage, PR coverage diffs, regression detection</p>
+                            <div class="item-description">Add codecov integration to unit test workflow</div>
+                            <p>Immediate visibility into coverage trends; enables enforcement thresholds</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">3-4 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to docker_smoke_tests workflow</div>
-                            <p>Catch CVEs in feature-server and operator images before merge</p>
+                            <div class="item-description">Add Trivy container scanning to PR workflow</div>
+                            <p>Early detection of CVEs in feature-server and operator images</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add mypy to the linter CI workflow</div>
-                            <p>Catch type errors at PR time; Makefile target already exists</p>
+                            <div class="item-description">Enable Dependabot for Python/Go/Java dependencies</div>
+                            <p>Automated security updates for all dependency ecosystems</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add test pattern rules to .claude/rules (unit-tests.md, integration-tests.md)</div>
-                            <p>Improve AI-generated test quality with repository-specific patterns</p>
+                            <div class="item-description">Add pytest-cov flags to existing unit test Make target</div>
+                            <p>Coverage report generation with zero workflow changes</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +501,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Implement Python coverage tracking with pytest-cov and codecov integration in unit_tests.yml</li><li>Add Trivy or Grype container scanning to docker_smoke_tests.yml and Konflux pipelines</li><li>Ensure integration test workflows run for opendatahub-io/feast PRs (not just feast-dev/feast)</li></ul>
+                            <ul><li>Integrate codecov or coveralls into unit_tests.yml — add --cov and --cov-report to pytest, upload results</li><li>Add Trivy scanning workflow for feature-server and operator container images on PRs</li><li>Address UI test desert: add React Testing Library tests for core components (FeatureView, Entity, DataSource pages)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add mypy type checking to the linter CI workflow</li><li>Create dedicated .claude/rules for test automation patterns (unit-tests.md, integration-tests.md, e2e-tests.md)</li><li>Add Go coverage enforcement to operator_pr.yml with coverage thresholds</li></ul>
+                            <ul><li>Add Dependabot/Renovate for automated dependency updates across Python, Go, Java, and npm</li><li>Add coverage enforcement thresholds (e.g., 60% floor, no regression on PRs)</li><li>Add golangci-lint configuration for Go code and operator</li><li>Create test-creation agent rules (.claude/rules/unit-tests.md, e2e-tests.md) with framework-specific patterns</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SBOM generation to Konflux build pipelines</li><li>Add performance/benchmark regression detection to nightly CI</li><li>Consider adding contract tests between Python SDK and Go feature server</li></ul>
+                            <ul><li>Add SBOM generation (Syft/Trivy) to Konflux build pipelines</li><li>Add image signing with Cosign/Sigstore</li><li>Add performance regression tests for feature retrieval latency</li><li>Add contract tests between Python SDK and Go feature server</li></ul>
                         </div>
                     </div>
                 </div>

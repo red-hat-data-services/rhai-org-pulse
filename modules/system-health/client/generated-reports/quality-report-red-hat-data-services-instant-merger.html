@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:33 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:53 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/instant-merger</h2>
         </header>
 
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No source code or test files exist in the repository</div>
+                            <div class="scorecard-status">No tests exist — zero test files in the repository</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E tests; repo is a single GitHub Actions workflow</div>
+                            <div class="scorecard-status">No integration or E2E tests of any kind</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No build process; no Dockerfile, Makefile, or build scripts</div>
+                            <div class="scorecard-status">No build process — pure workflow-only repository</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No container images built or tested</div>
+                            <div class="scorecard-status">No container images — not applicable</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tooling; no code to cover</div>
+                            <div class="scorecard-status">No code to cover — no coverage tooling</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Single workflow exists but has security concerns and no validation</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Single workflow exists but has security vulnerabilities and no safeguards</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
+                            <div class="scorecard-status">No CLAUDE.md, .claude/ directory, or agent rules</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +411,51 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Potential command injection vulnerability in workflow</div>
-                            <p>PR title is interpolated into shell context via ${{ }} syntax; a crafted title could execute arbitrary commands</p>
+                            <div class="item-description">GitHub Actions script injection vulnerability</div>
+                            <p>Untrusted PR event data interpolated directly into shell commands via ${{ }} — attacker-controlled input can execute arbitrary code</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Debug context dump committed to repository (1.json)</div>
-                            <p>Exposes internal GitHub API structure, workflow metadata, and repo details; token is masked but file should not exist</p>
+                        <li class="item-card high">
+                            <div class="item-description">Committed debug payload with potential sensitive data</div>
+                            <p>1.json contains full GitHub webhook context dump including token field (masked) and internal repository metadata — should not be in version control</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">0.5 hours</span>
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Overly broad GitHub token permissions</div>
-                            <p>Workflow requests security-events:write, statuses:write, and checks:write which are unused; violates principle of least privilege</p>
+                            <div class="item-description">Overly broad workflow permissions</div>
+                            <p>Workflow requests contents:write, pull-requests:write, checks:write, security-events:write, statuses:write — only contents:write and pull-requests:write are needed for merge</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">0.5 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No workflow testing or validation</div>
-                            <p>Changes to the merge logic cannot be validated before deployment; no dry-run or test mode</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Zero test coverage across all dimensions</div>
-                            <p>No quality gates of any kind; changes are unvalidated</p>
+                            <div class="item-description">No branch protection or approval checks</div>
+                            <p>Workflow bypasses all review requirements using --admin flag, no audit trail or approval gate</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">Hardcoded user identity check</div>
+                            <p>Authorization is based on a single hardcoded GitHub login name — fragile, not scalable, no team-based access control</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">Zero test coverage</div>
+                            <p>No validation that the workflow logic works correctly — behavior changes are untested</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,35 +472,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Remove 1.json debug artifact from repository</div>
-                            <p>Eliminates leaked debug context and reduces repository noise</p>
+                            <div class="item-description">Fix script injection by using environment variables</div>
+                            <p>Eliminates critical security vulnerability — use env vars instead of direct ${{ }} interpolation in run steps</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">30 minutes</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Remove 1.json debug artifact</div>
+                            <p>Removes committed debug data containing webhook payloads from version control</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">10 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Scope GitHub token permissions to minimum required (contents:write, pull-requests:write)</div>
-                            <p>Reduces blast radius if token is compromised; follows least-privilege principle</p>
+                            <div class="item-description">Reduce workflow permissions to minimum required</div>
+                            <p>Follows principle of least privilege — only contents:write and pull-requests:write needed</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">15 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Fix potential injection by using environment variables instead of direct interpolation</div>
-                            <p>Prevents command injection via crafted PR titles</p>
+                            <div class="item-description">Add .gitignore for JSON debug files</div>
+                            <p>Prevents future accidental commits of debug artifacts</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add a CLAUDE.md with repo purpose and contribution guidelines</div>
-                            <p>Helps contributors and AI agents understand the repo&#x27;s intent and constraints</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
+                                <span class="meta-tag effort-tag">10 minutes</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Fix shell injection vulnerability: use env variables instead of direct ${{ }} interpolation in run steps</li><li>Remove 1.json debug dump from repository history</li><li>Reduce permissions to only contents:write and pull-requests:write</li></ul>
+                            <ul><li>Fix GitHub Actions script injection: replace ${{ github.event.sender.login }} in run steps with environment variables to prevent command injection</li><li>Remove 1.json containing debug webhook payload from version control</li><li>Reduce permissions block to only contents:write and pull-requests:write</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add workflow linting with actionlint in a CI check</li><li>Add a dry-run test mode for the merge workflow</li><li>Add CODEOWNERS to require review for workflow changes</li></ul>
+                            <ul><li>Replace hardcoded username check with team membership verification using GitHub API</li><li>Add audit logging for auto-merge actions (comment on PR before merge)</li><li>Add workflow tests using act or similar GitHub Actions testing tool</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add CLAUDE.md describing repo purpose and constraints</li><li>Add branch protection rules on main</li><li>Consider adding act (local GitHub Actions runner) for local testing</li></ul>
+                            <ul><li>Add CODEOWNERS file to protect the workflow definition</li><li>Add README documentation explaining the tool&#x27;s purpose and security model</li><li>Consider converting to a reusable workflow or composite action for better portability</li></ul>
                         </div>
                     </div>
                 </div>

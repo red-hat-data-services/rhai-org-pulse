@@ -3,381 +3,460 @@ repository: "red-hat-data-services/caikit-nlp"
 overall_score: 4.6
 scorecard:
   - dimension: "Unit Tests"
-    score: 6.5
-    status: "207 test functions across 18 test files with good fixture usage, but no coverage enforcement"
+    score: 7.0
+    status: "Good pytest suite with 206 tests across 20 files; fixtures well-organized; no coverage thresholds enforced"
   - dimension: "Integration/E2E"
-    score: 2.0
-    status: "No integration or E2E test suites; no deployment-level testing"
-  - dimension: "Build Integration"
     score: 3.0
-    status: "Docker image built on PR but no runtime validation or Konflux simulation"
+    status: "No integration or E2E tests; all tests are unit-level with mocked backends"
+  - dimension: "Build Integration"
+    score: 6.0
+    status: "Konflux PR builds with multi-arch support; no runtime validation or health check testing"
   - dimension: "Image Testing"
-    score: 2.5
-    status: "Multi-stage Dockerfile builds but zero runtime or startup validation"
+    score: 4.0
+    status: "Multi-stage Docker build with UBI9 base; no container runtime validation or startup testing"
   - dimension: "Coverage Tracking"
     score: 3.0
-    status: "pytest-cov generates reports locally via tox but no CI enforcement or codecov integration"
+    status: "Local pytest-cov generates reports but no CI integration (codecov/coveralls) or thresholds"
   - dimension: "CI/CD Automation"
-    score: 5.0
-    status: "4 workflows covering build, lint, image, and publish but missing concurrency control and caching"
+    score: 6.0
+    status: "4 GitHub Actions workflows + Tekton/Konflux pipelines; outdated action versions; no concurrency control"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory — zero AI-assisted test guidance"
+    status: "No CLAUDE.md, .claude/ directory, or agent rules for test automation guidance"
 critical_gaps:
-  - title: "No codecov or coverage enforcement in CI"
-    impact: "Coverage can silently regress on any PR without detection"
+  - title: "No coverage enforcement or CI tracking"
+    impact: "Coverage regressions go undetected; no PR-level coverage reporting; developers have no visibility into coverage trends"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No integration or E2E test suites"
-    impact: "Module interactions, TGIS backend connectivity, and runtime serving behavior are untested end-to-end"
+  - title: "No integration or E2E tests"
+    impact: "Module interactions with real TGIS backends, model loading pipelines, and caikit runtime are never tested end-to-end"
     severity: "HIGH"
-    effort: "16-24 hours"
-  - title: "No container image runtime validation"
-    impact: "Built images may fail to start or serve correctly — discovered only in staging/production"
+    effort: "20-40 hours"
+  - title: "No container runtime validation"
+    impact: "Image startup failures, missing dependencies, and runtime errors only discovered in deployment"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "No security scanning (Trivy, Snyk, CodeQL, SAST)"
-    impact: "Vulnerabilities in dependencies or code go undetected until downstream consumers scan"
+  - title: "Security scans not running on PRs in GitHub Actions"
+    impact: "Vulnerabilities in dependencies or code detected only post-merge via Konflux push pipeline"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No agent rules for AI-assisted development"
-    impact: "AI-generated code and tests lack project-specific guidance, leading to inconsistent quality"
+  - title: "No type checking (mypy/pyright)"
+    impact: "Type errors in a complex ML codebase with many data models go undetected until runtime"
     severity: "MEDIUM"
-    effort: "3-4 hours"
+    effort: "8-16 hours"
 quick_wins:
-  - title: "Add codecov integration to CI"
+  - title: "Add codecov integration to build-library workflow"
     effort: "2-3 hours"
-    impact: "Automatic coverage tracking, PR comments, and regression detection"
-  - title: "Add Trivy container scanning to build-image workflow"
+    impact: "PR-level coverage reporting, trend tracking, and regression detection"
+  - title: "Add Trivy scanning to PR workflow"
     effort: "1-2 hours"
-    impact: "Catch known CVEs in base images and dependencies before merge"
-  - title: "Add concurrency control to PR workflows"
+    impact: "Catch vulnerability issues before merge instead of only in Konflux post-push"
+  - title: "Update pre-commit hook versions"
     effort: "30 minutes"
-    impact: "Cancel stale CI runs on force-pushes, save CI compute"
-  - title: "Add basic container startup validation"
-    effort: "2-3 hours"
-    impact: "Verify built images can start and respond to health checks"
-  - title: "Create CLAUDE.md with test patterns and conventions"
-    effort: "2-3 hours"
-    impact: "Consistent AI-generated tests matching project patterns"
+    impact: "Fix outdated Black (22.3.0), isort (5.11.5), and Prettier (v2.1.2) to latest versions"
+  - title: "Add concurrency control to GitHub Actions workflows"
+    effort: "30 minutes"
+    impact: "Cancel redundant workflow runs on force-pushes, saving CI resources"
+  - title: "Update GitHub Actions to latest versions"
+    effort: "30 minutes"
+    impact: "Replace deprecated actions/checkout@v3 and actions/setup-python@v4 with v4/v5"
 recommendations:
   priority_0:
-    - "Add codecov integration with coverage thresholds to block PRs that reduce coverage"
-    - "Add Trivy or Snyk container scanning to the build-image workflow"
-    - "Add CodeQL or Semgrep SAST scanning for Python code"
+    - "Add codecov/coveralls integration with coverage thresholds (e.g., 80% minimum, no decrease on PR)"
+    - "Add security scanning (Trivy or CodeQL) to GitHub Actions PR workflows"
+    - "Add container startup validation test that builds and runs the image, verifying the caikit_nlp module loads"
   priority_1:
-    - "Create integration tests that validate module loading, inference, and TGIS backend interaction"
-    - "Add container runtime validation (startup, health check, basic inference) to CI"
-    - "Add concurrency control and dependency caching to all workflows"
-    - "Create agent rules (.claude/rules/) for unit test, integration test, and fixture patterns"
+    - "Create integration tests that exercise the caikit runtime with real model loading (using tiny models)"
+    - "Add mypy type checking with gradual strictness"
+    - "Create agent rules (.claude/rules/) for unit test, integration test, and module test patterns"
+    - "Add secret detection (gitleaks) to CI pipeline"
   priority_2:
-    - "Add E2E tests exercising the full caikit-nlp runtime with real or simulated models"
-    - "Add performance benchmarks to CI to catch inference regressions"
-    - "Add secret detection (gitleaks or truffleHog) to the CI pipeline"
-    - "Upgrade actions/checkout and actions/setup-python to v4/v5 across all workflows"
+    - "Add E2E tests with TGIS backend using testcontainers or mock server"
+    - "Add HEALTHCHECK to Dockerfile for container orchestration"
+    - "Add performance regression benchmarks to CI"
+    - "Modernize linting by adopting ruff (replaces black, isort, pylint, flake8)"
 ---
 
 # Quality Analysis: caikit-nlp
 
+**Repository**: [red-hat-data-services/caikit-nlp](https://github.com/red-hat-data-services/caikit-nlp)
+**Type**: Python ML Library (NLP)
+**Primary Language**: Python
+**Framework**: Caikit (NLP modules for text generation, embedding, classification, tokenization)
+**Analysis Date**: 2026-07-06
+
 ## Executive Summary
 
 - **Overall Score: 4.6/10**
-- **Repository Type**: Python ML library (NLP inference and fine-tuning built on caikit framework)
-- **Primary Language**: Python 3.9+
-- **Framework**: caikit (with HuggingFace Transformers, PEFT, sentence-transformers)
-- **Key Strengths**: Good unit test coverage for core modules, well-structured fixtures, pre-commit hooks with Black/isort
-- **Critical Gaps**: No coverage enforcement in CI, no integration/E2E tests, no security scanning, no container runtime validation
-- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
+- **Key Strengths**: Solid unit test suite with 206 tests and well-organized fixtures; multi-stage Docker builds with UBI9 base and non-root user; Konflux pipelines with multi-arch builds (x86_64 + arm64); comprehensive post-merge security scanning (Clair, Snyk SAST, ClamAV, SBOM)
+- **Critical Gaps**: No coverage enforcement or CI tracking; no integration/E2E tests; no container runtime validation; no PR-level security scanning in GitHub Actions; no type checking
+- **Agent Rules Status**: Missing - no CLAUDE.md, .claude/ directory, or agent rules exist
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 6.5/10 | 207 test functions across 18 files; good fixture patterns but no coverage gates |
-| Integration/E2E | 2.0/10 | No integration or E2E test suites whatsoever |
-| **Build Integration** | **3.0/10** | **Docker image built on PR but no runtime validation or Konflux simulation** |
-| Image Testing | 2.5/10 | Multi-stage Dockerfile builds but zero runtime or startup validation |
-| Coverage Tracking | 3.0/10 | pytest-cov in tox config but no CI enforcement or codecov integration |
-| CI/CD Automation | 5.0/10 | 4 workflows covering basics but missing concurrency, caching, and matrix breadth |
-| Agent Rules | 0.0/10 | No AI-assisted development guidance of any kind |
+| Unit Tests | 7/10 | Good pytest suite with 206 tests; fixtures well-organized; no coverage thresholds |
+| Integration/E2E | 3/10 | No integration or E2E tests; all tests mock external backends |
+| **Build Integration** | **6/10** | **Konflux PR builds work with multi-arch; no runtime validation** |
+| Image Testing | 4/10 | Multi-stage build but no runtime validation or startup testing |
+| Coverage Tracking | 3/10 | Local pytest-cov but no CI integration or thresholds |
+| CI/CD Automation | 6/10 | 4 GHA workflows + Tekton pipelines; outdated versions; no concurrency control |
+| Agent Rules | 0/10 | No agent rules or test automation guidance |
 
 ## Critical Gaps
 
-### 1. No Coverage Enforcement in CI (HIGH)
-- **Impact**: Coverage can silently regress on any PR without detection
-- **Current State**: `tox.ini` includes `pytest-cov` and generates term+HTML coverage reports, but this only runs locally. No codecov/coveralls integration exists. No coverage thresholds are enforced.
+### 1. No Coverage Enforcement or CI Tracking
+- **Impact**: Coverage regressions go undetected across PRs; no visibility into coverage trends
+- **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Fix**: Add `.codecov.yml` with target thresholds, add codecov upload step to `build-library.yml`
+- **Details**: `tox.ini` generates local coverage reports (`--cov=caikit_nlp --cov-report=term --cov-report=html`) but no `codecov.yml` or coveralls integration exists. No coverage thresholds are set. PR reviewers have no automated coverage feedback.
 
-### 2. No Integration or E2E Test Suites (HIGH)
-- **Impact**: Module interactions, TGIS backend connectivity, runtime serving behavior, and multi-module pipelines are completely untested at the integration level
-- **Current State**: All tests are unit tests with mocked backends (StubTGISClient/StubTGISBackend). While the fixtures are well-designed, they intentionally avoid real backend connections.
-- **Effort**: 16-24 hours
-- **Fix**: Create integration tests that spin up a local TGIS backend (or testcontainers) and validate end-to-end inference pipelines
+### 2. No Integration or E2E Tests
+- **Impact**: Module interactions with TGIS backends, model loading through caikit runtime, and cross-module data flows are never tested end-to-end
+- **Severity**: HIGH
+- **Effort**: 20-40 hours
+- **Details**: All 206 tests are unit-level. TGIS backend interactions use `StubTGISBackend(mock_remote=True)` and `mock.patch.object(StubTGISClient, ...)`. No tests exercise the actual caikit runtime, gRPC/HTTP serving, or model download-load-infer pipeline.
 
-### 3. No Container Runtime Validation (HIGH)
-- **Impact**: Built images may fail to start, have missing dependencies, or be unable to serve models — only discovered in staging/production
-- **Current State**: `build-image.yml` builds the Docker image and loads it, but never starts the container or validates it can run
+### 3. No Container Runtime Validation
+- **Impact**: Image startup failures, missing Python dependencies, or import errors only discovered in deployment
+- **Severity**: HIGH
 - **Effort**: 4-8 hours
-- **Fix**: Add a post-build step that starts the container and validates health endpoint response
+- **Details**: `build-image.yml` builds the Docker image but never runs it. No validation that `caikit_nlp` can be imported, that the runtime starts, or that the entrypoint works. The Dockerfile's `CMD ["python"]` is a generic entrypoint with no built-in health check.
 
-### 4. No Security Scanning (HIGH)
-- **Impact**: CVEs in base images (UBI9), Python dependencies (torch, transformers, etc.), or source code go undetected
-- **Current State**: WhiteSource config exists (`.whitesource`) but appears to be a legacy inherited config. No Trivy, Snyk, CodeQL, Semgrep, gitleaks, or any active scanning.
+### 4. No PR-Level Security Scanning in GitHub Actions
+- **Impact**: Vulnerabilities in Python dependencies or code are only detected post-merge via Konflux push pipeline
+- **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Fix**: Add Trivy scanning to `build-image.yml`, add CodeQL workflow for Python
+- **Details**: The Konflux push pipeline (`caikit-nlp-push.yaml`) runs Clair, Snyk SAST, ClamAV, SBOM, and deprecated image checks, but only on push to main. The PR pipeline (`caikit-nlp-pull-request.yaml`) uses an external pipeline reference and doesn't inline these scan tasks. GitHub Actions workflows have no security scanning at all.
 
-### 5. No Agent Rules (MEDIUM)
-- **Impact**: AI-assisted code generation and test creation lack project-specific patterns, leading to inconsistent test quality
-- **Current State**: No `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
-- **Effort**: 3-4 hours
-- **Fix**: Use `/test-rules-generator` to create comprehensive agent rules for this project's test patterns
+### 5. No Type Checking
+- **Impact**: Type errors in data models, module interfaces, and TGIS backend interactions go undetected
+- **Severity**: MEDIUM
+- **Effort**: 8-16 hours
+- **Details**: No mypy, pyright, or type checking configuration. For an ML library with complex data models (`GeneratedTextResult`, `ClassificationTrainRecord`, etc.) and module interfaces, type safety is important for catching interface contract violations.
 
 ## Quick Wins
 
 ### 1. Add Codecov Integration (2-3 hours)
-- **Impact**: Automatic coverage tracking, PR comments showing coverage delta, regression detection
-- **Implementation**:
-  ```yaml
-  # Add to build-library.yml after tox step
-  - name: Upload coverage
-    uses: codecov/codecov-action@v4
-    with:
-      token: ${{ secrets.CODECOV_TOKEN }}
-      fail_ci_if_error: true
-  ```
+Add codecov upload step to `build-library.yml`:
+```yaml
+- name: Upload coverage
+  uses: codecov/codecov-action@v4
+  with:
+    file: ./coverage.xml
+    flags: unittests
+    fail_ci_if_error: true
+```
+Update tox to generate XML coverage: `--cov-report=xml`
 
-### 2. Add Trivy Container Scanning (1-2 hours)
-- **Impact**: Detect known CVEs in base images and Python dependencies before merge
-- **Implementation**:
-  ```yaml
-  # Add to build-image.yml after build step
-  - name: Run Trivy vulnerability scanner
-    uses: aquasecurity/trivy-action@master
-    with:
-      image-ref: 'caikit-nlp:latest'
-      format: 'table'
-      exit-code: '1'
-      severity: 'CRITICAL,HIGH'
-  ```
+### 2. Add Trivy Scanning to PR Workflow (1-2 hours)
+```yaml
+- name: Run Trivy vulnerability scanner
+  uses: aquasecurity/trivy-action@master
+  with:
+    scan-type: 'fs'
+    scan-ref: '.'
+    severity: 'CRITICAL,HIGH'
+    exit-code: '1'
+```
 
-### 3. Add Concurrency Control (30 minutes)
-- **Impact**: Cancel stale CI runs on force-pushes, save compute resources
-- **Implementation**:
-  ```yaml
-  # Add to all workflows
-  concurrency:
-    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-    cancel-in-progress: true
-  ```
+### 3. Update Pre-commit Hook Versions (30 minutes)
+Current versions are outdated:
+- `black`: 22.3.0 (latest: 24.x)
+- `isort`: 5.11.5 (latest: 5.13.x)
+- `prettier`: v2.1.2 (latest: v3.x)
 
-### 4. Add Container Startup Validation (2-3 hours)
-- **Impact**: Verify built images can start the Python runtime and import the library correctly
-- **Implementation**:
-  ```yaml
-  - name: Validate container startup
-    run: |
-      docker run --rm caikit-nlp:latest python -c "import caikit_nlp; print('OK')"
-  ```
+### 4. Add Concurrency Control (30 minutes)
+Add to all workflows:
+```yaml
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+```
 
-### 5. Create CLAUDE.md with Test Conventions (2-3 hours)
-- **Impact**: Enable consistent AI-generated tests with project-specific fixture patterns, mock strategies, and naming conventions
-- **Implementation**: Use `/test-rules-generator` skill
+### 5. Update GitHub Actions Versions (30 minutes)
+- `actions/checkout@v3` → `actions/checkout@v4`
+- `actions/setup-python@v4` → `actions/setup-python@v5`
+- `actions/setup-python@v3` → `actions/setup-python@v5` (in publish workflow)
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows (4 total)**:
+**GitHub Actions Workflows (4 total)**:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `build-library.yml` | push (main, release-*), PR | Run tests via tox on Python 3.9 + 3.10 matrix |
-| `lint-code.yml` | push (main, release-*), PR | Run formatting (black/isort) + pylint |
-| `build-image.yml` | push (main, release-*, with path filter), PR | Build Docker image with BuildX + GHA cache |
-| `publish-library.yml` | release published | Build wheel + publish to PyPI |
+| `build-library.yml` | PR + push (main, release-*) | Run tests via tox (Python 3.9, 3.10) |
+| `lint-code.yml` | PR + push (main, release-*) | Formatting check (black, isort, prettier) + pylint |
+| `build-image.yml` | PR + push (main, release-*) | Build Docker image with buildx |
+| `publish-library.yml` | Release published | Build wheel + publish to PyPI |
+
+**Tekton/Konflux Pipelines (2 total)**:
+
+| Pipeline | Trigger | Features |
+|----------|---------|----------|
+| `caikit-nlp-pull-request.yaml` | PR (label/comment triggered) | Multi-arch build (x86_64, arm64), 5-day image expiry |
+| `caikit-nlp-push.yaml` | Push to main | Full build + Clair, Snyk SAST, ClamAV, SBOM, deprecated image check, ecosystem cert |
 
 **Strengths**:
 - Multi-Python version testing (3.9, 3.10)
-- Docker BuildX with GHA cache-from/cache-to for fast image builds
-- Separate lint workflow catches formatting issues early
-- PyPI publishing on release tags is automated
+- Multi-arch container builds (x86_64 + arm64) via Konflux
+- Build caching with GitHub Actions cache (`type=gha`)
+- Konflux pipeline uses cancel-in-progress for PRs
+- PyPI publishing automated on release
 
 **Weaknesses**:
-- No concurrency control on any workflow — stale runs accumulate on force-pushes
-- No pip dependency caching in test/lint workflows (setup-python@v4 supports this)
-- Path filtering on `build-image.yml` is incomplete — changes to `tests/` or `tox.ini` don't trigger image rebuild
-- Using outdated action versions: `actions/checkout@v3` (v4 available), `actions/setup-python@v3/v4` (v5 available)
-- No workflow_dispatch triggers for manual reruns
-- No test result reporting (e.g., pytest JUnit XML upload)
-- Dependabot configured for pip daily updates (good) but no auto-merge or review workflow
+- No concurrency control in GitHub Actions workflows
+- Outdated action versions (checkout@v3, setup-python@v3/v4)
+- No test results reporting (no JUnit XML upload)
+- PR Konflux pipeline is label/comment-triggered, not automatic
+- No workflow for dependency updates (Dependabot/Renovate)
 
 ### Test Coverage
 
-**Unit Tests (207 test functions)**:
+**Framework**: pytest 7.1.3 with pytest-cov and pytest-html
 
-| Test Module | Tests | Lines | Notes |
-|-------------|-------|-------|-------|
-| `text_embedding/test_embedding.py` | 51 | 1145 | Most comprehensive, covers encode, train, save/load, truncation |
-| `text_generation/test_peft_prompt_tuning.py` | 30 | 674 | Good coverage of PEFT tuning, save/reload, verbalizers |
-| `text_embedding/test_crossencoder.py` | 20 | 518 | Reranking, scoring, train/save/load |
-| `text_generation/test_text_generation_tgis.py` | 15 | 275 | TGIS remote inference (stubbed) |
-| `text_generation/test_text_generation_local.py` | 10 | 217 | Local HF text generation |
-| Others | 81 | ~2500 | Toolkit utils, tokenization, classification, data model |
+**Test Distribution** (206 total test methods across 20 files):
 
-**Test Quality Observations**:
-- Well-structured fixtures using `pytest.fixture` with `scope="session"` for expensive model initialization
-- Good use of `monkeypatch` and `unittest.mock` for isolating TGIS backend
-- Comprehensive `StubTGISClient` and `StubTGISBackend` classes in fixtures for consistent mocking
-- Tests validate both unary and streaming generation patterns
-- `set_cpu_device` fixture properly handles CUDA environment for CI runners
+| Module | Test File | Test Count |
+|--------|-----------|------------|
+| text_embedding | `test_embedding.py` | 51 |
+| text_generation | `test_peft_prompt_tuning.py` | 30 |
+| text_embedding | `test_crossencoder.py` | 20 |
+| text_generation | `test_text_generation_tgis.py` | 15 |
+| token_classification | `test_filtered_span_classification.py` | 15 |
+| resources | `test_pretrained_model.py` | 13 |
+| text_generation | `test_text_generation_local.py` | 10 |
+| toolkit | `test_verbalizers.py` | 8 |
+| toolkit | `test_data_type_utils.py` | 7 |
+| model_management | `test_tgis_auto_finder.py` | 7 |
+| text_generation | `test_peft_tgis_remote.py` | 5 |
+| text_generation | `test_peft_config.py` | 5 |
+| toolkit | `test_task_specific_utils.py` | 4 |
+| data_model | `test_generation.py` | 3 |
+| toolkit | `test_data_stream_wrapper.py` | 3 |
+| text_classification | `test_sequence_classification.py` | 3 |
+| toolkit/text_gen | `test_model_run_utils.py` | 3 |
+| toolkit/text_gen | `test_tgis_utils.py` | 2 |
+| tokenization | `test_regex_sentence_splitter.py` | 2 |
 
-**Test-to-Code Ratio**: 5,335 test lines / 8,987 source lines = **0.59** (below recommended 1.0+)
+**Test-to-Code Ratio**: 5,335 test lines / 8,987 source lines = **0.59** (adequate)
 
-**Coverage Generation**: `pytest --cov=caikit_nlp --cov-report=term --cov-report=html` configured in tox but runs only locally
+**Testing Patterns Used**:
+- `pytest.fixture` for test setup (set_cpu_device, temp_config, etc.)
+- `unittest.mock` for TGIS backend mocking
+- `pytest.mark.skipif` for platform-specific tests (ARM)
+- Tiny models in `tests/fixtures/tiny_models/` for fast testing
+- Custom fixtures for cache directory management and config overrides
 
-**Missing Test Areas**:
-- No tests for `caikit_nlp/config/` module
-- No tests for runtime configuration loading
-- No tests for model management beyond `tgis_auto_finder`
-- No property-based testing
-- No parameterized test matrices for different model architectures
+**Coverage Gaps by Source Module**:
+
+| Source Module | Has Tests? | Coverage Level |
+|---------------|------------|----------------|
+| `modules/text_generation/` (5 files) | Yes (5 test files) | Good - all modules tested |
+| `modules/text_embedding/` (3 files) | Yes (2 test files) | Good - embedding + crossencoder |
+| `modules/text_classification/` | Yes | Minimal - only 3 tests |
+| `modules/token_classification/` | Yes | Good - 15 tests |
+| `modules/tokenization/` | Yes | Minimal - 2 tests |
+| `resources/pretrained_model/` (4 files) | Yes (1 test file) | Partial - 13 tests for 4 source files |
+| `toolkit/` (6 files) | Partial (4 tested) | Missing: `torch_run.py`, `trainer_utils.py` |
+| `model_management/` | Yes | Moderate - 7 tests |
+| `data_model/` | Yes | Minimal - 3 tests |
+| `config/` | No | Not tested |
 
 ### Code Quality
 
-**Linting**:
-- **pylint** configured via `.pylintrc` with `fail-under=10` (strict — requires perfect score)
-- 18+ disabled checks (missing-docstring, too-many-arguments, etc.) — moderate strictness
-- Runs in CI via `tox -e lint`
+**Linting & Formatting**:
+- **Pylint**: Configured via `.pylintrc` with `fail-under=10` (strict - no violations tolerated)
+- **Black**: Code formatting via pre-commit (version 22.3.0, outdated)
+- **isort**: Import sorting with black profile
+- **Prettier**: For non-Python files (YAML, Markdown)
 
-**Formatting**:
-- **Black** (v22.3.0) for code formatting
-- **isort** (v5.11.5) with Black-compatible profile
-- **Prettier** for non-Python files (markdown, yaml)
-- All run via pre-commit hooks
+**Pre-commit Hooks** (`.pre-commit-config.yaml`):
+- prettier (v2.1.2) - formatting non-Python files
+- black (22.3.0) - Python code formatting
+- isort (5.11.5) - import sorting
 
-**Pre-commit Hooks** (3 hooks):
-- `prettier` — formatting for markdown/yaml
-- `black` — Python code formatting
-- `isort` — import sorting
-
-**Gaps**:
-- No type checking (mypy, pyright) configured
-- No complexity analysis tools (radon, flake8-cognitive-complexity)
-- Pre-commit versions are outdated (Black 22.3.0 — current is 24.x)
-- No ruff configured (faster alternative to pylint+isort+black)
+**Missing Quality Tools**:
+- No mypy/pyright (type checking)
+- No ruff (modern Python linter)
+- No bandit (Python security linter)
+- No CodeQL
+- No Dependabot/Renovate
 
 ### Container Images
 
-**Dockerfiles (2)**:
-- `Dockerfile` — standard multi-stage build (base → builder → deploy)
-- `Dockerfile.konflux` — identical to Dockerfile but with Red Hat EULA labels added
+**Dockerfiles**: 2 (standard `Dockerfile` + `Dockerfile.konflux`)
 
 **Build Architecture**:
-- Base: `registry.access.redhat.com/ubi9/ubi-minimal:latest` (good — enterprise-grade)
-- Multi-stage: 3 stages (base, builder, deploy) — appropriate for minimizing image size
-- Uses `tox -e build` to create wheel in builder stage
-- Proper virtualenv isolation in deploy stage
-- Non-root user created (`caikit`, UID 1001, GID 0) — security best practice
-- Build cache mounts for pip (`--mount=type=cache,target=/root/.cache/pip`)
+- Multi-stage build: `base` → `builder` → `deploy`
+- Base image: `registry.access.redhat.com/ubi9/ubi-minimal:latest`
+- Build caching: `--mount=type=cache,target=/root/.cache/pip`
+- Uses tox to build wheel in builder stage
+- Non-root user: `caikit` (uid 1001, gid 0)
 
-**Gaps**:
-- No multi-architecture build support (no platform matrix)
-- No health check (`HEALTHCHECK` instruction missing from Dockerfile)
-- No `.trivyignore` for known acceptable CVEs
-- No SBOM generation
-- No image signing or attestation
-- `Dockerfile.konflux` is a near-exact copy of `Dockerfile` — should be DRY (use build args)
-- CMD is just `["python"]` — no entrypoint for runtime serving
+**Strengths**:
+- Multi-stage build separates build deps from runtime
+- Non-root user execution
+- Build tools (gcc, python3-devel) cleaned up after install
+- Konflux labels for RHOAI metadata
+
+**Weaknesses**:
+- No `HEALTHCHECK` directive
+- No container startup validation in CI
+- `CMD ["python"]` is generic - no runtime entrypoint validation
+- No `.dockerignore` optimization analysis
+- No image size optimization (no distroless or minimal runtime)
 
 ### Security
 
-**Current State**: Minimal
+**Konflux Push Pipeline Security Scans**:
+- Clair vulnerability scan
+- Snyk SAST check
+- ClamAV malware scan
+- SBOM JSON check
+- Deprecated base image check
+- Ecosystem cert preflight checks
 
-| Practice | Status |
-|----------|--------|
-| Container scanning (Trivy/Snyk) | Not configured |
-| SAST (CodeQL/Semgrep) | Not configured |
-| Dependency scanning | Dependabot (pip daily) — basic only |
-| Secret detection (gitleaks) | Not configured |
-| WhiteSource/Mend | `.whitesource` exists but inherits config from external repo — unclear if active |
-| Image signing | Not configured |
-| SBOM | Not generated |
-| Non-root container | Yes (caikit user, UID 1001) |
+**GitHub Actions Security**: None
+
+**Other Security Measures**:
+- WhiteSource integration (`.whitesource`)
+- Security policy documented (`SECURITY.md`)
+- CODEOWNERS file enforces review
+- Non-root container execution
+
+**Missing**:
+- No PR-level security scanning in GitHub Actions
+- No CodeQL / Semgrep
+- No secret detection (gitleaks, trufflehog)
+- No dependency scanning in PR workflow
+- No bandit (Python security linter)
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: Zero — no test type rules exist
+- **Coverage**: No test type rules exist
 - **Quality**: N/A
-- **Gaps**: No CLAUDE.md, no AGENTS.md, no `.claude/` directory, no `.claude/rules/`, no `.claude/skills/`
-- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
-  - Unit test patterns (pytest fixtures, mock TGIS patterns, CPU device handling)
-  - Integration test patterns (testcontainers for TGIS backend)
-  - Fixture conventions (session-scoped model fixtures, StubTGIS patterns)
-  - Coverage expectations and testing conventions
+- **Gaps**: No `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`, no rules for any test type
+- **Recommendation**: Generate comprehensive rules with `/test-rules-generator` covering:
+  - Unit test patterns (pytest fixtures, mocking TGIS backends, tiny model usage)
+  - Module test patterns (caikit module save/load/run lifecycle)
+  - Integration test guidance (runtime testing, gRPC/HTTP testing)
+  - Fixture usage (set_cpu_device, temp_config, model fixtures)
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add codecov integration with coverage thresholds** — Block PRs that reduce coverage below baseline. Upload coverage from `build-library.yml` tox runs.
+1. **Add codecov/coveralls integration with thresholds**
+   - Upload coverage XML from tox runs
+   - Set minimum coverage threshold (e.g., 75%)
+   - Require no coverage decrease on PRs
+   - Effort: 2-4 hours
 
-2. **Add container security scanning** — Trivy or Snyk scanning in `build-image.yml` for CVE detection in UBI9 base image and Python dependencies (torch, transformers, etc. are high-value targets).
+2. **Add security scanning to GitHub Actions PR workflows**
+   - Add Trivy filesystem scan for dependency vulnerabilities
+   - Add CodeQL analysis for Python
+   - Catch issues before merge, not just in post-merge Konflux
+   - Effort: 2-4 hours
 
-3. **Add SAST scanning** — CodeQL for Python to catch injection, unsafe deserialization, and other code-level vulnerabilities. Particularly important given model loading from untrusted sources.
+3. **Add container runtime validation**
+   - After image build in `build-image.yml`, run the container and verify:
+     - `python -c "import caikit_nlp"` succeeds
+     - Runtime configuration can be loaded
+     - Module discovery works
+   - Effort: 4-8 hours
 
 ### Priority 1 (High Value)
 
-4. **Create integration tests for TGIS backend** — Test actual module loading and inference with a containerized TGIS backend. Validate the TGIS-AUTO model finder with real connections.
+4. **Create integration tests with caikit runtime**
+   - Test model load → inference pipeline with tiny models
+   - Test gRPC/HTTP runtime startup
+   - Test module registration and discovery
+   - Effort: 20-40 hours
 
-5. **Add container runtime validation** — After building the Docker image in CI, start it and verify: Python imports work, caikit runtime initializes, health checks pass.
+5. **Add mypy type checking**
+   - Start with `--ignore-missing-imports` and gradual strictness
+   - Add to tox.ini as a new environment
+   - Run in CI on PRs
+   - Effort: 8-16 hours
 
-6. **Add concurrency control and caching** — Add `concurrency:` blocks to all workflows. Add pip caching via `actions/setup-python` cache option.
+6. **Create agent rules for test automation**
+   - `.claude/rules/unit-tests.md` - pytest patterns, fixture usage, TGIS mocking
+   - `.claude/rules/module-tests.md` - caikit module lifecycle testing
+   - `.claude/rules/integration-tests.md` - runtime testing guidance
+   - Effort: 4-6 hours
 
-7. **Create agent rules** — Generate `.claude/rules/` with unit-test.md, integration-test.md, and fixture-patterns.md covering the project's specific testing conventions.
+7. **Add secret detection**
+   - Add gitleaks to pre-commit hooks and CI
+   - Effort: 1-2 hours
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add E2E tests** — Full runtime serving tests with model load → inference → streaming response validation.
+8. **Add E2E tests with TGIS mock server**
+   - Use testcontainers or a stub TGIS server
+   - Test the full inference pipeline end-to-end
+   - Effort: 20-40 hours
 
-9. **Add performance benchmarks to CI** — The `benchmarks/` directory exists but isn't wired into CI. Add regression detection for inference latency.
+9. **Add HEALTHCHECK to Dockerfile**
+   - `HEALTHCHECK CMD python -c "import caikit_nlp" || exit 1`
+   - Effort: 30 minutes
 
-10. **Add type checking (mypy)** — Python ML code benefits greatly from type checking, especially around tensor shapes and data model types.
+10. **Modernize linting with ruff**
+    - Replace black + isort + pylint with ruff
+    - Much faster, single tool
+    - Effort: 4-8 hours
 
-11. **Add secret detection** — gitleaks or truffleHog to catch accidentally committed API keys, HuggingFace tokens, etc.
+11. **Add performance regression benchmarks**
+    - Benchmark inference latency with tiny models
+    - Track regressions across PRs
+    - Effort: 8-16 hours
 
-12. **Upgrade action versions** — Update `actions/checkout` to v4, `actions/setup-python` to v5 across all workflows.
+12. **Add Dependabot/Renovate for dependency updates**
+    - Automated PR creation for dependency updates
+    - Especially important for ML libraries with frequent releases
+    - Effort: 1-2 hours
 
 ## Comparison to Gold Standards
 
 | Dimension | caikit-nlp | odh-dashboard | notebooks | kserve |
 |-----------|-----------|---------------|-----------|--------|
-| Unit Tests | 6.5 | 9.0 | 7.0 | 9.0 |
-| Integration/E2E | 2.0 | 9.0 | 8.0 | 9.5 |
-| Build Integration | 3.0 | 8.0 | 9.0 | 8.0 |
-| Image Testing | 2.5 | 7.0 | 9.5 | 7.0 |
-| Coverage Tracking | 3.0 | 9.0 | 6.0 | 9.0 |
-| CI/CD Automation | 5.0 | 9.0 | 8.0 | 9.0 |
-| Agent Rules | 0.0 | 8.0 | 3.0 | 2.0 |
-| **Overall** | **4.6** | **8.7** | **7.5** | **8.2** |
+| Unit Tests | 7/10 | 9/10 | 7/10 | 9/10 |
+| Integration/E2E | 3/10 | 9/10 | 8/10 | 9/10 |
+| Build Integration | 6/10 | 8/10 | 9/10 | 8/10 |
+| Image Testing | 4/10 | 7/10 | 9/10 | 7/10 |
+| Coverage Tracking | 3/10 | 9/10 | 6/10 | 9/10 |
+| CI/CD Automation | 6/10 | 9/10 | 8/10 | 9/10 |
+| Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
+| **Overall** | **4.6** | **8.7** | **7.5** | **8.0** |
+
+**Key Differentiators from Gold Standards**:
+- odh-dashboard: Has multi-layer testing (unit, integration, contract, E2E), coverage enforcement, comprehensive agent rules
+- notebooks: Has 5-layer image validation, multi-arch testing, security scanning in PR pipeline
+- kserve: Has coverage enforcement via codecov, multi-version testing, E2E with Kind cluster
 
 ## File Paths Reference
 
-| Category | File |
-|----------|------|
-| CI: Tests | `.github/workflows/build-library.yml` |
-| CI: Lint | `.github/workflows/lint-code.yml` |
-| CI: Image | `.github/workflows/build-image.yml` |
-| CI: Publish | `.github/workflows/publish-library.yml` |
-| Test Config | `tox.ini` |
-| Linting | `.pylintrc` |
-| Formatting | `.pre-commit-config.yaml`, `.isort.cfg` |
-| Dockerfile | `Dockerfile`, `Dockerfile.konflux` |
-| Dependencies | `pyproject.toml`, `setup_requirements.txt` |
-| Dependabot | `.github/dependabot.yml` |
-| Security | `.whitesource` (legacy) |
-| Tests | `tests/` (28 files, 207 test functions) |
-| Source | `caikit_nlp/` (40 files, ~9K lines) |
-| Fixtures | `tests/fixtures/__init__.py` |
-| Runtime Config | `runtime_config.yaml` |
+| Category | File | Purpose |
+|----------|------|---------|
+| CI/CD | `.github/workflows/build-library.yml` | Test execution (Python 3.9, 3.10) |
+| CI/CD | `.github/workflows/lint-code.yml` | Pylint + formatting check |
+| CI/CD | `.github/workflows/build-image.yml` | Docker image build |
+| CI/CD | `.github/workflows/publish-library.yml` | PyPI release publishing |
+| Konflux | `.tekton/caikit-nlp-pull-request.yaml` | PR build pipeline (multi-arch) |
+| Konflux | `.tekton/caikit-nlp-push.yaml` | Push pipeline (build + security scans) |
+| Testing | `tox.ini` | Test environments (py39, py310, fmt, lint, build) |
+| Testing | `tests/conftest.py` | Global test configuration |
+| Testing | `tests/fixtures/__init__.py` | Shared test fixtures |
+| Quality | `.pre-commit-config.yaml` | Pre-commit hooks (black, isort, prettier) |
+| Quality | `.pylintrc` | Pylint configuration (fail-under=10) |
+| Quality | `.isort.cfg` | Import sorting config |
+| Container | `Dockerfile` | Standard Docker build |
+| Container | `Dockerfile.konflux` | Konflux-specific build with RHOAI labels |
+| Security | `.whitesource` | WhiteSource dependency scanning config |
+| Security | `SECURITY.md` | Security policy reference |
+| Governance | `CODEOWNERS` | Code review ownership |
+| Project | `pyproject.toml` | Python project config (dependencies, build) |

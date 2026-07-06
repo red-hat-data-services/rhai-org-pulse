@@ -1,395 +1,455 @@
 ---
 repository: "opendatahub-io/kubeflow-ui-essentials"
-overall_score: 4.6
+overall_score: 3.6
 scorecard:
   - dimension: "Unit Tests"
     score: 4.0
-    status: "13 test files for 177 source files (7% ratio); no coverage thresholds enforced"
+    status: "15 test files for 167 source files (9% ratio); mod-arch-kubeflow and installer have zero tests"
   - dimension: "Integration/E2E"
     score: 2.0
-    status: "Cypress exists in starter template only; no E2E in library packages or CI"
+    status: "No E2E or integration tests; docs/testing.md is entirely 'Coming soon' placeholders"
   - dimension: "Build Integration"
-    score: 2.0
-    status: "No PR-time Docker build, no Konflux simulation, no image validation"
+    score: 5.0
+    status: "PR CI builds all packages and verifies dist; no PR-time Docker build or Konflux simulation"
   - dimension: "Image Testing"
-    score: 1.0
-    status: "Dockerfile present in starter only; no runtime validation or image scanning"
+    score: 3.0
+    status: "Multi-stage Dockerfile with distroless base; no scanning, SBOM, or runtime validation"
   - dimension: "Coverage Tracking"
     score: 3.0
-    status: "CI runs coverage collection but no thresholds, no codecov, no PR reporting"
+    status: "Jest coverage config present; CI runs coverage but no codecov integration or thresholds"
   - dimension: "CI/CD Automation"
-    score: 7.0
-    status: "Well-structured test/release/publish workflows with semantic-release and OIDC publishing"
+    score: 6.0
+    status: "3 workflows with semantic release and npm provenance; missing concurrency control and security scanning"
   - dimension: "Agent Rules"
-    score: 7.0
-    status: "Comprehensive AGENTS.md, CLAUDE.md, Jira rules, and kubeflow theming rules; lacks test-specific rules"
+    score: 6.0
+    status: "Excellent AGENTS.md with per-package rules; no test creation rules in .claude/rules/"
 critical_gaps:
-  - title: "Extremely low test coverage ratio (7% file ratio, 19% line ratio)"
-    impact: "Most library code is untested — regressions silently ship to all downstream consumers"
+  - title: "No E2E or integration test infrastructure"
+    impact: "User journeys across deployment modes (standalone, federated, kubeflow) are completely untested"
     severity: "HIGH"
-    effort: "40-80 hours"
-  - title: "No coverage enforcement or thresholds"
-    impact: "Coverage can decrease with every PR; no gate prevents untested code from merging"
+    effort: "20-30 hours"
+  - title: "No security scanning in CI"
+    impact: "Vulnerabilities in dependencies and container images are not detected before release"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "Zero security scanning (no Trivy, CodeQL, SAST, or dependency scanning)"
-    impact: "Vulnerabilities in dependencies or source code go undetected until downstream consumers are impacted"
+  - title: "Extremely low unit test coverage for shared components"
+    impact: "Only 3 of 24 shared UI components have tests (12.5%); regressions in core UI library go undetected"
     severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "No E2E testing in CI pipeline"
-    impact: "Component integration issues, theming bugs, and context provider failures are only caught manually"
-    severity: "HIGH"
-    effort: "16-24 hours"
-  - title: "No container image build or validation on PRs"
-    impact: "Dockerfile breaks discovered only when downstream projects (dashboard) attempt builds"
+    effort: "15-20 hours"
+  - title: "No coverage thresholds or PR reporting"
+    impact: "Coverage can silently decrease with no enforcement; no visibility on PR-level coverage changes"
     severity: "MEDIUM"
-    effort: "8-12 hours"
-  - title: "mod-arch-kubeflow has zero unit tests"
-    impact: "Theme context, hooks, and MUI/PatternFly token mapping logic is entirely untested"
+    effort: "2-4 hours"
+  - title: "mod-arch-kubeflow has zero tests"
+    impact: "Theme context, hooks, and style utility code completely untested despite being consumed by downstream apps"
     severity: "HIGH"
-    effort: "16-24 hours"
+    effort: "8-12 hours"
+  - title: "No container image scanning"
+    impact: "Published npm packages and Docker images not scanned for known CVEs"
+    severity: "HIGH"
+    effort: "2-4 hours"
 quick_wins:
-  - title: "Add codecov integration with PR coverage reporting"
-    effort: "2-4 hours"
-    impact: "Immediate visibility into coverage trends; prevents silent coverage regression"
-  - title: "Add coverage thresholds to Jest configs (e.g. 60% minimum)"
-    effort: "1-2 hours"
-    impact: "Blocks PRs that reduce coverage below acceptable levels"
-  - title: "Add CodeQL/Trivy scanning workflow"
-    effort: "2-4 hours"
-    impact: "Automated vulnerability detection for npm dependencies and source code"
-  - title: "Add Dependabot configuration"
-    effort: "1 hour"
-    impact: "Automated dependency update PRs (currently using manual Dependabot-style bumps)"
-  - title: "Create .claude/rules for unit test patterns"
+  - title: "Add codecov integration with PR comments"
     effort: "2-3 hours"
-    impact: "AI-generated tests follow consistent patterns; accelerates test coverage growth"
+    impact: "Immediate visibility into coverage changes on every PR; blocks coverage regressions"
+  - title: "Add Trivy container scanning to CI"
+    effort: "1-2 hours"
+    impact: "Catch CVEs in base images and Go/Node dependencies before release"
+  - title: "Add concurrency control to test workflow"
+    effort: "30 minutes"
+    impact: "Prevent redundant CI runs on rapid pushes; save compute resources"
+  - title: "Create .claude/rules/ for unit test patterns"
+    effort: "2-3 hours"
+    impact: "Ensure AI-generated tests follow repo conventions (RTL, Jest, __tests__/ directories)"
+  - title: "Add CodeQL SAST scanning workflow"
+    effort: "1-2 hours"
+    impact: "Free GitHub-native static analysis for TypeScript and Go code"
+  - title: "Set Jest coverage thresholds"
+    effort: "1 hour"
+    impact: "Prevent coverage regressions by failing CI when thresholds are not met"
 recommendations:
   priority_0:
-    - "Add coverage thresholds to Jest configs and integrate codecov for PR-level coverage reporting"
-    - "Write unit tests for untested packages (mod-arch-kubeflow has 0 tests, mod-arch-shared has 4 tests for 109 source files)"
-    - "Add CodeQL or Trivy security scanning GitHub workflow"
+    - "Add unit tests for mod-arch-kubeflow (ThemeContext, useThemeContext hook, style utilities)"
+    - "Add tests for remaining 21 untested shared components in mod-arch-shared"
+    - "Add security scanning - Trivy for containers, CodeQL for TypeScript/Go SAST"
+    - "Integrate codecov with coverage thresholds and PR reporting"
   priority_1:
-    - "Create Cypress or Playwright E2E test suite for library components in integration context"
-    - "Add PR-time Docker build validation for mod-arch-starter Dockerfile"
-    - "Create .claude/rules/ for unit-tests.md, e2e-tests.md, and component-tests.md"
-    - "Add contract tests for API utilities (apiUtils, errorUtils, k8s helpers)"
+    - "Set up Cypress or Playwright E2E test infrastructure for the mod-arch-starter"
+    - "Add contract tests for BFF API endpoints using OpenAPI spec validation"
+    - "Create .claude/rules/ for unit-tests.md, e2e-tests.md, and integration-tests.md"
+    - "Add PR-time Docker image build validation for mod-arch-starter"
+    - "Add dependency scanning (npm audit in CI, Dependabot or Renovate)"
   priority_2:
-    - "Add multi-architecture Docker build validation"
-    - "Add performance regression testing for hook rendering (useNamespaces, useSettings)"
-    - "Add accessibility testing automation (axe-core integration)"
-    - "Complete the WIP docs/testing.md with concrete patterns and examples"
+    - "Add accessibility testing automation (axe-core in Jest)"
+    - "Add performance testing for shared components (React profiler)"
+    - "Add visual regression testing for UI components"
+    - "Complete the docs/testing.md documentation"
+    - "Add SBOM generation for published npm packages"
 ---
 
-# Quality Analysis: kubeflow-ui-essentials (mod-arch-library)
+# Quality Analysis: opendatahub-io/kubeflow-ui-essentials
 
 ## Executive Summary
-
-- **Overall Score: 4.6/10**
-- **Repository Type**: TypeScript/React monorepo — npm-published UI library for micro-frontend architectures
-- **Key Strengths**: Well-structured CI/CD with semantic-release, comprehensive agent rules (AGENTS.md + CLAUDE.md), strong ESLint configuration with Prettier, Husky pre-commit hooks, OIDC-based npm publishing
-- **Critical Gaps**: Very low test coverage (13 test files / 177 source files), no security scanning, no E2E testing in CI, no coverage enforcement, no container image testing
-- **Agent Rules Status**: Present and well-developed for code style, Jira workflows, and theming guidelines; **missing test automation rules**
+- Overall Score: 3.6/10
+- Key Strengths: Well-structured monorepo with comprehensive AGENTS.md, solid ESLint configuration, semantic release with npm provenance, good BFF Go test patterns for proxy/SSRF code
+- Critical Gaps: Extremely low test coverage (9% test file ratio), zero E2E/integration tests, no security scanning, no coverage enforcement, mod-arch-kubeflow entirely untested
+- Agent Rules Status: Present and well-structured (AGENTS.md + per-package rules) but missing test creation guidance
 
 ## Quality Scorecard
-
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 4.0/10 | 13 test files for 177 source files (7%); 1,937 test LOC vs 10,373 source LOC (19%) |
-| Integration/E2E | 2.0/10 | Cypress only in starter template; not run in CI; no library-level E2E |
-| **Build Integration** | **2.0/10** | **No PR-time Docker build; no Konflux simulation; no image validation** |
-| Image Testing | 1.0/10 | Dockerfile in starter only; no runtime validation, scanning, or SBOM |
-| Coverage Tracking | 3.0/10 | CI runs `--coverage` but no thresholds, no codecov, no PR gates |
-| CI/CD Automation | 7.0/10 | 3 workflows (test/release/publish); semantic-release; OIDC publishing; matrix testing |
-| Agent Rules | 7.0/10 | Comprehensive AGENTS.md; .claude/rules for Jira and theming; missing test rules |
+| Unit Tests | 4.0/10 | 15 test files for 167 source files (9% ratio); mod-arch-kubeflow and installer have zero tests |
+| Integration/E2E | 2.0/10 | No E2E or integration tests; docs/testing.md is entirely "Coming soon" placeholders |
+| **Build Integration** | **5.0/10** | **PR CI builds all packages and verifies dist; no PR-time Docker build or Konflux simulation** |
+| Image Testing | 3.0/10 | Multi-stage Dockerfile with distroless base; no scanning, SBOM, or runtime validation |
+| Coverage Tracking | 3.0/10 | Jest coverage config present; CI runs coverage but no codecov integration or thresholds |
+| CI/CD Automation | 6.0/10 | 3 workflows with semantic release and npm provenance; missing concurrency control and security scanning |
+| Agent Rules | 6.0/10 | Excellent AGENTS.md with per-package rules; no test creation rules in .claude/rules/ |
 
 ## Critical Gaps
 
-### 1. Extremely Low Test Coverage (Severity: HIGH)
-- **Impact**: Most library code ships to downstream consumers (odh-dashboard, kubeflow modules) untested
-- **Details**:
-  - `mod-arch-core`: 33 source files, 8 test files (24% file ratio)
-  - `mod-arch-shared`: 109 source files, 4 test files (4% file ratio)
-  - `mod-arch-kubeflow`: 11 source files, **0 test files** (0%)
-  - `mod-arch-installer`: 24 source files, 1 test file (4%)
-- **Effort**: 40-80 hours to reach 60% coverage across packages
-- **Risk**: As an npm-published library, untested APIs can break multiple downstream applications simultaneously
+1. **No E2E or Integration Test Infrastructure**
+   - Impact: User journeys across three deployment modes (standalone, federated, kubeflow) are completely untested. Module Federation remotes, BFF proxy flows, and theme switching are validated only manually.
+   - Severity: HIGH
+   - Effort: 20-30 hours
 
-### 2. No Coverage Enforcement (Severity: HIGH)
-- **Impact**: Coverage can silently decrease with every merged PR
-- **Details**: Jest configs define `coverageDirectory` and `collectCoverageFrom` but **no `coverageThreshold`**. CI runs coverage collection for core and shared packages but results aren't reported or gated.
-- **Effort**: 4-6 hours (add thresholds + codecov integration)
+2. **No Security Scanning in CI**
+   - Impact: Vulnerabilities in npm dependencies, Go modules, and container base images are not detected before release. Published npm packages could carry known CVEs.
+   - Severity: HIGH
+   - Effort: 4-6 hours
 
-### 3. Zero Security Scanning (Severity: HIGH)
-- **Impact**: Vulnerabilities in 1000+ transitive npm dependencies go undetected
-- **Details**: No CodeQL, Trivy, Snyk, Gitleaks, or any SAST/DAST tool configured. No Dependabot configuration despite numerous manual dependency bump PRs visible in git history.
-- **Effort**: 4-8 hours
+3. **Extremely Low Unit Test Coverage for Shared Components**
+   - Impact: Only 3 of 24 shared UI components (`FieldGroupHelpLabelIcon`, `ManageColumnsModal`, `useManageColumns`) have tests. Critical components like `SimpleSelect`, `TypeaheadSelect`, `MarkdownView`, `ApplicationsPage` are untested.
+   - Severity: HIGH
+   - Effort: 15-20 hours
 
-### 4. No E2E Testing in CI (Severity: HIGH)
-- **Impact**: Integration between context providers, hooks, and components across packages is never validated automatically
-- **Details**: Cypress exists in `mod-arch-starter/frontend` with a single NavBar test, but it's not part of the library CI workflow. No component-level E2E for the published packages.
-- **Effort**: 16-24 hours
+4. **mod-arch-kubeflow Has Zero Tests**
+   - Impact: `ThemeContext`, `useThemeContext` hook, and all style utilities are consumed by downstream applications but have no test coverage. Theme-related regressions propagate silently to consumers.
+   - Severity: HIGH
+   - Effort: 8-12 hours
 
-### 5. mod-arch-kubeflow Package Has Zero Tests (Severity: HIGH)
-- **Impact**: Theme context provider, MUI/PatternFly token mapping, SCSS architecture — all untested
-- **Details**: This package has 11 source files with complex theming logic, including MUI-to-PatternFly design token mapping and theme context switching. Zero test coverage.
-- **Effort**: 16-24 hours
+5. **No Coverage Thresholds or PR Reporting**
+   - Impact: Coverage can silently decrease with each merge. No codecov/coveralls integration means no visibility on PR-level coverage impact.
+   - Severity: MEDIUM
+   - Effort: 2-4 hours
 
-### 6. No Container Image Testing (Severity: MEDIUM)
-- **Impact**: Dockerfile in `mod-arch-starter` is never built or validated on PRs
-- **Details**: Multi-stage Dockerfile (Node + Go BFF + distroless) exists but is never exercised in CI. Build failures only discovered downstream.
-- **Effort**: 8-12 hours
+6. **No Container Image Scanning**
+   - Impact: The Dockerfile uses `gcr.io/distroless/static:nonroot` (good), but no Trivy/Snyk scan validates the final image or intermediate stages for CVEs.
+   - Severity: HIGH
+   - Effort: 2-4 hours
 
 ## Quick Wins
 
-### 1. Add Coverage Thresholds to Jest Configs (1-2 hours)
-Add to both `mod-arch-core/jest.config.js` and `mod-arch-shared/jest.config.js`:
-```javascript
-coverageThreshold: {
-  global: {
-    branches: 50,
-    functions: 50,
-    lines: 60,
-    statements: 60,
-  },
-},
-```
+1. **Add Codecov Integration with PR Comments** (2-3 hours)
+   - Impact: Immediate coverage visibility on every PR
+   - Implementation:
+     ```yaml
+     # Add to test.yml after coverage run
+     - name: Upload coverage
+       uses: codecov/codecov-action@v4
+       with:
+         token: ${{ secrets.CODECOV_TOKEN }}
+         files: mod-arch-core/jest-coverage/lcov.info,mod-arch-shared/jest-coverage/lcov.info
+         fail_ci_if_error: true
+     ```
 
-### 2. Add Codecov Integration (2-4 hours)
-Add to `.github/workflows/test.yml` test-coverage job:
-```yaml
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        flags: mod-arch-core
-        directory: mod-arch-core/jest-coverage
-```
+2. **Add Trivy Container Scanning** (1-2 hours)
+   - Impact: Catch CVEs in base images and dependencies
+   - Implementation:
+     ```yaml
+     # New workflow: .github/workflows/security.yml
+     name: Security
+     on: [push, pull_request]
+     jobs:
+       trivy:
+         runs-on: ubuntu-latest
+         steps:
+         - uses: actions/checkout@v4
+         - uses: aquasecurity/trivy-action@master
+           with:
+             scan-type: 'fs'
+             scan-ref: '.'
+             severity: 'CRITICAL,HIGH'
+     ```
 
-### 3. Add CodeQL Security Scanning (2-4 hours)
-Create `.github/workflows/codeql.yml`:
-```yaml
-name: CodeQL
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  schedule:
-    - cron: '0 6 * * 1'
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: javascript-typescript
-      - uses: github/codeql-action/analyze@v3
-```
+3. **Add Concurrency Control to Test Workflow** (30 minutes)
+   - Impact: Prevent redundant CI runs on rapid pushes
+   - Implementation:
+     ```yaml
+     # Add to test.yml at the top level
+     concurrency:
+       group: ${{ github.workflow }}-${{ github.ref }}
+       cancel-in-progress: true
+     ```
 
-### 4. Add Dependabot Configuration (1 hour)
-Create `.github/dependabot.yml`:
-```yaml
-version: 2
-updates:
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    groups:
-      dev-dependencies:
-        dependency-type: "development"
-```
+4. **Create `.claude/rules/` for Unit Test Patterns** (2-3 hours)
+   - Impact: AI-generated tests follow established conventions
+   - Create `.claude/rules/unit-tests.md` covering:
+     - Use Jest + React Testing Library
+     - Tests go in `__tests__/` directories alongside source
+     - File naming: `*.test.ts` or `*.test.tsx`
+     - Mock patterns: `config/transform.style.js` for CSS, `config/transform.file.js` for assets
+     - Coverage: always add to `collectCoverageFrom` in jest.config.js
 
-### 5. Create Agent Rules for Test Patterns (2-3 hours)
-Create `.claude/rules/unit-tests.md` with patterns for:
-- React hook testing with `renderHook`
-- Component testing with React Testing Library
-- Context provider testing
-- API utility mocking patterns
+5. **Add CodeQL SAST Scanning** (1-2 hours)
+   - Impact: Free GitHub-native static analysis for TypeScript and Go
+   - Implementation: Use the standard CodeQL workflow template for `javascript` and `go` languages
+
+6. **Set Jest Coverage Thresholds** (1 hour)
+   - Impact: Fail CI when coverage drops below minimum
+   - Implementation:
+     ```js
+     // Add to jest.config.js in each package
+     coverageThreshold: {
+       global: {
+         branches: 50,
+         functions: 50,
+         lines: 60,
+         statements: 60,
+       },
+     },
+     ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows (3 total)**:
+**Workflow Inventory:**
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `test.yml` | PR + push to main | Lint PR title, build all, lint, test, coverage, per-package matrix test |
-| `release.yml` | Push to main | Semantic release → OIDC npm publish (all 4 packages) |
-| `publish.yml` | Manual dispatch | Manual version-specific publish with package selection |
+| `test.yml` | push/PR to main | Lint PR title, build, lint, test (all + individual packages), coverage |
+| `publish.yml` | workflow_dispatch | Manual npm publish with version input |
+| `release.yml` | push to main | Semantic release with npm provenance publishing |
 
-**Strengths**:
-- Semantic PR title enforcement (conventional commits)
-- Matrix testing per package (core, shared, kubeflow)
-- npm cache via `setup-node`
-- OIDC-based npm trusted publishing (no long-lived tokens)
-- `verify-dist.mjs` script validates build output before publish
-- Build → test → verify → publish pipeline
+**Strengths:**
+- Semantic PR title enforcement via `action-semantic-pull-request`
+- Matrix strategy for testing individual packages (core, shared, kubeflow)
+- Semantic release with conventional commits
+- npm provenance for supply chain security (`--provenance` flag)
+- OIDC trusted publishing with Node 22.14+ verification
+- Dist output verification before publish (`scripts/verify-dist.mjs`)
+- npm caching in all workflows
 
-**Gaps**:
-- No concurrency control on test workflow (duplicate runs on PR + push)
-- No caching of `npm ci` beyond node modules
-- Coverage job runs separately but doesn't upload or gate
-- No E2E or integration test step
+**Gaps:**
+- No concurrency control — pushes in quick succession run duplicate workflows
+- No E2E test job
+- No Docker image build validation in PR workflow
+- No security scanning workflow (Trivy, CodeQL, Dependabot)
+- No Konflux build simulation
+- Test coverage runs but results are not uploaded to any service
 
 ### Test Coverage
 
-**Framework**: Jest with ts-jest, React Testing Library, jsdom environment
+**TypeScript Library Packages:**
 
-**Per-Package Breakdown**:
-| Package | Source Files | Test Files | File Ratio | Status |
-|---------|-------------|------------|------------|--------|
-| mod-arch-core | 33 | 8 | 24% | Partial — hooks and context tested, API utilities gaps |
-| mod-arch-shared | 109 | 4 | 4% | Critical — 105 untested components and utilities |
-| mod-arch-kubeflow | 11 | 0 | 0% | Critical — entire theming package untested |
-| mod-arch-installer | 24 | 1 | 4% | Critical — CLI installer barely tested |
-| **Total** | **177** | **13** | **7%** | **Critical** |
+| Package | Source Files | Test Files | Test Ratio | Key Gaps |
+|---------|------------|------------|------------|----------|
+| mod-arch-core | ~40 | 7 | 17.5% | Missing: `useSettings`, `useTimeBasedRefresh`, `useQueryParamNamespaces`, `BrowserStorageContext`, `NotificationContext` |
+| mod-arch-shared | ~50 | 6 | 12% | Only 3/24 components tested. Missing: `SimpleSelect`, `TypeaheadSelect`, `MarkdownView`, `ApplicationsPage`, `EditableLabelsDescriptionListGroup`, and 18 others |
+| mod-arch-kubeflow | ~15 | 0 | 0% | Zero tests. Missing: `ThemeContext`, `useThemeContext`, `generate-mui-theme.mjs` |
+| mod-arch-installer | ~5 | 0 | 0% | Zero direct tests. Has flavor test infrastructure via `scripts/test-flavor.mjs` |
 
-**Line counts**: 1,937 lines of test code vs 10,373 lines of source code (19% ratio)
+**Overall TypeScript metrics:**
+- 167 source files, 15 test files (9% ratio)
+- 10,076 source LOC, 2,295 test LOC (22.8% test-to-code ratio)
 
-**Test scripts per package**:
-- All packages run: lint → unit tests → type-check (`run-s test:lint test:unit test:type-check`)
-- Jest passes with `--passWithNoTests` for shared and kubeflow (masking zero-test state)
-- Installer uses custom `test-flavor.mjs` script
+**Go BFF (mod-arch-starter):**
+
+| Area | Test Files | Coverage |
+|------|-----------|----------|
+| `internal/proxy/` | 3 | WebSocket upgrader, TLS config, tracker — well tested |
+| `internal/ssrf/` | 1 | Private IP validation, hostname resolution — comprehensive |
+| `internal/integrations/bffclient/` | 4 | Client, config, errors, factory — good coverage |
+| `cmd/` | 1 | Helper functions |
+| `internal/api/` | 1 (helpers only) | Handlers NOT tested — no tests for namespace, user, health endpoints |
+| `internal/repositories/` | 0 | Zero tests for repository layer |
+
+**Go BFF metrics:**
+- 3,803 source LOC, 1,575 test LOC (41.4% test-to-code ratio)
+- Uses envtest for Kubernetes API testing (good infrastructure, limited use)
+- Self-contained tests using `httptest.NewServer` — no external cluster needed
+
+**Testing Frameworks:**
+- Frontend: Jest 29 + React Testing Library 16 + ts-jest
+- BFF: Go standard testing + envtest + httptest
+- Test environment: jest-environment-jsdom
 
 ### Code Quality
 
-**ESLint Configuration**: Strong
-- TypeScript parser with project references
-- Plugins: `@typescript-eslint`, `react-hooks`, `import`, `no-only-tests`, `no-relative-import-paths`, `prettier`
-- Extends: `eslint:recommended`, `jsx-a11y/recommended`, `react/recommended`, `@typescript-eslint/recommended`, `prettier`
-- `--max-warnings 0` enforced in CI
-- Import ordering rules configured
+**TypeScript Linting (ESLint):**
+- Very comprehensive configuration with strict rules
+- Plugins: `@typescript-eslint`, `react-hooks`, `jsx-a11y`, `import`, `no-only-tests`, `prettier`
+- Notable strict rules:
+  - `no-console: error` — prevents debug logging
+  - `@typescript-eslint/explicit-module-boundary-types: error` — enforces return types
+  - `@typescript-eslint/no-unnecessary-condition: error` — catches dead code
+  - `no-only-tests/no-only-tests: error` — prevents `.only()` from being committed
+  - `no-restricted-properties: sort` — enforces `.toSorted()` over `.sort()`
+  - `@typescript-eslint/consistent-type-assertions: never` — bans type assertions outside tests
+- Accessibility: `jsx-a11y` plugin with anchor and autofocus rules
+- Import ordering enforced with specific group order
+- Prettier integration for consistent formatting
 
-**Pre-commit Hooks**: Present
-- Husky configured with `npx lint-staged`
-- lint-staged runs ESLint on `mod-arch-*/**/*.{js,ts,jsx,tsx}`
-- Enforces `--max-warnings 0`
+**Go Linting:**
+- golangci-lint v2 configured (`.golangci.yaml`)
+- Minimal custom configuration — uses mostly default linters with exclusion presets
+- `go fmt` and `go vet` in Makefile
 
-**Prettier**: Configured per package (core, shared, starter)
+**Pre-commit Hooks:**
+- Husky pre-commit runs `npx lint-staged`
+- lint-staged: ESLint with `--max-warnings 0` on all `mod-arch-*/**/*.{js,ts,jsx,tsx}` files
+- No pre-commit for Go code
 
-**TypeScript**: Strict enough — `noEmit` type checking in test pipeline, separate `tsconfig.build.json` for builds
+**Static Analysis:**
+- No CodeQL/SAST
+- No Semgrep
+- No gosec
+- No dependency scanning beyond npm's `audit-level=moderate`
+- No secret detection (no Gitleaks/TruffleHog)
 
 ### Container Images
 
-**Dockerfile** (mod-arch-starter only):
-- Multi-stage: Node 22 (UI build) → Go 1.24.3 (BFF build) → distroless (runtime)
-- `TARGETOS`/`TARGETARCH` support for multi-arch
-- Non-root user (65532:65532)
-- Distroless base image
+**Build Process:**
+- Multi-stage Dockerfile in `mod-arch-starter/`:
+  - Stage 1: Node 22 — builds React frontend
+  - Stage 2: Go 1.24.3 — builds BFF binary
+  - Stage 3: `gcr.io/distroless/static:nonroot` — minimal runtime image
+- Supports multiple deployment modes via build args (`DEPLOYMENT_MODE`, `STYLE_THEME`)
+- Multi-architecture support via `docker buildx` with `PLATFORM` variable
+- Kind deployment script for local testing (`scripts/deploy_kind_cluster.sh`)
 
-**Gaps**:
-- Not built or tested in CI
-- No image startup validation
-- No vulnerability scanning (Trivy, Snyk)
-- No SBOM generation
-- No image signing/attestation
-- Only present in starter template, not the library packages themselves
+**Gaps:**
+- No container image scanning (Trivy, Snyk, Grype)
+- No SBOM generation (Syft, Anchore)
+- No image signing or attestation (Cosign, Sigstore)
+- No runtime validation tests
+- No image startup tests in CI
+- Docker builds are not part of PR workflow — build issues discovered only post-merge
 
 ### Security
 
-**Current State**: No security scanning whatsoever
-- No CodeQL/SAST
-- No Trivy/Snyk for container scanning
-- No dependency scanning (no Dependabot config despite manual bumps)
-- No secret detection (Gitleaks, TruffleHog)
-- No npm audit in CI
-- OIDC publishing is a security positive (no long-lived npm tokens)
+**Strengths:**
+- Distroless base image — minimal attack surface
+- npm provenance for supply chain transparency
+- SSRF protection in BFF code (`internal/ssrf/`) with comprehensive tests
+- npm `audit-level=moderate` in `.npmrc`
+- `nonroot` user in container (UID 65532)
+- Pinned GitHub Actions with SHA hashes in some workflows
+
+**Gaps:**
+- No Trivy/Snyk container scanning
+- No CodeQL/SAST for code analysis
+- No Dependabot/Renovate for dependency updates
+- No secret detection (Gitleaks/TruffleHog)
+- No npm audit step in CI workflow
+- Not all GitHub Actions pinned to SHAs (some use `@v4` tags)
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status**: Present — above average for agent guidance
-- **CLAUDE.md**: Points to AGENTS.md
-- **AGENTS.md**: Comprehensive monorepo guide with structure, commands, conventions, testing patterns, component guidelines
-- **.claude/rules/jira-creation.md**: Detailed Jira issue creation rules (Bug/Story/Task/Epic workflows, severity guidelines, field mappings)
-- **.claude/skills/**: release-version and review-dependabot skills
-- **mod-arch-kubeflow/.claude/rules/**: 3 rules for PatternFly tokens, SCSS architecture, and workflow
+**Status:** Present and well-structured
 
-**Coverage Assessment**:
-| Rule Category | Status | Notes |
-|---------------|--------|-------|
-| Code Style | Present | ESLint rules, naming conventions, import order |
-| Jira Workflow | Present | Comprehensive Bug/Story/Task/Epic templates |
-| Theming | Present | PatternFly tokens, SCSS architecture, MUI integration |
-| Unit Tests | **Missing** | No rules for test patterns, mocking strategies, coverage expectations |
-| E2E Tests | **Missing** | No Cypress/Playwright guidance for agents |
-| Component Tests | **Missing** | No React Testing Library patterns documented as rules |
-| API Tests | **Missing** | No contract test or API utility test rules |
+**Coverage:**
 
-**Recommendation**: Generate test-specific rules with `/test-rules-generator` to fill the gap — particularly for React hook testing, component rendering, and context provider testing patterns used in this codebase.
+| Location | Type | Content |
+|----------|------|---------|
+| `CLAUDE.md` | Root | Points to AGENTS.md |
+| `AGENTS.md` | Root | Comprehensive: repo overview, structure, commands, code style, testing, architecture |
+| `mod-arch-kubeflow/AGENTS.md` | Package | Theming rules, PatternFly tokens, MUI integration |
+| `mod-arch-kubeflow/.claude/rules/` | Rules (3) | `patternfly-design-tokens.md`, `scss-architecture.md`, `workflow.md` |
+| `mod-arch-starter/AGENTS.md` | Package | Mandatory development flow (contract-first), project structure |
+| `mod-arch-starter/CLAUDE.md` | Package | Points to AGENTS.md |
+| `.claude/rules/jira-creation.md` | Rule | Detailed Jira issue creation workflows for RHOAIENG |
+
+**Quality Assessment:**
+- Root AGENTS.md is excellent — covers workspace commands, code conventions, import order, testing patterns
+- mod-arch-kubeflow rules are thorough for their domain (theming/styling)
+- mod-arch-starter's contract-first development flow is a strong opinionated guide
+- Jira creation rule is very detailed with templates for Bug/Story/Task/Epic
+
+**Gaps:**
+- No `.claude/rules/` for test creation patterns (unit, integration, E2E)
+- No test pattern documentation for AI agents
+- No rules for component testing conventions
+- No rules for Go BFF testing patterns
+- No snapshot testing guidelines
+- Recommendation: Generate test rules with `/test-rules-generator`
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Add coverage thresholds and codecov integration** — prevent silent coverage regression, make coverage visible on PRs
-2. **Write unit tests for mod-arch-kubeflow** (0% → 60%) — theme context, hook behavior, token mapping
-3. **Write unit tests for mod-arch-shared** (4% → 40%) — UI components, utility functions
-4. **Add CodeQL security scanning** — catch vulnerabilities in source and dependencies
-5. **Add npm audit to CI** — quick dependency vulnerability check
+- Add unit tests for mod-arch-kubeflow (`ThemeContext`, `useThemeContext`, style utilities)
+- Add tests for the 21 untested shared components in mod-arch-shared
+- Add security scanning — Trivy for filesystem/container scanning, CodeQL for TypeScript/Go SAST
+- Integrate codecov with coverage thresholds and PR reporting
+- Add `npm audit` step to the test workflow
 
 ### Priority 1 (High Value)
-1. **Create E2E test suite** — Cypress or Playwright testing components in realistic provider hierarchy
-2. **Add PR-time Docker build** for `mod-arch-starter/Dockerfile` — validate multi-stage build doesn't break
-3. **Create `.claude/rules/` for test automation** — unit-tests.md, component-tests.md, e2e-tests.md
-4. **Add Dependabot** — automate dependency update PRs
-5. **Add concurrency control** to test workflow — avoid duplicate runs
+- Set up Cypress or Playwright E2E infrastructure for mod-arch-starter (covering standalone, federated, kubeflow modes)
+- Add contract tests for BFF API endpoints using OpenAPI spec validation
+- Create `.claude/rules/` for unit-tests.md, e2e-tests.md, integration-tests.md
+- Add PR-time Docker image build validation for mod-arch-starter
+- Add dependency management (Dependabot or Renovate) for npm and Go dependencies
+- Add concurrency control to CI workflows
+- Pin all GitHub Actions to SHA hashes for supply chain security
 
 ### Priority 2 (Nice-to-Have)
-1. **Add Trivy container scanning** for starter Dockerfile
-2. **Performance testing** for hooks (useNamespaces renders, useGenericObjectState equality checks)
-3. **Accessibility testing** (axe-core) integration in component tests
-4. **Complete docs/testing.md** — currently a WIP placeholder with no concrete content
-5. **Add SBOM generation** for npm packages and container images
-6. **Add image signing** (cosign/sigstore) for published npm packages
+- Add accessibility testing automation (axe-core in Jest component tests)
+- Add performance testing for shared components
+- Add visual regression testing for UI components (Chromatic or Percy)
+- Complete the `docs/testing.md` documentation (currently all placeholders)
+- Add SBOM generation for published npm packages
+- Add image signing with Cosign/Sigstore
+- Add Gitleaks secret detection
 
 ## Comparison to Gold Standards
 
-| Dimension | kubeflow-ui-essentials | odh-dashboard | notebooks | Gold Standard |
-|-----------|----------------------|---------------|-----------|---------------|
-| Unit Test Coverage | ~7% file ratio | >80% | N/A | >70% with thresholds |
-| E2E Tests | Cypress in starter only | Cypress (mocked + real) | N/A | Multi-layer (mocked + live) |
-| Coverage Enforcement | None | Codecov + thresholds | N/A | PR gates + trend tracking |
-| Security Scanning | None | CodeQL + Trivy | Trivy | CodeQL + Trivy + Dependabot |
-| Image Testing | None | N/A | 5-layer validation | Build + startup + functional |
-| CI/CD Quality | Good (semantic-release) | Excellent | Good | Matrix + caching + concurrency |
-| Agent Rules | Strong (style/Jira/theming) | Strong (comprehensive) | None | Test rules + code rules + workflow |
-| Pre-commit Hooks | Husky + lint-staged | Husky + lint-staged | N/A | Lint + format + type-check |
-| Contract Tests | None | Yes | N/A | API boundary tests |
+| Dimension | kubeflow-ui-essentials | odh-dashboard (Gold) | notebooks (Gold) | Gap |
+|-----------|----------------------|---------------------|------------------|-----|
+| Unit Test Ratio | 9% file ratio | ~40%+ | N/A (image-focused) | 4x below gold standard |
+| E2E Tests | None | Cypress + mocked tests | N/A | No E2E infrastructure at all |
+| Coverage Tracking | Config only, no reporting | Codecov with thresholds | N/A | Missing enforcement and visibility |
+| Security Scanning | None | CodeQL + dependency scanning | Trivy + image scanning | No scanning of any kind |
+| Container Scanning | None | Limited | 5-layer validation | No image testing pipeline |
+| Agent Rules | Good AGENTS.md, partial .claude/rules/ | Comprehensive rules + skills | N/A | Missing test creation rules |
+| Pre-commit | Husky + lint-staged (TS only) | Comprehensive pre-commit | N/A | No Go pre-commit hooks |
+| CI Automation | 3 workflows, basic | Multi-workflow, comprehensive | Periodic + PR | Missing security and E2E jobs |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/test.yml` — PR testing (lint, build, test, coverage, matrix)
-- `.github/workflows/release.yml` — Semantic release + OIDC npm publish
-- `.github/workflows/publish.yml` — Manual version publish
-
-### Testing
-- `mod-arch-core/__tests__/` — Core hook and context tests
-- `mod-arch-core/api/__tests__/` — API utility tests
-- `mod-arch-shared/__tests__/` — Shared component tests
-- `mod-arch-shared/utilities/__tests__/` — Utility tests
-- `mod-arch-starter/frontend/src/__tests__/cypress/` — Cypress tests (starter only)
-- `mod-arch-core/jest.config.js` — Core Jest configuration
-- `mod-arch-shared/jest.config.js` — Shared Jest configuration
-
-### Code Quality
-- `mod-arch-core/.eslintrc.cjs` — Core ESLint config
-- `mod-arch-shared/.eslintrc.cjs` — Shared ESLint config
-- `.husky/pre-commit` — Pre-commit hook (lint-staged)
+- `.github/workflows/test.yml` — PR/push test workflow (lint, build, test, coverage)
+- `.github/workflows/publish.yml` — Manual npm publish workflow
+- `.github/workflows/release.yml` — Semantic release on main push
 - `.releaserc.json` — Semantic release configuration
 
+### Testing
+- `mod-arch-core/jest.config.js` — Core package Jest config
+- `mod-arch-shared/jest.config.js` — Shared package Jest config
+- `mod-arch-kubeflow/jest.config.js` — Kubeflow package Jest config (0 tests)
+- `mod-arch-core/__tests__/` — Core test directory
+- `mod-arch-shared/__tests__/` — Shared test directory
+- `mod-arch-starter/bff/Makefile` — BFF test targets (uses envtest)
+- `docs/testing.md` — Testing documentation (mostly placeholders)
+
+### Code Quality
+- `mod-arch-core/.eslintrc.cjs` — ESLint config (comprehensive)
+- `mod-arch-shared/.eslintrc.cjs` — ESLint config (comprehensive)
+- `mod-arch-starter/bff/.golangci.yaml` — Go linter config (minimal)
+- `.husky/pre-commit` — Pre-commit hook (lint-staged)
+
 ### Container Images
-- `mod-arch-starter/Dockerfile` — Multi-stage Node + Go + distroless
+- `mod-arch-starter/Dockerfile` — Multi-stage build (Node + Go → distroless)
+- `mod-arch-starter/Makefile` — Docker build/push/deploy targets
+- `mod-arch-starter/scripts/deploy_kind_cluster.sh` — Kind deployment
 
 ### Agent Rules
-- `CLAUDE.md` — Points to AGENTS.md
-- `AGENTS.md` — Comprehensive monorepo development guide
-- `.claude/rules/jira-creation.md` — Jira issue templates and workflows
-- `.claude/skills/release-version/SKILL.md` — Release version skill
-- `.claude/skills/review-dependabot/SKILL.md` — Dependabot review skill
-- `mod-arch-kubeflow/AGENTS.md` — Kubeflow theming agent rules
-- `mod-arch-kubeflow/.claude/rules/` — PatternFly tokens, SCSS architecture, workflow
+- `CLAUDE.md` — Root agent instructions
+- `AGENTS.md` — Comprehensive repo guide
+- `.claude/rules/jira-creation.md` — Jira issue creation guide
+- `mod-arch-kubeflow/AGENTS.md` — Kubeflow theming guide
+- `mod-arch-kubeflow/.claude/rules/` — 3 theming rules
+- `mod-arch-starter/AGENTS.md` — Starter template guide (contract-first flow)
+
+### Security
+- `.npmrc` — `audit-level=moderate`
+- `mod-arch-starter/bff/internal/ssrf/` — SSRF protection (with tests)

@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:42 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:18 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/notebooks</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#28a745"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="90.47779199999995"
+                                stroke-dashoffset="84.82293"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">8.4</div>
+                        <div class="score-value">8.5</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Solid pytest + Go test coverage for utility code; coverage tooling integrated but thresholds informational only</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Strong pytest + Go testing, 53% test-to-code ratio, coverage reporting via Codecov</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Multi-layer container testing (testcontainers, Playwright, papermill), automated on PR with matrix builds</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Multi-layer: Testcontainers integration, Playwright browser E2E, K8s smoke tests, GPU-gated tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">PR builds both ODH and RHOAI variants; matrix-based cached builds; Konflux Tekton pipelines for production</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">Dynamic PR matrix builds (ODH/RHOAI), multi-platform, but no PR-time Konflux simulation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">5-layer validation: Dockerfile lint, static manifest checks, container runtime tests, browser E2E, Trivy scanning</div>
+                            <div class="scorecard-status">5-layer validation: ELF linking, workbench HTTP readiness, library loading, IPv6, manifest annotations</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">Codecov integration with Python + Go flags and carryforward; thresholds are informational, not enforced</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Codecov with Python+Go flags and carryforward, but thresholds are informational-only</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
-                            <div class="scorecard-status">41 workflows covering builds, security, quality, releases; concurrency control, SHA-pinned actions, matrix builds</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">41 workflows, concurrency control, matrix generation, automated security scanning, Renovate</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Comprehensive AGENTS.md, test conventions in .cursor/rules, Jira conventions, skills directory; missing .claude/rules</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">CLAUDE.md + AGENTS.md + .cursor/rules/ with comprehensive test conventions and Jira patterns</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +411,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card medium">
-                            <div class="item-description">Coverage thresholds are informational only</div>
-                            <p>Coverage can silently regress — no PR gate prevents merging low-coverage changes</p>
+                            <div class="item-description">No PR-time Konflux/Tekton build simulation</div>
+                            <p>Build failures from Konflux-specific stages (hermetic builds, prefetch) discovered only post-merge</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card low">
-                            <div class="item-description">No .claude/rules/ directory for Claude Code agents</div>
-                            <p>Claude Code agents lack test creation guidance natively; must rely on .cursor/rules cross-reference</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Container integration tests are not in default PR flow</div>
-                            <p>Container test self-test only runs when tests/containers/** changes; images built on PR are not integration-tested by default</p>
+                            <div class="item-description">Coverage thresholds are informational only</div>
+                            <p>Coverage can silently regress without blocking PRs</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card low">
-                            <div class="item-description">No performance/load testing for notebook images</div>
-                            <p>Memory/startup performance regressions in notebook images go undetected until deployment</p>
+                            <div class="item-description">No SBOM generation or image signing in GitHub CI</div>
+                            <p>Supply chain provenance not tracked in upstream CI (may be handled by Konflux downstream)</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">8-16 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,27 +448,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Enforce Codecov coverage thresholds</div>
-                            <p>Prevent coverage regression by changing informational to required status checks</p>
+                            <div class="item-description">Enable coverage enforcement in Codecov</div>
+                            <p>Prevent silent coverage regression by setting project/patch targets to non-informational</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Mirror .cursor/rules to .claude/rules</div>
-                            <p>Claude Code agents get native test convention guidance without needing cross-references</p>
+                            <div class="item-description">Add SBOM generation to PR build workflow</div>
+                            <p>Supply chain transparency; Trivy can generate SBOMs alongside vulnerability scans</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add container test gate on image-building PRs</div>
-                            <p>Catch runtime failures in built images before merge</p>
+                            <div class="item-description">Add coverage threshold to pytest.ini</div>
+                            <p>Fail local test runs when coverage drops below acceptable minimum</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                     </ul>
@@ -493,15 +485,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Change Codecov status from informational to enforced with a minimum threshold (e.g., 60%)</li><li>Run container integration tests on images built during PR CI, not just when test files change</li></ul>
+                            <ul><li>Change Codecov status checks from informational to enforced with a reasonable target (e.g., 60% project, 70% patch)</li><li>Add SBOM generation step to the build-notebooks-TEMPLATE workflow using Trivy or syft</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Mirror .cursor/rules/test-conventions.mdc to .claude/rules/ for native Claude Code support</li><li>Add startup-time benchmarking for notebook images to detect performance regressions</li></ul>
+                            <ul><li>Add PR-time Konflux build simulation for critical images to catch hermetic build failures early</li><li>Expose yamllint, hadolint, and gotestsum as Makefile targets to close CI-local parity gap</li><li>Add mutation testing (mutmut or cosmic-ray) for Python test quality validation</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add contract tests for manifest/imagestream interfaces consumed by odh-dashboard</li><li>Implement image size tracking to alert on unexpected growth</li></ul>
+                            <ul><li>Add performance regression testing for notebook startup times</li><li>Consider contract tests between image labels/manifests and ODH Notebook Controller expectations</li><li>Add browser accessibility testing to Playwright suite</li></ul>
                         </div>
                     </div>
                 </div>

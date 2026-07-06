@@ -4,73 +4,68 @@ overall_score: 7.6
 scorecard:
   - dimension: "Unit Tests"
     score: 8.5
-    status: "285 test files (~78K lines) with pytest+pytest-asyncio; 1.5:1 test-to-code ratio"
+    status: "Excellent test-to-code ratio (303:309), comprehensive pytest suite with async support"
   - dimension: "Integration/E2E"
     score: 7.0
-    status: "QA integration suite and Docker runtime tests; no Kind/Minikube cluster testing"
+    status: "LangChain integration tests and E2E tests present; no live/deployed E2E automation"
   - dimension: "Build Integration"
-    score: 6.5
-    status: "Docker build+runtime test on PRs; wheel build+server smoke across 4 Python versions"
+    score: 5.0
+    status: "Docker image tested on PR for Dockerfile changes only; no fork-specific Dockerfile.server PR validation"
   - dimension: "Image Testing"
-    score: 7.0
-    status: "Two Dockerfiles tested; runtime health check; no multi-arch or SBOM generation"
+    score: 6.5
+    status: "Docker runtime validation in CI with health checks; UBI9 multi-stage build but no PR-time validation for fork image"
   - dimension: "Coverage Tracking"
     score: 7.5
-    status: "Codecov integration on Python 3.11; no enforcement thresholds or PR coverage gates"
+    status: "Codecov integration with PR reporting; coverage set to informational, no enforcement threshold"
   - dimension: "CI/CD Automation"
-    score: 9.0
-    status: "17 workflows covering PR tests, full matrix (3 OS x 4 Python), nightly latest-deps, release automation"
+    score: 8.5
+    status: "Well-organized reusable workflows, multi-OS/multi-Python matrix, caching, parallel tests with xdist"
   - dimension: "Agent Rules"
-    score: 7.0
-    status: "CLAUDE.md present with build/test/architecture guidance; no .claude/rules/ for test patterns"
+    score: 6.0
+    status: "CLAUDE.md present with repo layout and build/test instructions; no .claude/rules/ for test creation guidance"
 critical_gaps:
-  - title: "No coverage enforcement thresholds"
-    impact: "Coverage can silently regress without any CI gate; no minimum coverage requirement"
+  - title: "Coverage thresholds are informational only"
+    impact: "Coverage can regress without blocking PRs; no enforcement of minimum standards"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No multi-architecture image builds"
-    impact: "Only amd64 images tested; arm64 (Apple Silicon, Graviton) not validated"
-    severity: "MEDIUM"
-    effort: "4-6 hours"
-  - title: "Dockerfile.server not tested in CI"
-    impact: "Production UBI9 image (used in RHOAI) not validated on PRs; build issues discovered post-merge"
+  - title: "No PR-time validation for Dockerfile.server (fork image)"
+    impact: "UBI9 fork-specific image build failures discovered only post-merge or in downstream builds"
     severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "No SBOM generation or image signing"
-    impact: "Supply chain security gaps; no software bill of materials for compliance"
-    severity: "MEDIUM"
     effort: "4-6 hours"
-  - title: "No secret detection in CI"
-    impact: "Leaked credentials or API keys may go undetected in commits"
+  - title: "No secret detection tooling"
+    impact: "Secrets or API keys could be committed without automated detection"
+    severity: "HIGH"
+    effort: "2-3 hours"
+  - title: "Missing test automation agent rules"
+    impact: "AI-generated tests lack consistency; no standardized patterns for test creation"
     severity: "MEDIUM"
-    effort: "1-2 hours"
+    effort: "3-4 hours"
 quick_wins:
-  - title: "Add coverage enforcement threshold to Codecov"
+  - title: "Enforce coverage thresholds in Codecov config"
     effort: "1-2 hours"
-    impact: "Prevent silent coverage regression with a minimum gate (e.g., 70%)"
-  - title: "Add Gitleaks secret detection to PR workflow"
+    impact: "Prevent coverage regression on PRs with hard pass/fail gates"
+  - title: "Add Gitleaks pre-commit hook for secret detection"
     effort: "1-2 hours"
-    impact: "Catch leaked credentials before they reach the repository"
-  - title: "Add Dockerfile.server build test to PR workflow"
+    impact: "Prevent accidental secret commits at development time"
+  - title: "Add Dockerfile.server build to PR workflow"
     effort: "2-3 hours"
-    impact: "Validate the production UBI9 image builds correctly on every PR"
-  - title: "Create .claude/rules/ test pattern guides"
+    impact: "Catch fork-specific image build failures before merge"
+  - title: "Create .claude/rules/ with test pattern guidance"
     effort: "2-3 hours"
-    impact: "Improve AI-generated test quality and consistency for contributors"
+    impact: "Improve AI-generated test quality and consistency"
 recommendations:
   priority_0:
-    - "Add coverage enforcement threshold (e.g., 70% minimum) via .codecov.yml"
-    - "Add Dockerfile.server CI build validation on PRs touching server code or dependencies"
+    - "Enforce coverage thresholds — change Codecov status from informational to required with a minimum threshold (e.g., 70%)"
+    - "Add Dockerfile.server build validation to PR workflow to catch fork-specific build issues"
+    - "Integrate secret detection (Gitleaks) into pre-commit hooks and CI"
   priority_1:
-    - "Add Gitleaks or TruffleHog secret detection to PR workflow"
-    - "Add multi-architecture (arm64) image build testing"
-    - "Generate SBOM with Syft and sign images with cosign"
-    - "Create .claude/rules/ for unit test and integration test patterns"
+    - "Create .claude/rules/ directory with test creation patterns (unit, integration, e2e)"
+    - "Add SBOM generation and image signing to container build pipeline"
+    - "Activate 'live' and 'slow' test markers with dedicated CI jobs for provider integration testing"
   priority_2:
-    - "Add Dockerfile.server runtime smoke test (health check, guardrail endpoint)"
-    - "Add contract tests for the /v1/guardrail/checks fork-specific API"
-    - "Add performance regression testing for guardrail evaluation latency"
-    - "Consider adding concurrency control to PR test workflows"
+    - "Add multi-architecture container build support (arm64) for Dockerfile.server"
+    - "Implement contract tests for the /v1/guardrail/checks API endpoint"
+    - "Add performance regression detection to benchmark tests in CI"
 ---
 
 # Quality Analysis: NeMo-Guardrails (TrustyAI Fork)
@@ -78,389 +73,379 @@ recommendations:
 ## Executive Summary
 
 - **Overall Score: 7.6/10**
-- **Repository Type**: Python library + FastAPI server for LLM guardrails
-- **Primary Language**: Python (3.10-3.13)
-- **Framework**: FastAPI, LangChain, Colang DSL
-- **Fork Context**: TrustyAI fork of NVIDIA/NeMo-Guardrails with Red Hat customizations
+- **Repository Type**: Python library + FastAPI server (LLM guardrails toolkit)
+- **Primary Language**: Python (761 .py files)
+- **Fork**: `trustyai-explainability/NeMo-Guardrails` (fork of NVIDIA/NeMo-Guardrails)
+- **Default Branch**: `develop`
 
-**Key Strengths**: Exceptional test suite (285 test files, 78K lines), mature CI/CD with 17 workflows spanning 3 OS x 4 Python versions, strong security scanning (Trivy + Bandit), well-documented CLAUDE.md, and automated release pipeline with changelog generation.
+### Key Strengths
+1. **Exceptional test-to-code ratio** — 303 test files for 309 source files (~1:1), with 1,445 async test functions
+2. **Mature CI/CD** — Reusable workflow pattern, multi-OS/multi-Python matrix (3.10-3.13), pytest-xdist parallelism
+3. **Strong security scanning** — Trivy filesystem + dependency scanning, Bandit SAST, SARIF upload to GitHub Security tab
+4. **Comprehensive pre-commit hooks** — Ruff linting/formatting, YAML checks, license headers, Pyright type checking
 
-**Critical Gaps**: No coverage enforcement thresholds, production Dockerfile.server not tested in CI, no multi-arch builds, no secret detection, no SBOM generation.
+### Critical Gaps
+1. Coverage enforcement is informational-only (no blocking thresholds)
+2. Fork-specific Dockerfile.server not validated in PR workflows
+3. No secret detection tooling (Gitleaks/TruffleHog)
+4. No `.claude/rules/` for AI test automation guidance
 
-**Agent Rules Status**: CLAUDE.md present with good build/test/architecture documentation; no `.claude/rules/` directory for structured test automation patterns.
+### Agent Rules Status: **Partial**
+- `CLAUDE.md` is present with repo layout, build, and test instructions
+- No `.claude/` directory or test creation rules
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 8.5/10 | 285 test files (~78K lines) with pytest+pytest-asyncio; 1.5:1 test-to-code ratio |
-| Integration/E2E | 7.0/10 | QA integration suite and Docker runtime tests; no K8s cluster testing |
-| **Build Integration** | **6.5/10** | **Docker build+runtime on PRs; Dockerfile.server NOT tested in CI** |
-| Image Testing | 7.0/10 | Two Dockerfiles tested; runtime health check; no multi-arch/SBOM |
-| Coverage Tracking | 7.5/10 | Codecov integration on Python 3.11; no enforcement thresholds |
-| CI/CD Automation | 9.0/10 | 17 workflows, full matrix testing, nightly deps, release automation |
-| Agent Rules | 7.0/10 | CLAUDE.md present with guidance; no .claude/rules/ for test patterns |
+| Unit Tests | 8.5/10 | Excellent test-to-code ratio (303:309), comprehensive pytest suite with async support |
+| Integration/E2E | 7.0/10 | LangChain integration tests and E2E tests present; no live/deployed E2E automation |
+| **Build Integration** | **5.0/10** | **Docker image tested on PR for Dockerfile changes only; no fork-specific Dockerfile.server PR validation** |
+| Image Testing | 6.5/10 | Docker runtime validation in CI with health checks; UBI9 multi-stage build but no PR-time validation for fork image |
+| Coverage Tracking | 7.5/10 | Codecov integration with PR reporting; coverage set to informational, no enforcement threshold |
+| CI/CD Automation | 8.5/10 | Well-organized reusable workflows, multi-OS/multi-Python matrix, caching, parallel tests with xdist |
+| Agent Rules | 6.0/10 | CLAUDE.md present with repo layout and build/test instructions; no .claude/rules/ for test creation guidance |
 
 ## Critical Gaps
 
-### 1. No Coverage Enforcement Thresholds
-- **Impact**: Coverage can silently regress; contributors can merge code that reduces overall coverage without any CI gate
+### 1. Coverage Thresholds Are Informational Only
+- **Impact**: Coverage can regress silently without blocking PRs
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Evidence**: Codecov uploads coverage XML but no `.codecov.yml` exists to enforce minimum thresholds
-- **Fix**: Create `.codecov.yml` with `target: 70%` and `threshold: 2%` for patch coverage
+- **Details**: `.github/codecov.yml` sets both `project` and `patch` status to `informational: true`. This means Codecov reports coverage but never blocks a PR from merging, regardless of how much coverage drops.
+- **Fix**: Set `informational: false` and add `target: 70%` (or appropriate baseline) to both project and patch status.
 
-### 2. Dockerfile.server Not Tested in CI
-- **Impact**: The production UBI9 multi-stage image used in RHOAI deployments is never validated on PRs; build failures are only discovered post-merge or in downstream (Konflux)
+### 2. No PR-Time Validation for Dockerfile.server (Fork Image)
+- **Impact**: UBI9 fork-specific image build failures discovered only post-merge or in downstream Konflux builds
 - **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Evidence**: `test-docker.yml` only tests `Dockerfile` (upstream NVIDIA image); `Dockerfile.server` (the fork-specific UBI9 production image) has no CI testing
-- **Fix**: Add a workflow job to build Dockerfile.server on PRs touching `Dockerfile.server`, `requirements.txt`, `pyproject.toml`, or `scripts/`
-
-### 3. No Multi-Architecture Image Builds
-- **Impact**: Only amd64 images tested; arm64 (Apple Silicon, AWS Graviton) not validated despite growing usage
-- **Severity**: MEDIUM
 - **Effort**: 4-6 hours
-- **Evidence**: `Makefile` supports `PLATFORMS` variable but CI only runs on `ubuntu-latest` (amd64)
+- **Details**: The `test-docker.yml` workflow builds and tests the upstream `Dockerfile` only. The fork's production image (`Dockerfile.server`) — which is a UBI9 multi-stage build with baked-in models, filter scripts, and a custom entrypoint — is never validated in CI. Changes to `pyproject.toml`, `requirements.txt`, or `scripts/` could break the production image silently.
+- **Fix**: Add a PR-triggered job that builds `Dockerfile.server` and performs a basic health check.
 
-### 4. No SBOM Generation or Image Signing
-- **Impact**: Supply chain security gaps; no software bill of materials for compliance and vulnerability tracking
-- **Severity**: MEDIUM
-- **Effort**: 4-6 hours
-- **Evidence**: Neither Syft/SBOM generation nor cosign image signing is configured
+### 3. No Secret Detection Tooling
+- **Impact**: API keys, tokens, or credentials could be committed without automated detection
+- **Severity**: HIGH
+- **Effort**: 2-3 hours
+- **Details**: No `.gitleaks.toml`, no TruffleHog, no secret scanning in pre-commit or CI. The repo handles API keys (OpenAI, NVIDIA) in test configuration, increasing the risk.
+- **Fix**: Add `gitleaks` to `.pre-commit-config.yaml` and a CI job.
 
-### 5. No Secret Detection in CI
-- **Impact**: Leaked credentials, API keys, or tokens may go undetected in commits
+### 4. Missing Test Automation Agent Rules
+- **Impact**: AI-generated tests lack consistency; no standardized patterns for different test types
 - **Severity**: MEDIUM
-- **Effort**: 1-2 hours
-- **Evidence**: No Gitleaks, TruffleHog, or similar secret scanning configured
+- **Effort**: 3-4 hours
+- **Details**: The `CLAUDE.md` provides good repo orientation but no `.claude/rules/` directory with test creation patterns. AI agents creating tests won't follow consistent patterns for unit vs. integration vs. server tests.
 
 ## Quick Wins
 
-### 1. Add Coverage Enforcement (1-2 hours)
-Create `.codecov.yml`:
+### 1. Enforce Coverage Thresholds (1-2 hours)
+Update `.github/codecov.yml`:
 ```yaml
 coverage:
   status:
     project:
       default:
+        informational: false
         target: 70%
-        threshold: 2%
     patch:
       default:
+        informational: false
         target: 80%
 ```
 
-### 2. Add Gitleaks Secret Detection (1-2 hours)
-Add to PR workflow:
+### 2. Add Gitleaks Pre-commit Hook (1-2 hours)
+Add to `.pre-commit-config.yaml`:
 ```yaml
-- name: Run Gitleaks
-  uses: gitleaks/gitleaks-action@v2
-  env:
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4
+    hooks:
+      - id: gitleaks
 ```
 
-### 3. Add Dockerfile.server Build Test (2-3 hours)
-Add a job to `test-docker.yml` or create a new workflow:
+### 3. Add Dockerfile.server Build to PR Workflow (2-3 hours)
+Add a job to `pr-tests.yml` or create a new workflow:
 ```yaml
-test-server-image:
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v6
-    - name: Build Dockerfile.server
-      run: docker build -f Dockerfile.server -t nemo-server-test .
-    - name: Start and health check
-      run: |
-        docker run -d --name test -p 8000:8000 nemo-server-test
-        sleep 10
-        curl -f http://localhost:8000/v1/rails/configs
+  build-server-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.server
+          load: true
+          tags: nemo-guardrails-server:test
+      - run: |
+          docker run -d --name test -p 8000:8000 nemo-guardrails-server:test
+          timeout 120 bash -c 'until curl -sf http://localhost:8000/v1/rails/configs; do sleep 2; done'
+          docker stop test
 ```
 
-### 4. Create `.claude/rules/` Test Patterns (2-3 hours)
-Add structured test automation rules for AI-assisted development — unit test patterns, mock strategies, async test patterns, and fixture conventions.
+### 4. Create Agent Rules for Test Patterns (2-3 hours)
+Run `/test-rules-generator` on this repository to auto-generate `.claude/rules/` with patterns for:
+- Unit tests (pytest, async, mocking patterns)
+- Integration tests (LangChain, server API)
+- E2E tests (guardrail validation)
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Strengths (Score: 9.0/10)**:
-
-The CI/CD pipeline is exceptionally well-organized with 17 workflows covering the full development lifecycle:
+**Workflow Inventory** (19 workflow files):
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `pr-tests.yml` | PR (code changes) | Matrix: Ubuntu x Python 3.10-3.13, coverage on 3.11 |
-| `pr-tests-skip.yml` | PR (docs/CI only) | Fast skip for non-code changes |
-| `full-tests.yml` | Push to main/develop, review requested | Matrix: Windows + macOS x Python 3.10-3.13 |
-| `latest-deps-tests.yml` | Nightly (10 PM UTC) | All 3 OS x 4 Python with `poetry update` |
-| `lint.yml` | PR, push | Pre-commit hooks (ruff, pyright, license headers) |
-| `security.yml` | PR to develop, push | Trivy (filesystem + deps) + Bandit SAST |
-| `test-docker.yml` | PR (Dockerfile changes), weekly, tags | Docker build + runtime health check |
-| `test-and-build-wheel.yml` | Push, nightly | Build wheel + install + server smoke (4 Python) |
-| `docs-build.yaml` | PR (docs changes), push | Sphinx docs with redirect validation |
-| `release.yml` | Manual dispatch | Automated release PR with changelog (git-cliff) |
-| `create-tag.yml` | Release PR merge | Auto-tag creation |
-| `publish-pypi-approval.yml` | After build+test | PyPI publish with environment approval |
+| `pr-tests.yml` | PR (code changes) | Ubuntu-only pytest matrix (3.10-3.13), coverage on 3.11 |
+| `pr-tests-skip.yml` | PR (docs/CI changes) | Skip tests for non-code changes |
+| `full-tests.yml` | PR review requested, push to main/develop, tags | Windows + macOS matrix (3.10-3.13) |
+| `lint.yml` | PR, push to main/develop | Pre-commit hooks (Ruff, Pyright, YAML, license) |
+| `security.yml` | PR to develop, push to develop | Trivy + Bandit scans with SARIF upload |
+| `test-docker.yml` | Weekly, tags, PR (Dockerfile changes) | Build upstream Dockerfile, runtime health check |
+| `test-and-build-wheel.yml` | Push to main/develop, tags, nightly | Build wheel, test distribution |
+| `test-published-dist.yml` | Nightly | Install from PyPI, server smoke test |
+| `latest-deps-tests.yml` | Nightly | Full matrix with latest dependencies |
+| `docs-build.yaml` | PR/push (docs changes) | Fern docs build |
+| `docs-links-pr.yaml` | PR (markdown changes) | Documentation link validation |
+| `release.yml` | Manual dispatch | Release preparation |
+| `create-tag.yml` | PR merge to develop | Auto-tag on release branch merge |
+| `publish-*.yml` | Various | PyPI publishing |
 
-**Key features**:
-- Reusable workflow (`_test.yml`) for DRY test matrix
-- Poetry virtualenv caching with health checks
-- `poetry check --lock` ensures lock file integrity
-- Multi-OS testing (Ubuntu, macOS, Windows)
-- Nightly latest-deps testing catches upstream breakage
-- Automated release pipeline (git-cliff changelog, auto-tag, PyPI publish)
-- Concurrency control on docs builds (`cancel-in-progress: true`)
+**Strengths**:
+- Reusable workflow pattern (`_test.yml`) avoids duplication
+- Multi-OS matrix (Ubuntu, macOS, Windows) with multi-Python (3.10-3.13)
+- Smart path-based filtering — docs-only changes skip tests
+- Venv caching with health check
+- Poetry lock verification (`poetry check --lock`)
+- Nightly dependency compatibility testing
+- Nightly published package validation
 
 **Gaps**:
-- No concurrency control on PR test workflows (parallel runs on rapid pushes)
-- `test-docker.yml` only tests upstream `Dockerfile`, not fork-specific `Dockerfile.server`
-- Wheel smoke test does basic health check but no guardrail endpoint validation
+- No concurrency control (`concurrency:` groups) — parallel runs on same PR possible
+- No explicit timeout on test jobs (risk of hanging tests consuming runner time)
+- `test-docker.yml` only validates upstream `Dockerfile`, not fork `Dockerfile.server`
 
 ### Test Coverage
 
-**Strengths (Score: 8.5/10 Unit, 7.0/10 Integration)**:
+**Test Structure**:
+- **303 test files** across 14 subdirectories
+- **309 source files** — near 1:1 test-to-code ratio
+- **3 conftest.py** files for fixtures
+- **1,445 async test functions** (`@pytest.mark.asyncio`)
+- **99 parametrized** test functions
+- **163 skipped** tests (needs review for stale skips)
 
-| Metric | Value |
-|--------|-------|
-| Test files | 285 Python test files |
-| Test lines | ~78,226 lines |
-| Source files | 270 Python source files |
-| Source lines | ~51,938 lines |
-| Test-to-code ratio | **1.5:1** (excellent) |
-| Test framework | pytest + pytest-asyncio |
-| Coverage tool | pytest-cov → Codecov |
+**Test Categories**:
+| Category | Location | Count | Notes |
+|----------|----------|-------|-------|
+| Unit | `tests/` (root) | ~200 | Core guardrails, rails, LLM interaction |
+| Integration | `tests/integrations/langchain/` | 20+ | LangChain adapter tests |
+| Server | `tests/server/` | 5 | API endpoint tests |
+| CLI | `tests/cli/` | CLI command tests | |
+| Colang | `tests/colang/`, `tests/v2_x/` | Language tests | Colang v1/v2 |
+| Eval | `tests/eval/` | Evaluation framework tests | |
+| Telemetry | `tests/telemetry/` | OpenTelemetry integration | |
+| E2E | `tests/test_*_e2e*.py` | 4 files | Guardrails AI integration |
+| Benchmark | `benchmark/tests/` | 9 | Performance/load testing |
+| QA | `qa/` | 5 | Live API tests (manual) |
 
-**Test organization**:
-- `tests/` (root): 157 test files covering core guardrail functionality
-- `tests/v2_x/`: 32 test files for Colang v2.x language features
-- `tests/tracing/`: 11 test files for OpenTelemetry span formatting and tracing
-- `tests/test_configs/`: 63 config directories for integration-style tests
-- `qa/`: 5 integration test files for specific guardrail types (jailbreak, moderation, topical, grounding, execution)
-- `benchmark/tests/`: 9 test files for load testing infrastructure (Locust, aiperf)
-- `docs/colang-2/examples/`: Documentation examples also run as tests
-
-**Testing patterns**:
-- Async testing with `pytest-asyncio` (core engine is async)
-- Extensive configuration-driven tests via `test_configs/` directories
-- Mock LLM responses for deterministic testing
-- Profile-based test debugging (`pytest-profiling`)
-- Cross-Python-version validation (3.10-3.13)
+**Test Execution**:
+- `pytest-xdist` for parallel execution with `worksteal` distribution
+- `UNIT_TEST_ENV` strips API keys to prevent accidental live calls
+- Custom markers: `serial`, `slow`, `live`, `real_embeddings`
+- asyncio default fixture scope: `function`
 
 **Gaps**:
-- No coverage thresholds enforced
-- No separate integration test marker/category
-- QA tests (`qa/`) require external LLM access, not run in standard CI
-- No contract tests for fork-specific `/v1/guardrail/checks` API
+- `live` marker only used on 2 tests — limited live provider testing
+- `serial` and `slow` markers defined but unused (0 tests marked)
+- 163 skipped tests may indicate stale/broken tests
+- No contract tests for API boundaries
 
 ### Code Quality
 
-**Strengths (Score: 8.5/10)**:
+**Linting & Formatting**:
+- **Ruff** (v0.14.6): E4, E7, E9, F, W291-293, I001-002 rules enabled; line-length=120
+- **Pyright**: Type checking on core modules (rails, actions, llm, embeddings, cli, kb, logging, tracing, server, guardrails)
+- **Pre-commit hooks**: check-yaml, end-of-file-fixer, trailing-whitespace, ruff (lint + format), license headers, pyright
 
-| Tool | Configuration | Status |
-|------|--------------|--------|
-| Ruff (linter) | `ruff.toml` — E4, E7, E9, F, W291-293, I001-002; line-length 120 | Active |
-| Ruff (formatter) | Double quotes, spaces, auto line endings | Active |
-| Pyright | Type checking on core modules (rails, actions, llm, embeddings, etc.) | Active |
-| Pre-commit | 4 repos: pre-commit-hooks, ruff, license-header, pyright | Active |
-| License headers | Auto-inserted on `.py` files via pre-commit | Active |
-
-**Pre-commit hooks**:
-1. `check-yaml` — YAML syntax validation
-2. `end-of-file-fixer` — consistent EOF
-3. `trailing-whitespace` — clean whitespace
-4. `ruff --fix` — auto-fix lint issues
-5. `ruff-format` — code formatting
-6. `insert-license` — Apache 2.0 header on Python files
-7. `pyright` — static type checking
-
-**Quality tools enforced in CI** (via `lint.yml`):
-- All pre-commit hooks run on every PR and push to main/develop
-- Poetry lock file validation (`poetry check --lock`)
+**Strengths**:
+- Comprehensive pre-commit pipeline — code can't be committed without passing lint + type check
+- Ruff used for both linting and formatting (consistent toolchain)
+- Pyright scoped to critical modules (avoids noise from experimental code)
+- License header enforcement on all `.py` files
 
 **Gaps**:
-- Ruff ignores `F821` (undefined names) and `F841` (unused variables) — these could catch real bugs
-- No McCabe complexity checks (`C901`)
-- Pyright only covers select directories, not the full codebase
+- Ruff rule selection is minimal — only basic error detection, no complexity checks (C901), naming conventions (N), or documentation rules
+- No `mypy` (Pyright is used instead, which is fine, but has different strictness defaults)
+- `.coderabbit.yaml` configured but with `auto_incremental_review: false` — manual trigger only
 
 ### Container Images
 
-**Strengths (Score: 7.0/10)**:
+**Dockerfiles** (4 files):
 
-**Two Dockerfiles**:
+| File | Base | Purpose |
+|------|------|---------|
+| `Dockerfile` | `python:3.12-slim` | Upstream development/demo image |
+| `Dockerfile.server` | `ubi9/python-312` | **Fork production image** — UBI9, multi-stage, baked models |
+| `qa/Dockerfile.qa` | `python:3.10` | QA test image for GitLab CI |
+| `.devcontainer/Dockerfile` | Various | Dev container |
 
-1. **`Dockerfile`** (upstream NVIDIA) — `python:3.12-slim` based
-   - Single-stage build with Poetry
-   - Installs all extras including dev dependencies
-   - Pre-downloads embedding model (`all-MiniLM-L6-v2`)
-   - Validates with `nemoguardrails --help`
-   - **CI tested**: Build + runtime health check in `test-docker.yml`
+**Dockerfile.server (Fork Production Image)**:
+- Multi-stage build (build → runtime)
+- UBI9 base for RHEL compliance
+- Pre-downloads required models (FastEmbed, HuggingFace)
+- Guardrail profile filtering (`scripts/filter_guardrails.py`)
+- Non-root user (1001)
+- Build args: `COMMIT_SHA`, `BUILD_REF`, `GUARDRAILS_PROFILE`
+- Proper cache cleanup in build stage
 
-2. **`Dockerfile.server`** (fork-specific) — `registry.access.redhat.com/ubi9/python-312` based
-   - Multi-stage build (build → runtime)
-   - UBI9 base for RHOAI compliance
-   - Pre-downloads models based on guardrails profile
-   - Includes guardrail filtering (`filter_guardrails.py`)
-   - Non-root user (1001)
-   - Cache cleanup for smaller image size
-   - **NOT CI tested** — major gap
-
-**CI Docker testing** (`test-docker.yml`):
-- Builds upstream `Dockerfile`
-- Starts container and waits for readiness
-- Health check: `GET /v1/rails/configs` → 200
-- Triggers on: PR changes to Dockerfile/deps, weekly schedule, tags
+**Runtime Validation**:
+- `test-docker.yml` builds upstream `Dockerfile`, starts container, validates `/v1/rails/configs` endpoint
+- GitLab CI has `docker-test` stage that runs pytest inside container (tags only)
 
 **Gaps**:
-- `Dockerfile.server` (production image) not tested in CI
-- No multi-architecture builds in CI (only amd64)
-- No image vulnerability scanning of built images (Trivy scans source, not built images)
-- No SBOM generation (Syft)
-- No image signing (cosign)
-- No `.trivyignore` for managing known acceptable vulnerabilities
+- `Dockerfile.server` has no CI validation at all
+- No multi-architecture builds (amd64 only for fork image)
+- No vulnerability scanning of built images (Trivy scans source, not built images)
+- No SBOM generation
+- No image signing/attestation
 
 ### Security
 
-**Strengths (Score: 8.0/10)**:
-
-| Tool | Scope | CI Integration | Exit Code |
-|------|-------|---------------|-----------|
-| Trivy (filesystem) | Source code scanning | `security.yml` on PR/push to develop | Non-blocking (exit 0) |
-| Trivy (dependencies) | Vulnerability scanning | `security.yml` on PR/push to develop | Non-blocking (exit 0) |
-| Trivy (critical check) | CRITICAL+HIGH severity | `security.yml` on PR/push to develop | **Blocking (exit 1)** |
-| Bandit | Python SAST | `security.yml` on PR/push to develop | Blocking |
-| SARIF upload | GitHub Security tab | On PRs to develop | Yes |
-| Greptile | AI code review | `greptile.json` configured | On PR updates |
-
-**Security features**:
-- Trivy blocks PRs with CRITICAL/HIGH vulnerabilities
-- Bandit catches common Python security issues
-- SARIF results uploaded to GitHub Security tab for tracking
-- Pinned protobuf version for CVE-2024-7254 mitigation
-- `.dockerignore` prevents sensitive file leakage into images
-- Non-root container user in `Dockerfile.server`
+**Strengths**:
+- **Trivy**: Filesystem + dependency scanning on PRs and pushes to develop
+- **Bandit**: Python SAST scanning with SARIF output
+- **SARIF integration**: Both tools upload to GitHub Security tab
+- **Critical/High blocking**: Trivy `exit-code: 1` on critical/high vulnerabilities
+- **GitLab SAST**: Template-based SAST in GitLab CI
+- **Dependency pinning**: `poetry.lock` with `poetry check --lock` enforcement
+- **CVE awareness**: `protobuf >= 5.29.5` pinned against CVE-2024-7254
+- **SECURITY.md**: Proper vulnerability disclosure process (NVIDIA PSIRT)
 
 **Gaps**:
-- No secret detection (Gitleaks/TruffleHog)
-- No CodeQL/Semgrep for deeper SAST analysis
-- No dependency review action on PRs (GitHub dependency review)
-- Trivy filesystem and dependency scans are non-blocking (only the critical check blocks)
-- No image scanning of built Docker images
+- No secret detection (Gitleaks, TruffleHog)
+- No CodeQL workflow
+- Bandit excludes `tests/` directory
+- No container image scanning (only source scanning)
+- No dependency review action for new PRs
+- Security workflow only triggers on `develop` branch, not `main`
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status**: Partially present (Score: 7.0/10)
+**Status**: Partial
 
-**CLAUDE.md** (present, well-structured):
-- Overview of repository layout and architecture
-- Git remotes documentation (upstream, midstream, downstream)
-- Build and install instructions (`poetry install --all-extras`)
-- Server startup commands
-- Test running commands (`pytest tests/`)
-- CI workflow description
-- Key fork changes documented
+**Present**:
+- `CLAUDE.md` at repository root with:
+  - Repository layout overview
+  - Git remote configuration (upstream, trustyai-fork, midstream, downstream)
+  - Build and install instructions
+  - Test execution commands
+  - CI workflow description
+  - Key fork changes summary
 
-**What's missing**:
-- No `.claude/rules/` directory for structured test patterns
-- No unit test creation rules (pytest patterns, async test conventions)
-- No integration test guidelines
-- No mock strategy documentation for AI agents
-- No fixture conventions guide
-- No test naming conventions
-- No coverage requirements for new code
+**Missing**:
+- No `.claude/` directory
+- No `.claude/rules/` for test creation patterns
+- No test automation guidance (unit test patterns, fixture usage, async test patterns)
+- No integration test templates
+- No server test guidelines
 
-**Recommendation**: Generate structured rules with `/test-rules-generator` covering:
-- Unit test patterns with pytest-asyncio
-- Mock LLM response patterns
-- Configuration-driven test setup
-- Coverage expectations for new code
-- Test file naming and organization conventions
+**Recommendation**: Run `/test-rules-generator` to generate comprehensive test creation rules based on existing patterns.
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add coverage enforcement thresholds** — Create `.codecov.yml` with project target (70%) and patch target (80%) to prevent silent coverage regression. The infrastructure is already in place (pytest-cov + Codecov upload); only the enforcement gate is missing.
+1. **Enforce coverage thresholds** — Change Codecov status from `informational: true` to `informational: false` with `target: 70%` for project and `target: 80%` for patch coverage. This prevents silent coverage regression.
 
-2. **Add Dockerfile.server build validation to CI** — The production UBI9 image used in RHOAI deployments is never tested in CI. Add a build + health check job triggered on PRs touching `Dockerfile.server`, `requirements.txt`, `pyproject.toml`, or `scripts/`.
+2. **Add Dockerfile.server build validation to PR workflow** — Create a CI job that builds the fork production image and performs a basic health check. Currently, the only Docker CI validates the upstream `Dockerfile`.
+
+3. **Integrate secret detection** — Add Gitleaks to pre-commit hooks and a CI workflow. The repo handles API keys (OpenAI, NVIDIA) and lacks any secret detection.
 
 ### Priority 1 (High Value)
 
-3. **Add secret detection** — Integrate Gitleaks or TruffleHog into the PR workflow to catch leaked credentials before they reach the repository. This is a 1-2 hour effort with high security ROI.
+4. **Create `.claude/rules/` with test patterns** — Generate rules for unit (pytest + async), integration (LangChain adapter), server (FastAPI test client), and E2E (guardrail validation) test patterns.
 
-4. **Add multi-architecture image builds** — The Makefile already supports `PLATFORMS` but CI only runs on amd64. Add arm64 build+test to support Apple Silicon and AWS Graviton deployments.
+5. **Add SBOM generation and image signing** — Integrate Syft/Grype for SBOM and cosign for image signing in the container build pipeline.
 
-5. **Generate SBOM and sign images** — Add Syft for SBOM generation and cosign for image signing to meet supply chain security requirements.
+6. **Activate live/slow test markers** — The `live` marker is defined but only used on 2 tests. Create a scheduled CI job that runs `@pytest.mark.live` tests against real LLM providers.
 
-6. **Create `.claude/rules/` for test patterns** — Add structured rules for unit test creation, async test patterns, mock strategies, and fixture conventions to improve AI-assisted development quality.
+7. **Add concurrency control to workflows** — Add `concurrency:` groups to prevent parallel runs on the same PR:
+   ```yaml
+   concurrency:
+     group: ${{ github.workflow }}-${{ github.ref }}
+     cancel-in-progress: true
+   ```
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Add Dockerfile.server runtime smoke test** — Beyond just building, validate the production image starts and responds to guardrail check endpoints.
+8. **Add multi-architecture container builds** — Support arm64 in addition to amd64 for `Dockerfile.server`.
 
-8. **Add contract tests for fork-specific API** — The `/v1/guardrail/checks` endpoint is a fork-specific addition that should have contract tests to prevent regressions when rebasing from upstream.
+9. **Implement contract tests for /v1/guardrail/checks** — The fork-specific API endpoint should have contract tests ensuring backward compatibility.
 
-9. **Add performance regression testing** — The `benchmark/` directory has Locust and aiperf infrastructure; integrate it into CI to catch latency regressions.
+10. **Add performance regression detection** — The `benchmark/` directory has infrastructure; wire it into CI with regression thresholds.
 
-10. **Add concurrency control to PR workflows** — Add `concurrency` group with `cancel-in-progress: true` to PR test workflows to avoid wasted CI resources on rapid pushes.
+11. **Review 163 skipped tests** — Audit `@pytest.mark.skip` tests for stale/broken tests that should be fixed or removed.
 
-11. **Enable Ruff F821/F841 checks** — Currently ignored, but `F821` (undefined names) and `F841` (unused variables) can catch real bugs.
+12. **Add CodeQL analysis** — Complement Bandit with GitHub's CodeQL for deeper semantic analysis.
 
 ## Comparison to Gold Standards
 
-| Dimension | NeMo-Guardrails | odh-dashboard | notebooks | kserve |
-|-----------|-----------------|---------------|-----------|--------|
-| Unit Tests | 8.5 (285 files, 1.5:1 ratio) | 9.0 (Jest + React Testing Library) | 7.0 (notebook validation) | 9.0 (envtest + Go testing) |
-| Integration/E2E | 7.0 (QA suite, Docker tests) | 9.5 (Cypress + contract tests) | 8.5 (5-layer image validation) | 9.0 (multi-version KServe tests) |
-| Build Integration | 6.5 (Docker build in CI) | 8.0 (Module Federation) | 7.0 (Multi-arch builds) | 8.5 (Operator integration) |
-| Image Testing | 7.0 (Build + health check) | 7.0 (Dev container) | 9.5 (5-layer validation) | 7.5 (Image + deployment) |
-| Coverage Tracking | 7.5 (Codecov, no threshold) | 9.0 (Codecov + enforcement) | 6.0 (Limited tracking) | 9.0 (Codecov + 80% threshold) |
-| CI/CD Automation | 9.0 (17 workflows, 3 OS) | 9.0 (Well-organized) | 8.0 (Matrix builds) | 9.5 (Comprehensive) |
-| Security | 8.0 (Trivy + Bandit) | 7.5 (Snyk) | 7.0 (Image scanning) | 8.0 (CodeQL + Trivy) |
-| Agent Rules | 7.0 (CLAUDE.md present) | 9.0 (Comprehensive rules) | 5.0 (Basic) | 4.0 (Minimal) |
-| **Overall** | **7.6** | **8.5** | **7.5** | **8.0** |
+| Dimension | NeMo-Guardrails | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
+|-----------|----------------|---------------------|-----------------|--------------|
+| Test-to-code ratio | ~1:1 | ~1:1 | Moderate | High |
+| Coverage enforcement | Informational | Hard threshold | N/A | Hard threshold |
+| Multi-OS testing | Yes (3 OS) | No | N/A | No |
+| Multi-version testing | Yes (4 Python) | N/A | N/A | Yes (K8s versions) |
+| Container scanning | Trivy (source) | Trivy (images) | Trivy (images) | Trivy |
+| Secret detection | None | Gitleaks | N/A | N/A |
+| Pre-commit hooks | Yes (Ruff, Pyright) | Yes (ESLint, Prettier) | N/A | Yes |
+| Image runtime test | Yes (upstream only) | N/A | Yes (5-layer) | N/A |
+| Agent rules | CLAUDE.md only | .claude/rules/ | N/A | N/A |
+| SBOM generation | None | Present | Present | N/A |
+| Parallel tests | pytest-xdist | Jest workers | N/A | Go parallel |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/pr-tests.yml` — PR test matrix (Ubuntu x 4 Python)
+- `.github/workflows/pr-tests.yml` — PR test matrix
 - `.github/workflows/_test.yml` — Reusable test workflow
-- `.github/workflows/full-tests.yml` — Full matrix (Windows + macOS)
-- `.github/workflows/latest-deps-tests.yml` — Nightly latest deps
-- `.github/workflows/lint.yml` — Pre-commit hooks
+- `.github/workflows/full-tests.yml` — Full OS matrix tests
+- `.github/workflows/lint.yml` — Pre-commit/linting
 - `.github/workflows/security.yml` — Trivy + Bandit
-- `.github/workflows/test-docker.yml` — Docker build + smoke
-- `.github/workflows/test-and-build-wheel.yml` — Wheel build + install test
-- `.github/workflows/release.yml` — Automated release PR
-- `.github/workflows/create-tag.yml` — Auto-tag on release merge
-- `.github/workflows/publish-pypi-approval.yml` — PyPI publish
+- `.github/workflows/test-docker.yml` — Docker image testing
+- `.github/workflows/test-and-build-wheel.yml` — Build + test distribution
+- `.github/workflows/test-published-dist.yml` — Published package testing
+- `.github/workflows/latest-deps-tests.yml` — Nightly dependency testing
+- `.gitlab-ci.yml` — GitLab CI (tests + docker build/test)
 
 ### Testing
-- `tests/` — 285 test files (157 root, 32 v2_x, 11 tracing)
-- `tests/test_configs/` — 63 configuration-driven test directories
-- `qa/` — Integration tests (jailbreak, moderation, grounding, etc.)
-- `benchmark/tests/` — 9 load testing infrastructure tests
-- `pytest.ini` / `pyproject.toml [tool.pytest]` — Test configuration
-- `tox.ini` — Multi-Python test automation
+- `tests/` — Main test directory (303 test files)
+- `tests/conftest.py` — Root test fixtures
+- `tests/integrations/langchain/` — LangChain integration tests
+- `tests/server/` — Server API tests
+- `benchmark/tests/` — Benchmark tests
+- `qa/` — QA/live API tests
 
 ### Code Quality
-- `ruff.toml` — Linter + formatter configuration
-- `.pre-commit-config.yaml` — Pre-commit hooks (ruff, pyright, license)
-- `pyproject.toml [tool.pyright]` — Type checking configuration
+- `ruff.toml` — Ruff linter/formatter config
+- `.pre-commit-config.yaml` — Pre-commit hooks
+- `pyproject.toml` — Project config, Pyright settings
+- `.coderabbit.yaml` — CodeRabbit AI review config
 
 ### Container Images
-- `Dockerfile` — Upstream NVIDIA image (python:3.12-slim)
-- `Dockerfile.server` — Fork-specific UBI9 production image
-- `.dockerignore` — Build context exclusions
-- `Makefile` — Image build targets (buildx, kind-load)
+- `Dockerfile` — Upstream development image
+- `Dockerfile.server` — Fork production image (UBI9)
+- `qa/Dockerfile.qa` — QA test image
+- `.devcontainer/Dockerfile` — Dev container
+- `.dockerignore` — Docker build exclusions
+
+### Coverage
+- `.github/codecov.yml` — Codecov configuration
 
 ### Security
-- `.github/workflows/security.yml` — Trivy + Bandit scanning
-- `greptile.json` — AI code review configuration
+- `.github/workflows/security.yml` — Trivy + Bandit
+- `SECURITY.md` — Vulnerability disclosure
+- `.gitlab-ci.yml` — GitLab SAST template
 
 ### Agent Rules
-- `CLAUDE.md` — Repository overview, build/test/architecture guidance
-
-### Dependencies
-- `pyproject.toml` — Poetry dependencies and extras
-- `poetry.lock` — Locked dependency versions
-- `requirements.txt` — Pinned deps via `uv pip compile`
+- `CLAUDE.md` — Repository documentation for AI agents

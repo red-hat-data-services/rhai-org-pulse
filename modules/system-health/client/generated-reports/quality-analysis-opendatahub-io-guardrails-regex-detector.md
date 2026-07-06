@@ -1,132 +1,144 @@
 ---
 repository: "opendatahub-io/guardrails-regex-detector"
-overall_score: 2.8
+overall_score: 1.2
 scorecard:
   - dimension: "Unit Tests"
     score: 2.0
-    status: "Only 1 test for core regex_match function; no tests for built-in detectors, handler, or error paths"
+    status: "Single test for security-critical PII detection logic; built-in detectors untested"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests; no HTTP endpoint testing"
+    status: "No integration or E2E tests; HTTP endpoints untested"
   - dimension: "Build Integration"
-    score: 1.0
-    status: "No CI/CD workflows; Dockerfile runs tests/lint/fmt in build stages but no PR-time validation"
-  - dimension: "Image Testing"
     score: 3.0
-    status: "Multi-stage Dockerfile with test/lint/format stages, but no runtime validation or scanning"
+    status: "Dockerfile has test/lint/format stages but no CI to trigger them on PRs"
+  - dimension: "Image Testing"
+    score: 2.0
+    status: "Multi-stage Dockerfile with UBI9 base but no runtime validation or scanning"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tracking, no codecov/coveralls, no coverage thresholds"
+    status: "No coverage tooling, no codecov, no thresholds"
   - dimension: "CI/CD Automation"
-    score: 0.0
-    status: "No GitHub Actions, no CI/CD workflows of any kind"
+    score: 1.0
+    status: "Zero CI/CD workflows; no PR checks, no periodic jobs"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude directory, no agent rules or test guidance"
+    status: "No .claude directory, no CLAUDE.md, no agent rules"
 critical_gaps:
-  - title: "No CI/CD pipeline"
-    impact: "No automated quality gates on PRs; tests, lint, and formatting only run if someone manually builds the Docker image"
+  - title: "No CI/CD pipeline at all"
+    impact: "Code merges with zero automated checks — no tests, linting, or security validation on PRs"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "Minimal test coverage (1 test for 212 LOC)"
-    impact: "Built-in detectors (email, SSN, credit card), the HTTP handler, error paths, and edge cases are completely untested"
+  - title: "Security-critical PII detectors have almost no tests"
+    impact: "Email, SSN, credit card regex patterns could silently break with no test coverage catching regressions"
     severity: "HIGH"
-    effort: "6-8 hours"
+    effort: "4-8 hours"
   - title: "No integration/E2E tests for HTTP API"
-    impact: "API contract, request validation, error responses, and multi-content handling are never verified"
+    impact: "Endpoint behavior (routing, error handling, response format) is completely untested"
     severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No security scanning"
-    impact: "Dependency vulnerabilities and container image CVEs go undetected"
+    effort: "6-10 hours"
+  - title: "No container vulnerability scanning"
+    impact: "Vulnerable dependencies or base image CVEs ship undetected to production"
     severity: "HIGH"
     effort: "2-3 hours"
+  - title: "No coverage tracking or enforcement"
+    impact: "No visibility into test coverage trends; regressions go unnoticed"
+    severity: "MEDIUM"
+    effort: "2-4 hours"
 quick_wins:
-  - title: "Add GitHub Actions workflow with cargo test, clippy, and fmt"
+  - title: "Add GitHub Actions CI workflow with cargo test, clippy, and fmt"
     effort: "2-3 hours"
-    impact: "Automated quality gates on every PR; catches regressions before merge"
-  - title: "Add unit tests for built-in detectors (email, SSN, credit card)"
+    impact: "Catch test failures, lint violations, and format issues on every PR"
+  - title: "Add unit tests for all built-in PII detectors"
     effort: "2-3 hours"
-    impact: "Validates regex patterns that are the core product functionality"
-  - title: "Add cargo-tarpaulin for coverage tracking"
+    impact: "Validate email, SSN, and credit card patterns with positive and negative cases"
+  - title: "Add Trivy scanning to Dockerfile or CI"
     effort: "1-2 hours"
-    impact: "Visibility into test coverage; enables coverage thresholds"
-  - title: "Add Trivy container scanning"
-    effort: "1 hour"
-    impact: "Detect known vulnerabilities in base image and dependencies"
+    impact: "Detect known vulnerabilities in dependencies and base image"
+  - title: "Add cargo-tarpaulin for coverage reporting"
+    effort: "1-2 hours"
+    impact: "Visibility into test coverage with codecov integration"
 recommendations:
   priority_0:
-    - "Create GitHub Actions CI workflow with cargo test, clippy, fmt check on PRs"
-    - "Add unit tests for all 3 built-in detectors and the handle_text_contents handler"
-    - "Add integration tests that start the HTTP server and test the API endpoint"
+    - "Create GitHub Actions CI workflow with cargo test, cargo clippy, and cargo fmt --check on PRs"
+    - "Add comprehensive unit tests for all 3 built-in PII detectors (email, SSN, credit card) with edge cases"
+    - "Add Trivy container scanning to detect CVEs in dependencies and UBI9 base image"
   priority_1:
-    - "Add cargo-tarpaulin coverage tracking with codecov integration"
-    - "Add Trivy or Snyk container scanning to CI pipeline"
-    - "Add CODEOWNERS file for review enforcement"
-    - "Create CLAUDE.md with test patterns and contribution guidelines"
+    - "Add integration tests for HTTP endpoints using axum::test or reqwest"
+    - "Add cargo-tarpaulin coverage tracking with codecov integration and minimum threshold"
+    - "Add .dockerignore to exclude unnecessary files from build context"
+    - "Create agent rules (.claude/rules/) for test creation patterns"
   priority_2:
-    - "Add property-based testing (proptest) for regex detectors"
-    - "Add benchmarks for regex performance"
-    - "Add OpenAPI/Swagger spec for the API contract"
-    - "Add pre-commit hooks for local development"
+    - "Add SBOM generation and image signing/attestation"
+    - "Add pre-commit hooks for local development quality checks"
+    - "Add fuzz testing for regex patterns to catch ReDoS vulnerabilities"
+    - "Add multi-architecture image builds (amd64/arm64)"
 ---
 
 # Quality Analysis: guardrails-regex-detector
 
 ## Executive Summary
-- **Overall Score: 2.8/10**
+
+- **Overall Score: 1.2/10**
 - **Repository Type**: Rust HTTP microservice (Axum framework)
-- **Size**: ~212 lines of Rust across 2 source files
-- **Purpose**: Regex-based PII detection service for FMS Guardrails Orchestrator
-- **Key Strengths**: Well-structured multi-stage Dockerfile; clean Rust code; pinned toolchain
-- **Critical Gaps**: No CI/CD pipeline, minimal tests (1 test), no coverage, no security scanning
-- **Agent Rules Status**: Missing — no CLAUDE.md, no .claude directory
+- **Primary Language**: Rust (212 lines across 2 source files)
+- **Purpose**: Regex-based PII detection service (emails, SSNs, credit cards) for FMS Guardrails Orchestrator
+- **Key Strengths**: Multi-stage Dockerfile with separate test/lint/format stages; clean UBI9 base image; Rust toolchain pinned
+- **Critical Gaps**: No CI/CD pipeline, minimal test coverage, no security scanning, no coverage tracking
+- **Agent Rules Status**: Missing — no `.claude/` directory or agent rules
+
+This is a **security-critical service** handling PII detection, yet it has almost no quality infrastructure. The codebase is small enough that comprehensive coverage would be quick to add, making the gap especially urgent.
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 2/10 | Only 1 test for `regex_match`; no tests for built-in detectors or handler |
-| Integration/E2E | 0/10 | No integration or E2E tests whatsoever |
-| **Build Integration** | **1/10** | **No CI/CD; Dockerfile has test stages but no automated PR validation** |
-| Image Testing | 3/10 | Multi-stage Dockerfile runs tests/lint/fmt during build; no runtime validation |
-| Coverage Tracking | 0/10 | No coverage generation, tracking, or enforcement |
-| CI/CD Automation | 0/10 | No GitHub Actions, no CI/CD configuration at all |
-| Agent Rules | 0/10 | No agent rules, no test guidance, no CLAUDE.md |
+| Unit Tests | 2/10 | Single test; 3 built-in PII detectors untested |
+| Integration/E2E | 0/10 | No HTTP endpoint testing whatsoever |
+| **Build Integration** | **3/10** | **Dockerfile stages exist but no CI to run them** |
+| Image Testing | 2/10 | Multi-stage build, UBI9 base, no scanning/validation |
+| Coverage Tracking | 0/10 | No coverage tool, no codecov, no thresholds |
+| CI/CD Automation | 1/10 | Zero GitHub Actions workflows |
+| Agent Rules | 0/10 | No agent rules or test guidance |
 
 ## Critical Gaps
 
 ### 1. No CI/CD Pipeline
-- **Impact**: There are zero GitHub Actions workflows. Tests, linting, and formatting only run if someone manually triggers a Docker build. PRs can be merged with broken code, failing tests, or formatting violations.
 - **Severity**: HIGH
+- **Impact**: Code merges to `main` with zero automated checks. No tests, no linting, no formatting, no security scans run on pull requests. The only automated quality gates are Dockerfile stages (`cargo test`, `cargo clippy`, `cargo fmt --check`) that only execute during container builds — not on PRs.
 - **Effort**: 4-6 hours
-- **Current state**: The Dockerfile contains `cargo test`, `cargo clippy`, and `cargo fmt --check` stages, but these only execute during Docker image builds — they are not wired into any CI/CD system.
+- **Evidence**: No `.github/workflows/` directory exists. Repository has zero workflow files.
 
-### 2. Minimal Unit Test Coverage
-- **Impact**: The entire codebase has exactly 1 unit test (`test_regex_match`) that tests the generic `regex_match` function with a simple numeric regex. None of the built-in detectors (email, SSN, credit card) have dedicated tests. The HTTP handler `handle_text_contents` is completely untested. Edge cases like empty input, invalid regex, overlapping matches, and malformed JSON are not covered.
+### 2. Security-Critical PII Detectors Have Almost No Tests
 - **Severity**: HIGH
-- **Effort**: 6-8 hours
-- **Test-to-code ratio**: ~27 test lines / 138 production lines = 0.20 (target: >1.0)
+- **Impact**: The service detects emails, SSNs, and credit cards using regex patterns. Only `regex_match()` has a single generic test. The `email_address_detector()`, `ssn_detector()`, and `credit_card_detector()` functions have **zero direct tests**. Edge cases like partial matches, false positives, and malformed input are untested.
+- **Effort**: 4-8 hours
+- **Evidence**: `src/detectors.rs:139-166` — single `#[cfg(test)]` module with 1 test
 
-### 3. No Integration or E2E Tests
-- **Impact**: The HTTP API contract (`POST /api/v1/text/contents`) is never tested end-to-end. Request validation (empty regex returns 400), response format (nested array structure `[[...]]`), multi-content processing, and error handling paths are all unverified.
+### 3. No Integration/E2E Tests for HTTP API
 - **Severity**: HIGH
-- **Effort**: 4-6 hours
+- **Impact**: The `POST /api/v1/text/contents` endpoint has no tests for request parsing, error handling (empty regex list returns 400), response format, or the `/health` endpoint. Routing regressions, deserialization errors, or response format changes would go undetected.
+- **Effort**: 6-10 hours
+- **Evidence**: `src/main.rs` — no test module, no integration test files
 
-### 4. No Security Scanning
-- **Impact**: No dependency vulnerability scanning (cargo-audit), no container image scanning (Trivy/Snyk), no SAST tools, no secret detection. The project uses `ubi9/ubi-minimal:latest` as base image without pinning — vulnerable base images could ship to production undetected.
+### 4. No Container Vulnerability Scanning
 - **Severity**: HIGH
+- **Impact**: Dependencies in `Cargo.lock` and the UBI9 base image are never scanned for CVEs. Known vulnerabilities could ship to production undetected. The `compat-openssl11` package installed in the Dockerfile is particularly concerning as OpenSSL has frequent CVEs.
 - **Effort**: 2-3 hours
+- **Evidence**: No `.trivyignore`, no scanning workflow, no Snyk configuration
 
-### 5. No Coverage Tracking
-- **Impact**: No visibility into what code is tested. No coverage thresholds to prevent regression. No PR coverage reporting. With only 1 test, actual coverage is estimated at <10%.
+### 5. No Coverage Tracking or Enforcement
 - **Severity**: MEDIUM
-- **Effort**: 1-2 hours
+- **Impact**: No visibility into what percentage of code is tested. No minimum coverage thresholds. Test coverage regressions go unnoticed.
+- **Effort**: 2-4 hours
+- **Evidence**: No `tarpaulin.toml`, no `.codecov.yml`, no coverage generation in any configuration
 
 ## Quick Wins
 
 ### 1. Add GitHub Actions CI Workflow (2-3 hours)
-Create `.github/workflows/ci.yml`:
+Immediately establishes a quality gate on PRs.
+
 ```yaml
+# .github/workflows/ci.yml
 name: CI
 on:
   pull_request:
@@ -135,7 +147,7 @@ on:
     branches: [main]
 
 jobs:
-  check:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -148,13 +160,63 @@ jobs:
       - run: cargo test
 ```
 
-### 2. Add Unit Tests for Built-in Detectors (2-3 hours)
-Add tests for `email_address_detector`, `ssn_detector`, and `credit_card_detector` with:
-- Valid match cases (various formats)
-- Non-match cases (partial matches, wrong formats)
-- Edge cases (empty strings, multiple matches in one input)
+### 2. Add Unit Tests for PII Detectors (2-3 hours)
+Test each built-in detector with positive matches, negative matches, and edge cases.
 
-### 3. Add cargo-tarpaulin Coverage (1-2 hours)
+```rust
+#[test]
+fn test_email_detector_valid() {
+    let content = "contact me at user@example.com please".to_string();
+    let results = email_address_detector(&content).unwrap();
+    assert_eq!(results.len(), 1);
+    assert_eq!(results[0].text, "user@example.com");
+    assert_eq!(results[0].detection, "EmailAddress");
+}
+
+#[test]
+fn test_email_detector_no_match() {
+    let content = "no email here".to_string();
+    let results = email_address_detector(&content).unwrap();
+    assert!(results.is_empty());
+}
+
+#[test]
+fn test_ssn_detector_dashed() {
+    let content = "SSN: 123-45-6789".to_string();
+    let results = ssn_detector(&content).unwrap();
+    assert_eq!(results.len(), 1);
+    assert_eq!(results[0].detection, "SocialSecurity");
+}
+
+#[test]
+fn test_credit_card_detector_amex() {
+    let content = "card: 374245455400126".to_string();
+    let results = credit_card_detector(&content).unwrap();
+    assert_eq!(results.len(), 1);
+    assert_eq!(results[0].detection, "CreditCard");
+}
+```
+
+### 3. Add Trivy Scanning (1-2 hours)
+Add vulnerability scanning to the CI workflow.
+
+```yaml
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t regex-detector:test .
+      - name: Run Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'regex-detector:test'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+```
+
+### 4. Add Coverage with cargo-tarpaulin (1-2 hours)
+
 ```yaml
   coverage:
     runs-on: ubuntu-latest
@@ -164,115 +226,174 @@ Add tests for `email_address_detector`, `ssn_detector`, and `credit_card_detecto
       - run: cargo install cargo-tarpaulin
       - run: cargo tarpaulin --out xml
       - uses: codecov/codecov-action@v4
-```
-
-### 4. Add Trivy Container Scanning (1 hour)
-```yaml
-  scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: docker build -t regex-detector .
-      - uses: aquasecurity/trivy-action@master
         with:
-          image-ref: regex-detector
-          severity: CRITICAL,HIGH
+          files: cobertura.xml
 ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
-- **Workflows**: None. The `.github/` directory does not exist.
-- **PR validation**: None. PRs have no automated checks.
-- **Build automation**: Only via Dockerfile multi-stage builds.
-- **Caching**: N/A — no CI to cache.
-- **Concurrency control**: N/A.
+
+**Status: Non-existent**
+
+- **Workflows**: Zero `.github/workflows/` files
+- **PR Checks**: None — no status checks required to merge
+- **Periodic Jobs**: None
+- **Concurrency Control**: N/A
+- **Caching**: N/A
+
+The only quality checks exist as Dockerfile multi-stage targets:
+- `tests` stage: `cargo test` (line 24-25)
+- `lint` stage: `cargo clippy --all-targets --all-features -- -D warnings` (line 28-29)
+- `format` stage: `cargo fmt --check` (line 32-33)
+
+These stages are **disconnected from the release image** — they are independent build targets that would need to be explicitly invoked with `docker build --target tests .`. They are not part of any CI pipeline.
 
 ### Test Coverage
-- **Framework**: Rust's built-in `#[cfg(test)]` module in `detectors.rs`
-- **Test count**: 1 test (`test_regex_match`)
-- **What's tested**: Generic `regex_match()` function with a simple numeric pattern
-- **What's NOT tested**:
-  - `email_address_detector()` — email regex never validated
-  - `ssn_detector()` — SSN regex never validated
-  - `credit_card_detector()` — credit card regex never validated
-  - `handle_text_contents()` — HTTP handler never tested
-  - Error paths (empty regex, invalid regex, malformed JSON)
-  - Multi-content processing (multiple items in `contents` array)
-  - Custom regex handling path
-  - Response format validation (nested array `[[...]]`)
+
+**Status: Minimal**
+
+| Metric | Value |
+|--------|-------|
+| Test files | 0 (tests inline in `detectors.rs`) |
+| Test functions | 1 |
+| Lines of test code | ~28 |
+| Lines of production code | ~138 |
+| Test-to-code ratio | 0.20 |
+| Built-in detectors tested | 0/3 |
+| Endpoints tested | 0/2 |
+
+**Single test**: `test_regex_match` (detectors.rs:145) tests the generic `regex_match()` helper with a simple numeric pattern. It does NOT test:
+- `email_address_detector()` — the email regex pattern
+- `ssn_detector()` — the SSN regex pattern (most complex regex in the codebase)
+- `credit_card_detector()` — the credit card regex pattern
+- `handle_text_contents()` — the HTTP handler
+- Error cases (invalid regex, empty payload)
+- Edge cases (multiple matches, overlapping patterns, unicode input)
 
 ### Code Quality
-- **Linting**: Clippy is configured in `rust-toolchain.toml` and run in Dockerfile `lint` stage, but not in CI.
-- **Formatting**: rustfmt configured in `rust-toolchain.toml` and checked in Dockerfile `format` stage, but not in CI.
-- **Pre-commit hooks**: None.
-- **Static analysis**: None beyond Clippy in Docker build.
-- **Code style**: Clean, idiomatic Rust. Good use of pattern matching and error handling with `Result` types.
+
+**Status: Partially configured**
+
+- **Rust Toolchain**: Pinned to 1.84.0 with `clippy` and `rustfmt` components (`rust-toolchain.toml`)
+- **Clippy**: Available via toolchain but not enforced in any CI — only in Dockerfile lint stage
+- **Rustfmt**: Available via toolchain but not enforced in any CI — only in Dockerfile format stage
+- **Pre-commit hooks**: None (`.pre-commit-config.yaml` absent)
+- **Static Analysis**: None beyond clippy
+- **SAST**: No CodeQL, no Semgrep
+- **Secret Detection**: No gitleaks, no TruffleHog
+
+**Code Issues Noted**:
+- `println!("hi")` at detectors.rs:99 — debug statement left in production code
+- Functions take `&String` instead of idiomatic `&str` (detectors.rs:38, 50, 62)
+- No error propagation in `handle_text_contents` — regex errors silently produce empty results
 
 ### Container Images
-- **Dockerfile**: Well-structured multi-stage build with separate builder, test, lint, format, and release stages.
-- **Base image**: `ubi9/ubi-minimal:latest` — good choice for Red Hat compatibility, but `latest` tag is unpinned.
-- **Multi-architecture**: Not configured.
-- **Runtime validation**: None — image startup and health endpoint not tested.
-- **Security scanning**: None — no Trivy, Snyk, or cargo-audit.
-- **SBOM generation**: None.
-- **Image signing**: None.
-- **Notable**: The Dockerfile installs `compat-openssl11` which may not be needed and could introduce vulnerabilities.
+
+**Status: Partially configured**
+
+**Strengths**:
+- Multi-stage Dockerfile with builder pattern
+- Separate stages for test, lint, format (good intent)
+- UBI9 minimal base image (Red Hat ecosystem compliant)
+- Pinned Rust version in builder stage
+
+**Weaknesses**:
+- No `.dockerignore` — entire repo context sent to Docker daemon
+- No vulnerability scanning (Trivy, Snyk)
+- No SBOM generation
+- No image signing or attestation
+- No multi-architecture support (no `--platform` flags)
+- `compat-openssl11` package is a legacy compatibility package — should verify necessity
+- No health check in Dockerfile (`HEALTHCHECK` instruction missing)
+- No non-root user configured (runs as root by default)
 
 ### Security
-- **SAST**: None (no CodeQL, Semgrep, or gosec equivalent)
-- **Dependency scanning**: None (no cargo-audit or Dependabot)
-- **Secret detection**: None (no Gitleaks or TruffleHog)
-- **Container scanning**: None
-- **Input validation**: Minimal — checks for empty regex but no regex complexity limits (potential ReDoS vector)
-- **Potential ReDoS concern**: Custom regex patterns are accepted from user input and compiled without complexity limits. A malicious regex could cause CPU exhaustion.
+
+**Status: Non-existent**
+
+| Security Practice | Status |
+|-------------------|--------|
+| Container scanning (Trivy/Snyk) | Missing |
+| SAST/CodeQL | Missing |
+| Dependency scanning | Missing |
+| Secret detection | Missing |
+| SBOM generation | Missing |
+| Image signing | Missing |
+| Dependency audit (`cargo audit`) | Missing |
+
+This is particularly concerning because:
+1. The service handles **PII data** (emails, SSNs, credit cards)
+2. It exposes an **HTTP endpoint** accepting arbitrary regex patterns (potential ReDoS vector)
+3. The custom regex path (`else` branch in detectors.rs:121-130) passes **user-supplied regex** directly to `Regex::new()` with no validation or timeout
+
+**ReDoS Risk**: User-supplied regex patterns are compiled and executed without any timeout or complexity bounds. A malicious regex like `(a+)+$` could cause catastrophic backtracking and deny service.
 
 ### Agent Rules (Agentic Flow Quality)
-- **Status**: Missing
-- **CLAUDE.md**: Not present
-- **`.claude/` directory**: Not present
-- **`.claude/rules/`**: Not present
-- **Test guidance**: None
-- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` including:
-  - Unit test patterns for Rust `#[cfg(test)]` modules
-  - Integration test patterns using `axum::test` or `reqwest`
-  - Regex detector test templates
-  - API contract test guidance
+
+**Status: Missing**
+
+- No `.claude/` directory
+- No `CLAUDE.md` or `AGENTS.md`
+- No `.claude/rules/` for test creation guidance
+- No `.claude/skills/` for custom skills
+- No testing standards documentation
+
+**Recommendation**: Generate agent rules with `/test-rules-generator` to establish patterns for:
+- Rust unit test conventions (`#[cfg(test)]` modules)
+- Axum integration test patterns
+- PII detector test expectations
+- Regex validation test patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Create GitHub Actions CI workflow** — Add `.github/workflows/ci.yml` with `cargo test`, `cargo clippy`, and `cargo fmt --check` on every PR. This is the single highest-impact improvement.
-2. **Add unit tests for all built-in detectors** — Each of the 3 detectors (email, SSN, credit card) needs at minimum: valid match, no match, edge case, and multi-match tests.
-3. **Add HTTP handler integration tests** — Use `axum::test` helpers or start the server in tests to validate the API contract, error responses, and multi-content processing.
+
+1. **Create GitHub Actions CI workflow** — Add `cargo test`, `cargo clippy`, and `cargo fmt --check` as required PR checks. The Dockerfile already has these commands; moving them to CI ensures they run on every PR, not just during image builds.
+
+2. **Add comprehensive unit tests for all PII detectors** — Each built-in detector (email, SSN, credit card) needs tests for valid inputs, invalid inputs, edge cases (multiple matches, partial matches, boundary conditions), and the `handle_text_contents` handler needs at minimum a happy-path test.
+
+3. **Add Trivy container scanning** — Scan both the built image and `Cargo.lock` dependencies for known CVEs. This is a security-critical service handling PII.
+
+4. **Mitigate ReDoS vulnerability** — User-supplied regex patterns (detectors.rs:121-130) are compiled and executed without timeout. Add `regex::RegexBuilder` with `size_limit()` or use the `fancy-regex` crate with backtracking limits.
 
 ### Priority 1 (High Value)
-4. **Add cargo-tarpaulin coverage tracking** — Generate coverage reports and integrate with Codecov. Set a minimum coverage threshold (e.g., 60% initially, increasing over time).
-5. **Add container security scanning** — Trivy or Snyk for image CVE scanning, cargo-audit for Rust dependency vulnerabilities.
-6. **Pin base image tag** — Replace `ubi9/ubi-minimal:latest` with a specific digest or version tag for reproducible builds.
-7. **Add Dependabot or Renovate** — Automated dependency update PRs for Cargo dependencies.
-8. **Create CLAUDE.md** — Document test patterns, contribution guidelines, and quality standards for AI-assisted development.
+
+5. **Add integration tests for HTTP endpoints** — Use `axum::test` utilities or spawn a test server to validate request/response format, error handling, and routing.
+
+6. **Add cargo-tarpaulin coverage tracking** — Generate coverage reports and integrate with codecov. Set a minimum threshold (suggest 70% for a project this size).
+
+7. **Add `.dockerignore`** — Exclude `.git/`, `target/`, `README.md`, `LICENSE` from build context to speed up builds.
+
+8. **Create agent rules** — Add `.claude/rules/` with Rust testing patterns specific to this project.
+
+9. **Fix security posture** — Run container as non-root user, add `HEALTHCHECK` instruction, audit `compat-openssl11` necessity.
 
 ### Priority 2 (Nice-to-Have)
-9. **Add ReDoS protection** — Limit regex complexity or use `regex` crate's built-in time limits for user-supplied patterns.
-10. **Add property-based testing** — Use `proptest` crate to fuzz regex detectors with random inputs.
-11. **Add API documentation** — OpenAPI/Swagger spec for the `/api/v1/text/contents` endpoint.
-12. **Add benchmarks** — `criterion` benchmarks for regex compilation and matching performance.
-13. **Add pre-commit hooks** — Local `cargo fmt` and `cargo clippy` before commit.
-14. **Multi-architecture builds** — Add `--platform linux/amd64,linux/arm64` support.
+
+10. **Add fuzz testing** — Use `cargo-fuzz` or `arbitrary` crate to fuzz the regex detection logic with random inputs.
+
+11. **Add SBOM generation** — Generate Software Bill of Materials with `syft` or `cargo-sbom`.
+
+12. **Add pre-commit hooks** — Configure `pre-commit` with `rustfmt` and `clippy` for local development.
+
+13. **Add multi-architecture builds** — Support `linux/amd64` and `linux/arm64` platforms.
+
+14. **Remove debug output** — Remove `println!("hi")` at detectors.rs:99.
 
 ## Comparison to Gold Standards
 
-| Dimension | guardrails-regex-detector | odh-dashboard | notebooks | kserve |
-|-----------|--------------------------|---------------|-----------|--------|
-| Unit Tests | 1 test (2/10) | Comprehensive Jest suite (9/10) | N/A | Extensive Go tests (9/10) |
-| Integration/E2E | None (0/10) | Cypress E2E + API tests (9/10) | Notebook validation (8/10) | Multi-version E2E (9/10) |
-| Build Integration | No CI (1/10) | PR-time builds + overlays (8/10) | Image pipeline (8/10) | Konflux integration (7/10) |
-| Image Testing | Dockerfile stages only (3/10) | Dev/prod image validation (8/10) | 5-layer validation (9/10) | Multi-image testing (8/10) |
-| Coverage | None (0/10) | Codecov enforced (8/10) | N/A | Codecov with thresholds (9/10) |
-| CI/CD | None (0/10) | Multi-workflow CI/CD (9/10) | Periodic + PR workflows (8/10) | Comprehensive CI (9/10) |
-| Agent Rules | None (0/10) | Comprehensive rules (8/10) | Basic rules (4/10) | None (0/10) |
-| **Overall** | **2.8/10** | **8.5/10** | **7.5/10** | **8.0/10** |
+| Practice | guardrails-regex-detector | odh-dashboard | notebooks | kserve |
+|----------|--------------------------|---------------|-----------|--------|
+| CI/CD Workflows | None | 15+ workflows | 10+ workflows | 20+ workflows |
+| Unit Tests | 1 test | 1000+ tests | Extensive | Extensive |
+| Integration Tests | None | Contract tests | Image validation | Multi-version |
+| E2E Tests | None | Cypress suite | 5-layer validation | Kind-based |
+| Coverage Tracking | None | Codecov enforced | Basic | Enforced thresholds |
+| Container Scanning | None | Trivy + Snyk | Trivy | Trivy |
+| Pre-commit Hooks | None | Configured | Configured | Configured |
+| Agent Rules | None | Comprehensive | Basic | None |
+| SBOM/Signing | None | Present | Present | Present |
 
 ## File Paths Reference
 
@@ -280,20 +401,8 @@ Add tests for `email_address_detector`, `ssn_detector`, and `credit_card_detecto
 |------|---------|
 | `Cargo.toml` | Rust project configuration, dependencies |
 | `Cargo.lock` | Pinned dependency versions |
-| `src/main.rs` | HTTP server setup (Axum router, health endpoint) |
-| `src/detectors.rs` | Core regex detection logic, built-in detectors, HTTP handler, tests |
-| `Dockerfile` | Multi-stage build (builder → tests → lint → format → release) |
-| `rust-toolchain.toml` | Pinned Rust toolchain (1.84.0) with clippy + rustfmt |
-| `README.md` | API documentation with sample request/response |
-| `.gitignore` | Ignores `/target` directory |
-
-## Summary
-
-The `guardrails-regex-detector` is a small but functional Rust microservice that serves as a PII detection component for the FMS Guardrails ecosystem. While the code itself is clean and well-structured, the project has **critical quality infrastructure gaps**:
-
-- **No CI/CD at all** — the most impactful gap
-- **Near-zero test coverage** — only 1 test for ~212 LOC
-- **No security scanning** — particularly concerning for a security-focused tool
-- **No agent rules** — missing guidance for AI-assisted development
-
-The Dockerfile's multi-stage build with test/lint/format stages shows intent to maintain quality, but without CI automation these checks only run during manual Docker builds. The top priority should be establishing a GitHub Actions CI pipeline, followed by comprehensive test coverage for the regex detectors that are the core value proposition of this service.
+| `rust-toolchain.toml` | Rust 1.84.0 with clippy + rustfmt |
+| `Dockerfile` | Multi-stage build with test/lint/format targets |
+| `src/main.rs` | HTTP server entry point (Axum router, 46 lines) |
+| `src/detectors.rs` | PII detection logic + 1 unit test (166 lines) |
+| `.gitignore` | Only excludes `/target` |

@@ -1,420 +1,366 @@
 ---
 repository: "red-hat-data-services/Cloud-Cost-Optimization"
-overall_score: 1.6
+overall_score: 1.8
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "Zero test files exist in the repository - no unit tests at all"
+    status: "No test files exist anywhere in the repository"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests - all validation is manual via workflow dispatch"
+    status: "No integration or E2E tests; all workflows are schedule/dispatch-only"
   - dimension: "Build Integration"
-    score: 1.0
-    status: "No PR workflows exist - all workflows are schedule/dispatch only"
+    score: 0.0
+    status: "No PR-triggered workflows; no build validation on pull requests"
   - dimension: "Image Testing"
     score: 0.0
-    status: "No container images built - scripts run directly on GitHub Actions runners"
+    status: "No container images or Dockerfiles present"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling, no codecov, no coverage thresholds"
+    status: "No coverage tooling, no codecov/coveralls integration"
   - dimension: "CI/CD Automation"
     score: 5.0
-    status: "15 operational workflows with schedule triggers, but no PR validation"
+    status: "15 scheduled/dispatch workflows for operational automation, but zero PR validation"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude directory, no agent rules of any kind"
+    status: "No CLAUDE.md, no .claude directory, no agent rules"
 critical_gaps:
-  - title: "Zero test coverage across 4,068 lines of Python and 400 lines of Bash"
-    impact: "Any code change can silently break cluster hibernation, cloud cleanup, or IAM role deletion - operations that directly affect production AWS infrastructure and cost"
+  - title: "Zero test coverage — no tests of any kind"
+    impact: "Any code change can silently break production cluster operations (hibernate, resume, cleanup)"
     severity: "HIGH"
     effort: "16-24 hours"
-  - title: "No PR validation workflow"
-    impact: "Code is merged without any automated checks - no linting, no tests, no syntax validation"
+  - title: "No PR-triggered CI — code merges without any validation"
+    impact: "Syntax errors, broken imports, and regressions ship unchecked"
+    severity: "HIGH"
+    effort: "2-4 hours"
+  - title: "os.popen() command injection risk in 13 files"
+    impact: "Unsanitized inputs passed to shell commands; potential for command injection via cluster names"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "Bare except clauses and os.popen() usage create silent failures"
-    impact: "Errors in AWS resource cleanup are swallowed silently, leading to resource leaks and unexpected cloud costs"
-    severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "No dry-run validation in CI for destructive operations"
-    impact: "Scripts that delete VPCs, IAM roles, EC2 instances, and EBS volumes have no automated safeguards"
-    severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "Duplicated oc_cluster class across multiple files"
-    impact: "Inconsistent parsing logic between cloud_cleaner.py and hibernate_cluster.py could cause misidentification of clusters"
+  - title: "No linting or static analysis"
+    impact: "Code quality varies wildly between files; bare except clauses, unused variables, dead code"
     severity: "MEDIUM"
-    effort: "4-6 hours"
-quick_wins:
-  - title: "Add a PR validation workflow with Python linting (ruff) and syntax checks"
-    effort: "2-3 hours"
-    impact: "Catches syntax errors, import issues, and basic code quality problems before merge"
-  - title: "Add unit tests for pure functions (sanitize_cluster_name, tag-matching logic)"
-    effort: "4-6 hours"
-    impact: "Validates critical cluster identification logic that gates destructive AWS operations"
-  - title: "Replace bare except clauses with specific exception handling"
-    effort: "2-3 hours"
-    impact: "Makes failures visible instead of silently continuing with potentially dangerous operations"
-  - title: "Add pre-commit hooks with ruff and basic Python checks"
     effort: "1-2 hours"
-    impact: "Enforces consistent code quality at commit time"
+  - title: "No secret scanning or dependency vulnerability scanning"
+    impact: "Secrets or vulnerable dependencies could be introduced undetected"
+    severity: "MEDIUM"
+    effort: "1-2 hours"
+quick_wins:
+  - title: "Add a PR-triggered lint + syntax check workflow"
+    effort: "1-2 hours"
+    impact: "Catch syntax errors and basic code quality issues before merge"
+  - title: "Add ruff or flake8 linting configuration"
+    effort: "1 hour"
+    impact: "Enforce consistent code style, catch bare excepts and unused imports"
+  - title: "Add unit tests for pure-logic functions (sanitize_cluster_name, tag checking, date parsing)"
+    effort: "4-6 hours"
+    impact: "Cover critical business logic that determines which clusters get hibernated/deleted"
+  - title: "Replace os.popen() with subprocess.run() across all files"
+    effort: "2-3 hours"
+    impact: "Eliminate command injection risk and improve error handling"
+  - title: "Pin GitHub Actions versions (actions/checkout@v3 → @v4 with SHA)"
+    effort: "1 hour"
+    impact: "Prevent supply chain attacks via unpinned action versions"
 recommendations:
   priority_0:
-    - "Add a PR validation workflow with ruff linting, mypy type checking, and pytest execution"
-    - "Write unit tests for all cluster identification and tag-matching functions - these gate destructive AWS operations"
-    - "Replace os.popen() with subprocess.run() across all files for proper error handling"
-    - "Replace all bare except clauses with specific exception types"
+    - "Add a PR-triggered workflow that runs syntax checking, linting, and unit tests"
+    - "Write unit tests for cluster selection logic, tag matching, and date parsing"
+    - "Replace all os.popen() calls with subprocess.run() to prevent command injection"
   priority_1:
-    - "Add integration tests using moto (AWS mock library) for boto3-based cleanup logic"
-    - "Consolidate duplicated oc_cluster class into a shared module"
-    - "Add dry-run CI validation that exercises all cleanup scripts in simulation mode"
-    - "Pin GitHub Actions versions (actions/checkout@v3 -> actions/checkout@v4) and use setup-python@v5"
+    - "Refactor duplicated oc_cluster class (defined in 8+ files) into a shared module"
+    - "Add integration tests using moto (AWS mock library) for boto3 operations"
+    - "Add Dependabot or Renovate for dependency updates"
+    - "Create agent rules (.claude/rules/) for test creation patterns"
   priority_2:
-    - "Add dependabot or renovate for automated dependency updates"
-    - "Create CLAUDE.md and agent rules for test patterns and code conventions"
-    - "Add CODEOWNERS file for review requirements"
-    - "Add type hints consistently and enforce with mypy"
+    - "Add pre-commit hooks for formatting and linting"
+    - "Add type hints consistently across all files"
+    - "Add logging module instead of print statements"
+    - "Consider containerizing the scripts with a Dockerfile for reproducibility"
 ---
 
 # Quality Analysis: Cloud-Cost-Optimization
 
 ## Executive Summary
-
-- **Overall Score: 1.6/10**
-- **Repository Type**: Python/Bash DevOps automation toolkit for AWS cloud cost optimization
-- **Primary Function**: Automated cluster hibernation, cloud resource cleanup, and cost management for Red Hat OpenShift AI infrastructure
-- **Critical Risk**: This repository manages **destructive AWS operations** (deleting VPCs, IAM roles, EC2 instances, EBS volumes) across production and staging accounts with **zero automated test coverage**
-- **Key Strengths**: Well-organized GitHub Actions workflows with schedule-based automation
-- **Critical Gaps**: No tests, no PR validation, no linting, no coverage tracking, no agent rules
-- **Agent Rules Status**: Missing - no CLAUDE.md, no .claude directory
+- **Overall Score: 1.8/10**
+- **Repository Type**: Python automation scripts for cloud cost optimization (cluster hibernation, resource cleanup)
+- **Primary Language**: Python 3.11 (~4,078 lines across 17 source files)
+- **Key Strengths**: Comprehensive operational automation with 15 GitHub Actions workflows; newer files (iam_role_cleaner, elastic_ip_cleaner, cleanup_openshift_ci) show improved code quality with classes, docstrings, and proper error handling
+- **Critical Gaps**: Zero test coverage of any kind, no PR-triggered CI, command injection vulnerabilities via os.popen(), no linting, no security scanning
+- **Agent Rules Status**: Missing — no CLAUDE.md, no .claude directory
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0/10 | Zero test files in the entire repository |
-| Integration/E2E | 0/10 | No integration or E2E tests whatsoever |
-| **Build Integration** | **1/10** | **No PR workflows - all workflows are schedule/dispatch only** |
-| Image Testing | N/A | No container images (scripts run on GHA runners) |
-| Coverage Tracking | 0/10 | No coverage tooling of any kind |
-| CI/CD Automation | 5/10 | 15 operational workflows, but no PR validation |
-| Agent Rules | 0/10 | No agent rules, no CLAUDE.md, no .claude directory |
+| Unit Tests | 0/10 | No test files exist anywhere in the repository |
+| Integration/E2E | 0/10 | No integration or E2E tests; all workflows are schedule/dispatch-only |
+| **Build Integration** | **0/10** | **No PR-triggered workflows; no build validation on pull requests** |
+| Image Testing | 0/10 | No container images or Dockerfiles present (N/A for this repo type) |
+| Coverage Tracking | 0/10 | No coverage tooling, no codecov/coveralls integration |
+| CI/CD Automation | 5/10 | 15 scheduled/dispatch workflows for ops automation, but zero PR validation |
+| Agent Rules | 0/10 | No CLAUDE.md, no .claude directory, no agent rules |
 
 ## Critical Gaps
 
-### 1. Zero Test Coverage (Severity: HIGH)
-- **Impact**: 4,068 lines of Python and 400 lines of Bash that manage destructive AWS operations have no automated tests
-- **Risk**: Any code change can silently break cluster hibernation (affecting all RHOAI dev clusters), cloud cleanup (leading to resource leaks), or IAM role deletion (security implications)
-- **Files at Risk**:
-  - `src/cleanup_openshift_ci_on_aws.py` (707 lines) - Deletes VPCs, instances, security groups, NAT gateways
-  - `src/hibernate_cluster.py` (271 lines) - Stops EC2 instances, detaches and deletes EBS volumes
-  - `src/iam_role_cleaner.py` (203 lines) - Deletes IAM roles and policies
-  - `src/cloud_cleaner.py` (308 lines) - Cleans up ELBs, EBS volumes, networking resources
-- **Effort**: 16-24 hours for comprehensive unit test suite
-- **Priority**: P0 - These scripts operate on production AWS infrastructure
+### 1. Zero Test Coverage — No Tests of Any Kind
+- **Impact**: Any code change can silently break production cluster operations. A bug in `hibernate_cluster.py` could leave clusters running (wasting money) or incorrectly delete EBS volumes (data loss). A bug in `cleanup_openshift_ci_on_aws.py` could delete active resources.
+- **Severity**: HIGH
+- **Effort**: 16-24 hours for baseline coverage
+- **Details**: Not a single `*_test.py`, `test_*.py`, or `tests/` directory exists. The `.gitignore` includes pytest-related entries (`.pytest_cache/`, `coverage.xml`, etc.), suggesting testing was considered but never implemented.
 
-### 2. No PR Validation Pipeline (Severity: HIGH)
-- **Impact**: Code merges without any automated checks
-- **Current State**: All 15 workflows are either `schedule` or `workflow_dispatch` triggered - none run on `pull_request`
-- **What's Missing**:
-  - No syntax/import validation
-  - No linting (no ruff, flake8, or pylint configuration)
-  - No type checking (no mypy or pyright)
-  - No test execution
-  - No code review requirements
-- **Effort**: 4-6 hours to create a comprehensive PR workflow
-- **Priority**: P0
+### 2. No PR-Triggered CI — Code Merges Without Validation
+- **Impact**: Contributors can merge code with syntax errors, broken imports, or regressions. All 15 workflows are `schedule` or `workflow_dispatch` only — none triggers on `pull_request`.
+- **Severity**: HIGH
+- **Effort**: 2-4 hours
+- **Details**: Workflows include `hibernate_clusters_daily.yaml`, `cloud_cleaner.yaml`, `resume_clusters_daily.yaml`, etc. — all operational. No `ci.yaml`, `test.yaml`, or `lint.yaml` exists.
 
-### 3. Silent Failure Patterns (Severity: HIGH)
-- **Impact**: Errors in destructive operations are silently swallowed
-- **Examples**:
-  - `src/hibernate_cluster.py:96` - `except:` (bare except with no logging, retries volume deletion 7 times silently)
-  - `src/hibernate_cluster.py:38` - `except:` (catches all exceptions when getting IPI cluster name)
-  - `src/cloud_cleaner.py:32-33` - `run_command()` uses `os.popen()` which doesn't check exit codes
-  - `src/hibernate_cluster.py:199` - `os.popen()` executes shell commands without error checking
-- **Effort**: 8-12 hours to audit and fix all error handling
-- **Priority**: P0
+### 3. Command Injection Risk via os.popen() in 13 Files
+- **Impact**: `os.popen(command)` is used in 13 source files to execute shell commands. Cluster names from external sources (OCM API, Smartsheet) are interpolated directly into shell commands without sanitization (e.g., `f'script/./hybernate_cluster.sh {cluster.ocm_account} {cluster.id}'`).
+- **Severity**: HIGH
+- **Effort**: 4-6 hours
+- **Details**: Affected files: `main.py`, `people_populator.py`, `hibernate_clusters_daily.py`, `resume_clusters_daily.py`, `hibernate_untracked_clusters_during_shutdown.py`, `hibernate_cluster.py`, `resume_cluster.py`, `weekly_reminder.py`, `resume_clusters_weekend.py`, `cloud_cleaner.py`, `check_instances_status.py`, `hibernate_clusters_weekend.py`, `cluster_aggregator.py`
 
-### 4. No Dry-Run CI Validation (Severity: HIGH)
-- **Impact**: Scripts that delete AWS resources have dry-run modes but these are never exercised in CI
-- **Risk**: Regression in dry-run logic could cause unintended deletions
-- **Affected Scripts**: `cleanup_openshift_ci_on_aws.py`, `iam_role_cleaner.py`, `instance_profile_cleaner.py`, `elastic_ip_cleaner.py`
-- **Effort**: 8-12 hours
-- **Priority**: P0
+### 4. No Linting or Static Analysis
+- **Impact**: Code quality varies dramatically. Older files have no classes, no type hints, bare `except:` clauses, and inconsistent naming. Newer files (`iam_role_cleaner.py`, `elastic_ip_cleaner.py`) are significantly better quality.
+- **Severity**: MEDIUM
+- **Effort**: 1-2 hours
+- **Details**: No `.flake8`, `ruff.toml`, `pyproject.toml`, `mypy.ini`, or `.pre-commit-config.yaml` found.
 
-### 5. Duplicated Code and Inconsistent Patterns (Severity: MEDIUM)
-- **Impact**: The `oc_cluster` class is defined differently in `cloud_cleaner.py` (missing fields) vs `hibernate_cluster.py` (more complete)
-- **Risk**: Inconsistent cluster parsing could lead to misidentification when performing destructive operations
-- **Effort**: 4-6 hours to consolidate
-- **Priority**: P1
+### 5. No Secret or Dependency Scanning
+- **Impact**: Vulnerable dependencies (boto3, requests) could be introduced without detection. No Dependabot, no Trivy, no CodeQL.
+- **Severity**: MEDIUM
+- **Effort**: 1-2 hours
 
 ## Quick Wins
 
-### 1. Add PR Validation Workflow with Ruff Linting (2-3 hours)
-- **Impact**: Catches syntax errors, unused imports, and code quality issues before merge
-- **Implementation**:
+### 1. Add PR-Triggered Lint + Test Workflow (1-2 hours)
 ```yaml
-# .github/workflows/pr-validation.yaml
-name: PR Validation
+# .github/workflows/ci.yaml
+name: CI
 on:
   pull_request:
     branches: [main]
 
 jobs:
-  lint:
+  lint-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install ruff
+      - run: pip install ruff pytest moto boto3
       - run: ruff check src/
-      - run: ruff format --check src/
-
-  syntax-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: python -m py_compile src/*.py
+      - run: python -m pytest tests/ -v
 ```
 
-### 2. Add Unit Tests for Tag-Matching Functions (4-6 hours)
-- **Impact**: Validates the most critical logic that determines which AWS resources to delete
-- **Key Functions to Test**:
-  - `worker_node_belongs_to_the_hcp_cluster()` - HCP cluster tag matching
-  - `worker_node_belongs_to_the_ipi_cluster()` - IPI cluster tag matching
-  - `_validate_resource_build_id()` - Build ID validation before deletion
-  - `sanitize_cluster_name()` - Cluster name parsing
-  - `check_if_given_tag_exists()` - Tag existence checks
-  - `filter_tagged_roles()` / `calculate_expired_roles()` - IAM role expiration logic
-- **Implementation**:
+### 2. Add ruff Configuration (1 hour)
+```toml
+# ruff.toml
+target-version = "py311"
+line-length = 120
+
+[lint]
+select = ["E", "F", "W", "I", "S", "B", "UP"]
+ignore = ["E501"]
+
+[lint.per-file-ignores]
+"src/*.py" = ["S603", "S607"]  # subprocess security — review individually
+```
+
+### 3. Unit Tests for Critical Logic (4-6 hours)
+Priority functions to test:
+- `sanitize_cluster_name()` — determines which cluster to operate on
+- `worker_node_belongs_to_the_hcp_cluster()` — determines which EC2 instances to stop
+- `worker_node_belongs_to_the_ipi_cluster()` — same for IPI clusters
+- `check_if_given_tag_exists()` — guards volume deletion
+- `name_starts_with_existing_cluster()` — prevents cleanup of active resources
+- `is_existing_cluster()` — same purpose
+
+### 4. Replace os.popen() with subprocess.run() (2-3 hours)
 ```python
-# tests/test_hibernate_cluster.py
-import pytest
-from unittest.mock import MagicMock
-import sys
-sys.path.insert(0, 'src')
-import hibernate_cluster as hc
+# Before (vulnerable):
+def run_command(command):
+    output = os.popen(command).read()
+    return output
 
-def test_sanitize_cluster_name_short():
-    assert hc.sanitize_cluster_name("my-cluster") == "my-cluster"
+# After (safe):
+import subprocess
 
-def test_sanitize_cluster_name_with_four_dashes():
-    name = "my-cluster-with-four-dashes"
-    assert len(hc.sanitize_cluster_name(name)) <= 28
-
-def test_worker_node_belongs_to_hcp_cluster_match():
-    ec2 = {'Tags': [{'Key': 'api.openshift.com/name', 'Value': 'test-cluster'}]}
-    assert hc.worker_node_belongs_to_the_hcp_cluster(ec2, 'test-cluster') is True
-
-def test_worker_node_belongs_to_hcp_cluster_no_match():
-    ec2 = {'Tags': [{'Key': 'api.openshift.com/name', 'Value': 'other-cluster'}]}
-    assert hc.worker_node_belongs_to_the_hcp_cluster(ec2, 'test-cluster') is False
+def run_command(command, shell=False):
+    if isinstance(command, str):
+        command = command.split()
+    result = subprocess.run(command, capture_output=True, text=True, check=True)
+    return result.stdout
 ```
 
-### 3. Replace Bare Except Clauses (2-3 hours)
-- **Impact**: Makes errors visible; prevents silent continuation of destructive operations
-- **Example Fix**:
-```python
-# Before (src/hibernate_cluster.py:96)
-except:
-    time.sleep(5)
-
-# After
-except botocore.exceptions.ClientError as e:
-    print(f'Failed to delete volume {volume_id}: {e}')
-    time.sleep(5)
-```
-
-### 4. Add Pre-commit Configuration (1-2 hours)
-- **Impact**: Enforces code quality at commit time
-- **Implementation**:
+### 5. Pin GitHub Actions Versions (1 hour)
 ```yaml
-# .pre-commit-config.yaml
-repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.0
-    hooks:
-      - id: ruff
-        args: [--fix]
-      - id: ruff-format
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
-    hooks:
-      - id: check-yaml
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
-      - id: check-added-large-files
+# Before:
+- uses: actions/checkout@v3
+- uses: actions/setup-python@v1  # Very outdated!
+
+# After:
+- uses: actions/checkout@v4
+- uses: actions/setup-python@v5
 ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflow Inventory** (15 workflows, all operational):
+**Workflow Inventory** (15 workflows, all schedule/dispatch):
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `hibernate_cluster.yaml` | workflow_dispatch | On-demand cluster hibernation |
-| `hibernate_clusters_daily.yaml` | cron (*/30 * * * *) | Daily automated hibernation |
-| `hibernate_clusters_weeend.yaml` | cron (0 1 * * 6) | Weekend hibernation |
-| `hibernate_untracked_clusters_during_shutdown.yaml` | cron | Untracked cluster shutdown |
-| `resume_cluster.yaml` | workflow_dispatch | On-demand cluster resume |
-| `resume_clusters_daily.yaml` | cron | Daily automated resume |
-| `resume_clusters_weekend.yaml` | cron (30 10 * * 1) | Monday morning resume |
-| `cloud_cleaner.yaml` | cron (0 */4 * * *) | CI resource cleanup (every 4h) |
-| `additional_cloud_cleaner.yaml` | cron (0 0 * * *) | Daily IAM/EIP/hosted-zone cleanup |
-| `check_instance_status.yaml` | schedule | EC2 instance status check |
-| `update_cluster_smartsheet.yaml` | schedule | Smartsheet data sync |
-| `send_weekly_reminder.yaml` | cron (0 11 * * 3) | Wednesday cost reminders |
-| `prune_rosa_roles.yaml` | cron (0 4 * * 6) | Weekly ROSA role pruning |
-| `prune_oci_gcp.yaml` | schedule | GCP OCI resource pruning |
+| `additional_cloud_cleaner.yaml` | Daily cron + dispatch | Clean IAM roles, hosted zones, instance profiles, elastic IPs |
+| `check_instance_status.yaml` | Every 15 min | Check and report instance status to Smartsheet |
+| `cloud_cleaner.yaml` | Every 4 hours | Clean orphaned OpenShift CI resources |
+| `hibernate_clusters_daily.yaml` | Every 30 min | Daily cluster hibernation based on inactive hours |
+| `hibernate_clusters_weeend.yaml` | Saturday 5am UTC | Weekend cluster hibernation |
+| `hibernate_cluster.yaml` | Manual dispatch | Hibernate a specific cluster |
+| `hibernate_untracked_clusters_during_shutdown.yaml` | Manual dispatch | Hibernate untracked clusters |
+| `prune_oci_gcp.yaml` | Saturday 2am UTC | Clean stale OpenShift CI resources on GCP |
+| `prune_rosa_roles.yaml` | Saturday 4am UTC | Clean stale ROSA IAM roles |
+| `resume_clusters_daily.yaml` | Every 30 min (weekdays) | Resume clusters based on schedule |
+| `resume_clusters_weekend.yaml` | Monday 4:30am UTC | Resume after weekend hibernation |
+| `resume_cluster.yaml` | Manual dispatch | Resume a specific cluster |
+| `send_weekly_reminder.yaml` | Wednesday 11am UTC | Send Slack reminders |
+| `update_cluster_smartsheet.yaml` | Hourly | Sync cluster data to Smartsheet |
 
-**Critical Issues**:
-- No PR-triggered workflows at all
-- Using outdated action versions: `actions/checkout@v3`, `actions/setup-python@v1`
-- No dependency caching (pip install on every run)
-- No concurrency controls on schedule-triggered workflows
-- Daily hibernation runs every 30 minutes (`*/30 * * * *`) which seems excessive
+**Issues Found**:
+- No PR validation workflow exists
+- `actions/setup-python@v1` is used (4+ years outdated, v5 is current)
+- `actions/checkout@v3` used (v4 is current)
+- No concurrency controls — multiple workflow runs could conflict
+- No caching of pip dependencies
+- Binary `ocm` CLI is checked into `bin/` instead of downloaded at runtime
+- No workflow for dependency updates
 
 ### Test Coverage
 
-**Status: ZERO**
-- No `test_*.py` or `*_test.py` files anywhere in the repository
-- No `tests/` or `test/` directory
-- No pytest configuration (`pytest.ini`, `pyproject.toml`, `setup.cfg`)
-- No test dependencies in `requirements.txt` (only boto3, smartsheet-python-sdk, requests, botocore)
-- `.gitignore` includes pytest/coverage patterns (suggesting intent but no follow-through)
+**Unit Tests**: None. Zero test files.
+**Integration Tests**: None.
+**E2E Tests**: None.
+**Coverage Tracking**: None.
+**Test-to-Code Ratio**: 0:4078 (0%)
 
-**Test-to-Code Ratio**: 0:4,068 (0%)
+The `.gitignore` includes entries for `.pytest_cache/`, `coverage.xml`, `.coverage`, and `htmlcov/`, indicating pytest was planned but never implemented.
 
 ### Code Quality
 
-**Linting**: None configured
-- No `.flake8`, `ruff.toml`, `pyproject.toml`, or `pylintrc`
-- No linting in any workflow
+**Code Style**: Inconsistent across files
+- Older files (`main.py`, `cloud_cleaner.py`, `hibernate_cluster.py`): No classes, no docstrings, minimal error handling, `os.popen()` for shell commands
+- Newer files (`iam_role_cleaner.py`, `elastic_ip_cleaner.py`, `instance_profile_cleaner.py`, `cleanup_openshift_ci_on_aws.py`): Proper classes, docstrings, argparse, `ClientError` handling, dry-run support
 
-**Type Checking**: Minimal
-- Some Python type hints used (e.g., `cluster:oc_cluster`, `region: str`)
-- No mypy or pyright configuration
-- Inconsistent type annotation style
+**Code Duplication**: Severe
+- `oc_cluster` class is copy-pasted and defined in 8+ files with slight variations
+- `run_command()` function using `os.popen()` is duplicated in 13 files
+- `get_instances_for_region()` appears in multiple files
+- `get_all_cluster_details()` is duplicated across files
 
-**Pre-commit Hooks**: None
-- No `.pre-commit-config.yaml`
+**Type Hints**: Inconsistent — newer files have type hints, older files have none
 
-**Code Smells**:
-1. **`os.popen()` usage** - Used in `hibernate_cluster.py:199` and `cloud_cleaner.py:32` instead of `subprocess.run()`. Does not capture exit codes or stderr.
-2. **Bare except clauses** - Multiple instances that swallow all exceptions silently
-3. **Duplicate class definitions** - `oc_cluster` defined in both `cloud_cleaner.py` and `hibernate_cluster.py` with different field sets
-4. **Commented-out code** - Large blocks of commented-out code in `cloud_cleaner.py` (lines 42-43, 86, 195-199, 218-225, 293-305)
-5. **Typos in function names** - `hybernate_hypershift_cluster()` (should be "hibernate")
-6. **Magic strings** - VPC IDs hardcoded (`vpc-00331e896a900165b`), NAT gateway IDs hardcoded (`nat-0fe88f6e5c09c380a`)
-7. **No logging framework** - All output via `print()` statements with no structured logging
+**Error Handling**: 
+- Older files: Bare `except:` clauses that silently swallow errors
+- Newer files: Proper `ClientError`/`NoCredentialsError` handling with informative messages
 
 ### Container Images
 
-**Status: N/A**
-- This repository does not build container images
-- All Python scripts run directly on GitHub Actions `ubuntu-latest` runners
-- A bundled `bin/ocm` binary (OCM CLI) is committed to the repository rather than installed from a release
+N/A — This repository does not build container images. It consists of Python scripts run directly by GitHub Actions.
 
 ### Security
 
-**Status: Critical Gaps**
-- **No SAST/CodeQL**: No static analysis configured
-- **No dependency scanning**: No dependabot, renovate, or snyk
-- **No secret scanning**: No gitleaks or trufflehog
-- **Hardcoded resource IDs**: VPC and NAT gateway exception IDs hardcoded in source
-- **Committed binary**: `bin/ocm` is a committed binary with no verification (no checksum, no signature check)
-- **Command injection risk**: `os.popen(f'script/./get_all_cluster_details.sh {ocm_account}')` - if `ocm_account` input is not sanitized, shell injection is possible (mitigated by GitHub Actions input validation but still a code-level concern)
-- **Broad AWS permissions implied**: Scripts require extensive AWS permissions (EC2, IAM, ELB, Route53) with no principle of least privilege documentation
+**Critical Security Issues**:
+1. **os.popen() command injection** (13 files): External inputs interpolated into shell commands
+2. **Hardcoded region fallbacks** without validation
+3. **Binary checked into repo**: `bin/ocm` (35MB OCM CLI binary) — should be downloaded at runtime
+4. **Secrets in workflow definitions**: Properly using GitHub Secrets, but no rotation or audit trail
+5. **Outdated action versions**: `setup-python@v1` has known vulnerabilities
+
+**Missing Security Tooling**:
+- No Dependabot/Renovate configuration
+- No CodeQL or SAST scanning
+- No secret scanning (Gitleaks, TruffleHog)
+- No dependency vulnerability scanning
+- No `.pre-commit-config.yaml`
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status: Missing**
-- No `CLAUDE.md` or `AGENTS.md` in root
-- No `.claude/` directory
-- No `.claude/rules/` for test creation guidance
-- No `.claude/skills/` for custom skills
-- No testing documentation in `docs/` (no docs directory exists)
-- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
-  - Unit test patterns for boto3-based scripts (using moto)
-  - Integration test patterns for AWS cleanup operations
-  - Code conventions (error handling, logging, type hints)
+- **Status**: Missing
+- **Coverage**: No rules for any test type
+- **Quality**: N/A
+- **Gaps**: No `CLAUDE.md`, no `.claude/` directory, no agent rules of any kind
+- **Recommendation**: Generate rules with `/test-rules-generator` once baseline tests are established
 
 ## Recommendations
 
-### Priority 0 (Critical - Safety of AWS Operations)
+### Priority 0 (Critical)
 
-1. **Create a PR validation workflow** with ruff linting, py_compile syntax checks, and pytest execution. Without this, any code change can break scripts that manage production AWS resources.
+1. **Add a PR-triggered CI workflow** — At minimum, run `python -m py_compile` on all source files and `ruff check`. This is the single highest-impact change (2 hours).
 
-2. **Write unit tests for all tag-matching and cluster identification functions**. These functions determine which AWS resources get deleted - a bug here means deleting the wrong VPCs, instances, or IAM roles.
+2. **Write unit tests for cluster selection and tag-matching logic** — Functions like `sanitize_cluster_name()`, `worker_node_belongs_to_the_hcp_cluster()`, and `check_if_given_tag_exists()` determine which AWS resources get stopped or deleted. Bugs here can cause data loss or cost waste (8-12 hours).
 
-3. **Replace `os.popen()` with `subprocess.run()`** across all files. `os.popen()` silently ignores non-zero exit codes, meaning shell script failures go unnoticed.
-
-4. **Replace all bare `except:` clauses** with specific exception types (`botocore.exceptions.ClientError`, `ValueError`, etc.) and add proper error logging.
+3. **Replace os.popen() with subprocess.run()** — Eliminate command injection risk across all 13 files. Use `shlex.split()` or pass arguments as lists (4-6 hours).
 
 ### Priority 1 (High Value)
 
-5. **Add integration tests using `moto`** (AWS mock library) to test boto3-based cleanup logic without hitting real AWS APIs. Critical for `cleanup_openshift_ci_on_aws.py` (707 lines of VPC/resource deletion logic).
+4. **Refactor duplicated code into shared modules** — Extract `oc_cluster` class, `run_command()`, `get_instances_for_region()`, and `get_all_cluster_details()` into a `src/common/` package. Reduces maintenance burden and inconsistency (6-8 hours).
 
-6. **Consolidate the duplicated `oc_cluster` class** into a shared `models.py` module. The versions in `cloud_cleaner.py` and `hibernate_cluster.py` parse cluster details differently, which could cause misidentification.
+5. **Add integration tests with moto** — Use the `moto` library to mock AWS services and test boto3 operations without real AWS credentials. Critical for the cleaner scripts that delete resources (8-12 hours).
 
-7. **Add a dry-run CI job** that exercises all cleanup scripts in simulation mode on schedule, validating that the dry-run codepaths don't crash.
+6. **Add Dependabot** — Create `.github/dependabot.yml` to keep `boto3`, `requests`, and GitHub Actions versions up to date (30 min).
 
-8. **Update GitHub Actions versions**: `actions/checkout@v3` → `v4`, `actions/setup-python@v1` → `v5`.
+7. **Upgrade GitHub Actions** — Update `actions/checkout@v3` → `@v4`, `actions/setup-python@v1` → `@v5` across all 15 workflows (1 hour).
 
 ### Priority 2 (Nice-to-Have)
 
-9. **Add Dependabot** for automated dependency updates (boto3, requests have known CVEs in older versions).
+8. **Add pre-commit hooks** — Configure ruff, mypy, and trailing whitespace checks via `.pre-commit-config.yaml` (1-2 hours).
 
-10. **Create `CLAUDE.md` and agent rules** for consistent AI-assisted development patterns.
+9. **Replace print() with logging** — Use Python's `logging` module with configurable levels instead of `print()` statements (4-6 hours).
 
-11. **Add structured logging** (Python `logging` module) to replace `print()` statements, enabling log levels and structured output.
+10. **Add type hints to older files** — Bring `main.py`, `cloud_cleaner.py`, etc. up to the standard of the newer cleaner files (4-6 hours).
 
-12. **Add `CODEOWNERS`** to require reviews for changes to destructive scripts.
+11. **Download OCM CLI at runtime** — Remove the 35MB `bin/ocm` binary from the repo; download and cache it in workflows instead (1-2 hours).
+
+12. **Add concurrency controls to workflows** — Prevent multiple runs of the same workflow from conflicting (1 hour).
 
 ## Comparison to Gold Standards
 
-| Capability | Cloud-Cost-Optimization | odh-dashboard | notebooks | kserve |
-|------------|------------------------|---------------|-----------|--------|
-| Unit Tests | None (0%) | Comprehensive (Jest) | Present | Extensive (Go) |
-| Integration Tests | None | Contract tests | Image testing | envtest |
-| E2E Tests | None | Cypress suite | Multi-arch validation | Multi-version |
-| PR Validation | None | Multi-stage | Build + test | Full CI |
-| Coverage Tracking | None | Codecov enforced | Partial | Codecov |
-| Linting | None | ESLint + Prettier | shellcheck | golangci-lint |
-| Security Scanning | None | Dependabot + CodeQL | Trivy | Snyk + CodeQL |
-| Pre-commit | None | Husky | Partial | golangci |
-| Agent Rules | None | Comprehensive | Partial | Partial |
-| **Overall** | **1.6/10** | **9/10** | **7/10** | **8.5/10** |
+| Dimension | Cloud-Cost-Optimization | odh-dashboard | notebooks | kserve |
+|-----------|------------------------|---------------|-----------|--------|
+| Unit Tests | None (0%) | Comprehensive (Jest) | Per-image tests | Go testing + envtest |
+| Integration/E2E | None | Cypress E2E | 5-layer validation | Multi-version E2E |
+| PR Validation | None | Full CI pipeline | Image build + test | Lint + test + build |
+| Coverage Tracking | None | Codecov enforced | Per-image coverage | Codecov with thresholds |
+| Linting | None | ESLint + Prettier | Shell linting | golangci-lint (30+ linters) |
+| Security Scanning | None | Snyk/Trivy | Trivy scanning | CodeQL + Snyk |
+| Agent Rules | None | Comprehensive | Basic | None |
+| Code Quality | Mixed (0-6/10) | Consistent (8/10) | Good (7/10) | Strong (8/10) |
 
 ## File Paths Reference
 
-### Source Code (Python)
-- `src/hibernate_cluster.py` - Core cluster hibernation logic (271 lines)
-- `src/hibernate_clusters_daily.py` - Daily scheduled hibernation (261 lines)
-- `src/hibernate_clusters_weekend.py` - Weekend hibernation (202 lines)
-- `src/resume_cluster.py` - Cluster resume logic (277 lines)
-- `src/resume_clusters_daily.py` - Daily scheduled resume (220 lines)
-- `src/cleanup_openshift_ci_on_aws.py` - AWS VPC/resource cleanup (707 lines)
-- `src/cloud_cleaner.py` - ELB/EBS/networking cleanup (308 lines)
-- `src/iam_role_cleaner.py` - IAM role cleanup (203 lines)
-- `src/elastic_ip_cleaner.py` - Elastic IP cleanup (214 lines)
-- `src/instance_profile_cleaner.py` - Instance profile cleanup (237 lines)
-- `src/cluster_aggregator.py` - Smartsheet cluster data aggregation (268 lines)
-- `src/weekly_reminder.py` - Cost reminder notifications (121 lines)
-
-### Shell Scripts
-- `script/rosa_role_cleanup.sh` - ROSA operator role pruning (54 lines)
-- `script/clean-hosted-zones.sh` - Route53 hosted zone cleanup (175 lines)
-- `gcp/oci-pruner.sh` - GCP OCI resource pruning
+### Source Code
+- `src/*.py` — 17 Python automation scripts (~4,078 total lines)
+- `script/*.sh` — 10 shell scripts (~636 total lines)
+- `gcp/oci-pruner.sh` — GCP resource cleanup (236 lines)
 
 ### CI/CD
-- `.github/workflows/*.yaml` - 15 operational workflows (all schedule/dispatch)
+- `.github/workflows/*.yaml` — 15 operational workflows (all schedule/dispatch)
+- No PR validation workflow
 
-### Dependencies
-- `requirements.txt` - boto3, smartsheet-python-sdk, requests, botocore
+### Configuration
+- `requirements.txt` — 4 dependencies (boto3, smartsheet, requests, botocore)
+- `.gitignore` — Standard Python template
+
+### Documentation
+- `README.md` — Comprehensive operational documentation
+- `Hypershift-Cluster-Hibernation.md` — Hypershift hibernation guide
+- `IPI-Cluster-Hibernation.md` — IPI hibernation guide
+
+### Missing (Should Exist)
+- `tests/` — Test directory
+- `pyproject.toml` or `setup.cfg` — Project configuration
+- `ruff.toml` or `.flake8` — Linting configuration
+- `.pre-commit-config.yaml` — Pre-commit hooks
+- `.github/dependabot.yml` — Dependency updates
+- `CLAUDE.md` or `.claude/` — Agent rules

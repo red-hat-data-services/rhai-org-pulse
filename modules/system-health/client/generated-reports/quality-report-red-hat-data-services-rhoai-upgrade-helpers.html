@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on May 29, 2026 at 08:56 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 05:29 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/rhoai-upgrade-helpers</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="497.62785599999995"
+                                stroke-dashoffset="429.76951199999996"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">1.2</div>
+                        <div class="score-value">2.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,7 +365,7 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No test files exist anywhere in the repository</div>
+                            <div class="scorecard-status">No test files exist; zero automated testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
@@ -375,12 +375,12 @@
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CI/CD pipelines, no PR validation, no build system</div>
+                            <div class="scorecard-status">No CI/CD workflows, no PR validation, no build pipeline</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">N/A - no container images (script-only repository)</div>
+                            <div class="scorecard-status">No container images built; not applicable to this repo</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
@@ -390,12 +390,27 @@
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No .github/workflows, no CI/CD of any kind</div>
+                            <div class="scorecard-status">No GitHub Actions workflows, no CI of any kind</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules</div>
+                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent guidance</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Script Quality</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
+                            <div class="scorecard-status">Good defensive scripting practices: set -euo pipefail, dry-run, help, input validation</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Documentation</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Each component has a README; scripts have inline help and usage examples</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Code Organization</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Clean per-component directory layout; consistent patterns across scripts</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +426,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Zero automated tests for scripts that perform destructive production operations</div>
-                            <p>A single regression in serverless-to-raw.sh or ray_cluster_migration.py could delete InferenceServices, RayClusters, or RBAC resources in production with no safety net</p>
+                            <div class="item-description">Zero automated testing</div>
+                            <p>Scripts that modify live OpenShift clusters (delete resources, patch CRs, migrate data) have no tests. A single bug can destroy customer workloads during upgrade.</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">40-60 hours</span>
+                                <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No CI/CD pipeline whatsoever</div>
-                            <p>PRs are merged with no automated validation - no linting, no shellcheck, no syntax verification, no test execution</p>
+                            <div class="item-description">No CI/CD pipeline</div>
+                            <p>PRs are merged without any automated validation. No shellcheck, no linting, no syntax checking. Regressions can be introduced silently.</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No ShellCheck or static analysis for bash scripts</div>
-                            <p>Shell scripting bugs (quoting issues, unset variables, incorrect conditionals) go undetected; 9,800+ lines of bash with zero static analysis</p>
+                            <div class="item-description">No ShellCheck linting</div>
+                            <p>19 shell scripts totaling ~9,500 lines have no static analysis. Common shell pitfalls (word splitting, quoting, uninitialized variables) go undetected.</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No Python linting or type checking for ray_cluster_migration.py</div>
-                            <p>2,677-line Python script with Kubernetes API calls has no mypy, ruff, or pylint validation</p>
+                            <div class="item-description">Repository is deprecated with no successor</div>
+                            <p>Marked deprecated in README but scripts are still being actively committed to (57 PRs merged). Users may run outdated/broken scripts on production clusters.</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">N/A - organizational decision</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Missing bash strict mode in key scripts</div>
-                            <p>serverless-to-raw.sh (1,651 lines) and serving-runtime.sh (412 lines) lack &#x27;set -e&#x27; - errors in subcommands are silently ignored</p>
+                            <div class="item-description">No security scanning</div>
+                            <p>Scripts execute kubectl/oc commands with cluster-admin privileges. No secret detection, no dependency scanning for Python scripts.</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -465,34 +480,42 @@
                         
                         <li class="item-card ">
                             <div class="item-description">Add ShellCheck CI workflow</div>
-                            <p>Catches quoting bugs, undefined variables, and common bash pitfalls across 9,800 lines of shell code</p>
+                            <p>Catch common shell scripting bugs across all 19 scripts automatically on every PR</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Python linting (ruff + mypy) CI workflow</div>
-                            <p>Type-checks ray_cluster_migration.py and dashboard/generate-dashboard-redirect.py against Kubernetes API</p>
+                            <div class="item-description">Add Python linting (ruff) CI workflow</div>
+                            <p>Lint the 2 Python scripts for common errors and style issues</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add bash strict mode to serverless-to-raw.sh</div>
-                            <p>Prevents silent failures in a 1,651-line script that deletes and recreates InferenceServices</p>
+                            <div class="item-description">Add BATS unit tests for critical functions</div>
+                            <p>Test parsing, validation, and transformation logic in isolation without a live cluster</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">4-8 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add CODEOWNERS file</div>
+                            <p>Ensure appropriate reviewers for each component area</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CLAUDE.md with contribution guidelines</div>
-                            <p>Enables AI-assisted contributions to follow consistent patterns and testing expectations</p>
+                            <div class="item-description">Add pre-commit hooks</div>
+                            <p>Catch formatting and linting issues before code reaches PR</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +532,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add a GitHub Actions CI workflow with ShellCheck for all .sh files and ruff/mypy for .py files</li><li>Add unit tests for ray_cluster_migration.py using mocked Kubernetes API (pytest + kubernetes-client mocks)</li><li>Add bash strict mode (set -euo pipefail) to serverless-to-raw.sh and serving-runtime.sh</li></ul>
+                            <ul><li>Add a GitHub Actions CI workflow with ShellCheck for all .sh files and ruff/mypy for .py files</li><li>Add BATS-based unit tests for the most critical scripts (workbench migration, model-serving migration, ray cluster migration)</li><li>Add a basic PR template requiring manual test evidence since scripts target live clusters</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add BATS (Bash Automated Testing System) tests for critical helper functions in shell scripts</li><li>Add pre-commit hooks (.pre-commit-config.yaml) with shellcheck, ruff, and trailing-whitespace checks</li><li>Create CLAUDE.md with testing requirements and contribution guidelines</li></ul>
+                            <ul><li>Add dry-run integration tests using mock kubectl/oc commands (bats-mock or shunit2)</li><li>Add Python unit tests for ray_cluster_migration.py using pytest with mocked kubernetes client</li><li>Create CLAUDE.md and .claude/rules/ for consistent script development and testing patterns</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add integration tests using kind/minikube that exercise dry-run mode of key scripts</li><li>Add documentation testing (verify README commands match actual script flags)</li><li>Consider consolidating common bash functions (logging, prerequisite checks) into a shared library</li></ul>
+                            <ul><li>Add version pinning and checksum verification for external tool dependencies (jq, oc, kubectl)</li><li>Consolidate common shell functions (logging, color output, argument parsing) into a shared library</li><li>Add end-to-end smoke tests using Kind/Minikube with mock CRDs</li></ul>
                         </div>
                     </div>
                 </div>

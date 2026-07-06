@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:57 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:29 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/rag</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="446.73409799999996"
+                                stroke-dashoffset="491.97299399999997"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">2.1</div>
+                        <div class="score-value">1.3</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.5/10</div>
-                            <div class="scorecard-status">Virtually no unit tests — 1 Go test file in entire repo, 0 Python unit tests</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">Virtually no unit tests; 1 Go integration test requiring live WhatsApp, 0 Python tests across ~4700 LOC</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No automated integration or E2E tests; manual deployment verification only</div>
+                            <div class="scorecard-status">No integration or E2E test suites; 1 manual shell script that checks dependencies</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.5/10</div>
-                            <div class="scorecard-status">No PR-time build validation; Dockerfiles exist but are never built in CI</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No PR-time build validation for any Dockerfile or Kustomize overlay</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.5/10</div>
-                            <div class="scorecard-status">4 Dockerfiles present but zero image build, scan, or runtime validation in CI</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">4 Dockerfiles with no image scanning, runtime validation, or multi-arch support</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tools, no codecov integration, no thresholds</div>
+                            <div class="scorecard-status">No coverage tooling, no codecov integration, no coverage thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
                             <div class="scorecard-status">Single pre-commit workflow with good linting; no test, build, or deploy workflows</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules of any kind</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +411,51 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Zero automated test suite</div>
-                            <p>No automated validation of any code path — regressions go undetected until manual testing</p>
+                            <div class="item-description">Zero automated test execution in CI</div>
+                            <p>Code changes are never validated by automated tests; regressions go undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">20-40 hours</span>
+                                <span class="meta-tag effort-tag">8-16 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No CI build validation for Docker images</div>
-                            <p>4 Dockerfiles are never built in CI; broken images discovered only at deploy time</p>
+                            <div class="item-description">No Python unit tests for ~4700 lines of application code</div>
+                            <p>Core demo logic (pipelines, MCP server, API server, UI) has zero test coverage</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">16-24 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No container image build validation on PRs</div>
+                            <p>Broken Dockerfiles and Kustomize overlays discovered only after merge or manual deploy</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No coverage tracking</div>
-                            <p>Cannot measure or enforce code quality; impossible to set quality gates</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No security scanning</div>
-                            <p>Container images and dependencies not scanned for vulnerabilities</p>
+                            <div class="item-description">No security scanning (SAST, container, dependency)</div>
+                            <p>Vulnerabilities in Python/Go dependencies and container images go undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No agent rules for test automation</div>
-                            <p>AI-assisted contributions have no test quality guidance</p>
+                            <div class="item-description">No coverage tracking or enforcement</div>
+                            <p>Cannot measure or improve test coverage over time</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No Go linting (golangci-lint) for ~3900 lines of Go code</div>
+                            <p>Go code quality issues not caught; only Python linting via ruff</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,35 +472,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to CI</div>
-                            <p>Detect vulnerabilities in all 4 Docker images before merge</p>
+                            <div class="item-description">Add Trivy container scanning to pre-commit workflow</div>
+                            <p>Catch known vulnerabilities in container base images and dependencies</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Docker build validation workflow</div>
-                            <p>Catch broken Dockerfiles at PR time instead of deploy time</p>
+                            <div class="item-description">Add Dockerfile build validation workflow</div>
+                            <p>Verify all 4 Dockerfiles build successfully on every PR</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add pytest for Python utility modules</div>
-                            <p>Cover evaluation_utilities.py (900 LOC) and benchmarks with basic unit tests</p>
+                            <div class="item-description">Add golangci-lint for Go code</div>
+                            <p>Catch Go code quality issues in the whatsapp-bot component</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add pytest for MCP server and voice API</div>
+                            <p>Cover critical demo code with basic unit tests</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add ruff type checking to pre-commit</div>
-                            <p>Catch type errors in 25 Python files at lint time</p>
+                            <div class="item-description">Add Kustomize build validation</div>
+                            <p>Verify kustomize overlays render correctly before merge</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +525,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Create a comprehensive test suite for evaluation_utilities.py and beir_benchmarks.py — these are the most complex and critical code paths</li><li>Add Docker image build-and-smoke-test workflow to CI for all 4 Dockerfiles</li><li>Add Trivy or Snyk vulnerability scanning for container images and Python dependencies</li></ul>
+                            <ul><li>Add GitHub Actions workflow to run pytest on Python code (MCP server, voice API, pipelines)</li><li>Add Dockerfile build validation workflow for all 4 container images</li><li>Add Trivy or Snyk scanning for container images and Python/Go dependencies</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add Go unit tests for the whatsapp-bot handlers and utilities</li><li>Implement codecov integration with minimum coverage thresholds</li><li>Add Kustomize build validation (kustomize build stack/base/) to CI</li><li>Create CLAUDE.md and .claude/rules/ for test automation guidance</li></ul>
+                            <ul><li>Write unit tests for MCP server (database_manager.py, mcp_server.py, logger.py)</li><li>Write unit tests for voice API server (routers, services)</li><li>Add Go test CI workflow and golangci-lint for whatsapp-bot</li><li>Add Kustomize overlay validation (kustomize build) in CI</li><li>Set up codecov with minimum coverage thresholds</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add integration tests using Testcontainers for the voice-api-server FastAPI application</li><li>Add notebook execution validation (papermill) for Jupyter notebooks</li><li>Implement SBOM generation for container images</li><li>Add CodeQL or Semgrep SAST scanning</li></ul>
+                            <ul><li>Create agent rules (.claude/rules/) for test creation patterns</li><li>Add notebook validation (papermill or nbval) for Jupyter notebooks</li><li>Add integration tests that deploy to Kind/Minikube</li><li>Add SBOM generation for container images</li><li>Implement CodeQL or Semgrep for SAST</li></ul>
                         </div>
                     </div>
                 </div>

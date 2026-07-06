@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 09:55 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 03:29 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">noobaa/noobaa-core</h2>
         </header>
 
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Good coverage with Mocha + Jest dual framework, but no coverage measurement</div>
+                            <div class="scorecard-status">Good test structure with Mocha+Jest but no coverage tracking</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Strong external test suites (Ceph S3, Warp, Mint) with containerized execution</div>
+                            <div class="scorecard-status">Strong S3 compatibility testing (Ceph, Mint, Warp) with containerized infrastructure</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">PR-time image builds with multi-arch, but no Konflux simulation</div>
+                            <div class="scorecard-status">PR builds Docker images with smart caching but no Konflux simulation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Multi-stage builds with multi-arch support, no vulnerability scanning</div>
+                            <div class="scorecard-status">Multi-stage Docker builds with containerized tests but no vulnerability scanning</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No coverage tooling, enforcement, or PR reporting whatsoever</div>
+                            <div class="scorecard-status">No coverage generation, thresholds, or PR reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Comprehensive PR workflow with 10 parallel test jobs and image caching</div>
+                            <div class="scorecard-status">39 workflows with PR gates, nightly runs, and concurrency control</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, .claude directory, or AI agent guidance exists</div>
+                            <div class="scorecard-status">No CLAUDE.md, .claude/ directory, or AI agent test guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Zero code coverage tracking</div>
-                            <p>No visibility into what code is tested; regressions go undetected, coverage drift is invisible</p>
+                            <div class="item-description">No code coverage tracking or enforcement</div>
+                            <p>Cannot measure test effectiveness; regressions go undetected as coverage silently drops</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No security scanning in CI</div>
-                            <p>Vulnerabilities in dependencies and container images are not detected before merge or release</p>
+                            <div class="item-description">No security scanning (SAST, dependency, container)</div>
+                            <p>Vulnerabilities in code, dependencies, and container images not detected until production</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No secret detection</div>
-                            <p>Leaked credentials in code or commits are not caught automatically</p>
+                            <div class="item-description">No dependency management automation (Dependabot/Renovate)</div>
+                            <p>Known CVEs in npm dependencies persist indefinitely; manual updates missed</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No SBOM generation or image signing</div>
-                            <p>Supply chain security gaps; cannot audit shipped artifacts for compliance</p>
+                            <div class="item-description">Go code has zero test coverage</div>
+                            <p>TCP/HTTP speed utilities untested; regressions undetectable</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No pre-commit hooks or automated formatting</div>
+                            <p>Style inconsistencies and common errors slip into PRs, increasing review burden</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,32 +464,40 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add nyc/c8 coverage and Codecov integration</div>
-                            <p>Immediate visibility into tested vs. untested code; PR-level coverage diff reporting</p>
+                            <div class="item-description">Add Dependabot for npm and Go dependency updates</div>
+                            <p>Automated CVE detection and dependency freshness for 200+ npm packages</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
                             <div class="item-description">Add Trivy container scanning to PR workflow</div>
-                            <p>Catch known CVEs in base images and dependencies before merge</p>
+                            <p>Catch known vulnerabilities in base images and dependencies before merge</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Enable Istanbul/nyc coverage generation in Mocha runs</div>
+                            <p>Visibility into actual test coverage; baseline for threshold enforcement</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add CodeQL SAST workflow</div>
+                            <p>Automated detection of injection, XSS, and logic bugs in JavaScript code</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Gitleaks secret detection</div>
-                            <p>Prevent credential leaks in commits automatically</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create basic CLAUDE.md with test patterns</div>
-                            <p>Improve AI-generated code and test consistency</p>
+                            <div class="item-description">Create .claude/rules/ with test patterns</div>
+                            <p>AI-generated tests follow project conventions; consistent quality</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -501,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Implement code coverage tracking (nyc/c8 + Codecov) with PR gating</li><li>Add container vulnerability scanning (Trivy) to PR and nightly workflows</li><li>Add secret detection (Gitleaks) to PR workflow</li></ul>
+                            <ul><li>Add code coverage tracking with Istanbul/nyc and integrate with Codecov for PR reporting and threshold enforcement</li><li>Add container vulnerability scanning (Trivy) to the PR build workflow</li><li>Enable Dependabot or Renovate for automated dependency updates and CVE alerts</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add CodeQL or Semgrep SAST analysis to PR workflow</li><li>Generate SBOMs (Syft) and sign images (Cosign) in release workflow</li><li>Add pre-commit hooks for lint and secret detection</li><li>Consolidate dual test runners (Mocha + Jest) to a single framework</li></ul>
+                            <ul><li>Add CodeQL SAST workflow for JavaScript static analysis on PRs</li><li>Add secret detection with Gitleaks to prevent credential leaks</li><li>Write Go unit tests for tcp_speed and http_speed utilities</li><li>Unify test configuration with jest.config.js and .mocharc.yml</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Create comprehensive agent rules for test automation (.claude/rules/)</li><li>Remove legacy Travis CI and Jenkins configurations</li><li>Add Go component testing (currently 0 test files for 3 Go source files)</li><li>Add performance regression testing for S3 operations</li></ul>
+                            <ul><li>Add pre-commit hooks with ESLint auto-fix and formatting checks</li><li>Remove legacy Travis CI configuration (.travis.yml)</li><li>Create comprehensive agent rules for AI-assisted test creation (.claude/rules/)</li><li>Add SBOM generation and image signing for release images</li><li>Lower ESLint complexity threshold from 35 to 15 incrementally</li></ul>
                         </div>
                     </div>
                 </div>

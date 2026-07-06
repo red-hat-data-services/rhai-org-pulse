@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:31 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:51 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/gpu-observability-dashboard</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="497.62785599999995"
+                                stroke-dashoffset="503.28271799999993"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">1.2</div>
+                        <div class="score-value">1.1</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No test files exist. Zero test coverage for 1,512-line application.</div>
+                            <div class="scorecard-status">No test files exist. Zero test coverage.</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E tests. No test infrastructure of any kind.</div>
+                            <div class="scorecard-status">No integration or E2E test infrastructure</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CI/CD pipeline. No PR validation. No build automation.</div>
+                            <div class="scorecard-status">No CI/CD pipeline, no build automation, no PR checks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No Dockerfile or Containerfile. No container image build process.</div>
+                            <div class="scorecard-status">No Dockerfile, no container image, no image testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tool integration. No codecov, coveralls, or pytest-cov.</div>
+                            <div class="scorecard-status">No coverage tool, no codecov integration, no thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No GitHub Actions workflows. No CI/CD configuration of any kind.</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">Only .gitignore exists; no workflows, no Makefile, no linting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, .claude/ directory, or agent rules present.</div>
+                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules</div>
                         </div>
                     </div>
                 </div>
@@ -412,7 +412,7 @@
                         
                         <li class="item-card high">
                             <div class="item-description">No test suite of any kind</div>
-                            <p>Every code change is deployed without validation. Regressions are invisible until users report them.</p>
+                            <p>All 1,512 lines of application code are completely untested — regressions, data logic bugs, and visualization errors go undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">8-16 hours</span>
@@ -420,42 +420,42 @@
                         </li>
                         <li class="item-card high">
                             <div class="item-description">No CI/CD pipeline</div>
-                            <p>No automated quality gates. PRs merge without any checks — no lint, no test, no build verification.</p>
+                            <p>No automated checks on PRs — broken code can be merged freely</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No container image or deployment config</div>
-                            <p>No reproducible deployment. Manual setup required on every target environment.</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No code quality tooling (linting, formatting, type checking)</div>
-                            <p>Code style inconsistencies accumulate. Python type errors go undetected. No automated code review.</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No security scanning</div>
-                            <p>Dependency vulnerabilities (streamlit, plotly, pandas, numpy) are never checked. No secret detection.</p>
+                        <li class="item-card high">
+                            <div class="item-description">No Dockerfile or container build</div>
+                            <p>Cannot deploy reproducibly; no path to Konflux, OpenShift, or any container platform</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Single-file monolith architecture</div>
-                            <p>1,512 lines in one file makes testing, maintenance, and collaboration difficult. Functions are tightly coupled.</p>
+                            <div class="item-description">No linting or static analysis</div>
+                            <p>Code style drift, potential bugs (e.g., unused imports, type errors) go unnoticed</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No security scanning</div>
+                            <p>Dependency vulnerabilities (streamlit, pandas, numpy, plotly) not monitored</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No dependency pinning</div>
+                            <p>requirements.txt uses &gt;= ranges — builds are non-reproducible and vulnerable to breaking upgrades</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                     </ul>
@@ -473,42 +473,42 @@
                         
                         <li class="item-card ">
                             <div class="item-description">Add a basic GitHub Actions CI workflow with linting</div>
-                            <p>Immediate quality gate on all PRs. Catches syntax errors, import issues, and style violations.</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add ruff for linting and formatting</div>
-                            <p>Automated code quality enforcement. Ruff is fast and covers flake8 + isort + pyupgrade in one tool.</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1 hour</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add a Dockerfile for containerized deployment</div>
-                            <p>Reproducible deployment. Enables container scanning. Required for production/OpenShift deployment.</p>
+                            <p>Catches syntax errors, import issues, and style violations on every PR</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add pytest with basic smoke tests for data generation functions</div>
-                            <p>Covers the core data logic. generate_all_gpu_data(), generate_30day_timeseries(), generate_hourly_usage_patterns() are pure functions — easy to test.</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">3-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Pin dependency versions in requirements.txt</div>
-                            <p>Prevents surprise breakage from upstream dependency updates. Currently all versions use &gt;= (minimum floor only).</p>
+                            <div class="item-description">Pin dependencies in requirements.txt</div>
+                            <p>Reproducible builds, prevents surprise breakage from upstream releases</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add a Dockerfile for containerized deployment</div>
+                            <p>Enables deployment to OpenShift, Konflux, or any container platform</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add ruff for Python linting and formatting</div>
+                            <p>Consistent code quality with zero-config Python linting</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">30 minutes</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add pytest with basic unit tests for data generation functions</div>
+                            <p>Validates data simulation logic — the core of the application</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -525,15 +525,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add a GitHub Actions CI workflow that runs on PRs with at minimum: Python syntax check, ruff lint, and dependency install verification</li><li>Create a basic pytest test suite covering the three data generation functions (pure functions, deterministic with seed — ideal test targets)</li><li>Add a Dockerfile so the app can be containerized and deployed to OpenShift or any container platform</li></ul>
+                            <ul><li>Create a GitHub Actions CI workflow that runs on PRs with linting (ruff) and tests (pytest)</li><li>Add pytest unit tests for the three data generation functions (generate_all_gpu_data, generate_30day_timeseries, generate_hourly_usage_patterns)</li><li>Add a Dockerfile for containerized deployment</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add ruff.toml with a comprehensive rule set and integrate into CI</li><li>Add mypy or pyright for static type checking — app.py has no type annotations</li><li>Add Trivy or Snyk scanning for dependency vulnerabilities in CI</li><li>Add pre-commit hooks (.pre-commit-config.yaml) for local quality enforcement</li><li>Refactor app.py into modules: data generation, visualization functions, and Streamlit layout</li></ul>
+                            <ul><li>Pin all dependency versions in requirements.txt for reproducible builds</li><li>Add pre-commit hooks with ruff, mypy, and security checks</li><li>Add Trivy or pip-audit for dependency vulnerability scanning</li><li>Create agent rules (.claude/rules/) for test patterns and coding standards</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add Selenium or Playwright-based E2E tests for the Streamlit dashboard</li><li>Add codecov integration with a coverage threshold (e.g., 60% minimum)</li><li>Create agent rules (.claude/rules/) for test patterns and code standards</li><li>Add CODEOWNERS file for PR review assignment</li><li>Add dependabot.yml for automated dependency updates</li></ul>
+                            <ul><li>Add Selenium or Playwright E2E tests for Streamlit UI rendering</li><li>Add codecov integration with coverage thresholds</li><li>Refactor the monolithic 1,512-line app.py into modules (data, charts, layout)</li><li>Add type hints throughout the codebase</li></ul>
                         </div>
                     </div>
                 </div>
