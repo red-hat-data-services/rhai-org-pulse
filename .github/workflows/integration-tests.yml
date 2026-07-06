@@ -158,7 +158,7 @@ jobs:
           if [ "${{ github.event_name }}" = "merge_group" ]; then
             MODULES='${{ steps.git-filter.outputs.modules }}'
           elif [ "${{ steps.filter.outputs.shared-test-files }}" == "true" ]; then
-            MODULES='["about-tabs", "ai-impact", "system-health", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "sotu-dashboard"]'
+            MODULES='["about-tabs", "ai-impact", "catalyst-showcase", "system-health", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "sotu-dashboard"]'
           else
             # Use the modules that have direct changes
             MODULES='${{ steps.filter.outputs.changes }}'

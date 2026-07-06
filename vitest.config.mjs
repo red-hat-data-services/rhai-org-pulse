@@ -12,6 +12,7 @@ try {
 const sharedExclude = [
   '**/node_modules/**',
   '**/tests/integration/**',
+  '**/tests/smoke/**',
   'playwright-report/**',
   'modules/team-tracker/**',
   'shared/**',

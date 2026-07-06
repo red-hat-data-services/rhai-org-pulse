@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 
-/* eslint-disable-next-line org-pulse/no-cross-module-imports -- approved cross-module API; okr-hub requires releases in module.json */
+ 
 const API_BASE = '/api/modules/releases/delivery'
 
 export function useCommitmentTracking() {

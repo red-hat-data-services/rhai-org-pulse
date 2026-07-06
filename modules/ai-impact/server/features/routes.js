@@ -33,7 +33,7 @@ function internalHeaders(contentType) {
  * @returns {Promise<{ created: number, updated: number, unchanged: number }>}
  */
 async function forwardToReleases(features) {
-  // eslint-disable-next-line org-pulse/no-cross-module-imports -- sanctioned internal API (Option B)
+   
   const url = 'http://localhost:' + API_PORT + '/api/modules/releases/execution/ai-review/bulk';
   const resp = await fetch(url, {
     method: 'POST',
@@ -52,7 +52,7 @@ async function forwardToReleases(features) {
  * @returns {Promise<void>}
  */
 async function forwardDeleteToReleases() {
-  // eslint-disable-next-line org-pulse/no-cross-module-imports -- sanctioned internal API (Option B)
+   
   const url = 'http://localhost:' + API_PORT + '/api/modules/releases/execution/ai-review';
   const resp = await fetch(url, {
     method: 'DELETE',

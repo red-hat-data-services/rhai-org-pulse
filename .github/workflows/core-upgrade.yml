@@ -27,7 +27,8 @@ jobs:
 
       - name: Update kustomize remote ref
         run: |
-          VERSION="${{ github.event.client_payload.version }}"
+          VERSION="v${{ github.event.client_payload.version }}"
+          VERSION="${VERSION#vv}"  # normalize: v2.0.8 → v2.0.8, 2.0.8 → v2.0.8
           sed -i "s|org-pulse-core//deploy/openshift/base?ref=v[0-9.]*|org-pulse-core//deploy/openshift/base?ref=${VERSION}|" deploy/openshift/overlays/ai-eng/kustomization.yaml
 
       - uses: peter-evans/create-pull-request@v7

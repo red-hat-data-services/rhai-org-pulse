@@ -271,7 +271,7 @@ async function createSnapshot() {
   creatingSnapshot.value = true
   snapshotError.value = null
   try {
-    /* eslint-disable-next-line org-pulse/no-cross-module-imports -- approved cross-module API; okr-hub requires releases in module.json */
+     
     const response = await fetch(`/api/modules/releases/delivery/commitment/snapshot/${selectedVersion.value}/${selectedPhase.value}`, {
       method: 'POST'
     })

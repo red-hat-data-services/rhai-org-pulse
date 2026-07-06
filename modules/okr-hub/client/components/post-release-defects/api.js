@@ -1,6 +1,6 @@
 import { apiRequest } from '@shared/client';
 
-/* eslint-disable-next-line org-pulse/no-cross-module-imports -- approved cross-module API; okr-hub requires releases in module.json */
+ 
 const BASE = '/modules/releases/delivery/quality';
 const OKR_BASE = '/modules/okr-hub/reports';
 

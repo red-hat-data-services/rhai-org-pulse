@@ -14,6 +14,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:smoke": "playwright test tests/smoke",
     "test:integration": "playwright test tests/integration",
     "lint": "eslint .",
     "validate:modules": "node node_modules/@org-pulse/core/scripts/validate-modules.js",
