@@ -448,6 +448,11 @@
                         @view-all="navigateToExceptionsTab"
                       />
                       <span v-else class="text-gray-400 dark:text-gray-500">—</span>
+                      <button
+                        v-if="(!team.boards || team.boards.length === 0) && !hasExceptionFor('team', team.id, '__boards__')"
+                        class="hidden group-hover:inline-flex items-center gap-0.5 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                        @click.stop="openExceptionModal('team', team.id, team.name, '__boards__')"
+                      >Add Exception</button>
                       <svg class="h-3 w-3 text-gray-400 dark:text-gray-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                       </svg>
@@ -474,6 +479,7 @@
       v-if="showExceptionModal"
       :people="allPeople.map(p => ({ uid: p.uid, name: p.name }))"
       :teams="teams.map(t => ({ id: t.id, name: t.name, orgKey: t.orgKey }))"
+      :org-keys="orgKeys"
       :field-definitions="fieldDefinitions"
       :prefill-entity-type="exceptionPrefill.entityType"
       :prefill-entity-id="exceptionPrefill.entityId"

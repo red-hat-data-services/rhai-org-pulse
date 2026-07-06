@@ -132,6 +132,7 @@ import { apiRequest } from '@shared/client/services/api'
 const props = defineProps({
   people: { type: Array, default: () => [] },
   teams: { type: Array, default: () => [] },
+  orgKeys: { type: Array, default: () => [] },
   fieldDefinitions: { type: Object, default: () => ({ person: [], team: [] }) },
   prefillEntityType: { type: String, default: null },
   prefillEntityId: { type: String, default: null },
@@ -176,7 +177,10 @@ const filteredEntities = computed(() => {
     return props.teams
       .filter(t => t.name?.toLowerCase().includes(q))
       .slice(0, 20)
-      .map(t => ({ id: t.id, label: t.name, sub: t.orgKey }))
+      .map(t => {
+        const org = props.orgKeys.find(o => o.key === t.orgKey)
+        return { id: t.id, label: t.name, sub: org?.displayName || t.orgKey }
+      })
   }
 })
 

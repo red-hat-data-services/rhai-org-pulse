@@ -82,6 +82,10 @@
               </td>
               <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
                 {{ resolveEntityName(ex) }}
+                <span
+                  v-if="ex.entityType === 'team' && resolveOrgName(ex)"
+                  class="ml-1.5 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                >{{ resolveOrgName(ex) }}</span>
               </td>
               <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
                 {{ resolveFieldLabel(ex) }}
@@ -115,6 +119,7 @@
       v-if="showAddModal"
       :people="allPeople"
       :teams="allTeams"
+      :org-keys="orgKeys"
       :field-definitions="fieldDefinitions"
       @close="showAddModal = false"
       @created="handleCreated"
@@ -128,7 +133,7 @@ import { apiRequest } from '@shared/client/services/api'
 import { useFieldCompleteness } from '../composables/useFieldCompleteness'
 import AddExceptionModal from './AddExceptionModal.vue'
 
-const { people, teams, fieldDefinitions, load: loadCompleteness } = useFieldCompleteness()
+const { people, teams, fieldDefinitions, orgKeys, load: loadCompleteness } = useFieldCompleteness()
 
 const exceptions = ref([])
 const loading = ref(false)
@@ -156,6 +161,15 @@ function resolveEntityName(ex) {
     const team = teams.value.find(t => t.id === ex.entityId)
     return team?.name || ex.entityId
   }
+}
+
+// Resolve org display name for a team exception
+function resolveOrgName(ex) {
+  if (ex.entityType !== 'team') return null
+  const team = teams.value.find(t => t.id === ex.entityId)
+  if (!team?.orgKey) return null
+  const org = orgKeys.value.find(o => o.key === team.orgKey)
+  return org?.displayName || team.orgKey
 }
 
 // Resolve field label from field definitions
