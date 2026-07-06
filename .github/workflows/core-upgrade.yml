@@ -26,13 +26,16 @@ jobs:
           node-version: '22'
 
       - name: Upgrade core dependency
-        run: npm install @org-pulse/core@${{ github.event.client_payload.version }}
+        run: |
+          VERSION="${{ github.event.client_payload.version }}"
+          NPM_VERSION="${VERSION#v}"
+          npm install @org-pulse/core@${NPM_VERSION}
 
       - name: Update kustomize remote ref
         run: |
-          VERSION="v${{ github.event.client_payload.version }}"
-          VERSION="${VERSION#vv}"  # normalize: v2.0.8 → v2.0.8, 2.0.8 → v2.0.8
-          sed -i "s|org-pulse-core//deploy/openshift/base?ref=v[0-9.]*|org-pulse-core//deploy/openshift/base?ref=${VERSION}|" deploy/openshift/overlays/ai-eng/kustomization.yaml
+          VERSION="${{ github.event.client_payload.version }}"
+          TAG_VERSION="v${VERSION#v}"
+          sed -i "s|org-pulse-core//deploy/openshift/base?ref=v[0-9.]*|org-pulse-core//deploy/openshift/base?ref=${TAG_VERSION}|" deploy/openshift/overlays/ai-eng/kustomization.yaml
 
       - uses: peter-evans/create-pull-request@v7
         with:
