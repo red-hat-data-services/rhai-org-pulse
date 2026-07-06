@@ -7,3 +7,7 @@ dist
 deploy/openshift
 *.md
 modules/*/__tests__/
+
+# Core code is already in the base image — don't copy symlinks
+modules/team-tracker
+shared

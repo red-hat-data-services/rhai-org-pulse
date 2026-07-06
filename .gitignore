@@ -48,3 +48,8 @@ scripts/fetch-releases.sh
 
 # Journal plugin
 journal/
+
+# Core platform symlinks (managed by setup script)
+modules/team-tracker
+shared
+src

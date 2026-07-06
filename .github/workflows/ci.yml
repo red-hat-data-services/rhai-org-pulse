@@ -36,7 +36,7 @@ jobs:
           fi
 
           CHANGED=$(git diff --name-only ${BASE_SHA} HEAD)
-          if echo "$CHANGED" | grep -qE '^(src/|server/|modules/|shared/|platform/|scripts/validate|package|vite\.config|tailwind\.config|postcss\.config|vitest\.config|index\.html|public/|tests/smoke/|playwright\.config|Makefile)'; then
+          if echo "$CHANGED" | grep -qE '^(server/index\.js|modules/|platform/|package|vite\.config|tailwind\.config|postcss\.config|vitest\.config|index\.html|public/|tests/|playwright\.config|Makefile)'; then
             echo "app=true" >> "$GITHUB_OUTPUT"
           fi
           if echo "$CHANGED" | grep -q '^deploy/'; then
@@ -65,6 +65,10 @@ jobs:
             echo "::warning::Socket firewall not available, falling back to plain npm ci"
             npm ci
           fi
+
+      - name: Setup workspace
+        if: steps.changes.outputs.app == 'true'
+        run: npm run setup
 
       - name: Security audit
         if: steps.changes.outputs.app == 'true'
@@ -109,29 +113,6 @@ jobs:
             kustomize build "$overlay" > /dev/null
           done
 
-  smoke-test-core:
-    name: Core Smoke Tests
-    runs-on: ubuntu-latest
-    needs: test
-    if: needs.test.outputs.app == 'true'
-    permissions:
-      contents: read
-    env:
-      CONTAINER_RUNTIME: docker
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-
-      - name: Build core backend image
-        run: make build-core-backend-image
-
-      - name: Build core frontend image
-        run: make build-core-frontend-image
-
-      - name: Run core smoke tests
-        run: make smoke-test-core
-
   smoke-test-ai-eng:
     name: AI Eng Smoke Tests
     runs-on: ubuntu-latest
@@ -146,11 +127,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
-      - name: Build core base images (needed for AI Eng FROM)
-        run: make build-core-base-images
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
 
-      - name: Build AI Eng images
+      - name: Install dependencies and setup workspace
+        run: npm ci && npm run setup
+
+      - name: Pull core images and build AI Eng images
         run: |
+          make pull-core-images
           make build-backend-image
           make build-frontend-image
 
@@ -161,7 +149,7 @@ jobs:
     name: Smoke Test Status
     runs-on: ubuntu-latest
     if: always()
-    needs: [test, smoke-test-core, smoke-test-ai-eng]
+    needs: [test, smoke-test-ai-eng]
     steps:
       - name: Evaluate smoke test results
         run: |
@@ -170,8 +158,7 @@ jobs:
           elif [ "${{ needs.test.result }}" != "success" ]; then
             echo "Test & Build failed — smoke tests did not run"
             exit 1
-          elif [ "${{ needs.smoke-test-core.result }}" = "success" ] && \
-               [ "${{ needs.smoke-test-ai-eng.result }}" = "success" ]; then
+          elif [ "${{ needs.smoke-test-ai-eng.result }}" = "success" ]; then
             echo "All smoke tests passed"
           else
             echo "Smoke tests failed"

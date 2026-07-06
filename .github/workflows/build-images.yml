@@ -2,35 +2,30 @@ name: Build & Push Images
 
 on:
   workflow_dispatch:
+    inputs:
+      core_tag:
+        description: 'Core image tag override (default: version from npm package)'
+        required: false
+        type: string
   push:
     branches: [main, preprod]
     paths:
       # Backend
-      - 'server/**'
+      - 'server/index.js'
       - 'modules/*/server/**'
-      - 'shared/server/**'
-      - 'deploy/core.backend.Dockerfile'
       - 'deploy/ai-eng.backend.Dockerfile'
       # Frontend
-      - 'src/**'
       - 'public/**'
       - 'modules/*/client/**'
-      - 'shared/client/**'
       - 'platform/**'
       - 'index.html'
       - 'vite.config.mjs'
       - 'tailwind.config.mjs'
       - 'postcss.config.mjs'
-      - 'deploy/core.frontend*.Dockerfile'
       - 'deploy/ai-eng.frontend.Dockerfile'
-      - 'deploy/nginx-default.conf'
-      - 'deploy/openshift/base/nginx-app.conf.template'
       # Shared
       - 'modules/*/module.json'
       - 'package*.json'
-      # Smoke tests
-      - 'tests/smoke/**'
-      - 'playwright.config.js'
 
 permissions:
   contents: read
@@ -42,8 +37,6 @@ concurrency:
 env:
   BACKEND_IMAGE: quay.io/org-pulse/team-tracker-backend
   FRONTEND_IMAGE: quay.io/org-pulse/team-tracker-frontend
-  CORE_BACKEND_IMAGE: quay.io/org-pulse/org-pulse-core-backend
-  CORE_FRONTEND_IMAGE: quay.io/org-pulse/org-pulse-core-frontend
 
 jobs:
   detect-changes:
@@ -68,12 +61,12 @@ jobs:
           FRONTEND=false
 
           # Check backend paths
-          if echo "$CHANGED" | grep -qE '^(server/|modules/[^/]+/server/|modules/[^/]+/module\.json|shared/server/|deploy/(core|ai-eng)\.backend\.Dockerfile|package)'; then
+          if echo "$CHANGED" | grep -qE '^(server/index\.js|modules/[^/]+/server/|modules/[^/]+/module\.json|deploy/ai-eng\.backend\.Dockerfile|package)'; then
             BACKEND=true
           fi
 
           # Check frontend paths
-          if echo "$CHANGED" | grep -qE '^(src/|public/|modules/[^/]+/client/|modules/[^/]+/module\.json|shared/client/|platform/|index\.html|vite\.config|tailwind\.config|postcss\.config|deploy/(core|ai-eng)\.frontend.*\.Dockerfile|deploy/nginx-default\.conf|deploy/openshift/base/nginx-app\.conf\.template|tests/smoke/|playwright\.config|package)'; then
+          if echo "$CHANGED" | grep -qE '^(public/|modules/[^/]+/client/|modules/[^/]+/module\.json|platform/|index\.html|vite\.config|tailwind\.config|postcss\.config|deploy/ai-eng\.frontend.*\.Dockerfile|package)'; then
             FRONTEND=true
           fi
 
@@ -99,18 +92,16 @@ jobs:
           cache: 'npm'
 
       - run: npm ci
+      - run: npm run setup
       - run: npm run lint
       - run: npm test
       - run: npm run build
 
   # ════════════════════════════════════════
-  # Version Bump (core images, main only)
+  # Version Bump (main only)
   # ════════════════════════════════════════
-  # Bumps the patch version in package.json BEFORE building so that
-  # the version on main always matches the images that were built.
-  # On preprod this job is skipped and builds use github.sha directly.
   version-bump:
-    name: Bump Core Version
+    name: Bump Version
     needs: [test, detect-changes]
     if: |
       github.ref == 'refs/heads/main' &&
@@ -167,251 +158,69 @@ jobs:
           echo "Build SHA: ${BUILD_SHA}"
 
   # ════════════════════════════════════════
-  # Core Images (platform + team-tracker)
+  # Resolve Core Image Tag
   # ════════════════════════════════════════
-  build-core-backend:
-    name: Build Core Backend
-    needs: [test, detect-changes, version-bump]
+  resolve-core-tag:
+    name: Resolve Core Tag
+    needs: [version-bump]
+    if: |
+      always() &&
+      (needs.version-bump.result == 'success' || needs.version-bump.result == 'skipped')
+    runs-on: ubuntu-latest
+    outputs:
+      core_tag: ${{ steps.resolve.outputs.core_tag }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.version-bump.outputs.build_sha || github.sha }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - run: npm ci --ignore-scripts
+
+      - name: Resolve core tag
+        id: resolve
+        run: |
+          if [ -n "${{ inputs.core_tag }}" ]; then
+            CORE_TAG="${{ inputs.core_tag }}"
+          else
+            CORE_VERSION=$(node -p "require('@org-pulse/core/package.json').version")
+            CORE_TAG="v${CORE_VERSION}"
+          fi
+          echo "core_tag=${CORE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "Core tag: ${CORE_TAG}"
+
+  # ════════════════════════════════════════
+  # AI Eng Images
+  # ════════════════════════════════════════
+  build-backend:
+    name: Build & Push Backend
+    needs: [test, detect-changes, version-bump, resolve-core-tag]
     if: |
       always() &&
       needs.test.result == 'success' &&
       needs.detect-changes.outputs.backend == 'true' &&
+      needs.resolve-core-tag.result == 'success' &&
       (needs.version-bump.result == 'success' || needs.version-bump.result == 'skipped')
     runs-on: ubuntu-latest
     env:
       BUILD_SHA: ${{ needs.version-bump.outputs.build_sha || github.sha }}
-      BUILD_VERSION: ${{ needs.version-bump.outputs.version }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ needs.version-bump.outputs.build_sha || github.sha }}
-
-      - name: Build core backend image
-        run: |
-          docker build \
-            -f deploy/core.backend.Dockerfile \
-            --build-arg GIT_SHA=${BUILD_SHA} \
-            --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
-            -t ${{ env.CORE_BACKEND_IMAGE }}:${BUILD_SHA} \
-            .
-
-      - name: Smoke test core backend
-        run: |
-          docker run -d --name core-backend-smoke -p 3001:3001 \
-            -e DEMO_MODE=true \
-            ${{ env.CORE_BACKEND_IMAGE }}:${BUILD_SHA}
-          echo "Waiting for core backend to start..."
-          sleep 5
-          if curl -sf --max-time 5 http://localhost:3001/api/healthz > /dev/null 2>&1; then
-            echo "Core backend smoke test passed"
-          else
-            echo "Core backend smoke test failed"
-            docker logs core-backend-smoke
-            docker stop core-backend-smoke
-            exit 1
-          fi
-          docker stop core-backend-smoke
-
-      - name: Login to Quay.io
-        uses: docker/login-action@v4
-        with:
-          registry: quay.io
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_PASSWORD }}
-
-      - name: Push core backend image
-        run: |
-          BRANCH_TAG=${{ github.ref_name == 'preprod' && 'preprod' || 'latest' }}
-          docker tag ${{ env.CORE_BACKEND_IMAGE }}:${BUILD_SHA} ${{ env.CORE_BACKEND_IMAGE }}:${BRANCH_TAG}
-          docker push ${{ env.CORE_BACKEND_IMAGE }}:${BUILD_SHA}
-          docker push ${{ env.CORE_BACKEND_IMAGE }}:${BRANCH_TAG}
-          if [ -n "${BUILD_VERSION}" ]; then
-            docker tag ${{ env.CORE_BACKEND_IMAGE }}:${BUILD_SHA} ${{ env.CORE_BACKEND_IMAGE }}:${BUILD_VERSION}
-            docker push ${{ env.CORE_BACKEND_IMAGE }}:${BUILD_VERSION}
-          fi
-
-  build-core-frontend:
-    name: Build Core Frontend
-    needs: [test, detect-changes, version-bump]
-    if: |
-      always() &&
-      needs.test.result == 'success' &&
-      needs.detect-changes.outputs.frontend == 'true' &&
-      (needs.version-bump.result == 'success' || needs.version-bump.result == 'skipped')
-    runs-on: ubuntu-latest
-    env:
-      BUILD_SHA: ${{ needs.version-bump.outputs.build_sha || github.sha }}
-      BUILD_VERSION: ${{ needs.version-bump.outputs.version }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ needs.version-bump.outputs.build_sha || github.sha }}
-
-      - name: Build core frontend image
-        run: |
-          docker build \
-            -f deploy/core.frontend.Dockerfile \
-            -t ${{ env.CORE_FRONTEND_IMAGE }}:${BUILD_SHA} \
-            .
-
-      - name: Login to Quay.io
-        uses: docker/login-action@v4
-        with:
-          registry: quay.io
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_PASSWORD }}
-
-      - name: Push core frontend image
-        run: |
-          BRANCH_TAG=${{ github.ref_name == 'preprod' && 'preprod' || 'latest' }}
-          docker tag ${{ env.CORE_FRONTEND_IMAGE }}:${BUILD_SHA} ${{ env.CORE_FRONTEND_IMAGE }}:${BRANCH_TAG}
-          docker push ${{ env.CORE_FRONTEND_IMAGE }}:${BUILD_SHA}
-          docker push ${{ env.CORE_FRONTEND_IMAGE }}:${BRANCH_TAG}
-          if [ -n "${BUILD_VERSION}" ]; then
-            docker tag ${{ env.CORE_FRONTEND_IMAGE }}:${BUILD_SHA} ${{ env.CORE_FRONTEND_IMAGE }}:${BUILD_VERSION}
-            docker push ${{ env.CORE_FRONTEND_IMAGE }}:${BUILD_VERSION}
-          fi
-
-  # Also push builder + runtime images for orgs extending the frontend
-  build-core-frontend-builder:
-    name: Build Core Frontend Builder
-    needs: [test, detect-changes, version-bump]
-    if: |
-      always() &&
-      needs.test.result == 'success' &&
-      needs.detect-changes.outputs.frontend == 'true' &&
-      (needs.version-bump.result == 'success' || needs.version-bump.result == 'skipped')
-    runs-on: ubuntu-latest
-    env:
-      BUILD_SHA: ${{ needs.version-bump.outputs.build_sha || github.sha }}
-      BUILD_VERSION: ${{ needs.version-bump.outputs.version }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ needs.version-bump.outputs.build_sha || github.sha }}
-
-      - name: Build core frontend builder image
-        run: |
-          docker build \
-            -f deploy/core.frontend-builder.Dockerfile \
-            -t ${{ env.CORE_FRONTEND_IMAGE }}-builder:${BUILD_SHA} \
-            .
-
-      - name: Login to Quay.io
-        uses: docker/login-action@v4
-        with:
-          registry: quay.io
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_PASSWORD }}
-
-      - name: Push core frontend builder image
-        run: |
-          BRANCH_TAG=${{ github.ref_name == 'preprod' && 'preprod' || 'latest' }}
-          docker tag ${{ env.CORE_FRONTEND_IMAGE }}-builder:${BUILD_SHA} ${{ env.CORE_FRONTEND_IMAGE }}-builder:${BRANCH_TAG}
-          docker push ${{ env.CORE_FRONTEND_IMAGE }}-builder:${BUILD_SHA}
-          docker push ${{ env.CORE_FRONTEND_IMAGE }}-builder:${BRANCH_TAG}
-          if [ -n "${BUILD_VERSION}" ]; then
-            docker tag ${{ env.CORE_FRONTEND_IMAGE }}-builder:${BUILD_SHA} ${{ env.CORE_FRONTEND_IMAGE }}-builder:${BUILD_VERSION}
-            docker push ${{ env.CORE_FRONTEND_IMAGE }}-builder:${BUILD_VERSION}
-          fi
-
-  build-core-frontend-runtime:
-    name: Build Core Frontend Runtime
-    needs: [test, detect-changes, version-bump]
-    if: |
-      always() &&
-      needs.test.result == 'success' &&
-      needs.detect-changes.outputs.frontend == 'true' &&
-      (needs.version-bump.result == 'success' || needs.version-bump.result == 'skipped')
-    runs-on: ubuntu-latest
-    env:
-      BUILD_SHA: ${{ needs.version-bump.outputs.build_sha || github.sha }}
-      BUILD_VERSION: ${{ needs.version-bump.outputs.version }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ needs.version-bump.outputs.build_sha || github.sha }}
-
-      - name: Build core frontend runtime image
-        run: |
-          docker build \
-            -f deploy/core.frontend-runtime.Dockerfile \
-            -t ${{ env.CORE_FRONTEND_IMAGE }}-runtime:${BUILD_SHA} \
-            .
-
-      - name: Login to Quay.io
-        uses: docker/login-action@v4
-        with:
-          registry: quay.io
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_PASSWORD }}
-
-      - name: Push core frontend runtime image
-        run: |
-          BRANCH_TAG=${{ github.ref_name == 'preprod' && 'preprod' || 'latest' }}
-          docker tag ${{ env.CORE_FRONTEND_IMAGE }}-runtime:${BUILD_SHA} ${{ env.CORE_FRONTEND_IMAGE }}-runtime:${BRANCH_TAG}
-          docker push ${{ env.CORE_FRONTEND_IMAGE }}-runtime:${BUILD_SHA}
-          docker push ${{ env.CORE_FRONTEND_IMAGE }}-runtime:${BRANCH_TAG}
-          if [ -n "${BUILD_VERSION}" ]; then
-            docker tag ${{ env.CORE_FRONTEND_IMAGE }}-runtime:${BUILD_SHA} ${{ env.CORE_FRONTEND_IMAGE }}-runtime:${BUILD_VERSION}
-            docker push ${{ env.CORE_FRONTEND_IMAGE }}-runtime:${BUILD_VERSION}
-          fi
-
-  # ════════════════════════════════════════
-  # Core Smoke Tests (full Playwright suite)
-  # ════════════════════════════════════════
-  smoke-test-core:
-    name: Core Smoke Tests
-    needs: [build-core-backend, build-core-frontend, version-bump]
-    if: |
-      always() &&
-      needs.build-core-backend.result == 'success' &&
-      needs.build-core-frontend.result == 'success'
-    runs-on: ubuntu-latest
-    env:
-      BUILD_SHA: ${{ needs.version-bump.outputs.build_sha || github.sha }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ needs.version-bump.outputs.build_sha || github.sha }}
-
-      - name: Pull core images
-        run: |
-          docker pull ${{ env.CORE_BACKEND_IMAGE }}:${BUILD_SHA}
-          docker pull ${{ env.CORE_FRONTEND_IMAGE }}:${BUILD_SHA}
-
-      - name: Run smoke tests against core images
-        run: |
-          make smoke-test-core \
-            CONTAINER_RUNTIME=docker \
-            CORE_BACKEND_IMAGE=${{ env.CORE_BACKEND_IMAGE }}:${BUILD_SHA} \
-            CORE_FRONTEND_IMAGE=${{ env.CORE_FRONTEND_IMAGE }}:${BUILD_SHA}
-
-  # ════════════════════════════════════════
-  # AI Eng Images (extend core)
-  # ════════════════════════════════════════
-  build-backend:
-    name: Build & Push Backend
-    needs: [build-core-backend, version-bump]
-    if: |
-      always() &&
-      needs.build-core-backend.result == 'success'
-    runs-on: ubuntu-latest
-    env:
-      BUILD_SHA: ${{ needs.version-bump.outputs.build_sha || github.sha }}
+      CORE_TAG: ${{ needs.resolve-core-tag.outputs.core_tag }}
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ needs.version-bump.outputs.build_sha || github.sha }}
 
       - name: Pull core backend image
-        run: docker pull ${{ env.CORE_BACKEND_IMAGE }}:${BUILD_SHA}
+        run: docker pull quay.io/org-pulse/org-pulse-core-backend:${CORE_TAG}
 
       - name: Build AI Eng backend image
         run: |
           docker build \
             -f deploy/ai-eng.backend.Dockerfile \
-            --build-arg CORE_TAG=${BUILD_SHA} \
+            --build-arg CORE_TAG=${CORE_TAG} \
             -t ${{ env.BACKEND_IMAGE }}:${BUILD_SHA} \
             .
 
@@ -448,14 +257,17 @@ jobs:
 
   build-frontend:
     name: Build & Push Frontend
-    needs: [build-core-frontend-builder, build-core-frontend-runtime, version-bump]
+    needs: [test, detect-changes, version-bump, resolve-core-tag]
     if: |
       always() &&
-      needs.build-core-frontend-builder.result == 'success' &&
-      needs.build-core-frontend-runtime.result == 'success'
+      needs.test.result == 'success' &&
+      needs.detect-changes.outputs.frontend == 'true' &&
+      needs.resolve-core-tag.result == 'success' &&
+      (needs.version-bump.result == 'success' || needs.version-bump.result == 'skipped')
     runs-on: ubuntu-latest
     env:
       BUILD_SHA: ${{ needs.version-bump.outputs.build_sha || github.sha }}
+      CORE_TAG: ${{ needs.resolve-core-tag.outputs.core_tag }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -463,25 +275,23 @@ jobs:
 
       - name: Pull core frontend images
         run: |
-          docker pull ${{ env.CORE_FRONTEND_IMAGE }}-builder:${BUILD_SHA}
-          docker pull ${{ env.CORE_FRONTEND_IMAGE }}-runtime:${BUILD_SHA}
+          docker pull quay.io/org-pulse/org-pulse-core-frontend-builder:${CORE_TAG}
+          docker pull quay.io/org-pulse/org-pulse-core-frontend-runtime:${CORE_TAG}
 
       - name: Build AI Eng frontend image
         run: |
           docker build \
             -f deploy/ai-eng.frontend.Dockerfile \
-            --build-arg CORE_TAG=${BUILD_SHA} \
+            --build-arg CORE_TAG=${CORE_TAG} \
             -t ${{ env.FRONTEND_IMAGE }}:${BUILD_SHA} \
             .
 
       - name: Build AI Eng backend image (needed for smoke tests)
         run: |
-          docker pull ${{ env.CORE_BACKEND_IMAGE }}:${BUILD_SHA} || \
-            (docker pull ${{ env.CORE_BACKEND_IMAGE }}:latest && \
-             docker tag ${{ env.CORE_BACKEND_IMAGE }}:latest ${{ env.CORE_BACKEND_IMAGE }}:${BUILD_SHA})
+          docker pull quay.io/org-pulse/org-pulse-core-backend:${CORE_TAG}
           docker build \
             -f deploy/ai-eng.backend.Dockerfile \
-            --build-arg CORE_TAG=${BUILD_SHA} \
+            --build-arg CORE_TAG=${CORE_TAG} \
             -t ${{ env.BACKEND_IMAGE }}:${BUILD_SHA} \
             .
 

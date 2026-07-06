@@ -9,9 +9,19 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Build core base images (needed for AI Eng FROM)
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: '22'
+        cache: 'npm'
+
+    - name: Install dependencies and setup workspace
       shell: bash
-      run: make build-core-base-images
+      run: npm ci && npm run setup
+
+    - name: Pull core images
+      shell: bash
+      run: make pull-core-images
       env:
         CONTAINER_RUNTIME: docker
 

@@ -2,20 +2,27 @@ import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
+let coreDir
+try {
+  coreDir = path.dirname(require.resolve('@org-pulse/core/package.json'))
+} catch {
+  coreDir = __dirname
+}
+
 const sharedExclude = [
   '**/node_modules/**',
-  '**/tests/smoke/**',
   '**/tests/integration/**',
   'playwright-report/**',
-  'docs/module-template/**',
+  'modules/team-tracker/**',
+  'shared/**',
 ]
 
 const sharedConfig = {
   plugins: [vue()],
   resolve: {
     alias: {
-      '@/': path.resolve(__dirname, 'src') + '/',
-      '@shared': path.resolve(__dirname, 'shared'),
+      '@/': path.resolve(coreDir, 'src') + '/',
+      '@shared': path.resolve(coreDir, 'shared'),
       '@modules': path.resolve(__dirname, 'modules'),
       '@platform': path.resolve(__dirname, 'platform')
     }
@@ -34,8 +41,6 @@ export default defineConfig({
           globals: true,
           environment: 'node',
           include: [
-            'server/**/*.{test,spec}.js',
-            'shared/server/**/*.{test,spec}.js',
             'modules/*/server/**/*.{test,spec}.js',
             'modules/*/__tests__/server/**/*.{test,spec}.js',
           ],
@@ -52,7 +57,6 @@ export default defineConfig({
           exclude: [
             ...sharedExclude,
             'server/**',
-            'shared/server/**',
             'modules/*/server/**',
             'modules/*/__tests__/server/**',
           ],
