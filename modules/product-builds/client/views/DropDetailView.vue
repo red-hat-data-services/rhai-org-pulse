@@ -4,6 +4,7 @@ import { useDropDetail } from '../composables/useDrops'
 import { useArtifacts } from '../composables/useArtifacts'
 import { apiRequest } from '@shared/client/services/api'
 import { formatDate, envBadgeClass, archBadgeClass, konfluxStateBadgeClass, testStatusBadgeClass, testStatusLabel, formatDuration, getCommitUrl } from '../utils/formatting'
+import ChiBadge from '../components/ChiBadge.vue'
 import DropTimeline from '../components/DropTimeline.vue'
 
 const BASE = '/modules/product-builds'
@@ -458,6 +459,12 @@ const totalColumns = 7
                                 <svg v-if="copiedKey === name" class="w-3 h-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
                                 <svg v-else class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                               </button>
+                            </div>
+                          </div>
+                          <div v-if="art.health_index" class="mt-3">
+                            <span class="font-medium text-gray-900 dark:text-gray-100">Health Index:</span>
+                            <div class="mt-1">
+                              <ChiBadge :health-index="art.health_index" show-details />
                             </div>
                           </div>
                           <div v-if="art.drop_keys?.length" class="mt-3">

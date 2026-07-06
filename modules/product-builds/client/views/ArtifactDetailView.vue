@@ -2,6 +2,7 @@
 import { ref, reactive, computed, watch, onMounted, inject, defineAsyncComponent } from 'vue'
 import { useArtifactDetail } from '../composables/useArtifacts'
 import { formatDate, envBadgeClass, archBadgeClass, konfluxStateBadgeClass, testStatusBadgeClass, testStatusLabel, formatDuration, getAcceleratorInfo, getCommitUrl } from '../utils/formatting'
+import ChiBadge from '../components/ChiBadge.vue'
 
 const DependencyGraph = defineAsyncComponent(() => import('../components/DependencyGraph.vue'))
 
@@ -326,6 +327,12 @@ const otherLabels = computed(() => {
                 class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
                 :class="envBadgeClass(env)"
               >{{ env }}</span>
+            </dd>
+          </div>
+          <div v-if="artifact.health_index">
+            <dt class="text-gray-500 dark:text-gray-400">Health Index</dt>
+            <dd class="mt-0.5">
+              <ChiBadge :health-index="artifact.health_index" show-details />
             </dd>
           </div>
           <div v-if="artifact.drop_keys?.length">

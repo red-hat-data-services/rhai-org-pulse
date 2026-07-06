@@ -76,6 +76,20 @@ export function getCommitUrl(artifact) {
   return `${baseUrl}/-/commit/${commit}`
 }
 
+export const CHI_GRADE_CLASSES = {
+  A: 'bg-green-600 text-white',
+  B: 'bg-lime-500 text-white',
+  C: 'bg-yellow-400 text-gray-900',
+  D: 'bg-orange-500 text-white',
+  E: 'bg-amber-600 text-white',
+  F: 'bg-red-700 text-white',
+  Unknown: 'bg-gray-400 text-white',
+}
+
+export function chiGradeBadgeClass(grade) {
+  return CHI_GRADE_CLASSES[grade] || CHI_GRADE_CLASSES.Unknown
+}
+
 export function getAcceleratorInfo(art) {
   const labels = art?.labels || {}
   let accel = art?.variant ? art.variant.split('-')[0] : null
