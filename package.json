@@ -20,6 +20,7 @@
     "validate:modules": "node node_modules/@org-pulse/core/scripts/validate-modules.js",
     "validate:platform": "node node_modules/@org-pulse/core/scripts/validate-platform.js",
     "validate:openapi": "cp scripts/openapi-route-count.json node_modules/@org-pulse/core/scripts/ && node node_modules/@org-pulse/core/scripts/validate-openapi.js",
+    "validate:dockerfile-deps": "node scripts/validate-dockerfile-deps.js",
     "prepare": "husky || true"
   },
   "dependencies": {

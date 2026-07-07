@@ -94,6 +94,10 @@ jobs:
         if: steps.changes.outputs.app == 'true'
         run: npm run validate:openapi
 
+      - name: Validate Dockerfile dependencies
+        if: steps.changes.outputs.app == 'true'
+        run: npm run validate:dockerfile-deps
+
       - name: Build
         if: steps.changes.outputs.app == 'true'
         run: npm run build
