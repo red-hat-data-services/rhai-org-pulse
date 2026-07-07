@@ -48,7 +48,7 @@ jobs:
         run: |
           sed -i "s|org-pulse-core//deploy/openshift/base?ref=v[0-9.]*|org-pulse-core//deploy/openshift/base?ref=v${{ steps.check.outputs.latest }}|" deploy/openshift/overlays/ai-eng/kustomization.yaml
 
-      - uses: peter-evans/create-pull-request@v7
+      - uses: peter-evans/create-pull-request@v8
         if: steps.check.outputs.needs_upgrade == 'true'
         with:
           token: ${{ steps.app-token.outputs.token }}
