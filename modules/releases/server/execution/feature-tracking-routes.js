@@ -21,10 +21,66 @@ const TRACKING_CONFIG_FILE = 'releases/execution/feature-tracking-config.json'
 const TRACKING_CACHE_PREFIX = 'releases/execution/tracking-data-'
 const CACHE_TTL_MS = 10 * 60 * 1000
 const DEFAULT_PRODUCTS = ['rhoai', 'rhelai', 'RHAII']
-const DEFAULT_PROJECTS = ['RHAISTRAT', 'RHOAIENG', 'AIPCC', 'RHAIENG', 'INFERENG']
-const DEFAULT_ISSUE_TYPES = ['Feature']
+const DEFAULT_PROJECTS = ['RHAISTRAT', 'AIPCC', 'INFERENG']
+const DEFAULT_ISSUE_TYPES = ['Feature', 'Initiative']
 
 const EXCLUDE_VERSION_RE = /^\d+\.\d+\.\d+$/
+
+// Map: new version name (lowercased) -> old version names (lowercased)
+// Used to detect version renames in changelog so they aren't counted as
+// late additions or drops.
+const VERSION_RENAMES = {
+  '3.5 ga rhoai release': ['rhoai-3.5'],
+  '3.5 ea2 rhoai release': ['rhoai-3.5.ea2'],
+  '3.5 ea1 rhoai release': ['rhoai-3.5 ea1'],
+  '3.5 ga rhaii release': ['rhaii-3.5 ga'],
+  '3.5 ea2 rhaii release': ['rhaii-3.5 ea2'],
+  '3.5 ea1 rhaii release': ['rhaii-3.5 ea1'],
+  '3.5 ga rhel ai release': ['rhel ai 3.5 ga'],
+  '3.5 ea2 rhel ai release': ['rhel ai-3.5 ea2'],
+  '3.5 ea1 rhel ai release': ['rhel ai-3.5 ea1'],
+  '3.6 ga rhoai release': ['rhoai-3.6'],
+  '3.6 ea2 rhoai rlease': ['rhoai-3.6 ea2'],
+  '3.6 ea1 rhoai release': ['rhoai-3.6 ea1'],
+  '3.6 ga rhaii release': ['rhaii-3.6'],
+  '3.6 ea1 rhaii release': ['rhaii-3.6-ea1'],
+  '3.6 ga rhel ai release': ['rhel ai 3.6 ga'],
+  '3.6 ea2 rhel ai release': ['rhel ai-3.6 ea2'],
+  '3.6 ea1 rhel ai release': ['rhel ai-3.6 ea1']
+}
+
+// Reverse map: old version name (lowercased) -> new version names (lowercased)
+const VERSION_RENAMES_REVERSE = {}
+for (const newName of Object.keys(VERSION_RENAMES)) {
+  for (const oldName of VERSION_RENAMES[newName]) {
+    if (!VERSION_RENAMES_REVERSE[oldName]) VERSION_RENAMES_REVERSE[oldName] = []
+    VERSION_RENAMES_REVERSE[oldName].push(newName)
+  }
+}
+
+function getOldVersionNames(fixVersionNames) {
+  const names = Array.isArray(fixVersionNames) ? fixVersionNames : [fixVersionNames]
+  const oldNames = {}
+  for (let i = 0; i < names.length; i++) {
+    const old = VERSION_RENAMES[names[i].toLowerCase()]
+    if (old) {
+      for (let j = 0; j < old.length; j++) oldNames[old[j]] = true
+    }
+  }
+  return oldNames
+}
+
+function getNewVersionNames(fixVersionNames) {
+  const names = Array.isArray(fixVersionNames) ? fixVersionNames : [fixVersionNames]
+  const newNames = {}
+  for (let i = 0; i < names.length; i++) {
+    const renamed = VERSION_RENAMES_REVERSE[names[i].toLowerCase()]
+    if (renamed) {
+      for (let j = 0; j < renamed.length; j++) newNames[renamed[j]] = true
+    }
+  }
+  return newNames
+}
 
 const FIELDS_TO_FETCH = [
   'summary', 'status', 'issuetype', 'assignee', 'fixVersions', 'versions',
@@ -32,7 +88,8 @@ const FIELDS_TO_FETCH = [
   CUSTOM_FIELDS.team,
   CUSTOM_FIELDS.statusSummary,
   CUSTOM_FIELDS.colorStatus,
-  CUSTOM_FIELDS.productManager
+  CUSTOM_FIELDS.productManager,
+  CUSTOM_FIELDS.blockedDropdown
 ].join(',')
 
 function cacheKey(portfolioVersion) {
@@ -224,6 +281,8 @@ async function fetchFeaturesByFixVersion(fixVersions, jiraRequestFn, fetchAllJql
     seen[raw.key] = true
     const transformed = transformIssue(raw, {})
     transformed.fixVersionAddedAt = findFixVersionAddedDate(raw.changelog, versions)
+    var blockedField = raw.fields && raw.fields[CUSTOM_FIELDS.blockedDropdown]
+    transformed.isBlocked = !!(blockedField && blockedField.value === 'True')
     features.push(transformed)
   }
 
@@ -234,6 +293,11 @@ async function fetchFeaturesByFixVersion(fixVersions, jiraRequestFn, fetchAllJql
  * Parse changelog to find when a fixVersion was added to the issue.
  * Accepts a single version name or an array of names to match against
  * (handles naming variants like "rhelai-3.5EA2" / "rhelai-3.5 EA2 release").
+ *
+ * If the addition was part of a version rename (old version removed in the
+ * same changelog entry), returns when the OLD version was originally added
+ * instead, so that renames aren't counted as late additions.
+ *
  * Returns ISO timestamp string or null if not found in changelog.
  */
 function findFixVersionAddedDate(changelog, fixVersionNames) {
@@ -245,6 +309,8 @@ function findFixVersionAddedDate(changelog, fixVersionNames) {
     normalizedTargets[targets[ti].toLowerCase()] = true
   }
 
+  const oldNames = getOldVersionNames(targets)
+
   for (let i = 0; i < changelog.histories.length; i++) {
     const history = changelog.histories[i]
     const items = history.items || []
@@ -254,6 +320,18 @@ function findFixVersionAddedDate(changelog, fixVersionNames) {
       if (item.field !== 'Fix Version' && item.fieldId !== 'fixVersions') continue
       const toString = (item.toString || '').toLowerCase()
       if (normalizedTargets[toString]) {
+        if (Object.keys(oldNames).length > 0) {
+          var isRename = false
+          for (let k = 0; k < items.length; k++) {
+            if (items[k].field !== 'Fix Version' && items[k].fieldId !== 'fixVersions') continue
+            var fromStr = (items[k].fromString || '').toLowerCase()
+            if (oldNames[fromStr]) { isRename = true; break }
+          }
+          if (isRename) {
+            var oldDate = findFixVersionAddedDate(changelog, Object.keys(oldNames))
+            if (oldDate) return oldDate
+          }
+        }
         return history.created
       }
     }
@@ -311,12 +389,25 @@ async function fetchDroppedFeatures(fixVersions, jiraRequestFn, fetchAllJqlResul
       expand: 'renderedFields,changelog'
     })
 
+    const renamedToNames = getNewVersionNames(versions)
+
     const dropped = []
     for (let i = 0; i < rawIssues.length; i++) {
       const raw = rawIssues[i]
       if (currentKeys[raw.key]) continue
+
+      var currentFixVersions = (raw.fields && raw.fields.fixVersions) || []
+      var wasRenamed = false
+      for (let fvi = 0; fvi < currentFixVersions.length; fvi++) {
+        var fvName = (currentFixVersions[fvi].name || '').toLowerCase()
+        if (renamedToNames[fvName]) { wasRenamed = true; break }
+      }
+      if (wasRenamed) continue
+
       const transformed = transformIssue(raw, {})
       transformed.fixVersionRemovedAt = findFixVersionRemovedDate(raw.changelog, versions)
+      var droppedBlockedField = raw.fields && raw.fields[CUSTOM_FIELDS.blockedDropdown]
+      transformed.isBlocked = !!(droppedBlockedField && droppedBlockedField.value === 'True')
 
       if (freezeDate) {
         const removedDate = transformed.fixVersionRemovedAt

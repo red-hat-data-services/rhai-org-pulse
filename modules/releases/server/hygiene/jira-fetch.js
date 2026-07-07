@@ -26,7 +26,8 @@ const CUSTOM_FIELDS = {
   impact: 'customfield_10836',
   confidence: 'customfield_10838',
   effort: 'customfield_10637',
-  riceScore: 'customfield_10864'
+  riceScore: 'customfield_10864',
+  blockedDropdown: 'customfield_10517'
 }
 
 // Fields fetched in Pass 1 for all features
