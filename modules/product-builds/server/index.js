@@ -768,6 +768,12 @@ module.exports = function registerRoutes(router, context) {
    *         schema:
    *           type: string
    *         description: Repo types to check (repeatable, default test+production)
+   *       - name: expand_upstream
+   *         in: query
+   *         schema:
+   *           type: string
+   *           enum: ['true']
+   *         description: When 'true', also search upstream PyPI for newer versions
    *     responses:
    *       200:
    *         description: Search results with package availability across indexes

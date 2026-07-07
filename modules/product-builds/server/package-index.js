@@ -19,6 +19,7 @@ async function pMap(items, fn, concurrency) {
   return results
 }
 
+// JSON-only: Pulp returns HTML when multiple Accept types are present (broken content negotiation)
 const ACCEPT_HEADER = 'application/vnd.pypi.simple.v1+json'
 
 const PACKAGE_NAME_RE = /^[a-zA-Z][a-zA-Z0-9._-]*$/
