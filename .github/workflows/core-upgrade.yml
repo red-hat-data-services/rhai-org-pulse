@@ -1,8 +1,9 @@
 name: Core Upgrade
 
 on:
-  repository_dispatch:
-    types: [core-release]
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -25,25 +26,34 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Upgrade core dependency
+      - name: Check for new core version
+        id: check
         run: |
-          VERSION="${{ github.event.client_payload.version }}"
-          NPM_VERSION="${VERSION#v}"
-          npm install @org-pulse/core@${NPM_VERSION}
+          LATEST=$(npm view @org-pulse/core version)
+          CURRENT=$(node -p "require('./package.json').dependencies['@org-pulse/core'].replace(/^\^/, '')")
+          echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+          if [ "$LATEST" != "$CURRENT" ]; then
+            echo "needs_upgrade=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "needs_upgrade=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upgrade core dependency
+        if: steps.check.outputs.needs_upgrade == 'true'
+        run: npm install @org-pulse/core@${{ steps.check.outputs.latest }}
 
       - name: Update kustomize remote ref
+        if: steps.check.outputs.needs_upgrade == 'true'
         run: |
-          VERSION="${{ github.event.client_payload.version }}"
-          TAG_VERSION="v${VERSION#v}"
-          sed -i "s|org-pulse-core//deploy/openshift/base?ref=v[0-9.]*|org-pulse-core//deploy/openshift/base?ref=${TAG_VERSION}|" deploy/openshift/overlays/ai-eng/kustomization.yaml
+          sed -i "s|org-pulse-core//deploy/openshift/base?ref=v[0-9.]*|org-pulse-core//deploy/openshift/base?ref=v${{ steps.check.outputs.latest }}|" deploy/openshift/overlays/ai-eng/kustomization.yaml
 
       - uses: peter-evans/create-pull-request@v7
+        if: steps.check.outputs.needs_upgrade == 'true'
         with:
           token: ${{ steps.app-token.outputs.token }}
-          commit-message: 'chore(deps): upgrade @org-pulse/core to ${{ github.event.client_payload.version }}'
-          title: 'chore(deps): upgrade @org-pulse/core to ${{ github.event.client_payload.version }}'
+          commit-message: 'chore(deps): upgrade @org-pulse/core to v${{ steps.check.outputs.latest }}'
+          title: 'chore(deps): upgrade @org-pulse/core to v${{ steps.check.outputs.latest }}'
           body: |
-            Automated upgrade triggered by core release.
-
-            Version: `${{ github.event.client_payload.version }}`
-          branch: chore/core-upgrade-${{ github.event.client_payload.version }}
+            Automated upgrade from `v${{ steps.check.outputs.current }}` to `v${{ steps.check.outputs.latest }}`.
+          branch: chore/core-upgrade-v${{ steps.check.outputs.latest }}
