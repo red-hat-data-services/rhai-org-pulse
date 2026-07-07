@@ -4,7 +4,8 @@ import { reactive } from 'vue'
 const props = defineProps({
   groups: { type: Array, default: () => [] },
   portfolioVersion: { type: String, default: '' },
-  featureFreezeDate: { type: String, default: null }
+  featureFreezeDate: { type: String, default: null },
+  totalUniqueFeatures: { type: Number, default: null }
 })
 
 const JIRA_BASE = 'https://redhat.atlassian.net/browse'
@@ -68,6 +69,7 @@ function collapseAll() {
 }
 
 function totalFeatureCount() {
+  if (props.totalUniqueFeatures != null) return props.totalUniqueFeatures
   var count = 0
   for (var i = 0; i < props.groups.length; i++) {
     count += props.groups[i].featureCount || 0

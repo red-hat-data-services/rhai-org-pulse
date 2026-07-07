@@ -22,7 +22,7 @@ const TRACKING_CACHE_PREFIX = 'releases/execution/tracking-data-'
 const CACHE_TTL_MS = 10 * 60 * 1000
 const DEFAULT_PRODUCTS = ['rhoai', 'rhelai', 'RHAII']
 const DEFAULT_PROJECTS = ['RHAISTRAT', 'RHOAIENG', 'AIPCC', 'RHAIENG', 'INFERENG']
-const DEFAULT_ISSUE_TYPES = ['Feature', 'Initiative']
+const DEFAULT_ISSUE_TYPES = ['Feature']
 
 const EXCLUDE_VERSION_RE = /^\d+\.\d+\.\d+$/
 
@@ -727,10 +727,21 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
         })
       }
 
+      const allKeys = {}
+      for (let gi = 0; gi < groups.length; gi++) {
+        var gFeatures = groups[gi].features || []
+        for (let fi = 0; fi < gFeatures.length; fi++) {
+          if (gFeatures[fi].scopeChange !== 'dropped') {
+            allKeys[gFeatures[fi].key] = true
+          }
+        }
+      }
+
       const responseData = {
         portfolioVersion: version,
         planningFreezeDate: freezeDates.earliest,
         fetchedAt: new Date().toISOString(),
+        totalUniqueFeatures: Object.keys(allKeys).length,
         groups: groups,
         _freezeDateSource: scheduleSource,
         _freezeDatesCache: cacheDates,

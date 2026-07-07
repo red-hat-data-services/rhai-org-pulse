@@ -36,6 +36,9 @@ const freezeStatus = computed(() => {
 })
 
 const totalFeatures = computed(() => {
+  if (currentData.value && currentData.value.totalUniqueFeatures != null) {
+    return currentData.value.totalUniqueFeatures
+  }
   var count = 0
   for (var i = 0; i < groups.value.length; i++) {
     count += groups.value[i].featureCount || 0
@@ -425,6 +428,7 @@ onMounted(async () => {
         :groups="filteredGroups"
         :portfolioVersion="selectedVersion"
         :featureFreezeDate="featureFreezeDate"
+        :totalUniqueFeatures="totalFeatures"
       />
     </template>
 
