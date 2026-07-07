@@ -551,6 +551,61 @@ const versionMatrix = computed(() => {
         </div>
       </div>
 
+      <!-- Version × Product Version Matrix -->
+      <details v-if="versionMatrix && versionMatrix.pkgVersions.length > 0" class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden group/matrix">
+        <summary class="px-4 py-3 bg-gray-100 dark:bg-gray-700 cursor-pointer flex items-center gap-2 hover:bg-gray-200/80 dark:hover:bg-gray-600 transition-colors">
+          <svg class="w-3.5 h-3.5 text-gray-400 transition-transform group-open/matrix:rotate-90 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+          </svg>
+          <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+            Version availability across product versions
+          </span>
+        </summary>
+        <div class="overflow-x-auto border-t border-gray-100 dark:border-gray-700">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
+                <th class="px-4 py-3 font-medium sticky left-0 bg-white dark:bg-gray-800">Package Version</th>
+                <th
+                  v-for="pv in versionMatrix.prodVersions"
+                  :key="pv"
+                  class="px-4 py-3 font-medium text-center whitespace-nowrap"
+                >{{ pv }}</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+              <tr
+                v-for="pkgVer in versionMatrix.pkgVersions"
+                :key="pkgVer"
+                class="hover:bg-gray-50/80 dark:hover:bg-gray-900/30"
+              >
+                <td class="px-4 py-3 font-medium sticky left-0 bg-white dark:bg-gray-800">
+                  <button
+                    type="button"
+                    class="text-primary-600 dark:text-primary-400 hover:underline"
+                    @click="jumpToVersion(pkgVer)"
+                  >{{ pkgVer }}</button>
+                </td>
+                <td
+                  v-for="pv in versionMatrix.prodVersions"
+                  :key="pv"
+                  class="px-4 py-3 text-center"
+                >
+                  <template v-for="(cell, ci) in [versionMatrix.getCell(pkgVer, pv)]" :key="ci">
+                    <span
+                      v-if="cell"
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                      :title="[...cell.variants].join(', ')"
+                    >{{ cell.count }} file{{ cell.count !== 1 ? 's' : '' }}</span>
+                    <span v-else class="text-gray-300 dark:text-gray-600">&mdash;</span>
+                  </template>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
       <!-- Index Availability Tables -->
       <details v-for="group in indexAvailability" :key="group.productVersion" class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden group/pv" open>
         <summary class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/40 cursor-pointer flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -642,61 +697,6 @@ const versionMatrix = computed(() => {
                   </tr>
                 </template>
               </template>
-            </tbody>
-          </table>
-        </div>
-      </details>
-
-      <!-- Version × Product Version Matrix -->
-      <details v-if="versionMatrix && versionMatrix.pkgVersions.length > 0" class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden group/matrix">
-        <summary class="px-4 py-3 bg-gray-100 dark:bg-gray-700 cursor-pointer flex items-center gap-2 hover:bg-gray-200/80 dark:hover:bg-gray-600 transition-colors">
-          <svg class="w-3.5 h-3.5 text-gray-400 transition-transform group-open/matrix:rotate-90 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-          </svg>
-          <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-            Version availability across product versions
-          </span>
-        </summary>
-        <div class="overflow-x-auto border-t border-gray-100 dark:border-gray-700">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
-                <th class="px-4 py-3 font-medium sticky left-0 bg-white dark:bg-gray-800">Package Version</th>
-                <th
-                  v-for="pv in versionMatrix.prodVersions"
-                  :key="pv"
-                  class="px-4 py-3 font-medium text-center whitespace-nowrap"
-                >{{ pv }}</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-              <tr
-                v-for="pkgVer in versionMatrix.pkgVersions"
-                :key="pkgVer"
-                class="hover:bg-gray-50/80 dark:hover:bg-gray-900/30"
-              >
-                <td class="px-4 py-3 font-medium sticky left-0 bg-white dark:bg-gray-800">
-                  <button
-                    type="button"
-                    class="text-primary-600 dark:text-primary-400 hover:underline"
-                    @click="jumpToVersion(pkgVer)"
-                  >{{ pkgVer }}</button>
-                </td>
-                <td
-                  v-for="pv in versionMatrix.prodVersions"
-                  :key="pv"
-                  class="px-4 py-3 text-center"
-                >
-                  <template v-for="(cell, ci) in [versionMatrix.getCell(pkgVer, pv)]" :key="ci">
-                    <span
-                      v-if="cell"
-                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                      :title="[...cell.variants].join(', ')"
-                    >{{ cell.count }} file{{ cell.count !== 1 ? 's' : '' }}</span>
-                    <span v-else class="text-gray-300 dark:text-gray-600">&mdash;</span>
-                  </template>
-                </td>
-              </tr>
             </tbody>
           </table>
         </div>
