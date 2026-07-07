@@ -74,11 +74,10 @@ modules/              # AI Eng-specific feature modules (auto-discovered via mod
   releases/           # Release tracking & execution pipeline
   system-health/      # System health monitoring
   upstream-pulse/     # Upstream community tracking
-  catalyst-showcase/  # Catalyst showcase
+  ai-catalyst/        # AI Catalyst
   customer-insights/  # Customer insights (Google Sheets)
   okr-hub/            # OKR tracking & commitment reports
   product-builds/     # Product build tracking
-  sotu-dashboard/     # State of the Union dashboard
 
 platform/             # AI Eng-specific core UI customizations (About page tabs, etc.)
 
