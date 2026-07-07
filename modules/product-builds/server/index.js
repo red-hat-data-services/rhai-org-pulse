@@ -888,6 +888,7 @@ module.exports = function registerRoutes(router, context) {
           index_exists: raw.indexExists,
           found: raw.found,
           files,
+          format: raw.format || null,
           error: raw.error,
           source: task.source || 'internal'
         };

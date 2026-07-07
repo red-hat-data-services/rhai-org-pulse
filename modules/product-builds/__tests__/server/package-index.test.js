@@ -106,7 +106,7 @@ describe('package-index', () => {
   })
 
   describe('fetchIndex', () => {
-    it('returns found with files on 200', async () => {
+    it('returns found with files and format=html on HTML 200', async () => {
       const html = '<a href="url">torch-2.5.1.tar.gz</a>'
       vi.spyOn(globalThis, 'fetch').mockResolvedValue({
         ok: true,
@@ -119,6 +119,7 @@ describe('package-index', () => {
       expect(result.indexExists).toBe(true)
       expect(result.found).toBe(true)
       expect(result.files).toHaveLength(1)
+      expect(result.format).toBe('html')
       expect(result.error).toBeNull()
     })
 
@@ -200,7 +201,7 @@ describe('package-index', () => {
       expect(fetchSpy).toHaveBeenCalledTimes(1)
     })
 
-    it('parses PEP 691 JSON response', async () => {
+    it('parses PEP 691 JSON response with format=json', async () => {
       const jsonData = { files: [{ filename: 'pkg-1.0.tar.gz', url: 'https://example.com/pkg.tar.gz' }] }
       vi.spyOn(globalThis, 'fetch').mockResolvedValue({
         ok: true,
@@ -212,6 +213,44 @@ describe('package-index', () => {
       const result = await fetchIndex('https://index.example.com/simple/', 'pkg')
       expect(result.files).toHaveLength(1)
       expect(result.files[0].filename).toBe('pkg-1.0.tar.gz')
+      expect(result.format).toBe('json')
+    })
+
+    it('falls back to HTML on 406 Not Acceptable', async () => {
+      const html = '<a href="url">pkg-1.0.tar.gz</a>'
+      vi.spyOn(globalThis, 'fetch')
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 406,
+          headers: new Headers()
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          headers: new Headers({ 'content-type': 'text/html' }),
+          text: vi.fn().mockResolvedValue(html)
+        })
+
+      const result = await fetchIndex('https://index.example.com/simple/', 'pkg')
+      expect(result.indexExists).toBe(true)
+      expect(result.found).toBe(true)
+      expect(result.format).toBe('html')
+      expect(result.files).toHaveLength(1)
+    })
+
+    it('returns error when 406 fallback also fails', async () => {
+      vi.spyOn(globalThis, 'fetch')
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 406,
+          headers: new Headers()
+        })
+        .mockRejectedValueOnce(new Error('network error'))
+        .mockRejectedValueOnce(new Error('still broken'))
+
+      const result = await fetchIndex('https://index.example.com/simple/', 'pkg')
+      expect(result.found).toBe(false)
+      expect(result.error).toBe('still broken')
     })
   })
 
