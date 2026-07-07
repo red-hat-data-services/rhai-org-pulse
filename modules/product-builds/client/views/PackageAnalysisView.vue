@@ -55,7 +55,16 @@ const MIN_DAYS = 1
 const MAX_DAYS = 90
 
 // --- Shared state ---
-const activeTab = ref('onboarded')
+function getInitialTab() {
+  const hash = window.location.hash || ''
+  const qIdx = hash.indexOf('?')
+  if (qIdx !== -1) {
+    const params = new URLSearchParams(hash.slice(qIdx + 1))
+    if (params.get('tab') === 'search') return 'search'
+  }
+  return 'onboarded'
+}
+const activeTab = ref(getInitialTab())
 const reports = ref([])
 const loading = ref(true)
 const error = ref(null)
