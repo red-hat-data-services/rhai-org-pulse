@@ -889,9 +889,11 @@ const htmlFallbackIndexes = computed(() => {
                           {{ s.label }}
                           <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': expandedCells.has(cellKey(group.productVersion, row.variant, rt)) }" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
                         </button>
-                        <span v-if="newestUploadDate(row.repos[rt]?.files)" class="text-[10px] text-gray-400 dark:text-gray-500" :title="relativeTime(newestUploadDate(row.repos[rt]?.files))">
-                          {{ formatUploadDate(newestUploadDate(row.repos[rt]?.files)) }}
+                        <template v-for="(uploadDate, _) in [newestUploadDate(row.repos[rt]?.files)]" :key="_">
+                        <span v-if="uploadDate" class="text-[10px] text-gray-400 dark:text-gray-500" :title="relativeTime(uploadDate)">
+                          {{ formatUploadDate(uploadDate) }}
                         </span>
+                        </template>
                       </div>
                       <span
                         v-else-if="s.type === 'amber'"
