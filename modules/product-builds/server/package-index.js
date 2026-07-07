@@ -19,10 +19,7 @@ async function pMap(items, fn, concurrency) {
   return results
 }
 
-const ACCEPT_HEADER =
-  'application/vnd.pypi.simple.v1+json, ' +
-  'application/vnd.pypi.simple.v1+html;q=0.5, ' +
-  'text/html;q=0.01'
+const ACCEPT_HEADER = 'application/vnd.pypi.simple.v1+json'
 
 const PACKAGE_NAME_RE = /^[a-zA-Z][a-zA-Z0-9._-]*$/
 const VERSION_RE = /^[a-zA-Z0-9._-]+$/
@@ -98,7 +95,7 @@ function parseSimpleHtml(html) {
 function parseSimpleJson(data) {
   if (!data || !Array.isArray(data.files)) return []
   return data.files.map(function (f) {
-    return { filename: f.filename, url: f.url }
+    return { filename: f.filename, url: f.url, uploadTime: f['upload-time'] || null }
   })
 }
 
@@ -201,6 +198,16 @@ function getDefaultProductVersion() {
   return process.env.PACKAGE_INDEX_DEFAULT_PRODUCT_VERSION || null
 }
 
+function getUpstreamPypiUrl() {
+  const raw = process.env.UPSTREAM_PYPI_URL || 'https://pypi.org/simple/'
+  return raw.replace(/\/+$/, '') + '/'
+}
+
+function isUpstreamPypiEnabled() {
+  const val = process.env.UPSTREAM_PYPI_ENABLED
+  return val !== 'false' && val !== '0'
+}
+
 module.exports = {
   PACKAGE_NAME_RE,
   VERSION_RE,
@@ -214,6 +221,8 @@ module.exports = {
   getVariants,
   getProductVersions,
   getDefaultProductVersion,
+  getUpstreamPypiUrl,
+  isUpstreamPypiEnabled,
   clearCache,
   getCacheStats,
   pMap,

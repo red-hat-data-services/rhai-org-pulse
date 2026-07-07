@@ -9,7 +9,9 @@ const {
   getBaseUrl,
   getVariants,
   getProductVersions,
-  getDefaultProductVersion
+  getDefaultProductVersion,
+  getUpstreamPypiUrl,
+  isUpstreamPypiEnabled
 } = require('../../server/package-index')
 
 describe('package-index', () => {
@@ -25,6 +27,8 @@ describe('package-index', () => {
     delete process.env.PACKAGE_INDEX_DEFAULT_PRODUCT_VERSION
     delete process.env.PACKAGE_INDEX_QUERY_TIMEOUT
     delete process.env.PACKAGE_INDEX_CACHE_TTL
+    delete process.env.UPSTREAM_PYPI_URL
+    delete process.env.UPSTREAM_PYPI_ENABLED
   })
 
   describe('canonicalizeName', () => {
@@ -73,6 +77,26 @@ describe('package-index', () => {
       const files = parseSimpleJson(data)
       expect(files).toHaveLength(2)
       expect(files[0].filename).toBe('pkg-1.0.tar.gz')
+    })
+
+    it('captures upload-time from PEP 691 JSON', () => {
+      const data = {
+        files: [
+          { filename: 'pkg-1.0.tar.gz', url: 'https://example.com/pkg-1.0.tar.gz', 'upload-time': '2026-06-25T00:42:58.129454Z' }
+        ]
+      }
+      const files = parseSimpleJson(data)
+      expect(files[0].uploadTime).toBe('2026-06-25T00:42:58.129454Z')
+    })
+
+    it('returns null uploadTime when upload-time is missing', () => {
+      const data = {
+        files: [
+          { filename: 'pkg-1.0.tar.gz', url: 'https://example.com/pkg-1.0.tar.gz' }
+        ]
+      }
+      const files = parseSimpleJson(data)
+      expect(files[0].uploadTime).toBeNull()
     })
 
     it('returns empty for missing files array', () => {
@@ -230,6 +254,41 @@ describe('package-index', () => {
     it('getDefaultProductVersion reads env var', () => {
       process.env.PACKAGE_INDEX_DEFAULT_PRODUCT_VERSION = '3.4'
       expect(getDefaultProductVersion()).toBe('3.4')
+    })
+  })
+
+  describe('upstream PyPI config', () => {
+    it('getUpstreamPypiUrl returns default', () => {
+      expect(getUpstreamPypiUrl()).toBe('https://pypi.org/simple/')
+    })
+
+    it('getUpstreamPypiUrl reads env var', () => {
+      process.env.UPSTREAM_PYPI_URL = 'https://test.pypi.org/simple'
+      expect(getUpstreamPypiUrl()).toBe('https://test.pypi.org/simple/')
+    })
+
+    it('getUpstreamPypiUrl normalizes trailing slashes', () => {
+      process.env.UPSTREAM_PYPI_URL = 'https://pypi.org/simple///'
+      expect(getUpstreamPypiUrl()).toBe('https://pypi.org/simple/')
+    })
+
+    it('isUpstreamPypiEnabled returns true by default', () => {
+      expect(isUpstreamPypiEnabled()).toBe(true)
+    })
+
+    it('isUpstreamPypiEnabled returns false when set to false', () => {
+      process.env.UPSTREAM_PYPI_ENABLED = 'false'
+      expect(isUpstreamPypiEnabled()).toBe(false)
+    })
+
+    it('isUpstreamPypiEnabled returns false when set to 0', () => {
+      process.env.UPSTREAM_PYPI_ENABLED = '0'
+      expect(isUpstreamPypiEnabled()).toBe(false)
+    })
+
+    it('isUpstreamPypiEnabled returns true for any other value', () => {
+      process.env.UPSTREAM_PYPI_ENABLED = 'yes'
+      expect(isUpstreamPypiEnabled()).toBe(true)
     })
   })
 })
