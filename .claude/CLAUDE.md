@@ -12,6 +12,7 @@ hard constraints, and code style: see AGENTS.md (imported above).
 
 ```bash
 npm install
+npm run setup          # Symlinks core platform files into workspace
 cp .env.example .env   # Edit with your credentials
 npm run dev:full       # Starts Vite (5173) + Express (3001)
 ```
@@ -95,48 +96,50 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 
 ## Project Structure
 
+This repo is the AI Engineering consumer of `@org-pulse/core`. Core files are symlinked by `npm run setup`.
+
 ```
-src/
-  components/       # App shell (App.vue, AppSidebar, LandingPage, SettingsView)
-  composables/      # Shell-only composables (useModules, useModuleAdmin)
-  module-loader.js  # Frontend module auto-discovery via import.meta.glob
-  __tests__/        # Frontend tests
+server/
+  index.js            # Thin wrapper calling core's startServer() with AI Eng config
 
-shared/
-  client/
-    composables/    # Shared composables (useRoster, useAuth, useGithubStats, etc.)
-    services/       # API client with caching (api.js)
-    components/     # Shared UI (Toast, LoadingOverlay, RefreshModal)
-    index.js        # Barrel export
-  server/
-    storage.js      # Filesystem storage abstraction
-    demo-storage.js # Fixture-backed storage for demo mode
-    auth.js         # Auth middleware (requireAuth, requireAdmin)
-    roster-sync/    # Roster sync engine (LDAP + Google Sheets), config, constants
-    index.js        # Barrel export
+modules/              # AI Eng-specific modules (auto-discovered)
+platform/             # AI Eng-specific core UI customizations
+fixtures/             # Demo mode fixture data for AI Eng modules
+scripts/
+  setup.js            # Symlinks core files (src/, shared/, modules/team-tracker)
+  validate-dockerfile-deps.js  # CI check: Dockerfile deps match package.json
+
+deploy/
+  ai-eng.backend.Dockerfile    # Extends core backend image
+  ai-eng.frontend.Dockerfile   # Extends core builder + runtime images
+  openshift/overlays/ai-eng*/  # Kustomize overlays (remote base from core repo)
+
+# Symlinked from @org-pulse/core (do not edit directly):
+src/                  # App shell (App.vue, AppSidebar, LandingPage, SettingsView)
+shared/               # Shared client/server code (composables, storage, auth)
+modules/team-tracker/ # Core team-tracker module
 ```
-
-## Local Kind Cluster
-
-For testing the containerized deployment locally, see `deploy/KIND.md`. The `deploy/openshift/overlays/local/` overlay strips OpenShift-specific resources (OAuth proxy, Route, ServiceAccount) and uses locally-built images with `imagePullPolicy: Never`. Cluster name is `team-tracker` (not the default `kind`). If using Podman: `export KIND_EXPERIMENTAL_PROVIDER=podman`.
 
 ## Deployment
 
-Deployed to OpenShift via ArgoCD. Full guide: `deploy/OPENSHIFT.md`.
+Deployed to OpenShift via ArgoCD. Full guide: `docs/DEPLOYMENT.md`.
 
-| Component | Core Image | AI Eng Image |
+AI Eng images extend core images from `@org-pulse/core`. Core images are built and published by the [core repo](https://github.com/red-hat-data-services/org-pulse-core).
+
+| Component | Core Image (from core repo) | AI Eng Image (from this repo) |
 |-----------|-----------|--------------|
 | Backend | `quay.io/org-pulse/org-pulse-core-backend` | `quay.io/org-pulse/team-tracker-backend` (extends core) |
-| Frontend | `quay.io/org-pulse/org-pulse-core-frontend` | `quay.io/org-pulse/team-tracker-frontend` (extends core) |
 | Frontend Builder | `quay.io/org-pulse/org-pulse-core-frontend-builder` | — (used as build stage) |
 | Frontend Runtime | `quay.io/org-pulse/org-pulse-core-frontend-runtime` | — (used as runtime stage) |
+| Frontend | — | `quay.io/org-pulse/team-tracker-frontend` (built from builder + runtime) |
 | OAuth Proxy | `quay.io/openshift/origin-oauth-proxy:4.16` (sidecar) | same |
 
-Kustomize layers: `base/` (core platform + team-tracker) → `overlays/ai-eng/` (AI Eng modules + secrets) → `overlays/ai-eng-{dev,preprod,prod}/` (environment-specific). The `overlays/local/` overlay uses core images for Kind testing.
+Kustomize layers: remote `base/` from core repo → `overlays/ai-eng/` (AI Eng modules + secrets) → `overlays/ai-eng-{dev,preprod,prod}/` (environment-specific).
 
 ### CI/CD
-- **`ci.yml`** — PRs + main: lint, test, build, kustomize validate. Required check: "Test & Build".
-- **`build-images.yml`** — main pushes: builds core images first (backend, frontend, frontend-builder, frontend-runtime), then AI Eng images FROM core, runs smoke tests, pushes to Quay (`:<sha>` + `:latest`), commits prod image tag update directly to main (`[skip ci]`).
+- **`ci.yml`** — PRs + main: lint, test, build, kustomize validate, Dockerfile dep sync check. Required check: "Test & Build".
+- **`build-images.yml`** — main pushes: pulls core images (by version from `@org-pulse/core/package.json`), builds AI Eng images FROM core, runs smoke tests, pushes to Quay (`:<sha>` + `:latest`), commits prod image tag update directly to main (`[skip ci]`).
+- **`core-upgrade.yml`** — triggered by `repository_dispatch` from core repo on new releases. Creates a PR to bump `@org-pulse/core` version and kustomize remote ref.
 - ConfigMap changes auto-trigger rollouts via kustomize `configMapGenerator` — ConfigMap names include a content hash suffix (e.g., `team-tracker-config-5h2f9k`), so any data change produces a new name and triggers a pod rollout automatically.
 
 **Branch protection** uses a GitHub repository ruleset on `main`:
@@ -159,12 +162,8 @@ Kustomize layers: `base/` (core platform + team-tracker) → `overlays/ai-eng/` 
 **Smoke tests** use Playwright to verify the production container images. Located in `tests/smoke/app-loads.spec.js`. These run automatically in CI after images are built and can also be run locally:
 
 ```bash
-make build-core-frontend-image  # Build core frontend image (team-tracker only)
-make build-core-backend-image   # Build core backend image (team-tracker only)
-make smoke-test-core            # Run smoke tests against core images
-
-make build-frontend-image       # Build AI Eng frontend image (all modules)
-make build-backend-image        # Build AI Eng backend image (all modules)
+make build-frontend-image       # Build AI Eng frontend image (extends core)
+make build-backend-image        # Build AI Eng backend image (extends core)
 make smoke-test                 # Run smoke tests against AI Eng images
 ```
 
@@ -180,10 +179,11 @@ Playwright runs in a container (`quay.io/browser/playwright-chromium`), so no lo
 **IMPORTANT:** The Playwright version must match between `package.json` (`@playwright/test`) and `Makefile` (`PLAYWRIGHT_IMAGE`). When updating Playwright, change both files to the same version to prevent browser binary mismatches. The Quay image uses `playwright-<version>` tags (e.g., `playwright-1.60.0`).
 
 CI workflow (`build-images.yml`):
-1. Builds core images (backend, frontend, frontend-builder, frontend-runtime) with smoke test
-2. Builds AI Eng images FROM core (backend extends core-backend, frontend uses core-builder + core-runtime)
-3. Runs Playwright smoke tests against AI Eng images
-4. Pushes all images to Quay, commits prod image tag update directly to main
+1. Resolves core image tag from `@org-pulse/core/package.json` version
+2. Pulls pre-built core images from Quay
+3. Builds AI Eng images FROM core (backend extends core-backend, frontend uses core-builder + core-runtime)
+4. Runs Playwright smoke tests against AI Eng images
+5. Pushes AI Eng images to Quay, commits prod image tag update directly to main
 
 **Integration tests** use Playwright to verify module-specific functionality against production containers in demo mode. Located in `tests/integration/<module>.spec.js`:
 
@@ -213,7 +213,7 @@ To add integration tests for a new module:
 3. That's it! The matrix automatically picks up the new module when it changes
 
 ### Building images on ARM Macs
-Standard `--platform linux/amd64` builds fail: npm times out under QEMU, esbuild crashes. Workaround: build/install natively, then copy into amd64 base images. See `deploy/OPENSHIFT.md` step 3 for details. This works because the backend has no native Node addons (all pure JS).
+Standard `--platform linux/amd64` builds fail: npm times out under QEMU, esbuild crashes. Workaround: build/install natively, then copy into amd64 base images. This works because the backend has no native Node addons (all pure JS).
 
 ### Dev vs prod
 - **Base** sets `ADMIN_EMAILS=` (empty) and `CRON_ADMIN_EMAIL=`.

@@ -12,13 +12,16 @@ deployed on OpenShift via ArgoCD.
 
 ## Architecture
 
+This repo is the **AI Engineering consumer** of [`@org-pulse/core`](https://github.com/red-hat-data-services/org-pulse-core). Core platform code (app shell, shared utilities, team-tracker module) is installed as an npm dependency and symlinked into the workspace by `npm run setup`.
+
+- **Core platform**: `@org-pulse/core` npm package — app shell, shared client/server code, team-tracker module
 - **Frontend**: Vue 3 SPA (`<script setup>`), Vite 8, Tailwind CSS 3, Chart.js 4
-- **Backend**: Express (port 3001), single `server/dev-server.js` for dev + prod
-- **Modules**: Built-in modules in `modules/<slug>/` with `module.json` manifests, auto-discovered
+- **Backend**: Express (port 3001), thin `server/index.js` wrapper calling core's `startServer()`
+- **Modules**: AI Eng modules in `modules/<slug>/` with `module.json` manifests, auto-discovered
 - **Auth**: OpenShift OAuth proxy in prod; no auth locally (uses `ADMIN_EMAILS`)
 - **Storage**: Local filesystem (`./data/`), mounted as PVC in OpenShift
-- **Shared code**: `shared/client/` and `shared/server/`, importable via `@shared` alias
-- **Platform extensions**: `platform/` holds deployment-specific core UI customizations (e.g., About page tabs), importable via `@platform` alias. Separate from modules — see `docs/PLATFORM.md`
+- **Shared code**: `shared/client/` and `shared/server/` (from core), importable via `@shared` alias
+- **Platform extensions**: `platform/` holds AI Eng-specific core UI customizations (e.g., About page tabs), importable via `@platform` alias. Separate from modules — see `docs/PLATFORM.md`
 
 See `docs/MODULES.md` for the module development guide.
 
@@ -126,6 +129,7 @@ checklist, which explicitly enforces the hard constraints above.
 ## Commands
 
 ```bash
+npm run setup                   # Symlink core platform into workspace (run after npm install)
 npm run dev:full              # Start Vite (5173) + Express (3001)
 npm run dev                   # Vite only
 npm run dev:server            # Express only (needs .env)
@@ -136,9 +140,9 @@ npm run build                 # Production build
 npm run validate:modules      # Validate module manifests
 npm run validate:platform     # Validate platform extension manifests
 npm run validate:openapi      # Validate OpenAPI annotations
+npm run validate:dockerfile-deps  # Verify Dockerfile deps match package.json
 
 # Container-based tests (requires Docker/Podman)
-make smoke-test-core            # Run smoke tests against core images
 make smoke-test                 # Run smoke tests against AI Eng images
 make test-module MODULE=<name>  # Run integration tests for a module
 ```
