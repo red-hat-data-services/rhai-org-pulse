@@ -9,6 +9,9 @@ playwright-report/
 test-results/
 .playwright/
 
+# Coverage
+coverage/
+
 # Environment variables
 .env
 .env.local
