@@ -95,6 +95,7 @@ function numericField(field) {
   var num = Number(val)
   return isNaN(num) ? null : num
 }
+
 /**
  * Compute RICE completion status from the four RICE component fields.
  * @param {object} fields - Raw Jira fields object
@@ -301,7 +302,7 @@ function transformIssue(rawIssue, rfeMap) {
     docsRequired: serializeField(fields[CUSTOM_FIELDS.docsRequired]),
     targetEnd: fields[CUSTOM_FIELDS.targetEnd] || null,
     riceStatus: computeRiceStatus(fields),
-    riceScore: fields[CUSTOM_FIELDS.riceScore] || null,
+    riceScore: numericField(fields[CUSTOM_FIELDS.riceScore]),
     priority,
     isBlocked,
     blockedBy,
