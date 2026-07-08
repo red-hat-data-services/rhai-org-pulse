@@ -494,10 +494,14 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    var sidebarLink = page.locator('nav a[href*="releases"], nav button:has-text("Releases"), [role="navigation"] a:has-text("Releases")').first();
-    await expect(sidebarLink).toBeVisible();
+    var moduleHeader = page.locator('aside nav button').filter({ hasText: 'Releases' }).first();
+    await expect(moduleHeader).toBeVisible();
 
-    await sidebarLink.click();
+    await moduleHeader.click();
+    await page.waitForTimeout(500);
+
+    var planLink = page.locator('aside nav button').filter({ hasText: 'Plan' }).first();
+    await planLink.click();
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
