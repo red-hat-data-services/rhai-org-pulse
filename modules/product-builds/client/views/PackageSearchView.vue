@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, nextTick, watch } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { usePackageSearch } from '../composables/usePackageSearch'
 
 const {
@@ -22,7 +22,7 @@ const packageVersion = ref('')
 const selectedProductVersion = ref('')
 const selectedVariant = ref('')
 const selectedRepoTypes = ref('default')
-const expandUpstream = ref(false)
+const loadingUpstream = ref(false)
 
 function compareVersionsDesc(a, b) {
   const normalize = v => v.replace(/([a-zA-Z]+)/g, '.$1.').split('.').filter(Boolean)
@@ -121,6 +121,21 @@ const canSubmit = computed(() => !loading.value && packageName.value.trim() && o
 const hasSearched = computed(() => results.value !== null)
 const linkCopied = ref(false)
 
+function clearSearch() {
+  packageName.value = ''
+  packageVersion.value = ''
+  results.value = null
+  error.value = null
+  expandedVersions.value = new Set()
+  expandedCells.value = new Set()
+  expandedPvs.value = new Set()
+  versionVariantFilter.value = ''
+  versionRepoFilter.value = ''
+  const hash = window.location.hash || ''
+  const basePath = hash.split('?')[0] || '#/product-builds/package-analysis'
+  history.replaceState(null, '', window.location.pathname + window.location.search + basePath + '?tab=search')
+}
+
 function copySearchLink() {
   navigator.clipboard.writeText(window.location.href)
     .then(() => {
@@ -140,7 +155,7 @@ function pushSearchToUrl() {
   if (selectedProductVersion.value.trim()) params.set('pv', selectedProductVersion.value.trim())
   if (selectedVariant.value) params.set('variant', selectedVariant.value)
   if (selectedRepoTypes.value !== 'default') params.set('repos', selectedRepoTypes.value)
-  if (expandUpstream.value) params.set('upstream', '1')
+  if (hasUpstreamData.value) params.set('upstream', '1')
   const newHash = basePath + '?' + params.toString()
   if (window.location.hash !== newHash) {
     history.replaceState(null, '', window.location.pathname + window.location.search + newHash)
@@ -174,9 +189,12 @@ onMounted(async () => {
     selectedProductVersion.value = urlParams.productVersion
     selectedVariant.value = urlParams.variant
     selectedRepoTypes.value = urlParams.repoTypes
-    expandUpstream.value = urlParams.expandUpstream || false
     await nextTick()
-    handleSubmit()
+    if (urlParams.expandUpstream) {
+      handleSearchUpstream()
+    } else {
+      handleSubmit()
+    }
   }
 })
 
@@ -200,28 +218,34 @@ async function handleSubmit() {
   expandedPvs.value = new Set()
   versionVariantFilter.value = ''
   versionRepoFilter.value = ''
-  pushSearchToUrl()
   await search({
     packageName: packageName.value,
     packageVersion: packageVersion.value,
     productVersion: selectedProductVersion.value,
     variant: selectedVariant.value,
     repoTypes: selectedRepoTypes.value,
-    expandUpstream: expandUpstream.value
+    expandUpstream: false
   })
+  pushSearchToUrl()
+}
+
+async function handleSearchUpstream() {
+  if (!canSubmit.value) return
+  loadingUpstream.value = true
+  await search({
+    packageName: packageName.value,
+    packageVersion: packageVersion.value,
+    productVersion: selectedProductVersion.value,
+    variant: selectedVariant.value,
+    repoTypes: selectedRepoTypes.value,
+    expandUpstream: true
+  })
+  loadingUpstream.value = false
+  pushSearchToUrl()
 }
 
 const hasUpstreamData = computed(() => {
   return results.value?.results?.some(r => r.source === 'upstream') ?? false
-})
-
-watch(expandUpstream, (on) => {
-  if (!results.value || !canSubmit.value) return
-  if (on && !hasUpstreamData.value) {
-    handleSubmit()
-  } else {
-    pushSearchToUrl()
-  }
 })
 
 const expandedVersions = ref(new Set())
@@ -492,13 +516,26 @@ const htmlFallbackIndexes = computed(() => {
               <label class="block text-xs uppercase tracking-wide font-medium text-gray-500 dark:text-gray-400 mb-1">
                 Package Name <span class="text-red-500">*</span>
               </label>
-              <input
-                v-model="packageName"
-                type="text"
-                placeholder="torch, vllm, transformers..."
-                autofocus
-                class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-gray-300 w-full placeholder-gray-400"
-              />
+              <div class="relative">
+                <input
+                  v-model="packageName"
+                  type="text"
+                  placeholder="torch, vllm, transformers..."
+                  autofocus
+                  class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 pr-8 text-sm bg-white dark:bg-gray-800 dark:text-gray-300 w-full placeholder-gray-400"
+                />
+                <button
+                  v-if="packageName || hasSearched"
+                  type="button"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  title="Clear search"
+                  @click="clearSearch"
+                >
+                  <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
             <div class="flex-1 min-w-[140px]">
               <label class="block text-xs uppercase tracking-wide font-medium text-gray-500 dark:text-gray-400 mb-1">
@@ -572,24 +609,6 @@ const htmlFallbackIndexes = computed(() => {
                 <option value="all">All (incl. SDists)</option>
               </select>
             </div>
-            <div v-if="upstreamPypiAvailable" class="flex items-center gap-2 self-end pb-1">
-              <button
-                type="button"
-                role="switch"
-                :aria-checked="expandUpstream"
-                class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
-                :class="expandUpstream ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-600'"
-                @click="expandUpstream = !expandUpstream"
-              >
-                <span
-                  class="pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow ring-0 transition-transform duration-200"
-                  :class="expandUpstream ? 'translate-x-4' : 'translate-x-0'"
-                />
-              </button>
-              <span class="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap cursor-pointer select-none" @click="expandUpstream = !expandUpstream">
-                Show upstream versions
-              </span>
-            </div>
             <div>
               <button
                 type="submit"
@@ -606,6 +625,25 @@ const htmlFallbackIndexes = computed(() => {
                 {{ loading ? 'Searching...' : 'Search' }}
               </button>
             </div>
+          </div>
+
+          <!-- Search upstream button -->
+          <div v-if="upstreamPypiAvailable" class="mt-3 flex justify-end">
+            <button
+              type="button"
+              :disabled="!canSubmit"
+              class="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-1.5 text-sm font-medium rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              @click="handleSearchUpstream"
+            >
+              <svg v-if="loadingUpstream" class="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <svg v-else class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
+              </svg>
+              {{ loadingUpstream ? 'Searching...' : 'Search upstream' }}
+            </button>
           </div>
         </form>
       </div>
@@ -761,7 +799,7 @@ const htmlFallbackIndexes = computed(() => {
 
       <!-- Upstream PyPI Section -->
       <details
-        v-if="expandUpstream && upstreamFiles.length > 0"
+        v-if="hasUpstreamData && upstreamFiles.length > 0"
         class="rounded-xl border border-purple-300 dark:border-purple-700 bg-purple-50/30 dark:bg-purple-900/10 shadow-sm overflow-hidden group/pv"
         open
       >
@@ -804,7 +842,7 @@ const htmlFallbackIndexes = computed(() => {
         </div>
       </details>
       <div
-        v-else-if="expandUpstream && upstreamGroup && upstreamFiles.length === 0"
+        v-else-if="hasUpstreamData && upstreamGroup && upstreamFiles.length === 0"
         class="rounded-xl border border-purple-200 dark:border-purple-700 bg-purple-50/30 dark:bg-purple-900/10 px-4 py-3 text-sm text-purple-600 dark:text-purple-400"
       >
         No newer upstream versions found on PyPI
