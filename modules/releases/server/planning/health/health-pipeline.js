@@ -15,7 +15,7 @@
  */
 
 const { loadIndex, loadFeatureDetail } = require('../cache-reader')
-const { getConfig } = require('../config')
+const { getConfig, getConfiguredReleases, loadBigRocks } = require('../config')
 const { JIRA_BROWSE_URL, CLOSED_STATUSES, PLANNING_DEADLINE_OFFSET_DAYS, VALID_PHASES } = require('../constants')
 const { enrichFeatures } = require('./jira-enrichment')
 const { computeDoR, computeDoD, computePlanningChecks, derivePlanningStatus, applyBlockerEscalation, parseStratCreatorStatus } = require('./planning-gates')
@@ -814,8 +814,14 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     }
   }
 
-  // Step 6b: Compute composite priority scores
-  var priorityScores = computePriorityScores(healthFeatures)
+  // Step 6b: Build Big Rock priority map and compute composite priority scores
+  var bigRocks = loadBigRocks(readFromStorage, version)
+  var bigRockPriorityMap = new Map()
+  for (var bri = 0; bri < bigRocks.length; bri++) {
+    if (bigRocks[bri].name) bigRockPriorityMap.set(bigRocks[bri].name, bigRocks[bri].priority || (bri + 1))
+  }
+  var configuredVersions = getConfiguredReleases(readFromStorage).map(function(r) { return r.version })
+  var priorityScores = computePriorityScores(healthFeatures, { bigRockPriorityMap: bigRockPriorityMap, configuredVersions: configuredVersions })
   for (var pi = 0; pi < healthFeatures.length; pi++) {
     var pKey = healthFeatures[pi].key
     var pResult = priorityScores.get(pKey)

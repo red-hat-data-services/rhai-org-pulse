@@ -1,30 +1,25 @@
 import { describe, it, expect } from 'vitest'
 
-const {
+var {
   computePriorityScores,
+  computeBigRockScore,
+  computeTargetVersionScore,
   WEIGHTS,
-  TIER_SCORES,
   PRIORITY_SCORES,
-  TSHIRT_SCORES
+  TARGET_VERSION_POSITION_SCORES
 } = require('../../../server/planning/health/priority-scorer')
 
 describe('exported constants', function() {
   it('weights sum to 1.0', function() {
-    var sum = WEIGHTS.rice + WEIGHTS.bigRock + WEIGHTS.priority + WEIGHTS.complexity
+    var sum = WEIGHTS.rice + WEIGHTS.bigRock + WEIGHTS.targetVersion + WEIGHTS.priority
     expect(sum).toBeCloseTo(1.0)
   })
 
   it('exposes correct weight values', function() {
     expect(WEIGHTS.rice).toBe(0.30)
     expect(WEIGHTS.bigRock).toBe(0.30)
-    expect(WEIGHTS.priority).toBe(0.25)
-    expect(WEIGHTS.complexity).toBe(0.15)
-  })
-
-  it('exposes tier scores', function() {
-    expect(TIER_SCORES[1]).toBe(1.0)
-    expect(TIER_SCORES[2]).toBe(0.6)
-    expect(TIER_SCORES[3]).toBe(0.2)
+    expect(WEIGHTS.targetVersion).toBe(0.25)
+    expect(WEIGHTS.priority).toBe(0.15)
   })
 
   it('exposes priority scores', function() {
@@ -35,22 +30,153 @@ describe('exported constants', function() {
     expect(PRIORITY_SCORES['Minor']).toBe(0.2)
   })
 
-  it('exposes t-shirt scores', function() {
-    expect(TSHIRT_SCORES['XS']).toBe(1.0)
-    expect(TSHIRT_SCORES['S']).toBe(0.8)
-    expect(TSHIRT_SCORES['M']).toBe(0.6)
-    expect(TSHIRT_SCORES['L']).toBe(0.4)
-    expect(TSHIRT_SCORES['XL']).toBe(0.2)
+  it('exposes target version position scores', function() {
+    expect(TARGET_VERSION_POSITION_SCORES[0]).toBe(1.0)
+    expect(TARGET_VERSION_POSITION_SCORES[1]).toBe(0.6)
+    expect(TARGET_VERSION_POSITION_SCORES[2]).toBe(0.2)
+  })
+})
+
+describe('computeBigRockScore', function() {
+  it('returns 1.0 for position 1 (highest priority rock)', function() {
+    var map = new Map([['Rock A', 1]])
+    var feature = { bigRock: 'Rock A' }
+    expect(computeBigRockScore(feature, map)).toBe(1.0)
+  })
+
+  it('decays by 0.1 per position', function() {
+    var map = new Map([['Rock A', 1], ['Rock B', 2], ['Rock C', 3]])
+    expect(computeBigRockScore({ bigRock: 'Rock A' }, map)).toBe(1.0)
+    expect(computeBigRockScore({ bigRock: 'Rock B' }, map)).toBe(0.9)
+    expect(computeBigRockScore({ bigRock: 'Rock C' }, map)).toBe(0.8)
+  })
+
+  it('floors at 0.3 for very low positions', function() {
+    var map = new Map([['Deep Rock', 10]])
+    // 1.0 - (10-1)*0.1 = 1.0 - 0.9 = 0.1 -> clamped to 0.3
+    expect(computeBigRockScore({ bigRock: 'Deep Rock' }, map)).toBe(0.3)
+  })
+
+  it('floors at 0.3 for positions beyond 8', function() {
+    var map = new Map([['Rock 8', 8], ['Rock 9', 9]])
+    // position 8: 1.0 - 0.7 = 0.3
+    expect(computeBigRockScore({ bigRock: 'Rock 8' }, map)).toBe(0.3)
+    // position 9: 1.0 - 0.8 = 0.2 -> clamped to 0.3
+    expect(computeBigRockScore({ bigRock: 'Rock 9' }, map)).toBe(0.3)
+  })
+
+  it('returns best score when feature belongs to multiple rocks', function() {
+    var map = new Map([['Rock A', 5], ['Rock B', 2]])
+    var feature = { bigRock: 'Rock A, Rock B' }
+    // Rock A: 1.0 - 0.4 = 0.6; Rock B: 1.0 - 0.1 = 0.9; best = 0.9
+    expect(computeBigRockScore(feature, map)).toBe(0.9)
+  })
+
+  it('returns 0 when bigRockPriorityMap is null', function() {
+    var feature = { bigRock: 'Rock A' }
+    expect(computeBigRockScore(feature, null)).toBe(0)
+  })
+
+  it('returns 0 when feature has no bigRock name', function() {
+    var map = new Map([['Rock A', 1]])
+    expect(computeBigRockScore({ bigRock: null }, map)).toBe(0)
+    expect(computeBigRockScore({ bigRock: '' }, map)).toBe(0)
+    expect(computeBigRockScore({}, map)).toBe(0)
+  })
+
+  it('returns 0 when rock name is not in the map', function() {
+    var map = new Map([['Rock A', 1]])
+    var feature = { bigRock: 'Unknown Rock' }
+    expect(computeBigRockScore(feature, map)).toBe(0)
+  })
+})
+
+describe('computeTargetVersionScore', function() {
+  it('returns 1.0 for position 0 (first configured version)', function() {
+    var versions = ['v1.0', 'v2.0', 'v3.0']
+    var feature = { targetVersions: ['v1.0'] }
+    expect(computeTargetVersionScore(feature, versions)).toBe(1.0)
+  })
+
+  it('returns 0.6 for position 1', function() {
+    var versions = ['v1.0', 'v2.0', 'v3.0']
+    var feature = { targetVersions: ['v2.0'] }
+    expect(computeTargetVersionScore(feature, versions)).toBe(0.6)
+  })
+
+  it('returns 0.2 for position 2', function() {
+    var versions = ['v1.0', 'v2.0', 'v3.0']
+    var feature = { targetVersions: ['v3.0'] }
+    expect(computeTargetVersionScore(feature, versions)).toBe(0.2)
+  })
+
+  it('returns 0.1 for positions beyond 2', function() {
+    var versions = ['v1.0', 'v2.0', 'v3.0', 'v4.0']
+    var feature = { targetVersions: ['v4.0'] }
+    expect(computeTargetVersionScore(feature, versions)).toBe(0.1)
+  })
+
+  it('uses fuzzy match when exact match fails', function() {
+    var versions = ['v1.0', 'v2.0']
+    var feature = { targetVersions: ['v1.0-beta'] }
+    // 'v1.0-beta'.indexOf('v1.0') !== -1, so matches position 0
+    expect(computeTargetVersionScore(feature, versions)).toBe(1.0)
+  })
+
+  it('uses fuzzy match when configured version is substring of target', function() {
+    var versions = ['v1.0-rc', 'v2.0']
+    var feature = { targetVersions: ['v1.0'] }
+    // 'v1.0-rc'.indexOf('v1.0') !== -1, so matches position 0
+    expect(computeTargetVersionScore(feature, versions)).toBe(1.0)
+  })
+
+  it('returns best position when feature has multiple target versions', function() {
+    var versions = ['v1.0', 'v2.0', 'v3.0']
+    var feature = { targetVersions: ['v3.0', 'v1.0'] }
+    // best match is position 0 (v1.0)
+    expect(computeTargetVersionScore(feature, versions)).toBe(1.0)
+  })
+
+  it('returns 0.1 when no target versions match configured versions', function() {
+    var versions = ['v1.0', 'v2.0']
+    var feature = { targetVersions: ['v9.9'] }
+    expect(computeTargetVersionScore(feature, versions)).toBe(0.1)
+  })
+
+  it('returns 0 when feature has no target versions', function() {
+    var versions = ['v1.0', 'v2.0']
+    var feature = { targetVersions: [] }
+    expect(computeTargetVersionScore(feature, versions)).toBe(0)
+  })
+
+  it('returns 0 when feature has undefined target versions', function() {
+    var versions = ['v1.0', 'v2.0']
+    var feature = {}
+    expect(computeTargetVersionScore(feature, versions)).toBe(0)
+  })
+
+  it('returns 0.1 when configuredVersions is empty', function() {
+    var feature = { targetVersions: ['v1.0'] }
+    expect(computeTargetVersionScore(feature, [])).toBe(0.1)
+  })
+
+  it('returns 0.1 when configuredVersions is null', function() {
+    var feature = { targetVersions: ['v1.0'] }
+    expect(computeTargetVersionScore(feature, null)).toBe(0.1)
   })
 })
 
 describe('computePriorityScores', function() {
   it('returns a Map with entries for each feature', function() {
     var features = [
-      { key: 'T-1', rice: { score: 100 }, tier: 1, priority: 'Major', tshirtSize: 'M' },
-      { key: 'T-2', rice: { score: 50 }, tier: 2, priority: 'Minor', tshirtSize: 'XL' }
+      { key: 'T-1', rice: { score: 100 }, bigRock: 'Rock A', targetVersions: ['v1.0'], priority: 'Major' },
+      { key: 'T-2', rice: { score: 50 }, bigRock: null, targetVersions: [], priority: 'Minor' }
     ]
-    var results = computePriorityScores(features)
+    var opts = {
+      bigRockPriorityMap: new Map([['Rock A', 1]]),
+      configuredVersions: ['v1.0']
+    }
+    var results = computePriorityScores(features, opts)
     expect(results).toBeInstanceOf(Map)
     expect(results.size).toBe(2)
     expect(results.has('T-1')).toBe(true)
@@ -59,25 +185,33 @@ describe('computePriorityScores', function() {
 
   it('returns score and breakdown for each feature', function() {
     var features = [
-      { key: 'T-1', rice: { score: 100 }, tier: 1, priority: 'Blocker', tshirtSize: 'XS' }
+      { key: 'T-1', rice: { score: 100 }, bigRock: 'Rock A', targetVersions: ['v1.0'], priority: 'Blocker' }
     ]
-    var results = computePriorityScores(features)
+    var opts = {
+      bigRockPriorityMap: new Map([['Rock A', 1]]),
+      configuredVersions: ['v1.0']
+    }
+    var results = computePriorityScores(features, opts)
     var r = results.get('T-1')
     expect(r).toBeDefined()
     expect(typeof r.score).toBe('number')
     expect(r.breakdown).toBeDefined()
     expect(typeof r.breakdown.rice).toBe('number')
     expect(typeof r.breakdown.bigRock).toBe('number')
+    expect(typeof r.breakdown.targetVersion).toBe('number')
     expect(typeof r.breakdown.priority).toBe('number')
-    expect(typeof r.breakdown.complexity).toBe('number')
   })
 
   it('scores range from 0-100', function() {
     var features = [
-      { key: 'T-1', rice: { score: 100 }, tier: 1, priority: 'Blocker', tshirtSize: 'XS' },
-      { key: 'T-2', rice: { score: 10 }, tier: 3, priority: 'Minor', tshirtSize: 'XL' }
+      { key: 'T-1', rice: { score: 100 }, bigRock: 'Rock A', targetVersions: ['v1.0'], priority: 'Blocker' },
+      { key: 'T-2', rice: { score: 10 }, bigRock: null, targetVersions: [], priority: 'Minor' }
     ]
-    var results = computePriorityScores(features)
+    var opts = {
+      bigRockPriorityMap: new Map([['Rock A', 1]]),
+      configuredVersions: ['v1.0']
+    }
+    var results = computePriorityScores(features, opts)
     expect(results.get('T-1').score).toBeGreaterThanOrEqual(0)
     expect(results.get('T-1').score).toBeLessThanOrEqual(100)
     expect(results.get('T-2').score).toBeGreaterThanOrEqual(0)
@@ -87,22 +221,20 @@ describe('computePriorityScores', function() {
   describe('RICE normalization', function() {
     it('min-max normalizes RICE scores across features', function() {
       var features = [
-        { key: 'HIGH', rice: { score: 200 }, tier: 1, priority: 'Normal', tshirtSize: null },
-        { key: 'LOW', rice: { score: 50 }, tier: 1, priority: 'Normal', tshirtSize: null }
+        { key: 'HIGH', rice: { score: 200 }, priority: 'Normal' },
+        { key: 'LOW', rice: { score: 50 }, priority: 'Normal' }
       ]
       var results = computePriorityScores(features)
-      // HIGH should have riceNorm=1.0, LOW should have riceNorm=0.0
       expect(results.get('HIGH').breakdown.rice).toBe(100)
       expect(results.get('LOW').breakdown.rice).toBe(0)
     })
 
     it('normalizes to 0.5 when all RICE scores are the same', function() {
       var features = [
-        { key: 'T-1', rice: { score: 100 }, tier: 1, priority: 'Normal', tshirtSize: null },
-        { key: 'T-2', rice: { score: 100 }, tier: 1, priority: 'Normal', tshirtSize: null }
+        { key: 'T-1', rice: { score: 100 }, priority: 'Normal' },
+        { key: 'T-2', rice: { score: 100 }, priority: 'Normal' }
       ]
       var results = computePriorityScores(features)
-      // riceRange is 0, so fallback to 0.5
       expect(results.get('T-1').breakdown.rice).toBe(50)
       expect(results.get('T-2').breakdown.rice).toBe(50)
     })
@@ -111,9 +243,9 @@ describe('computePriorityScores', function() {
   describe('median fallback for missing RICE', function() {
     it('uses median when feature has no RICE score', function() {
       var features = [
-        { key: 'WITH-RICE-1', rice: { score: 100 }, tier: 1, priority: 'Normal', tshirtSize: null },
-        { key: 'WITH-RICE-2', rice: { score: 200 }, tier: 1, priority: 'Normal', tshirtSize: null },
-        { key: 'NO-RICE', rice: null, tier: 1, priority: 'Normal', tshirtSize: null }
+        { key: 'WITH-RICE-1', rice: { score: 100 }, priority: 'Normal' },
+        { key: 'WITH-RICE-2', rice: { score: 200 }, priority: 'Normal' },
+        { key: 'NO-RICE', rice: null, priority: 'Normal' }
       ]
       var results = computePriorityScores(features)
       // Median of [100, 200] = 150; normalized = (150-100)/(200-100) = 0.5
@@ -122,8 +254,8 @@ describe('computePriorityScores', function() {
 
     it('uses 0.5 fallback when no features have RICE', function() {
       var features = [
-        { key: 'T-1', rice: null, tier: 1, priority: 'Normal', tshirtSize: null },
-        { key: 'T-2', rice: null, tier: 2, priority: 'Major', tshirtSize: 'M' }
+        { key: 'T-1', rice: null, priority: 'Normal' },
+        { key: 'T-2', rice: null, priority: 'Major' }
       ]
       var results = computePriorityScores(features)
       expect(results.get('T-1').breakdown.rice).toBe(50)
@@ -132,19 +264,18 @@ describe('computePriorityScores', function() {
 
     it('handles rice object with null score', function() {
       var features = [
-        { key: 'T-1', rice: { score: null }, tier: 1, priority: 'Normal', tshirtSize: null }
+        { key: 'T-1', rice: { score: null }, priority: 'Normal' }
       ]
       var results = computePriorityScores(features)
-      // No valid RICE values, median is 0.5
       expect(results.get('T-1').breakdown.rice).toBe(50)
     })
 
     it('computes correct median for odd number of RICE values', function() {
       var features = [
-        { key: 'T-1', rice: { score: 10 }, tier: 1, priority: 'Normal', tshirtSize: null },
-        { key: 'T-2', rice: { score: 50 }, tier: 1, priority: 'Normal', tshirtSize: null },
-        { key: 'T-3', rice: { score: 90 }, tier: 1, priority: 'Normal', tshirtSize: null },
-        { key: 'T-NONE', rice: null, tier: 1, priority: 'Normal', tshirtSize: null }
+        { key: 'T-1', rice: { score: 10 }, priority: 'Normal' },
+        { key: 'T-2', rice: { score: 50 }, priority: 'Normal' },
+        { key: 'T-3', rice: { score: 90 }, priority: 'Normal' },
+        { key: 'T-NONE', rice: null, priority: 'Normal' }
       ]
       var results = computePriorityScores(features)
       // Median of [10, 50, 90] = 50; normalized = (50-10)/(90-10) = 0.5
@@ -152,123 +283,92 @@ describe('computePriorityScores', function() {
     })
   })
 
-  describe('tier mapping', function() {
-    it('maps tier 1 to 1.0', function() {
-      var features = [{ key: 'T-1', rice: null, tier: 1, priority: 'Normal', tshirtSize: null }]
-      var results = computePriorityScores(features)
+  describe('big rock scoring via map', function() {
+    it('scores feature in highest-priority rock', function() {
+      var features = [{ key: 'T-1', rice: null, bigRock: 'Rock A', priority: 'Normal' }]
+      var opts = { bigRockPriorityMap: new Map([['Rock A', 1]]) }
+      var results = computePriorityScores(features, opts)
       expect(results.get('T-1').breakdown.bigRock).toBe(100)
     })
 
-    it('maps tier 2 to 0.6', function() {
-      var features = [{ key: 'T-1', rice: null, tier: 2, priority: 'Normal', tshirtSize: null }]
-      var results = computePriorityScores(features)
-      expect(results.get('T-1').breakdown.bigRock).toBe(60)
+    it('scores 0 when feature has no big rock', function() {
+      var features = [{ key: 'T-1', rice: null, bigRock: null, priority: 'Normal' }]
+      var opts = { bigRockPriorityMap: new Map([['Rock A', 1]]) }
+      var results = computePriorityScores(features, opts)
+      expect(results.get('T-1').breakdown.bigRock).toBe(0)
     })
 
-    it('maps tier 3 to 0.2', function() {
-      var features = [{ key: 'T-1', rice: null, tier: 3, priority: 'Normal', tshirtSize: null }]
+    it('scores 0 when no bigRockPriorityMap provided', function() {
+      var features = [{ key: 'T-1', rice: null, bigRock: 'Rock A', priority: 'Normal' }]
       var results = computePriorityScores(features)
-      expect(results.get('T-1').breakdown.bigRock).toBe(20)
+      expect(results.get('T-1').breakdown.bigRock).toBe(0)
+    })
+  })
+
+  describe('target version scoring', function() {
+    it('scores feature targeting first configured version', function() {
+      var features = [{ key: 'T-1', rice: null, targetVersions: ['v1.0'], priority: 'Normal' }]
+      var opts = { configuredVersions: ['v1.0', 'v2.0'] }
+      var results = computePriorityScores(features, opts)
+      expect(results.get('T-1').breakdown.targetVersion).toBe(100)
     })
 
-    it('defaults to tier 3 for unknown tier', function() {
-      var features = [{ key: 'T-1', rice: null, tier: null, priority: 'Normal', tshirtSize: null }]
-      var results = computePriorityScores(features)
-      expect(results.get('T-1').breakdown.bigRock).toBe(20)
+    it('scores 0 when feature has no target versions', function() {
+      var features = [{ key: 'T-1', rice: null, targetVersions: [], priority: 'Normal' }]
+      var opts = { configuredVersions: ['v1.0'] }
+      var results = computePriorityScores(features, opts)
+      expect(results.get('T-1').breakdown.targetVersion).toBe(0)
     })
 
-    it('defaults to tier 3 for missing tier', function() {
-      var features = [{ key: 'T-1', rice: null, priority: 'Normal', tshirtSize: null }]
+    it('scores 10 when no configuredVersions provided', function() {
+      var features = [{ key: 'T-1', rice: null, targetVersions: ['v1.0'], priority: 'Normal' }]
       var results = computePriorityScores(features)
-      expect(results.get('T-1').breakdown.bigRock).toBe(20)
+      // configuredVersions defaults to [], so computeTargetVersionScore returns 0.1
+      expect(results.get('T-1').breakdown.targetVersion).toBe(10)
     })
   })
 
   describe('priority mapping', function() {
     it('maps Blocker to 1.0', function() {
-      var features = [{ key: 'T-1', rice: null, tier: 1, priority: 'Blocker', tshirtSize: null }]
+      var features = [{ key: 'T-1', rice: null, priority: 'Blocker' }]
       var results = computePriorityScores(features)
       expect(results.get('T-1').breakdown.priority).toBe(100)
     })
 
     it('maps Critical to 0.8', function() {
-      var features = [{ key: 'T-1', rice: null, tier: 1, priority: 'Critical', tshirtSize: null }]
+      var features = [{ key: 'T-1', rice: null, priority: 'Critical' }]
       var results = computePriorityScores(features)
       expect(results.get('T-1').breakdown.priority).toBe(80)
     })
 
     it('maps Major to 0.6', function() {
-      var features = [{ key: 'T-1', rice: null, tier: 1, priority: 'Major', tshirtSize: null }]
+      var features = [{ key: 'T-1', rice: null, priority: 'Major' }]
       var results = computePriorityScores(features)
       expect(results.get('T-1').breakdown.priority).toBe(60)
     })
 
     it('maps Normal to 0.4', function() {
-      var features = [{ key: 'T-1', rice: null, tier: 1, priority: 'Normal', tshirtSize: null }]
+      var features = [{ key: 'T-1', rice: null, priority: 'Normal' }]
       var results = computePriorityScores(features)
       expect(results.get('T-1').breakdown.priority).toBe(40)
     })
 
     it('maps Minor to 0.2', function() {
-      var features = [{ key: 'T-1', rice: null, tier: 1, priority: 'Minor', tshirtSize: null }]
+      var features = [{ key: 'T-1', rice: null, priority: 'Minor' }]
       var results = computePriorityScores(features)
       expect(results.get('T-1').breakdown.priority).toBe(20)
     })
 
     it('defaults to Normal for unknown priority', function() {
-      var features = [{ key: 'T-1', rice: null, tier: 1, priority: 'Undefined', tshirtSize: null }]
+      var features = [{ key: 'T-1', rice: null, priority: 'Undefined' }]
       var results = computePriorityScores(features)
       expect(results.get('T-1').breakdown.priority).toBe(40)
     })
 
     it('defaults to Normal for missing priority', function() {
-      var features = [{ key: 'T-1', rice: null, tier: 1, tshirtSize: null }]
+      var features = [{ key: 'T-1', rice: null }]
       var results = computePriorityScores(features)
       expect(results.get('T-1').breakdown.priority).toBe(40)
-    })
-  })
-
-  describe('t-shirt size mapping', function() {
-    it('maps XS to 1.0', function() {
-      var features = [{ key: 'T-1', rice: null, tier: 1, priority: 'Normal', tshirtSize: 'XS' }]
-      var results = computePriorityScores(features)
-      expect(results.get('T-1').breakdown.complexity).toBe(100)
-    })
-
-    it('maps S to 0.8', function() {
-      var features = [{ key: 'T-1', rice: null, tier: 1, priority: 'Normal', tshirtSize: 'S' }]
-      var results = computePriorityScores(features)
-      expect(results.get('T-1').breakdown.complexity).toBe(80)
-    })
-
-    it('maps M to 0.6', function() {
-      var features = [{ key: 'T-1', rice: null, tier: 1, priority: 'Normal', tshirtSize: 'M' }]
-      var results = computePriorityScores(features)
-      expect(results.get('T-1').breakdown.complexity).toBe(60)
-    })
-
-    it('maps L to 0.4', function() {
-      var features = [{ key: 'T-1', rice: null, tier: 1, priority: 'Normal', tshirtSize: 'L' }]
-      var results = computePriorityScores(features)
-      expect(results.get('T-1').breakdown.complexity).toBe(40)
-    })
-
-    it('maps XL to 0.2', function() {
-      var features = [{ key: 'T-1', rice: null, tier: 1, priority: 'Normal', tshirtSize: 'XL' }]
-      var results = computePriorityScores(features)
-      expect(results.get('T-1').breakdown.complexity).toBe(20)
-    })
-
-    it('defaults to 0.5 for null tshirtSize', function() {
-      var features = [{ key: 'T-1', rice: null, tier: 1, priority: 'Normal', tshirtSize: null }]
-      var results = computePriorityScores(features)
-      expect(results.get('T-1').breakdown.complexity).toBe(50)
-    })
-
-    it('defaults to 0.5 for undefined tshirtSize', function() {
-      var features = [{ key: 'T-1', rice: null, tier: 1, priority: 'Normal' }]
-      var results = computePriorityScores(features)
-      expect(results.get('T-1').breakdown.complexity).toBe(50)
     })
   })
 
@@ -280,42 +380,63 @@ describe('computePriorityScores', function() {
     })
 
     it('handles single feature with all null signals', function() {
-      var features = [{ key: 'T-1', rice: null, tier: null, priority: null, tshirtSize: null }]
+      var features = [{ key: 'T-1', rice: null, bigRock: null, targetVersions: [], priority: null }]
       var results = computePriorityScores(features)
       var r = results.get('T-1')
       expect(r).toBeDefined()
       expect(typeof r.score).toBe('number')
-      // rice=0.5, bigRock=tier3=0.2, priority=Normal=0.4, complexity=0.5
-      // 0.5*0.30 + 0.2*0.30 + 0.4*0.25 + 0.5*0.15 = 0.15 + 0.06 + 0.10 + 0.075 = 0.385
-      expect(r.score).toBe(39) // Math.round(0.385 * 100)
+      // rice=0.5, bigRock=0 (no map), targetVersion=0.1 (no configured versions fallback), priority=Normal=0.4
+      // 0.5*0.30 + 0*0.30 + 0.1*0.25 + 0.4*0.15 = 0.15 + 0 + 0.025 + 0.06 = 0.235
+      expect(r.score).toBe(24)
     })
 
     it('computes correct score for a max-priority feature', function() {
-      // Only one feature, so RICE normalizes to 0.5
-      var features = [{ key: 'T-1', rice: { score: 100 }, tier: 1, priority: 'Blocker', tshirtSize: 'XS' }]
-      var results = computePriorityScores(features)
+      var features = [
+        { key: 'T-1', rice: { score: 100 }, bigRock: 'Rock A', targetVersions: ['v1.0'], priority: 'Blocker' }
+      ]
+      var opts = {
+        bigRockPriorityMap: new Map([['Rock A', 1]]),
+        configuredVersions: ['v1.0']
+      }
+      var results = computePriorityScores(features, opts)
       var r = results.get('T-1')
-      // rice=0.5 (single feature), bigRock=1.0, priority=1.0, complexity=1.0
+      // rice=0.5 (single feature), bigRock=1.0, targetVersion=1.0, priority=1.0
       // 0.5*0.30 + 1.0*0.30 + 1.0*0.25 + 1.0*0.15 = 0.15 + 0.30 + 0.25 + 0.15 = 0.85
       expect(r.score).toBe(85)
     })
 
     it('computes correct score for a min-priority feature', function() {
-      var features = [{ key: 'T-1', rice: { score: 10 }, tier: 3, priority: 'Minor', tshirtSize: 'XL' }]
+      var features = [
+        { key: 'T-1', rice: { score: 10 }, bigRock: null, targetVersions: [], priority: 'Minor' }
+      ]
       var results = computePriorityScores(features)
       var r = results.get('T-1')
-      // rice=0.5 (single feature), bigRock=0.2, priority=0.2, complexity=0.2
-      // 0.5*0.30 + 0.2*0.30 + 0.2*0.25 + 0.2*0.15 = 0.15 + 0.06 + 0.05 + 0.03 = 0.29
-      expect(r.score).toBe(29)
+      // rice=0.5 (single feature), bigRock=0 (no map), targetVersion=0.1 (no configured versions), priority=0.2
+      // 0.5*0.30 + 0*0.30 + 0.1*0.25 + 0.2*0.15 = 0.15 + 0 + 0.025 + 0.03 = 0.205
+      expect(r.score).toBe(21)
     })
 
     it('higher-priority features score higher than lower-priority features', function() {
       var features = [
-        { key: 'HIGH', rice: { score: 200 }, tier: 1, priority: 'Blocker', tshirtSize: 'XS' },
-        { key: 'LOW', rice: { score: 10 }, tier: 3, priority: 'Minor', tshirtSize: 'XL' }
+        { key: 'HIGH', rice: { score: 200 }, bigRock: 'Rock A', targetVersions: ['v1.0'], priority: 'Blocker' },
+        { key: 'LOW', rice: { score: 10 }, bigRock: null, targetVersions: [], priority: 'Minor' }
+      ]
+      var opts = {
+        bigRockPriorityMap: new Map([['Rock A', 1]]),
+        configuredVersions: ['v1.0']
+      }
+      var results = computePriorityScores(features, opts)
+      expect(results.get('HIGH').score).toBeGreaterThan(results.get('LOW').score)
+    })
+
+    it('works without opts argument', function() {
+      var features = [
+        { key: 'T-1', rice: { score: 100 }, priority: 'Normal' }
       ]
       var results = computePriorityScores(features)
-      expect(results.get('HIGH').score).toBeGreaterThan(results.get('LOW').score)
+      var r = results.get('T-1')
+      expect(r).toBeDefined()
+      expect(typeof r.score).toBe('number')
     })
   })
 })
