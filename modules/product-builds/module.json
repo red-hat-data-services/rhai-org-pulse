@@ -27,8 +27,14 @@
     "entry": "./server/index.js"
   },
   "secrets": {
-    "platform": ["jira"],
-    "module": []
+    "platform": ["jira", "gitlab"],
+    "module": [
+      {
+        "key": "NIGHTLY_PIPELINE_GITLAB_TOKEN",
+        "description": "GitLab PAT for nightly pipeline schedule queries (overrides GITLAB_TOKEN)",
+        "required": false
+      }
+    ]
   },
   "export": {
     "files": [
