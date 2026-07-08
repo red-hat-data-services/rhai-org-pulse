@@ -20,6 +20,7 @@ const { JIRA_BROWSE_URL, CLOSED_STATUSES, PLANNING_DEADLINE_OFFSET_DAYS, VALID_P
 const { enrichFeatures } = require('./jira-enrichment')
 const { computeDoR, computeDoD, computePlanningChecks, derivePlanningStatus, applyBlockerEscalation, parseStratCreatorStatus } = require('./planning-gates')
 const { computeFeatureRisk } = require('./risk-engine')
+var { computeFPDoRReadiness, extractRubricData } = require('../fpdor')
 const { computePriorityScores } = require('./priority-scorer')
 const smartsheetClient = require('../../../../../shared/server/smartsheet')
 
@@ -710,6 +711,13 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
       planningChecksResult = computePlanningChecks(feature)
     }
 
+    // Compute FPDoR readiness (rubric items will be not-evaluated since health pipeline lacks strat-pipeline scores)
+    var featureForFpdor = Object.assign({}, feature, {
+      riceScore: (enrichment && enrichment.rice && enrichment.rice.score != null) ? enrichment.rice.score : (feature.riceScore != null ? feature.riceScore : null)
+    })
+    var rubricData = extractRubricData(featureForFpdor)
+    var fpdorResult = computeFPDoRReadiness(featureForFpdor, rubricData)
+
     // Compute risk
     var riskResult = computeFeatureRisk(featureForRisk, milestones, enrichment, {
       riskThresholds: healthConfig.riskThresholds,
@@ -778,6 +786,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
       planningStatus: planningStatus,
       rice: riceResult,
       planningChecks: planningChecksResult,
+      fpdor: fpdorResult,
       issueType: feature.issueType || '',
       versionStatus: (feature.fixVersions && feature.fixVersions.length > 0) ? 'committed'
         : (feature.targetVersions && feature.targetVersions.length > 0) ? 'targeted' : 'none',
@@ -869,8 +878,17 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     }
   }
 
+  // FPDoR summary aggregation
+  var fpdorFullyPassedCount = 0
+  for (var fpi = 0; fpi < healthFeatures.length; fpi++) {
+    var fpd = healthFeatures[fpi].fpdor
+    if (fpd && fpd.passedCount === fpd.evaluatedCount && fpd.evaluatedCount >= 6) {
+      fpdorFullyPassedCount++
+    }
+  }
+
   var cache = {
-    healthCacheVersion: 3,
+    healthCacheVersion: 4,
     cachedAt: today.toISOString(),
     version: version,
     releasePhaseMode: releasePhaseMode,
@@ -901,7 +919,11 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
       daysToNextMilestone: milestoneInfo.daysToNextMilestone,
       nextMilestone: milestoneInfo.nextMilestone,
       planningDeadline: planningDeadline,
-      planningReadiness: planningReadiness
+      planningReadiness: planningReadiness,
+      fpdorReadiness: {
+        fullyPassed: fpdorFullyPassedCount,
+        totalFeatures: healthFeatures.length
+      }
     },
     features: healthFeatures,
     enrichmentStatus: {
@@ -928,7 +950,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
  */
 function buildEmptyCache(version, warnings) {
   return {
-    healthCacheVersion: 3,
+    healthCacheVersion: 4,
     cachedAt: new Date().toISOString(),
     version: version,
     releasePhaseMode: 'unknown',
@@ -946,7 +968,9 @@ function buildEmptyCache(version, warnings) {
       blockedCount: 0,
       currentPhase: 'Unknown',
       daysToNextMilestone: null,
-      nextMilestone: null
+      nextMilestone: null,
+      planningReadiness: null,
+      fpdorReadiness: null
     },
     features: [],
     enrichmentStatus: {

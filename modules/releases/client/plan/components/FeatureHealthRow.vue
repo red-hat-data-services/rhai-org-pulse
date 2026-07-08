@@ -190,6 +190,7 @@ var flagSeverityClass = {
           :dor="feature.dor"
           :dod="feature.dod"
           :planningStatus="feature.planningStatus"
+          :fpdor="feature.fpdor"
           variant="full"
         >
           <span
@@ -256,6 +257,7 @@ var flagSeverityClass = {
               :dod="feature.dod"
               :planningStatus="feature.planningStatus"
               :planningChecks="feature.planningChecks"
+              :fpdor="feature.fpdor"
             />
           </div>
 

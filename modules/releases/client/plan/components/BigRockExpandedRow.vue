@@ -217,6 +217,9 @@ var outcomeGroups = computed(function() {
                       class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold"
                       :class="PLANNING_STATUS_CLASSES[f.planningStatus] || ''"
                     >{{ PLANNING_STATUS_LABELS[f.planningStatus] || f.planningStatus }}</span>
+                    <span v-if="f.fpdor" class="ml-1 text-[10px] text-gray-500 dark:text-gray-400">
+                      FPDoR {{ f.fpdor.passedCount }}/{{ f.fpdor.evaluatedCount }}
+                    </span>
                     <span v-if="f.planningChecks" class="ml-1 text-[10px] text-gray-500 dark:text-gray-400">
                       {{ f.planningChecks.passedCount }}/{{ f.planningChecks.totalCount }}
                     </span>
@@ -323,7 +326,10 @@ var outcomeGroups = computed(function() {
                   class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold"
                   :class="PLANNING_STATUS_CLASSES[f.planningStatus] || ''"
                 >{{ PLANNING_STATUS_LABELS[f.planningStatus] || f.planningStatus }}</span>
-                <span v-if="f.planningChecks" class="ml-1 text-[10px] text-gray-500 dark:text-gray-400">
+                <span v-if="f.fpdor" class="ml-1 text-[10px] text-gray-500 dark:text-gray-400">
+                      FPDoR {{ f.fpdor.passedCount }}/{{ f.fpdor.evaluatedCount }}
+                    </span>
+                    <span v-if="f.planningChecks" class="ml-1 text-[10px] text-gray-500 dark:text-gray-400">
                   {{ f.planningChecks.passedCount }}/{{ f.planningChecks.totalCount }}
                 </span>
               </template>

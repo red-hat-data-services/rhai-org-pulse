@@ -11,6 +11,7 @@ const props = defineProps({
   dor: { type: Object, default: null },
   dod: { type: Object, default: null },
   planningStatus: { type: String, default: '' },
+  fpdor: { type: Object, default: null },
   variant: { type: String, default: 'full' }
 })
 
@@ -154,6 +155,9 @@ function formatDate(iso) {
         </div>
         <div v-if="dor && !dor.passed && dor.blockers" class="mt-1 text-red-600 dark:text-red-400">
           DoR blocked: {{ dor.blockers.filter(b => !b.passed).map(b => b.label).join(', ') }}
+        </div>
+        <div v-if="fpdor" class="mt-1 text-gray-600 dark:text-gray-300">
+          FPDoR: {{ fpdor.passedCount }}/{{ fpdor.evaluatedCount }} items passed
         </div>
         <div v-if="dorWarningCount > 0" class="mt-0.5 text-yellow-600 dark:text-yellow-400">
           {{ dorWarningCount }} DoR warning{{ dorWarningCount !== 1 ? 's' : '' }}

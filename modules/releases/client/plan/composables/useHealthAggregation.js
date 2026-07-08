@@ -74,6 +74,11 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
    * Planning readiness data from the health API summary.
    * Null when not in planning mode or enablePlanningChecks is off.
    */
+  var fpdorReadiness = computed(function() {
+    if (!healthData.value || !healthData.value.summary) return null
+    return healthData.value.summary.fpdorReadiness || null
+  })
+
   var planningReadiness = computed(function() {
     if (!healthData.value || !healthData.value.summary) return null
     return healthData.value.summary.planningReadiness || null
@@ -103,7 +108,7 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
       for (var ri = 0; ri < rockNames.length; ri++) {
         var rockName = rockNames[ri]
         if (!result[rockName]) {
-          result[rockName] = { worstLevel: 'green', totalFlags: 0, featureCount: 0, dorPassedCount: 0, dodPassedCount: 0, planningReady: 0, planningTotal: 0, planningBlockers: 0, versionedCount: 0, missingVersionCount: 0, committedCount: 0, targetedCount: 0, distinctVersions: new Set(), releaseTypes: new Set() }
+          result[rockName] = { worstLevel: 'green', totalFlags: 0, featureCount: 0, dorPassedCount: 0, dodPassedCount: 0, planningReady: 0, planningTotal: 0, planningBlockers: 0, fpdorReady: 0, fpdorTotal: 0, versionedCount: 0, missingVersionCount: 0, committedCount: 0, targetedCount: 0, distinctVersions: new Set(), releaseTypes: new Set() }
         }
 
         // Collect release type from candidates data (available on all features)
@@ -131,6 +136,12 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
             result[rockName].planningReady++
           } else {
             result[rockName].planningBlockers++
+          }
+        }
+        if (h.fpdor) {
+          result[rockName].fpdorTotal++
+          if (h.fpdor.passedCount === h.fpdor.evaluatedCount && h.fpdor.evaluatedCount >= 6) {
+            result[rockName].fpdorReady++
           }
         }
         // Version aggregation
@@ -198,6 +209,7 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
           versionStatus: h ? (h.versionStatus || 'none') : 'none',
           completionPct: h ? (h.completionPct || 0) : 0,
           planningChecks: h && h.planningChecks ? h.planningChecks : null,
+          fpdor: h && h.fpdor ? h.fpdor : null,
           parentKey: f.parentKey || ''
         })
       }
@@ -235,6 +247,7 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
     healthSummary: healthSummary,
     tier1HealthSummary: tier1HealthSummary,
     planningReadiness: planningReadiness,
+    fpdorReadiness: fpdorReadiness,
     releasePhaseMode: releasePhaseMode
   }
 }
