@@ -137,8 +137,8 @@ describe('mapToCandidate', () => {
     const candidate = mapToCandidate(feature, 'Training', 'tier2')
     expect(candidate.pm).toBe('Jane PM')
     expect(candidate.architect).toBe('Bob Arch')
-    expect(candidate.components).toBe('Serving, Platform')
-    expect(candidate.team).toBe('Serving, Platform')
+    expect(candidate.components).toEqual(['Serving', 'Platform'])
+    expect(candidate.team).toEqual(['Serving', 'Platform'])
   })
 
   it('identifies RHAIRFE keys as rfe source', () => {
