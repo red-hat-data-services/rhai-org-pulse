@@ -16,6 +16,7 @@ const registerHygieneRoutes = require('./hygiene/routes');
 const registerTvFvDeltaRoutes = require('./tv-fv-delta/routes');
 const registerFeaturePressureRoutes = require('./feature-pressure/routes');
 const registerPmHubRoutes = require('./pm-hub/routes');
+const registerDraftPlanRoutes = require('./draft-plans/routes');
 const { getAuditLog } = require('./planning/audit-log');
 
 /**
@@ -283,6 +284,19 @@ module.exports = function registerRoutes(router, context) {
     storage
   });
   router.use('/pm-hub', pmHubRouter);
+
+  // Draft Plans sub-router (mounted at /api/modules/releases/draft-plans/)
+  var draftPlansRouter = express.Router();
+  registerDraftPlanRoutes(draftPlansRouter, {
+    storage,
+    requireAuth,
+    requireScope,
+    secrets,
+    registerDiagnostics: context.registerDiagnostics || null,
+    registerRefresh: context.registerRefresh || null,
+    isRefreshRunning: context.isRefreshRunning || null
+  });
+  router.use('/draft-plans', draftPlansRouter);
 
   // ─── Unified Audit Routes ───
 
