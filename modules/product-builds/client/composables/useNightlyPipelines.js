@@ -31,6 +31,7 @@ export function useNightlyPipelines() {
 
   async function loadPipelineJobs(pipelineId) {
     jobsLoading.value = true
+    error.value = null
     selectedPipelineId.value = pipelineId
     jobs.value = null
     packages.value = {}

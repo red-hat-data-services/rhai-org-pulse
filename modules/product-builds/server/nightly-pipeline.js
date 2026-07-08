@@ -30,44 +30,32 @@ async function gitlabApi(path, token) {
 
 const STAGE_SUFFIXES = ['bootstrap-and-onboard', 'build-wheels', 'publish-wheels', 'release-tarball'];
 const SPECIAL_JOB_PREFIXES = ['slack-notify-', 'update-publish-config'];
+const KNOWN_VARIANTS = ['cpu', 'cuda12.9', 'cuda13.0', 'rocm7.1', 'rocm7.14', 'spyre'];
 
 function parseJobName(name) {
   if (SPECIAL_JOB_PREFIXES.some(p => name.startsWith(p))) return null;
 
+  let stage = null, rest = null;
   for (const suffix of STAGE_SUFFIXES) {
-    if (!name.endsWith(suffix)) continue;
-    const prefix = name.slice(0, -(suffix.length + 1));
-    const ubi9Idx = prefix.lastIndexOf('-ubi9');
-    if (ubi9Idx === -1) continue;
-
-    const collectionAndVariant = prefix.slice(0, ubi9Idx);
-    const arch = prefix.slice(ubi9Idx + 5);
-
-    const lastDash = collectionAndVariant.lastIndexOf('-');
-    if (lastDash === -1) continue;
-
-    const possibleVariant = collectionAndVariant.slice(lastDash + 1);
-    const KNOWN_VARIANTS = ['cpu', 'cuda12.9', 'cuda13.0', 'rocm7.1', 'rocm7.14', 'spyre'];
-
-    let collection, variant;
-    if (KNOWN_VARIANTS.includes(possibleVariant)) {
-      collection = collectionAndVariant.slice(0, lastDash);
-      variant = possibleVariant;
-    } else {
-      const secondLastDash = collectionAndVariant.lastIndexOf('-', lastDash - 1);
-      if (secondLastDash === -1) continue;
-      const twoPartVariant = collectionAndVariant.slice(secondLastDash + 1);
-      if (KNOWN_VARIANTS.includes(twoPartVariant)) {
-        collection = collectionAndVariant.slice(0, secondLastDash);
-        variant = twoPartVariant;
-      } else {
-        continue;
-      }
+    if (name.endsWith('-' + suffix)) {
+      stage = suffix;
+      rest = name.slice(0, -(suffix.length + 1));
+      break;
     }
-
-    return { collection, variant, arch, stage: suffix };
   }
+  if (!stage) return null;
 
+  const ubi9Pos = rest.lastIndexOf('-ubi9-');
+  if (ubi9Pos === -1) return null;
+
+  const collVar = rest.slice(0, ubi9Pos);
+  const arch = rest.slice(ubi9Pos + 6);
+
+  for (const v of KNOWN_VARIANTS) {
+    if (collVar.endsWith('-' + v)) {
+      return { collection: collVar.slice(0, -(v.length + 1)), variant: v, arch, stage };
+    }
+  }
   return null;
 }
 
@@ -127,29 +115,28 @@ function structureJobs(jobs) {
   }
 
   const collectionSummaries = {};
+  let totalCount = 0, successCount = 0, failedCount = 0, skippedCount = 0;
   for (const [name, variants] of Object.entries(collections)) {
-    const allStatuses = [];
+    const statuses = [];
     for (const archs of Object.values(variants)) {
       for (const stages of Object.values(archs)) {
         for (const job of Object.values(stages)) {
-          allStatuses.push(job.status);
+          statuses.push(job.status);
+          totalCount++;
+          if (job.status === 'success') successCount++;
+          else if (job.status === 'failed') failedCount++;
+          else if (job.status === 'skipped') skippedCount++;
         }
       }
     }
     collectionSummaries[name] = {
-      status: rollUpStatus(allStatuses),
+      status: rollUpStatus(statuses),
       variants,
     };
   }
 
-  const allStatuses = jobs.filter(j => parseJobName(j.name)).map(j => j.status);
   return {
-    summary: {
-      total: allStatuses.length,
-      success: allStatuses.filter(s => s === 'success').length,
-      failed: allStatuses.filter(s => s === 'failed').length,
-      skipped: allStatuses.filter(s => s === 'skipped').length,
-    },
+    summary: { total: totalCount, success: successCount, failed: failedCount, skipped: skippedCount },
     failed_jobs: failedJobs,
     collections: collectionSummaries,
     special_jobs: specialJobs,
@@ -299,23 +286,20 @@ module.exports = function registerNightlyPipelineRoutes(router, context) {
     try {
       const limit = Math.min(Math.max(parseInt(req.query.limit) || 14, 1), 100);
 
-      const [schedule, ...pipelinePages] = await Promise.all([
+      const [schedule, firstPage] = await Promise.all([
         gitlabApi(`/projects/${GITLAB_PROJECT}/pipeline_schedules/${SCHEDULE_ID}`, token),
         gitlabApi(`/projects/${GITLAB_PROJECT}/pipeline_schedules/${SCHEDULE_ID}/pipelines?per_page=100&page=1`, token),
       ]);
 
-      let allPipelines = pipelinePages[0];
-      if (allPipelines.length === 100) {
-        let page = 2;
-        while (allPipelines.length < limit) {
+      const allPipelines = [...firstPage];
+      if (firstPage.length === 100) {
+        for (let page = 2; page <= 50; page++) {
           const batch = await gitlabApi(
             `/projects/${GITLAB_PROJECT}/pipeline_schedules/${SCHEDULE_ID}/pipelines?per_page=100&page=${page}`,
             token
           );
-          if (!batch.length) break;
           allPipelines.push(...batch);
           if (batch.length < 100) break;
-          page++;
         }
       }
 

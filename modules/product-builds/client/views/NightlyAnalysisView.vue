@@ -10,18 +10,127 @@ const STAGE_LABELS = {
   'release-tarball': 'Tarball',
 }
 
-const SCHEDULE_INFO = {
-  description: 'Nightly Builds for Automated Updates [managed by gitlabform]',
+const SCHEDULE_FALLBACK = {
+  description: 'Nightly Builds for Automated Updates',
   time: 'Daily at 8:00 PM ET',
   target: 'main',
 }
 
+const THEMES = {
+  success: {
+    banner: 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800/40',
+    iconBg: 'bg-green-100 dark:bg-green-900/30',
+    icon: 'text-green-600 dark:text-green-400',
+    title: 'text-green-800 dark:text-green-300',
+    subtitle: 'text-green-700 dark:text-green-400',
+    info: 'text-green-600 dark:text-green-400/80',
+    link: 'text-green-700 dark:text-green-400 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30',
+    tile: 'bg-green-50 dark:bg-green-950/40 hover:bg-green-100 dark:hover:bg-green-900/50',
+    tileSelected: 'border-green-500 dark:border-green-400 shadow-sm shadow-green-200 dark:shadow-green-900/40',
+    tileLabel: 'text-green-500 dark:text-green-500',
+    tileDay: 'text-green-700 dark:text-green-300',
+    label: 'PASSING',
+  },
+  failed: {
+    banner: 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800/40',
+    iconBg: 'bg-red-100 dark:bg-red-900/30',
+    icon: 'text-red-600 dark:text-red-400',
+    title: 'text-red-800 dark:text-red-300',
+    subtitle: 'text-red-700 dark:text-red-400',
+    info: 'text-red-600 dark:text-red-400/80',
+    link: 'text-red-700 dark:text-red-400 border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/30',
+    tile: 'bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/50',
+    tileSelected: 'border-red-500 dark:border-red-400 shadow-sm shadow-red-200 dark:shadow-red-900/40',
+    tileLabel: 'text-red-400 dark:text-red-500',
+    tileDay: 'text-red-700 dark:text-red-300',
+    label: 'FAILING',
+  },
+  _default: {
+    banner: 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800/40',
+    iconBg: 'bg-blue-100 dark:bg-blue-900/30',
+    icon: 'text-blue-600 dark:text-blue-400',
+    title: 'text-blue-800 dark:text-blue-300',
+    subtitle: 'text-blue-700 dark:text-blue-400',
+    info: 'text-blue-600 dark:text-blue-400/80',
+    link: 'text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/30',
+    tile: 'bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50',
+    tileSelected: 'border-blue-500 dark:border-blue-400 shadow-sm shadow-blue-200 dark:shadow-blue-900/40',
+    tileLabel: 'text-blue-400 dark:text-blue-500',
+    tileDay: 'text-blue-700 dark:text-blue-300',
+    label: null,
+  },
+}
+
+const STATUS_BADGE = {
+  success: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+  failed: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  running: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  canceled: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  _default: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400',
+}
+
+const JOB_CELL = {
+  success: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 hover:ring-green-400',
+  failed: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 hover:ring-red-400',
+  _default: 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400 hover:ring-gray-400',
+}
+
+function theme(status) { return THEMES[status] || THEMES._default }
+function badgeClass(status) { return STATUS_BADGE[status] || STATUS_BADGE._default }
+function jobCellClass(status) { return JOB_CELL[status] || JOB_CELL._default }
+function jobLabel(status) { return status === 'success' ? 'Pass' : status === 'failed' ? 'Fail' : status }
+
 const {
-  pipelines, jobs, selectedPipelineId, loading, jobsLoading, error,
+  pipelines, schedule, jobs, selectedPipelineId, loading, jobsLoading, error,
   packages, packagesLoading,
   loadPipelines, loadPipelineJobs, loadCollectionPackages,
   latestPipeline, successRate, currentStreak, lastSuccess,
 } = useNightlyPipelines()
+
+const heroTheme = computed(() => theme(latestPipeline.value?.status))
+
+const scheduleInfo = computed(() => {
+  const s = schedule.value
+  if (!s?.description) return SCHEDULE_FALLBACK
+  return {
+    description: s.description.replace(/\s*\[.*\]$/, ''),
+    time: s.cron ? `${s.cron} ${s.cron_timezone || 'UTC'}` : SCHEDULE_FALLBACK.time,
+    target: s.ref || SCHEDULE_FALLBACK.target,
+  }
+})
+
+const selectedPipeline = computed(() =>
+  pipelines.value.find(p => p.id === jobs.value?.pipeline_id) || null
+)
+
+const timelinePipelines = computed(() => [...pipelines.value].reverse())
+
+const sortedCollections = computed(() => {
+  if (!jobs.value?.collections) return []
+  return Object.entries(jobs.value.collections)
+    .sort(([, a], [, b]) => {
+      if (a.status === 'failed' && b.status !== 'failed') return -1
+      if (a.status !== 'failed' && b.status === 'failed') return 1
+      return 0
+    })
+    .map(([name, data]) => {
+      let jobCount = 0, failCount = 0
+      const variantEntries = Object.entries(data.variants)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([variant, archs]) => ({
+          variant,
+          archs: Object.entries(archs)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([arch, stages]) => {
+              const stageJobs = Object.values(stages)
+              jobCount += stageJobs.length
+              failCount += stageJobs.filter(j => j.status === 'failed').length
+              return { arch, stages }
+            }),
+        }))
+      return { name, ...data, variantEntries, jobCount, failCount }
+    })
+})
 
 function selectPipeline(p) {
   if (selectedPipelineId.value === p.id) return
@@ -38,35 +147,24 @@ function formatTeamName(source) {
   return source.replace(/^team-/, '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
 
-function formatPipelineDate(iso) {
+function formatDate(iso) {
   if (!iso) return ''
-  const d = new Date(iso)
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-function formatPipelineDateFull(iso) {
+function formatDateFull(iso) {
   if (!iso) return ''
-  const d = new Date(iso)
-  return d.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return new Date(iso).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
-function formatDurationSec(sec) {
+function formatDuration(sec) {
   if (!sec) return ''
   const h = Math.floor(sec / 3600)
   const m = Math.floor((sec % 3600) / 60)
-  if (h > 0) return `${h}h ${m}m`
-  return `${m}m`
+  return h > 0 ? `${h}h ${m}m` : `${m}m`
 }
 
-function statusBadgeClass(status) {
-  if (status === 'success') return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-  if (status === 'failed') return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-  if (status === 'running') return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-  if (status === 'canceled') return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-  return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
-}
-
-function pipelineDateParts(iso) {
+function dateParts(iso) {
   if (!iso) return {}
   const d = new Date(iso)
   return {
@@ -76,55 +174,13 @@ function pipelineDateParts(iso) {
   }
 }
 
-const timelinePipelines = computed(() => [...pipelines.value].reverse())
-
-const sortedCollections = computed(() => {
-  if (!jobs.value?.collections) return []
-  return Object.entries(jobs.value.collections)
-    .sort(([, a], [, b]) => {
-      if (a.status === 'failed' && b.status !== 'failed') return -1
-      if (a.status !== 'failed' && b.status === 'failed') return 1
-      return 0
-    })
-    .map(([name, data]) => ({ name, ...data }))
-})
-
-function getVariantEntries(variants) {
-  return Object.entries(variants)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([variant, archs]) => ({
-      variant,
-      archs: Object.entries(archs)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([arch, stages]) => ({ arch, stages })),
-    }))
+function jobTitle(job) {
+  const parts = [job.status]
+  if (job.duration) parts.push(formatDuration(job.duration))
+  return parts.join(' · ')
 }
 
-function collectionJobCount(data) {
-  let count = 0
-  for (const archs of Object.values(data.variants)) {
-    for (const stages of Object.values(archs)) {
-      count += Object.keys(stages).length
-    }
-  }
-  return count
-}
-
-function collectionFailCount(data) {
-  let count = 0
-  for (const archs of Object.values(data.variants)) {
-    for (const stages of Object.values(archs)) {
-      for (const job of Object.values(stages)) {
-        if (job.status === 'failed') count++
-      }
-    }
-  }
-  return count
-}
-
-onMounted(() => {
-  loadPipelines()
-})
+onMounted(() => loadPipelines())
 </script>
 
 <template>
@@ -145,63 +201,27 @@ onMounted(() => {
 
     <template v-else-if="pipelines.length > 0">
       <!-- ===== TIER 1: Hero Status Banner ===== -->
-      <div v-if="latestPipeline" class="mb-6 p-5 rounded-lg border flex items-center gap-4"
-        :class="latestPipeline.status === 'success'
-          ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800/40'
-          : latestPipeline.status === 'failed'
-            ? 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800/40'
-            : 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800/40'"
-      >
-        <!-- Status icon -->
-        <div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center"
-          :class="latestPipeline.status === 'success'
-            ? 'bg-green-100 dark:bg-green-900/30'
-            : latestPipeline.status === 'failed'
-              ? 'bg-red-100 dark:bg-red-900/30'
-              : 'bg-blue-100 dark:bg-blue-900/30'"
-        >
-          <!-- Checkmark -->
-          <svg v-if="latestPipeline.status === 'success'" class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div v-if="latestPipeline" :class="heroTheme.banner" class="mb-6 p-5 rounded-lg border flex items-center gap-4">
+        <div :class="heroTheme.iconBg" class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center">
+          <svg v-if="latestPipeline.status === 'success'" :class="heroTheme.icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
           </svg>
-          <!-- X mark -->
-          <svg v-else-if="latestPipeline.status === 'failed'" class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg v-else-if="latestPipeline.status === 'failed'" :class="heroTheme.icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
           </svg>
-          <!-- Running spinner -->
-          <svg v-else class="w-6 h-6 text-blue-600 dark:text-blue-400 animate-spin" fill="none" viewBox="0 0 24 24">
+          <svg v-else :class="heroTheme.icon" class="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
         </div>
 
         <div class="flex-1 min-w-0">
-          <div class="text-lg font-bold"
-            :class="latestPipeline.status === 'success'
-              ? 'text-green-800 dark:text-green-300'
-              : latestPipeline.status === 'failed'
-                ? 'text-red-800 dark:text-red-300'
-                : 'text-blue-800 dark:text-blue-300'"
-          >
-            Nightly Builds for Automated Updates
+          <div :class="heroTheme.title" class="text-lg font-bold">{{ scheduleInfo.description }}</div>
+          <div :class="heroTheme.subtitle" class="text-sm font-semibold mt-1">
+            {{ theme(latestPipeline.status).label || latestPipeline.status.toUpperCase() }}
           </div>
-          <div class="text-sm font-semibold mt-1"
-            :class="latestPipeline.status === 'success'
-              ? 'text-green-700 dark:text-green-400'
-              : latestPipeline.status === 'failed'
-                ? 'text-red-700 dark:text-red-400'
-                : 'text-blue-700 dark:text-blue-400'"
-          >
-            {{ latestPipeline.status === 'success' ? 'PASSING' : latestPipeline.status === 'failed' ? 'FAILING' : latestPipeline.status.toUpperCase() }}
-          </div>
-          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-xs"
-            :class="latestPipeline.status === 'success'
-              ? 'text-green-600 dark:text-green-400/80'
-              : latestPipeline.status === 'failed'
-                ? 'text-red-600 dark:text-red-400/80'
-                : 'text-blue-600 dark:text-blue-400/80'"
-          >
-            <span>{{ formatPipelineDateFull(latestPipeline.created_at) }}</span>
+          <div :class="heroTheme.info" class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-xs">
+            <span>{{ formatDateFull(latestPipeline.created_at) }}</span>
             <span v-if="currentStreak.count > 1">
               {{ currentStreak.count }} {{ currentStreak.status === 'success' ? 'passing' : 'failing' }} in a row
             </span>
@@ -209,23 +229,19 @@ onMounted(() => {
           <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-xs text-gray-500 dark:text-gray-400">
             <span class="flex items-center gap-1">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              {{ SCHEDULE_INFO.time }}
+              {{ scheduleInfo.time }}
             </span>
             <span class="flex items-center gap-1">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
-              Target: {{ SCHEDULE_INFO.target }}
+              Target: {{ scheduleInfo.target }}
             </span>
           </div>
         </div>
 
         <a :href="latestPipeline.web_url" target="_blank" rel="noopener noreferrer"
+          :class="heroTheme.link"
           class="flex-shrink-0 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors"
-          :class="latestPipeline.status === 'success'
-            ? 'text-green-700 dark:text-green-400 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30'
-            : latestPipeline.status === 'failed'
-              ? 'text-red-700 dark:text-red-400 border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/30'
-              : 'text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/30'"
-        >View on GitLab →</a>
+        >View on GitLab &rarr;</a>
       </div>
 
       <!-- ===== TIER 2: Pipeline Timeline ===== -->
@@ -235,7 +251,7 @@ onMounted(() => {
           <div class="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
             <span>{{ successRate }}% pass rate</span>
             <span v-if="lastSuccess && latestPipeline?.status !== 'success'">
-              Last success: {{ formatPipelineDate(lastSuccess.created_at) }}
+              Last success: {{ formatDate(lastSuccess.created_at) }}
             </span>
           </div>
         </div>
@@ -243,52 +259,21 @@ onMounted(() => {
         <div class="flex gap-1.5 overflow-x-auto pb-1">
           <button
             v-for="p in timelinePipelines" :key="p.id"
+            :class="[theme(p.status).tile, selectedPipelineId === p.id ? theme(p.status).tileSelected : 'border-transparent']"
             class="flex-shrink-0 w-16 rounded-lg pt-1.5 pb-2 text-center cursor-pointer transition-all border-2"
-            :class="[
-              p.status === 'success'
-                ? 'bg-green-50 dark:bg-green-950/40 hover:bg-green-100 dark:hover:bg-green-900/50'
-                : p.status === 'failed'
-                  ? 'bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/50'
-                  : 'bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50',
-              selectedPipelineId === p.id
-                ? p.status === 'success'
-                  ? 'border-green-500 dark:border-green-400 shadow-sm shadow-green-200 dark:shadow-green-900/40'
-                  : p.status === 'failed'
-                    ? 'border-red-500 dark:border-red-400 shadow-sm shadow-red-200 dark:shadow-red-900/40'
-                    : 'border-blue-500 dark:border-blue-400 shadow-sm shadow-blue-200 dark:shadow-blue-900/40'
-                : 'border-transparent',
-            ]"
             @click="selectPipeline(p)"
           >
-            <div class="text-[10px] leading-tight font-medium"
-              :class="p.status === 'success'
-                ? 'text-green-500 dark:text-green-500'
-                : p.status === 'failed'
-                  ? 'text-red-400 dark:text-red-500'
-                  : 'text-blue-400 dark:text-blue-500'"
-            >{{ pipelineDateParts(p.created_at).dow }}</div>
-            <div class="text-xl font-bold leading-tight mt-0.5"
-              :class="p.status === 'success'
-                ? 'text-green-700 dark:text-green-300'
-                : p.status === 'failed'
-                  ? 'text-red-700 dark:text-red-300'
-                  : 'text-blue-700 dark:text-blue-300'"
-            >{{ pipelineDateParts(p.created_at).day }}</div>
-            <div class="text-[10px] leading-tight"
-              :class="p.status === 'success'
-                ? 'text-green-500 dark:text-green-500'
-                : p.status === 'failed'
-                  ? 'text-red-400 dark:text-red-500'
-                  : 'text-blue-400 dark:text-blue-500'"
-            >{{ pipelineDateParts(p.created_at).month }}</div>
+            <div :class="theme(p.status).tileLabel" class="text-[10px] leading-tight font-medium">{{ dateParts(p.created_at).dow }}</div>
+            <div :class="theme(p.status).tileDay" class="text-xl font-bold leading-tight mt-0.5">{{ dateParts(p.created_at).day }}</div>
+            <div :class="theme(p.status).tileLabel" class="text-[10px] leading-tight">{{ dateParts(p.created_at).month }}</div>
             <div class="mt-1">
-              <svg v-if="p.status === 'success'" class="w-4 h-4 mx-auto text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg v-if="p.status === 'success'" :class="theme(p.status).icon" class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
               </svg>
-              <svg v-else-if="p.status === 'failed'" class="w-4 h-4 mx-auto text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg v-else-if="p.status === 'failed'" :class="theme(p.status).icon" class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
               </svg>
-              <svg v-else class="w-4 h-4 mx-auto text-blue-500 dark:text-blue-400 animate-spin" fill="none" viewBox="0 0 24 24">
+              <svg v-else class="w-4 h-4 mx-auto animate-spin" :class="theme(p.status).icon" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
@@ -298,15 +283,16 @@ onMounted(() => {
       </div>
 
       <!-- ===== TIER 3: Pipeline Detail ===== -->
-      <!-- Prompt to select a pipeline -->
+      <!-- Prompt to select -->
       <div v-if="!selectedPipelineId && !jobsLoading && !jobs" class="text-center py-10 bg-gray-50 dark:bg-gray-800/50 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
         <svg class="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
         </svg>
         <div class="text-sm font-medium text-gray-600 dark:text-gray-400">Click a pipeline above to view job details</div>
-        <div class="text-xs text-gray-400 dark:text-gray-500 mt-1">Each row represents one nightly pipeline run</div>
+        <div class="text-xs text-gray-400 dark:text-gray-500 mt-1">Each tile represents one nightly pipeline run</div>
       </div>
 
+      <!-- Jobs loading -->
       <div v-if="jobsLoading" class="text-center py-12">
         <svg class="animate-spin h-8 w-8 text-gray-400 mx-auto" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
@@ -315,23 +301,23 @@ onMounted(() => {
         <div class="mt-2 text-gray-500 dark:text-gray-400 text-sm">Loading job details...</div>
       </div>
 
-      <template v-else-if="jobs">
-        <!-- Pipeline header with date context -->
+      <template v-else-if="jobs && selectedPipeline">
+        <!-- Pipeline header -->
         <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg">
           <div class="flex items-center gap-3 flex-wrap">
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium" :class="statusBadgeClass(pipelines.find(p => p.id === jobs.pipeline_id)?.status)">
-              {{ pipelines.find(p => p.id === jobs.pipeline_id)?.status }}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium" :class="badgeClass(selectedPipeline.status)">
+              {{ selectedPipeline.status }}
             </span>
             <span class="text-sm font-semibold text-gray-900 dark:text-white">
-              {{ formatPipelineDateFull(pipelines.find(p => p.id === jobs.pipeline_id)?.created_at) }}
+              {{ formatDateFull(selectedPipeline.created_at) }}
             </span>
             <span class="text-xs text-gray-400 dark:text-gray-500">Pipeline #{{ jobs.pipeline_id }}</span>
             <span class="text-sm text-gray-500 dark:text-gray-400 ml-auto">
-              {{ jobs.summary.total }} jobs · {{ jobs.summary.success }} passed · {{ jobs.summary.failed }} failed · {{ jobs.summary.skipped }} skipped
+              {{ jobs.summary.total }} jobs &middot; {{ jobs.summary.success }} passed &middot; {{ jobs.summary.failed }} failed &middot; {{ jobs.summary.skipped }} skipped
             </span>
-            <a :href="pipelines.find(p => p.id === jobs.pipeline_id)?.web_url" target="_blank" rel="noopener noreferrer"
+            <a :href="selectedPipeline.web_url" target="_blank" rel="noopener noreferrer"
               class="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-              View on GitLab →
+              View on GitLab &rarr;
             </a>
           </div>
         </div>
@@ -354,7 +340,7 @@ onMounted(() => {
                   {{ fj.name }}
                 </a>
                 <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  {{ fj.collection }} · {{ fj.variant }} · {{ fj.arch }} · {{ STAGE_LABELS[fj.stage] || fj.stage }}
+                  {{ fj.collection }} &middot; {{ fj.variant }} &middot; {{ fj.arch }} &middot; {{ STAGE_LABELS[fj.stage] || fj.stage }}
                 </div>
               </div>
               <span v-if="fj.failure_reason" class="text-xs text-gray-400 dark:text-gray-500">{{ fj.failure_reason }}</span>
@@ -381,16 +367,9 @@ onMounted(() => {
               ></span>
 
               <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ col.name }}</span>
-
-              <span class="text-xs text-gray-500 dark:text-gray-400">
-                {{ collectionJobCount(col) }} jobs
-              </span>
-
-              <span v-if="col.status === 'failed'" class="text-xs text-red-600 dark:text-red-400 font-medium">
-                {{ collectionFailCount(col) }} failed
-              </span>
-
-              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ml-auto" :class="statusBadgeClass(col.status)">
+              <span class="text-xs text-gray-500 dark:text-gray-400">{{ col.jobCount }} jobs</span>
+              <span v-if="col.failCount > 0" class="text-xs text-red-600 dark:text-red-400 font-medium">{{ col.failCount }} failed</span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ml-auto" :class="badgeClass(col.status)">
                 {{ col.status }}
               </span>
             </summary>
@@ -415,7 +394,6 @@ onMounted(() => {
                 </summary>
 
                 <div class="px-4 py-3 border-t border-gray-100 dark:border-gray-700/50">
-                  <!-- Loading -->
                   <div v-if="packagesLoading.has(col.name)" class="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 py-2">
                     <svg class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
@@ -424,12 +402,10 @@ onMounted(() => {
                     Loading packages...
                   </div>
 
-                  <!-- Error -->
                   <div v-else-if="packages[col.name]?.error" class="text-xs text-red-500 dark:text-red-400 py-1">
                     Failed to load packages: {{ packages[col.name].error }}
                   </div>
 
-                  <!-- Package groups -->
                   <div v-else-if="packages[col.name]?.groups" class="space-y-3">
                     <div v-for="group in packages[col.name].groups" :key="group.source">
                       <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{{ formatTeamName(group.source) }}</div>
@@ -441,7 +417,6 @@ onMounted(() => {
                     </div>
                   </div>
 
-                  <!-- Not loaded yet -->
                   <div v-else class="text-xs text-gray-400 dark:text-gray-500 py-1">
                     Package data not available
                   </div>
@@ -472,7 +447,7 @@ onMounted(() => {
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700/50">
-                      <template v-for="ve in getVariantEntries(col.variants)" :key="ve.variant">
+                      <template v-for="ve in col.variantEntries" :key="ve.variant">
                         <tr v-for="(ae, ai) in ve.archs" :key="`${ve.variant}-${ae.arch}`"
                           class="hover:bg-gray-50 dark:hover:bg-gray-750/50 transition-colors"
                         >
@@ -484,14 +459,8 @@ onMounted(() => {
                             <template v-if="ae.stages[stage]">
                               <a :href="ae.stages[stage].web_url" target="_blank" rel="noopener noreferrer"
                                 class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium transition-colors hover:ring-1 hover:ring-offset-1 dark:hover:ring-offset-gray-800"
-                                :class="ae.stages[stage].status === 'success'
-                                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 hover:ring-green-400'
-                                  : ae.stages[stage].status === 'failed'
-                                    ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 hover:ring-red-400'
-                                    : ae.stages[stage].status === 'skipped'
-                                      ? 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400 hover:ring-gray-400'
-                                      : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:ring-gray-400'"
-                                :title="`${ae.stages[stage].status}${ae.stages[stage].duration ? ' · ' + formatDurationSec(ae.stages[stage].duration) : ''} — click to view job`"
+                                :class="jobCellClass(ae.stages[stage].status)"
+                                :title="jobTitle(ae.stages[stage])"
                               >
                                 <svg v-if="ae.stages[stage].status === 'success'" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
@@ -501,7 +470,7 @@ onMounted(() => {
                                 </svg>
                                 <span v-else-if="ae.stages[stage].status === 'skipped'" class="w-3 text-center">-</span>
                                 <span v-else class="w-3 text-center">?</span>
-                                {{ ae.stages[stage].status === 'success' ? 'Pass' : ae.stages[stage].status === 'failed' ? 'Fail' : ae.stages[stage].status }}
+                                {{ jobLabel(ae.stages[stage].status) }}
                               </a>
                             </template>
                             <span v-else class="text-gray-300 dark:text-gray-600">&mdash;</span>
