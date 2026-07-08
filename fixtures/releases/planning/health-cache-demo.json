@@ -61,6 +61,10 @@
       "rubricPass": 2,
       "needsAttention": 1,
       "notAssessed": 2
+    },
+    "fpdorReadiness": {
+      "fullyPassed": 0,
+      "totalFeatures": 13
     }
   },
   "features": [
@@ -198,6 +202,22 @@
         ]
       },
       "planningStatus": "ready-for-execution",
+      "fpdor": {
+        "items": [
+          { "name": "RICE Score", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+        ],
+        "passedCount": 5,
+        "totalCount": 9,
+        "evaluatedCount": 6
+      },
       "issueType": "Feature",
       "versionStatus": "committed",
       "fixVersions": "rhoai-3.5",
@@ -294,6 +314,22 @@
         ]
       },
       "planningStatus": "ready-for-execution",
+      "fpdor": {
+        "items": [
+          { "name": "RICE Score", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+        ],
+        "passedCount": 5,
+        "totalCount": 9,
+        "evaluatedCount": 6
+      },
       "issueType": "Feature",
       "versionStatus": "targeted",
       "fixVersions": "",
@@ -399,6 +435,22 @@
         ]
       },
       "planningStatus": "ready-for-execution",
+      "fpdor": {
+        "items": [
+          { "name": "RICE Score", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+        ],
+        "passedCount": 4,
+        "totalCount": 9,
+        "evaluatedCount": 6
+      },
       "issueType": "Feature",
       "versionStatus": "committed",
       "fixVersions": "rhoai-3.5, rhoai-3.5-EA2",
@@ -501,6 +553,22 @@
         ]
       },
       "planningStatus": "ready-for-execution",
+      "fpdor": {
+        "items": [
+          { "name": "RICE Score", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+        ],
+        "passedCount": 5,
+        "totalCount": 9,
+        "evaluatedCount": 6
+      },
       "issueType": "Feature",
       "versionStatus": "targeted",
       "fixVersions": "",
@@ -611,6 +679,22 @@
         ]
       },
       "planningStatus": "in-planning",
+      "fpdor": {
+        "items": [
+          { "name": "RICE Score", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Assignee + PM", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+        ],
+        "passedCount": 3,
+        "totalCount": 9,
+        "evaluatedCount": 6
+      },
       "issueType": "Feature",
       "versionStatus": "committed",
       "fixVersions": "rhoai-3.5",
@@ -781,6 +865,22 @@
         ]
       },
       "planningStatus": "in-planning",
+      "fpdor": {
+        "items": [
+          { "name": "RICE Score", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Sizing & Breakdown", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Target Version + Release Type", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+        ],
+        "passedCount": 3,
+        "totalCount": 9,
+        "evaluatedCount": 6
+      },
       "issueType": "Feature",
       "versionStatus": "none",
       "fixVersions": "",
@@ -966,6 +1066,22 @@
         ]
       },
       "planningStatus": "in-planning",
+      "fpdor": {
+        "items": [
+          { "name": "RICE Score", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Sizing & Breakdown", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Assignee + PM", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Components", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+        ],
+        "passedCount": 1,
+        "totalCount": 9,
+        "evaluatedCount": 6
+      },
       "issueType": "Feature",
       "versionStatus": "targeted",
       "fixVersions": "",
@@ -1080,6 +1196,22 @@
         ]
       },
       "planningStatus": "ready-for-execution",
+      "fpdor": {
+        "items": [
+          { "name": "RICE Score", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+        ],
+        "passedCount": 5,
+        "totalCount": 9,
+        "evaluatedCount": 6
+      },
       "issueType": "Feature",
       "versionStatus": "committed",
       "fixVersions": "rhoai-3.5",
@@ -1185,6 +1317,22 @@
         ]
       },
       "planningStatus": "in-planning",
+      "fpdor": {
+        "items": [
+          { "name": "RICE Score", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+        ],
+        "passedCount": 4,
+        "totalCount": 9,
+        "evaluatedCount": 6
+      },
       "issueType": "Feature",
       "versionStatus": "committed",
       "fixVersions": "rhoai-3.5-EA1",
@@ -1281,6 +1429,22 @@
         ]
       },
       "planningStatus": "in-planning",
+      "fpdor": {
+        "items": [
+          { "name": "RICE Score", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+        ],
+        "passedCount": 5,
+        "totalCount": 9,
+        "evaluatedCount": 6
+      },
       "issueType": "Initiative",
       "versionStatus": "targeted",
       "fixVersions": "",
@@ -1391,6 +1555,22 @@
         ]
       },
       "planningStatus": "in-planning",
+      "fpdor": {
+        "items": [
+          { "name": "RICE Score", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Target Version + Release Type", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+        ],
+        "passedCount": 3,
+        "totalCount": 9,
+        "evaluatedCount": 6
+      },
       "issueType": "Feature",
       "versionStatus": "none",
       "fixVersions": "",
@@ -1493,6 +1673,22 @@
         ]
       },
       "planningStatus": "in-planning",
+      "fpdor": {
+        "items": [
+          { "name": "RICE Score", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+        ],
+        "passedCount": 5,
+        "totalCount": 9,
+        "evaluatedCount": 6
+      },
       "issueType": "Feature",
       "versionStatus": "committed",
       "fixVersions": "rhoai-3.5",
@@ -1601,6 +1797,22 @@
         ]
       },
       "planningStatus": "in-planning",
+      "fpdor": {
+        "items": [
+          { "name": "RICE Score", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
+          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
+          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+        ],
+        "passedCount": 5,
+        "totalCount": 9,
+        "evaluatedCount": 6
+      },
       "issueType": "Feature",
       "versionStatus": "committed",
       "fixVersions": "rhoai-3.5-EA1",
@@ -1614,5 +1826,5 @@
     "riceAvailable": true,
     "warnings": []
   },
-  "healthCacheVersion": 3
+  "healthCacheVersion": 4
 }
