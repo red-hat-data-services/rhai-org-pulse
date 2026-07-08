@@ -124,6 +124,9 @@ const linkCopied = ref(false)
 function clearSearch() {
   packageName.value = ''
   packageVersion.value = ''
+  selectedProductVersion.value = ''
+  selectedVariant.value = ''
+  selectedRepoTypes.value = 'default'
   results.value = null
   error.value = null
   expandedVersions.value = new Set()
@@ -232,6 +235,11 @@ async function handleSubmit() {
 async function handleSearchUpstream() {
   if (!canSubmit.value) return
   loadingUpstream.value = true
+  expandedVersions.value = new Set()
+  expandedCells.value = new Set()
+  expandedPvs.value = new Set()
+  versionVariantFilter.value = ''
+  versionRepoFilter.value = ''
   await search({
     packageName: packageName.value,
     packageVersion: packageVersion.value,
