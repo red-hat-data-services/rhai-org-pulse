@@ -969,7 +969,7 @@ describe('buildFeatureReadiness', function() {
       })
       var result = buildFeatureReadiness(readFromStorage)
       var f = result.ready[0]
-      expect(f.tier).toBe('T1')
+      expect(f.tier).toBe(1)
       expect(f.bigRock).toBe('AI Efficiency')
       expect(f.targetVersions).toEqual(['rhoai-3.6'])
       expect(f.fixVersion).toBe('3.6.0')
@@ -1013,7 +1013,7 @@ describe('buildFeatureReadiness', function() {
       })
       var result = buildFeatureReadiness(readFromStorage)
       var feat = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-1' })
-      expect(feat.tier).toBe('T2')
+      expect(feat.tier).toBe(2)
     })
   })
 
@@ -1066,7 +1066,7 @@ describe('buildFeatureReadiness', function() {
       })
       var result = buildFeatureReadiness(readFromStorage)
       var f = result.ready[0]
-      expect(f.tier).toBe('T2')
+      expect(f.tier).toBe(2)
       expect(f.bigRock).toBe('Platform Efficiency')
       expect(f.targetVersions).toEqual(['rhoai-3.6'])
       expect(f.fixVersion).toBe('3.6.0')
@@ -1091,7 +1091,7 @@ describe('buildFeatureReadiness', function() {
       })
       var result = buildFeatureReadiness(readFromStorage)
       var f = result.ready[0]
-      expect(f.tier).toBe('T1')
+      expect(f.tier).toBe(1)
       expect(f.bigRock).toBe('AI Speed')
       expect(f.targetVersions).toEqual(['rhoai-3.6-cand'])
       expect(f.fixVersion).toBe('3.6.0-cand')
@@ -1390,7 +1390,7 @@ describe('buildFeatureReadiness', function() {
       var result = buildFeatureReadiness(readFromStorage)
       var allFeatures = result.pendingReview.concat(result.ready)
       expect(allFeatures).toHaveLength(1)
-      expect(allFeatures[0].tier).toBe('T1')
+      expect(allFeatures[0].tier).toBe(1)
       expect(allFeatures[0].bigRock).toBe('First')
     })
 

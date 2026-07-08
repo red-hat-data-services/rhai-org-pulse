@@ -385,7 +385,7 @@ function mergeFeatureData(key, jiraFeatures, aiReviewMap, candidateIndex, health
   if (aiReview && Array.isArray(aiReview.components) && aiReview.components.length > 0) {
     components = aiReview.components
   } else if (health && health.components) {
-    components = health.components.split(', ').filter(Boolean)
+    components = Array.isArray(health.components) ? health.components : health.components.split(', ').filter(Boolean)
   } else if (jira && Array.isArray(jira.components)) {
     components = jira.components
   } else if (exec) {
@@ -417,9 +417,11 @@ function mergeFeatureData(key, jiraFeatures, aiReviewMap, candidateIndex, health
 
   var tier
   if (candidate && candidate.tier != null) {
-    tier = 'T' + candidate.tier
-  } else if (health && health.tier) {
-    tier = health.tier
+    tier = parseInt(candidate.tier, 10) || null
+  } else if (health && health.tier != null) {
+    tier = typeof health.tier === 'string' && health.tier.charAt(0) === 'T'
+      ? parseInt(health.tier.slice(1), 10) || null
+      : parseInt(health.tier, 10) || null
   } else {
     tier = null
   }

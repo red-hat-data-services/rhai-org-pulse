@@ -99,7 +99,7 @@ function mapCandidateToHealthFeature(candidate) {
     status: candidate.status || '',
     priority: candidate.priority || '',
     releaseType: candidate.phase || '',
-    components: splitCommaString(candidate.components),
+    components: Array.isArray(candidate.components) ? candidate.components : splitCommaString(candidate.components),
     fixVersions: splitCommaString(candidate.fixVersion),
     targetVersions: candidate.targetRelease ? [candidate.targetRelease] : [],
     assignee: candidate.deliveryOwner || '',
@@ -746,8 +746,8 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
 
     // Build health feature entry
     var components = Array.isArray(feature.components)
-      ? feature.components.join(', ')
-      : ''
+      ? feature.components
+      : []
 
     healthFeatures.push({
       key: key,
