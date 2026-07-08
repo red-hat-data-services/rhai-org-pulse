@@ -877,7 +877,7 @@ describe('runHealthPipeline', function() {
       expect(result.features[i].priorityBreakdown).toHaveProperty('rice')
       expect(result.features[i].priorityBreakdown).toHaveProperty('bigRock')
       expect(result.features[i].priorityBreakdown).toHaveProperty('priority')
-      expect(result.features[i].priorityBreakdown).toHaveProperty('complexity')
+      expect(result.features[i].priorityBreakdown).toHaveProperty('targetVersion')
     }
     // Tier 1 Major should score higher than Tier 3 Minor
     expect(result.features[0].priorityScore).toBeGreaterThan(result.features[1].priorityScore)

@@ -5,7 +5,7 @@ import { useReleases } from '../composables/useReleasePlanning'
 import { useRefreshPolling } from '../composables/useRefreshPolling'
 import { apiRequest } from '@shared/client/services/api'
 import FeatureReadinessFilterBar from '../components/FeatureReadinessFilterBar.vue'
-import FeatureReadinessRow from '@shared/client/components/FeatureReadinessRow.vue'
+import FeatureReadinessRow from '../components/FeatureReadinessRow.vue'
 import FeatureReadinessDrawer from '@shared/client/components/FeatureReadinessDrawer.vue'
 
 const nav = inject('moduleNav')
@@ -252,12 +252,8 @@ function formatSyncDate(dateStr) {
                   <p class="font-semibold text-gray-700 dark:text-gray-200 mb-2">Score Rubric</p>
                   <div class="space-y-2 text-gray-600 dark:text-gray-300">
                     <div>
-                      <p class="font-medium text-gray-700 dark:text-gray-200 mb-0.5">When RICE or Rubric present:</p>
-                      <p class="font-mono text-[10px]">RICE/Rubric (30w) + Tier (25w) + Priority (25w) + Target Version (20w)</p>
-                    </div>
-                    <div>
-                      <p class="font-medium text-gray-700 dark:text-gray-200 mb-0.5">When neither present:</p>
-                      <p class="font-mono text-[10px]">Tier (40w) + Priority (35w) + Target Version (25w)</p>
+                      <p class="font-medium text-gray-700 dark:text-gray-200 mb-0.5">Priority Score Formula:</p>
+                      <p class="font-mono text-[10px]">RICE (30w) + Big Rock (30w) + Target Version (25w) + Priority (15w)</p>
                     </div>
                     <div class="pt-1 border-t border-gray-100 dark:border-gray-700">
                       <p class="font-medium text-gray-700 dark:text-gray-200 mb-0.5">Completeness multiplier:</p>

@@ -1,76 +1,50 @@
 var { getConfiguredReleases } = require('./config')
 var { loadIndex } = require('./cache-reader')
-var { CLOSED_STATUSES } = require('./constants')
+var { CLOSED_STATUSES, EARLY_STATUSES } = require('./constants')
 var { deriveHumanReviewStatus: sharedDeriveStatus } = require('../execution/ai-review-fields')
+var { computeFPDoRReadiness, extractRubricData } = require('./fpdor')
+var { computeBigRockScore, computeTargetVersionScore: computeTVScore, PRIORITY_SCORES } = require('./health/priority-scorer')
 
-var RICE_MAX = 16900 // 13 × 13 × 100 ÷ 1 (theoretical max: max Reach × max Impact × max Confidence ÷ min Effort)
+var RICE_MAX = 16900
 
-var TIER_SCORES     = { T1: 1.0, T2: 0.6, T3: 0.2 }
-var PRIORITY_SCORES = { Blocker: 1.0, Critical: 0.8, Major: 0.6, Normal: 0.4, Minor: 0.2 }
+var BLOCKING_HYGIENE_RULES = ['missing-assignee', 'open-children-on-closed']
 
-var EARLY_STATUSES = ['New', 'Refinement']
-
-var BLOCKING_HYGIENE_RULES = ['missing-assignee', 'missing-fix-version', 'missing-target-version', 'open-children-on-closed']
-
-function computeTierScore(feature) {
-  if (feature.tier === 'T1' && feature.rockPriority != null && feature.rockPriority > 0) {
-    return Math.max(0.3, 1.0 - (feature.rockPriority - 1) * 0.1)
-  }
-  return TIER_SCORES[feature.tier] || 0
+function computeBigRockMembershipScore(feature, bigRockPriorityMap) {
+  return computeBigRockScore(feature, bigRockPriorityMap)
 }
 
 function computeTargetVersionScore(feature, configuredVersions) {
-  if (!configuredVersions || configuredVersions.length === 0) return null
-  var tvs = feature.targetVersions || []
-  if (tvs.length === 0) return 0.0
-  var bestIndex = configuredVersions.length
-  for (var i = 0; i < tvs.length; i++) {
-    var idx = configuredVersions.indexOf(tvs[i])
-    if (idx === -1) {
-      for (var j = 0; j < configuredVersions.length; j++) {
-        if (tvs[i].indexOf(configuredVersions[j]) !== -1 || configuredVersions[j].indexOf(tvs[i]) !== -1) {
-          idx = j
-          break
-        }
-      }
-    }
-    if (idx !== -1 && idx < bestIndex) bestIndex = idx
-  }
-  if (bestIndex >= configuredVersions.length) return 0.1
-  if (configuredVersions.length === 1) return 1.0
-  return 1.0 - (bestIndex / (configuredVersions.length - 1)) * 0.7
+  return computeTVScore(feature, configuredVersions)
 }
 
 var COMPLETENESS_MULTIPLIERS = [0, 0.5, 0.7, 0.85, 1.0]
 var MAX_SIGNALS = 4
 
-function computeBestAvailableScore(feature, configuredVersions) {
+function computeBestAvailableScore(feature, configuredVersions, bigRockPriorityMap) {
   var signals = []
   var missing = []
-  var hasValueSignal = feature.riceScore != null || (feature.rubricTotal || 0) > 0
 
   if (feature.riceScore != null) {
     signals.push({ name: "RICE Score", value: feature.riceScore / RICE_MAX, weight: 30, raw: feature.riceScore })
-  } else if ((feature.rubricTotal || 0) > 0) {
-    signals.push({ name: "Rubric", value: feature.rubricTotal / 8, weight: 30, raw: feature.rubricTotal })
   } else {
     missing.push("RICE Score")
   }
 
-  if (feature.tier != null) {
-    signals.push({ name: "Tier", value: computeTierScore(feature), weight: hasValueSignal ? 25 : 40, raw: feature.tier })
+  var brScore = computeBigRockMembershipScore(feature, bigRockPriorityMap)
+  if (feature.bigRock) {
+    signals.push({ name: "Big Rock", value: brScore, weight: 30, raw: feature.bigRock })
   } else {
-    missing.push("Tier")
+    missing.push("Big Rock")
   }
 
-  signals.push({ name: "Priority", value: PRIORITY_SCORES[feature.priority] || 0.4, weight: hasValueSignal ? 25 : 35, raw: feature.priority || "Normal" })
-
   var tvScore = computeTargetVersionScore(feature, configuredVersions)
-  if (tvScore != null) {
-    signals.push({ name: "Target Version", value: tvScore, weight: hasValueSignal ? 20 : 25, raw: (feature.targetVersions || []).join(", ") || "none" })
+  if ((feature.targetVersions || []).length > 0) {
+    signals.push({ name: "Target Version", value: tvScore, weight: 25, raw: (feature.targetVersions || []).join(", ") })
   } else {
     missing.push("Target Version")
   }
+
+  signals.push({ name: "Priority", value: PRIORITY_SCORES[feature.priority] || 0.4, weight: 15, raw: feature.priority || "Normal" })
 
   var totalWeight = 0
   var weightedSum = 0
@@ -124,28 +98,26 @@ function computeBlockers(feature, productPath) {
 }
 
 function computeReadiness(feature) {
-  var isApproved = feature.humanReviewStatus === 'approved'
-  var hasRubric = (feature.rubricTotal || 0) > 0
-  var hasPM = !!feature.pmOwner
-  var hasDeliveryOwner = !!feature.deliveryOwner
+  var rubricData = extractRubricData(feature)
+  var fpdor = computeFPDoRReadiness(feature, rubricData)
+
   var pastRefinement = !!feature.status && EARLY_STATUSES.indexOf(feature.status) === -1
-  var hasTargetVersion = (feature.targetVersions || []).length > 0
   var noBlockingViolations = !hasBlockingViolations(feature.violations)
 
+  var isReady = fpdor.passedCount === fpdor.evaluatedCount
+    && fpdor.evaluatedCount >= 6
+    && pastRefinement
+    && noBlockingViolations
+
   var gates = {
-    isApproved: isApproved,
-    hasRubric: hasRubric,
-    pmAssigned: hasPM,
-    deliveryOwnerAssigned: hasDeliveryOwner,
+    fpDorPassed: fpdor.passedCount,
+    fpDorTotal: fpdor.totalCount,
+    fpDorEvaluated: fpdor.evaluatedCount,
     pastRefinement: pastRefinement,
-    hasTargetVersion: hasTargetVersion,
     noBlockingViolations: noBlockingViolations
   }
 
-  var isReady = isApproved && hasRubric && hasPM && hasDeliveryOwner
-    && pastRefinement && hasTargetVersion && noBlockingViolations
-
-  return { isReady: isReady, gates: gates }
+  return { isReady: isReady, gates: gates, fpdor: fpdor }
 }
 
 function hasBlockingViolations(violations) {
@@ -413,7 +385,7 @@ function mergeFeatureData(key, jiraFeatures, aiReviewMap, candidateIndex, health
   if (aiReview && Array.isArray(aiReview.components) && aiReview.components.length > 0) {
     components = aiReview.components
   } else if (health && health.components) {
-    components = health.components.split(', ').filter(Boolean)
+    components = Array.isArray(health.components) ? health.components : health.components.split(', ').filter(Boolean)
   } else if (jira && Array.isArray(jira.components)) {
     components = jira.components
   } else if (exec) {
@@ -445,9 +417,11 @@ function mergeFeatureData(key, jiraFeatures, aiReviewMap, candidateIndex, health
 
   var tier
   if (candidate && candidate.tier != null) {
-    tier = 'T' + candidate.tier
-  } else if (health && health.tier) {
-    tier = health.tier
+    tier = parseInt(candidate.tier, 10) || null
+  } else if (health && health.tier != null) {
+    tier = typeof health.tier === 'string' && health.tier.charAt(0) === 'T'
+      ? parseInt(health.tier.slice(1), 10) || null
+      : parseInt(health.tier, 10) || null
   } else {
     tier = null
   }
@@ -501,6 +475,12 @@ function mergeFeatureData(key, jiraFeatures, aiReviewMap, candidateIndex, health
 
   var hygieneStatus = computeHygieneStatus(violations)
 
+  var storyPoints = (health && health.storyPoints) || (candidate && candidate.storyPoints) || (jira && jira.storyPoints) || null
+  var epicCount = (health && health.epicCount) || (candidate && candidate.epicCount) || 0
+  var releaseType = (health && health.releaseType) || (candidate && candidate.phase) || (jira && jira.releaseType) || null
+  var assignee = deliveryOwner
+  var pm = pmOwner || (health && health.pm) || (candidate && candidate.pm) || null
+
   return {
     key: key,
     title: title,
@@ -531,7 +511,13 @@ function mergeFeatureData(key, jiraFeatures, aiReviewMap, candidateIndex, health
     violations: violations,
     hygieneStatus: hygieneStatus,
     priorityScore: priorityScore,
-    dataSource: dataSource
+    dataSource: dataSource,
+    storyPoints: storyPoints,
+    epicCount: epicCount,
+    releaseType: releaseType,
+    assignee: assignee,
+    pm: pm,
+    phase: releaseType
   }
 }
 
@@ -561,7 +547,7 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
     if (merged.status && CLOSED_STATUSES.indexOf(merged.status) !== -1) return
 
     var priorityScoreFallback = merged.priorityScore === null
-    var computedBreakdown = computeBestAvailableScore(merged, cacheData.configuredVersions)
+    var computedBreakdown = computeBestAvailableScore(merged, cacheData.configuredVersions, null)
     var effectivePriorityScore = priorityScoreFallback ? computedBreakdown.score : merged.priorityScore
 
     var blockerResult = computeBlockers(merged, merged.dataSource)
@@ -605,6 +591,7 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
       dataSource: merged.dataSource,
       confidence: confidence,
       readinessGates: readinessResult.gates,
+      fpdor: readinessResult.fpdor,
       violations: merged.violations,
       hygieneStatus: merged.hygieneStatus
     }
@@ -651,4 +638,4 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
   return { pendingReview: pendingReview, ready: ready, filterMeta: filterMeta, meta: meta }
 }
 
-module.exports = { buildFeatureReadiness: buildFeatureReadiness, computeBlockers: computeBlockers, computeBestAvailableScore: computeBestAvailableScore, computeReadiness: computeReadiness, computeTierScore: computeTierScore, computeTargetVersionScore: computeTargetVersionScore, hasBlockingViolations: hasBlockingViolations, computeHygieneStatus: computeHygieneStatus, computeConfidence: computeConfidence, collectFilterMeta: collectFilterMeta, deriveHumanReviewStatusFromLabels: deriveHumanReviewStatusFromLabels, buildCanonicalKeySet: buildCanonicalKeySet, mergeFeatureData: mergeFeatureData, BLOCKING_HYGIENE_RULES: BLOCKING_HYGIENE_RULES, COMPLETENESS_MULTIPLIERS: COMPLETENESS_MULTIPLIERS, MAX_SIGNALS: MAX_SIGNALS }
+module.exports = { buildFeatureReadiness: buildFeatureReadiness, computeBlockers: computeBlockers, computeBestAvailableScore: computeBestAvailableScore, computeReadiness: computeReadiness, computeBigRockMembershipScore: computeBigRockMembershipScore, computeTargetVersionScore: computeTargetVersionScore, hasBlockingViolations: hasBlockingViolations, computeHygieneStatus: computeHygieneStatus, computeConfidence: computeConfidence, collectFilterMeta: collectFilterMeta, deriveHumanReviewStatusFromLabels: deriveHumanReviewStatusFromLabels, buildCanonicalKeySet: buildCanonicalKeySet, mergeFeatureData: mergeFeatureData, BLOCKING_HYGIENE_RULES: BLOCKING_HYGIENE_RULES, COMPLETENESS_MULTIPLIERS: COMPLETENESS_MULTIPLIERS, MAX_SIGNALS: MAX_SIGNALS }

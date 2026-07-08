@@ -312,7 +312,9 @@ function buildCandidateResponse(pipelineResult, version, bigRocks, demoMode) {
   for (let fi = 0; fi < features.length; fi++) {
     if (features[fi].status) allStatuses.add(features[fi].status)
     if (features[fi].components) {
-      const parts = features[fi].components.split(', ')
+      const parts = Array.isArray(features[fi].components)
+        ? features[fi].components
+        : features[fi].components.split(', ')
       for (let pi = 0; pi < parts.length; pi++) {
         const trimmed = parts[pi].trim()
         if (trimmed) allTeams.add(trimmed)
