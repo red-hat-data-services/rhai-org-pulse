@@ -243,6 +243,7 @@ function toggleRepoFilter(rt) {
 }
 
 function jumpToPv(pv) {
+  // Single-PV blocks render unconditionally (no <details>), so expandedPvs mutation is only needed for multi-PV
   if (!expandedPvs.value.has(pv) && internalGroups.value.length > 1) {
     const next = new Set(expandedPvs.value)
     next.add(pv)
@@ -756,18 +757,14 @@ const htmlFallbackIndexes = computed(() => {
                 >
                   <template v-for="(cell, ci) in [versionMatrix.getCell(pkgVer, pv)]" :key="ci">
                     <button
-                      v-if="cell && pv !== 'upstream-pypi'"
+                      v-if="cell"
                       type="button"
-                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50 cursor-pointer transition-colors"
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-colors"
+                      :class="pv === 'upstream-pypi'
+                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50'
+                        : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50'"
                       :title="[...cell.variants].join(', ')"
                       @click="jumpToPv(pv)"
-                    >{{ cell.count }} file{{ cell.count !== 1 ? 's' : '' }}</button>
-                    <button
-                      v-else-if="cell"
-                      type="button"
-                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50 cursor-pointer transition-colors"
-                      :title="[...cell.variants].join(', ')"
-                      @click="jumpToPv('upstream-pypi')"
                     >{{ cell.count }} file{{ cell.count !== 1 ? 's' : '' }}</button>
                     <span v-else class="text-gray-300 dark:text-gray-600">&mdash;</span>
                   </template>
