@@ -77,6 +77,18 @@ describe('transformForEnrichment', () => {
     expect(result.components).toEqual(['Serving', 'Pipelines'])
     expect(result.fixVersions).toEqual(['rhoai-3.5', 'rhoai-3.6'])
   })
+
+  it('unwraps riceScore from Jira object format', () => {
+    const issue = makeJiraIssue('RHAISTRAT-100', { fields: { customfield_10864: { value: 34.667 } } })
+    const result = transformForEnrichment(issue)
+    expect(result.riceScore).toBe(34.667)
+  })
+
+  it('returns null for riceScore object with null value', () => {
+    const issue = makeJiraIssue('RHAISTRAT-100', { fields: { customfield_10864: { value: null } } })
+    const result = transformForEnrichment(issue)
+    expect(result.riceScore).toBeNull()
+  })
 })
 
 describe('extractIssueLinks', () => {

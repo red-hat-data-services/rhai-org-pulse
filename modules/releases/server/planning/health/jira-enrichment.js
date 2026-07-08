@@ -12,6 +12,7 @@
 
 const { ENRICHMENT_FIELDS, CHANGELOG_FIELDS, EARLY_STATUSES } = require('../constants')
 const { parseTshirtSize } = require('./tshirt-parser')
+const { numericField } = require('../../hygiene/jira-fetch')
 
 /**
  * Check whether Jira credentials are configured.
@@ -217,7 +218,7 @@ async function runPass1(jiraRequest, fetchAllJqlResults, featureKeys, opts) {
 
         enrichmentMap.set(issue.key, {
           hasDescription: hasDescriptionContent(fields.description),
-          storyPoints: fields.customfield_10028 || null,
+          storyPoints: numericField(fields.customfield_10028),
           dependencyLinks: parseIssueLinks(fields.issuelinks),
           labels: Array.isArray(fields.labels) ? fields.labels : [],
           refinementHistory: null,

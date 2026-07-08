@@ -87,6 +87,14 @@ function serializeField(field) {
   return String(field)
 }
 
+
+function numericField(field) {
+  if (field == null) return null
+  var val = typeof field === 'object' && field !== null ? field.value : field
+  if (val == null) return null
+  var num = Number(val)
+  return isNaN(num) ? null : num
+}
 /**
  * Compute RICE completion status from the four RICE component fields.
  * @param {object} fields - Raw Jira fields object
@@ -589,6 +597,7 @@ module.exports = {
   fetchHygieneFeatures,
   transformIssue,
   serializeField,
+  numericField,
   computeRiceStatus,
   extractClonesLinks,
   parseChangelog,

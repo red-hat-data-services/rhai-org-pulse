@@ -219,6 +219,19 @@ describe('runPass1', function() {
     expect(result.get('TEST-1').storyPoints).toBe(5)
   })
 
+  it('unwraps storyPoints from Jira object format', async function() {
+    var mockFetch = vi.fn().mockResolvedValue([{
+      key: 'TEST-SP',
+      fields: {
+        description: 'desc',
+        customfield_10028: { value: 8 },
+        issuelinks: []
+      }
+    }])
+    var result = await runPass1(vi.fn(), mockFetch, ['TEST-SP'], { batchSize: 40, throttleMs: 0 })
+    expect(result.get('TEST-SP').storyPoints).toBe(8)
+  })
+
   it('stores labels from Jira response', async function() {
     var mockFetch = vi.fn().mockResolvedValue([{
       key: 'TEST-L',
