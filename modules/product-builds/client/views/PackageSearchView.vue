@@ -13,8 +13,7 @@ const {
   anyFound,
   anyPackageFound,
   anyIndexExists,
-  packageUiHref,
-  upstreamPypiAvailable
+  packageUiHref
 } = usePackageSearch()
 
 const packageName = ref('')
@@ -22,7 +21,6 @@ const packageVersion = ref('')
 const selectedProductVersion = ref('')
 const selectedVariant = ref('')
 const selectedRepoTypes = ref('default')
-const loadingUpstream = ref(false)
 
 function compareVersionsDesc(a, b) {
   const normalize = v => v.replace(/([a-zA-Z]+)/g, '.$1.').split('.').filter(Boolean)
@@ -158,7 +156,6 @@ function pushSearchToUrl() {
   if (selectedProductVersion.value.trim()) params.set('pv', selectedProductVersion.value.trim())
   if (selectedVariant.value) params.set('variant', selectedVariant.value)
   if (selectedRepoTypes.value !== 'default') params.set('repos', selectedRepoTypes.value)
-  if (hasUpstreamData.value) params.set('upstream', '1')
   const newHash = basePath + '?' + params.toString()
   if (window.location.hash !== newHash) {
     history.replaceState(null, '', window.location.pathname + window.location.search + newHash)
@@ -178,8 +175,7 @@ function readSearchFromUrl() {
     packageVersion: params.get('ver') || '',
     productVersion: params.get('pv') || '',
     variant: params.get('variant') || '',
-    repoTypes: params.get('repos') || 'default',
-    expandUpstream: params.get('upstream') === '1'
+    repoTypes: params.get('repos') || 'default'
   }
 }
 
@@ -193,11 +189,7 @@ onMounted(async () => {
     selectedVariant.value = urlParams.variant
     selectedRepoTypes.value = urlParams.repoTypes
     await nextTick()
-    if (urlParams.expandUpstream) {
-      handleSearchUpstream()
-    } else {
-      handleSubmit()
-    }
+    handleSubmit()
   }
 })
 
@@ -227,34 +219,11 @@ async function handleSubmit() {
     productVersion: selectedProductVersion.value,
     variant: selectedVariant.value,
     repoTypes: selectedRepoTypes.value,
-    expandUpstream: false
-  })
-  pushSearchToUrl()
-}
-
-async function handleSearchUpstream() {
-  if (!canSubmit.value) return
-  loadingUpstream.value = true
-  expandedVersions.value = new Set()
-  expandedCells.value = new Set()
-  expandedPvs.value = new Set()
-  versionVariantFilter.value = ''
-  versionRepoFilter.value = ''
-  await search({
-    packageName: packageName.value,
-    packageVersion: packageVersion.value,
-    productVersion: selectedProductVersion.value,
-    variant: selectedVariant.value,
-    repoTypes: selectedRepoTypes.value,
     expandUpstream: true
   })
-  loadingUpstream.value = false
   pushSearchToUrl()
 }
 
-const hasUpstreamData = computed(() => {
-  return results.value?.results?.some(r => r.source === 'upstream') ?? false
-})
 
 const expandedVersions = ref(new Set())
 const versionVariantFilter = ref('')
@@ -271,6 +240,18 @@ function toggleVariantFilter(variant) {
 
 function toggleRepoFilter(rt) {
   versionRepoFilter.value = versionRepoFilter.value === rt ? '' : rt
+}
+
+function jumpToPv(pv) {
+  if (!expandedPvs.value.has(pv) && internalGroups.value.length > 1) {
+    const next = new Set(expandedPvs.value)
+    next.add(pv)
+    expandedPvs.value = next
+  }
+  nextTick(() => {
+    const el = document.getElementById('pv-block-' + pv)
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  })
 }
 
 function jumpToVersion(version) {
@@ -395,9 +376,6 @@ const showVersionBreakdown = computed(() => {
   return versionBreakdown.value.length > 1 || (versionBreakdown.value.length === 1 && !results.value.requested_version)
 })
 
-const isMultiProductSearch = computed(() => {
-  return results.value && !selectedProductVersion.value.trim() && productVersions.value.length > 1
-})
 
 const expandedCells = ref(new Set())
 
@@ -474,9 +452,13 @@ function cellStatus(result) {
 }
 
 const versionMatrix = computed(() => {
-  if (!results.value || !isMultiProductSearch.value) return null
+  if (!results.value) return null
   const pkgVersions = new Set()
-  const prodVersions = [...productVersions.value]
+  const raw = [...productVersions.value]
+  const prodVersions = [
+    ...raw.filter(pv => pv === 'upstream-pypi'),
+    ...raw.filter(pv => pv !== 'upstream-pypi')
+  ]
   const cells = {}
 
   for (const r of processedResults.value) {
@@ -635,24 +617,6 @@ const htmlFallbackIndexes = computed(() => {
             </div>
           </div>
 
-          <!-- Search upstream button -->
-          <div v-if="upstreamPypiAvailable" class="mt-3 flex justify-end">
-            <button
-              type="button"
-              :disabled="!canSubmit"
-              class="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-1.5 text-sm font-medium rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              @click="handleSearchUpstream"
-            >
-              <svg v-if="loadingUpstream" class="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              <svg v-else class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
-              </svg>
-              {{ loadingUpstream ? 'Searching...' : 'Search upstream' }}
-            </button>
-          </div>
         </form>
       </div>
     </div>
@@ -750,7 +714,7 @@ const htmlFallbackIndexes = computed(() => {
       </div>
 
       <!-- Version × Product Version Matrix -->
-      <details v-if="versionMatrix && versionMatrix.pkgVersions.length > 0" class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden group/matrix">
+      <details v-if="versionMatrix && versionMatrix.pkgVersions.length > 0" open class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden group/matrix">
         <summary class="px-4 py-3 bg-gray-100 dark:bg-gray-700 cursor-pointer flex items-center gap-2 hover:bg-gray-200/80 dark:hover:bg-gray-600 transition-colors">
           <svg class="w-3.5 h-3.5 text-gray-400 transition-transform group-open/matrix:rotate-90 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -791,11 +755,20 @@ const htmlFallbackIndexes = computed(() => {
                   class="px-4 py-3 text-center"
                 >
                   <template v-for="(cell, ci) in [versionMatrix.getCell(pkgVer, pv)]" :key="ci">
-                    <span
-                      v-if="cell"
-                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                    <button
+                      v-if="cell && pv !== 'upstream-pypi'"
+                      type="button"
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50 cursor-pointer transition-colors"
                       :title="[...cell.variants].join(', ')"
-                    >{{ cell.count }} file{{ cell.count !== 1 ? 's' : '' }}</span>
+                      @click="jumpToPv(pv)"
+                    >{{ cell.count }} file{{ cell.count !== 1 ? 's' : '' }}</button>
+                    <button
+                      v-else-if="cell"
+                      type="button"
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50 cursor-pointer transition-colors"
+                      :title="[...cell.variants].join(', ')"
+                      @click="jumpToPv('upstream-pypi')"
+                    >{{ cell.count }} file{{ cell.count !== 1 ? 's' : '' }}</button>
                     <span v-else class="text-gray-300 dark:text-gray-600">&mdash;</span>
                   </template>
                 </td>
@@ -804,57 +777,6 @@ const htmlFallbackIndexes = computed(() => {
           </table>
         </div>
       </details>
-
-      <!-- Upstream PyPI Section -->
-      <details
-        v-if="hasUpstreamData && upstreamFiles.length > 0"
-        class="rounded-xl border border-purple-300 dark:border-purple-700 bg-purple-50/30 dark:bg-purple-900/10 shadow-sm overflow-hidden group/pv"
-        open
-      >
-        <summary class="px-4 py-3 border-b border-purple-200 dark:border-purple-800 bg-purple-50/80 dark:bg-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-900/50 cursor-pointer flex items-center gap-2 transition-colors">
-          <svg class="w-3.5 h-3.5 text-purple-400 transition-transform group-open/pv:rotate-90 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-          </svg>
-          <span class="text-sm font-medium text-purple-700 dark:text-purple-300">Upstream PyPI (pypi.org)</span>
-          <span class="text-xs text-purple-500 dark:text-purple-400">&mdash; {{ upstreamFiles.length }} file{{ upstreamFiles.length !== 1 ? 's' : '' }} newer</span>
-        </summary>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="text-left text-xs uppercase tracking-wide text-purple-600 dark:text-purple-400 border-b border-purple-100 dark:border-purple-800">
-                <th class="px-4 py-3 font-medium">Version</th>
-                <th class="px-4 py-3 font-medium w-32">Architecture</th>
-                <th class="px-4 py-3 font-medium w-32">Release Date</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-purple-100 dark:divide-purple-800">
-              <tr v-for="f in upstreamFiles" :key="f.filename" class="hover:bg-purple-50/80 dark:hover:bg-purple-900/30">
-                <td class="px-4 py-2.5">
-                  <a
-                    :href="f.url"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-purple-600 dark:hover:text-purple-400 hover:underline"
-                  >{{ f.version || 'unknown' }}</a>
-                  <span class="text-xs text-gray-400 dark:text-gray-500 ml-1.5">{{ f.filename }}</span>
-                </td>
-                <td class="px-4 py-2.5 font-mono text-sm text-gray-600 dark:text-gray-300">
-                  {{ f.platform ? f.platform.replace(/^linux_/, '') : 'any' }}
-                </td>
-                <td class="px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300" :title="f.uploadTime ? relativeTime(f.uploadTime) : ''">
-                  {{ f.uploadTime ? formatUploadDate(f.uploadTime) : '—' }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </details>
-      <div
-        v-else-if="hasUpstreamData && upstreamGroup && upstreamFiles.length === 0"
-        class="rounded-xl border border-purple-200 dark:border-purple-700 bg-purple-50/30 dark:bg-purple-900/10 px-4 py-3 text-sm text-purple-600 dark:text-purple-400"
-      >
-        No newer upstream versions found on PyPI
-      </div>
 
       <!-- Product Version Pills -->
       <div v-if="internalGroups.length > 1" class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm px-4 py-3">
@@ -882,6 +804,7 @@ const htmlFallbackIndexes = computed(() => {
       <!-- Expanded Product Version Blocks -->
       <template v-for="group in internalGroups" :key="group.productVersion">
       <details
+        :id="'pv-block-' + group.productVersion"
         v-if="internalGroups.length === 1 || expandedPvs.has(group.productVersion)"
         class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden group/pv"
         open
@@ -1009,6 +932,52 @@ const htmlFallbackIndexes = computed(() => {
         </div>
       </details>
       </template>
+
+      <!-- Upstream PyPI Section -->
+      <details
+        v-if="upstreamFiles.length > 0"
+        id="pv-block-upstream-pypi"
+        class="rounded-xl border border-purple-300 dark:border-purple-700 bg-purple-50/30 dark:bg-purple-900/10 shadow-sm overflow-hidden group/pv"
+        open
+      >
+        <summary class="px-4 py-3 border-b border-purple-200 dark:border-purple-800 bg-purple-50/80 dark:bg-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-900/50 cursor-pointer flex items-center gap-2 transition-colors">
+          <svg class="w-3.5 h-3.5 text-purple-400 transition-transform group-open/pv:rotate-90 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+          </svg>
+          <span class="text-sm font-medium text-purple-700 dark:text-purple-300">Upstream PyPI (pypi.org)</span>
+          <span class="text-xs text-purple-500 dark:text-purple-400">&mdash; {{ upstreamFiles.length }} file{{ upstreamFiles.length !== 1 ? 's' : '' }} newer</span>
+        </summary>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left text-xs uppercase tracking-wide text-purple-600 dark:text-purple-400 border-b border-purple-100 dark:border-purple-800">
+                <th class="px-4 py-3 font-medium">Version</th>
+                <th class="px-4 py-3 font-medium w-32">Architecture</th>
+                <th class="px-4 py-3 font-medium w-32">Release Date</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-purple-100 dark:divide-purple-800">
+              <tr v-for="f in upstreamFiles" :key="f.filename" class="hover:bg-purple-50/80 dark:hover:bg-purple-900/30">
+                <td class="px-4 py-2.5">
+                  <a
+                    :href="f.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-purple-600 dark:hover:text-purple-400 hover:underline"
+                  >{{ f.version || 'unknown' }}</a>
+                  <span class="text-xs text-gray-400 dark:text-gray-500 ml-1.5">{{ f.filename }}</span>
+                </td>
+                <td class="px-4 py-2.5 font-mono text-sm text-gray-600 dark:text-gray-300">
+                  {{ f.platform ? f.platform.replace(/^linux_/, '') : 'any' }}
+                </td>
+                <td class="px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300" :title="f.uploadTime ? relativeTime(f.uploadTime) : ''">
+                  {{ f.uploadTime ? formatUploadDate(f.uploadTime) : '—' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
 
       <!-- Version Breakdown (collapsed by default) -->
       <details v-if="showVersionBreakdown" class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden shadow-sm group/vb">
