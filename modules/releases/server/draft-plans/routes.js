@@ -85,6 +85,21 @@ module.exports = function registerDraftPlanRoutes(router, context) {
 
   // ─── Fixed-path routes (before parameterized) ──────────────────────
 
+  /**
+   * @openapi
+   * /api/modules/releases/draft-plans/releases:
+   *   get:
+   *     tags: [Releases]
+   *     summary: List draft plan versions with health summary
+   *     parameters:
+   *       - in: query
+   *         name: product
+   *         schema: { type: string }
+   *         description: Filter by product (e.g. RHOAI)
+   *     responses:
+   *       200:
+   *         description: Draft plan releases with health data
+   */
   router.get('/releases', requireAuth, requireScope('releases:read'), function(req, res) {
     var productFilter = req.query.product || null;
     var results = [];
@@ -138,6 +153,24 @@ module.exports = function registerDraftPlanRoutes(router, context) {
     });
   });
 
+  /**
+   * @openapi
+   * /api/modules/releases/draft-plans/refresh:
+   *   post:
+   *     tags: [Releases]
+   *     summary: Trigger draft plans data refresh from GitLab
+   *     responses:
+   *       200:
+   *         description: Refresh result
+   *       400:
+   *         description: Fetch is disabled
+   *       409:
+   *         description: Global refresh already in progress
+   *       429:
+   *         description: Cooldown active
+   *       500:
+   *         description: No token configured or fetch error
+   */
   router.post('/refresh', requireAuth, requireScope('releases:write'), async function(req, res) {
     if (isRefreshRunning && isRefreshRunning()) {
       return res.status(409).json({ status: 'error', message: 'A global refresh is already in progress' });
@@ -179,6 +212,16 @@ module.exports = function registerDraftPlanRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/releases/draft-plans/refresh/status:
+   *   get:
+   *     tags: [Releases]
+   *     summary: Get draft plans refresh progress and last fetch info
+   *     responses:
+   *       200:
+   *         description: Refresh status
+   */
   router.get('/refresh/status', requireAuth, requireScope('releases:read'), function(req, res) {
     var lastFetch = storage.readFromStorage(DATA_PREFIX + '/last-fetch.json');
     res.json({
@@ -189,6 +232,16 @@ module.exports = function registerDraftPlanRoutes(router, context) {
     });
   });
 
+  /**
+   * @openapi
+   * /api/modules/releases/draft-plans/config:
+   *   get:
+   *     tags: [Releases]
+   *     summary: Get draft plans fetch configuration
+   *     responses:
+   *       200:
+   *         description: Current configuration with token status
+   */
   router.get('/config', requireAuth, requireScope('releases:write'), function(req, res) {
     var config = loadConfig();
     res.json(Object.assign({}, config, {
@@ -197,11 +250,23 @@ module.exports = function registerDraftPlanRoutes(router, context) {
     }));
   });
 
+  /**
+   * @openapi
+   * /api/modules/releases/draft-plans/config:
+   *   post:
+   *     tags: [Releases]
+   *     summary: Update draft plans fetch configuration
+   *     responses:
+   *       200:
+   *         description: Configuration saved (optionally triggers fetch if newly enabled)
+   *       400:
+   *         description: Invalid configuration values
+   */
   router.post('/config', requireAuth, requireScope('releases:write'), async function(req, res) {
     try {
       validateConfig(req.body);
       var oldConfig = loadConfig();
-      var config = Object.assign({}, DEFAULT_CONFIG, req.body);
+      var config = Object.assign({}, oldConfig, req.body);
       saveConfig(config);
 
       logAudit(storage.readFromStorage, storage.writeToStorage, {
@@ -230,6 +295,30 @@ module.exports = function registerDraftPlanRoutes(router, context) {
 
   // ─── Parameterized routes ──────────────────────────────────────────
 
+  /**
+   * @openapi
+   * /api/modules/releases/draft-plans/{version}:
+   *   get:
+   *     tags: [Releases]
+   *     summary: Get full draft plan for a specific version
+   *     parameters:
+   *       - in: path
+   *         name: version
+   *         required: true
+   *         schema: { type: string }
+   *         description: Release version (e.g. 3.5)
+   *       - in: query
+   *         name: product
+   *         schema: { type: string }
+   *         description: Filter by product
+   *     responses:
+   *       200:
+   *         description: Draft plan data for the version
+   *       400:
+   *         description: Invalid version format
+   *       404:
+   *         description: No data found for version
+   */
   router.get('/:version', requireAuth, requireScope('releases:read'), function(req, res) {
     var version = req.params.version;
     if (!/^[a-zA-Z0-9._-]{1,50}$/.test(version)) {
@@ -271,6 +360,30 @@ module.exports = function registerDraftPlanRoutes(router, context) {
     res.json(result);
   });
 
+  /**
+   * @openapi
+   * /api/modules/releases/draft-plans/{version}/health:
+   *   get:
+   *     tags: [Releases]
+   *     summary: Get health details for a specific version
+   *     parameters:
+   *       - in: path
+   *         name: version
+   *         required: true
+   *         schema: { type: string }
+   *         description: Release version (e.g. 3.5)
+   *       - in: query
+   *         name: product
+   *         schema: { type: string }
+   *         description: Filter by product
+   *     responses:
+   *       200:
+   *         description: Health data for the version
+   *       400:
+   *         description: Invalid version format
+   *       404:
+   *         description: No health data found for version
+   */
   router.get('/:version/health', requireAuth, requireScope('releases:read'), function(req, res) {
     var version = req.params.version;
     if (!/^[a-zA-Z0-9._-]{1,50}$/.test(version)) {
