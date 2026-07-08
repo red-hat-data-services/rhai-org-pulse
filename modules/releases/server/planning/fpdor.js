@@ -58,14 +58,18 @@ function evalRubricItem(name, rubricData, dimension) {
   return { name: name, pass: passed, source: 'strat-pipeline', state: passed ? 'passed' : 'failed' }
 }
 
+function evalJiraItem(name, passed) {
+  return { name: name, pass: passed, source: 'jira', state: passed ? 'passed' : 'failed' }
+}
+
 function computeFPDoRReadiness(feature, rubricData) {
   var items = [
-    { name: 'RICE Score', pass: hasRiceScore(feature), source: 'jira', state: hasRiceScore(feature) ? 'passed' : 'failed' },
-    { name: 'Sizing & Breakdown', pass: hasSizing(feature), source: 'jira', state: hasSizing(feature) ? 'passed' : 'failed' },
-    { name: 'Target Version + Release Type', pass: hasTargetAndReleaseType(feature), source: 'jira', state: hasTargetAndReleaseType(feature) ? 'passed' : 'failed' },
-    { name: 'Assignee + PM', pass: hasOwners(feature), source: 'jira', state: hasOwners(feature) ? 'passed' : 'failed' },
-    { name: 'Components', pass: hasComponents(feature), source: 'jira', state: hasComponents(feature) ? 'passed' : 'failed' },
-    { name: 'Cross-functional Engagement', pass: hasCrossFunctional(feature), source: 'jira', state: hasCrossFunctional(feature) ? 'passed' : 'failed' },
+    evalJiraItem('RICE Score', hasRiceScore(feature)),
+    evalJiraItem('Sizing & Breakdown', hasSizing(feature)),
+    evalJiraItem('Target Version + Release Type', hasTargetAndReleaseType(feature)),
+    evalJiraItem('Assignee + PM', hasOwners(feature)),
+    evalJiraItem('Components', hasComponents(feature)),
+    evalJiraItem('Cross-functional Engagement', hasCrossFunctional(feature)),
     evalRubricItem('Acceptance Criteria', rubricData, 'testability'),
     evalRubricItem('Architecture Review', rubricData, 'architecture'),
     evalRubricItem('Risks & Assumptions', rubricData, 'feasibility')
