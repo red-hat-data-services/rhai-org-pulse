@@ -33,6 +33,21 @@
         "key": "NIGHTLY_PIPELINE_GITLAB_TOKEN",
         "description": "GitLab PAT for nightly pipeline schedule queries (overrides GITLAB_TOKEN)",
         "required": false
+      },
+      {
+        "key": "NIGHTLY_PIPELINE_GITLAB_BASE_URL",
+        "description": "GitLab instance base URL (defaults to https://gitlab.com)",
+        "required": false
+      },
+      {
+        "key": "NIGHTLY_PIPELINE_GITLAB_PROJECT",
+        "description": "URL-encoded GitLab project path (defaults to redhat%2Frhel-ai%2Frhai%2Fpipeline)",
+        "required": false
+      },
+      {
+        "key": "NIGHTLY_PIPELINE_SCHEDULE_ID",
+        "description": "GitLab pipeline schedule ID (defaults to 4256496)",
+        "required": false
       }
     ]
   },

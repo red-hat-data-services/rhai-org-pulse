@@ -3,18 +3,24 @@ const JOBS_PER_PAGE = 100;
 const PACKAGES_CONCURRENCY = 5;
 const PREFERRED_VARIANT = 'cpu-ubi9';
 
+const PACKAGES_CACHE_MAX = 200;
 const packagesCache = new Map();
+const SAFE_NAME_RE = /^[a-zA-Z0-9_.-]+$/;
 
-let GITLAB_BASE_URL = 'https://gitlab.com';
-let GITLAB_PROJECT = 'redhat%2Frhel-ai%2Frhai%2Fpipeline';
-let SCHEDULE_ID = '4256496';
+const DEFAULTS = {
+  gitlabBaseUrl: 'https://gitlab.com',
+  gitlabProject: 'redhat%2Frhel-ai%2Frhai%2Fpipeline',
+  scheduleId: '4256496',
+};
 
 function getToken(secrets) {
   return secrets.NIGHTLY_PIPELINE_GITLAB_TOKEN || secrets.GITLAB_TOKEN || null;
 }
 
+let _cfg = { ...DEFAULTS };
+
 async function gitlabApi(path, token) {
-  const url = `${GITLAB_BASE_URL}/api/v4${path}`;
+  const url = `${_cfg.gitlabBaseUrl}/api/v4${path}`;
   const res = await fetch(url, {
     headers: { 'PRIVATE-TOKEN': token, 'Accept': 'application/json' },
     signal: AbortSignal.timeout(API_TIMEOUT),
@@ -177,7 +183,7 @@ async function concurrentMap(items, fn, limit) {
 }
 
 async function fetchPipelineSha(token, pipelineId) {
-  const pipeline = await gitlabApi(`/projects/${GITLAB_PROJECT}/pipelines/${pipelineId}`, token);
+  const pipeline = await gitlabApi(`/projects/${_cfg.gitlabProject}/pipelines/${pipelineId}`, token);
   return pipeline.sha;
 }
 
@@ -186,7 +192,7 @@ async function fetchTreeListing(token, path, ref) {
   let page = 1;
   while (true) {
     const entries = await gitlabApi(
-      `/projects/${GITLAB_PROJECT}/repository/tree?path=${encodeURIComponent(path)}&ref=${ref}&per_page=100&page=${page}`,
+      `/projects/${_cfg.gitlabProject}/repository/tree?path=${encodeURIComponent(path)}&ref=${ref}&per_page=100&page=${page}`,
       token
     );
     allEntries.push(...entries);
@@ -197,8 +203,8 @@ async function fetchTreeListing(token, path, ref) {
 }
 
 async function fetchFileRaw(token, filePath, ref) {
-  const url = `/projects/${GITLAB_PROJECT}/repository/files/${encodeURIComponent(filePath)}/raw?ref=${ref}`;
-  const res = await fetch(`${GITLAB_BASE_URL}/api/v4${url}`, {
+  const url = `/projects/${_cfg.gitlabProject}/repository/files/${encodeURIComponent(filePath)}/raw?ref=${ref}`;
+  const res = await fetch(`${_cfg.gitlabBaseUrl}/api/v4${url}`, {
     headers: { 'PRIVATE-TOKEN': token, 'Accept': 'text/plain' },
     signal: AbortSignal.timeout(API_TIMEOUT),
   });
@@ -208,7 +214,12 @@ async function fetchFileRaw(token, filePath, ref) {
 
 async function fetchCollectionPackages(token, sha, collection, variant) {
   const cacheKey = `${sha}:${collection}:${variant}`;
-  if (packagesCache.has(cacheKey)) return packagesCache.get(cacheKey);
+  if (packagesCache.has(cacheKey)) {
+    const cached = packagesCache.get(cacheKey);
+    packagesCache.delete(cacheKey);
+    packagesCache.set(cacheKey, cached);
+    return cached;
+  }
 
   const reqPath = `collections/${collection}/${variant}/requirements`;
   let tree;
@@ -237,6 +248,10 @@ async function fetchCollectionPackages(token, sha, collection, variant) {
   for (const g of validGroups) g.packages.forEach(p => allPkgs.add(p));
 
   const result = { collection, variant, sha, groups: validGroups, totalCount: allPkgs.size };
+  if (packagesCache.size >= PACKAGES_CACHE_MAX) {
+    const oldest = packagesCache.keys().next().value;
+    packagesCache.delete(oldest);
+  }
   packagesCache.set(cacheKey, result);
   return result;
 }
@@ -259,7 +274,7 @@ async function fetchAllJobs(token, pipelineId) {
   let page = 1;
   while (true) {
     const jobs = await gitlabApi(
-      `/projects/${GITLAB_PROJECT}/pipelines/${pipelineId}/jobs?per_page=${JOBS_PER_PAGE}&page=${page}`,
+      `/projects/${_cfg.gitlabProject}/pipelines/${pipelineId}/jobs?per_page=${JOBS_PER_PAGE}&page=${page}`,
       token
     );
     allJobs.push(...jobs);
@@ -273,11 +288,34 @@ module.exports = function registerNightlyPipelineRoutes(router, context) {
   const secrets = context.secrets || {};
 
   if (context.resolveSecret) {
-    GITLAB_BASE_URL = (context.resolveSecret('NIGHTLY_PIPELINE_GITLAB_BASE_URL') || GITLAB_BASE_URL).replace(/\/+$/, '');
-    GITLAB_PROJECT = context.resolveSecret('NIGHTLY_PIPELINE_GITLAB_PROJECT') || GITLAB_PROJECT;
-    SCHEDULE_ID = context.resolveSecret('NIGHTLY_PIPELINE_SCHEDULE_ID') || SCHEDULE_ID;
+    _cfg = {
+      gitlabBaseUrl: (context.resolveSecret('NIGHTLY_PIPELINE_GITLAB_BASE_URL') || DEFAULTS.gitlabBaseUrl).replace(/\/+$/, ''),
+      gitlabProject: context.resolveSecret('NIGHTLY_PIPELINE_GITLAB_PROJECT') || DEFAULTS.gitlabProject,
+      scheduleId: context.resolveSecret('NIGHTLY_PIPELINE_SCHEDULE_ID') || DEFAULTS.scheduleId,
+    };
   }
 
+  /**
+   * @openapi
+   * /api/modules/product-builds/nightly-pipelines:
+   *   get:
+   *     tags: [Nightly Pipelines]
+   *     summary: List nightly pipeline runs with schedule metadata
+   *     parameters:
+   *       - name: limit
+   *         in: query
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 100
+   *           default: 14
+   *         description: Number of most recent pipelines to return
+   *     responses:
+   *       200:
+   *         description: Schedule metadata and sorted pipeline list
+   *       503:
+   *         description: GitLab token not configured
+   */
   router.get('/nightly-pipelines', async (req, res) => {
     const token = getToken(secrets);
     if (!token) {
@@ -287,15 +325,15 @@ module.exports = function registerNightlyPipelineRoutes(router, context) {
       const limit = Math.min(Math.max(parseInt(req.query.limit) || 14, 1), 100);
 
       const [schedule, firstPage] = await Promise.all([
-        gitlabApi(`/projects/${GITLAB_PROJECT}/pipeline_schedules/${SCHEDULE_ID}`, token),
-        gitlabApi(`/projects/${GITLAB_PROJECT}/pipeline_schedules/${SCHEDULE_ID}/pipelines?per_page=100&page=1`, token),
+        gitlabApi(`/projects/${_cfg.gitlabProject}/pipeline_schedules/${_cfg.scheduleId}`, token),
+        gitlabApi(`/projects/${_cfg.gitlabProject}/pipeline_schedules/${_cfg.scheduleId}/pipelines?per_page=100&page=1`, token),
       ]);
 
       const allPipelines = [...firstPage];
       if (firstPage.length === 100) {
         for (let page = 2; page <= 50; page++) {
           const batch = await gitlabApi(
-            `/projects/${GITLAB_PROJECT}/pipeline_schedules/${SCHEDULE_ID}/pipelines?per_page=100&page=${page}`,
+            `/projects/${_cfg.gitlabProject}/pipeline_schedules/${_cfg.scheduleId}/pipelines?per_page=100&page=${page}`,
             token
           );
           allPipelines.push(...batch);
@@ -318,8 +356,8 @@ module.exports = function registerNightlyPipelineRoutes(router, context) {
         .slice(0, limit);
 
       res.json({
-        schedule_id: Number(SCHEDULE_ID),
-        project_web_url: `${GITLAB_BASE_URL}/${decodeURIComponent(GITLAB_PROJECT)}`,
+        schedule_id: Number(_cfg.scheduleId),
+        project_web_url: `${_cfg.gitlabBaseUrl}/${decodeURIComponent(_cfg.gitlabProject)}`,
         schedule: {
           description: schedule.description,
           cron: schedule.cron,
@@ -336,6 +374,27 @@ module.exports = function registerNightlyPipelineRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/product-builds/nightly-pipelines/{pipelineId}/jobs:
+   *   get:
+   *     tags: [Nightly Pipelines]
+   *     summary: Get structured job data for a nightly pipeline run
+   *     parameters:
+   *       - name: pipelineId
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: GitLab pipeline ID
+   *     responses:
+   *       200:
+   *         description: Jobs grouped by collection/variant/arch/stage with summary counts
+   *       400:
+   *         description: Invalid pipeline ID
+   *       503:
+   *         description: GitLab token not configured
+   */
   router.get('/nightly-pipelines/:pipelineId/jobs', async (req, res) => {
     const token = getToken(secrets);
     if (!token) {
@@ -358,6 +417,38 @@ module.exports = function registerNightlyPipelineRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/product-builds/nightly-pipelines/{pipelineId}/packages:
+   *   get:
+   *     tags: [Nightly Pipelines]
+   *     summary: Get package list for a collection at a pipeline commit
+   *     parameters:
+   *       - name: pipelineId
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: GitLab pipeline ID
+   *       - name: collection
+   *         in: query
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Collection name from job parsing
+   *       - name: variant
+   *         in: query
+   *         schema:
+   *           type: string
+   *         description: Build variant (defaults to cpu-ubi9 or first available)
+   *     responses:
+   *       200:
+   *         description: Package groups by source file with total count
+   *       400:
+   *         description: Invalid pipeline ID or missing/invalid collection
+   *       503:
+   *         description: GitLab token not configured
+   */
   router.get('/nightly-pipelines/:pipelineId/packages', async (req, res) => {
     const token = getToken(secrets);
     if (!token) {
@@ -370,6 +461,9 @@ module.exports = function registerNightlyPipelineRoutes(router, context) {
     const { collection, variant } = req.query;
     if (!collection) {
       return res.status(400).json({ error: 'collection query parameter is required' });
+    }
+    if (!SAFE_NAME_RE.test(collection) || (variant && !SAFE_NAME_RE.test(variant))) {
+      return res.status(400).json({ error: 'Invalid collection or variant name' });
     }
     try {
       const sha = await fetchPipelineSha(token, pipelineId);
