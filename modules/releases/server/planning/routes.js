@@ -29,13 +29,13 @@ const healthRoutes = require('./health/health-routes')
 var { buildFeatureReadiness } = require('./feature-readiness')
 var { fetchFeatures } = require('./feature-query')
 
+const { isValidVersionParam } = require('../version-utils')
+
 const DEMO_MODE = process.env.DEMO_MODE === 'true'
 const DATA_PREFIX = 'releases/planning'
-const VERSION_RE = /^[a-zA-Z0-9._-]{1,50}$/
-const RESERVED_VERSIONS = ['__proto__', 'constructor', 'prototype']
 
 function isValidVersion(version) {
-  return VERSION_RE.test(version) && !RESERVED_VERSIONS.includes(version)
+  return isValidVersionParam(version)
 }
 
 /**
@@ -1244,7 +1244,7 @@ module.exports = function registerPlanningRoutes(router, context) {
 
     const versions = Object.keys(config.releases)
     for (let i = 0; i < versions.length; i++) {
-      if (!VERSION_RE.test(versions[i]) || RESERVED_VERSIONS.includes(versions[i])) {
+      if (!isValidVersion(versions[i])) {
         return res.status(400).json({ error: 'Invalid version: ' + versions[i] })
       }
     }

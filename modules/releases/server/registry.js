@@ -9,16 +9,12 @@
 
 const { logAudit } = require('./planning/audit-log');
 const { loadRegistryConfig, saveRegistryConfig } = require('./registry-config');
+const { stripZStream, normalizeVersionName } = require('./version-utils');
 
 const REGISTRY_FILE = 'releases/registry.json';
 const SCHEMA_VERSION = 1;
 
 const VALID_STATES = ['active', 'archived'];
-
-function stripZStream(value) {
-  if (!value) return value;
-  return String(value).replace(/\.z\b/gi, '');
-}
 
 // Fields controlled by Product Pages — cannot be edited locally on PP-sourced releases
 const PP_MANAGED_FIELDS = ['displayName', 'productPagesShortname', 'productPagesVersion', 'milestones'];
@@ -80,34 +76,6 @@ function normalizeRelease(input) {
     createdAt: input.createdAt || now,
     updatedAt: now
   };
-}
-
-/**
- * Normalize a version name for fuzzy matching.
- * Lowercases, strips ".z" suffixes (Product Pages z-stream convention),
- * collapses separators (hyphens, dots) to spaces, and handles the
- * RHAISTRAT naming convention ("3.5 GA RHOAI RELEASE" → "rhoai 3 5").
- * @param {string} name
- * @returns {string}
- */
-function normalizeVersionName(name) {
-  var s = String(name).toLowerCase();
-  // Strip ".z" suffix (but not ".z." — only terminal .z)
-  s = s.replace(/\.z(?=$|\.)/g, '');
-  // Collapse hyphens and dots to spaces
-  s = s.replace(/[-._]+/g, ' ');
-  // Collapse multiple spaces
-  s = s.replace(/\s+/g, ' ');
-  s = s.trim();
-  // RHAISTRAT uses "3.5 GA RHOAI RELEASE" / "3.5 EA1 RHOAI RELEASE" format.
-  // Rearrange to canonical "rhoai 3 5" / "rhoai 3 5 ea1" form.
-  var rhaistrat = /^(\d+\s+\d+)\s+(ga|ea\d+)\s+(rhoai|rhaii|rhelai)\s+release$/.exec(s);
-  if (rhaistrat) {
-    s = rhaistrat[2] === 'ga'
-      ? rhaistrat[3] + ' ' + rhaistrat[1]
-      : rhaistrat[3] + ' ' + rhaistrat[1] + ' ' + rhaistrat[2];
-  }
-  return s;
 }
 
 /**

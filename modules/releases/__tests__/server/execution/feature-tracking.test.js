@@ -391,45 +391,50 @@ describe('classifyFeature', function () {
 
 describe('normalizeVersionName', function () {
   it('normalizes dot-separated EA tag (rhoai style)', function () {
-    expect(normalizeVersionName('rhoai-3.5.EA2')).toBe('rhoai-3.5ea2')
+    expect(normalizeVersionName('rhoai-3.5.EA2')).toBe('rhoai 3 5 ea2')
   })
 
   it('normalizes space-separated EA tag (RHAII style)', function () {
-    expect(normalizeVersionName('RHAII-3.5 EA2')).toBe('rhaii-3.5ea2')
+    expect(normalizeVersionName('RHAII-3.5 EA2')).toBe('rhaii 3 5 ea2')
   })
 
   it('normalizes concatenated EA tag (rhelai style)', function () {
-    expect(normalizeVersionName('rhelai-3.5EA2')).toBe('rhelai-3.5ea2')
+    expect(normalizeVersionName('rhelai-3.5EA2')).toBe('rhelai 3 5ea2')
   })
 
   it('strips trailing "release" suffix', function () {
-    expect(normalizeVersionName('rhelai-3.5 EA2 release')).toBe('rhelai-3.5ea2')
+    expect(normalizeVersionName('rhelai-3.5 EA2 release')).toBe('rhelai 3 5 ea2')
   })
 
   it('normalizes hyphenated EA tag (RHELAI-3.4 EA-1)', function () {
-    expect(normalizeVersionName('RHELAI-3.4 EA-1')).toBe('rhelai-3.4ea1')
+    expect(normalizeVersionName('RHELAI-3.4 EA-1')).toBe('rhelai 3 4 ea1')
   })
 
   it('normalizes GA versions consistently', function () {
-    expect(normalizeVersionName('rhoai-3.5')).toBe('rhoai-3.5')
-    expect(normalizeVersionName('RHAII-3.5')).toBe('rhaii-3.5')
+    expect(normalizeVersionName('rhoai-3.5')).toBe('rhoai 3 5')
+    expect(normalizeVersionName('RHAII-3.5')).toBe('rhaii 3 5')
   })
 
-  it('normalizes space-separated GA tag', function () {
-    expect(normalizeVersionName('RHAII-3.5 GA')).toBe('rhaii-3.5ga')
-    expect(normalizeVersionName('RHAII-3.5 ga')).toBe('rhaii-3.5ga')
+  it('normalizes space-separated GA tag (strips trailing GA)', function () {
+    expect(normalizeVersionName('RHAII-3.5 GA')).toBe('rhaii 3 5')
+    expect(normalizeVersionName('RHAII-3.5 ga')).toBe('rhaii 3 5')
   })
 
   it('strips .z notation from z-stream releases', function () {
-    expect(normalizeVersionName('rhoai-3.5.z')).toBe('rhoai-3.5')
-    expect(normalizeVersionName('rhoai-3.5.z.EA1')).toBe('rhoai-3.5ea1')
-    expect(normalizeVersionName('RHAI-3.6.z.EA2')).toBe('rhai-3.6ea2')
-    expect(normalizeVersionName('rhelai-3.5.z EA2 release')).toBe('rhelai-3.5ea2')
+    expect(normalizeVersionName('rhoai-3.5.z')).toBe('rhoai 3 5')
+    expect(normalizeVersionName('rhoai-3.5.z.EA1')).toBe('rhoai 3 5 ea1')
+    expect(normalizeVersionName('RHAI-3.6.z.EA2')).toBe('rhai 3 6 ea2')
+    expect(normalizeVersionName('rhelai-3.5.z EA2 release')).toBe('rhelai 3 5 ea2')
   })
 
   it('handles null/empty gracefully', function () {
     expect(normalizeVersionName(null)).toBe('')
     expect(normalizeVersionName('')).toBe('')
+  })
+
+  it('normalizes RHAISTRAT format (version-first)', function () {
+    expect(normalizeVersionName('3.5 EA1 RHOAI RELEASE')).toBe('rhoai 3 5 ea1')
+    expect(normalizeVersionName('3.5 GA RHOAI RELEASE')).toBe('rhoai 3 5')
   })
 })
 

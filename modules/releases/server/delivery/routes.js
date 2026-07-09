@@ -5,6 +5,7 @@ const productPages = require('./product-pages')
 const { fetchProductsByShortname, fetchAllProducts, getProductPagesToken, getAuthStatus } = productPages
 const registerConformaRoutes = require('./conforma')
 const { logAudit } = require('../planning/audit-log')
+const { stripZStream: sharedStripZStream, normalizeVersionName, extractProduct: sharedExtractProduct } = require('../version-utils')
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true'
 
@@ -21,27 +22,12 @@ function normalizeText(value) {
   return String(value || '').trim().toLowerCase()
 }
 
-/**
- * Normalizes release/fix version names by removing z-stream notation.
- * Z-stream releases (async/minor updates) should group with parent version.
- * Examples:
- *   "rhoai-3.5.z" → "rhoai-3.5"
- *   "rhoai-3.5.z.EA1" → "rhoai-3.5.EA1"
- *   "RHAI 3.5.z" → "RHAI 3.5"
- */
 function normalizeReleaseNumber(value) {
-  if (!value) return value
-  // Remove .z notation (z-stream releases)
-  return String(value).replace(/\.z\b/gi, '')
+  return sharedStripZStream(value)
 }
 
 function normalizeKey(value) {
-  // Remove common suffixes like " release", " GA", etc. before normalizing
-  let normalized = normalizeText(value);
-  normalized = normalized.replace(/\s+release$/i, ''); // "rhelai-3.5 EA1 release" → "rhelai-3.5 ea1"
-  normalized = normalized.replace(/\s+ga$/i, '');      // "RHAII-3.5 GA" → "rhaii-3.5"
-  normalized = normalized.replace(/\.z\b/gi, '');      // "rhoai-3.5.z.EA1" → "rhoai-3.5.ea1"
-  return normalized.replace(/[^a-z0-9]/g, '');
+  return normalizeVersionName(value).replace(/[^a-z0-9]/g, '');
 }
 
 function toIsoDate(dateValue) {
@@ -2006,12 +1992,8 @@ module.exports = function registerRoutes(router, context) {
     }
   })
 
-  // Normalize product prefix: rhaiis/RHAIIS -> rhaii, preserve rhoai/rhelai/rhaii
   function normalizeProduct(versionName) {
-    const lower = versionName.toLowerCase()
-    if (lower.startsWith('rhaiis-')) return 'rhaii'
-    const dashIdx = lower.indexOf('-')
-    return dashIdx > 0 ? lower.substring(0, dashIdx) : lower
+    return sharedExtractProduct(versionName) || versionName.toLowerCase()
   }
 
   function compute90DaySummary(configReleases, allBugs, storedVersions) {

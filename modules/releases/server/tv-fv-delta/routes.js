@@ -1,4 +1,5 @@
 const { jiraRequest, JIRA_HOST, fetchAllJqlResults, fetchProjectVersions } = require('../../../../shared/server/jira')
+const { normalizeVersionName: sharedNormalize } = require('../version-utils')
 
 const JIRA_BROWSE = JIRA_HOST + '/browse'
 const JIRA_SEARCH = JIRA_HOST + '/issues/?jql='
@@ -78,12 +79,8 @@ const JQL_FIELDS = [
 
 function normVer(v) {
   if (!v || v === 'null' || v === 'undefined') return null
-  v = String(v).trim()
-  const upper = v.toUpperCase()
-  if (upper.startsWith('RHOAI_')) {
-    v = 'rhoai-' + upper.slice(6).replace(/\.0(?=_|$)/g, '').replace(/_/g, '.')
-  }
-  return v.toLowerCase()
+  var result = sharedNormalize(v)
+  return result || null
 }
 
 function parseVersions(vStr) {
@@ -101,14 +98,13 @@ function extractVersionNames(fixVersions) {
 }
 
 /**
- * Detect z-stream (patch) releases — e.g. rhoai-3.4.1, rhoai-3.5.2.
+ * Detect z-stream (patch) releases — e.g. rhoai-3.4.1, rhaii-3.5.2.
  * These carry bug fixes only, not features, so they don't belong in TV/FV analysis.
- * Pattern: rhoai-X.Y.Z where Z is purely numeric (vs EA1, EA2 which are feature milestones).
+ * Pattern: {product}-X.Y.Z where Z is purely numeric (vs EA1, EA2 which are feature milestones).
  */
 function isZStream(versionName) {
   if (!versionName) return false
-  // Match rhoai-<major>.<minor>.<patch> where patch is a number
-  return /^rhoai-\d+\.\d+\.\d+$/i.test(versionName.trim())
+  return /^(?:rhoai|rhaiis|rhaii|rhelai|rhai)-\d+\.\d+\.\d+$/i.test(versionName.trim())
 }
 
 // ---------------------------------------------------------------------------

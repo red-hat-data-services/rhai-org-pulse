@@ -14,6 +14,7 @@
 const { readRegistry } = require('../registry')
 const { fetchPlanningFreezeDatesFromSchedule } = require('../delivery/product-pages')
 const { CUSTOM_FIELDS, transformIssue } = require('../hygiene/jira-fetch')
+const versionUtils = require('../version-utils')
 
 const PP_CACHE_FILE = 'releases/delivery/product-pages-releases-cache.json'
 const PLANNING_CONFIG_FILE = 'releases/planning/config.json'
@@ -96,63 +97,12 @@ function cacheKey(portfolioVersion) {
   return TRACKING_CACHE_PREFIX + portfolioVersion + '.json'
 }
 
-/**
- * Extract the product prefix from a release number.
- * e.g. "rhoai-3.5.EA1" → "rhoai", "RHAII-3.5" → "rhaii"
- */
 function extractProduct(releaseNumber) {
-  const s = (releaseNumber || '').toLowerCase()
-  const dash = s.indexOf('-')
-  return dash > 0 ? s.slice(0, dash) : s
-}
-
-/**
- * Normalize a version string for comparison: lowercase, strip separators
- * between version number and EA/GA tag, and strip trailing suffixes like
- * "release". Handles all observed naming conventions:
- *   "rhoai-3.5.EA2"            → "rhoai-3.5ea2"
- *   "RHAII-3.5 EA2"            → "rhaii-3.5ea2"
- *   "rhelai-3.5EA2"            → "rhelai-3.5ea2"
- *   "rhelai-3.5 EA2 release"   → "rhelai-3.5ea2"
- *   "RHELAI-3.4 EA-1"          → "rhelai-3.4ea1"
- */
-function stripZStream(value) {
-  if (!value) return value
-  return String(value).replace(/\.z\b/gi, '')
+  return versionUtils.extractProduct(releaseNumber) || (releaseNumber || '').toLowerCase()
 }
 
 function normalizeVersionName(name) {
-  let s = (name || '').toLowerCase()
-  s = stripZStream(s)
-  if (s.endsWith(' release')) s = s.slice(0, -8)
-  s = s.trimEnd()
-
-  const SEPS = ' ._-'
-  let result = ''
-  let i = 0
-  while (i < s.length) {
-    const ch = s[i]
-
-    if (SEPS.includes(ch) && i > 0 && s.charCodeAt(i - 1) >= 48 && s.charCodeAt(i - 1) <= 57) {
-      let j = i
-      while (j < s.length && SEPS.includes(s[j])) j++
-      const tag = s.slice(j, j + 2)
-      if (tag === 'ea' || tag === 'ga') {
-        i = j
-        continue
-      }
-    }
-
-    if (ch === 'e' && i + 3 < s.length && s[i + 1] === 'a' && s[i + 2] === '-' && s.charCodeAt(i + 3) >= 48 && s.charCodeAt(i + 3) <= 57) {
-      result += 'ea'
-      i += 3
-      continue
-    }
-
-    result += s[i]
-    i++
-  }
-  return result
+  return versionUtils.normalizeVersionName(name || '')
 }
 
 const jiraVersionsCache = { versions: null, fetchedAt: 0 }
@@ -205,7 +155,7 @@ async function resolveProductVersionsFromJira(portfolioVersion, jiraRequestFn, t
     if (!product) continue
 
     const normalizedName = normalizeVersionName(v.name)
-    const versionPart = normalizedName.replace(/^[a-z]+-/, '')
+    const versionPart = normalizedName.replace(/^(?:rhoai|rhaiis|rhaii|rhelai|rhai)\s+/, '')
 
     if (versionPart === normalizedPortfolio) {
       if (!productMap[product]) {
@@ -601,9 +551,10 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
     const versionMap = {}
 
     function addVersion(releaseNumber) {
-      const normalized = stripZStream(releaseNumber)
-      const product = extractProduct(normalized)
-      const versionPart = (normalized || '').replace(/^[a-z]+-/i, '')
+      const components = versionUtils.parseVersionComponents(releaseNumber)
+      if (!components) return
+      const product = components.product
+      const versionPart = components.version + (components.phase ? '.' + components.phase : '')
       if (!versionPart || !product) return
       if (EXCLUDE_VERSION_RE.test(versionPart)) return
       if (!versionMap[versionPart]) {

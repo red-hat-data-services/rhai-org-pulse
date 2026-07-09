@@ -70,11 +70,13 @@ describe('normalizeVersionName', () => {
     expect(normalizeVersionName('3.5 GA RHAII RELEASE')).toBe(normalizeVersionName('RHAII-3.5'));
   });
 
-  it('does not rearrange non-RHAISTRAT patterns', () => {
-    // z-stream versions with different format should NOT match
-    expect(normalizeVersionName('RHOAI 3.3.5 GA')).toBe('rhoai 3 3 5 ga');
-    expect(normalizeVersionName('RHAII 3.3.5 Release')).toBe('rhaii 3 3 5 release');
+  it('handles product-first formats with GA stripping', () => {
+    expect(normalizeVersionName('RHOAI 3.3.5 GA')).toBe('rhoai 3 3 5');
     expect(normalizeVersionName('rhai-3.5')).toBe('rhai 3 5');
+  });
+
+  it('strips trailing release from version-first patterns', () => {
+    expect(normalizeVersionName('RHAII 3.3.5 Release')).toBe('rhaii 3 3 5');
   });
 });
 
