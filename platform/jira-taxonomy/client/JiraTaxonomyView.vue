@@ -78,7 +78,7 @@
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
               <tr
                 v-for="comp in filteredComponents"
-                :key="comp.id"
+                :key="comp.name"
                 class="hover:bg-gray-50 dark:hover:bg-gray-700/50"
               >
                 <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">
@@ -126,7 +126,7 @@ const filteredComponents = computed(() => {
   const q = searchQuery.value.toLowerCase().trim()
   if (q) {
     result = result.filter(c =>
-      c.name.toLowerCase().includes(q) || (c.description || '').toLowerCase().includes(q) || (c.lead && c.lead.displayName || '').toLowerCase().includes(q)
+      c.name.toLowerCase().includes(q) || (c.description || '').toLowerCase().includes(q) || (c.lead?.displayName || '').toLowerCase().includes(q)
     )
   }
 

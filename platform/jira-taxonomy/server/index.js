@@ -10,12 +10,12 @@
  * data into the browse-friendly format.
  */
 
-var COMPONENT_OPTIONS_NAME = 'component';
+const COMPONENT_OPTIONS_NAME = 'component';
 
 module.exports = function registerJiraTaxonomyRoutes(router, context) {
-  var storage = context.storage;
-  var requireScope = context.requireScope;
-  var readFromStorage = storage.readFromStorage;
+  const storage = context.storage;
+  const requireScope = context.requireScope;
+  const readFromStorage = storage.readFromStorage;
 
   /**
    * Build the component browse response from the field-options store.
@@ -23,14 +23,14 @@ module.exports = function registerJiraTaxonomyRoutes(router, context) {
    * component array format expected by the taxonomy browse UI.
    */
   function buildComponentResponse() {
-    var data = readFromStorage('team-data/field-options/' + COMPONENT_OPTIONS_NAME + '.json');
+    const data = readFromStorage('team-data/field-options/' + COMPONENT_OPTIONS_NAME + '.json');
     if (!data || !data.values) {
       return { fetchedAt: null, project: null, components: [], source: null };
     }
 
-    var richValues = data.richValues || {};
-    var components = data.values.map(function(name) {
-      var rich = richValues[name] || {};
+    const richValues = data.richValues || {};
+    const components = data.values.map(function(name) {
+      const rich = richValues[name] || {};
       return {
         id: rich.id || '',
         name: name,
