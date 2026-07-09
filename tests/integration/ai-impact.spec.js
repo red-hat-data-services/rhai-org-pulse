@@ -222,7 +222,7 @@ test.describe('AI Impact Views @ai-impact', () => {
     const effortHeading = page.locator('text=Effort Breakdown');
     await expect(effortHeading).toBeVisible();
 
-    const ttfHeading = page.locator('text=Time to Fix');
+    const ttfHeading = page.getByRole('heading', { name: 'Time to Fix' });
     await expect(ttfHeading).toBeVisible();
 
     const effortColumn = page.locator('th:has-text("Effort")');
