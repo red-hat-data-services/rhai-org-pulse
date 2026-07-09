@@ -1,4 +1,4 @@
-var { CUSTOM_FIELDS, serializeField } = require('../hygiene/jira-fetch')
+var { CUSTOM_FIELDS, serializeField, numericField } = require('../hygiene/jira-fetch')
 
 var QUERY_FIELDS = [
   'summary', 'status', 'issuetype', 'assignee', 'fixVersions',
@@ -57,7 +57,7 @@ function normalizeIssue(issue) {
     fixVersions: fixVersions,
     targetVersions: targetVersions,
     priority: priority,
-    riceScore: fields[CUSTOM_FIELDS.riceScore] || null,
+    riceScore: numericField(fields[CUSTOM_FIELDS.riceScore]),
     statusSummary: serializeField(fields[CUSTOM_FIELDS.statusSummary]),
     colorStatus: serializeField(fields[CUSTOM_FIELDS.colorStatus]),
     releaseType: serializeField(fields[CUSTOM_FIELDS.releaseType]),

@@ -9,7 +9,8 @@
 const {
   CUSTOM_FIELDS,
   serializeField,
-  computeRiceStatus
+  computeRiceStatus,
+  numericField
 } = require('../../server/hygiene/jira-fetch');
 const { deriveHumanReviewStatus, extractSignOffInfo } = require('./ai-review-fields');
 
@@ -210,7 +211,7 @@ function transformForEnrichment(rawIssue) {
     components,
     docsRequired: serializeField(fields[CUSTOM_FIELDS.docsRequired]),
     targetEnd: fields[CUSTOM_FIELDS.targetEnd] || null,
-    riceScore: fields[CUSTOM_FIELDS.riceScore] || null,
+    riceScore: numericField(fields[CUSTOM_FIELDS.riceScore]),
     riceStatus: computeRiceStatus(fields),
     isBlocked,
     linkedRfeKey,

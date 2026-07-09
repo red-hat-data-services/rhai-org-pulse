@@ -5,7 +5,8 @@ const props = defineProps({
   dor: { type: Object, default: null },
   dod: { type: Object, default: null },
   planningStatus: { type: String, default: '' },
-  planningChecks: { type: Object, default: null }
+  planningChecks: { type: Object, default: null },
+  fpdor: { type: Object, default: null }
 })
 
 var STATUS_LABELS = {
@@ -92,6 +93,27 @@ function stratBadgeLabel(detail) {
     </div>
 
     <!-- DoR Blockers -->
+
+    <!-- FPDoR Readiness -->
+    <div v-if="fpdor && fpdor.items" class="border-t border-gray-100 dark:border-gray-700 pt-2">
+      <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+        FPDoR Readiness
+        <span class="font-normal ml-1" :class="fpdor.passedCount === fpdor.evaluatedCount ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'">({{ fpdor.passedCount }}/{{ fpdor.evaluatedCount }} passed)</span>
+      </div>
+      <div v-for="item in fpdor.items" :key="item.name" class="flex items-center gap-2 py-0.5 text-xs">
+        <svg v-if="item.pass === true" class="w-3.5 h-3.5 text-green-500 dark:text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+        <svg v-else-if="item.pass === false" class="w-3.5 h-3.5 text-red-500 dark:text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        <svg v-else class="w-3.5 h-3.5 text-gray-300 dark:text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
+        </svg>
+        <span :class="item.pass === true ? 'text-gray-700 dark:text-gray-300' : item.pass === false ? 'text-gray-500 dark:text-gray-400' : 'text-gray-400 dark:text-gray-500'">{{ item.name }}</span>
+        <span v-if="item.state === 'not-evaluated'" class="text-[10px] text-gray-400 dark:text-gray-500">(not evaluated)</span>
+      </div>
+    </div>
     <div v-if="hasActiveBlockers">
       <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Definition of Ready — Blockers</div>
       <div v-for="blocker in dorBlockers" :key="blocker.id" class="py-0.5 text-xs">

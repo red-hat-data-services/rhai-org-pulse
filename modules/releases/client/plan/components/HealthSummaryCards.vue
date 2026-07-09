@@ -5,7 +5,8 @@ const props = defineProps({
   cardCounts: { type: Object, default: null },
   planningDeadline: { type: Object, default: null },
   releasePhaseMode: { type: String, default: 'unknown' },
-  planningReadiness: { type: Object, default: null }
+  planningReadiness: { type: Object, default: null },
+  fpdorReadiness: { type: Object, default: null }
 })
 
 var emit = defineEmits(['filterByCheck'])
@@ -152,6 +153,11 @@ var deadlineColorClass = computed(function() {
             ></div>
           </div>
         </button>
+      </div>
+      <div v-if="fpdorReadiness" class="mt-3 p-3 rounded-lg border bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 flex items-center gap-3">
+        <span class="text-sm font-semibold text-indigo-700 dark:text-indigo-400">FPDoR Ready</span>
+        <span class="text-2xl font-bold text-indigo-700 dark:text-indigo-400">{{ fpdorReadiness.fullyPassed }}</span>
+        <span class="text-sm text-indigo-600/70 dark:text-indigo-400/70">/ {{ fpdorReadiness.totalFeatures }}</span>
       </div>
     </template>
 
