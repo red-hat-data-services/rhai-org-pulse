@@ -480,6 +480,10 @@ function mergeFeatureData(key, jiraFeatures, aiReviewMap, candidateIndex, health
   var releaseType = (health && health.releaseType) || (candidate && candidate.phase) || (jira && jira.releaseType) || null
   var assignee = deliveryOwner
   var pm = pmOwner || (health && health.pm) || (candidate && candidate.pm) || null
+  var docsRequired = (jira && jira.docsRequired) || null
+  var effort = (jira && jira.effort) || null
+  var tshirtSize = (health && health.tshirtSize) || (aiReview && aiReview.size) || null
+  var descriptionSignals = (jira && jira.descriptionSignals) || (health && health.descriptionSignals) || null
 
   return {
     key: key,
@@ -517,6 +521,10 @@ function mergeFeatureData(key, jiraFeatures, aiReviewMap, candidateIndex, health
     releaseType: releaseType,
     assignee: assignee,
     pm: pm,
+    docsRequired: docsRequired,
+    effort: effort,
+    tshirtSize: tshirtSize,
+    descriptionSignals: descriptionSignals,
     phase: releaseType
   }
 }

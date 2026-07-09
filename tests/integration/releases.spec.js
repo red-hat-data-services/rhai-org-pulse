@@ -598,8 +598,8 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     expect(sample.fpdor).toHaveProperty('totalCount');
     expect(sample.fpdor).toHaveProperty('evaluatedCount');
     expect(Array.isArray(sample.fpdor.items)).toBe(true);
-    expect(sample.fpdor.totalCount).toBe(9);
-    expect(sample.fpdor.items.length).toBe(9);
+    expect(sample.fpdor.totalCount).toBe(10);
+    expect(sample.fpdor.items.length).toBe(10);
 
     var item = sample.fpdor.items[0];
     expect(item).toHaveProperty('name');

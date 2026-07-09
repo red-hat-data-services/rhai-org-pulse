@@ -12,6 +12,7 @@
 
 const { ENRICHMENT_FIELDS, CHANGELOG_FIELDS, EARLY_STATUSES } = require('../constants')
 const { parseTshirtSize } = require('./tshirt-parser')
+const { parseDescriptionSignals } = require('./description-scanner')
 const { numericField } = require('../../hygiene/jira-fetch')
 
 /**
@@ -223,7 +224,8 @@ async function runPass1(jiraRequest, fetchAllJqlResults, featureKeys, opts) {
           labels: Array.isArray(fields.labels) ? fields.labels : [],
           refinementHistory: null,
           rice: rice,
-          tshirtSize: parseTshirtSize(fields.description)
+          tshirtSize: parseTshirtSize(fields.description),
+          descriptionSignals: parseDescriptionSignals(fields.description)
         })
       }
     } catch (err) {
@@ -239,6 +241,7 @@ async function runPass1(jiraRequest, fetchAllJqlResults, featureKeys, opts) {
             refinementHistory: null,
             rice: null,
             tshirtSize: null,
+            descriptionSignals: null,
             _error: true
           })
         }

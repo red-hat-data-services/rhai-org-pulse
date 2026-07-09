@@ -204,18 +204,70 @@
       "planningStatus": "ready-for-execution",
       "fpdor": {
         "items": [
-          { "name": "RICE Score", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+          {
+            "name": "Requirements Clarity",
+            "pass": null,
+            "source": "jira",
+            "state": "not-evaluated",
+            "detail": "No requirements clarity data available"
+          },
+          {
+            "name": "RICE Score",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Sizing & Breakdown",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Target Version + Release Type",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Assignee + PM",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Components",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Cross-functional Engagement",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Acceptance Criteria",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Architecture Review",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Risks & Assumptions",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          }
         ],
         "passedCount": 5,
-        "totalCount": 9,
+        "totalCount": 10,
         "evaluatedCount": 6
       },
       "issueType": "Feature",
@@ -316,18 +368,70 @@
       "planningStatus": "ready-for-execution",
       "fpdor": {
         "items": [
-          { "name": "RICE Score", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+          {
+            "name": "Requirements Clarity",
+            "pass": null,
+            "source": "jira",
+            "state": "not-evaluated",
+            "detail": "No requirements clarity data available"
+          },
+          {
+            "name": "RICE Score",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Sizing & Breakdown",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Target Version + Release Type",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Assignee + PM",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Components",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Cross-functional Engagement",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Acceptance Criteria",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Architecture Review",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Risks & Assumptions",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          }
         ],
         "passedCount": 5,
-        "totalCount": 9,
+        "totalCount": 10,
         "evaluatedCount": 6
       },
       "issueType": "Feature",
@@ -437,18 +541,70 @@
       "planningStatus": "ready-for-execution",
       "fpdor": {
         "items": [
-          { "name": "RICE Score", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+          {
+            "name": "Requirements Clarity",
+            "pass": null,
+            "source": "jira",
+            "state": "not-evaluated",
+            "detail": "No requirements clarity data available"
+          },
+          {
+            "name": "RICE Score",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Sizing & Breakdown",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Target Version + Release Type",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Assignee + PM",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Components",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Cross-functional Engagement",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Acceptance Criteria",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Architecture Review",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Risks & Assumptions",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          }
         ],
         "passedCount": 4,
-        "totalCount": 9,
+        "totalCount": 10,
         "evaluatedCount": 6
       },
       "issueType": "Feature",
@@ -555,18 +711,70 @@
       "planningStatus": "ready-for-execution",
       "fpdor": {
         "items": [
-          { "name": "RICE Score", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+          {
+            "name": "Requirements Clarity",
+            "pass": null,
+            "source": "jira",
+            "state": "not-evaluated",
+            "detail": "No requirements clarity data available"
+          },
+          {
+            "name": "RICE Score",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Sizing & Breakdown",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Target Version + Release Type",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Assignee + PM",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Components",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Cross-functional Engagement",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Acceptance Criteria",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Architecture Review",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Risks & Assumptions",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          }
         ],
         "passedCount": 5,
-        "totalCount": 9,
+        "totalCount": 10,
         "evaluatedCount": 6
       },
       "issueType": "Feature",
@@ -681,18 +889,70 @@
       "planningStatus": "in-planning",
       "fpdor": {
         "items": [
-          { "name": "RICE Score", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Assignee + PM", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+          {
+            "name": "Requirements Clarity",
+            "pass": null,
+            "source": "jira",
+            "state": "not-evaluated",
+            "detail": "No requirements clarity data available"
+          },
+          {
+            "name": "RICE Score",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Sizing & Breakdown",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Target Version + Release Type",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Assignee + PM",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Components",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Cross-functional Engagement",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Acceptance Criteria",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Architecture Review",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Risks & Assumptions",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          }
         ],
         "passedCount": 3,
-        "totalCount": 9,
+        "totalCount": 10,
         "evaluatedCount": 6
       },
       "issueType": "Feature",
@@ -867,18 +1127,70 @@
       "planningStatus": "in-planning",
       "fpdor": {
         "items": [
-          { "name": "RICE Score", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Sizing & Breakdown", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Target Version + Release Type", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+          {
+            "name": "Requirements Clarity",
+            "pass": null,
+            "source": "jira",
+            "state": "not-evaluated",
+            "detail": "No requirements clarity data available"
+          },
+          {
+            "name": "RICE Score",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Sizing & Breakdown",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Target Version + Release Type",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Assignee + PM",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Components",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Cross-functional Engagement",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Acceptance Criteria",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Architecture Review",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Risks & Assumptions",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          }
         ],
         "passedCount": 3,
-        "totalCount": 9,
+        "totalCount": 10,
         "evaluatedCount": 6
       },
       "issueType": "Feature",
@@ -1068,18 +1380,70 @@
       "planningStatus": "in-planning",
       "fpdor": {
         "items": [
-          { "name": "RICE Score", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Sizing & Breakdown", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Assignee + PM", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Components", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+          {
+            "name": "Requirements Clarity",
+            "pass": null,
+            "source": "jira",
+            "state": "not-evaluated",
+            "detail": "No requirements clarity data available"
+          },
+          {
+            "name": "RICE Score",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Sizing & Breakdown",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Target Version + Release Type",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Assignee + PM",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Components",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Cross-functional Engagement",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Acceptance Criteria",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Architecture Review",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Risks & Assumptions",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          }
         ],
         "passedCount": 1,
-        "totalCount": 9,
+        "totalCount": 10,
         "evaluatedCount": 6
       },
       "issueType": "Feature",
@@ -1198,18 +1562,70 @@
       "planningStatus": "ready-for-execution",
       "fpdor": {
         "items": [
-          { "name": "RICE Score", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+          {
+            "name": "Requirements Clarity",
+            "pass": null,
+            "source": "jira",
+            "state": "not-evaluated",
+            "detail": "No requirements clarity data available"
+          },
+          {
+            "name": "RICE Score",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Sizing & Breakdown",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Target Version + Release Type",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Assignee + PM",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Components",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Cross-functional Engagement",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Acceptance Criteria",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Architecture Review",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Risks & Assumptions",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          }
         ],
         "passedCount": 5,
-        "totalCount": 9,
+        "totalCount": 10,
         "evaluatedCount": 6
       },
       "issueType": "Feature",
@@ -1319,18 +1735,70 @@
       "planningStatus": "in-planning",
       "fpdor": {
         "items": [
-          { "name": "RICE Score", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+          {
+            "name": "Requirements Clarity",
+            "pass": null,
+            "source": "jira",
+            "state": "not-evaluated",
+            "detail": "No requirements clarity data available"
+          },
+          {
+            "name": "RICE Score",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Sizing & Breakdown",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Target Version + Release Type",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Assignee + PM",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Components",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Cross-functional Engagement",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Acceptance Criteria",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Architecture Review",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Risks & Assumptions",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          }
         ],
         "passedCount": 4,
-        "totalCount": 9,
+        "totalCount": 10,
         "evaluatedCount": 6
       },
       "issueType": "Feature",
@@ -1431,18 +1899,70 @@
       "planningStatus": "in-planning",
       "fpdor": {
         "items": [
-          { "name": "RICE Score", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+          {
+            "name": "Requirements Clarity",
+            "pass": null,
+            "source": "jira",
+            "state": "not-evaluated",
+            "detail": "No requirements clarity data available"
+          },
+          {
+            "name": "RICE Score",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Sizing & Breakdown",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Target Version + Release Type",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Assignee + PM",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Components",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Cross-functional Engagement",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Acceptance Criteria",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Architecture Review",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Risks & Assumptions",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          }
         ],
         "passedCount": 5,
-        "totalCount": 9,
+        "totalCount": 10,
         "evaluatedCount": 6
       },
       "issueType": "Initiative",
@@ -1557,18 +2077,70 @@
       "planningStatus": "in-planning",
       "fpdor": {
         "items": [
-          { "name": "RICE Score", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Target Version + Release Type", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+          {
+            "name": "Requirements Clarity",
+            "pass": null,
+            "source": "jira",
+            "state": "not-evaluated",
+            "detail": "No requirements clarity data available"
+          },
+          {
+            "name": "RICE Score",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Sizing & Breakdown",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Target Version + Release Type",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Assignee + PM",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Components",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Cross-functional Engagement",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Acceptance Criteria",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Architecture Review",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Risks & Assumptions",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          }
         ],
         "passedCount": 3,
-        "totalCount": 9,
+        "totalCount": 10,
         "evaluatedCount": 6
       },
       "issueType": "Feature",
@@ -1675,18 +2247,70 @@
       "planningStatus": "in-planning",
       "fpdor": {
         "items": [
-          { "name": "RICE Score", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+          {
+            "name": "Requirements Clarity",
+            "pass": null,
+            "source": "jira",
+            "state": "not-evaluated",
+            "detail": "No requirements clarity data available"
+          },
+          {
+            "name": "RICE Score",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Sizing & Breakdown",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Target Version + Release Type",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Assignee + PM",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Components",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Cross-functional Engagement",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Acceptance Criteria",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Architecture Review",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Risks & Assumptions",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          }
         ],
         "passedCount": 5,
-        "totalCount": 9,
+        "totalCount": 10,
         "evaluatedCount": 6
       },
       "issueType": "Feature",
@@ -1799,18 +2423,70 @@
       "planningStatus": "in-planning",
       "fpdor": {
         "items": [
-          { "name": "RICE Score", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Sizing & Breakdown", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Target Version + Release Type", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Assignee + PM", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
-          { "name": "Cross-functional Engagement", "pass": false, "source": "jira", "state": "failed" },
-          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Architecture Review", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" },
-          { "name": "Risks & Assumptions", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+          {
+            "name": "Requirements Clarity",
+            "pass": null,
+            "source": "jira",
+            "state": "not-evaluated",
+            "detail": "No requirements clarity data available"
+          },
+          {
+            "name": "RICE Score",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Sizing & Breakdown",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Target Version + Release Type",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Assignee + PM",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Components",
+            "pass": true,
+            "source": "jira",
+            "state": "passed"
+          },
+          {
+            "name": "Cross-functional Engagement",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Acceptance Criteria",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Architecture Review",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          },
+          {
+            "name": "Risks & Assumptions",
+            "pass": null,
+            "source": "strat-pipeline",
+            "state": "not-evaluated"
+          }
         ],
         "passedCount": 5,
-        "totalCount": 9,
+        "totalCount": 10,
         "evaluatedCount": 6
       },
       "issueType": "Feature",
