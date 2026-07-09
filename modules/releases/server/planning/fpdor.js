@@ -31,7 +31,7 @@ function hasComponents(feature) {
 }
 
 function hasCrossFunctional(feature) {
-  if (feature.docsRequired) return true
+  if (feature.docsRequired && feature.docsRequired !== 'No') return true
   var comps = feature.components || []
   if (!Array.isArray(comps)) return false
   if (comps.length > 1) return true
