@@ -5,9 +5,11 @@ function hasRiceScore(feature) {
 }
 
 function hasSizing(feature) {
-  var hasPoints = feature.storyPoints != null && feature.storyPoints > 0
-  var hasEpics = feature.epicCount != null && feature.epicCount > 0
-  return hasPoints || hasEpics
+  var hasSize = (feature.storyPoints != null && feature.storyPoints > 0)
+    || !!feature.tshirtSize
+    || (feature.effort != null && feature.effort > 0)
+  var hasBreakdown = feature.epicCount != null && feature.epicCount > 0
+  return hasSize && hasBreakdown
 }
 
 function hasTargetAndReleaseType(feature) {
@@ -29,10 +31,23 @@ function hasComponents(feature) {
 }
 
 function hasCrossFunctional(feature) {
+  if (feature.docsRequired && feature.docsRequired !== 'No') return true
   var comps = feature.components || []
   if (!Array.isArray(comps)) return false
+  if (comps.length > 1) return true
   for (var i = 0; i < comps.length; i++) {
     if (comps[i] && comps[i].toLowerCase().indexOf('doc') !== -1) return true
+  }
+  return false
+}
+
+function hasRequirementsClarity(feature, rubricData) {
+  if (rubricData && rubricData.scored && rubricData.scope != null) {
+    return rubricData.scope >= RUBRIC_PASS_THRESHOLD
+  }
+  var signals = feature.descriptionSignals
+  if (signals && signals.hasContent) {
+    return signals.signalCount >= 2
   }
   return false
 }
@@ -40,13 +55,15 @@ function hasCrossFunctional(feature) {
 function extractRubricData(feature) {
   if (!feature) return null
   var scores = feature.scores || {}
-  var hasAny = scores.testability != null || scores.architecture != null || scores.feasibility != null
+  var hasAny = scores.testability != null || scores.architecture != null
+    || scores.feasibility != null || scores.scope != null
   if (!hasAny) return null
   return {
     scored: true,
     testability: scores.testability != null ? scores.testability : null,
     architecture: scores.architecture != null ? scores.architecture : null,
-    feasibility: scores.feasibility != null ? scores.feasibility : null
+    feasibility: scores.feasibility != null ? scores.feasibility : null,
+    scope: scores.scope != null ? scores.scope : null
   }
 }
 
@@ -69,10 +86,14 @@ function riceDetail(feature) {
 }
 
 function sizingDetail(feature) {
-  var parts = []
-  if (feature.storyPoints == null || feature.storyPoints <= 0) parts.push('no story points')
-  if (feature.epicCount == null || feature.epicCount <= 0) parts.push('no child epics')
-  return parts.length === 2 ? 'No story points or child epics' : null
+  var hasSize = (feature.storyPoints != null && feature.storyPoints > 0)
+    || !!feature.tshirtSize
+    || (feature.effort != null && feature.effort > 0)
+  var hasBreakdown = feature.epicCount != null && feature.epicCount > 0
+  if (!hasSize && !hasBreakdown) return 'No sizing and no child work items'
+  if (!hasSize) return 'No sizing (set story points, t-shirt size, or effort)'
+  if (!hasBreakdown) return 'No child work items (create child epics)'
+  return null
 }
 
 function targetDetail(feature) {
@@ -94,14 +115,30 @@ function ownersDetail(feature) {
   return parts.join(', ') || null
 }
 
+function crossFunctionalDetail(_feature) {
+  return 'No cross-functional engagement (add docs component, set docsRequired, or add multiple components)'
+}
+
+function requirementsDetail(feature, rubricData) {
+  if (rubricData && rubricData.scored && rubricData.scope != null) {
+    return 'Scope score below threshold (' + rubricData.scope + '/' + RUBRIC_PASS_THRESHOLD + ')'
+  }
+  var signals = feature.descriptionSignals
+  if (signals && signals.hasContent) {
+    return 'Description lacks sufficient requirement signals (' + signals.signalCount + '/2 needed)'
+  }
+  return 'No requirements clarity data available'
+}
+
 function computeFPDoRReadiness(feature, rubricData) {
   var items = [
+    evalJiraItem('Requirements Clarity', hasRequirementsClarity(feature, rubricData), requirementsDetail(feature, rubricData)),
     evalJiraItem('RICE Score', hasRiceScore(feature), riceDetail(feature)),
     evalJiraItem('Sizing & Breakdown', hasSizing(feature), sizingDetail(feature)),
     evalJiraItem('Target Version + Release Type', hasTargetAndReleaseType(feature), targetDetail(feature)),
     evalJiraItem('Assignee + PM', hasOwners(feature), ownersDetail(feature)),
     evalJiraItem('Components', hasComponents(feature), 'No components set'),
-    evalJiraItem('Cross-functional Engagement', hasCrossFunctional(feature), 'Missing docs/UXD engagement'),
+    evalJiraItem('Cross-functional Engagement', hasCrossFunctional(feature), crossFunctionalDetail(feature)),
     evalRubricItem('Acceptance Criteria', rubricData, 'testability'),
     evalRubricItem('Architecture Review', rubricData, 'architecture'),
     evalRubricItem('Risks & Assumptions', rubricData, 'feasibility')
@@ -117,7 +154,7 @@ function computeFPDoRReadiness(feature, rubricData) {
   return {
     items: items,
     passedCount: passedCount,
-    totalCount: 9,
+    totalCount: 10,
     evaluatedCount: evaluatedCount
   }
 }
@@ -132,5 +169,7 @@ module.exports = {
   hasOwners: hasOwners,
   hasComponents: hasComponents,
   hasCrossFunctional: hasCrossFunctional,
+  hasRequirementsClarity: hasRequirementsClarity,
   RUBRIC_PASS_THRESHOLD: RUBRIC_PASS_THRESHOLD
 }
+

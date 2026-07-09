@@ -480,6 +480,10 @@ function mergeFeatureData(key, jiraFeatures, aiReviewMap, candidateIndex, health
   var releaseType = (health && health.releaseType) || (candidate && candidate.phase) || (jira && jira.releaseType) || null
   var assignee = deliveryOwner
   var pm = pmOwner || (health && health.pm) || (candidate && candidate.pm) || null
+  var docsRequired = (jira && jira.docsRequired) || null
+  var effort = (jira && jira.effort) || null
+  var tshirtSize = (health && health.tshirtSize) || (aiReview && aiReview.size) || null
+  var descriptionSignals = (jira && jira.descriptionSignals) || (health && health.descriptionSignals) || null
 
   return {
     key: key,
@@ -517,6 +521,10 @@ function mergeFeatureData(key, jiraFeatures, aiReviewMap, candidateIndex, health
     releaseType: releaseType,
     assignee: assignee,
     pm: pm,
+    docsRequired: docsRequired,
+    effort: effort,
+    tshirtSize: tshirtSize,
+    descriptionSignals: descriptionSignals,
     phase: releaseType
   }
 }
@@ -639,3 +647,4 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
 }
 
 module.exports = { buildFeatureReadiness: buildFeatureReadiness, computeBlockers: computeBlockers, computeBestAvailableScore: computeBestAvailableScore, computeReadiness: computeReadiness, computeBigRockMembershipScore: computeBigRockMembershipScore, computeTargetVersionScore: computeTargetVersionScore, hasBlockingViolations: hasBlockingViolations, computeHygieneStatus: computeHygieneStatus, computeConfidence: computeConfidence, collectFilterMeta: collectFilterMeta, deriveHumanReviewStatusFromLabels: deriveHumanReviewStatusFromLabels, buildCanonicalKeySet: buildCanonicalKeySet, mergeFeatureData: mergeFeatureData, BLOCKING_HYGIENE_RULES: BLOCKING_HYGIENE_RULES, COMPLETENESS_MULTIPLIERS: COMPLETENESS_MULTIPLIERS, MAX_SIGNALS: MAX_SIGNALS }
+

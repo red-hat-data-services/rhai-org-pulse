@@ -44,8 +44,8 @@ describe('FPDoR in health pipeline', function() {
     expect(result.features).toHaveLength(1)
     var f = result.features[0]
     expect(f.fpdor).toBeDefined()
-    expect(f.fpdor.items).toHaveLength(9)
-    expect(f.fpdor.totalCount).toBe(9)
+    expect(f.fpdor.items).toHaveLength(10)
+    expect(f.fpdor.totalCount).toBe(10)
     expect(typeof f.fpdor.passedCount).toBe('number')
     expect(typeof f.fpdor.evaluatedCount).toBe('number')
   })
@@ -58,7 +58,7 @@ describe('FPDoR in health pipeline', function() {
     var items = result.features[0].fpdor.items
     var jiraItems = items.filter(function(i) { return i.source === 'jira' })
     var rubricItems = items.filter(function(i) { return i.source === 'strat-pipeline' })
-    expect(jiraItems).toHaveLength(6)
+    expect(jiraItems).toHaveLength(7)
     expect(rubricItems).toHaveLength(3)
   })
 
@@ -160,7 +160,7 @@ describe('FPDoR in health pipeline', function() {
     ]))
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
     var fpdor = result.features[0].fpdor
-    expect(fpdor.evaluatedCount).toBe(6)
+    expect(fpdor.evaluatedCount).toBe(7)
     expect(fpdor.passedCount).toBe(4)
     var passed = fpdor.items.filter(function(i) { return i.pass === true })
     var passedNames = passed.map(function(i) { return i.name }).sort()

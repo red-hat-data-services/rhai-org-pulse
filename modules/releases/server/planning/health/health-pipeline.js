@@ -713,7 +713,10 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
 
     // Compute FPDoR readiness (rubric items will be not-evaluated since health pipeline lacks strat-pipeline scores)
     var featureForFpdor = Object.assign({}, feature, {
-      riceScore: (enrichment && enrichment.rice && enrichment.rice.score != null) ? enrichment.rice.score : (feature.riceScore != null ? feature.riceScore : null)
+      riceScore: (enrichment && enrichment.rice && enrichment.rice.score != null) ? enrichment.rice.score : (feature.riceScore != null ? feature.riceScore : null),
+      storyPoints: enrichment ? enrichment.storyPoints || null : null,
+      tshirtSize: enrichment ? enrichment.tshirtSize || null : null,
+      descriptionSignals: enrichment ? enrichment.descriptionSignals || null : null
     })
     var rubricData = extractRubricData(featureForFpdor)
     var fpdorResult = computeFPDoRReadiness(featureForFpdor, rubricData)
@@ -792,6 +795,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
         : (feature.targetVersions && feature.targetVersions.length > 0) ? 'targeted' : 'none',
       storyPoints: enrichment ? enrichment.storyPoints || null : null,
       tshirtSize: enrichment ? enrichment.tshirtSize || null : null,
+      descriptionSignals: enrichment ? enrichment.descriptionSignals || null : null,
       versionHistory: enrichment && enrichment.refinementHistory ? enrichment.refinementHistory : [],
       jiraUrl: JIRA_BROWSE_URL + '/' + key
     })
