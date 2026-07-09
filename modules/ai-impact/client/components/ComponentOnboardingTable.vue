@@ -37,6 +37,16 @@ function sortIcon(key) {
 const search = ref('')
 const completionFilter = ref('all')
 const productFilter = ref('all')
+const targetVersionFilter = ref('all')
+
+const targetVersionOptions = computed(() => {
+  const versions = new Set()
+  Object.values(props.components).forEach(c => {
+    if (c.targetVersion) versions.add(c.targetVersion)
+  })
+  return [...versions].sort()
+})
+
 // ── Derived list ──────────────────────────────────────────────────────────────
 const selectedKey = ref(null)
 
@@ -61,6 +71,7 @@ const componentList = computed(() => {
     .filter(c => {
       if (completionFilter.value !== 'all' && c.completionStatus !== completionFilter.value) return false
       if (productFilter.value !== 'all' && c.productContext !== productFilter.value) return false
+      if (targetVersionFilter.value !== 'all' && (c.targetVersion || '') !== targetVersionFilter.value) return false
       if (!q) return true
       return (
         c.key.toLowerCase().includes(q) ||
@@ -162,6 +173,7 @@ function stepsDone(component) {
         <option value="all">All statuses</option>
         <option value="completed">Completed</option>
         <option value="in-progress">In Progress</option>
+        <option value="new">New</option>
       </select>
 
       <!-- Product filter -->
@@ -172,6 +184,15 @@ function stepsDone(component) {
         <option value="all">All products</option>
         <option value="RHOAI">RHOAI</option>
         <option value="ODH">ODH</option>
+      </select>
+
+      <!-- Target Version filter -->
+      <select
+        v-model="targetVersionFilter"
+        class="text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="all">All versions</option>
+        <option v-for="v in targetVersionOptions" :key="v" :value="v">{{ v }}</option>
       </select>
 
       <span class="ml-auto text-xs text-gray-400 dark:text-gray-500">
@@ -262,14 +283,20 @@ function stepsDone(component) {
             <td class="px-4 py-3">
               <span
                 class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
-                :class="component.completionStatus === 'completed'
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                  : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'"
+                :class="{
+                  'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300': component.completionStatus === 'completed',
+                  'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300': component.completionStatus === 'in-progress',
+                  'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300': component.completionStatus === 'new'
+                }"
               >
                 <span class="h-1.5 w-1.5 rounded-full"
-                  :class="component.completionStatus === 'completed' ? 'bg-green-500' : 'bg-amber-500'"
+                  :class="{
+                    'bg-green-500': component.completionStatus === 'completed',
+                    'bg-amber-500': component.completionStatus === 'in-progress',
+                    'bg-blue-500': component.completionStatus === 'new'
+                  }"
                 />
-                {{ component.completionStatus === 'completed' ? 'Completed' : 'In Progress' }}
+                {{ component.completionStatus === 'completed' ? 'Completed' : component.completionStatus === 'new' ? 'New' : 'In Progress' }}
               </span>
             </td>
             <td class="px-4 py-3">
@@ -394,9 +421,11 @@ function stepsDone(component) {
                         <span class="text-gray-400 dark:text-gray-500">{{ new Date(h.syncedAt).toLocaleDateString() }}</span>
                         <span
                           class="px-1.5 py-0.5 rounded-full"
-                          :class="h.completionStatus === 'completed'
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                            : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'"
+                          :class="{
+                            'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400': h.completionStatus === 'completed',
+                            'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400': h.completionStatus === 'in-progress',
+                            'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400': h.completionStatus === 'new'
+                          }"
                         >{{ h.completionStatus }}</span>
                         <span class="text-gray-400">{{ Object.values(h.onboardingSteps || {}).filter(Boolean).length }}/{{ STEPS.length }} steps</span>
                       </div>

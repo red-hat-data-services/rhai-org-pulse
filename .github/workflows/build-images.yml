@@ -13,6 +13,7 @@ on:
       # Backend
       - 'server/index.js'
       - 'modules/*/server/**'
+      - 'platform/*/server/**'
       - 'deploy/ai-eng.backend.Dockerfile'
       # Frontend
       - 'public/**'
@@ -60,8 +61,8 @@ jobs:
           BACKEND=false
           FRONTEND=false
 
-          # Check backend paths
-          if echo "$CHANGED" | grep -qE '^(server/index\.js|modules/[^/]+/server/|modules/[^/]+/module\.json|deploy/ai-eng\.backend\.Dockerfile|package)'; then
+          # Check backend paths (platform extensions can have server routes)
+          if echo "$CHANGED" | grep -qE '^(server/index\.js|modules/[^/]+/server/|modules/[^/]+/module\.json|platform/[^/]+/server/|platform/[^/]+/manifest\.json|deploy/ai-eng\.backend\.Dockerfile|package)'; then
             BACKEND=true
           fi
 

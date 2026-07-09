@@ -6,7 +6,7 @@ defineProps({
 
 <template>
   <div v-if="metrics" class="p-6 border-b border-gray-200 dark:border-gray-700">
-    <div class="grid gap-6 grid-cols-2 lg:grid-cols-6">
+    <div class="grid gap-6 grid-cols-2 lg:grid-cols-7">
       <!-- Total Onboarded -->
       <div class="space-y-1">
         <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
@@ -32,6 +32,20 @@ defineProps({
         <div class="flex items-baseline gap-2">
           <span class="text-3xl font-bold text-amber-600 dark:text-amber-400">{{ metrics.totalInProgress }}</span>
           <span class="text-xs text-gray-400 dark:text-gray-500">ongoing</span>
+        </div>
+      </div>
+
+      <!-- New -->
+      <div class="space-y-1">
+        <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+          <svg class="h-3.5 w-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          New
+        </p>
+        <div class="flex items-baseline gap-2">
+          <span class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{ metrics.totalNew ?? 0 }}</span>
+          <span class="text-xs text-gray-400 dark:text-gray-500">pending start</span>
         </div>
       </div>
 
