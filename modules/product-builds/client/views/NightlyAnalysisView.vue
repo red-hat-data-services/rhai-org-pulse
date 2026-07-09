@@ -87,7 +87,14 @@ const {
   latestPipeline, successRate, currentStreak, lastSuccess,
 } = useNightlyPipelines()
 
-const heroTheme = computed(() => theme(latestPipeline.value?.status))
+const heroStatus = computed(() => {
+  if (selectedPipelineId.value === latestPipeline.value?.id && jobs.value?.status) {
+    return jobs.value.status
+  }
+  return latestPipeline.value?.status
+})
+
+const heroTheme = computed(() => theme(heroStatus.value))
 
 const scheduleInfo = computed(() => {
   const s = schedule.value
@@ -180,7 +187,12 @@ function jobTitle(job) {
   return parts.join(' · ')
 }
 
-onMounted(() => loadPipelines())
+onMounted(async () => {
+  await loadPipelines()
+  if (latestPipeline.value) {
+    loadPipelineJobs(latestPipeline.value.id)
+  }
+})
 </script>
 
 <template>
@@ -203,10 +215,10 @@ onMounted(() => loadPipelines())
       <!-- ===== TIER 1: Hero Status Banner ===== -->
       <div v-if="latestPipeline" :class="heroTheme.banner" class="mb-6 p-5 rounded-lg border flex items-center gap-4">
         <div :class="heroTheme.iconBg" class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center">
-          <svg v-if="latestPipeline.status === 'success'" :class="heroTheme.icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg v-if="heroStatus === 'success'" :class="heroTheme.icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
           </svg>
-          <svg v-else-if="latestPipeline.status === 'failed'" :class="heroTheme.icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg v-else-if="heroStatus === 'failed'" :class="heroTheme.icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
           </svg>
           <svg v-else :class="heroTheme.icon" class="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -218,7 +230,7 @@ onMounted(() => loadPipelines())
         <div class="flex-1 min-w-0">
           <div :class="heroTheme.title" class="text-lg font-bold">{{ scheduleInfo.description }}</div>
           <div :class="heroTheme.subtitle" class="text-sm font-semibold mt-1">
-            {{ theme(latestPipeline.status).label || latestPipeline.status.toUpperCase() }}
+            {{ theme(heroStatus).label || heroStatus.toUpperCase() }}
           </div>
           <div :class="heroTheme.info" class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-xs">
             <span>{{ formatDateFull(latestPipeline.created_at) }}</span>
@@ -283,15 +295,6 @@ onMounted(() => loadPipelines())
       </div>
 
       <!-- ===== TIER 3: Pipeline Detail ===== -->
-      <!-- Prompt to select -->
-      <div v-if="!selectedPipelineId && !jobsLoading && !jobs" class="text-center py-10 bg-gray-50 dark:bg-gray-800/50 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-        <svg class="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-        </svg>
-        <div class="text-sm font-medium text-gray-600 dark:text-gray-400">Click a pipeline above to view job details</div>
-        <div class="text-xs text-gray-400 dark:text-gray-500 mt-1">Each tile represents one nightly pipeline run</div>
-      </div>
-
       <!-- Jobs loading -->
       <div v-if="jobsLoading" class="text-center py-12">
         <svg class="animate-spin h-8 w-8 text-gray-400 mx-auto" fill="none" viewBox="0 0 24 24">
@@ -305,8 +308,8 @@ onMounted(() => loadPipelines())
         <!-- Pipeline header -->
         <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg">
           <div class="flex items-center gap-3 flex-wrap">
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium" :class="badgeClass(selectedPipeline.status)">
-              {{ selectedPipeline.status }}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium" :class="badgeClass(jobs.status)">
+              {{ jobs.status }}
             </span>
             <span class="text-sm font-semibold text-gray-900 dark:text-white">
               {{ formatDateFull(selectedPipeline.created_at) }}

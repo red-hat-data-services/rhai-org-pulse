@@ -1,3 +1,5 @@
+const yaml = require('js-yaml');
+
 const API_TIMEOUT = 30_000;
 const JOBS_PER_PAGE = 100;
 const PACKAGES_CONCURRENCY = 5;
@@ -6,6 +8,10 @@ const PREFERRED_VARIANT = 'cpu-ubi9';
 const PACKAGES_CACHE_MAX = 200;
 const packagesCache = new Map();
 const SAFE_NAME_RE = /^[a-zA-Z0-9_.-]+$/;
+
+const SUPPORTED_VARIANTS_CACHE_TTL = 3600_000;
+let _supportedVariantsCache = null;
+let _supportedVariantsCacheTime = 0;
 
 const DEFAULTS = {
   gitlabBaseUrl: 'https://gitlab.com',
@@ -269,6 +275,67 @@ async function resolveVariant(token, sha, collection, requestedVariant) {
   }
 }
 
+async function fetchSupportedVariants(token, ref = 'main') {
+  const now = Date.now();
+  if (_supportedVariantsCache && (now - _supportedVariantsCacheTime) < SUPPORTED_VARIANTS_CACHE_TTL) {
+    return _supportedVariantsCache;
+  }
+  const content = await fetchFileRaw(token, 'supported_versions.yml', ref);
+  if (!content) return null;
+  const data = yaml.load(content);
+  const entry = data?.supported_versions?.find(v => v.release_branch === ref);
+  if (!entry?.variants) return null;
+  const variants = new Set(entry.variants.map(v => v.replace(/-ubi9$/, '')));
+  _supportedVariantsCache = variants;
+  _supportedVariantsCacheTime = now;
+  return variants;
+}
+
+function filterBySupported(structured, supportedVariants) {
+  if (!supportedVariants) return structured;
+
+  const filteredCollections = {};
+  let totalCount = 0, successCount = 0, failedCount = 0, skippedCount = 0;
+
+  for (const [name, col] of Object.entries(structured.collections)) {
+    const filteredVariants = {};
+    const statuses = [];
+    for (const [variant, archs] of Object.entries(col.variants)) {
+      if (!supportedVariants.has(variant)) continue;
+      filteredVariants[variant] = archs;
+      for (const stages of Object.values(archs)) {
+        for (const job of Object.values(stages)) {
+          statuses.push(job.status);
+          totalCount++;
+          if (job.status === 'success') successCount++;
+          else if (job.status === 'failed') failedCount++;
+          else if (job.status === 'skipped') skippedCount++;
+        }
+      }
+    }
+    if (Object.keys(filteredVariants).length > 0) {
+      filteredCollections[name] = { status: rollUpStatus(statuses), variants: filteredVariants };
+    }
+  }
+
+  const allStatuses = [];
+  for (const col of Object.values(filteredCollections)) {
+    for (const archs of Object.values(col.variants)) {
+      for (const stages of Object.values(archs)) {
+        for (const job of Object.values(stages)) allStatuses.push(job.status);
+      }
+    }
+  }
+
+  return {
+    status: rollUpStatus(allStatuses),
+    summary: { total: totalCount, success: successCount, failed: failedCount, skipped: skippedCount },
+    failed_jobs: structured.failed_jobs.filter(j => supportedVariants.has(j.variant)),
+    collections: filteredCollections,
+    special_jobs: structured.special_jobs,
+  };
+}
+
 async function fetchAllJobs(token, pipelineId) {
   const allJobs = [];
   let page = 1;
@@ -341,7 +408,16 @@ module.exports = function registerNightlyPipelineRoutes(router, context) {
         }
       }
 
-      const sorted = allPipelines
+      const deduped = new Map();
+      for (const p of allPipelines) {
+        const date = p.created_at.slice(0, 10);
+        const existing = deduped.get(date);
+        if (!existing || new Date(p.created_at) > new Date(existing.created_at)) {
+          deduped.set(date, p);
+        }
+      }
+
+      const sorted = [...deduped.values()]
         .map(p => ({
           id: p.id,
           iid: p.iid,
@@ -354,6 +430,22 @@ module.exports = function registerNightlyPipelineRoutes(router, context) {
         }))
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
         .slice(0, limit);
+
+      const supportedVariants = await fetchSupportedVariants(token).catch(() => null);
+      if (supportedVariants) {
+        const failedPipelines = sorted.filter(p => p.status === 'failed');
+        await concurrentMap(failedPipelines, async (p) => {
+          const failedJobs = await gitlabApi(
+            `/projects/${_cfg.gitlabProject}/pipelines/${p.id}/jobs?scope[]=failed&per_page=100`,
+            token
+          ).catch(() => []);
+          const hasRelevantFailure = failedJobs.some(j => {
+            const parsed = parseJobName(j.name);
+            return parsed && supportedVariants.has(parsed.variant);
+          });
+          if (!hasRelevantFailure) p.status = 'success';
+        }, 5);
+      }
 
       res.json({
         schedule_id: Number(_cfg.scheduleId),
@@ -405,11 +497,15 @@ module.exports = function registerNightlyPipelineRoutes(router, context) {
       return res.status(400).json({ error: 'Invalid pipeline ID' });
     }
     try {
-      const jobs = await fetchAllJobs(token, pipelineId);
+      const [jobs, supportedVariants] = await Promise.all([
+        fetchAllJobs(token, pipelineId),
+        fetchSupportedVariants(token).catch(() => null),
+      ]);
       const structured = structureJobs(jobs);
+      const filtered = filterBySupported(structured, supportedVariants);
       res.json({
         pipeline_id: Number(pipelineId),
-        ...structured,
+        ...filtered,
       });
     } catch (err) {
       const status = err.upstreamStatus || 500;
