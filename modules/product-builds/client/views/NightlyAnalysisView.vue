@@ -280,15 +280,15 @@ onMounted(async () => {
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-3">
             <div class="text-sm font-semibold text-gray-700 dark:text-gray-300">Pipeline History</div>
-            <div class="inline-flex rounded-md border border-gray-200 dark:border-gray-600 overflow-hidden">
+            <div class="inline-flex rounded-md overflow-hidden border border-gray-300 dark:border-gray-500">
               <button
-                :class="chartView === 'chart' ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-750'"
-                class="px-2 py-1 text-[11px] font-medium transition-colors"
+                :class="chartView === 'chart' ? 'bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900' : 'bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'"
+                class="px-2.5 py-1 text-[11px] font-semibold transition-colors"
                 @click="chartView = 'chart'"
               >Chart</button>
               <button
-                :class="chartView === 'strip' ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-750'"
-                class="px-2 py-1 text-[11px] font-medium border-l border-gray-200 dark:border-gray-600 transition-colors"
+                :class="chartView === 'strip' ? 'bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900' : 'bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'"
+                class="px-2.5 py-1 text-[11px] font-semibold border-l border-gray-300 dark:border-gray-500 transition-colors"
                 @click="chartView = 'strip'"
               >Strip</button>
             </div>
@@ -341,25 +341,23 @@ onMounted(async () => {
 
         <!-- Strip view -->
         <div v-else class="flex gap-1.5">
-          <button
-            v-for="p in timelinePipelines" :key="p.id"
-            :class="[
-              p.status === 'success' ? 'bg-green-500 dark:bg-green-500' : 'bg-red-500 dark:bg-red-500',
-              selectedPipelineId === p.id ? 'ring-2 ring-offset-2 dark:ring-offset-gray-800' : '',
-              selectedPipelineId === p.id && p.status === 'success' ? 'ring-green-400' : '',
-              selectedPipelineId === p.id && p.status !== 'success' ? 'ring-red-400' : '',
-            ]"
-            class="flex-1 h-10 rounded cursor-pointer transition-all hover:opacity-80 relative group"
-            :title="`${dateParts(p.created_at).month} ${dateParts(p.created_at).day} — ${p.status === 'success' ? 'Passed' : 'Failed'}`"
-            @click="selectPipeline(p)"
-          >
-            <span class="absolute inset-x-0 -bottom-5 text-[10px] text-gray-500 dark:text-gray-400 text-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <div v-for="p in timelinePipelines" :key="p.id" class="flex-1 flex flex-col items-center gap-1">
+            <button
+              :class="[
+                p.status === 'success' ? 'bg-green-500' : 'bg-red-500',
+                selectedPipelineId === p.id ? 'ring-2 ring-offset-2 dark:ring-offset-gray-800' : '',
+                selectedPipelineId === p.id && p.status === 'success' ? 'ring-green-400' : '',
+                selectedPipelineId === p.id && p.status !== 'success' ? 'ring-red-400' : '',
+              ]"
+              class="w-full h-10 rounded cursor-pointer transition-all hover:opacity-80"
+              :title="`${dateParts(p.created_at).month} ${dateParts(p.created_at).day} — ${p.status === 'success' ? 'Passed' : 'Failed'}`"
+              @click="selectPipeline(p)"
+            ></button>
+            <span class="text-[9px] text-gray-500 dark:text-gray-400 leading-tight">
               {{ dateParts(p.created_at).month }} {{ dateParts(p.created_at).day }}
             </span>
-          </button>
+          </div>
         </div>
-        <!-- Spacer for strip hover labels -->
-        <div v-if="chartView === 'strip'" class="h-5"></div>
       </div>
 
       <!-- ===== TIER 3: Pipeline Detail ===== -->
@@ -404,6 +402,22 @@ onMounted(async () => {
             <div class="px-5 py-4 text-center">
               <div class="text-2xl font-semibold text-gray-400 dark:text-gray-500">{{ jobs.summary.skipped }}</div>
               <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Skipped</div>
+            </div>
+          </div>
+          <div v-if="sortedCollections.length" class="px-5 py-3 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-3 mb-2">
+              <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Collections</span>
+              <span class="text-xs text-gray-400 dark:text-gray-500">
+                {{ sortedCollections.filter(c => c.status === 'success').length }} passed,
+                {{ sortedCollections.filter(c => c.status !== 'success').length }} failed
+              </span>
+            </div>
+            <div class="flex gap-0.5 h-3 rounded-full overflow-hidden">
+              <div v-for="col in sortedCollections" :key="col.name"
+                class="flex-1 first:rounded-l-full last:rounded-r-full"
+                :class="col.status === 'success' ? 'bg-green-500' : 'bg-red-500'"
+                :title="`${col.name} — ${col.status}`"
+              ></div>
             </div>
           </div>
         </div>
@@ -473,10 +487,20 @@ onMounted(async () => {
 
               <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ col.name }}</span>
               <span class="text-xs text-gray-500 dark:text-gray-400">{{ col.jobCount }} jobs</span>
-              <span v-if="col.failCount > 0" class="text-xs text-red-600 dark:text-red-400 font-medium">{{ col.failCount }} failed</span>
-              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ml-auto" :class="badgeClass(col.status)">
-                {{ col.status }}
-              </span>
+
+              <div class="flex items-center gap-2 ml-auto">
+                <span v-if="col.failCount > 0" class="text-xs text-red-600 dark:text-red-400 font-medium">{{ col.failCount }} failed</span>
+                <div class="w-10 h-1.5 rounded-full overflow-hidden bg-green-500 dark:bg-green-500 flex"
+                  :title="`${col.jobCount - col.failCount} passed, ${col.failCount} failed`">
+                  <div v-if="col.failCount > 0"
+                    class="h-full bg-red-500 dark:bg-red-500 rounded-l-full"
+                    :style="{ width: (col.failCount / col.jobCount * 100) + '%' }"
+                  ></div>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium" :class="badgeClass(col.status)">
+                  {{ col.status }}
+                </span>
+              </div>
             </summary>
 
             <div class="bg-white dark:bg-gray-800">
