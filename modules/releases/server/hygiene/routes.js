@@ -284,7 +284,7 @@ module.exports = function registerHygieneRoutes(router, context) {
 
   // GET /features — hygiene features for a release version
   router.get('/features', requireAuth, requireScope('releases:read'), function(req, res) {
-    var version = req.query.version;
+    var version = Array.isArray(req.query.version) ? req.query.version[0] : req.query.version;
     if (!version) {
       return res.status(400).json({ error: 'version query parameter is required' });
     }
@@ -309,7 +309,7 @@ module.exports = function registerHygieneRoutes(router, context) {
 
   // GET /summary — aggregate violation summary
   router.get('/summary', requireAuth, requireScope('releases:read'), function(req, res) {
-    var version = req.query.version;
+    var version = Array.isArray(req.query.version) ? req.query.version[0] : req.query.version;
     if (!version) {
       return res.status(400).json({ error: 'version query parameter is required' });
     }
@@ -364,7 +364,7 @@ module.exports = function registerHygieneRoutes(router, context) {
 
   // POST /refresh — trigger Jira data refresh (fire-and-forget)
   router.post('/refresh', requirePlanningManager, requireScope('releases:write'), function(req, res) {
-    var version = req.query.version;
+    var version = Array.isArray(req.query.version) ? req.query.version[0] : req.query.version;
     if (!version) {
       return res.status(400).json({ error: 'version query parameter is required' });
     }
