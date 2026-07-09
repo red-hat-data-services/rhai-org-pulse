@@ -4,6 +4,10 @@ const {
   classifyIssue,
   processIssue,
   extractTerminalAt,
+  extractPipelineHistory,
+  computeEffortScore,
+  computePriorityBreakdown,
+  computeMedianTimeToFix,
   getLastWeekBounds,
   computeAutofixMetrics,
   buildTrendData
@@ -368,5 +372,214 @@ describe('getLastWeekBounds', () => {
   it('end is before now', () => {
     const { end } = getLastWeekBounds()
     expect(end).toBeLessThanOrEqual(Date.now())
+  })
+})
+
+describe('extractPipelineHistory', () => {
+  it('counts CI failure label additions', () => {
+    const changelog = {
+      histories: [
+        { created: '2026-06-10T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-ci-failing' }] },
+        { created: '2026-06-11T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-review' }] },
+        { created: '2026-06-12T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-ci-failing' }] },
+        { created: '2026-06-13T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-merged' }] }
+      ]
+    }
+    const h = extractPipelineHistory(changelog, 'autofix-merged')
+    expect(h.ciFailureCount).toBe(2)
+    expect(h.terminalAt).toBe('2026-06-13T10:00:00.000Z')
+  })
+
+  it('counts review round label additions', () => {
+    const changelog = {
+      histories: [
+        { created: '2026-06-10T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-review' }] },
+        { created: '2026-06-11T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-ci-failing' }] },
+        { created: '2026-06-12T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-review' }] },
+        { created: '2026-06-13T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-review' }] },
+        { created: '2026-06-14T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-merged' }] }
+      ]
+    }
+    const h = extractPipelineHistory(changelog, 'autofix-merged')
+    expect(h.reviewRoundCount).toBe(3)
+  })
+
+  it('detects blocked state', () => {
+    const changelog = {
+      histories: [
+        { created: '2026-06-10T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-blocked' }] },
+        { created: '2026-06-12T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-merged' }] }
+      ]
+    }
+    const h = extractPipelineHistory(changelog, 'autofix-merged')
+    expect(h.wasBlocked).toBe(true)
+  })
+
+  it('returns defaults for empty changelog', () => {
+    const h = extractPipelineHistory(null, 'autofix-merged')
+    expect(h.terminalAt).toBeNull()
+    expect(h.ciFailureCount).toBe(0)
+    expect(h.reviewRoundCount).toBe(0)
+    expect(h.wasBlocked).toBe(false)
+  })
+
+  it('handles multiple label changes in a single history entry', () => {
+    const changelog = {
+      histories: [
+        {
+          created: '2026-06-10T10:00:00.000Z',
+          items: [
+            { field: 'labels', toString: 'jira-autofix-review' },
+            { field: 'labels', toString: 'jira-autofix-ci-failing' }
+          ]
+        }
+      ]
+    }
+    const h = extractPipelineHistory(changelog, 'autofix-merged')
+    expect(h.reviewRoundCount).toBe(1)
+    expect(h.ciFailureCount).toBe(1)
+  })
+})
+
+describe('computeEffortScore', () => {
+  it('returns base score of 1 for a simple merged issue', () => {
+    const issue = { pipelineState: 'autofix-merged', created: '2026-06-10T00:00:00Z', terminalAt: '2026-06-11T00:00:00Z', priority: 'Normal' }
+    const { effortScore, effortTier } = computeEffortScore(issue)
+    expect(effortScore).toBe(1)
+    expect(effortTier).toBe('Quick Win')
+  })
+
+  it('adds 1 point for CI failures', () => {
+    const issue = { pipelineState: 'autofix-merged', ciFailureCount: 2, created: '2026-06-10T00:00:00Z', terminalAt: '2026-06-11T00:00:00Z', priority: 'Normal' }
+    const { effortScore } = computeEffortScore(issue)
+    expect(effortScore).toBe(2)
+  })
+
+  it('adds 1 point per extra review round beyond the first', () => {
+    const issue = { pipelineState: 'autofix-merged', reviewRoundCount: 3, created: '2026-06-10T00:00:00Z', terminalAt: '2026-06-11T00:00:00Z', priority: 'Normal' }
+    const { effortScore } = computeEffortScore(issue)
+    expect(effortScore).toBe(3)
+  })
+
+  it('adds 2 points for blocked state', () => {
+    const issue = { pipelineState: 'autofix-merged', wasBlocked: true, created: '2026-06-10T00:00:00Z', terminalAt: '2026-06-11T00:00:00Z', priority: 'Normal' }
+    const { effortScore } = computeEffortScore(issue)
+    expect(effortScore).toBe(3)
+  })
+
+  it('adds 1 point for time-to-fix over 7 days', () => {
+    const issue = { pipelineState: 'autofix-merged', created: '2026-06-01T00:00:00Z', terminalAt: '2026-06-10T00:00:00Z', priority: 'Normal' }
+    const { effortScore } = computeEffortScore(issue)
+    expect(effortScore).toBe(2)
+  })
+
+  it('adds 2 points for Blocker or Critical priority', () => {
+    const issue = { pipelineState: 'autofix-merged', created: '2026-06-10T00:00:00Z', terminalAt: '2026-06-11T00:00:00Z', priority: 'Blocker' }
+    const { effortScore, effortTier } = computeEffortScore(issue)
+    expect(effortScore).toBe(3)
+    expect(effortTier).toBe('Standard Fix')
+  })
+
+  it('maps tier boundaries correctly', () => {
+    const base = { pipelineState: 'autofix-merged', created: '2026-06-10T00:00:00Z', terminalAt: '2026-06-11T00:00:00Z', priority: 'Normal' }
+
+    expect(computeEffortScore({ ...base }).effortTier).toBe('Quick Win')
+    expect(computeEffortScore({ ...base, ciFailureCount: 1 }).effortTier).toBe('Quick Win')
+    expect(computeEffortScore({ ...base, wasBlocked: true }).effortTier).toBe('Standard Fix')
+    expect(computeEffortScore({ ...base, wasBlocked: true, ciFailureCount: 1 }).effortTier).toBe('Standard Fix')
+    expect(computeEffortScore({ ...base, wasBlocked: true, ciFailureCount: 1, reviewRoundCount: 3 }).effortTier).toBe('Complex Fix')
+  })
+
+  it('returns null for non-merged issues', () => {
+    const issue = { pipelineState: 'autofix-review', priority: 'Major' }
+    const { effortScore, effortTier } = computeEffortScore(issue)
+    expect(effortScore).toBeNull()
+    expect(effortTier).toBeNull()
+  })
+})
+
+describe('computePriorityBreakdown', () => {
+  it('counts issues by priority', () => {
+    const issues = [
+      { priority: 'Blocker' },
+      { priority: 'Major' },
+      { priority: 'Major' },
+      { priority: 'Undefined' }
+    ]
+    const result = computePriorityBreakdown(issues)
+    expect(result).toEqual({ Blocker: 1, Major: 2, Undefined: 1 })
+  })
+
+  it('returns empty object for empty array', () => {
+    expect(computePriorityBreakdown([])).toEqual({})
+  })
+})
+
+describe('computeMedianTimeToFix', () => {
+  it('returns median for odd number of merged issues', () => {
+    const issues = [
+      { pipelineState: 'autofix-merged', created: '2026-06-01T00:00:00Z', terminalAt: '2026-06-02T00:00:00Z' },
+      { pipelineState: 'autofix-merged', created: '2026-06-01T00:00:00Z', terminalAt: '2026-06-04T00:00:00Z' },
+      { pipelineState: 'autofix-merged', created: '2026-06-01T00:00:00Z', terminalAt: '2026-06-11T00:00:00Z' }
+    ]
+    expect(computeMedianTimeToFix(issues)).toBe(3)
+  })
+
+  it('returns median for even number of merged issues', () => {
+    const issues = [
+      { pipelineState: 'autofix-merged', created: '2026-06-01T00:00:00Z', terminalAt: '2026-06-03T00:00:00Z' },
+      { pipelineState: 'autofix-merged', created: '2026-06-01T00:00:00Z', terminalAt: '2026-06-05T00:00:00Z' }
+    ]
+    expect(computeMedianTimeToFix(issues)).toBe(3)
+  })
+
+  it('returns null when no merged issues', () => {
+    const issues = [
+      { pipelineState: 'autofix-review', created: '2026-06-01T00:00:00Z', terminalAt: null }
+    ]
+    expect(computeMedianTimeToFix(issues)).toBeNull()
+  })
+
+  it('skips non-merged issues', () => {
+    const issues = [
+      { pipelineState: 'autofix-rejected', created: '2026-06-01T00:00:00Z', terminalAt: '2026-06-02T00:00:00Z' },
+      { pipelineState: 'autofix-merged', created: '2026-06-01T00:00:00Z', terminalAt: '2026-06-06T00:00:00Z' }
+    ]
+    expect(computeMedianTimeToFix(issues)).toBe(5)
+  })
+})
+
+describe('computeAutofixMetrics new fields', () => {
+  const now = new Date()
+  const recent = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString()
+  const mergedAt = new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString()
+
+  it('includes priorityBreakdown in metrics', () => {
+    const issues = [
+      { created: recent, pipelineState: 'autofix-merged', priority: 'Blocker', terminalAt: mergedAt, effortScore: 3, effortTier: 'Standard Fix' },
+      { created: recent, pipelineState: 'triage-missing-info', priority: 'Major' }
+    ]
+    const m = computeAutofixMetrics(issues, 'week')
+    expect(m.priorityBreakdown).toEqual({ Blocker: 1, Major: 1 })
+  })
+
+  it('includes medianTimeToFixDays for merged issues', () => {
+    const created = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString()
+    const issues = [
+      { created, pipelineState: 'autofix-merged', priority: 'Major', terminalAt: mergedAt, effortScore: 1, effortTier: 'Quick Win' }
+    ]
+    const m = computeAutofixMetrics(issues, 'week')
+    expect(m.medianTimeToFixDays).toBeGreaterThan(0)
+  })
+
+  it('includes effortBreakdown and totalImpactScore', () => {
+    const issues = [
+      { created: recent, pipelineState: 'autofix-merged', priority: 'Major', terminalAt: mergedAt, effortScore: 1, effortTier: 'Quick Win' },
+      { created: recent, pipelineState: 'autofix-merged', priority: 'Blocker', terminalAt: mergedAt, effortScore: 4, effortTier: 'Standard Fix' },
+      { created: recent, pipelineState: 'autofix-merged', priority: 'Critical', terminalAt: mergedAt, effortScore: 6, effortTier: 'Complex Fix' }
+    ]
+    const m = computeAutofixMetrics(issues, 'week')
+    expect(m.effortBreakdown).toEqual({ quickWin: 1, standardFix: 1, complexFix: 1 })
+    expect(m.totalImpactScore).toBe(11)
   })
 })

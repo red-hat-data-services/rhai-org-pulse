@@ -80,21 +80,103 @@ function processIssue(issue) {
   };
 }
 
-function extractTerminalAt(changelog, pipelineState) {
-  if (!changelog || !changelog.histories) return null;
+function extractPipelineHistory(changelog, pipelineState) {
+  const result = {
+    terminalAt: null,
+    ciFailureCount: 0,
+    reviewRoundCount: 0,
+    wasBlocked: false
+  };
+
+  if (!changelog || !changelog.histories) return result;
+
   const targetLabel = 'jira-' + pipelineState;
-  let latest = null;
+  let latestTerminal = null;
+
   for (const history of changelog.histories) {
     for (const item of history.items) {
       if (item.field !== 'labels') continue;
       const after = item.toString || '';
+
       if (after.includes(targetLabel)) {
         const ts = new Date(history.created).getTime();
-        if (latest === null || ts > latest) latest = ts;
+        if (latestTerminal === null || ts > latestTerminal) latestTerminal = ts;
+      }
+      if (after.includes('jira-autofix-ci-failing')) {
+        result.ciFailureCount++;
+      }
+      if (after.includes('jira-autofix-review')) {
+        result.reviewRoundCount++;
+      }
+      if (after.includes('jira-autofix-blocked')) {
+        result.wasBlocked = true;
       }
     }
   }
-  return latest ? new Date(latest).toISOString() : null;
+
+  result.terminalAt = latestTerminal ? new Date(latestTerminal).toISOString() : null;
+  return result;
+}
+
+function extractTerminalAt(changelog, pipelineState) {
+  return extractPipelineHistory(changelog, pipelineState).terminalAt;
+}
+
+function computeEffortScore(issue) {
+  if (issue.pipelineState !== 'autofix-merged') {
+    return { effortScore: null, effortTier: null };
+  }
+
+  var score = 1;
+
+  if ((issue.ciFailureCount || 0) > 0) score += 1;
+
+  var reviewRounds = issue.reviewRoundCount || 0;
+  if (reviewRounds > 1) score += (reviewRounds - 1);
+
+  if (issue.wasBlocked) score += 2;
+
+  if (issue.terminalAt && issue.created) {
+    var days = (new Date(issue.terminalAt).getTime() - new Date(issue.created).getTime()) / (24 * 60 * 60 * 1000);
+    if (days > 7) score += 1;
+  }
+
+  var priority = issue.priority || '';
+  if (priority === 'Blocker' || priority === 'Critical') score += 2;
+
+  var tier;
+  if (score <= 2) tier = 'Quick Win';
+  else if (score <= 4) tier = 'Standard Fix';
+  else tier = 'Complex Fix';
+
+  return { effortScore: score, effortTier: tier };
+}
+
+function computePriorityBreakdown(issues) {
+  var breakdown = {};
+  for (var i = 0; i < issues.length; i++) {
+    var p = issues[i].priority || 'Undefined';
+    breakdown[p] = (breakdown[p] || 0) + 1;
+  }
+  return breakdown;
+}
+
+function computeMedianTimeToFix(issues) {
+  var days = [];
+  for (var i = 0; i < issues.length; i++) {
+    var issue = issues[i];
+    if (issue.pipelineState !== 'autofix-merged') continue;
+    if (!issue.terminalAt || !issue.created) continue;
+    var d = (new Date(issue.terminalAt).getTime() - new Date(issue.created).getTime()) / (24 * 60 * 60 * 1000);
+    days.push(d);
+  }
+  if (days.length === 0) return null;
+  days.sort(function(a, b) { return a - b; });
+  var mid = Math.floor(days.length / 2);
+  if (days.length % 2 === 0) {
+    return Math.round(((days[mid - 1] + days[mid]) / 2) * 10) / 10;
+  }
+  return Math.round(days[mid] * 10) / 10;
 }
 
 function getLastWeekBounds() {
@@ -174,6 +256,26 @@ function computeAutofixMetrics(issues, timeWindow) {
     ? Math.round((autofixStates.merged / terminalTotal) * 100)
     : 0;
 
+  var priorityBreakdown = computePriorityBreakdown(
+    issues.filter(function(issue) { return issueInWindow(issue, windowStart, windowEnd, isLastWeek); })
+  );
+
+  var mergedWindowIssues = issues.filter(function(issue) {
+    return issue.pipelineState === 'autofix-merged' && issueInWindow(issue, windowStart, windowEnd, isLastWeek);
+  });
+
+  var medianTimeToFixDays = computeMedianTimeToFix(mergedWindowIssues);
+
+  var effortBreakdown = { quickWin: 0, standardFix: 0, complexFix: 0 };
+  var totalImpactScore = 0;
+  for (var j = 0; j < mergedWindowIssues.length; j++) {
+    var tier = mergedWindowIssues[j].effortTier;
+    if (tier === 'Quick Win') effortBreakdown.quickWin++;
+    else if (tier === 'Standard Fix') effortBreakdown.standardFix++;
+    else if (tier === 'Complex Fix') effortBreakdown.complexFix++;
+    totalImpactScore += (mergedWindowIssues[j].effortScore || 0);
+  }
+
   return {
     triageTotal,
     triageVerdicts,
@@ -182,7 +284,11 @@ function computeAutofixMetrics(issues, timeWindow) {
     terminalTotal,
     successRate,
     windowTotal,
-    totalIssues: issues.length
+    totalIssues: issues.length,
+    priorityBreakdown,
+    medianTimeToFixDays,
+    effortBreakdown,
+    totalImpactScore
   };
 }
 
@@ -290,7 +396,11 @@ async function fetchAutofixData(jiraRequest, config) {
       return jiraRequest(
         '/rest/api/3/issue/' + encodeURIComponent(issue.key) + '?expand=changelog&fields=labels'
       ).then(function(detail) {
-        issue.terminalAt = extractTerminalAt(detail.changelog, issue.pipelineState);
+        var history = extractPipelineHistory(detail.changelog, issue.pipelineState);
+        issue.terminalAt = history.terminalAt;
+        issue.ciFailureCount = history.ciFailureCount;
+        issue.reviewRoundCount = history.reviewRoundCount;
+        issue.wasBlocked = history.wasBlocked;
       });
     }));
     for (const r of results) {
@@ -298,6 +408,12 @@ async function fetchAutofixData(jiraRequest, config) {
         console.error('[autofix] changelog fetch failed:', r.reason?.message || r.reason);
       }
     }
+  }
+
+  for (let i = 0; i < processed.length; i++) {
+    var scoring = computeEffortScore(processed[i]);
+    processed[i].effortScore = scoring.effortScore;
+    processed[i].effortTier = scoring.effortTier;
   }
 
   return processed;
@@ -308,6 +424,10 @@ module.exports = {
   processIssue,
   classifyIssue,
   extractTerminalAt,
+  extractPipelineHistory,
+  computeEffortScore,
+  computePriorityBreakdown,
+  computeMedianTimeToFix,
   getLastWeekBounds,
   computeAutofixMetrics,
   buildTrendData,

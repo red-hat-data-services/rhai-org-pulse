@@ -140,7 +140,9 @@ module.exports = function registerRoutes(router, context) {
       terminalAt: issue.terminalAt || null,
       components: issue.components,
       assignee: issue.assignee,
-      pipelineState: issue.pipelineState
+      pipelineState: issue.pipelineState,
+      effortScore: issue.effortScore || null,
+      effortTier: issue.effortTier || null
     };
   }
 
@@ -177,7 +179,7 @@ module.exports = function registerRoutes(router, context) {
       return res.json({
         fetchedAt: null,
         jiraHost: JIRA_HOST,
-        metrics: { triageTotal: 0, triageVerdicts: {}, autofixStates: {}, autofixTotal: 0, successRate: 0, windowTotal: 0, totalIssues: 0 },
+        metrics: { triageTotal: 0, triageVerdicts: {}, autofixStates: {}, autofixTotal: 0, successRate: 0, windowTotal: 0, totalIssues: 0, priorityBreakdown: {}, medianTimeToFixDays: null, effortBreakdown: { quickWin: 0, standardFix: 0, complexFix: 0 }, totalImpactScore: 0 },
         trendData: [],
         issues: []
       });

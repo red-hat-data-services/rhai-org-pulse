@@ -251,7 +251,34 @@ const metrics = computed(() => {
   const terminalTotal = autofixStates.merged + autofixStates.rejected + autofixStates.maxRetries
   const successRate = terminalTotal > 0 ? Math.round((autofixStates.merged / terminalTotal) * 100) : 0
 
-  return { triageTotal, triageVerdicts, autofixStates, autofixTotal: triageVerdicts.ready, successRate, windowTotal: windowIssues.length, totalIssues: issues.length }
+  const priorityBreakdown = {}
+  for (const issue of windowIssues) {
+    const p = issue.priority || 'Undefined'
+    priorityBreakdown[p] = (priorityBreakdown[p] || 0) + 1
+  }
+
+  const mergedWindowIssues = windowIssues.filter(i => i.pipelineState === 'autofix-merged' && i.terminalAt)
+  let medianTimeToFixDays = null
+  if (mergedWindowIssues.length > 0) {
+    const days = mergedWindowIssues
+      .map(i => (new Date(i.terminalAt).getTime() - new Date(i.created).getTime()) / (24 * 60 * 60 * 1000))
+      .sort((a, b) => a - b)
+    const mid = Math.floor(days.length / 2)
+    medianTimeToFixDays = days.length % 2 === 0
+      ? Math.round(((days[mid - 1] + days[mid]) / 2) * 10) / 10
+      : Math.round(days[mid] * 10) / 10
+  }
+
+  const effortBreakdown = { quickWin: 0, standardFix: 0, complexFix: 0 }
+  let totalImpactScore = 0
+  for (const issue of mergedWindowIssues) {
+    if (issue.effortTier === 'Quick Win') effortBreakdown.quickWin++
+    else if (issue.effortTier === 'Standard Fix') effortBreakdown.standardFix++
+    else if (issue.effortTier === 'Complex Fix') effortBreakdown.complexFix++
+    totalImpactScore += (issue.effortScore || 0)
+  }
+
+  return { triageTotal, triageVerdicts, autofixStates, autofixTotal: triageVerdicts.ready, successRate, windowTotal: windowIssues.length, totalIssues: issues.length, priorityBreakdown, medianTimeToFixDays, effortBreakdown, totalImpactScore }
 })
 
 const trendData = computed(() => {
@@ -489,6 +516,13 @@ function stateColorClass(state) {
   return 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
 }
 
+function effortTierColorClass(tier) {
+  if (tier === 'Quick Win') return 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400'
+  if (tier === 'Standard Fix') return 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400'
+  if (tier === 'Complex Fix') return 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400'
+  return ''
+}
+
 function formatDate(iso) {
   if (!iso) return ''
   return new Date(iso).toLocaleDateString()
@@ -526,6 +560,44 @@ const autofixSegments = computed(() => {
 })
 
 const autofixSegmentTotal = computed(() => autofixSegments.value.reduce((s, v) => s + v.count, 0))
+
+const PRIORITY_COLORS = {
+  Blocker: { bar: 'bg-red-500', text: 'text-red-600 dark:text-red-400' },
+  Critical: { bar: 'bg-orange-500', text: 'text-orange-600 dark:text-orange-400' },
+  Major: { bar: 'bg-yellow-500', text: 'text-yellow-600 dark:text-yellow-400' },
+  Normal: { bar: 'bg-blue-500', text: 'text-blue-600 dark:text-blue-400' },
+  Minor: { bar: 'bg-green-500', text: 'text-green-600 dark:text-green-400' },
+  Undefined: { bar: 'bg-gray-400', text: 'text-gray-500 dark:text-gray-400' }
+}
+
+const PRIORITY_ORDER = ['Blocker', 'Critical', 'Major', 'Normal', 'Minor', 'Undefined']
+
+const prioritySegments = computed(() => {
+  if (!metrics.value?.priorityBreakdown) return []
+  const pb = metrics.value.priorityBreakdown
+  return PRIORITY_ORDER
+    .filter(p => (pb[p] || 0) > 0)
+    .map(p => ({
+      label: p,
+      count: pb[p] || 0,
+      color: PRIORITY_COLORS[p]?.bar || 'bg-gray-400',
+      textClass: PRIORITY_COLORS[p]?.text || 'text-gray-500'
+    }))
+})
+
+const prioritySegmentTotal = computed(() => prioritySegments.value.reduce((s, v) => s + v.count, 0))
+
+const effortSegments = computed(() => {
+  if (!metrics.value?.effortBreakdown) return []
+  const eb = metrics.value.effortBreakdown
+  return [
+    { label: 'Quick Win', count: eb.quickWin || 0, color: 'bg-green-500', textClass: 'text-green-600 dark:text-green-400' },
+    { label: 'Standard Fix', count: eb.standardFix || 0, color: 'bg-blue-500', textClass: 'text-blue-600 dark:text-blue-400' },
+    { label: 'Complex Fix', count: eb.complexFix || 0, color: 'bg-purple-500', textClass: 'text-purple-600 dark:text-purple-400' }
+  ].filter(s => s.count > 0)
+})
+
+const effortSegmentTotal = computed(() => effortSegments.value.reduce((s, v) => s + v.count, 0))
 
 function buildJiraLabelUrl(jiraLabels, excludeLabels) {
   const host = jiraHost.value
@@ -924,6 +996,124 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
 
         </div>
 
+        <!-- Impact Metrics -->
+        <div class="px-6 pb-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Priority Distribution -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                Priority Distribution
+                <div class="relative group">
+                  <svg class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div class="absolute left-0 top-6 z-20 hidden group-hover:block w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50 p-3 text-xs text-gray-700 dark:text-gray-300">
+                    Distribution of Jira priorities across all issues in the selected time window. Priorities are set by the ticket reporter or team lead.
+                  </div>
+                </div>
+              </h3>
+              <span class="text-xs text-gray-400 dark:text-gray-500">{{ prioritySegmentTotal }} issues</span>
+            </div>
+
+            <div class="flex h-6 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 mb-4" v-if="prioritySegmentTotal > 0">
+              <div
+                v-for="seg in prioritySegments"
+                :key="seg.label"
+                class="transition-all duration-500"
+                :class="seg.color"
+                :style="{ width: (seg.count / prioritySegmentTotal * 100) + '%' }"
+                :title="`${seg.label}: ${seg.count}`"
+              />
+            </div>
+
+            <div class="space-y-2.5">
+              <div v-for="seg in prioritySegments" :key="seg.label" class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-sm shrink-0" :class="seg.color" />
+                  <span class="text-sm text-gray-600 dark:text-gray-300">{{ seg.label }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-semibold" :class="seg.textClass">{{ seg.count }}</span>
+                  <span class="text-xs text-gray-400 dark:text-gray-500 w-10 text-right">{{ prioritySegmentTotal > 0 ? Math.round(seg.count / prioritySegmentTotal * 100) : 0 }}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Effort Breakdown -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                Effort Breakdown
+                <div class="relative group">
+                  <svg class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div class="absolute left-0 top-6 z-20 hidden group-hover:block w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50 p-3 text-xs text-gray-700 dark:text-gray-300">
+                    Effort score measures fix complexity based on observable pipeline signals. Scoring: Base (1 pt), CI failures (+1), Extra review rounds (+1 each), Was blocked (+2), Time-to-fix over 7 days (+1), Blocker/Critical priority (+2). Tiers: Quick Win (1-2 pts), Standard Fix (3-4 pts), Complex Fix (5+ pts).
+                  </div>
+                </div>
+              </h3>
+              <span class="text-xs text-gray-400 dark:text-gray-500">{{ effortSegmentTotal }} issues</span>
+            </div>
+
+            <template v-if="effortSegmentTotal > 0">
+              <div class="flex h-6 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 mb-4">
+                <div
+                  v-for="seg in effortSegments"
+                  :key="seg.label"
+                  class="transition-all duration-500"
+                  :class="seg.color"
+                  :style="{ width: (seg.count / effortSegmentTotal * 100) + '%' }"
+                  :title="`${seg.label}: ${seg.count}`"
+                />
+              </div>
+
+              <div class="space-y-2.5">
+                <div v-for="seg in effortSegments" :key="seg.label" class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-sm shrink-0" :class="seg.color" />
+                    <span class="text-sm text-gray-600 dark:text-gray-300">{{ seg.label }}</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold" :class="seg.textClass">{{ seg.count }}</span>
+                    <span class="text-xs text-gray-400 dark:text-gray-500 w-10 text-right">{{ effortSegmentTotal > 0 ? Math.round(seg.count / effortSegmentTotal * 100) : 0 }}%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-gray-500 dark:text-gray-400">Total Impact Score</span>
+                  <span class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ metrics.totalImpactScore }}</span>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <!-- Time to Fix -->
+          <div class="relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+            <div class="flex items-center gap-2 mb-4">
+              <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Time to Fix</h3>
+              <div class="relative group">
+                <svg class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div class="absolute left-0 top-6 z-20 hidden group-hover:block w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50 p-3 text-xs text-gray-700 dark:text-gray-300">
+                  Median elapsed time from issue creation to merged fix for successfully resolved issues in the selected time window.
+                </div>
+              </div>
+            </div>
+            <div class="flex flex-col items-center justify-center py-4">
+              <div class="text-4xl font-bold text-gray-900 dark:text-gray-100">
+                {{ metrics.medianTimeToFixDays !== null ? metrics.medianTimeToFixDays + ' days' : 'N/A' }}
+              </div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-2 uppercase tracking-wide">Median Time to Fix</div>
+              <div class="text-[10px] text-gray-400 dark:text-gray-500 mt-1">{{ metrics.autofixStates?.merged || 0 }} merged issues</div>
+            </div>
+          </div>
+        </div>
+
         <!-- Pipeline Trends -->
         <div class="px-6 pb-6 grid grid-cols-1 lg:grid-cols-3 gap-6" v-if="trendData.length > 0 && hasTrendActivity">
           <!-- Waiting on Humans: Triage -->
@@ -1101,6 +1291,7 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
                     <th class="px-5 py-2 text-left text-gray-500 dark:text-gray-400 font-medium">Summary</th>
                     <th class="px-5 py-2 text-left text-gray-500 dark:text-gray-400 font-medium">Status</th>
                     <th class="px-5 py-2 text-left text-gray-500 dark:text-gray-400 font-medium">State</th>
+                    <th class="px-5 py-2 text-left text-gray-500 dark:text-gray-400 font-medium">Effort</th>
                     <th class="px-5 py-2 text-left text-gray-500 dark:text-gray-400 font-medium">Component</th>
                     <th class="px-5 py-2 text-left text-gray-500 dark:text-gray-400 font-medium">Created</th>
                   </tr>
@@ -1129,13 +1320,17 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
                         :class="stateColorClass(issue.pipelineState)"
                       >{{ stateLabel(issue.pipelineState) }}</span>
                     </td>
+                    <td class="px-5 py-2">
+                      <span v-if="issue.effortTier" class="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold" :class="effortTierColorClass(issue.effortTier)">{{ issue.effortTier }}</span>
+                      <span v-else class="text-gray-300 dark:text-gray-600">&mdash;</span>
+                    </td>
                     <td class="px-5 py-2 text-gray-600 dark:text-gray-400 text-xs">
                       {{ issue.components.join(', ') || '—' }}
                     </td>
                     <td class="px-5 py-2 text-gray-500 dark:text-gray-400 text-xs whitespace-nowrap">{{ formatDate(issue.created) }}</td>
                   </tr>
                   <tr v-if="filteredIssues.length === 0">
-                    <td colspan="6" class="px-5 py-8 text-center text-gray-500 dark:text-gray-400">
+                    <td colspan="7" class="px-5 py-8 text-center text-gray-500 dark:text-gray-400">
                       No issues found matching the current filters.
                     </td>
                   </tr>
