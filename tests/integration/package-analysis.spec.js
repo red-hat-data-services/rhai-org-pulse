@@ -111,4 +111,122 @@ test.describe('Package Analysis @package-analysis', () => {
 
     expect(page.errors).toHaveLength(0);
   });
+
+  test('should show Nightly Analysis tab', async ({ page }) => {
+    await page.goto('/#/product-builds/package-analysis');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const nightlyTab = page.getByRole('button', { name: /Nightly/ });
+    await expect(nightlyTab).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('should navigate to Nightly Analysis and auto-load latest pipeline', async ({ page }) => {
+    await page.goto('/#/product-builds/package-analysis?tab=nightly');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.locator('text=Pipeline History')).toBeVisible();
+    await expect(page.locator('text=Total Jobs')).toBeVisible();
+    await expect(page.locator('text=Passed')).toBeVisible();
+    await expect(page.locator('text=Failed')).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('should show Chart/Strip toggle in Pipeline History', async ({ page }) => {
+    await page.goto('/#/product-builds/package-analysis?tab=nightly');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.getByRole('button', { name: 'Chart' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Strip' })).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('should switch to Strip view and show dates', async ({ page }) => {
+    await page.goto('/#/product-builds/package-analysis?tab=nightly');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const stripBtn = page.getByRole('button', { name: 'Strip' });
+    await stripBtn.click();
+    await page.waitForTimeout(500);
+
+    const dateLabels = page.locator('text=/^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \\d+$/');
+    const count = await dateLabels.count();
+    expect(count).toBeGreaterThan(0);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('should show collapsible Collections box', async ({ page }) => {
+    await page.goto('/#/product-builds/package-analysis?tab=nightly');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const collectionsHeader = page.locator('summary').filter({ hasText: 'Collections' });
+    await expect(collectionsHeader).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('should show Root Cause Analysis section when RCA data is available', async ({ page }) => {
+    await page.goto('/#/product-builds/package-analysis?tab=nightly');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const rcaSection = page.locator('summary').filter({ hasText: 'Root Cause Analysis' });
+    const rcaLoading = page.locator('text=Loading failure analysis');
+    await page.waitForTimeout(3000);
+
+    const hasRca = await rcaSection.isVisible();
+    const stillLoading = await rcaLoading.isVisible();
+    if (hasRca) {
+      await expect(rcaSection).toBeVisible();
+      const issueGroupText = page.locator('text=/\\d+ issue group/');
+      await expect(issueGroupText).toBeVisible();
+    }
+    expect(stillLoading).toBe(false);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('should show Jira ticket links in RCA issue groups', async ({ page }) => {
+    await page.goto('/#/product-builds/package-analysis?tab=nightly');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME + 3000);
+
+    const rcaSection = page.locator('summary').filter({ hasText: 'Root Cause Analysis' });
+    if (await rcaSection.isVisible()) {
+      const jiraBadge = page.locator('a').filter({ hasText: /^AIPCC-\d+/ });
+      const count = await jiraBadge.count();
+      if (count > 0) {
+        const href = await jiraBadge.first().getAttribute('href');
+        expect(href).toContain('redhat.atlassian.net/browse/AIPCC-');
+      }
+    }
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('should click a different pipeline and update details', async ({ page }) => {
+    await page.goto('/#/product-builds/package-analysis?tab=nightly');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const svgDots = page.locator('svg circle[r="16"]');
+    const dotCount = await svgDots.count();
+    if (dotCount > 1) {
+      await svgDots.first().click();
+      await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+      await expect(page.locator('text=Total Jobs')).toBeVisible();
+    }
+
+    expect(page.errors).toHaveLength(0);
+  });
 });

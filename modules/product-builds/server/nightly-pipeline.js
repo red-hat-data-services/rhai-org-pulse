@@ -376,8 +376,9 @@ async function fetchRcaData(token, pipelineId) {
       : null,
   ]);
 
-  const analysisSummary = summaryRaw ? JSON.parse(summaryRaw) : null;
-  const jiraTickets = ticketsRaw ? JSON.parse(ticketsRaw) : null;
+  const safeParse = (raw) => { try { return JSON.parse(raw); } catch { return null; } };
+  const analysisSummary = summaryRaw ? safeParse(summaryRaw) : null;
+  const jiraTickets = ticketsRaw ? safeParse(ticketsRaw) : null;
 
   if (!analysisSummary) {
     return { available: false, reason: 'Analysis artifacts not available (may have expired)' };
