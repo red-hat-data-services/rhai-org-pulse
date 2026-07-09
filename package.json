@@ -34,6 +34,7 @@
     "@vue-flow/minimap": "^1.5.4",
     "@vueuse/core": "^14.3.0",
     "express": "^5.2.1",
+    "js-yaml": "^5.2.1",
     "mermaid": "^11.16.0"
   },
   "devDependencies": {

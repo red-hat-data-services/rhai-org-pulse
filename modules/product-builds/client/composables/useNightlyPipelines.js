@@ -13,7 +13,6 @@ export function useNightlyPipelines() {
   const error = ref(null)
   const packages = ref({})
   const packagesLoading = ref(new Set())
-  const collectionStats = ref({})
 
   async function loadPipelines(limit = 14) {
     loading.value = true
@@ -38,14 +37,7 @@ export function useNightlyPipelines() {
     packages.value = {}
     packagesLoading.value = new Set()
     try {
-      const data = await apiRequest(`${BASE}/${pipelineId}/jobs`)
-      jobs.value = data
-      if (data?.collections) {
-        const entries = Object.values(data.collections)
-        const total = entries.length
-        const passed = entries.filter(c => c.status === 'success').length
-        collectionStats.value = { ...collectionStats.value, [pipelineId]: { total, passed, failed: total - passed } }
-      }
+      jobs.value = await apiRequest(`${BASE}/${pipelineId}/jobs`)
     } catch (e) {
       error.value = e.message
       jobs.value = null
@@ -102,7 +94,6 @@ export function useNightlyPipelines() {
     error,
     packages,
     packagesLoading,
-    collectionStats,
     loadPipelines,
     loadPipelineJobs,
     loadCollectionPackages,

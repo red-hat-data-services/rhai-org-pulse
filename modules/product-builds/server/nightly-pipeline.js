@@ -127,6 +127,7 @@ function structureJobs(jobs) {
   }
 
   const collectionSummaries = {};
+  const allStatuses = [];
   let totalCount = 0, successCount = 0, failedCount = 0, skippedCount = 0;
   for (const [name, variants] of Object.entries(collections)) {
     const statuses = [];
@@ -134,6 +135,7 @@ function structureJobs(jobs) {
       for (const stages of Object.values(archs)) {
         for (const job of Object.values(stages)) {
           statuses.push(job.status);
+          allStatuses.push(job.status);
           totalCount++;
           if (job.status === 'success') successCount++;
           else if (job.status === 'failed') failedCount++;
@@ -148,6 +150,7 @@ function structureJobs(jobs) {
   }
 
   return {
+    status: rollUpStatus(allStatuses),
     summary: { total: totalCount, success: successCount, failed: failedCount, skipped: skippedCount },
     failed_jobs: failedJobs,
     collections: collectionSummaries,
@@ -295,6 +298,7 @@ function filterBySupported(structured, supportedVariants) {
   if (!supportedVariants) return structured;
 
   const filteredCollections = {};
+  const allStatuses = [];
   let totalCount = 0, successCount = 0, failedCount = 0, skippedCount = 0;
 
   for (const [name, col] of Object.entries(structured.collections)) {
@@ -306,6 +310,7 @@ function filterBySupported(structured, supportedVariants) {
       for (const stages of Object.values(archs)) {
         for (const job of Object.values(stages)) {
           statuses.push(job.status);
+          allStatuses.push(job.status);
           totalCount++;
           if (job.status === 'success') successCount++;
           else if (job.status === 'failed') failedCount++;
@@ -315,15 +320,6 @@ function filterBySupported(structured, supportedVariants) {
     }
     if (Object.keys(filteredVariants).length > 0) {
       filteredCollections[name] = { status: rollUpStatus(statuses), variants: filteredVariants };
-    }
-  }
-
-  const allStatuses = [];
-  for (const col of Object.values(filteredCollections)) {
-    for (const archs of Object.values(col.variants)) {
-      for (const stages of Object.values(archs)) {
-        for (const job of Object.values(stages)) allStatuses.push(job.status);
-      }
     }
   }
 
