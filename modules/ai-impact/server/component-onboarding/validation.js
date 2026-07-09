@@ -1,4 +1,4 @@
-const VALID_COMPLETION_STATUSES = ['completed', 'in-progress'];
+const VALID_COMPLETION_STATUSES = ['completed', 'in-progress', 'new'];
 const VALID_PRODUCT_CONTEXTS = ['RHOAI', 'ODH'];
 const VALID_ONBOARDING_METHODS = ['automated', 'manual'];
 const VALID_KEY_PREFIXES = ['RHOAIENG-'];
@@ -167,6 +167,11 @@ function validateComponentOnboarding(body) {
     errors.push('contextPath must be a string');
   }
 
+  // targetVersion: optional string (Jira Target Version / customfield_10855)
+  if (body.targetVersion !== undefined && body.targetVersion !== null && typeof body.targetVersion !== 'string') {
+    errors.push('targetVersion must be a string or null');
+  }
+
   if (errors.length > 0) {
     return { valid: false, errors };
   }
@@ -195,7 +200,8 @@ function validateComponentOnboarding(body) {
       validationDate: body.validationDate || null,
       onboardingMethod: body.onboardingMethod || 'automated',
       firstCommentDate: body.firstCommentDate || null,
-      contextPath: body.contextPath || ''
+      contextPath: body.contextPath || '',
+      targetVersion: body.targetVersion || null
     }
   };
 }

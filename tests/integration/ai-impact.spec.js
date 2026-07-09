@@ -253,3 +253,84 @@ test.describe('AI Impact Views @ai-impact', () => {
     expect(unexpectedErrors).toHaveLength(0);
   });
 });
+
+/**
+ * Build & Release (Component Onboarding) — status badges, filters, metrics
+ */
+test.describe('AI Impact Build & Release @ai-impact', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+    await page.goto('/#/ai-impact/build-release');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('"New" metric card renders in the header', async ({ page }) => {
+    const newCard = page.locator('text=New').first();
+    await expect(newCard).toBeVisible();
+
+    const pendingLabel = page.locator('text=pending start');
+    await expect(pendingLabel).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('"New" status badge displays with blue styling', async ({ page }) => {
+    const newBadge = page.locator('.rounded-full:has-text("New")').first();
+    await expect(newBadge).toBeVisible();
+
+    const hasBlueStyling = await newBadge.evaluate(el => {
+      return el.className.includes('bg-blue-100') || el.className.includes('blue');
+    });
+    expect(hasBlueStyling).toBe(true);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('target version dropdown appears and filters correctly', async ({ page }) => {
+    const versionSelect = page.locator('select').filter({ hasText: 'All versions' });
+    await expect(versionSelect).toBeVisible();
+
+    const options = await versionSelect.locator('option').allTextContents();
+    expect(options).toContain('All versions');
+    expect(options.length).toBeGreaterThan(1);
+
+    await versionSelect.selectOption({ index: 1 });
+    await page.waitForTimeout(500);
+
+    const countText = page.locator('text=/\\d+ components?/');
+    await expect(countText).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('status filter includes "New" option and filters correctly', async ({ page }) => {
+    const statusSelect = page.locator('select').filter({ hasText: 'All statuses' });
+    await expect(statusSelect).toBeVisible();
+
+    const options = await statusSelect.locator('option').allTextContents();
+    expect(options).toContain('New');
+
+    await statusSelect.selectOption('new');
+    await page.waitForTimeout(500);
+
+    const rows = page.locator('table tbody tr');
+    const rowCount = await rows.count();
+    expect(rowCount).toBeGreaterThan(0);
+
+    for (let i = 0; i < rowCount; i++) {
+      const row = rows.nth(i);
+      const badge = row.locator('.rounded-full');
+      if (await badge.count() > 0) {
+        const text = await badge.first().textContent();
+        expect(text.trim()).toBe('New');
+      }
+    }
+
+    expect(page.errors).toHaveLength(0);
+  });
+});
