@@ -211,6 +211,26 @@ test.describe('AI Impact Views @ai-impact', () => {
     await testView(page, 'autofix', 'AutoFix');
   });
 
+  test('Jira AutoFix view renders impact metrics sections', async ({ page }) => {
+    await page.goto('/#/ai-impact/autofix');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const priorityHeading = page.locator('text=Priority Distribution');
+    await expect(priorityHeading).toBeVisible();
+
+    const effortHeading = page.locator('text=Effort Breakdown');
+    await expect(effortHeading).toBeVisible();
+
+    const ttfHeading = page.locator('text=Time to Fix');
+    await expect(ttfHeading).toBeVisible();
+
+    const effortColumn = page.locator('th:has-text("Effort")');
+    await expect(effortColumn).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
   test('should load Test Plan Review view', async ({ page }) => {
     await testView(page, 'test-plan-review', 'Test Plan Review');
   });

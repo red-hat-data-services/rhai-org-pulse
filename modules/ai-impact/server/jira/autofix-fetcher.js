@@ -127,24 +127,24 @@ function computeEffortScore(issue) {
     return { effortScore: null, effortTier: null };
   }
 
-  var score = 1;
+  let score = 1;
 
   if ((issue.ciFailureCount || 0) > 0) score += 1;
 
-  var reviewRounds = issue.reviewRoundCount || 0;
+  const reviewRounds = issue.reviewRoundCount || 0;
   if (reviewRounds > 1) score += (reviewRounds - 1);
 
   if (issue.wasBlocked) score += 2;
 
   if (issue.terminalAt && issue.created) {
-    var days = (new Date(issue.terminalAt).getTime() - new Date(issue.created).getTime()) / (24 * 60 * 60 * 1000);
+    const days = (new Date(issue.terminalAt).getTime() - new Date(issue.created).getTime()) / (24 * 60 * 60 * 1000);
     if (days > 7) score += 1;
   }
 
-  var priority = issue.priority || '';
+  const priority = issue.priority || '';
   if (priority === 'Blocker' || priority === 'Critical') score += 2;
 
-  var tier;
+  let tier;
   if (score <= 2) tier = 'Quick Win';
   else if (score <= 4) tier = 'Standard Fix';
   else tier = 'Complex Fix';
@@ -153,26 +153,26 @@ function computeEffortScore(issue) {
 }
 
 function computePriorityBreakdown(issues) {
-  var breakdown = {};
-  for (var i = 0; i < issues.length; i++) {
-    var p = issues[i].priority || 'Undefined';
+  const breakdown = {};
+  for (let i = 0; i < issues.length; i++) {
+    const p = issues[i].priority || 'Undefined';
     breakdown[p] = (breakdown[p] || 0) + 1;
   }
   return breakdown;
 }
 
 function computeMedianTimeToFix(issues) {
-  var days = [];
-  for (var i = 0; i < issues.length; i++) {
-    var issue = issues[i];
+  const days = [];
+  for (let i = 0; i < issues.length; i++) {
+    const issue = issues[i];
     if (issue.pipelineState !== 'autofix-merged') continue;
     if (!issue.terminalAt || !issue.created) continue;
-    var d = (new Date(issue.terminalAt).getTime() - new Date(issue.created).getTime()) / (24 * 60 * 60 * 1000);
+    const d = (new Date(issue.terminalAt).getTime() - new Date(issue.created).getTime()) / (24 * 60 * 60 * 1000);
     days.push(d);
   }
   if (days.length === 0) return null;
   days.sort(function(a, b) { return a - b; });
-  var mid = Math.floor(days.length / 2);
+  const mid = Math.floor(days.length / 2);
   if (days.length % 2 === 0) {
     return Math.round(((days[mid - 1] + days[mid]) / 2) * 10) / 10;
   }
@@ -256,20 +256,20 @@ function computeAutofixMetrics(issues, timeWindow) {
     ? Math.round((autofixStates.merged / terminalTotal) * 100)
     : 0;
 
-  var priorityBreakdown = computePriorityBreakdown(
+  const priorityBreakdown = computePriorityBreakdown(
     issues.filter(function(issue) { return issueInWindow(issue, windowStart, windowEnd, isLastWeek); })
   );
 
-  var mergedWindowIssues = issues.filter(function(issue) {
+  const mergedWindowIssues = issues.filter(function(issue) {
     return issue.pipelineState === 'autofix-merged' && issueInWindow(issue, windowStart, windowEnd, isLastWeek);
   });
 
-  var medianTimeToFixDays = computeMedianTimeToFix(mergedWindowIssues);
+  const medianTimeToFixDays = computeMedianTimeToFix(mergedWindowIssues);
 
-  var effortBreakdown = { quickWin: 0, standardFix: 0, complexFix: 0 };
-  var totalImpactScore = 0;
-  for (var j = 0; j < mergedWindowIssues.length; j++) {
-    var tier = mergedWindowIssues[j].effortTier;
+  const effortBreakdown = { quickWin: 0, standardFix: 0, complexFix: 0 };
+  let totalImpactScore = 0;
+  for (let j = 0; j < mergedWindowIssues.length; j++) {
+    const tier = mergedWindowIssues[j].effortTier;
     if (tier === 'Quick Win') effortBreakdown.quickWin++;
     else if (tier === 'Standard Fix') effortBreakdown.standardFix++;
     else if (tier === 'Complex Fix') effortBreakdown.complexFix++;
@@ -396,7 +396,7 @@ async function fetchAutofixData(jiraRequest, config) {
       return jiraRequest(
         '/rest/api/3/issue/' + encodeURIComponent(issue.key) + '?expand=changelog&fields=labels'
       ).then(function(detail) {
-        var history = extractPipelineHistory(detail.changelog, issue.pipelineState);
+        const history = extractPipelineHistory(detail.changelog, issue.pipelineState);
         issue.terminalAt = history.terminalAt;
         issue.ciFailureCount = history.ciFailureCount;
         issue.reviewRoundCount = history.reviewRoundCount;
@@ -411,7 +411,7 @@ async function fetchAutofixData(jiraRequest, config) {
   }
 
   for (let i = 0; i < processed.length; i++) {
-    var scoring = computeEffortScore(processed[i]);
+    const scoring = computeEffortScore(processed[i]);
     processed[i].effortScore = scoring.effortScore;
     processed[i].effortTier = scoring.effortTier;
   }

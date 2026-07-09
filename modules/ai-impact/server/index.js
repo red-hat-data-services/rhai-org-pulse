@@ -141,8 +141,8 @@ module.exports = function registerRoutes(router, context) {
       components: issue.components,
       assignee: issue.assignee,
       pipelineState: issue.pipelineState,
-      effortScore: issue.effortScore || null,
-      effortTier: issue.effortTier || null
+      effortScore: issue.effortScore ?? null,
+      effortTier: issue.effortTier ?? null
     };
   }
 
