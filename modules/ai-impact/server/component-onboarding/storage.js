@@ -88,6 +88,7 @@ function getLatestProjection(data) {
       onboardingMethod: entry.latest.onboardingMethod || 'automated',
       firstCommentDate: entry.latest.firstCommentDate || null,
       contextPath: entry.latest.contextPath || '',
+      targetVersion: entry.latest.targetVersion || null,
       syncedAt: entry.latest.syncedAt
     };
   }
