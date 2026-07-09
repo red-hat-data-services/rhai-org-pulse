@@ -100,18 +100,21 @@ function stratBadgeLabel(detail) {
         FPDoR Readiness
         <span class="font-normal ml-1" :class="fpdor.passedCount === fpdor.evaluatedCount ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'">({{ fpdor.passedCount }}/{{ fpdor.evaluatedCount }} passed)</span>
       </div>
-      <div v-for="item in fpdor.items" :key="item.name" class="flex items-center gap-2 py-0.5 text-xs">
-        <svg v-if="item.pass === true" class="w-3.5 h-3.5 text-green-500 dark:text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+      <div v-for="item in fpdor.items" :key="item.name" class="flex items-start gap-2 py-0.5 text-xs">
+        <svg v-if="item.pass === true" class="w-3.5 h-3.5 text-green-500 dark:text-green-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
         </svg>
-        <svg v-else-if="item.pass === false" class="w-3.5 h-3.5 text-red-500 dark:text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <svg v-else-if="item.pass === false" class="w-3.5 h-3.5 text-red-500 dark:text-red-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
-        <svg v-else class="w-3.5 h-3.5 text-gray-300 dark:text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <svg v-else class="w-3.5 h-3.5 text-gray-300 dark:text-gray-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
         </svg>
-        <span :class="item.pass === true ? 'text-gray-700 dark:text-gray-300' : item.pass === false ? 'text-gray-500 dark:text-gray-400' : 'text-gray-400 dark:text-gray-500'">{{ item.name }}</span>
-        <span v-if="item.state === 'not-evaluated'" class="text-[10px] text-gray-400 dark:text-gray-500">(not evaluated)</span>
+        <div class="flex-1 min-w-0">
+          <span :class="item.pass === true ? 'text-gray-700 dark:text-gray-300' : item.pass === false ? 'text-gray-500 dark:text-gray-400' : 'text-gray-400 dark:text-gray-500'">{{ item.name }}</span>
+          <span v-if="item.state === 'not-evaluated'" class="text-[10px] text-gray-400 dark:text-gray-500 ml-1">(not evaluated)</span>
+          <div v-if="item.detail && item.pass !== true" class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 truncate">{{ item.detail }}</div>
+        </div>
       </div>
     </div>
     <div v-if="hasActiveBlockers">
@@ -176,25 +179,6 @@ function stratBadgeLabel(detail) {
         </svg>
         <span :class="check.passed ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'">{{ check.label }}</span>
         <span v-if="check.detail && !check.passed" class="text-gray-400 dark:text-gray-500 truncate">{{ check.detail }}</span>
-      </div>
-    </div>
-
-    <!-- Planning Readiness Checks (DoR-P series) -->
-    <div v-if="planningChecks && planningChecks.checks" class="border-t border-gray-100 dark:border-gray-700 pt-2">
-      <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
-        Planning Readiness
-        <span v-if="planningChecks.hasHardBlockers" class="text-red-600 dark:text-red-400 font-normal ml-1">({{ planningChecks.hardBlockersFailed.length }} blocker{{ planningChecks.hardBlockersFailed.length !== 1 ? 's' : '' }})</span>
-        <span v-else class="text-green-600 dark:text-green-400 font-normal ml-1">({{ planningChecks.passedCount }}/{{ planningChecks.totalCount }} passed)</span>
-      </div>
-      <div v-for="check in planningChecks.checks" :key="check.id" class="flex items-center gap-2 py-0.5 text-xs">
-        <svg v-if="check.passed" class="w-3.5 h-3.5 text-green-500 dark:text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
-        <svg v-else class="w-3.5 h-3.5 text-red-500 dark:text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-        <span :class="check.passed ? 'text-gray-700 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'">{{ check.label }}</span>
-        <span v-if="check.detail" class="text-gray-400 dark:text-gray-500 truncate">{{ check.detail }}</span>
       </div>
     </div>
   </div>

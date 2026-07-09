@@ -128,6 +128,36 @@ module.exports = function registerHygieneRoutes(router, context) {
     return DATA_PREFIX + '/features-' + version + '.json';
   }
 
+  function resolveHygieneVersion(version) {
+    var data = storage.readFromStorage(storageKey(version));
+    if (data) return { data: data, resolvedVersion: version };
+
+    var registry = readRegistry(storage.readFromStorage);
+    var registryReleases = registry.releases || [];
+    for (var ri = 0; ri < registryReleases.length; ri++) {
+      var rel = registryReleases[ri];
+      var aliases = [rel.displayName, rel.id].concat(rel.fixVersions || []).filter(Boolean);
+      var isMatch = false;
+      for (var ai = 0; ai < aliases.length; ai++) {
+        if (aliases[ai] === version) { isMatch = true; break; }
+      }
+      if (!isMatch) {
+        for (var ai2 = 0; ai2 < aliases.length; ai2++) {
+          if (aliases[ai2].indexOf(version) !== -1 || version.indexOf(aliases[ai2]) !== -1) { isMatch = true; break; }
+        }
+      }
+      if (isMatch) {
+        for (var ai3 = 0; ai3 < aliases.length; ai3++) {
+          if (aliases[ai3] !== version) {
+            var aliasData = storage.readFromStorage(storageKey(aliases[ai3]));
+            if (aliasData) return { data: aliasData, resolvedVersion: aliases[ai3] };
+          }
+        }
+      }
+    }
+    return { data: null, resolvedVersion: version };
+  }
+
   async function runHygieneRefreshAll(options) {
     options = options || {};
     if (refreshState.running) return { status: 'already_running' };
@@ -259,7 +289,8 @@ module.exports = function registerHygieneRoutes(router, context) {
       return res.status(400).json({ error: 'version query parameter is required' });
     }
 
-    var data = storage.readFromStorage(storageKey(version));
+    var resolved = resolveHygieneVersion(version);
+    var data = resolved.data;
     if (!data) {
       return res.json({ features: {}, fetchedAt: null, version: version });
     }
@@ -283,7 +314,8 @@ module.exports = function registerHygieneRoutes(router, context) {
       return res.status(400).json({ error: 'version query parameter is required' });
     }
 
-    var data = storage.readFromStorage(storageKey(version));
+    var resolved = resolveHygieneVersion(version);
+    var data = resolved.data;
     if (!data || !data.features) {
       return res.json({
         version: version,

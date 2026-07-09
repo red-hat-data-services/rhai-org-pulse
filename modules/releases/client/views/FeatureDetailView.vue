@@ -22,6 +22,27 @@ const hygieneViolations = ref([])
 const hygieneAvailable = ref(true)
 const hygieneExpanded = ref(false)
 
+// --- FPDoR Readiness ---
+const fpdorData = ref(null)
+const fpdorLoading = ref(false)
+
+async function loadFPDoR(version, key) {
+  if (!version || !key) return
+  fpdorLoading.value = true
+  try {
+    const data = await apiRequest(`/modules/releases/planning/releases/${encodeURIComponent(version)}/health/feature/${encodeURIComponent(key)}`)
+    if (data && data.fpdor) {
+      fpdorData.value = data.fpdor
+    } else {
+      fpdorData.value = null
+    }
+  } catch {
+    fpdorData.value = null
+  } finally {
+    fpdorLoading.value = false
+  }
+}
+
 async function loadHygiene(version) {
   if (!version) { hygieneAvailable.value = false; return }
   hygieneLoading.value = true
@@ -345,6 +366,7 @@ watch(feature, (feat) => {
   const version = versionParam || (feat?.fixVersions?.length ? feat.fixVersions[0] : null)
   if (version) {
     loadHygiene(version)
+    if (featureKey.value) loadFPDoR(version, featureKey.value)
   } else if (feat) {
     hygieneAvailable.value = false
   }
@@ -439,6 +461,40 @@ onMounted(() => {
 
         <!-- Release signoff: summary row in header; full panel expands on click -->
         <SignoffSection v-if="signoffValidation" collapsible :validation="signoffValidation" />
+      </div>
+
+      <!-- FPDoR Readiness Section -->
+      <div
+        v-if="fpdorData && fpdorData.items"
+        class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
+      >
+        <div class="flex items-center gap-3 mb-3">
+          <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">FPDoR Readiness</span>
+          <span
+            class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold"
+            :class="fpdorData.passedCount === fpdorData.evaluatedCount ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200'"
+          >{{ fpdorData.passedCount }}/{{ fpdorData.totalCount }}</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1">
+          <div v-for="item in fpdorData.items" :key="item.name" class="flex items-start gap-2 py-1 text-sm">
+            <svg v-if="item.pass === true" class="w-4 h-4 text-green-500 dark:text-green-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            <svg v-else-if="item.pass === false" class="w-4 h-4 text-red-500 dark:text-red-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            <svg v-else class="w-4 h-4 text-gray-300 dark:text-gray-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
+            </svg>
+            <div class="min-w-0">
+              <span :class="item.pass === true ? 'text-gray-700 dark:text-gray-300' : item.pass === false ? 'text-gray-500 dark:text-gray-400' : 'text-gray-400 dark:text-gray-500'">{{ item.name }}</span>
+              <div v-if="item.detail && item.pass !== true" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 truncate">{{ item.detail }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-else-if="fpdorLoading" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+        <span class="text-sm text-gray-500 dark:text-gray-400">Loading readiness data...</span>
       </div>
 
       <!-- Hygiene Section (collapsible) -->

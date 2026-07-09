@@ -13,16 +13,6 @@ var hasContent = computed(function() {
   return props.fpdor && props.fpdor.items && props.fpdor.items.length > 0
 })
 
-var jiraItems = computed(function() {
-  if (!props.fpdor || !props.fpdor.items) return []
-  return props.fpdor.items.filter(function(item) { return item.source === 'jira' })
-})
-
-var rubricItems = computed(function() {
-  if (!props.fpdor || !props.fpdor.items) return []
-  return props.fpdor.items.filter(function(item) { return item.source === 'strat-pipeline' })
-})
-
 var badgeLabel = computed(function() {
   if (!props.fpdor) return '—'
   return props.fpdor.passedCount + '/' + props.fpdor.totalCount
@@ -45,24 +35,6 @@ var confidenceLabel = computed(function() {
     default:          return '—'
   }
 })
-
-function stateClass(state) {
-  switch (state) {
-    case 'passed':        return 'text-green-600 dark:text-green-400'
-    case 'failed':        return 'text-red-500 dark:text-red-400'
-    case 'not-evaluated': return 'text-gray-400 dark:text-gray-500'
-    default:              return 'text-gray-400 dark:text-gray-500'
-  }
-}
-
-function stateLabel(state) {
-  switch (state) {
-    case 'passed':        return 'Passed'
-    case 'failed':        return 'Failed'
-    case 'not-evaluated': return 'Not evaluated'
-    default:              return '—'
-  }
-}
 </script>
 
 <template>
@@ -115,33 +87,20 @@ function stateLabel(state) {
         </button>
       </div>
 
-      <!-- Body -->
-      <div class="px-3 py-2 max-h-64 overflow-y-auto space-y-3">
-        <!-- Jira Fields group -->
-        <div v-if="jiraItems.length">
-          <p class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1.5">Jira Fields</p>
-          <div class="space-y-1">
-            <div v-for="item in jiraItems" :key="item.name" class="flex items-center gap-2">
-              <span :class="stateClass(item.state)" class="shrink-0">
-                {{ item.state === 'passed' ? '●' : '○' }}
-              </span>
-              <span class="text-gray-700 dark:text-gray-300 flex-1">{{ item.name }}</span>
-              <span :class="stateClass(item.state)" class="shrink-0 text-[10px]">{{ stateLabel(item.state) }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Strategy Rubric group -->
-        <div v-if="rubricItems.length">
-          <p class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1.5">Strategy Rubric</p>
-          <div class="space-y-1">
-            <div v-for="item in rubricItems" :key="item.name" class="flex items-center gap-2">
-              <span :class="stateClass(item.state)" class="shrink-0">
-                {{ item.state === 'passed' ? '●' : '○' }}
-              </span>
-              <span class="text-gray-700 dark:text-gray-300 flex-1">{{ item.name }}</span>
-              <span :class="stateClass(item.state)" class="shrink-0 text-[10px]">{{ stateLabel(item.state) }}</span>
-            </div>
+      <!-- Body — flat checklist -->
+      <div class="px-3 py-2 max-h-64 overflow-y-auto">
+        <div class="space-y-1">
+          <div v-for="item in fpdor.items" :key="item.name" class="flex items-center gap-2">
+            <svg v-if="item.pass === true" class="w-3.5 h-3.5 text-green-500 dark:text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            <svg v-else-if="item.pass === false" class="w-3.5 h-3.5 text-red-500 dark:text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            <svg v-else class="w-3.5 h-3.5 text-gray-300 dark:text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
+            </svg>
+            <span :class="item.pass === true ? 'text-gray-700 dark:text-gray-300' : item.pass === false ? 'text-gray-500 dark:text-gray-400' : 'text-gray-400 dark:text-gray-500'">{{ item.name }}</span>
           </div>
         </div>
       </div>
@@ -151,7 +110,7 @@ function stateLabel(state) {
         v-if="confidence"
         class="px-3 py-1.5 border-t border-gray-100 dark:border-gray-700 text-[10px] text-gray-400 dark:text-gray-500"
       >
-        Confidence: <span class="font-medium" :class="stateClass(confidence === 'not-ready' ? 'failed' : 'passed')">{{ confidenceLabel }}</span>
+        Confidence: <span class="font-medium" :class="confidence === 'not-ready' ? 'text-red-500 dark:text-red-400' : 'text-green-600 dark:text-green-400'">{{ confidenceLabel }}</span>
       </div>
     </div>
   </span>
