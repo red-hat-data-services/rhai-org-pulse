@@ -13,6 +13,8 @@ export function useNightlyPipelines() {
   const error = ref(null)
   const packages = ref({})
   const packagesLoading = ref(new Set())
+  const rca = ref(null)
+  const rcaLoading = ref(false)
 
   async function loadPipelines(limit = 14) {
     loading.value = true
@@ -34,6 +36,7 @@ export function useNightlyPipelines() {
     error.value = null
     selectedPipelineId.value = pipelineId
     jobs.value = null
+    rca.value = null
     packages.value = {}
     packagesLoading.value = new Set()
     try {
@@ -43,6 +46,18 @@ export function useNightlyPipelines() {
       jobs.value = null
     } finally {
       jobsLoading.value = false
+    }
+  }
+
+  async function loadRca(pipelineId) {
+    rca.value = null
+    rcaLoading.value = true
+    try {
+      rca.value = await apiRequest(`${BASE}/${pipelineId}/rca`)
+    } catch {
+      rca.value = null
+    } finally {
+      rcaLoading.value = false
     }
   }
 
@@ -94,8 +109,11 @@ export function useNightlyPipelines() {
     error,
     packages,
     packagesLoading,
+    rca,
+    rcaLoading,
     loadPipelines,
     loadPipelineJobs,
+    loadRca,
     loadCollectionPackages,
     latestPipeline,
     successRate,

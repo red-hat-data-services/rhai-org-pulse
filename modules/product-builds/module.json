@@ -48,6 +48,11 @@
         "key": "NIGHTLY_PIPELINE_SCHEDULE_ID",
         "description": "GitLab pipeline schedule ID (defaults to 4256496)",
         "required": false
+      },
+      {
+        "key": "NIGHTLY_RCA_GITLAB_PROJECT",
+        "description": "URL-encoded GitLab project path for the failure analyzer (defaults to redhat%2Frhel-ai%2Fagentic-ci%2Fpipeline-failure-analyzer)",
+        "required": false
       }
     ]
   },
