@@ -17,6 +17,7 @@ const DEFAULTS = {
   gitlabBaseUrl: 'https://gitlab.com',
   gitlabProject: 'redhat%2Frhel-ai%2Frhai%2Fpipeline',
   scheduleId: '4256496',
+  rcaProject: 'redhat%2Frhel-ai%2Fagentic-ci%2Fpipeline-failure-analyzer',
 };
 
 function getToken(secrets) {
@@ -332,6 +333,87 @@ function filterBySupported(structured, supportedVariants) {
   };
 }
 
+const RCA_BRIDGE_NAME = 'analyze-failures';
+const RCA_REPORT_BASE = 'https://redhat.gitlab.io/-/rhel-ai/agentic-ci/pipeline-failure-analyzer/-/jobs';
+
+async function fetchJobArtifact(token, project, jobId, artifactPath) {
+  const url = `/projects/${project}/jobs/${jobId}/artifacts/${artifactPath}`;
+  const res = await fetch(`${_cfg.gitlabBaseUrl}/api/v4${url}`, {
+    headers: { 'PRIVATE-TOKEN': token },
+    signal: AbortSignal.timeout(API_TIMEOUT),
+  });
+  if (!res.ok) return null;
+  return res.text();
+}
+
+async function fetchRcaData(token, pipelineId) {
+  const bridges = await gitlabApi(
+    `/projects/${_cfg.gitlabProject}/pipelines/${pipelineId}/bridges?per_page=100`,
+    token
+  );
+  const bridge = bridges.find(b => b.name === RCA_BRIDGE_NAME);
+  if (!bridge?.downstream_pipeline?.id) {
+    return { available: false, reason: 'No failure analysis pipeline found' };
+  }
+
+  const downstreamId = bridge.downstream_pipeline.id;
+  const downstreamUrl = bridge.downstream_pipeline.web_url;
+
+  const dsJobs = await gitlabApi(
+    `/projects/${_cfg.rcaProject}/pipelines/${downstreamId}/jobs?per_page=100`,
+    token
+  );
+  const summarizeJob = dsJobs.find(j => j.name === 'summarize');
+  const notifyJob = dsJobs.find(j => j.name === 'notify');
+  if (!summarizeJob) {
+    return { available: false, reason: 'Summarize job not found in downstream pipeline' };
+  }
+
+  const [summaryRaw, ticketsRaw] = await Promise.all([
+    fetchJobArtifact(token, _cfg.rcaProject, summarizeJob.id, '.work/analysis-summary.json'),
+    notifyJob
+      ? fetchJobArtifact(token, _cfg.rcaProject, notifyJob.id, '.work/jira-tickets.json')
+      : null,
+  ]);
+
+  const analysisSummary = summaryRaw ? JSON.parse(summaryRaw) : null;
+  const jiraTickets = ticketsRaw ? JSON.parse(ticketsRaw) : null;
+
+  if (!analysisSummary) {
+    return { available: false, reason: 'Analysis artifacts not available (may have expired)' };
+  }
+
+  const reportHtmlUrl = analysisSummary.report?.html_url
+    || `${RCA_REPORT_BASE}/${summarizeJob.id}/artifacts/.work/analysis-report.html`;
+
+  const issueGroups = (analysisSummary.issue_groups || []).map(g => ({
+    id: g.id,
+    title: g.title,
+    collections: g.collections || [],
+    confidence: g.confidence,
+    error_summary: g.error_summary,
+    suggested_resolution: g.suggested_resolution,
+    affected_job_count: g.affected_job_count || 0,
+    affected_jobs: (g.affected_jobs || []).map(j => ({ name: j.name, url: j.url })),
+    report_url: g.analysis_report_url || null,
+    jira: jiraTickets?.[g.id] || null,
+  }));
+
+  return {
+    available: true,
+    downstream_pipeline_url: downstreamUrl,
+    report_html_url: reportHtmlUrl,
+    summary: {
+      analysis_status: analysisSummary.analysis_status,
+      total_jobs: analysisSummary.summary?.total_jobs || 0,
+      failed: analysisSummary.summary?.failed || 0,
+      issue_groups_count: analysisSummary.summary?.issue_groups || 0,
+      infra_failures: analysisSummary.summary?.infra_failures || 0,
+    },
+    issue_groups: issueGroups,
+  };
+}
+
 async function fetchAllJobs(token, pipelineId) {
   const allJobs = [];
   let page = 1;
@@ -355,6 +437,7 @@ module.exports = function registerNightlyPipelineRoutes(router, context) {
       gitlabBaseUrl: (context.resolveSecret('NIGHTLY_PIPELINE_GITLAB_BASE_URL') || DEFAULTS.gitlabBaseUrl).replace(/\/+$/, ''),
       gitlabProject: context.resolveSecret('NIGHTLY_PIPELINE_GITLAB_PROJECT') || DEFAULTS.gitlabProject,
       scheduleId: context.resolveSecret('NIGHTLY_PIPELINE_SCHEDULE_ID') || DEFAULTS.scheduleId,
+      rcaProject: context.resolveSecret('NIGHTLY_RCA_GITLAB_PROJECT') || DEFAULTS.rcaProject,
     };
   }
 
@@ -568,6 +651,43 @@ module.exports = function registerNightlyPipelineRoutes(router, context) {
     } catch (err) {
       const status = err.upstreamStatus || 500;
       res.status(status).json({ error: err.message });
+    }
+  });
+  /**
+   * @openapi
+   * /api/modules/product-builds/nightly-pipelines/{pipelineId}/rca:
+   *   get:
+   *     tags: [Nightly Pipelines]
+   *     summary: Get RCA failure analysis and Jira ticket data for a nightly pipeline
+   *     parameters:
+   *       - name: pipelineId
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: GitLab pipeline ID
+   *     responses:
+   *       200:
+   *         description: RCA analysis with issue groups and Jira ticket links, or available=false
+   *       400:
+   *         description: Invalid pipeline ID
+   *       503:
+   *         description: GitLab token not configured
+   */
+  router.get('/nightly-pipelines/:pipelineId/rca', async (req, res) => {
+    const token = getToken(secrets);
+    if (!token) {
+      return res.status(503).json({ error: 'GitLab token not configured' });
+    }
+    const { pipelineId } = req.params;
+    if (!/^\d+$/.test(pipelineId)) {
+      return res.status(400).json({ error: 'Invalid pipeline ID' });
+    }
+    try {
+      const result = await fetchRcaData(token, pipelineId);
+      res.json(result);
+    } catch (err) {
+      res.json({ available: false, reason: err.message });
     }
   });
 };

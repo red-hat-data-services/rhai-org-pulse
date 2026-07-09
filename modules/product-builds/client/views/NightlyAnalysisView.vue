@@ -82,8 +82,8 @@ function jobLabel(status) { return status === 'success' ? 'Pass' : status === 'f
 
 const {
   pipelines, schedule, jobs, selectedPipelineId, loading, jobsLoading, error,
-  packages, packagesLoading,
-  loadPipelines, loadPipelineJobs, loadCollectionPackages,
+  packages, packagesLoading, rca, rcaLoading,
+  loadPipelines, loadPipelineJobs, loadRca, loadCollectionPackages,
   latestPipeline, successRate, currentStreak, lastSuccess,
 } = useNightlyPipelines()
 
@@ -161,6 +161,7 @@ const sortedCollections = computed(() => {
 function selectPipeline(p) {
   if (selectedPipelineId.value === p.id) return
   loadPipelineJobs(p.id)
+  loadRca(p.id)
 }
 
 function onCollectionToggle(event, collectionName) {
@@ -210,6 +211,7 @@ onMounted(async () => {
   await loadPipelines()
   if (latestPipeline.value) {
     loadPipelineJobs(latestPipeline.value.id)
+    loadRca(latestPipeline.value.id)
   }
 })
 </script>
@@ -314,7 +316,7 @@ onMounted(async () => {
             text-anchor="end" dominant-baseline="middle"
             class="fill-red-500 dark:fill-red-400 text-[11px] font-medium" style="font-family: system-ui, sans-serif">Fail</text>
 
-          <template v-for="pt in chartLayout.points" :key="pt.id">
+          <template v-for="(pt, ptIdx) in chartLayout.points" :key="pt.id">
             <line :x1="pt.x" :x2="pt.x" :y1="chartLayout.yMid" :y2="pt.y"
               :class="pt.status === 'success' ? 'stroke-green-400 dark:stroke-green-600' : 'stroke-red-300 dark:stroke-red-700'"
               stroke-width="2" stroke-linecap="round" />
@@ -326,10 +328,10 @@ onMounted(async () => {
             <circle :cx="pt.x" :cy="pt.y" r="6"
               :class="pt.status === 'success' ? 'fill-green-500 dark:fill-green-400' : 'fill-red-500 dark:fill-red-400'"
               class="cursor-pointer transition-all"
-              @click="selectPipeline(timelinePipelines[chartLayout.points.indexOf(pt)])" />
+              @click="selectPipeline(timelinePipelines[ptIdx])" />
 
             <circle :cx="pt.x" :cy="pt.y" r="16" fill="transparent" class="cursor-pointer"
-              @click="selectPipeline(timelinePipelines[chartLayout.points.indexOf(pt)])">
+              @click="selectPipeline(timelinePipelines[ptIdx])">
               <title>{{ pt.label }} — {{ pt.status === 'success' ? 'Passed' : 'Failed' }}</title>
             </circle>
 
@@ -467,13 +469,118 @@ onMounted(async () => {
           </div>
         </details>
 
-        <!-- Collection Grid -->
-        <div class="space-y-3">
-          <details v-for="col in sortedCollections" :key="col.name"
-            class="rounded-xl border shadow-sm overflow-hidden group/col"
-            :class="col.status === 'failed' ? 'border-red-200 dark:border-red-800/50' : 'border-gray-200 dark:border-gray-700'"
-            @toggle="onCollectionToggle($event, col.name)"
-          >
+        <!-- ===== Root Cause Analysis (RCA) ===== -->
+        <div v-if="rcaLoading" class="mb-4 text-center py-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+          <svg class="animate-spin h-6 w-6 text-gray-400 mx-auto" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <div class="mt-2 text-gray-500 dark:text-gray-400 text-sm">Loading failure analysis...</div>
+        </div>
+
+        <details v-else-if="rca?.available" open class="mb-4 bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-800/50 rounded-lg overflow-hidden group/rca">
+          <summary class="px-4 py-3 bg-amber-50 dark:bg-amber-900/10 flex items-center justify-between cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/20 transition-colors list-none [&::-webkit-details-marker]:hidden">
+            <div class="flex items-center gap-3">
+              <svg class="w-3.5 h-3.5 text-gray-400 transition-transform group-open/rca:rotate-90 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+              </svg>
+              <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Root Cause Analysis</h3>
+              <span class="text-xs text-gray-500 dark:text-gray-400">
+                {{ rca.issue_groups.length }} issue group{{ rca.issue_groups.length !== 1 ? 's' : '' }}
+              </span>
+            </div>
+            <div class="flex items-center gap-3">
+              <a v-if="rca.report_html_url" :href="rca.report_html_url" target="_blank" rel="noopener noreferrer"
+                class="text-xs text-blue-600 dark:text-blue-400 hover:underline" @click.stop>
+                Full RCA Report &rarr;
+              </a>
+              <a v-if="rca.downstream_pipeline_url" :href="rca.downstream_pipeline_url" target="_blank" rel="noopener noreferrer"
+                class="text-xs text-gray-500 dark:text-gray-400 hover:underline" @click.stop>
+                Analyzer Pipeline &rarr;
+              </a>
+            </div>
+          </summary>
+          <div class="p-4 space-y-3 border-t border-gray-200 dark:border-gray-700">
+            <details v-for="ig in rca.issue_groups" :key="ig.id"
+              class="rounded-xl border shadow-sm overflow-hidden group/ig"
+              :class="ig.confidence === 'high' ? 'border-amber-200 dark:border-amber-800/50' : 'border-gray-200 dark:border-gray-700'"
+            >
+              <summary class="px-4 py-3 flex items-center gap-3 cursor-pointer bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors list-none [&::-webkit-details-marker]:hidden">
+                <svg class="w-3.5 h-3.5 text-gray-400 transition-transform group-open/ig:rotate-90 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                </svg>
+                <svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <span class="text-sm font-semibold text-gray-900 dark:text-white flex-1 min-w-0 truncate">{{ ig.title }}</span>
+                <span v-if="ig.collections.length" class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ ig.collections.join(', ') }}
+                </span>
+                <span class="text-xs text-gray-400 dark:text-gray-500">{{ ig.affected_job_count }} job{{ ig.affected_job_count !== 1 ? 's' : '' }}</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+                  :class="ig.confidence === 'high' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                    : ig.confidence === 'medium' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                    : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'"
+                >{{ ig.confidence }}</span>
+                <a v-if="ig.jira" :href="ig.jira.url" target="_blank" rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium hover:underline"
+                  :class="ig.jira.action === 'created' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                    : 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'"
+                  @click.stop
+                >
+                  {{ ig.jira.key }}
+                  <span class="opacity-70">({{ ig.jira.action }})</span>
+                </a>
+              </summary>
+              <div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-4 space-y-4">
+                <div v-if="ig.error_summary">
+                  <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Error</div>
+                  <div class="text-sm text-gray-800 dark:text-gray-200 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-lg px-3 py-2 font-mono whitespace-pre-wrap">{{ ig.error_summary }}</div>
+                </div>
+                <div v-if="ig.suggested_resolution">
+                  <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Suggested Resolution</div>
+                  <div class="text-sm text-gray-700 dark:text-gray-300 bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/30 rounded-lg px-3 py-2">{{ ig.suggested_resolution }}</div>
+                </div>
+                <div v-if="ig.affected_jobs.length">
+                  <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Affected Jobs ({{ ig.affected_jobs.length }})</div>
+                  <div class="flex flex-wrap gap-1.5">
+                    <a v-for="aj in ig.affected_jobs" :key="aj.name" :href="aj.url" target="_blank" rel="noopener noreferrer"
+                      class="inline-block px-2 py-0.5 rounded-md text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:underline"
+                    >{{ aj.name }}</a>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4 pt-1">
+                  <a v-if="ig.report_url" :href="ig.report_url" target="_blank" rel="noopener noreferrer"
+                    class="text-xs text-blue-600 dark:text-blue-400 hover:underline">Detailed Analysis &rarr;</a>
+                  <a v-if="ig.jira" :href="ig.jira.url" target="_blank" rel="noopener noreferrer"
+                    class="text-xs text-blue-600 dark:text-blue-400 hover:underline">{{ ig.jira.key }} &rarr;</a>
+                </div>
+              </div>
+            </details>
+          </div>
+        </details>
+
+        <!-- ===== Collections ===== -->
+        <details open class="mb-4 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800/50 rounded-lg overflow-hidden group/collections">
+          <summary class="px-4 py-3 bg-blue-50 dark:bg-blue-900/10 flex items-center gap-3 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/20 transition-colors list-none [&::-webkit-details-marker]:hidden">
+            <svg class="w-3.5 h-3.5 text-gray-400 transition-transform group-open/collections:rotate-90 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            </svg>
+            <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Collections</h3>
+            <span class="text-xs text-gray-500 dark:text-gray-400">{{ sortedCollections.length }} collections</span>
+          </summary>
+          <div class="p-4 space-y-3 border-t border-gray-200 dark:border-gray-700">
+            <details v-for="col in sortedCollections" :key="col.name"
+              class="rounded-xl border shadow-sm overflow-hidden group/col"
+              :class="col.status === 'failed' ? 'border-red-200 dark:border-red-800/50' : 'border-gray-200 dark:border-gray-700'"
+              @toggle="onCollectionToggle($event, col.name)"
+            >
             <summary
               class="px-4 py-3 flex items-center gap-3 cursor-pointer bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors list-none [&::-webkit-details-marker]:hidden"
             >
@@ -612,10 +719,11 @@ onMounted(async () => {
               </details>
             </div>
           </details>
-        </div>
+          </div>
+        </details>
 
         <!-- Special Jobs -->
-        <div v-if="jobs.special_jobs.length > 0" class="mt-4 text-xs text-gray-500 dark:text-gray-400">
+        <div v-if="jobs.special_jobs.length > 0" class="mt-2 text-xs text-gray-500 dark:text-gray-400">
           <span class="font-medium">Utility jobs:</span>
           <span v-for="(sj, i) in jobs.special_jobs" :key="sj.name">
             {{ i > 0 ? ', ' : ' ' }}
