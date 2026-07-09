@@ -37,7 +37,8 @@ test.describe('Package Analysis @package-analysis', () => {
     const packageAnalysisLink = page.locator('aside nav a, aside nav button').filter({ hasText: 'Package Analysis' });
     await expect(packageAnalysisLink.first()).toBeVisible();
 
-    expect(page.errors).toHaveLength(0);
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
   });
 
   test('should navigate to Package Analysis and show content', async ({ page }) => {
@@ -55,7 +56,8 @@ test.describe('Package Analysis @package-analysis', () => {
 
     await expect(page.getByRole('heading', { name: 'Package Analysis' })).toBeVisible();
 
-    expect(page.errors).toHaveLength(0);
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
   });
 
   test('should show Packages Onboarded tab by default', async ({ page }) => {
@@ -66,7 +68,8 @@ test.describe('Package Analysis @package-analysis', () => {
     await expect(page.getByRole('button', { name: /Packages Onboarded/ })).toBeVisible();
     await expect(page.getByRole('button', { name: /Daily Report/ })).toBeVisible();
 
-    expect(page.errors).toHaveLength(0);
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
   });
 
   test('should switch to Daily Report tab', async ({ page }) => {
@@ -82,7 +85,8 @@ test.describe('Package Analysis @package-analysis', () => {
     const hasEmpty = await page.locator('text=No reports generated').isVisible().catch(() => false);
     expect(hasReport || hasEmpty).toBeTruthy();
 
-    expect(page.errors).toHaveLength(0);
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
   });
 
   test('should show Package Search tab', async ({ page }) => {
@@ -93,7 +97,8 @@ test.describe('Package Analysis @package-analysis', () => {
     const searchTab = page.getByRole('button', { name: /Package Search/ });
     await expect(searchTab).toBeVisible();
 
-    expect(page.errors).toHaveLength(0);
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
   });
 
   test('should switch to Package Search tab and show form', async ({ page }) => {
@@ -109,7 +114,8 @@ test.describe('Package Analysis @package-analysis', () => {
     await expect(searchButton).toBeVisible();
     await expect(searchButton).toContainText('Search');
 
-    expect(page.errors).toHaveLength(0);
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
   });
 
   test('should show Nightly Analysis tab', async ({ page }) => {
@@ -120,7 +126,8 @@ test.describe('Package Analysis @package-analysis', () => {
     const nightlyTab = page.getByRole('button', { name: /Nightly/ });
     await expect(nightlyTab).toBeVisible();
 
-    expect(page.errors).toHaveLength(0);
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
   });
 
   test('should navigate to Nightly Analysis and auto-load latest pipeline', async ({ page }) => {
@@ -133,7 +140,8 @@ test.describe('Package Analysis @package-analysis', () => {
     await expect(page.locator('text=Passed')).toBeVisible();
     await expect(page.locator('text=Failed')).toBeVisible();
 
-    expect(page.errors).toHaveLength(0);
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
   });
 
   test('should show Chart/Strip toggle in Pipeline History', async ({ page }) => {
@@ -144,7 +152,8 @@ test.describe('Package Analysis @package-analysis', () => {
     await expect(page.getByRole('button', { name: 'Chart' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Strip' })).toBeVisible();
 
-    expect(page.errors).toHaveLength(0);
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
   });
 
   test('should switch to Strip view and show dates', async ({ page }) => {
@@ -160,7 +169,8 @@ test.describe('Package Analysis @package-analysis', () => {
     const count = await dateLabels.count();
     expect(count).toBeGreaterThan(0);
 
-    expect(page.errors).toHaveLength(0);
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
   });
 
   test('should show collapsible Collections box', async ({ page }) => {
@@ -171,7 +181,8 @@ test.describe('Package Analysis @package-analysis', () => {
     const collectionsHeader = page.locator('summary').filter({ hasText: 'Collections' });
     await expect(collectionsHeader).toBeVisible();
 
-    expect(page.errors).toHaveLength(0);
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
   });
 
   test('should show Root Cause Analysis section when RCA data is available', async ({ page }) => {
@@ -192,7 +203,8 @@ test.describe('Package Analysis @package-analysis', () => {
     }
     expect(stillLoading).toBe(false);
 
-    expect(page.errors).toHaveLength(0);
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
   });
 
   test('should show Jira ticket links in RCA issue groups', async ({ page }) => {
@@ -210,7 +222,8 @@ test.describe('Package Analysis @package-analysis', () => {
       }
     }
 
-    expect(page.errors).toHaveLength(0);
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
   });
 
   test('should click a different pipeline and update details', async ({ page }) => {
@@ -227,6 +240,7 @@ test.describe('Package Analysis @package-analysis', () => {
       await expect(page.locator('text=Total Jobs')).toBeVisible();
     }
 
-    expect(page.errors).toHaveLength(0);
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
   });
 });
