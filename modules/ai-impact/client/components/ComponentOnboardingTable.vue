@@ -420,9 +420,11 @@ function stepsDone(component) {
                         <span class="text-gray-400 dark:text-gray-500">{{ new Date(h.syncedAt).toLocaleDateString() }}</span>
                         <span
                           class="px-1.5 py-0.5 rounded-full"
-                          :class="h.completionStatus === 'completed'
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                            : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'"
+                          :class="{
+                            'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400': h.completionStatus === 'completed',
+                            'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400': h.completionStatus === 'in-progress',
+                            'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400': h.completionStatus === 'new'
+                          }"
                         >{{ h.completionStatus }}</span>
                         <span class="text-gray-400">{{ Object.values(h.onboardingSteps || {}).filter(Boolean).length }}/{{ STEPS.length }} steps</span>
                       </div>
