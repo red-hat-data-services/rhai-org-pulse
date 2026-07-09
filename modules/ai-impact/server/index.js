@@ -117,9 +117,32 @@ module.exports = function registerRoutes(router, context) {
 
   let autofixDataCache = null;
 
+  function shiftAutofixDates(data) {
+    if (!data || !data.fetchedAt) return data;
+    const offset = Date.now() - new Date(data.fetchedAt).getTime();
+    if (Math.abs(offset) < 60 * 60 * 1000) return data;
+
+    function shift(iso) {
+      if (!iso) return iso;
+      return new Date(new Date(iso).getTime() + offset).toISOString();
+    }
+
+    return {
+      ...data,
+      fetchedAt: new Date().toISOString(),
+      issues: data.issues.map(i => ({
+        ...i,
+        created: shift(i.created),
+        updated: shift(i.updated),
+        terminalAt: shift(i.terminalAt)
+      }))
+    };
+  }
+
   function getAutofixData() {
     if (!autofixDataCache) {
-      autofixDataCache = readFromStorage('ai-impact/autofix-data.json');
+      const raw = readFromStorage('ai-impact/autofix-data.json');
+      autofixDataCache = DEMO_MODE ? shiftAutofixDates(raw) : raw;
     }
     return autofixDataCache;
   }
