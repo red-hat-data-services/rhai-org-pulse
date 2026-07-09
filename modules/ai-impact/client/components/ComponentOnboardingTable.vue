@@ -46,6 +46,7 @@ const targetVersionOptions = computed(() => {
   })
   return [...versions].sort()
 })
+
 // ── Derived list ──────────────────────────────────────────────────────────────
 const selectedKey = ref(null)
 
