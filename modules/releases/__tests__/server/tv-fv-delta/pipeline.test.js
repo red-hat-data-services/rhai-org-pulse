@@ -487,14 +487,14 @@ describe('jqlSafePattern', () => {
 
 describe('RHAII version handling', () => {
   it('normVer lowercases RHAII versions with spaces', () => {
-    expect(normVer('RHAII-3.5 EA1')).toBe('rhaii-3.5 ea1');
-    expect(normVer('RHAII-3.5 EA2')).toBe('rhaii-3.5 ea2');
+    expect(normVer('RHAII-3.5 EA1')).toBe('rhaii 3 5 ea1');
+    expect(normVer('RHAII-3.5 EA2')).toBe('rhaii 3 5 ea2');
   });
 
   it('parseVersions handles RHAII versions', () => {
     const result = parseVersions('RHAII-3.5 EA1');
     expect(result.size).toBe(1);
-    expect(result.has('rhaii-3.5 ea1')).toBe(true);
+    expect(result.has('rhaii 3 5 ea1')).toBe(true);
   });
 
   it('classifyFeatures matches RHAII releases correctly', () => {

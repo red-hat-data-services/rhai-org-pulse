@@ -437,7 +437,7 @@ describe('release-planning routes', function() {
     })
 
     it('rejects invalid version format', async function() {
-      const req = makeReq({ body: { version: 'a'.repeat(51) } })
+      const req = makeReq({ body: { version: 'a'.repeat(81) } })
       const res = await callRoute(router._routes, 'POST', '/releases', req)
       expect(res._status).toBe(400)
     })
