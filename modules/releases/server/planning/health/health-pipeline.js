@@ -630,8 +630,9 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
 
   console.log('[health] Found ' + features.length + ' features for version ' + version + ' phase ' + phaseKey)
 
-  // Step 1b: Enrich epicCount from execution index
-  // mapCandidateToHealthFeature() does not map epicCount; source it from execution index
+  // Step 1b: Enrich epicCount + scores from execution index
+  // mapCandidateToHealthFeature() does not map epicCount; source it from execution index.
+  // Also bridge aiReview.scores from feature detail files so FPDoR rubric items can be evaluated.
   var execIndex = loadIndex(readFromStorage)
   if (execIndex && execIndex.features) {
     var execByKey = {}
@@ -645,6 +646,12 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
       }
       if (execFeature && typeof execFeature.completionPct === 'number') {
         features[fi].completionPct = execFeature.completionPct
+      }
+      if (execFeature && !features[fi].scores) {
+        var execDetail = loadFeatureDetail(readFromStorage, features[fi].key)
+        if (execDetail && execDetail.aiReview && execDetail.aiReview.scores) {
+          features[fi].scores = execDetail.aiReview.scores
+        }
       }
     }
   }
@@ -711,12 +718,13 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
       planningChecksResult = computePlanningChecks(feature)
     }
 
-    // Compute FPDoR readiness (rubric items will be not-evaluated since health pipeline lacks strat-pipeline scores)
+    // Compute FPDoR readiness (rubric items evaluated when scores are bridged from execution detail files)
     var featureForFpdor = Object.assign({}, feature, {
       riceScore: (enrichment && enrichment.rice && enrichment.rice.score != null) ? enrichment.rice.score : (feature.riceScore != null ? feature.riceScore : null),
       storyPoints: enrichment ? enrichment.storyPoints || null : null,
       tshirtSize: enrichment ? enrichment.tshirtSize || null : null,
-      descriptionSignals: enrichment ? enrichment.descriptionSignals || null : null
+      descriptionSignals: enrichment ? enrichment.descriptionSignals || null : null,
+      scores: feature.scores || null
     })
     var rubricData = extractRubricData(featureForFpdor)
     var fpdorResult = computeFPDoRReadiness(featureForFpdor, rubricData)
@@ -796,6 +804,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
       storyPoints: enrichment ? enrichment.storyPoints || null : null,
       tshirtSize: enrichment ? enrichment.tshirtSize || null : null,
       descriptionSignals: enrichment ? enrichment.descriptionSignals || null : null,
+      scores: feature.scores || null,
       versionHistory: enrichment && enrichment.refinementHistory ? enrichment.refinementHistory : [],
       jiraUrl: JIRA_BROWSE_URL + '/' + key
     })

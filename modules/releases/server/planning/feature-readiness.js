@@ -442,7 +442,7 @@ function mergeFeatureData(key, jiraFeatures, aiReviewMap, candidateIndex, health
     riceScore = null
   }
 
-  var scores = aiReview ? (aiReview.scores || {}) : {}
+  var scores = aiReview ? (aiReview.scores || {}) : (health && health.scores ? health.scores : {})
   var rubricTotal = (scores.feasibility || 0) + (scores.testability || 0) + (scores.scope || 0) + (scores.architecture || 0)
 
   var humanReviewStatus

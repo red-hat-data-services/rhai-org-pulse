@@ -62,7 +62,7 @@ describe('FPDoR in health pipeline', function() {
     expect(rubricItems).toHaveLength(3)
   })
 
-  it('marks rubric items as not-evaluated since health pipeline lacks strat scores', async function() {
+  it('marks rubric items as not-evaluated when no execution detail has scores', async function() {
     var storage = makeStorage(makeCandidatesCache([
       { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
     ]))
@@ -73,6 +73,75 @@ describe('FPDoR in health pipeline', function() {
       expect(rubricItems[i].state).toBe('not-evaluated')
       expect(rubricItems[i].pass).toBeNull()
     }
+  })
+
+  it('evaluates rubric items when execution detail file has aiReview.scores', async function() {
+    var candidatesData = makeCandidatesCache([
+      { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: ['Dashboard'], fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
+    ])
+    candidatesData['releases/execution/index.json'] = {
+      features: [{ key: 'T-1', summary: 'F1', status: 'In Progress', epicCount: 3 }],
+      rfes: []
+    }
+    candidatesData['releases/execution/features/T-1.json'] = {
+      key: 'T-1', summary: 'F1', status: 'In Progress',
+      aiReview: {
+        scores: { feasibility: 2, testability: 2, scope: 2, architecture: 2 }
+      }
+    }
+    var storage = makeStorage(candidatesData)
+    var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
+    var items = result.features[0].fpdor.items
+    var rubricItems = items.filter(function(i) { return i.source === 'strat-pipeline' })
+    for (var i = 0; i < rubricItems.length; i++) {
+      expect(rubricItems[i].state).toBe('passed')
+      expect(rubricItems[i].pass).toBe(true)
+    }
+  })
+
+  it('includes scores in health cache output when bridged from execution', async function() {
+    var candidatesData = makeCandidatesCache([
+      { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: ['Dashboard'], fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
+    ])
+    candidatesData['releases/execution/index.json'] = {
+      features: [{ key: 'T-1', summary: 'F1', status: 'In Progress', epicCount: 3 }],
+      rfes: []
+    }
+    candidatesData['releases/execution/features/T-1.json'] = {
+      key: 'T-1', summary: 'F1', status: 'In Progress',
+      aiReview: {
+        scores: { feasibility: 1, testability: 0, scope: 2, architecture: 1 }
+      }
+    }
+    var storage = makeStorage(candidatesData)
+    var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
+    var f = result.features[0]
+    expect(f.scores).toEqual({ feasibility: 1, testability: 0, scope: 2, architecture: 1 })
+  })
+
+  it('fails rubric items when execution scores are below threshold', async function() {
+    var candidatesData = makeCandidatesCache([
+      { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: ['Dashboard'], fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
+    ])
+    candidatesData['releases/execution/index.json'] = {
+      features: [{ key: 'T-1', summary: 'F1', status: 'In Progress', epicCount: 3 }],
+      rfes: []
+    }
+    candidatesData['releases/execution/features/T-1.json'] = {
+      key: 'T-1', summary: 'F1', status: 'In Progress',
+      aiReview: {
+        scores: { feasibility: 0, testability: 1, scope: 0, architecture: 1 }
+      }
+    }
+    var storage = makeStorage(candidatesData)
+    var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
+    var items = result.features[0].fpdor.items
+    var acItem = items.find(function(i) { return i.name === 'Acceptance Criteria' })
+    var archItem = items.find(function(i) { return i.name === 'Architecture Review' })
+    var riskItem = items.find(function(i) { return i.name === 'Risks & Assumptions' })
+    expect(acItem.pass).toBe(false)
+    expect(archItem.pass).toBe(false)
+    expect(riskItem.pass).toBe(false)
   })
 
   it('passes components check when components are set', async function() {

@@ -1326,6 +1326,53 @@ describe('buildFeatureReadiness', function() {
     })
   })
 
+  describe('health cache scores fallback', function() {
+    it('uses health cache scores when aiReview is not available', function() {
+      var store = makeFeaturesStore({})
+      var healthCache = {
+        features: [{
+          key: 'AIPCC-500', summary: 'Health Feature', status: 'In Progress',
+          priority: 'Major', deliveryOwner: 'Jane', pm: 'Rick',
+          components: ['Dashboard', 'Documentation'], targetRelease: 'rhoai-3.6',
+          scores: { feasibility: 2, testability: 2, scope: 2, architecture: 2 }
+        }]
+      }
+      var readFromStorage = makeReadFromStorage({
+        ...convertToUnifiedFormat(store),
+        'releases/planning/config.json': CONFIG_3_6,
+        'releases/planning/health-cache-3.6-all.json': healthCache
+      })
+      var result = buildFeatureReadiness(readFromStorage)
+      var feat = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'AIPCC-500' })
+      expect(feat).toBeDefined()
+      expect(feat.rubricTotal).toBe(8)
+      expect(feat.scores).toEqual({ feasibility: 2, testability: 2, scope: 2, architecture: 2 })
+    })
+
+    it('prefers aiReview scores over health cache scores', function() {
+      var store = makeFeaturesStore({
+        'RHAISTRAT-1': { latest: makeLatest({
+          humanReviewStatus: 'approved',
+          scores: { feasibility: 3, testability: 3, scope: 3, architecture: 3 }
+        }) }
+      })
+      var healthCache = {
+        features: [{
+          key: 'RHAISTRAT-1', summary: 'Feature', status: 'In Progress',
+          scores: { feasibility: 1, testability: 1, scope: 1, architecture: 1 }
+        }]
+      }
+      var readFromStorage = makeReadFromStorage({
+        ...convertToUnifiedFormat(store),
+        'releases/planning/config.json': CONFIG_3_6,
+        'releases/planning/health-cache-3.6-all.json': healthCache
+      })
+      var result = buildFeatureReadiness(readFromStorage)
+      var feat = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-1' })
+      expect(feat.rubricTotal).toBe(12)
+    })
+  })
+
   describe('version-scoping guard', function() {
     it('excludes features not in any cache when caches have data', function() {
       var store = makeFeaturesStore({

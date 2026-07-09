@@ -6,7 +6,7 @@ import { useRefreshPolling } from '../composables/useRefreshPolling'
 import { apiRequest } from '@shared/client/services/api'
 import FeatureReadinessFilterBar from '../components/FeatureReadinessFilterBar.vue'
 import FeatureReadinessRow from '../components/FeatureReadinessRow.vue'
-import FeatureReadinessDrawer from '@shared/client/components/FeatureReadinessDrawer.vue'
+import FeatureReadinessDrawer from '../components/FeatureReadinessDrawer.vue'
 
 const nav = inject('moduleNav')
 const jiraBaseUrl = 'https://issues.redhat.com/browse'
