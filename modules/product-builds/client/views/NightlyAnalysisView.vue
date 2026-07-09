@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useNightlyPipelines } from '../composables/useNightlyPipelines.js'
 
 const STAGE_ORDER = ['bootstrap-and-onboard', 'build-wheels', 'publish-wheels', 'release-tarball']
@@ -110,7 +110,26 @@ const selectedPipeline = computed(() =>
   pipelines.value.find(p => p.id === jobs.value?.pipeline_id) || null
 )
 
+const chartView = ref('chart')
 const timelinePipelines = computed(() => [...pipelines.value].reverse())
+
+const chartLayout = computed(() => {
+  const pts = timelinePipelines.value
+  if (!pts.length) return null
+  const pad = { left: 44, right: 16, top: 16, bottom: 32 }
+  const w = Math.max(pts.length * 56, 300)
+  const h = 100
+  const yPass = pad.top + 14
+  const yFail = h - pad.bottom - 14
+  const plotW = w - pad.left - pad.right
+  const points = pts.map((p, i) => {
+    const x = pad.left + (pts.length === 1 ? plotW / 2 : (i / (pts.length - 1)) * plotW)
+    const y = p.status === 'success' ? yPass : yFail
+    const { day, month } = dateParts(p.created_at)
+    return { id: p.id, status: p.status, x, y, day, month, label: `${month} ${day}` }
+  })
+  return { w, h, yPass, yFail, yMid: (yPass + yFail) / 2, padLeft: pad.left, points }
+})
 
 const sortedCollections = computed(() => {
   if (!jobs.value?.collections) return []
@@ -256,10 +275,24 @@ onMounted(async () => {
         >View on GitLab &rarr;</a>
       </div>
 
-      <!-- ===== TIER 2: Pipeline Timeline ===== -->
-      <div class="mb-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-        <div class="flex items-center justify-between mb-4">
-          <div class="text-sm font-semibold text-gray-700 dark:text-gray-300">Pipeline History</div>
+      <!-- ===== TIER 2: Pipeline History ===== -->
+      <div v-if="chartLayout" class="mb-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <div class="text-sm font-semibold text-gray-700 dark:text-gray-300">Pipeline History</div>
+            <div class="inline-flex rounded-md border border-gray-200 dark:border-gray-600 overflow-hidden">
+              <button
+                :class="chartView === 'chart' ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-750'"
+                class="px-2 py-1 text-[11px] font-medium transition-colors"
+                @click="chartView = 'chart'"
+              >Chart</button>
+              <button
+                :class="chartView === 'strip' ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-750'"
+                class="px-2 py-1 text-[11px] font-medium border-l border-gray-200 dark:border-gray-600 transition-colors"
+                @click="chartView = 'strip'"
+              >Strip</button>
+            </div>
+          </div>
           <div class="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
             <span>{{ successRate }}% pass rate</span>
             <span v-if="lastSuccess && latestPipeline?.status !== 'success'">
@@ -268,30 +301,65 @@ onMounted(async () => {
           </div>
         </div>
 
-        <div class="flex gap-1.5 overflow-x-auto pb-1">
+        <!-- Chart view -->
+        <svg v-if="chartView === 'chart'" :viewBox="`0 0 ${chartLayout.w} ${chartLayout.h}`" class="w-full" preserveAspectRatio="xMidYMid meet">
+          <line :x1="chartLayout.padLeft" :x2="chartLayout.w - 16"
+            :y1="chartLayout.yMid" :y2="chartLayout.yMid"
+            class="stroke-gray-200 dark:stroke-gray-700" stroke-width="1" />
+
+          <text :x="chartLayout.padLeft - 8" :y="chartLayout.yPass + 1"
+            text-anchor="end" dominant-baseline="middle"
+            class="fill-green-600 dark:fill-green-400 text-[11px] font-medium" style="font-family: system-ui, sans-serif">Pass</text>
+          <text :x="chartLayout.padLeft - 8" :y="chartLayout.yFail + 1"
+            text-anchor="end" dominant-baseline="middle"
+            class="fill-red-500 dark:fill-red-400 text-[11px] font-medium" style="font-family: system-ui, sans-serif">Fail</text>
+
+          <template v-for="pt in chartLayout.points" :key="pt.id">
+            <line :x1="pt.x" :x2="pt.x" :y1="chartLayout.yMid" :y2="pt.y"
+              :class="pt.status === 'success' ? 'stroke-green-400 dark:stroke-green-600' : 'stroke-red-300 dark:stroke-red-700'"
+              stroke-width="2" stroke-linecap="round" />
+
+            <circle v-if="selectedPipelineId === pt.id"
+              :cx="pt.x" :cy="pt.y" r="10"
+              :class="pt.status === 'success' ? 'fill-green-100 dark:fill-green-900/40' : 'fill-red-100 dark:fill-red-900/40'" />
+
+            <circle :cx="pt.x" :cy="pt.y" r="6"
+              :class="pt.status === 'success' ? 'fill-green-500 dark:fill-green-400' : 'fill-red-500 dark:fill-red-400'"
+              class="cursor-pointer transition-all"
+              @click="selectPipeline(timelinePipelines[chartLayout.points.indexOf(pt)])" />
+
+            <circle :cx="pt.x" :cy="pt.y" r="16" fill="transparent" class="cursor-pointer"
+              @click="selectPipeline(timelinePipelines[chartLayout.points.indexOf(pt)])">
+              <title>{{ pt.label }} — {{ pt.status === 'success' ? 'Passed' : 'Failed' }}</title>
+            </circle>
+
+            <text :x="pt.x" :y="chartLayout.h - 4"
+              text-anchor="middle" dominant-baseline="auto"
+              class="fill-gray-500 dark:fill-gray-400 text-[10px]" style="font-family: system-ui, sans-serif">{{ pt.label }}</text>
+          </template>
+        </svg>
+
+        <!-- Strip view -->
+        <div v-else class="flex gap-1.5">
           <button
             v-for="p in timelinePipelines" :key="p.id"
-            :class="[theme(p.status).tile, selectedPipelineId === p.id ? theme(p.status).tileSelected : 'border-transparent']"
-            class="flex-shrink-0 w-16 rounded-lg pt-1.5 pb-2 text-center cursor-pointer transition-all border-2"
+            :class="[
+              p.status === 'success' ? 'bg-green-500 dark:bg-green-500' : 'bg-red-500 dark:bg-red-500',
+              selectedPipelineId === p.id ? 'ring-2 ring-offset-2 dark:ring-offset-gray-800' : '',
+              selectedPipelineId === p.id && p.status === 'success' ? 'ring-green-400' : '',
+              selectedPipelineId === p.id && p.status !== 'success' ? 'ring-red-400' : '',
+            ]"
+            class="flex-1 h-10 rounded cursor-pointer transition-all hover:opacity-80 relative group"
+            :title="`${dateParts(p.created_at).month} ${dateParts(p.created_at).day} — ${p.status === 'success' ? 'Passed' : 'Failed'}`"
             @click="selectPipeline(p)"
           >
-            <div :class="theme(p.status).tileLabel" class="text-[10px] leading-tight font-medium">{{ dateParts(p.created_at).dow }}</div>
-            <div :class="theme(p.status).tileDay" class="text-xl font-bold leading-tight mt-0.5">{{ dateParts(p.created_at).day }}</div>
-            <div :class="theme(p.status).tileLabel" class="text-[10px] leading-tight">{{ dateParts(p.created_at).month }}</div>
-            <div class="mt-1">
-              <svg v-if="p.status === 'success'" :class="theme(p.status).icon" class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-              </svg>
-              <svg v-else-if="p.status === 'failed'" :class="theme(p.status).icon" class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              <svg v-else class="w-4 h-4 mx-auto animate-spin" :class="theme(p.status).icon" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-            </div>
+            <span class="absolute inset-x-0 -bottom-5 text-[10px] text-gray-500 dark:text-gray-400 text-center opacity-0 group-hover:opacity-100 transition-opacity">
+              {{ dateParts(p.created_at).month }} {{ dateParts(p.created_at).day }}
+            </span>
           </button>
         </div>
+        <!-- Spacer for strip hover labels -->
+        <div v-if="chartView === 'strip'" class="h-5"></div>
       </div>
 
       <!-- ===== TIER 3: Pipeline Detail ===== -->
@@ -305,51 +373,85 @@ onMounted(async () => {
       </div>
 
       <template v-else-if="jobs && selectedPipeline">
-        <!-- Pipeline header -->
-        <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg">
-          <div class="flex items-center gap-3 flex-wrap">
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium" :class="badgeClass(jobs.status)">
+        <!-- Pipeline Stats Hero -->
+        <div class="mb-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+          <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3 flex-wrap">
+            <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-semibold" :class="badgeClass(jobs.status)">
               {{ jobs.status }}
             </span>
             <span class="text-sm font-semibold text-gray-900 dark:text-white">
               {{ formatDateFull(selectedPipeline.created_at) }}
             </span>
             <span class="text-xs text-gray-400 dark:text-gray-500">Pipeline #{{ jobs.pipeline_id }}</span>
-            <span class="text-sm text-gray-500 dark:text-gray-400 ml-auto">
-              {{ jobs.summary.total }} jobs &middot; {{ jobs.summary.success }} passed &middot; {{ jobs.summary.failed }} failed &middot; {{ jobs.summary.skipped }} skipped
-            </span>
             <a :href="selectedPipeline.web_url" target="_blank" rel="noopener noreferrer"
-              class="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+              class="text-sm text-blue-600 dark:text-blue-400 hover:underline ml-auto">
               View on GitLab &rarr;
             </a>
           </div>
-        </div>
-
-        <!-- Failed Jobs Alert -->
-        <div v-if="jobs.failed_jobs.length > 0" class="mb-4 border border-red-200 dark:border-red-800/50 rounded-lg overflow-hidden">
-          <div class="px-4 py-3 bg-red-50 dark:bg-red-900/10 border-b border-red-200 dark:border-red-800/50">
-            <span class="text-sm font-semibold text-red-800 dark:text-red-300">
-              {{ jobs.failed_jobs.length }} Failed Job{{ jobs.failed_jobs.length !== 1 ? 's' : '' }}
-            </span>
-          </div>
-          <div class="divide-y divide-red-100 dark:divide-red-900/20">
-            <div v-for="fj in jobs.failed_jobs" :key="fj.id" class="px-4 py-2.5 flex items-center gap-3 bg-white dark:bg-gray-800">
-              <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-              <div class="flex-1 min-w-0">
-                <a :href="fj.web_url" target="_blank" rel="noopener noreferrer"
-                  class="text-sm font-medium text-red-700 dark:text-red-400 hover:underline">
-                  {{ fj.name }}
-                </a>
-                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  {{ fj.collection }} &middot; {{ fj.variant }} &middot; {{ fj.arch }} &middot; {{ STAGE_LABELS[fj.stage] || fj.stage }}
-                </div>
-              </div>
-              <span v-if="fj.failure_reason" class="text-xs text-gray-400 dark:text-gray-500">{{ fj.failure_reason }}</span>
+          <div class="grid grid-cols-4 divide-x divide-gray-200 dark:divide-gray-700">
+            <div class="px-5 py-4 text-center">
+              <div class="text-2xl font-semibold text-gray-900 dark:text-white">{{ jobs.summary.total }}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Total Jobs</div>
+            </div>
+            <div class="px-5 py-4 text-center">
+              <div class="text-2xl font-semibold text-green-600 dark:text-green-400">{{ jobs.summary.success }}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Passed</div>
+            </div>
+            <div class="px-5 py-4 text-center">
+              <div class="text-2xl font-semibold" :class="jobs.summary.failed > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'">{{ jobs.summary.failed }}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Failed</div>
+            </div>
+            <div class="px-5 py-4 text-center">
+              <div class="text-2xl font-semibold text-gray-400 dark:text-gray-500">{{ jobs.summary.skipped }}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Skipped</div>
             </div>
           </div>
         </div>
+
+        <!-- Failed Jobs Overview -->
+        <details v-if="jobs.failed_jobs.length > 0" class="mb-4 rounded-xl border border-red-200 dark:border-red-800/50 shadow-sm overflow-hidden group/failed">
+          <summary class="px-4 py-3 bg-red-50 dark:bg-red-900/10 cursor-pointer flex items-center gap-3 hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors list-none [&::-webkit-details-marker]:hidden">
+            <svg class="w-3.5 h-3.5 text-red-400 transition-transform group-open/failed:rotate-90 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            </svg>
+            <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <span class="text-sm font-semibold text-red-800 dark:text-red-300">Overview of Failed Jobs</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+              {{ jobs.failed_jobs.length }}
+            </span>
+          </summary>
+          <div class="border-t border-red-200 dark:border-red-800/50">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="bg-red-50/50 dark:bg-red-900/5 border-b border-red-100 dark:border-red-900/20">
+                  <th class="text-left py-2 px-4 font-medium text-red-700 dark:text-red-400">Job Name</th>
+                  <th class="text-left py-2 px-4 font-medium text-red-700 dark:text-red-400">Collection</th>
+                  <th class="text-left py-2 px-4 font-medium text-red-700 dark:text-red-400">Variant</th>
+                  <th class="text-left py-2 px-4 font-medium text-red-700 dark:text-red-400">Arch</th>
+                  <th class="text-left py-2 px-4 font-medium text-red-700 dark:text-red-400">Stage</th>
+                  <th class="text-left py-2 px-4 font-medium text-red-700 dark:text-red-400">Reason</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-red-100 dark:divide-red-900/20">
+                <tr v-for="fj in jobs.failed_jobs" :key="fj.id" class="bg-white dark:bg-gray-800 hover:bg-red-50/50 dark:hover:bg-red-900/5 transition-colors">
+                  <td class="py-2 px-4">
+                    <a :href="fj.web_url" target="_blank" rel="noopener noreferrer"
+                      class="text-sm font-medium text-red-700 dark:text-red-400 hover:underline">
+                      {{ fj.name }}
+                    </a>
+                  </td>
+                  <td class="py-2 px-4 text-gray-700 dark:text-gray-300">{{ fj.collection }}</td>
+                  <td class="py-2 px-4 text-gray-700 dark:text-gray-300">{{ fj.variant }}</td>
+                  <td class="py-2 px-4 text-gray-600 dark:text-gray-400">{{ fj.arch }}</td>
+                  <td class="py-2 px-4 text-gray-600 dark:text-gray-400">{{ STAGE_LABELS[fj.stage] || fj.stage }}</td>
+                  <td class="py-2 px-4 text-gray-400 dark:text-gray-500 text-xs">{{ fj.failure_reason || '—' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
 
         <!-- Collection Grid -->
         <div class="space-y-3">
