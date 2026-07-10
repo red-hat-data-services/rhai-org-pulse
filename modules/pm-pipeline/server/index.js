@@ -91,6 +91,16 @@ module.exports = function registerRoutes(router, context) {
     res.json({ roster: loadPmRoster() })
   })
 
+  /**
+   * @openapi
+   * /modules/pm-pipeline/cache:
+   *   delete:
+   *     summary: Clear the PM pipeline cache
+   *     tags: [pm-pipeline]
+   *     responses:
+   *       200:
+   *         description: Cache cleared
+   */
   router.delete('/cache', requireAdmin, readScope, function(req, res) {
     cacheClear()
     res.json({ status: 'cleared' })
