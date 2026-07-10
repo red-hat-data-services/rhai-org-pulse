@@ -206,7 +206,20 @@ describe('FPDoR in health pipeline', function() {
     expect(tvItem.pass).toBe(true)
   })
 
-  it('passes cross-functional check when Documentation component present', async function() {
+  it('passes cross-functional check when Documentation and UXD components present', async function() {
+    var storage = makeStorage(makeCandidatesCache([
+      {
+        issueKey: 'T-1', summary: 'F1', status: 'In Progress',
+        components: ['Dashboard', 'Documentation', 'UXD'], fixVersion: '', deliveryOwner: 'Jane', tier: 1
+      }
+    ]))
+    var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
+    var items = result.features[0].fpdor.items
+    var cfItem = items.find(function(i) { return i.name === 'Cross-functional Engagement' })
+    expect(cfItem.pass).toBe(true)
+  })
+
+  it('fails cross-functional check when only Documentation present, no UXD', async function() {
     var storage = makeStorage(makeCandidatesCache([
       {
         issueKey: 'T-1', summary: 'F1', status: 'In Progress',
@@ -216,14 +229,14 @@ describe('FPDoR in health pipeline', function() {
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
     var items = result.features[0].fpdor.items
     var cfItem = items.find(function(i) { return i.name === 'Cross-functional Engagement' })
-    expect(cfItem.pass).toBe(true)
+    expect(cfItem.pass).toBe(false)
   })
 
   it('passes 4 of 6 jira items with correct candidate data (no enrichment)', async function() {
     var storage = makeStorage(makeCandidatesCache([
       {
         issueKey: 'T-1', summary: 'F1', status: 'In Progress',
-        components: ['Dashboard', 'Documentation'], fixVersion: '', deliveryOwner: 'Jane',
+        components: ['Dashboard', 'Documentation', 'UXD'], fixVersion: '', deliveryOwner: 'Jane',
         pm: 'Rick', tier: 1, targetRelease: '3.5', phase: 'GA'
       }
     ]))
@@ -245,7 +258,7 @@ describe('FPDoR in health pipeline', function() {
     var storage = makeStorage(makeCandidatesCache([
       {
         issueKey: 'T-1', summary: 'F1', status: 'In Progress',
-        components: ['Dashboard', 'Documentation'], fixVersion: '', deliveryOwner: 'Jane',
+        components: ['Dashboard', 'Documentation', 'UXD'], fixVersion: '', deliveryOwner: 'Jane',
         pm: 'Rick', tier: 1, targetRelease: '3.5', phase: 'GA'
       },
       {

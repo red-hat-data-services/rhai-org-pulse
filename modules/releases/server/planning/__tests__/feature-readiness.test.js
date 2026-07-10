@@ -34,7 +34,7 @@ function makeLatest(overrides) {
     scores: { feasibility: 2, testability: 2, scope: 2, architecture: 2 },
     reviewers: { feasibility: 'approve', testability: 'approve', scope: 'approve', architecture: 'approve' },
     reviewedAt: '2026-01-01T00:00:00.000Z',
-    components: ['Documentation', 'Platform'],
+    components: ['Documentation', 'UXD', 'Platform'],
     approvedBy: null,
     approvedAt: null,
     riceScore: 100,
@@ -656,7 +656,7 @@ describe('buildFeatureReadiness', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'Platform'], docsRequired: 'Required' }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'UXD', 'Platform'], docsRequired: 'Required' }] }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
@@ -719,7 +719,7 @@ describe('buildFeatureReadiness', function() {
       var candidateCache = {
         data: { features: [{ issueKey: 'RHAISTRAT-1', tier: 1, fixVersion: '3.6.0', targetRelease: 'rhoai-3.6' }] }
       }
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'Platform'], docsRequired: 'Required' }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'UXD', 'Platform'], docsRequired: 'Required' }] }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
@@ -734,7 +734,7 @@ describe('buildFeatureReadiness', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'Platform'], docsRequired: 'Required' }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'UXD', 'Platform'], docsRequired: 'Required' }] }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
@@ -800,7 +800,7 @@ describe('buildFeatureReadiness', function() {
       var hygieneCache = {
         features: { 'RHAISTRAT-1': { key: 'RHAISTRAT-1', team: 'Alpha', violations: violations } }
       }
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'Platform'], docsRequired: 'Required' }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'UXD', 'Platform'], docsRequired: 'Required' }] }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
@@ -840,7 +840,7 @@ describe('buildFeatureReadiness', function() {
       var hygieneCache = {
         features: { 'RHAISTRAT-1': { key: 'RHAISTRAT-1', team: 'Alpha', violations: violations } }
       }
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'Platform'], docsRequired: 'Required' }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'UXD', 'Platform'], docsRequired: 'Required' }] }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
@@ -963,7 +963,7 @@ describe('buildFeatureReadiness', function() {
           ]
         }
       }
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'Platform'], docsRequired: 'Required' }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'UXD', 'Platform'], docsRequired: 'Required' }] }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
@@ -1061,7 +1061,7 @@ describe('buildFeatureReadiness', function() {
           storyPoints: 5,
           epicCount: 3,
           releaseType: 'GA',
-          components: ['Documentation', 'Platform'],
+          components: ['Documentation', 'UXD', 'Platform'],
           docsRequired: 'Required'
         }]
       }
@@ -1087,7 +1087,7 @@ describe('buildFeatureReadiness', function() {
         data: { features: [{ issueKey: 'RHAISTRAT-1', tier: 1, bigRock: 'AI Speed', targetRelease: 'rhoai-3.6-cand', fixVersion: '3.6.0-cand' }] }
       }
       var healthCache = {
-        features: [{ key: 'RHAISTRAT-1', tier: 'T3', bigRock: 'Platform', targetRelease: 'rhoai-3.6-health', fixVersions: '3.6.0-health', deliveryOwner: 'Alice', pmOwner: 'Jane', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'Platform'], docsRequired: 'Required' }]
+        features: [{ key: 'RHAISTRAT-1', tier: 'T3', bigRock: 'Platform', targetRelease: 'rhoai-3.6-health', fixVersions: '3.6.0-health', deliveryOwner: 'Alice', pmOwner: 'Jane', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'UXD', 'Platform'], docsRequired: 'Required' }]
       }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
@@ -1129,7 +1129,7 @@ describe('buildFeatureReadiness', function() {
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
       var healthCache = {
-        features: [{ key: 'RHAISTRAT-1', priorityScore: 87, priorityBreakdown: { rice: 50, bigRock: 100 }, deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'Platform'], docsRequired: 'Required' }]
+        features: [{ key: 'RHAISTRAT-1', priorityScore: 87, priorityBreakdown: { rice: 50, bigRock: 100 }, deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'UXD', 'Platform'], docsRequired: 'Required' }]
       }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
@@ -1171,7 +1171,7 @@ describe('buildFeatureReadiness', function() {
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
       var healthCache = {
-        features: [{ key: 'RHAISTRAT-1', priorityScore: 70, priorityBreakdown: { rice: 60 }, deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'Platform'], docsRequired: 'Required' }]
+        features: [{ key: 'RHAISTRAT-1', priorityScore: 70, priorityBreakdown: { rice: 60 }, deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'UXD', 'Platform'], docsRequired: 'Required' }]
       }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
@@ -1246,7 +1246,7 @@ describe('buildFeatureReadiness', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'wrong-owner', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'Platform'], docsRequired: 'Required' }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'wrong-owner', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'UXD', 'Platform'], docsRequired: 'Required' }] }
       var hygieneCache = { features: { 'RHAISTRAT-1': { key: 'RHAISTRAT-1', team: 'Real Team' } } }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
@@ -1270,7 +1270,7 @@ describe('buildFeatureReadiness', function() {
       })
       var healthCache = {
         features: [
-          { key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'Platform'], docsRequired: 'Required' },
+          { key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'UXD', 'Platform'], docsRequired: 'Required' },
           { key: 'RHAISTRAT-2', priorityScore: null },
           { key: 'RHAISTRAT-3', priorityScore: null }
         ]
@@ -1421,8 +1421,8 @@ describe('buildFeatureReadiness', function() {
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
         'releases/planning/config.json': config,
-        'releases/planning/health-cache-3.5-all.json': { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.5', priorityScore: 80, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'Platform'], docsRequired: 'Required' }] },
-        'releases/planning/health-cache-3.6-all.json': { features: [{ key: 'RHAISTRAT-2', deliveryOwner: 'Bob', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: 60, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'Platform'], docsRequired: 'Required' }] }
+        'releases/planning/health-cache-3.5-all.json': { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.5', priorityScore: 80, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'UXD', 'Platform'], docsRequired: 'Required' }] },
+        'releases/planning/health-cache-3.6-all.json': { features: [{ key: 'RHAISTRAT-2', deliveryOwner: 'Bob', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: 60, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'UXD', 'Platform'], docsRequired: 'Required' }] }
       })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.ready).toHaveLength(2)
@@ -1475,7 +1475,7 @@ describe('buildFeatureReadiness', function() {
         releaseType: 'GA',
         deliveryOwner: 'Alice',
         pmOwner: 'Jane',
-        components: ['Documentation', 'Platform'],
+        components: ['Documentation', 'UXD', 'Platform'],
         docsRequired: 'Required',
         effort: 5,
         scores: { testability: 2, architecture: 2, feasibility: 2, scope: 2 },
@@ -1533,9 +1533,11 @@ describe('buildFeatureReadiness', function() {
       expect(result.isReady).toBe(false)
     })
 
-    it('cross-functional passes with multiple components even without docs', function() {
+    it('cross-functional fails with multiple components but no Documentation or UXD', function() {
       var result = computeReadiness(readyFeature({ components: ['Platform', 'UI'], docsRequired: null }))
-      expect(result.isReady).toBe(true)
+      expect(result.isReady).toBe(false)
+      var cfItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engagement' })
+      expect(cfItem.pass).toBe(false)
     })
 
     it('cross-functional fails with single non-doc component and no docsRequired', function() {
@@ -1622,18 +1624,40 @@ describe('buildFeatureReadiness', function() {
 
     // --- Cross-functional tests ---
 
-    it('cross-functional passes with docsRequired', function() {
-      var result = computeReadiness(readyFeature({ components: ['Platform'], docsRequired: 'Required' }))
+    it('cross-functional passes with docsRequired and UXD component', function() {
+      var result = computeReadiness(readyFeature({ components: ['UXD', 'Platform'], docsRequired: 'Required' }))
       expect(result.isReady).toBe(true)
       var cfItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engagement' })
       expect(cfItem.pass).toBe(true)
     })
 
-    it('cross-functional passes with doc component', function() {
-      var result = computeReadiness(readyFeature({ components: ['Documentation'], docsRequired: null }))
+    it('cross-functional passes with Documentation and UXD components', function() {
+      var result = computeReadiness(readyFeature({ components: ['Documentation', 'UXD'], docsRequired: null }))
       expect(result.isReady).toBe(true)
       var cfItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engagement' })
       expect(cfItem.pass).toBe(true)
+    })
+
+    it('cross-functional fails with only Documentation, no UXD', function() {
+      var result = computeReadiness(readyFeature({ components: ['Documentation', 'Platform'], docsRequired: null }))
+      var cfItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engagement' })
+      expect(cfItem.pass).toBe(false)
+      expect(cfItem.detail).toContain('missing UXD component')
+    })
+
+    it('cross-functional fails with only UXD, no Documentation or docsRequired', function() {
+      var result = computeReadiness(readyFeature({ components: ['UXD', 'Platform'], docsRequired: null }))
+      var cfItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engagement' })
+      expect(cfItem.pass).toBe(false)
+      expect(cfItem.detail).toContain('missing Documentation component')
+    })
+
+    it('cross-functional fails with no Documentation, no UXD, no docsRequired', function() {
+      var result = computeReadiness(readyFeature({ components: ['Platform'], docsRequired: null }))
+      var cfItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engagement' })
+      expect(cfItem.pass).toBe(false)
+      expect(cfItem.detail).toContain('missing Documentation')
+      expect(cfItem.detail).toContain('missing UXD')
     })
 
     // --- Requirements Clarity tests ---
@@ -1734,7 +1758,7 @@ describe('buildFeatureReadiness', function() {
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
       var healthCache = {
-        features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: 70, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'Platform'], docsRequired: 'Required' }]
+        features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: 70, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'UXD', 'Platform'], docsRequired: 'Required' }]
       }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
@@ -1856,7 +1880,7 @@ describe('buildFeatureReadiness', function() {
       })
       var healthCache = {
         features: [
-          { key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: 70, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'Platform'], docsRequired: 'Required' },
+          { key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: 70, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'UXD', 'Platform'], docsRequired: 'Required' },
           { key: 'AIPCC-1000', summary: 'AIPCC Ready', status: 'In Progress', priority: 'Major', deliveryOwner: 'Alice', blockerCount: 0, targetRelease: 'rhoai-3.6' }
         ]
       }
@@ -1880,7 +1904,7 @@ describe('buildFeatureReadiness', function() {
       var hygieneCache = {
         features: { 'RHAISTRAT-1': { key: 'RHAISTRAT-1', team: 'Alpha', violations: violations } }
       }
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'Platform'], docsRequired: 'Required' }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'UXD', 'Platform'], docsRequired: 'Required' }] }
       var registryData = {
         releases: [
           { id: 'rhoai-3.6', displayName: 'RHOAI 3.6', fixVersions: ['RHOAI-3.6'], state: 'active', milestones: {} }
@@ -1930,7 +1954,7 @@ describe('buildFeatureReadiness', function() {
       })
       var directViolations = [{ id: 'stale-status-summary', name: 'Direct', category: 'timeliness', message: 'Direct' }]
       var aliasViolations = [{ id: 'missing-assignee', name: 'Alias', category: 'ownership', message: 'Alias' }]
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'Platform'], docsRequired: 'Required' }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Documentation', 'UXD', 'Platform'], docsRequired: 'Required' }] }
       var registryData = {
         releases: [
           { id: 'rhoai-3.6', displayName: 'RHOAI 3.6', fixVersions: [], state: 'active', milestones: {} }

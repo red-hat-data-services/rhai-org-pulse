@@ -30,15 +30,27 @@ function hasComponents(feature) {
   return Array.isArray(comps) ? comps.length > 0 : !!(comps && String(comps).trim())
 }
 
-function hasCrossFunctional(feature) {
+function hasDocsEngagement(feature) {
   if (feature.docsRequired && feature.docsRequired !== 'No') return true
   var comps = feature.components || []
   if (!Array.isArray(comps)) return false
-  if (comps.length > 1) return true
   for (var i = 0; i < comps.length; i++) {
-    if (comps[i] && comps[i].toLowerCase().indexOf('doc') !== -1) return true
+    if (comps[i] && comps[i] === 'Documentation') return true
   }
   return false
+}
+
+function hasUxdEngagement(feature) {
+  var comps = feature.components || []
+  if (!Array.isArray(comps)) return false
+  for (var i = 0; i < comps.length; i++) {
+    if (comps[i] && comps[i] === 'UXD') return true
+  }
+  return false
+}
+
+function hasCrossFunctional(feature) {
+  return hasDocsEngagement(feature) && hasUxdEngagement(feature)
 }
 
 function hasRequirementsClarity(feature, rubricData) {
@@ -115,8 +127,13 @@ function ownersDetail(feature) {
   return parts.join(', ') || null
 }
 
-function crossFunctionalDetail(_feature) {
-  return 'No cross-functional engagement (add docs component, set docsRequired, or add multiple components)'
+function crossFunctionalDetail(feature) {
+  var hasDocs = hasDocsEngagement(feature)
+  var hasUxd = hasUxdEngagement(feature)
+  var parts = []
+  if (!hasDocs) parts.push('missing Documentation component or docsRequired')
+  if (!hasUxd) parts.push('missing UXD component')
+  return parts.join('; ') || null
 }
 
 function requirementsDetail(feature, rubricData) {
@@ -169,6 +186,8 @@ module.exports = {
   hasOwners: hasOwners,
   hasComponents: hasComponents,
   hasCrossFunctional: hasCrossFunctional,
+  hasDocsEngagement: hasDocsEngagement,
+  hasUxdEngagement: hasUxdEngagement,
   hasRequirementsClarity: hasRequirementsClarity,
   RUBRIC_PASS_THRESHOLD: RUBRIC_PASS_THRESHOLD
 }
