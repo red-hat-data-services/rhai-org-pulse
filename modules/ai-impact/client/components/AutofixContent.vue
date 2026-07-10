@@ -379,7 +379,7 @@ const filteredIssues = computed(() => {
 
 // Trend status: compare current half vs previous half of the trend window
 const trendStatus = computed(() => {
-  if (!trendData.value.length || trendData.value.length < 2) return { label: 'New', icon: 'stable' }
+  if (!trendData.value.length || trendData.value.length < 2) return { label: 'New', icon: 'none' }
   const mid = Math.floor(trendData.value.length / 2)
   const firstHalf = trendData.value.slice(0, mid)
   const secondHalf = trendData.value.slice(mid)
@@ -387,6 +387,7 @@ const trendStatus = computed(() => {
   const firstDone = firstHalf.reduce((s, p) => s + p.merged, 0)
   const secondTotal = secondHalf.reduce((s, p) => s + p.triaged, 0)
   const secondDone = secondHalf.reduce((s, p) => s + p.merged, 0)
+  if (firstTotal === 0 && secondTotal === 0) return { label: 'No Data', icon: 'none' }
   const firstRate = firstTotal > 0 ? firstDone / firstTotal : 0
   const secondRate = secondTotal > 0 ? secondDone / secondTotal : 0
   const diff = secondRate - firstRate
@@ -860,17 +861,18 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div class="absolute right-0 top-6 z-20 hidden group-hover:block w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50 p-3 text-xs text-gray-700 dark:text-gray-300 text-left">
-                Compares the <span class="font-medium">merged ÷ triaged</span> rate between the first and second half of the time window. Growing (&gt;5% increase), Declining (&gt;5% decrease), or Stable.
+                Compares the <span class="font-medium">merged ÷ triaged</span> rate between the first and second half of the time window. Growing (&gt;5pp increase), Declining (&gt;5pp decrease), Stable, or No Data when no issues were triaged.
               </div>
             </div>
             <div class="flex items-center justify-center gap-1.5">
               <svg v-if="trendStatus.icon === 'up'" class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
               <svg v-else-if="trendStatus.icon === 'down'" class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" /></svg>
-              <svg v-else class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" /></svg>
+              <svg v-else-if="trendStatus.icon === 'stable'" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" /></svg>
               <span class="text-lg font-bold" :class="{
                 'text-green-600 dark:text-green-400': trendStatus.icon === 'up',
                 'text-red-600 dark:text-red-400': trendStatus.icon === 'down',
-                'text-gray-500 dark:text-gray-400': trendStatus.icon === 'stable'
+                'text-gray-500 dark:text-gray-400': trendStatus.icon === 'stable',
+                'text-gray-400 dark:text-gray-500': trendStatus.icon === 'none'
               }">{{ trendStatus.label }}</span>
             </div>
             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-wide">Trend Status</div>
