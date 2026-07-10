@@ -36,7 +36,7 @@ test.describe('PM Pipeline Module @pm-pipeline', () => {
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
     expect(page.url()).toMatch(/pm-pipeline\/planning-prep/);
-    await expect(page.getByRole('heading', { name: 'PM Pipeline' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'PM Pipeline', level: 1 })).toBeVisible();
 
     const mainContentVisible = await mainContentIsVisible(page);
     expect(mainContentVisible).toBe(true);
