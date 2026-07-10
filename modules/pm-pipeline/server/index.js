@@ -75,6 +75,9 @@ module.exports = function registerRoutes(router, context) {
    *   get:
    *     summary: Contextual resource links for pipeline playbooks
    *     tags: [pm-pipeline]
+   *     responses:
+   *       200:
+   *         description: Resource link registry for playbook context
    */
   router.get('/resources', readScope, function(req, res) {
     res.json({ resources: loadResources() })
@@ -86,6 +89,9 @@ module.exports = function registerRoutes(router, context) {
    *   get:
    *     summary: Known PM Jira display names for view-as picker
    *     tags: [pm-pipeline]
+   *     responses:
+   *       200:
+   *         description: List of PM Jira display names
    */
   router.get('/pm-roster', readScope, function(req, res) {
     res.json({ roster: loadPmRoster() })
