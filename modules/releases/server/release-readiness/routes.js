@@ -1,0 +1,137 @@
+/**
+ * Release Readiness sub-router.
+ *
+ * Serves pre-generated release readiness metrics (produced by the
+ * external fetch_release_metrics.py script, pushed via /upload) from
+ * local storage.
+ *
+ * Mount: /api/modules/releases/release-readiness/
+ */
+
+const STORAGE_PREFIX = 'releases/release-readiness';
+
+/**
+ * @openapi
+ * /api/modules/releases/release-readiness:
+ *   get:
+ *     tags: [Releases]
+ *     summary: Get release readiness metrics for a release version
+ *     parameters:
+ *       - in: query
+ *         name: version
+ *         required: true
+ *         schema: { type: string }
+ *         description: Release version (e.g. "RHOAI 2.20")
+ *     responses:
+ *       200:
+ *         description: Aggregated delivery metrics payload
+ *       404:
+ *         description: No metrics found for the specified version
+ */
+
+/**
+ * @openapi
+ * /api/modules/releases/release-readiness/versions:
+ *   get:
+ *     tags: [Releases]
+ *     summary: List available release readiness versions
+ *     responses:
+ *       200:
+ *         description: Array of version strings with stored metrics
+ */
+
+/**
+ * @openapi
+ * /api/modules/releases/release-readiness/upload:
+ *   post:
+ *     tags: [Releases]
+ *     summary: Upload release readiness metrics JSON (from external script)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Metrics stored successfully
+ *       400:
+ *         description: Invalid payload (missing version or summary)
+ */
+
+function registerReleaseReadinessRoutes(router, { storage, requireAuth, requireScope }) {
+
+  router.get('/', requireAuth, requireScope('releases:read'), (req, res) => {
+    const version = req.query.version;
+    if (!version) {
+      return res.status(400).json({ error: 'version query parameter is required' });
+    }
+
+    const filename = sanitizeFilename(version);
+    const data = storage.readFromStorage(`${STORAGE_PREFIX}/${filename}.json`);
+
+    if (!data) {
+      return res.status(404).json({ error: `No release readiness metrics found for version "${version}"` });
+    }
+
+    res.json(data);
+  });
+
+  router.get('/versions', requireAuth, requireScope('releases:read'), (req, res) => {
+    let files;
+    try {
+      files = storage.listStorageFiles(STORAGE_PREFIX);
+    } catch {
+      return res.json({ versions: [] });
+    }
+
+    const versions = (files || [])
+      .filter(f => f.endsWith('.json'))
+      .map(f => f.replace('.json', '').replace(/_/g, ' '));
+
+    res.json({ versions });
+  });
+
+  router.post('/upload', requireAuth, requireScope('releases:write'), (req, res) => {
+    const payload = req.body;
+
+    if (!payload || !payload.version || !payload.summary) {
+      return res.status(400).json({ error: 'Invalid payload: must include version and summary' });
+    }
+
+    const filename = sanitizeFilename(payload.version);
+    storage.writeToStorage(`${STORAGE_PREFIX}/${filename}.json`, payload);
+
+    res.json({ status: 'stored', version: payload.version, filename: `${filename}.json` });
+  });
+
+  /**
+   * @openapi
+   * /api/modules/releases/release-readiness/refresh:
+   *   post:
+   *     tags: [Releases]
+   *     summary: Trigger release readiness metrics refresh
+   *     parameters:
+   *       - in: query
+   *         name: version
+   *         required: true
+   *         schema: { type: string }
+   *         description: Release version to refresh
+   *     responses:
+   *       501:
+   *         description: Refresh is handled externally via CI pipeline
+   */
+  router.post('/refresh', requireAuth, requireScope('releases:write'), (req, res) => {
+    res.status(501).json({
+      error: 'Refresh is handled externally via the CI pipeline (fetch_release_metrics.py). Use the /upload endpoint to push pre-computed metrics.'
+    });
+  });
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function sanitizeFilename(version) {
+  return version.replace(/[^a-zA-Z0-9._-]/g, '_');
+}
+
+module.exports = registerReleaseReadinessRoutes;

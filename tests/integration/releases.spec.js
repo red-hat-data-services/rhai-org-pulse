@@ -650,3 +650,75 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     expect(typeof signal.weight).toBe('number');
   });
 });
+
+/**
+ * RHOAI Release Readiness Dashboard
+ *
+ * Verify the release readiness report card is visible, clickable, and renders
+ * the expected dashboard structure with version selector and content sections.
+ */
+test.describe('Releases Release Readiness @releases', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('release readiness report card is visible in Reports hub', async ({ page }) => {
+    await page.goto('/#/releases/reports');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const card = page.locator('text=RHOAI Release Readiness');
+    await expect(card.first()).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('release readiness report loads with content', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=release-readiness');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const heading = page.locator('text=RHOAI Release Readiness');
+    await expect(heading.first()).toBeVisible();
+
+    const mainContent = page.locator('main, [role="main"], .min-h-screen').first();
+    await expect(mainContent).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('release readiness versions API returns available versions', async ({ request }) => {
+    const res = await request.get('/api/modules/releases/release-readiness/versions');
+    expect(res.ok()).toBe(true);
+    const body = await res.json();
+    expect(body).toHaveProperty('versions');
+    expect(Array.isArray(body.versions)).toBe(true);
+  });
+
+  test('release readiness metrics API returns data for fixture version', async ({ request }) => {
+    const res = await request.get('/api/modules/releases/release-readiness?version=rhoai-3.5.EA2');
+    if (res.status() === 404) {
+      test.skip();
+      return;
+    }
+    expect(res.ok()).toBe(true);
+    const body = await res.json();
+    expect(body).toHaveProperty('version');
+    expect(body).toHaveProperty('summary');
+    expect(body).toHaveProperty('director_summary');
+    expect(body).toHaveProperty('component_readiness');
+    expect(body).toHaveProperty('product_blockers');
+    expect(body.summary).toHaveProperty('total_work');
+    expect(body.summary).toHaveProperty('progress_pct');
+  });
+
+  test('release readiness refresh endpoint is not a data-producing GET', async ({ request }) => {
+    const res = await request.post('/api/modules/releases/release-readiness/refresh?version=rhoai-3.5.EA2');
+    const body = await res.json();
+    expect(body).not.toHaveProperty('director_summary');
+  });
+});

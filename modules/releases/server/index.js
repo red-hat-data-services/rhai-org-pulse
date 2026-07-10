@@ -17,6 +17,7 @@ const registerTvFvDeltaRoutes = require('./tv-fv-delta/routes');
 const registerFeaturePressureRoutes = require('./feature-pressure/routes');
 const registerPmHubRoutes = require('./pm-hub/routes');
 const registerDraftPlanRoutes = require('./draft-plans/routes');
+const registerReleaseReadinessRoutes = require('./release-readiness/routes');
 const { getAuditLog } = require('./planning/audit-log');
 
 /**
@@ -297,6 +298,15 @@ module.exports = function registerRoutes(router, context) {
     isRefreshRunning: context.isRefreshRunning || null
   });
   router.use('/draft-plans', draftPlansRouter);
+
+  // Release Readiness sub-router (mounted at /api/modules/releases/release-readiness/)
+  const releaseReadinessRouter = express.Router();
+  registerReleaseReadinessRoutes(releaseReadinessRouter, {
+    storage,
+    requireAuth,
+    requireScope
+  });
+  router.use('/release-readiness', releaseReadinessRouter);
 
   // ─── Unified Audit Routes ───
 
