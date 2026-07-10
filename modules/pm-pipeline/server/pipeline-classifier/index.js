@@ -84,7 +84,7 @@ function buildRelatedLinks(issue, jiraHost) {
   if (issue.linkedRfeKey) {
     links.push({ label: 'Source RFE', url: `${jiraHost}/browse/${issue.linkedRfeKey}` })
   }
-  if (issue.sourceRfe) {
+  if (issue.sourceRfe && issue.sourceRfe !== issue.linkedRfeKey) {
     links.push({ label: 'Source RFE', url: `${jiraHost}/browse/${issue.sourceRfe}` })
   }
   if (issue.linkedFeature) {
