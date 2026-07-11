@@ -346,7 +346,7 @@ export function useFeatureTrackingFilters(groups, selectedVersion) {
         selectedOwners.value = saved.selectedOwners.filter(function (v) { return owners.includes(v) })
       }
     } catch { /* ignore corrupt JSON */ }
-    _suspendSave = false
+    nextTick(function () { _suspendSave = false })
   }
 
   function resetFilters() {
