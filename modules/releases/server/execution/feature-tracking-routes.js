@@ -761,6 +761,7 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
               assignee: f.assignee || null,
               pmOwner: f.pmOwner || null,
               status: f.status || null,
+              team: f.team || null,
               scopeChange: f.scopeChange || null,
               fixVersionAddedAt: f.fixVersionAddedAt || null,
               fixVersionRemovedAt: f.fixVersionRemovedAt || null
