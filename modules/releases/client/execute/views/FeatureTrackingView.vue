@@ -136,6 +136,7 @@ watch(selectedVersion, async (v) => {
   resetFilters()
   if (v) {
     await loadTrackingData(v)
+    if (selectedVersion.value !== v) return
     nextTick(() => restoreFilters())
   }
 })
