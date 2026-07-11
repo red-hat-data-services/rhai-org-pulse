@@ -324,26 +324,27 @@ export function useFeatureTrackingFilters(groups, selectedVersion) {
     _suspendSave = true
     try {
       var raw = sessionStorage.getItem(FILTER_STORAGE_KEY + ':' + version)
-      if (!raw) return
-      var saved = JSON.parse(raw)
-      if (saved.searchQuery && typeof saved.searchQuery === 'string') {
-        searchQuery.value = saved.searchQuery.slice(0, 2000)
-      }
-      var prods = availableProducts.value
-      var stats = availableStatuses.value
-      var comps = availableComponents.value
-      var owners = availableOwners.value
-      if (Array.isArray(saved.selectedProducts)) {
-        selectedProducts.value = saved.selectedProducts.filter(function (v) { return prods.includes(v) })
-      }
-      if (Array.isArray(saved.selectedStatuses)) {
-        selectedStatuses.value = saved.selectedStatuses.filter(function (v) { return stats.includes(v) })
-      }
-      if (Array.isArray(saved.selectedComponents)) {
-        selectedComponents.value = saved.selectedComponents.filter(function (v) { return comps.includes(v) })
-      }
-      if (Array.isArray(saved.selectedOwners)) {
-        selectedOwners.value = saved.selectedOwners.filter(function (v) { return owners.includes(v) })
+      if (raw) {
+        var saved = JSON.parse(raw)
+        if (saved.searchQuery && typeof saved.searchQuery === 'string') {
+          searchQuery.value = saved.searchQuery.slice(0, 2000)
+        }
+        var prods = availableProducts.value
+        var stats = availableStatuses.value
+        var comps = availableComponents.value
+        var owners = availableOwners.value
+        if (Array.isArray(saved.selectedProducts)) {
+          selectedProducts.value = saved.selectedProducts.filter(function (v) { return prods.includes(v) })
+        }
+        if (Array.isArray(saved.selectedStatuses)) {
+          selectedStatuses.value = saved.selectedStatuses.filter(function (v) { return stats.includes(v) })
+        }
+        if (Array.isArray(saved.selectedComponents)) {
+          selectedComponents.value = saved.selectedComponents.filter(function (v) { return comps.includes(v) })
+        }
+        if (Array.isArray(saved.selectedOwners)) {
+          selectedOwners.value = saved.selectedOwners.filter(function (v) { return owners.includes(v) })
+        }
       }
     } catch { /* ignore corrupt JSON */ }
     nextTick(function () { _suspendSave = false })
