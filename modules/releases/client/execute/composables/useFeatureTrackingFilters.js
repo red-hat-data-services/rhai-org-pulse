@@ -1,4 +1,4 @@
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 
 var FILTER_STORAGE_KEY = 'releases:feature-tracking-filters'
 
@@ -357,7 +357,7 @@ export function useFeatureTrackingFilters(groups, selectedVersion) {
     selectedComponents.value = []
     selectedOwners.value = []
     activeCardFilter.value = null
-    _suspendSave = false
+    nextTick(function () { _suspendSave = false })
   }
 
   watch(
