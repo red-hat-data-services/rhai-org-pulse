@@ -1,0 +1,2434 @@
+{
+  "releases": [
+    "RHAI 3.3",
+    "RHAI 3.4 EA1",
+    "RHAI 3.4. EA2",
+    "RHAI 3.4",
+    "RHAI 3.5 EA1",
+    "RHAI 3.5 EA2",
+    "RHAI 3.5",
+    "RHAI 3.6 EA1",
+    "RHAI 3.6 EA2",
+    "RHAI 3.6"
+  ],
+  "accelerators": [
+    {
+      "sheet": "CUDA",
+      "sub_variants": [
+        {
+          "name": "CUDA 12.9",
+          "architectures": "x86_64 and aarch64",
+          "first_release_index": 0,
+          "last_release_index": 6,
+          "sdk_versions": {
+            "RHAI 3.3": "CUDA 12.9",
+            "RHAI 3.4 EA1": "CUDA 12.9",
+            "RHAI 3.4. EA2": "CUDA 12.9",
+            "RHAI 3.4": "CUDA 12.9",
+            "RHAI 3.5 EA1": "CUDA 12.9",
+            "RHAI 3.5 EA2": "CUDA 12.9",
+            "RHAI 3.5": "CUDA 12.9",
+            "RHAI 3.6 EA1": "CUDA 12.9"
+          },
+          "packages": [
+            {
+              "name": "torch",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "2.9.0",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "2.9.1",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "2.9.1",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "2.10",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "2.10",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "2.11",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "2.11",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "vllm",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "0.13.0",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "0.14.1",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "0.16.0",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "0.18.0",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "0.19.1",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "0.21.0",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "0.24.0",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "tensorflow",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "2.20.0",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "2.20.0",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "2.21.0",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "2.21.0",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "2.21.0",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": null,
+                  "dropped": true,
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "2.21.0",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "triton",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "3.5",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "3.5.1",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "3.6",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "3.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "3.7",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "nvshmem",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "3.4.5",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "3.4.5",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "3.4.5",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "3.4.5",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "3.4.5",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "3.4.5",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "3.5.19-1",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "llm-compressor",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "0.9.0.2",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "0.9.0.2",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "0.10.0.1",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "0.10.0.1",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "0.10.0.2",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "0.10.0.2",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "0.12.0",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "speculators",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": null,
+                  "dropped": true,
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": null,
+                  "dropped": true,
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "0.4.0a1 (TP)",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "0.4.0a1 GA",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "0.5.0",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "0.5.0a",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "0.5.0a",
+                  "tentative": false
+                }
+              }
+            }
+          ],
+          "infra": [
+            {
+              "name": "python",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "3.12",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "gcc",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "11",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "11",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "11",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "11 [default], 14 [specific packages]",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "11 [default], 14 [specific packages]",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "14",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "14",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "rhel",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "9.6",
+                  "tentative": false
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "CUDA 13.0",
+          "architectures": "x86_64 and aarch64",
+          "first_release_index": 2,
+          "last_release_index": 7,
+          "sdk_versions": {
+            "RHAI 3.4. EA2": "CUDA 13.0",
+            "RHAI 3.4": "CUDA 13.0",
+            "RHAI 3.5 EA1": "CUDA 13.0",
+            "RHAI 3.5 EA2": "CUDA 13.0.2",
+            "RHAI 3.5": "CUDA 13.0.2",
+            "RHAI 3.6 EA1": "CUDA 13.0.2"
+          },
+          "packages": [
+            {
+              "name": "torch",
+              "versions": {
+                "RHAI 3.4. EA2": {
+                  "version": "2.9.1",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "2.10",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "2.10",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "2.11",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "2.11",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "2.12.1",
+                  "tentative": true
+                }
+              }
+            },
+            {
+              "name": "vllm",
+              "versions": {
+                "RHAI 3.4. EA2": {
+                  "version": "0.16.0",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "0.18.0",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "0.19.1",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "0.21.0",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "0.24.0",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "0.25.0",
+                  "tentative": true
+                }
+              }
+            },
+            {
+              "name": "tensorflow",
+              "versions": {
+                "RHAI 3.5 EA1": {
+                  "version": "tensorflow",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": null,
+                  "dropped": true,
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": null,
+                  "dropped": true,
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "triton",
+              "versions": {
+                "RHAI 3.4. EA2": {
+                  "version": "3.6",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "3.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "3.7",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "nvshmem",
+              "versions": {
+                "RHAI 3.4. EA2": {
+                  "version": "3.5.19-1",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "3.5.19-1",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "3.5.19-1",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "3.4.5",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "3.5.19-1",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "llm-compressor",
+              "versions": {
+                "RHAI 3.4. EA2": {
+                  "version": "0.10.0.1",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "0.10.0.1",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "0.10.0.2",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "0.10.0.2 [torch2.10]",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "0.12.0",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "0.12.0",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "speculators",
+              "versions": {
+                "RHAI 3.4. EA2": {
+                  "version": "0.4.0a0 (TP)",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "0.4.0a1 GA",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "0.5.0",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "0.5.0a",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "0.6.0",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "0.6.0",
+                  "tentative": true
+                }
+              }
+            },
+            {
+              "name": "llm-d",
+              "versions": {
+                "RHAI 3.5": {
+                  "version": "0.8",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "deep-ep",
+              "versions": {
+                "RHAI 3.5": {
+                  "version": "EPv2",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "deep-gemm",
+              "versions": {
+                "RHAI 3.5": {
+                  "version": "891d57b (v2.1.1.post3+16)",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "nccl",
+              "versions": {
+                "RHAI 3.5": {
+                  "version": "2.30.4",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "nixl",
+              "versions": {
+                "RHAI 3.5": {
+                  "version": "1.2.0",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "ucx",
+              "versions": {
+                "RHAI 3.5": {
+                  "version": "1.20.1",
+                  "tentative": false
+                }
+              }
+            }
+          ],
+          "infra": [
+            {
+              "name": "python",
+              "versions": {
+                "RHAI 3.4. EA2": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "3.12",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "gcc",
+              "versions": {
+                "RHAI 3.4. EA2": {
+                  "version": "11",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "11 [default], 14 [specific packages]",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "11 [default], 14 [specific packages]",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "14",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "14",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "gcc14",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "rhel",
+              "versions": {
+                "RHAI 3.4. EA2": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "9.6",
+                  "tentative": false
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "CUDA 13.2",
+          "architectures": "x86_64 and aarch64",
+          "first_release_index": 4,
+          "last_release_index": 6,
+          "sdk_versions": {
+            "RHAI 3.5 EA1": "CUDA 13.2",
+            "RHAI 3.5 EA2": "CUDA 13.2",
+            "RHAI 3.5": "CUDA 13.2"
+          },
+          "packages": [
+            {
+              "name": "torch",
+              "versions": {
+                "RHAI 3.5 EA1": {
+                  "version": "2.10",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "2.11",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "2.11",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "vllm",
+              "versions": {
+                "RHAI 3.5 EA1": {
+                  "version": "0.19.1",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "0.21.0",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "0.21.0",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "tensorflow",
+              "versions": {
+                "RHAI 3.5 EA1": {
+                  "version": "tensorflow",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": null,
+                  "dropped": true,
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": null,
+                  "dropped": true,
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "triton",
+              "versions": {
+                "RHAI 3.5 EA1": {
+                  "version": "3.7",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "nvshmem",
+              "versions": {
+                "RHAI 3.5 EA1": {
+                  "version": "nvshmem",
+                  "tentative": true
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "3.4.5",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "3.4.5",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "llm-compressor",
+              "versions": {
+                "RHAI 3.5 EA1": {
+                  "version": "0.11.0",
+                  "tentative": true
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "0.10.0.2",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "0.10.0.2",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "speculators",
+              "versions": {
+                "RHAI 3.5 EA1": {
+                  "version": "0.5.x",
+                  "tentative": true
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "0.5.0a",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "0.5.0a",
+                  "tentative": false
+                }
+              }
+            }
+          ],
+          "infra": [
+            {
+              "name": "python",
+              "versions": {
+                "RHAI 3.5 EA1": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "3.12",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "gcc",
+              "versions": {
+                "RHAI 3.5 EA1": {
+                  "version": "11 [default], 14 [specific packages]",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "14",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "14",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "rhel",
+              "versions": {
+                "RHAI 3.5 EA1": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "9.6",
+                  "tentative": false
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sheet": "ROCm",
+      "sub_variants": [
+        {
+          "name": "ROCm 6.4",
+          "architectures": "x86_64",
+          "first_release_index": 0,
+          "last_release_index": 3,
+          "sdk_versions": {
+            "RHAI 3.3": "ROCm 6.4.3",
+            "RHAI 3.4 EA1": "ROCm 6.4.3",
+            "RHAI 3.4. EA2": "ROCm 6.4.3",
+            "RHAI 3.4": "ROCm 6.4.3",
+            "RHAI 3.5 EA1": "No Future Releases of ROCm 6.4.3 planned"
+          },
+          "packages": [
+            {
+              "name": "torch",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "2.9.0",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "2.9.1",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "2.9.1",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "2.9.1",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "vllm",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "0.13.0",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "0.14.1",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "0.16.0",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "0.16.0",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "tensorflow",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "tensorflow",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "tensorflow",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "tensorflow",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "tensorflow",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "triton",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "3.5",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "3.5.1",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "3.5.1",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "3.5.1",
+                  "tentative": false
+                }
+              }
+            }
+          ],
+          "infra": [
+            {
+              "name": "python",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "3.12",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "gcc",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "11",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "11",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "11",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "11 [default], 14 [specific packages]",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "rhel",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "9.6",
+                  "tentative": false
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "ROCm 7.1",
+          "architectures": "x86_64",
+          "first_release_index": 3,
+          "last_release_index": 5,
+          "sdk_versions": {
+            "RHAI 3.4": "ROCm 7.1.1",
+            "RHAI 3.5 EA1": "ROCm 7.1.1",
+            "RHAI 3.5 EA2": "ROCm 7.1.1"
+          },
+          "packages": [
+            {
+              "name": "torch",
+              "versions": {
+                "RHAI 3.4": {
+                  "version": "2.10",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "2.10",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "2.10",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "vllm",
+              "versions": {
+                "RHAI 3.4": {
+                  "version": "0.18.0",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "0.19.1",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "0.19.1",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "tensorflow",
+              "versions": {
+                "RHAI 3.4": {
+                  "version": "2.20.0",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "2.10.0",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "2.19.1",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "triton",
+              "versions": {
+                "RHAI 3.4": {
+                  "version": "3.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "3.7",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "3.7",
+                  "tentative": false
+                }
+              }
+            }
+          ],
+          "infra": [
+            {
+              "name": "python",
+              "versions": {
+                "RHAI 3.4": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "3.12",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "gcc",
+              "versions": {
+                "RHAI 3.4": {
+                  "version": "11 [default], 14 [specific packages]",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "11 [default], 14 [specific packages]",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "11 [default], 14 [specific packages]",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "rhel",
+              "versions": {
+                "RHAI 3.4": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "9.6",
+                  "tentative": false
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "ROCm 7.13",
+          "architectures": "summit variant x86_64",
+          "first_release_index": 4,
+          "last_release_index": 7,
+          "sdk_versions": {
+            "RHAI 3.5 EA1": "ROCm 7.13",
+            "RHAI 3.5 EA2": "ROCm 7.14",
+            "RHAI 3.5": "ROCm 7.14",
+            "RHAI 3.6 EA1": "7.2.4 / 7.1x (rock)"
+          },
+          "packages": [
+            {
+              "name": "torch",
+              "versions": {
+                "RHAI 3.5 EA1": {
+                  "version": "2.10",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "2.11",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "2.11",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "2.12.1",
+                  "tentative": true
+                }
+              }
+            },
+            {
+              "name": "vllm",
+              "versions": {
+                "RHAI 3.5 EA1": {
+                  "version": "0.19.1",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "0.21.0",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "0.24.0",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "0.25.0",
+                  "tentative": true
+                }
+              }
+            },
+            {
+              "name": "tensorflow",
+              "versions": {
+                "RHAI 3.5 EA1": {
+                  "version": "2.10.0",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "2.21",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "2.19.1",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "triton",
+              "versions": {
+                "RHAI 3.5 EA1": {
+                  "version": "3.7",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "triton",
+                  "tentative": true
+                },
+                "RHAI 3.5": {
+                  "version": "3.6.0",
+                  "tentative": false
+                }
+              }
+            }
+          ],
+          "infra": [
+            {
+              "name": "python",
+              "versions": {
+                "RHAI 3.5 EA1": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "3.12",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "gcc",
+              "versions": {
+                "RHAI 3.5 EA1": {
+                  "version": "11 [default], 14 [specific packages]",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "14",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "14",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "rhel",
+              "versions": {
+                "RHAI 3.5 EA1": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "9.6",
+                  "tentative": false
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "ROCm 7.2",
+          "architectures": "x86_64",
+          "first_release_index": 0,
+          "last_release_index": null,
+          "sdk_versions": {},
+          "packages": [],
+          "infra": []
+        }
+      ]
+    },
+    {
+      "sheet": "Google TPU",
+      "sub_variants": [
+        {
+          "name": "Google TPU v6",
+          "architectures": "x86_64",
+          "first_release_index": 0,
+          "last_release_index": 6,
+          "sdk_versions": {
+            "RHAI 3.3": "TPU v6(6)",
+            "RHAI 3.4 EA1": "TPU v6(6)",
+            "RHAI 3.4. EA2": "TPU v6(6)",
+            "RHAI 3.4": "TPU v6(6)",
+            "RHAI 3.5 EA1": "TPU v6(6)",
+            "RHAI 3.5 EA2": "TPU v6(6)",
+            "RHAI 3.5": "TPU v6(6)"
+          },
+          "packages": [
+            {
+              "name": "tpu",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "plugin 0.13.2",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "plugin 0.13.2",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "plugin 0.13.2",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "plugin 0.13.2",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "plugin 0.13.2",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "plugin 0.13.2",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "plugin 0.21.0",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "torch",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "2.9.1",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "2.9.1",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "2.9.1",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "2.9.1",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "2.9.1",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "2.9.1",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "2.10",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "vllm",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "0.13.0",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "0.13.0",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "0.13.0",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "0.13.0",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "0.13.0",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "0.13.0",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "0.21.0",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "triton",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "3.5",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "3.5.1",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "3.6",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "3.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "3.7",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "3.7",
+                  "tentative": false
+                }
+              }
+            }
+          ],
+          "infra": [
+            {
+              "name": "python",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "3.12",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "gcc",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "11",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "11",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "11",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "11 [default], 14 [specific packages]",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "11 [default], 14 [specific packages]",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "11 [default], 14 [specific packages]",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "14",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "rhel",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "9.6",
+                  "tentative": false
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sheet": "Spyre",
+      "sub_variants": [
+        {
+          "name": "Spyre",
+          "architectures": "s390x, ppc64le, x86_64",
+          "first_release_index": 0,
+          "last_release_index": 7,
+          "sdk_versions": {
+            "RHAI 3.3": "Spyre plugin 1.2.3",
+            "RHAI 3.4 EA1": "Spyre plugin 1.6.1",
+            "RHAI 3.4. EA2": "Spyre plugin 1.9.1",
+            "RHAI 3.4": "Spyre plugin 1.10.0",
+            "RHAI 3.5 EA1": "Spyre plugin 2.0.0",
+            "RHAI 3.5 EA2": "Spyre plugin 2.1.0",
+            "RHAI 3.5": "sendnn-inference 2.2.1",
+            "RHAI 3.6 EA1": "sendnn-inference 2.2.1(?)"
+          },
+          "packages": [
+            {
+              "name": "torch",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "[Spyre]",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "2.7.1",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "2.7.1",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "2.7.1",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "2.10",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "2.11",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "2.11",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "vllm",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "0.13.0",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "0.14.1",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "0.15.1",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "0.18.0",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "0.19.0",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "0.20.1",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "0.23.0",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "0.24.0",
+                  "tentative": true
+                }
+              }
+            }
+          ],
+          "infra": [
+            {
+              "name": "python",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "3.12",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "gcc",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "11",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "11",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "11",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "11 [default], 14 [specific packages]",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "14",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "14",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "14",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "14",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "rhel",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "9.6",
+                  "tentative": false
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sheet": "AWS Neuron",
+      "sub_variants": [
+        {
+          "name": "AWS Neuron",
+          "architectures": "x86_64",
+          "first_release_index": 0,
+          "last_release_index": 7,
+          "sdk_versions": {
+            "RHAI 3.3": "Neuron TP,2.27.0(neuron-sdk with Python 3.12)",
+            "RHAI 3.4 EA1": "Neuron TP, 2.27.0(neuron-sdk)",
+            "RHAI 3.4. EA2": "Neuron GA, 2.27.1",
+            "RHAI 3.4": "Neuron 2.28.0",
+            "RHAI 3.5 EA1": "Neuron 2.28.0",
+            "RHAI 3.5 EA2": "Neuron 2.28.0",
+            "RHAI 3.5": "Neuron 2.30.0",
+            "RHAI 3.6 EA1": "Neuron 2.31.0"
+          },
+          "packages": [
+            {
+              "name": "neuron",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": null,
+                  "dropped": true,
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "plugin 0.2.2+lts",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "plugin 0.3.0",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "0.4.1",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "plugin 0.5.0",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "plugin 0.5.0",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "plugin 0.5.1",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "plugin 0.5.2",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "torch",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "2.9.1",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "2.9.1",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "2.9.1",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "2.9.1",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "2.9.1",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "2.9.1",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "2.9.1",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "2.9.1",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "vllm",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "0.13.0",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "0.11.0",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "",
+                  "tentative": true
+                },
+                "RHAI 3.4": {
+                  "version": "0.13.0",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "0.16.0",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "0.16.0",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "0.16.0",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "0.16.0",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "triton",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "3.5",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "3.5.1",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "3.6",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "3.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "3.7",
+                  "tentative": false
+                }
+              }
+            }
+          ],
+          "infra": [
+            {
+              "name": "python",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "3.12",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "gcc",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "11",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "11",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "11",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "11 [default], 14 [specific packages]",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "11 [default], 14 [specific packages]",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "14",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "14",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "14",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "rhel",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "9.6",
+                  "tentative": false
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sheet": "CPU",
+      "sub_variants": [
+        {
+          "name": "CPU (aarch64)",
+          "architectures": "x86_64, aarch64, ppc64le, s390x",
+          "first_release_index": 0,
+          "last_release_index": 7,
+          "sdk_versions": {
+            "RHAI 3.3": "python 3.12",
+            "RHAI 3.4 EA1": "python 3.12",
+            "RHAI 3.4. EA2": "python 3.12",
+            "RHAI 3.4": "python 3.12",
+            "RHAI 3.5 EA1": "python 3.12",
+            "RHAI 3.5 EA2": "python 3.12",
+            "RHAI 3.5": "python 3.12",
+            "RHAI 3.6 EA1": "python 3.12"
+          },
+          "packages": [
+            {
+              "name": "torch",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "2.9.0",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "2.9.1",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "2.10",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "2.10",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "2.10",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "2.11",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "2.11",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "2.12.1",
+                  "tentative": true
+                }
+              }
+            },
+            {
+              "name": "vllm",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "0.13.0",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "0.14.1",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "0.16.0",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "0.18.0",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "0.19.1",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "0.21.0",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "0.24.0",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "0.25.0",
+                  "tentative": true
+                }
+              }
+            },
+            {
+              "name": "tensorflow",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "tensorflow",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "tensorflow",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "tensorflow",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "tensorflow",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "tensorflow",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "2.21",
+                  "tentative": false
+                }
+              }
+            }
+          ],
+          "infra": [
+            {
+              "name": "gcc",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "11",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "11",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "11",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "11 [default], 14 [specific packages]",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "14",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "14",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "14",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "14",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "rhel",
+              "versions": {
+                "RHAI 3.3": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.4 EA1": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.4. EA2": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "9.6",
+                  "tentative": true
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sheet": "Intel Gaudi",
+      "sub_variants": [
+        {
+          "name": "Intel Gaudi",
+          "architectures": "x86_64",
+          "first_release_index": 2,
+          "last_release_index": 7,
+          "sdk_versions": {
+            "RHAI 3.4. EA2": "Gaudi TP, 1.23",
+            "RHAI 3.4": "Gaudi TP, 1.23",
+            "RHAI 3.5 EA1": "Gaudi TP 1.24",
+            "RHAI 3.5 EA2": "Gaudi TP 1.24",
+            "RHAI 3.5": "Gaudi TP 1.24.1",
+            "RHAI 3.6 EA1": "Gaudi TP 1.25 (?)"
+          },
+          "packages": [
+            {
+              "name": "torch",
+              "versions": {
+                "RHAI 3.4. EA2": {
+                  "version": "",
+                  "tentative": true
+                },
+                "RHAI 3.4": {
+                  "version": "2.9.0",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "2.10",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "2.10",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "2.11",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "2.12",
+                  "tentative": true
+                }
+              }
+            },
+            {
+              "name": "vllm",
+              "versions": {
+                "RHAI 3.4. EA2": {
+                  "version": "",
+                  "tentative": true
+                },
+                "RHAI 3.4": {
+                  "version": "0.17.0",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "0.19.1",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "0.19.1",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "0.24.0",
+                  "tentative": false
+                }
+              }
+            }
+          ],
+          "infra": [
+            {
+              "name": "python",
+              "versions": {
+                "RHAI 3.4. EA2": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "3.12",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "3.12",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "gcc",
+              "versions": {
+                "RHAI 3.4. EA2": {
+                  "version": "11",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "11 [default], 14 [specific packages]",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "11 [default], 14 [specific packages]",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "14",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "14",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "14",
+                  "tentative": false
+                }
+              }
+            },
+            {
+              "name": "rhel",
+              "versions": {
+                "RHAI 3.4. EA2": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.4": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA1": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5 EA2": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.5": {
+                  "version": "9.6",
+                  "tentative": false
+                },
+                "RHAI 3.6 EA1": {
+                  "version": "9.6",
+                  "tentative": true
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "source": "snapshot",
+  "generated_at": "2026-07-12"
+}

@@ -27,7 +27,7 @@
     "entry": "./server/index.js"
   },
   "secrets": {
-    "platform": ["jira", "gitlab"],
+    "platform": ["jira", "gitlab", "google"],
     "module": [
       {
         "key": "NIGHTLY_PIPELINE_GITLAB_TOKEN",
@@ -52,6 +52,11 @@
       {
         "key": "NIGHTLY_RCA_GITLAB_PROJECT",
         "description": "URL-encoded GitLab project path for the failure analyzer (defaults to redhat%2Frhel-ai%2Fagentic-ci%2Fpipeline-failure-analyzer)",
+        "required": false
+      },
+      {
+        "key": "MILESTONES_SPREADSHEET_ID",
+        "description": "Google Sheets spreadsheet ID for accelerator variant planning (defaults to the shared planning spreadsheet)",
         "required": false
       }
     ]

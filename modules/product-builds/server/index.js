@@ -919,6 +919,9 @@ module.exports = function registerRoutes(router, context) {
   // --- Nightly Pipeline Analysis ---
   require('./nightly-pipeline')(router, context);
 
+  // --- Package Milestones ---
+  require('./milestones')(router, context);
+
   if (context.registerDiagnostics) {
     context.registerDiagnostics(async function() {
       const index = readFromStorage(PKG_INDEX_PATH);
