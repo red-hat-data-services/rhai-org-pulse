@@ -37,8 +37,28 @@ export function useGoogleDrive() {
       const response = await fetch('/api/modules/customer-insights/auth/google/status')
       const data = await response.json()
       connected.value = data.connected
+
+      // If connected, fetch the OAuth token for Picker API
+      if (data.connected) {
+        await fetchOAuthToken()
+      }
     } catch (err) {
       console.error('Error checking Google Drive status:', err)
+    }
+  }
+
+  /**
+   * Fetch OAuth token for Google Picker API
+   */
+  async function fetchOAuthToken() {
+    try {
+      const response = await fetch('/api/modules/customer-insights/auth/google/token')
+      if (response.ok) {
+        const data = await response.json()
+        oauthToken.value = data.accessToken
+      }
+    } catch (err) {
+      console.error('Error fetching OAuth token:', err)
     }
   }
 
@@ -91,7 +111,8 @@ export function useGoogleDrive() {
           connecting.value = false
           window.removeEventListener('message', messageListener)
           messageListener = null
-          resolve()
+          // Fetch OAuth token for Picker
+          fetchOAuthToken().then(resolve).catch(reject)
         } else if (event.data.type === 'google-oauth-error') {
           error.value = event.data.error
           connecting.value = false

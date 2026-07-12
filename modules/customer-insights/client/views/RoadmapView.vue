@@ -16,9 +16,12 @@
           v-model="selectedComponent"
           class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
-          <option v-for="c in components" :key="c.id" :value="c.id">
-            {{ c.label }}
-          </option>
+          <option value="all">Portfolio (All)</option>
+          <optgroup v-for="pillar in pillars" :key="pillar.name" :label="pillar.name">
+            <option v-for="c in pillar.components" :key="c.id" :value="c.id">
+              {{ c.label }}
+            </option>
+          </optgroup>
         </select>
 
         <!-- Generate Roadmap Button -->
@@ -47,9 +50,9 @@
     </div>
 
     <!-- Roadmap Content -->
-    <div v-else-if="roadmap" class="space-y-6">
+    <div v-else class="space-y-6">
       <!-- Summary Stats -->
-      <div class="grid grid-cols-4 gap-4">
+      <div v-if="roadmap" class="grid grid-cols-4 gap-4">
         <div class="bg-white rounded-lg shadow p-4">
           <div class="text-sm text-gray-600 mb-1">Total Initiatives</div>
           <div class="text-2xl font-bold text-gray-900">{{ roadmap.summary.total }}</div>
@@ -68,6 +71,72 @@
         </div>
       </div>
 
+      <!-- Customer Demand -->
+      <div v-if="hasInteractions" class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between cursor-pointer" @click="demandExpanded = !demandExpanded">
+          <div class="flex items-center gap-2">
+            <BarChart3 class="w-6 h-6 text-blue-600" />
+            <h2 class="text-xl font-semibold text-gray-900">Customer Demand</h2>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-sm text-gray-500">Based on {{ filteredDemandInteractions.length }} interaction{{ filteredDemandInteractions.length !== 1 ? 's' : '' }}</span>
+            <svg class="w-5 h-5 text-gray-400 transition-transform" :class="{ 'rotate-180': demandExpanded }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+
+        <div v-if="demandExpanded" class="mt-4 space-y-6">
+          <!-- Component Interest -->
+          <div v-if="componentDemand.length">
+            <h3 class="text-sm font-semibold text-gray-700 uppercase mb-3">Component Interest</h3>
+            <div class="space-y-3">
+              <div v-for="item in componentDemand" :key="item.component">
+                <div class="flex items-center gap-3">
+                  <div class="w-40 text-sm font-medium text-gray-900 truncate" :title="item.component">{{ item.component }}</div>
+                  <div class="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      class="h-full bg-blue-500 rounded-full"
+                      :style="{ width: (item.customerCount / maxDemandCount * 100) + '%' }"
+                    ></div>
+                  </div>
+                  <div class="w-24 text-sm text-gray-600 text-right whitespace-nowrap">
+                    {{ item.customerCount }} customer{{ item.customerCount !== 1 ? 's' : '' }}
+                  </div>
+                </div>
+                <p class="text-xs text-gray-500 mt-0.5 pl-44">
+                  {{ item.companies.slice(0, 3).join(', ') }}<span v-if="item.companies.length > 3">, +{{ item.companies.length - 3 }} more</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Most Requested Features -->
+          <div v-if="topFeatureRequests.length">
+            <h3 class="text-sm font-semibold text-gray-700 uppercase mb-3">Most Requested Features</h3>
+            <div class="space-y-3">
+              <div v-for="(request, index) in topFeatureRequests" :key="request.text" class="flex items-start gap-3">
+                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center text-xs font-bold mt-0.5">
+                  {{ index + 1 }}
+                </span>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium text-gray-900">{{ request.text }}</span>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full whitespace-nowrap">
+                      {{ request.customerCount }} customer{{ request.customerCount !== 1 ? 's' : '' }}
+                    </span>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-0.5">
+                    {{ request.companies.slice(0, 4).join(', ') }}<span v-if="request.companies.length > 4">, +{{ request.companies.length - 4 }} more</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <template v-if="roadmap">
       <!-- Timeline View -->
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center gap-2 mb-6">
@@ -237,15 +306,18 @@
           <Users class="w-6 h-6 text-purple-600" />
           <h2 class="text-xl font-semibold text-gray-900">Top Customer Requests</h2>
         </div>
-        <div class="space-y-3">
+        <div v-if="roadmap.topRequests?.length" class="space-y-3">
           <div
             v-for="request in roadmap.topRequests"
-            :key="request.feature"
+            :key="request.title"
             class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
           >
             <div class="flex-1">
-              <div class="font-medium text-gray-900">{{ request.feature }}</div>
-              <div class="text-sm text-gray-600 mt-1">{{ request.customerCount }} customers requesting</div>
+              <div class="font-medium text-gray-900">{{ request.title }}</div>
+              <div class="text-sm text-gray-600 mt-1">{{ request.requestCount }} customers requesting</div>
+              <div v-if="request.customers?.length" class="text-xs text-gray-500 mt-1">
+                {{ request.customers.slice(0, 3).join(', ') }}<span v-if="request.customers.length > 3">...</span>
+              </div>
             </div>
             <div class="flex items-center gap-2">
               <span
@@ -259,6 +331,9 @@
               </span>
             </div>
           </div>
+        </div>
+        <div v-else class="text-center py-8 text-gray-500">
+          No top requests data available. Generate a roadmap to see customer requests.
         </div>
       </div>
 
@@ -499,11 +574,10 @@
           Last updated: {{ formatDate(roadmap.recommendations.generatedAt) }}
         </div>
       </div>
-    </div>
+      </template>
 
-    <!-- No Data State -->
-    <div v-else class="bg-white rounded-lg shadow p-12 text-center">
-      <div class="text-gray-500 mb-4">
+      <!-- No Data State -->
+      <div v-if="!roadmap && !hasInteractions" class="bg-white rounded-lg shadow p-12 text-center">
         <Lightbulb class="w-16 h-16 mx-auto mb-4 text-gray-400" />
         <p class="font-medium text-lg mb-2">No Roadmap Generated Yet</p>
         <p class="text-sm mb-6">Click "Generate Roadmap with AI" above to analyze customer interactions and Jira RFEs to create strategic product recommendations.</p>
@@ -637,14 +711,14 @@
 </template>
 
 <script setup>
-import { ref, computed, inject } from 'vue'
+import { ref, computed, inject, onMounted } from 'vue'
 import InfoTooltip from '../components/InfoTooltip.vue'
 import { useComponentSelector } from '../composables/useComponentSelector'
 import { useRoadmap } from '../composables/useRoadmap'
 import RoadmapCard from '../components/RoadmapCard.vue'
-import { Calendar, Users, Sparkles, TrendingUp, Target, Zap, Lightbulb, AlertTriangle, ListChecks } from 'lucide-vue-next'
+import { Calendar, Users, Sparkles, TrendingUp, Target, Zap, Lightbulb, AlertTriangle, ListChecks, BarChart3 } from 'lucide-vue-next'
 
-const { components, selectedComponent } = useComponentSelector()
+const { pillars, selectedComponent } = useComponentSelector()
 const { roadmap, loading, error, refresh } = useRoadmap(selectedComponent)
 const moduleNav = inject('moduleNav')
 
@@ -652,6 +726,62 @@ const selectedItem = ref(null)
 const appliedAdjustments = ref([])
 const generating = ref(false)
 const executingAction = ref(null)
+const interactions = ref([])
+const demandExpanded = ref(true)
+
+onMounted(async () => {
+  try {
+    const res = await fetch('/api/modules/customer-insights/interactions')
+    if (res.ok) interactions.value = await res.json()
+  } catch (e) {
+    console.error('Failed to load interactions for demand view:', e)
+  }
+})
+
+const hasInteractions = computed(() => interactions.value.length > 0)
+
+const filteredDemandInteractions = computed(() => {
+  if (selectedComponent.value === 'all') return interactions.value
+  return interactions.value.filter(i => i.component === selectedComponent.value)
+})
+
+const componentDemand = computed(() => {
+  const grouped = {}
+  for (const interaction of filteredDemandInteractions.value) {
+    const comp = interaction.component || 'Unknown'
+    if (!grouped[comp]) grouped[comp] = { companies: new Set() }
+    grouped[comp].companies.add(interaction.customerCompany)
+  }
+  return Object.entries(grouped)
+    .map(([component, data]) => ({
+      component,
+      customerCount: data.companies.size,
+      companies: [...data.companies],
+    }))
+    .sort((a, b) => b.customerCount - a.customerCount)
+})
+
+const maxDemandCount = computed(() => {
+  if (!componentDemand.value.length) return 1
+  return componentDemand.value[0].customerCount
+})
+
+const topFeatureRequests = computed(() => {
+  const requestMap = {}
+  for (const interaction of filteredDemandInteractions.value) {
+    if (!Array.isArray(interaction.futureWishlist)) continue
+    for (const wish of interaction.futureWishlist) {
+      const key = wish.trim().toLowerCase()
+      if (!key) continue
+      if (!requestMap[key]) requestMap[key] = { text: wish.trim(), companies: new Set() }
+      requestMap[key].companies.add(interaction.customerCompany)
+    }
+  }
+  return Object.values(requestMap)
+    .map(r => ({ text: r.text, customerCount: r.companies.size, companies: [...r.companies] }))
+    .sort((a, b) => b.customerCount - a.customerCount)
+    .slice(0, 10)
+})
 
 async function generateRoadmap() {
   generating.value = true
@@ -871,6 +1001,11 @@ function createRfeFromRecommendation(recommendation) {
 
   // Requested by
   params.requestedBy = 'Product Team (AI Roadmap Analysis)'
+
+  // Source customers for customer interaction sourcing
+  if (recommendation.sourceCustomers && Array.isArray(recommendation.sourceCustomers)) {
+    params.sourceCustomers = recommendation.sourceCustomers.join(',')
+  }
 
   // Navigate to RFE creator with comprehensive pre-filled data
   moduleNav.navigateTo('rfe-creator', params)

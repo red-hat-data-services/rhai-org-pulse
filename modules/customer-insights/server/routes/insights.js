@@ -1,16 +1,25 @@
 const { createModelsCorpClient } = require('../services/modelsCorpClient')
-const { google } = require('googleapis')
-const { createUserTokenStore } = require('../services/userTokenStore')
+const { createStorage } = require('../services/googleSheetsStorage')
 
 /**
  * @param {import('express').Router} router
  * @param {import('@shared/server/module-context').ModuleContext} context
  */
 module.exports = function registerInsightsRoutes(router, context) {
-  const { storage, secrets, requireAuth } = context
+  const { storage, requireAuth, secrets } = context
   const { readFromStorage, writeToStorage } = storage
+   
   const isDemoMode = process.env.DEMO_MODE === 'true'
-  const tokenStore = createUserTokenStore(storage)
+
+  // Lazy initialization of service account storage
+  let sheetsStorage = null
+  function getStorage() {
+    if (isDemoMode) return null
+    if (!sheetsStorage) {
+      sheetsStorage = createStorage(context)
+    }
+    return sheetsStorage
+  }
 
   /**
    * @openapi
@@ -142,88 +151,12 @@ module.exports = function registerInsightsRoutes(router, context) {
         // Load from fixtures in demo mode
         interactions = readFromStorage('customer-insights/interactions.json') || []
       } else {
-        // Fetch from Google Sheets
-        const userEmail = req.userEmail
-        if (!userEmail) {
-          return res.status(401).json({ error: 'User not authenticated' })
-        }
-
-        const googleTokens = await tokenStore.getTokens(userEmail)
-        if (!googleTokens) {
-          return res.status(400).json({ error: 'Google account not connected. Please connect in Settings.' })
-        }
-
-        const config = await tokenStore.getSpreadsheetConfig(userEmail)
-        if (!config?.spreadsheetId) {
-          return res.status(400).json({ error: 'No spreadsheet configured. Please select a spreadsheet in Settings.' })
-        }
-
-        // Set up Google Sheets client
-        const clientId = secrets.GOOGLE_OAUTH_CLIENT_ID
-        const clientSecret = secrets.GOOGLE_OAUTH_CLIENT_SECRET
-        const oauth2Client = new google.auth.OAuth2(clientId, clientSecret)
-        oauth2Client.setCredentials(googleTokens)
-        const sheets = google.sheets({ version: 'v4', auth: oauth2Client })
-        const spreadsheetId = config.spreadsheetId
-
-        // Read interactions from Google Sheets
-        const response = await sheets.spreadsheets.values.get({
-          spreadsheetId,
-          range: 'Interactions!A1:Z',
-        })
-
-        const rows = response.data.values || []
-        if (rows.length === 0) {
-          return res.status(400).json({ error: 'No interactions found in spreadsheet' })
-        }
-
-        // Parse headers
-        const headers = rows[0].map(h => {
-          const normalized = String(h).trim()
-            .replace(/\s+/g, '')
-            .replace(/[^a-zA-Z0-9]/g, '')
-            .toLowerCase()
-          return { original: h, normalized }
-        })
-
-        const getColIndex = (fieldNames) => {
-          for (const name of fieldNames) {
-            const idx = headers.findIndex(h => h.normalized === name.toLowerCase())
-            if (idx !== -1) return idx
-          }
-          return -1
-        }
-
-        const colMap = {
-          customerCompany: getColIndex(['customercompany', 'customerCompany', 'Customer Company']),
-          component: getColIndex(['component', 'Component']),
-          industryVertical: getColIndex(['industryvertical', 'industryVertical', 'Industry Vertical']),
-          mainAIUseCase: getColIndex(['mainaiusecase', 'mainAIUseCase', 'Main AI Use Case']),
-          painPoints: getColIndex(['painpoints', 'painPoints', 'Pain Points']),
-          featureFeedback: getColIndex(['featurefeedback', 'featureFeedback', 'Feature Feedback']),
-          futureWishlist: getColIndex(['futurewishlist', 'futureWishlist', 'Future Wishlist']),
-          status: getColIndex(['status', 'Status']),
-        }
-
-        // Parse interactions
-        interactions = rows.slice(1).map(row => ({
-          customerCompany: (colMap.customerCompany !== -1 ? row[colMap.customerCompany] : null) || '',
-          component: (colMap.component !== -1 ? row[colMap.component] : null) || '',
-          industryVertical: (colMap.industryVertical !== -1 ? row[colMap.industryVertical] : null) || '',
-          mainAIUseCase: (colMap.mainAIUseCase !== -1 ? row[colMap.mainAIUseCase] : null) || '',
-          painPoints: (colMap.painPoints !== -1 ? row[colMap.painPoints] : null) || '',
-          featureFeedback: (colMap.featureFeedback !== -1 ? row[colMap.featureFeedback] : null) || '',
-          futureWishlist: (colMap.futureWishlist !== -1 && row[colMap.futureWishlist]) ? row[colMap.futureWishlist].split(',').map(t => t.trim()).filter(t => t && t !== '[]') : [],
-          status: (colMap.status !== -1 ? row[colMap.status] : null) || '',
-        }))
+        // Fetch from service account storage
+        const store = getStorage()
+        interactions = await store.getAll(component ? { component } : {})
       }
 
-      // Filter by component if specified
-      const filteredInteractions = component && component !== 'all'
-        ? interactions.filter(i => i.component === component)
-        : interactions
-
-      if (filteredInteractions.length === 0) {
+      if (interactions.length === 0) {
         return res.status(400).json({ error: 'No customer interactions found to analyze' })
       }
 
@@ -238,7 +171,7 @@ module.exports = function registerInsightsRoutes(router, context) {
       }
 
       // Create summary of interactions for AI
-      const interactionsSummary = filteredInteractions.map(i => ({
+      const interactionsSummary = interactions.map(i => ({
         customer: i.customerCompany,
         industry: i.industryVertical,
         useCase: i.mainAIUseCase,
@@ -248,7 +181,7 @@ module.exports = function registerInsightsRoutes(router, context) {
         status: i.status
       }))
 
-      const prompt = `You are a product manager analyzing customer feedback data. Based on the following ${filteredInteractions.length} customer interactions, generate strategic insights.
+      const prompt = `You are a product manager analyzing customer feedback data. Based on the following ${interactions.length} customer interactions, generate strategic insights.
 
 CUSTOMER INTERACTIONS DATA:
 ${JSON.stringify(interactionsSummary, null, 2)}
@@ -276,9 +209,9 @@ JSON:`
         generatedAt: new Date().toISOString(),
         component: component || 'all',
         analysisMetadata: {
-          totalInteractions: filteredInteractions.length,
-          uniqueCustomers: new Set(filteredInteractions.map(i => i.customerCompany).filter(c => c)).size,
-          industries: [...new Set(filteredInteractions.map(i => i.industryVertical).filter(i => i))],
+          totalInteractions: interactions.length,
+          uniqueCustomers: new Set(interactions.map(i => i.customerCompany).filter(c => c)).size,
+          industries: [...new Set(interactions.map(i => i.industryVertical).filter(i => i))],
         }
       }
 

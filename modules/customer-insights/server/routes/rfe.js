@@ -1,20 +1,53 @@
-const { createJiraClient, markdownToAdf } = require('../services/jiraClient')
-const { buildJiraIssueFields } = require('../services/rfeBuilder')
+const { createModelsCorpClient } = require('../services/modelsCorpClient')
+const { createJiraClient } = require('../../../../shared/server/jira')
+
+const STOP_WORDS = new Set([
+  'the', 'and', 'for', 'with', 'that', 'this', 'from', 'are', 'was',
+  'not', 'but', 'has', 'have', 'will', 'can', 'does', 'should', 'would',
+  'could', 'into', 'also', 'than', 'then', 'been', 'its', 'our', 'their',
+])
+
+function extractKeywords(text, maxCount) {
+  if (!text) return []
+  return text
+    .replace(/[^\w\s-]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length >= 3 && !STOP_WORDS.has(w.toLowerCase()))
+    .slice(0, maxCount)
+}
+
+function buildSearchJql(title, component, painPoints) {
+  let keywords = extractKeywords(title, 8)
+
+  if (keywords.length < 3 && painPoints) {
+    keywords = [...keywords, ...extractKeywords(painPoints, 5 - keywords.length)]
+  }
+
+  if (component) {
+    keywords.unshift(component)
+  }
+
+  keywords = [...new Set(keywords.map(k => k.toLowerCase()))].slice(0, 10)
+  if (keywords.length === 0) return null
+
+  const textClauses = keywords
+    .map(k => `text ~ "${k.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`)
+    .join(' AND ')
+  return `project = RHAIRFE AND issuetype = "Feature Request" AND ${textClauses} ORDER BY updated DESC`
+}
 
 /**
  * @param {import('express').Router} router
  * @param {import('@shared/server/module-context').ModuleContext} context
  */
 module.exports = function registerRfeRoutes(router, context) {
-  const { storage, secrets } = context
-  const { readFromStorage, writeToStorage } = storage
-  const isDemoMode = process.env.DEMO_MODE === 'true'
+  const { requireAuth, secrets } = context
 
   /**
    * @openapi
-   * /api/modules/customer-insights/rfe/search-similar:
+   * /api/modules/customer-insights/rfe/generate-summary:
    *   post:
-   *     summary: Search for similar RFEs using AI-powered semantic similarity
+   *     summary: Generate RFE summary from customer feedback
    *     tags: [Customer Insights]
    *     requestBody:
    *       required: true
@@ -23,17 +56,92 @@ module.exports = function registerRfeRoutes(router, context) {
    *           schema:
    *             type: object
    *             properties:
+   *               component:
+   *                 type: string
    *               title:
+   *                 type: string
+   *               customers:
+   *                 type: string
+   *               painPoints:
    *                 type: string
    *               businessJustification:
    *                 type: string
-   *               technicalDetails:
-   *                 type: string
-   *               component:
+   *               successCriteria:
    *                 type: string
    *     responses:
    *       200:
-   *         description: List of similar RFEs with similarity scores
+   *         description: Generated RFE summary
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 summary:
+   *                   type: string
+   */
+  router.post('/rfe/generate-summary', requireAuth, async (req, res) => {
+    try {
+      const { component, title, customers, painPoints, businessJustification, successCriteria } = req.body
+
+      // Validate required fields
+      if (!component || !title || !customers || !painPoints || !businessJustification) {
+        return res.status(400).json({ error: 'Missing required fields' })
+      }
+
+      // Check if AI is configured
+      const apiKey = secrets.MODELS_CORP_API_KEY
+      const baseUrl = secrets.MODELS_CORP_BASE_URL || 'https://gemini--apicast-production.apps.int.stc.ai.prod.us-east-1.aws.paas.redhat.com:443'
+
+      if (!apiKey) {
+        return res.status(503).json({
+          error: 'AI generation not configured. Set MODELS_CORP_API_KEY in module secrets.'
+        })
+      }
+
+      // Build prompt following Red Hat PM best practices
+      const prompt = buildRfePrompt({
+        component,
+        title,
+        customers,
+        painPoints,
+        businessJustification,
+        successCriteria
+      })
+
+      // Generate RFE summary using AI
+      const aiClient = createModelsCorpClient({ apiKey, baseUrl })
+      const summary = await aiClient.generateText(prompt)
+
+      res.json({ summary })
+    } catch (error) {
+      console.error('[customer-insights] Error generating RFE summary:', error)
+      res.status(500).json({ error: error.message })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/modules/customer-insights/rfe/search-similar:
+   *   post:
+   *     summary: Search Jira for similar existing RFEs
+   *     tags: [Customer Insights]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [title]
+   *             properties:
+   *               title:
+   *                 type: string
+   *               component:
+   *                 type: string
+   *               painPoints:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: Similar RFEs found (or empty with optional warning)
    *         content:
    *           application/json:
    *             schema:
@@ -43,448 +151,146 @@ module.exports = function registerRfeRoutes(router, context) {
    *                   type: array
    *                   items:
    *                     type: object
+   *                     properties:
+   *                       key:
+   *                         type: string
+   *                       summary:
+   *                         type: string
+   *                       status:
+   *                         type: string
+   *                       priority:
+   *                         type: string
+   *                       url:
+   *                         type: string
+   *                 warning:
+   *                   type: string
+   *       503:
+   *         description: Jira credentials not configured
    */
-  router.post('/rfe/search-similar', async (req, res) => {
+  router.post('/rfe/search-similar', requireAuth, async (req, res) => {
     try {
-      const { title, businessJustification, technicalDetails, component } = req.body
+      const { title, component, painPoints } = req.body
 
-      if (!title || !businessJustification) {
-        return res.status(400).json({ error: 'Title and business justification are required' })
+      if (!title || !title.trim()) {
+        return res.status(400).json({ error: 'Title is required' })
       }
 
-      if (isDemoMode) {
-        // In demo mode, return fixture data with similarity scores
-        const rfes = readFromStorage('customer-insights/rfes.json') || []
+      const jiraEmail = secrets.JIRA_EMAIL
+      const jiraToken = secrets.JIRA_TOKEN
 
-        // Simple keyword-based similarity for demo (in production, use AI embeddings)
-        const similar = rfes
-          .map(rfe => ({
-            ...rfe,
-            similarity: calculateSimilarity(
-              { title, businessJustification, technicalDetails, component },
-              rfe
-            )
-          }))
-          .filter(rfe => rfe.similarity > 0.3) // 30% threshold for demo
-          .sort((a, b) => b.similarity - a.similarity)
-          .slice(0, 5) // Top 5 results
-
-        return res.json({ similar })
+      if (!jiraEmail || !jiraToken) {
+        return res.status(503).json({
+          error: 'Jira credentials not configured. Add JIRA_EMAIL and JIRA_TOKEN to environment variables.'
+        })
       }
 
-      // Production: Search Jira for similar RFEs
+      const jql = buildSearchJql(title, component, painPoints)
+      if (!jql) {
+        return res.json({ similar: [] })
+      }
+
+      const jira = createJiraClient({
+        email: jiraEmail,
+        token: jiraToken,
+        host: process.env.JIRA_HOST,
+      })
+
+      let issues
       try {
-        const jiraEmail = secrets.JIRA_EMAIL
-        const jiraToken = secrets.JIRA_TOKEN
-
-        if (!jiraEmail || !jiraToken) {
-          // Fallback to demo mode behavior if credentials not available
-          console.warn('Jira credentials not configured, using local search')
-          const rfes = readFromStorage('customer-insights/rfes.json') || []
-          const similar = rfes
-            .map(rfe => ({
-              ...rfe,
-              similarity: calculateSimilarity(
-                { title, businessJustification, technicalDetails, component },
-                rfe
-              )
-            }))
-            .filter(rfe => rfe.similarity > 0.3)
-            .sort((a, b) => b.similarity - a.similarity)
-            .slice(0, 5)
-
-          return res.json({ similar })
-        }
-
-        // Create Jira client
-        const jiraClient = createJiraClient({
-          email: jiraEmail,
-          token: jiraToken,
-          baseUrl: 'https://redhat.atlassian.net'
-        })
-
-        // Search for similar RFEs in Jira
-        // Use text search in summary and description
-        // JQL escaping: double quotes in values must be escaped as \"
-        const escapeJQL = (str) => str.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
-        const searchTerms = title.split(/\s+/).filter(w => w.length > 3).slice(0, 5).join(' ')
-        let jql = `project = RHAIRFE AND issuetype = "Feature Request" AND text ~ "${escapeJQL(searchTerms)}"`
-
-        if (component) {
-          const labelValue = component.toLowerCase().replace(/\s+/g, '-')
-          jql += ` AND labels = "${escapeJQL(labelValue)}"`
-        }
-
-        const issues = await jiraClient.search(jql, ['summary', 'description', 'status', 'labels', 'priority'], 10)
-
-        // Calculate similarity scores for Jira results
-        const similar = issues.map(issue => {
-          const rfe = {
-            id: issue.key,
-            title: issue.fields.summary,
-            businessJustification: issue.fields.description?.content?.[0]?.content?.[0]?.text || '',
-            technicalDetails: '',
-            component: component,
-            status: issue.fields.status?.name || 'Unknown',
-            priority: issue.fields.priority?.name || 'Medium',
-            jiraIssue: {
-              key: issue.key,
-              summary: issue.fields.summary,
-              url: `https://redhat.atlassian.net/browse/${issue.key}`
-            }
-          }
-
-          return {
-            ...rfe,
-            similarity: calculateSimilarity(
-              { title, businessJustification, technicalDetails, component },
-              rfe
-            )
-          }
-        })
-        .filter(rfe => rfe.similarity > 0.3)
-        .sort((a, b) => b.similarity - a.similarity)
-        .slice(0, 5)
-
-        return res.json({ similar })
-
+        issues = await jira.fetchAllJqlResults(jql, 'summary,status,priority,created', { maxResults: 10 })
       } catch (jiraError) {
-        console.error('Jira search failed:', jiraError)
-        // Fallback to local search on error
-        const rfes = readFromStorage('customer-insights/rfes.json') || []
-        const similar = rfes
-          .map(rfe => ({
-            ...rfe,
-            similarity: calculateSimilarity(
-              { title, businessJustification, technicalDetails, component },
-              rfe
-            )
-          }))
-          .filter(rfe => rfe.similarity > 0.3)
-          .sort((a, b) => b.similarity - a.similarity)
-          .slice(0, 5)
-
-        return res.json({ similar })
-      }
-    } catch (error) {
-      console.error('Error searching similar RFEs:', error)
-      res.status(500).json({ error: error.message })
-    }
-  })
-
-  /**
-   * @openapi
-   * /api/modules/customer-insights/rfe/create:
-   *   post:
-   *     summary: Create a new RFE
-   *     tags: [Customer Insights]
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             required:
-   *               - component
-   *               - title
-   *               - businessJustification
-   *               - technicalDetails
-   *             properties:
-   *               sourceInteractionId:
-   *                 type: string
-   *               component:
-   *                 type: string
-   *               title:
-   *                 type: string
-   *               businessJustification:
-   *                 type: string
-   *               technicalDetails:
-   *                 type: string
-   *               useCases:
-   *                 type: string
-   *               customerCompany:
-   *                 type: string
-   *               industryVertical:
-   *                 type: string
-   *               priority:
-   *                 type: string
-   *               arrImpact:
-   *                 type: number
-   *     responses:
-   *       201:
-   *         description: RFE created successfully
-   */
-  router.post('/rfe/create', async (req, res) => {
-    try {
-      const {
-        sourceInteractionId,
-        component,
-        title,
-        businessJustification,
-        technicalDetails,
-        useCases,
-        acceptanceCriteria,
-        successMetrics,
-        complexity,
-        estimatedEffort,
-        dependencies,
-        targetRelease,
-        requestedBy,
-        customerCompany,
-        industryVertical,
-        priority,
-        arrImpact,
-      } = req.body
-
-      // Validation
-      if (!component || !title || !businessJustification || !technicalDetails) {
-        return res.status(400).json({
-          error: 'Component, title, business justification, and technical details are required'
-        })
-      }
-
-      if (isDemoMode) {
-        // In demo mode, create a mock RFE
-        const rfes = readFromStorage('customer-insights/rfes.json') || []
-
-        const newRfe = {
-          id: `rfe-${Date.now()}`,
-          sourceInteractionId,
-          component,
-          title,
-          businessJustification,
-          technicalDetails,
-          useCases,
-          acceptanceCriteria,
-          successMetrics,
-          complexity: complexity || 'Medium',
-          estimatedEffort,
-          dependencies,
-          targetRelease,
-          requestedBy,
-          customerCompany,
-          industryVertical,
-          priority: priority || 'Medium',
-          arrImpact,
-          status: 'Draft',
-          createdAt: new Date().toISOString(),
-          createdBy: 'demo-user',
-          jiraIssue: {
-            key: `RHAIRFE-${Math.floor(Math.random() * 10000)}`,
-            summary: title,
-            url: `https://redhat.atlassian.net/browse/RHAIRFE-${Math.floor(Math.random() * 10000)}`
-          }
-        }
-
-        rfes.push(newRfe)
-        writeToStorage('customer-insights/rfes.json', rfes)
-
-        return res.status(201).json(newRfe)
-      }
-
-      // Production: Create actual Jira issue
-      try {
-        let jiraClient
-
-        // Try per-user OAuth first (if available on router)
-        if (router.getJiraClient) {
-          try {
-            const { jiraRequest } = await router.getJiraClient(req)
-            // Wrap OAuth jiraRequest to match createJiraClient interface
-            jiraClient = {
-              jiraRequest,
-              createIssue: async (fields) => {
-                // Convert description to ADF if it's a string (same as createJiraClient)
-                if (fields.description && typeof fields.description === 'string') {
-                  fields = { ...fields, description: markdownToAdf(fields.description) }
-                }
-                return jiraRequest('/rest/api/3/issue', {
-                  method: 'POST',
-                  body: { fields }
-                })
-              },
-              search: async (jql, fields, maxResults) => {
-                const params = new URLSearchParams({
-                  jql,
-                  fields: Array.isArray(fields) ? fields.join(',') : fields,
-                  maxResults: String(maxResults || 50)
-                })
-                const result = await jiraRequest(`/rest/api/3/search?${params}`)
-                return result.issues || []
-              }
-            }
-          } catch (oauthError) {
-            // OAuth not connected, fall back to shared credentials
-            console.log('Per-user Jira OAuth not connected, trying shared credentials:', oauthError.message)
-          }
-        }
-
-        // Fall back to shared credentials if OAuth not available
-        if (!jiraClient) {
-          const jiraEmail = secrets.JIRA_EMAIL
-          const jiraToken = secrets.JIRA_TOKEN
-
-          if (!jiraEmail || !jiraToken) {
-            throw new Error('Jira credentials not configured. Either connect your Jira account (OAuth) or set JIRA_EMAIL and JIRA_TOKEN in module secrets.')
-          }
-
-          // Create Jira client with shared credentials
-          jiraClient = createJiraClient({
-            email: jiraEmail,
-            token: jiraToken,
-            baseUrl: 'https://redhat.atlassian.net'
+        const msg = jiraError.message || ''
+        const cause = jiraError.cause?.code || ''
+        if (cause === 'ENOTFOUND' || cause === 'ECONNREFUSED' || cause === 'ETIMEDOUT' || msg.includes('fetch failed')) {
+          return res.json({
+            similar: [],
+            warning: 'Could not reach Jira. You may need to connect to VPN.',
           })
         }
-
-        // Build Jira issue fields
-        const fields = buildJiraIssueFields({
-          component,
-          title,
-          businessJustification,
-          technicalDetails,
-          useCases,
-          customerCompany,
-          industryVertical,
-          priority,
-          arrImpact,
-          sourceInteractionId
-        }, 'RHAIRFE')
-
-        // Create the Jira issue
-        const result = await jiraClient.createIssue(fields)
-
-        // Store RFE metadata locally
-        const rfes = readFromStorage('customer-insights/rfes.json') || []
-        const newRfe = {
-          id: `rfe-${Date.now()}`,
-          sourceInteractionId,
-          component,
-          title,
-          businessJustification,
-          technicalDetails,
-          useCases,
-          acceptanceCriteria,
-          successMetrics,
-          complexity: complexity || 'Medium',
-          estimatedEffort,
-          dependencies,
-          targetRelease,
-          requestedBy,
-          customerCompany,
-          industryVertical,
-          priority: priority || 'Medium',
-          arrImpact,
-          status: 'Submitted',
-          createdAt: new Date().toISOString(),
-          createdBy: req.userEmail || 'unknown',
-          jiraIssue: {
-            key: result.key,
-            summary: title,
-            url: `https://redhat.atlassian.net/browse/${result.key}`
-          }
-        }
-
-        rfes.push(newRfe)
-        writeToStorage('customer-insights/rfes.json', rfes)
-
-        console.log(`✓ Created Jira RFE: ${result.key}`)
-
-        return res.status(201).json(newRfe)
-
-      } catch (jiraError) {
-        console.error('Jira creation failed:', jiraError)
-        // Return detailed error for debugging
-        return res.status(500).json({
-          error: 'Failed to create Jira issue',
-          details: jiraError.message
+        return res.json({
+          similar: [],
+          warning: `Jira search failed: ${msg}`,
         })
       }
+
+      const similar = issues.map(issue => ({
+        key: issue.key,
+        summary: issue.fields.summary,
+        status: issue.fields.status?.name || 'Unknown',
+        priority: issue.fields.priority?.name || 'Medium',
+        url: `${jira.JIRA_HOST}/browse/${issue.key}`,
+      }))
+
+      res.json({ similar })
     } catch (error) {
-      console.error('Error creating RFE:', error)
+      console.error('[customer-insights] Error searching similar RFEs:', error)
       res.status(500).json({ error: error.message })
     }
   })
+}
 
-  /**
-   * @openapi
-   * /api/modules/customer-insights/rfe/list:
-   *   get:
-   *     summary: List all RFEs
-   *     tags: [Customer Insights]
-   *     parameters:
-   *       - name: component
-   *         in: query
-   *         schema:
-   *           type: string
-   *       - name: status
-   *         in: query
-   *         schema:
-   *           type: string
-   *       - name: priority
-   *         in: query
-   *         schema:
-   *           type: string
-   *     responses:
-   *       200:
-   *         description: List of RFEs
-   */
-  router.get('/rfe/list', async (req, res) => {
-    try {
-      const { component, status, priority } = req.query
+/**
+ * Build RFE generation prompt following Red Hat PM best practices
+ * Based on pm-toolkit and rhai-customer-tracker patterns
+ */
+function buildRfePrompt(rfeData) {
+  const { component, title, customers, painPoints, businessJustification, successCriteria } = rfeData
 
-      if (isDemoMode) {
-        let rfes = readFromStorage('customer-insights/rfes.json') || []
+  return `You are a Red Hat Product Manager creating a Request for Enhancement (RFE) following official Red Hat PM guidelines.
 
-        // Apply filters
-        if (component) {
-          rfes = rfes.filter(rfe => rfe.component === component)
-        }
-        if (status) {
-          rfes = rfes.filter(rfe => rfe.status === status)
-        }
-        if (priority) {
-          rfes = rfes.filter(rfe => rfe.priority === priority)
-        }
+Generate a well-structured RFE summary that describes the WHAT and WHY (business need), never the HOW (implementation).
 
-        return res.json(rfes)
-      }
+**Critical Rules:**
+- Describe the business need and user problem, NOT technical implementation
+- Use actual customer names (no generic "users" or "customers")
+- Write acceptance criteria from the user's perspective ("User can do X" not "System implements Y")
+- Focus on outcomes and value, not features or architecture
+- Use evidence-based business justification (contracts, revenue, commitments)
 
-      // TODO: In production, fetch from database or Google Sheets
-      res.status(501).json({
-        error: 'RFE listing not yet implemented.'
-      })
-    } catch (error) {
-      console.error('Error listing RFEs:', error)
-      res.status(500).json({ error: error.message })
-    }
-  })
+**Input Data:**
 
-  /**
-   * Calculate simple keyword-based similarity (demo mode)
-   * In production, use AI embeddings with cosine similarity
-   */
-  function calculateSimilarity(rfe1, rfe2) {
-    let score = 0
+**Component:** ${component}
 
-    // Component match bonus
-    if (rfe1.component === rfe2.component) {
-      score += 0.2
-    }
+**Title:** ${title}
 
-    // Text similarity
-    const text1 = `${rfe1.title || ''} ${rfe1.businessJustification || ''} ${rfe1.technicalDetails || ''}`.toLowerCase()
-    const text2 = `${rfe2.title || ''} ${rfe2.businessJustification || ''} ${rfe2.technicalDetails || ''}`.toLowerCase()
+**Affected Customers:**
+${customers}
 
-    const words1 = new Set(text1.split(/\s+/).filter(w => w.length > 3))
-    const words2 = new Set(text2.split(/\s+/).filter(w => w.length > 3))
+**Pain Points / User Problem:**
+${painPoints}
 
-    const intersection = new Set([...words1].filter(w => words2.has(w)))
-    const union = new Set([...words1, ...words2])
+**Business Justification:**
+${businessJustification}
 
-    // Jaccard similarity (0-0.8 range)
-    const textSimilarity = union.size > 0 ? (intersection.size / union.size) * 0.8 : 0
-    score += textSimilarity
+${successCriteria ? `**Success Criteria:**\n${successCriteria}\n` : ''}
 
-    return Math.min(score, 1.0)
-  }
+---
+
+Generate a properly formatted RFE with these sections:
+
+## Summary
+[1-2 sentence high-level summary of the business need]
+
+## Problem Statement
+[Describe what users cannot do today and why it's painful. Use actual customer names. Focus on the business problem, not technical gaps.]
+
+## Affected Customers
+[List specific customer names and segments. Include context about their use cases and impact.]
+
+## Business Justification
+[Evidence-based justification: revenue impact, customer commitments, strategic alignment, competitive positioning. Use numbers and facts.]
+
+## Acceptance Criteria
+[3-5 user-perspective acceptance criteria written as checkboxes. Each starts with "User can..." or "Customer can...". No implementation details.]
+
+- [ ] User can...
+- [ ] User can...
+- [ ] User can...
+
+## Success Criteria
+[How will we know this solved the customer's problem? Think measurable outcomes.]
+
+---
+
+Return ONLY the formatted RFE markdown (no preamble, no explanation).`
 }

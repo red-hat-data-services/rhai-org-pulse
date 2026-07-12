@@ -1,35 +1,48 @@
 const { google } = require('googleapis')
-const { getAuthClient } = require('./googleAuth')
-const { readFromStorage, writeToStorage } = require('../../../../shared/server')
+const fs = require('fs')
 
 /**
- * Get configured Google Sheets API client
- * @param {object} secrets - Module secrets
+ * Get service account auth client with full spreadsheets scope
+ * @param {string} keyFile - Path to service account key JSON
+ * @returns {import('googleapis').Auth.GoogleAuth}
  */
-async function getSheetsApi(secrets) {
-  const auth = await getAuthClient(secrets, { readFromStorage, writeToStorage })
+function getServiceAccountAuth(keyFile) {
+  const resolvedKeyFile = keyFile || '/etc/secrets/google-sa-key.json'
+
+  if (!fs.existsSync(resolvedKeyFile)) {
+    throw new Error(
+      `Google service account key not found at ${resolvedKeyFile}. ` +
+      'Set GOOGLE_SERVICE_ACCOUNT_KEY_FILE env var to the correct path, or ' +
+      'ensure the key file is mounted at /etc/secrets/google-sa-key.json'
+    )
+  }
+
+  return new google.auth.GoogleAuth({
+    keyFile: resolvedKeyFile,
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'] // Full read/write access
+  })
+}
+
+/**
+ * Get configured Google Sheets API client with service account auth
+ * @param {string} keyFile - Path to service account key JSON
+ * @returns {Promise<import('googleapis').sheets_v4.Sheets>}
+ */
+async function getSheetsApi(keyFile) {
+  const auth = getServiceAccountAuth(keyFile)
   return google.sheets({ version: 'v4', auth })
 }
 
 /**
- * Get spreadsheet ID from secrets
- * @param {object} secrets - Module secrets
- */
-function getSpreadsheetId(secrets) {
-  const id = secrets.GOOGLE_SPREADSHEET_ID
-  if (!id) throw new Error('Missing GOOGLE_SPREADSHEET_ID in module secrets')
-  return id
-}
-
-/**
  * Read data from a sheet range
- * @param {object} secrets
+ * @param {import('googleapis').sheets_v4.Sheets} sheets - Sheets API client
+ * @param {string} spreadsheetId - Google Spreadsheet ID
  * @param {string} range - e.g., "Interactions!A2:Q"
+ * @returns {Promise<Array<Array>>}
  */
-async function readSheet(secrets, range) {
-  const sheets = await getSheetsApi(secrets)
+async function readSheet(sheets, spreadsheetId, range) {
   const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: getSpreadsheetId(secrets),
+    spreadsheetId,
     range,
   })
   return res.data.values || []
@@ -37,16 +50,16 @@ async function readSheet(secrets, range) {
 
 /**
  * Append rows to a sheet
- * @param {object} secrets
- * @param {string} sheetName
- * @param {Array<Array>} rows
+ * @param {import('googleapis').sheets_v4.Sheets} sheets - Sheets API client
+ * @param {string} spreadsheetId - Google Spreadsheet ID
+ * @param {string} sheetName - Sheet tab name
+ * @param {Array<Array>} rows - Rows to append
  */
-async function appendRows(secrets, sheetName, rows) {
+async function appendRows(sheets, spreadsheetId, sheetName, rows) {
   if (!rows.length) return
 
-  const sheets = await getSheetsApi(secrets)
   await sheets.spreadsheets.values.append({
-    spreadsheetId: getSpreadsheetId(secrets),
+    spreadsheetId,
     range: `${sheetName}!A:A`,
     valueInputOption: 'RAW',
     insertDataOption: 'INSERT_ROWS',
@@ -56,15 +69,15 @@ async function appendRows(secrets, sheetName, rows) {
 
 /**
  * Update a specific row
- * @param {object} secrets
- * @param {string} sheetName
+ * @param {import('googleapis').sheets_v4.Sheets} sheets - Sheets API client
+ * @param {string} spreadsheetId - Google Spreadsheet ID
+ * @param {string} sheetName - Sheet tab name
  * @param {number} rowNumber - 1-based row number
- * @param {Array} values
+ * @param {Array} values - Row values
  */
-async function updateRow(secrets, sheetName, rowNumber, values) {
-  const sheets = await getSheetsApi(secrets)
+async function updateRow(sheets, spreadsheetId, sheetName, rowNumber, values) {
   await sheets.spreadsheets.values.update({
-    spreadsheetId: getSpreadsheetId(secrets),
+    spreadsheetId,
     range: `${sheetName}!A${rowNumber}`,
     valueInputOption: 'RAW',
     requestBody: { values: [values] },
@@ -73,16 +86,16 @@ async function updateRow(secrets, sheetName, rowNumber, values) {
 
 /**
  * Delete a row
- * @param {object} secrets
- * @param {string} sheetName
+ * @param {import('googleapis').sheets_v4.Sheets} sheets - Sheets API client
+ * @param {string} spreadsheetId - Google Spreadsheet ID
+ * @param {string} sheetName - Sheet tab name
  * @param {number} rowNumber - 1-based row number
  */
-async function deleteRow(secrets, sheetName, rowNumber) {
-  const sheets = await getSheetsApi(secrets)
-  const sheetId = await getSheetId(secrets, sheetName)
+async function deleteRow(sheets, spreadsheetId, sheetName, rowNumber) {
+  const sheetId = await getSheetId(sheets, spreadsheetId, sheetName)
 
   await sheets.spreadsheets.batchUpdate({
-    spreadsheetId: getSpreadsheetId(secrets),
+    spreadsheetId,
     requestBody: {
       requests: [{
         deleteDimension: {
@@ -100,15 +113,13 @@ async function deleteRow(secrets, sheetName, rowNumber) {
 
 /**
  * Clear sheet and write new data
- * @param {object} secrets
- * @param {string} sheetName
- * @param {Array} headerRow
- * @param {Array<Array>} dataRows
+ * @param {import('googleapis').sheets_v4.Sheets} sheets - Sheets API client
+ * @param {string} spreadsheetId - Google Spreadsheet ID
+ * @param {string} sheetName - Sheet tab name
+ * @param {Array} headerRow - Header row
+ * @param {Array<Array>} dataRows - Data rows
  */
-async function clearAndWrite(secrets, sheetName, headerRow, dataRows) {
-  const sheets = await getSheetsApi(secrets)
-  const spreadsheetId = getSpreadsheetId(secrets)
-
+async function clearAndWrite(sheets, spreadsheetId, sheetName, headerRow, dataRows) {
   // Clear existing data
   await sheets.spreadsheets.values.clear({
     spreadsheetId,
@@ -129,13 +140,14 @@ async function clearAndWrite(secrets, sheetName, headerRow, dataRows) {
 
 /**
  * Get sheet ID from sheet name
- * @param {object} secrets
- * @param {string} sheetName
+ * @param {import('googleapis').sheets_v4.Sheets} sheets - Sheets API client
+ * @param {string} spreadsheetId - Google Spreadsheet ID
+ * @param {string} sheetName - Sheet tab name
+ * @returns {Promise<number>}
  */
-async function getSheetId(secrets, sheetName) {
-  const sheets = await getSheetsApi(secrets)
+async function getSheetId(sheets, spreadsheetId, sheetName) {
   const res = await sheets.spreadsheets.get({
-    spreadsheetId: getSpreadsheetId(secrets),
+    spreadsheetId,
     fields: 'sheets.properties',
   })
 
@@ -152,17 +164,17 @@ async function getSheetId(secrets, sheetName) {
 
 /**
  * Ensure headers exist in sheet (create if missing)
- * @param {object} secrets
- * @param {string} sheetName
- * @param {Array} headerRow
+ * @param {import('googleapis').sheets_v4.Sheets} sheets - Sheets API client
+ * @param {string} spreadsheetId - Google Spreadsheet ID
+ * @param {string} sheetName - Sheet tab name
+ * @param {Array} headerRow - Header row values
  */
-async function ensureHeaders(secrets, sheetName, headerRow) {
-  const existing = await readSheet(secrets, `${sheetName}!1:1`)
+async function ensureHeaders(sheets, spreadsheetId, sheetName, headerRow) {
+  const existing = await readSheet(sheets, spreadsheetId, `${sheetName}!1:1`)
 
   if (!existing.length || !existing[0].length) {
-    const sheets = await getSheetsApi(secrets)
     await sheets.spreadsheets.values.update({
-      spreadsheetId: getSpreadsheetId(secrets),
+      spreadsheetId,
       range: `${sheetName}!A1`,
       valueInputOption: 'RAW',
       requestBody: { values: [headerRow] },
@@ -171,6 +183,7 @@ async function ensureHeaders(secrets, sheetName, headerRow) {
 }
 
 module.exports = {
+  getSheetsApi,
   readSheet,
   appendRows,
   updateRow,

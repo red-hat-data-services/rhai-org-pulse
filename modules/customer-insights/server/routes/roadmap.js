@@ -1,7 +1,6 @@
-const { google } = require('googleapis')
-const { createUserTokenStore } = require('../services/userTokenStore')
+const { createStorage } = require('../services/googleSheetsStorage')
 const { createModelsCorpClient } = require('../services/modelsCorpClient')
-const { createJiraClient } = require('../services/jiraClient')
+const { createJiraClient } = require('../../../../shared/server/jira')
 
 /**
  * @param {import('express').Router} router
@@ -10,8 +9,18 @@ const { createJiraClient } = require('../services/jiraClient')
 module.exports = function registerRoadmapRoutes(router, context) {
   const { storage, requireAuth, secrets } = context
   const { readFromStorage, writeToStorage } = storage
+   
   const isDemoMode = process.env.DEMO_MODE === 'true'
-  const tokenStore = createUserTokenStore(storage)
+
+  // Lazy initialization of service account storage
+  let sheetsStorage = null
+  function getStorage() {
+    if (isDemoMode) return null
+    if (!sheetsStorage) {
+      sheetsStorage = createStorage(context)
+    }
+    return sheetsStorage
+  }
 
   /**
    * @openapi
@@ -136,47 +145,12 @@ module.exports = function registerRoadmapRoutes(router, context) {
     try {
       const { component } = req.body
 
-      // Step 1: Fetch customer interactions from Google Sheets
-      const userEmail = req.userEmail
-      if (!userEmail) {
-        return res.status(401).json({ error: 'User not authenticated' })
-      }
-
+      // Step 1: Fetch customer interactions from service account storage
       let interactions = []
 
       if (!isDemoMode) {
-        const googleTokens = await tokenStore.getTokens(userEmail)
-        if (!googleTokens) {
-          return res.status(400).json({ error: 'Google account not connected' })
-        }
-
-        const config = await tokenStore.getSpreadsheetConfig(userEmail)
-        if (!config?.spreadsheetId) {
-          return res.status(400).json({ error: 'No spreadsheet configured' })
-        }
-
-        const clientId = secrets.GOOGLE_OAUTH_CLIENT_ID
-        const clientSecret = secrets.GOOGLE_OAUTH_CLIENT_SECRET
-        const oauth2Client = new google.auth.OAuth2(clientId, clientSecret)
-        oauth2Client.setCredentials(googleTokens)
-        const sheets = google.sheets({ version: 'v4', auth: oauth2Client })
-
-        const response = await sheets.spreadsheets.values.get({
-          spreadsheetId: config.spreadsheetId,
-          range: 'Interactions!A1:Z',
-        })
-
-        const rows = response.data.values || []
-        if (rows.length > 1) {
-          const headers = rows[0].map(h => String(h).trim().toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, ''))
-          interactions = rows.slice(1).map(row => {
-            const obj = {}
-            headers.forEach((header, idx) => {
-              obj[header] = row[idx] || ''
-            })
-            return obj
-          })
-        }
+        const store = getStorage()
+        interactions = await store.getAll(component ? { component } : {})
       }
 
       // Step 2: Fetch RFEs from Jira
@@ -218,107 +192,33 @@ module.exports = function registerRoadmapRoutes(router, context) {
 
       const prompt = `You are a product manager creating a strategic product roadmap. Based on the following data, generate roadmap recommendations AND specific RFE suggestions.
 
-CUSTOMER INTERACTIONS (${interactions.length} total):
-${JSON.stringify(interactions.slice(0, 30).map(i => ({
+CUSTOMER INTERACTIONS (${interactions.length} total, showing top 10):
+${JSON.stringify(interactions.slice(0, 10).map(i => ({
   customer: i.customercompany,
   industry: i.industryvertical,
-  useCase: i.mainaiusecase,
-  painPoints: i.painpoints,
-  feedback: i.featurefeedback,
-  wishlist: i.futurewishlist,
-  status: i.status
-})), null, 2)}
+  painPoints: i.painpoints?.substring(0, 100) || '',
+  feedback: i.featurefeedback?.substring(0, 100) || ''
+})))}
 
-JIRA RFEs (${rfes.length} total):
-${JSON.stringify(rfes.slice(0, 20).map(r => ({
-  key: r.key,
-  summary: r.summary,
-  status: r.status,
-  priority: r.priority
-})), null, 2)}
+JIRA RFEs (${rfes.length} total, showing top 8):
+${JSON.stringify(rfes.slice(0, 8).map(r => ({key: r.key, summary: r.summary?.substring(0, 80)})))}
 
-Generate a product roadmap with ONLY valid JSON (no markdown):
+Return ONLY valid JSON (no markdown). CRITICAL: Total response must be under 10000 tokens. Keep ALL descriptions to 1 sentence max.
+
 {
-  "items": [
-    {
-      "id": "unique-id",
-      "title": "Initiative title",
-      "description": "What this initiative delivers",
-      "timeframe": "Now|Next|Later",
-      "status": "Planned|In Progress|Completed",
-      "priority": "High|Medium|Low",
-      "customerDemand": {
-        "requestCount": number,
-        "keyAccounts": ["List of customers requesting this"],
-        "arrImpact": "Estimated ARR impact"
-      },
-      "deliverables": ["Key deliverables"],
-      "relatedRFEs": ["RHAIRFE-123"],
-      "components": ["Component tags"]
-    }
-  ],
-  "topRequests": [
-    {
-      "title": "Most requested feature",
-      "requestCount": number,
-      "customers": ["Customer list"]
-    }
-  ],
+  "items": [{"id":"","title":"","description":"1 sentence","timeframe":"Now|Next|Later","status":"Planned","priority":"High|Medium|Low","customerDemand":{"requestCount":0,"keyAccounts":[""],"arrImpact":""},"deliverables":[""],"relatedRFEs":[""],"components":[""]}],
+  "topRequests": [{"title":"","requestCount":0,"customers":[""]}],
   "aiRecommendations": {
-    "quickActions": [
-      {
-        "id": "action-id",
-        "type": "update-rfe",
-        "title": "Action title",
-        "description": "Why this action matters",
-        "rfeKey": "RHAIRFE-123",
-        "suggestedChanges": {
-          "priority": "High|Medium|Low",
-          "summary": "Updated summary if needed",
-          "description": "Additional context to add",
-          "labels": ["label1", "label2"]
-        }
-      }
-    ],
-    "suggestedRFEs": [
-      {
-        "id": "rfe-suggestion-id",
-        "title": "Feature title (concise, under 80 chars)",
-        "businessJustification": "Why this matters - 2-3 sentences on business value and customer impact",
-        "technicalDetails": "What needs to be built - technical description of the feature",
-        "useCases": "Specific use cases or user scenarios - bullet points or numbered list",
-        "component": "navigator|autox|platform|d2ma|agentic|inferencing",
-        "priority": "Critical|High|Medium|Low",
-        "customerCompany": "Primary customer(s) requesting this",
-        "industryVertical": "Industry vertical",
-        "arrImpact": 0,
-        "sourceCustomers": ["List of 2-5 customers who need this"],
-        "estimatedEffort": "Small|Medium|Large",
-        "relatedRFEs": ["Existing RFE keys if any"]
-      }
-    ]
+    "quickActions": [{"id":"","type":"update-rfe","title":"","description":"1 sentence","rfeKey":"","suggestedChanges":{"priority":"","summary":"","description":"","labels":[]}}],
+    "suggestedRFEs": [{"id":"","title":"max 60 chars","businessJustification":"1 sentence","technicalDetails":"1 sentence","useCases":"1 sentence","component":"navigator|autox|platform|d2ma|agentic|inferencing","priority":"High|Medium|Low","customerCompany":"","industryVertical":"","arrImpact":0,"sourceCustomers":["2 max"],"estimatedEffort":"Small|Medium|Large","relatedRFEs":[""]}]
   }
 }
 
-Rules for Roadmap Items:
-- Create 8-12 roadmap items covering Now (3-4), Next (3-4), Later (2-4)
-- Prioritize based on customer demand, ARR impact, and RFE count
-- Group similar requests into initiatives
-- Reference actual customer names and RFE keys
-- Be specific and actionable
-
-Rules for Quick Actions:
-- Suggest 3-5 actions to improve existing RFEs (update priority, add context, tag with customers)
-- Only suggest actions for RFEs that would benefit from updates
-- Focus on actions that increase RFE visibility or priority
-
-Rules for Suggested RFEs:
-- Create 5-8 NEW RFE suggestions based on unmet customer needs
-- Each should be ready to submit (complete fields)
-- Consolidate similar requests from multiple customers
-- Reference actual customers from the interaction data
-- Use proper component tags
-- Estimate ARR impact conservatively
+Create EXACTLY:
+- 4 roadmap items (Now:1, Next:2, Later:1)
+- 3 top requests
+- 2 quick actions
+- 3 RFE suggestions
 
 JSON:`
 
@@ -338,6 +238,14 @@ JSON:`
       res.json(roadmap)
     } catch (error) {
       console.error('Error generating roadmap:', error)
+
+      // Provide helpful error message for JSON parse errors
+      if (error.message && error.message.includes('invalid JSON')) {
+        return res.status(500).json({
+          error: 'AI generated invalid JSON response. Try filtering by a specific component to reduce the data size, or try again.'
+        })
+      }
+
       res.status(500).json({ error: error.message })
     }
   })

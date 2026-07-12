@@ -244,13 +244,44 @@ Meeting with John Smith from Acme Financial Corp (Banking, North America)
                   v-model="extractedData.component"
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
-                  <option value="">-- Select --</option>
-                  <option value="navigator">Project Navigator</option>
-                  <option value="autox">AutoX</option>
-                  <option value="platform">AI Platform</option>
-                  <option value="d2ma">D2MA</option>
-                  <option value="agentic">Agentic</option>
-                  <option value="inferencing">Inferencing</option>
+                  <option value="">-- Select Component --</option>
+                  <optgroup label="Inference & Model Serving">
+                    <option value="vLLM">vLLM</option>
+                    <option value="llm-d">llm-d</option>
+                    <option value="Model Serving">Model Serving</option>
+                    <option value="Model Runtimes">Model Runtimes</option>
+                    <option value="LlamaStack">LlamaStack</option>
+                  </optgroup>
+                  <optgroup label="RAG & Data">
+                    <option value="RAG + Vector DB">RAG + Vector DB</option>
+                    <option value="AutoRAG">AutoRAG</option>
+                    <option value="Data Processing">Data Processing</option>
+                    <option value="Feature Store">Feature Store</option>
+                  </optgroup>
+                  <optgroup label="Training">
+                    <option value="Training">Training</option>
+                    <option value="Training Hub">Training Hub</option>
+                    <option value="Fine Tuning">Fine Tuning</option>
+                    <option value="SDG (Synthetic Data Generation)">SDG (Synthetic Data Generation)</option>
+                  </optgroup>
+                  <optgroup label="Agents">
+                    <option value="Agentic">Agentic</option>
+                    <option value="Agent Development">Agent Development</option>
+                    <option value="AgentOps">AgentOps</option>
+                  </optgroup>
+                  <optgroup label="Platform & Tooling">
+                    <option value="Project Navigator">Project Navigator</option>
+                    <option value="Notebooks">Notebooks</option>
+                    <option value="AI Hub">AI Hub</option>
+                    <option value="AI Pipelines">AI Pipelines</option>
+                    <option value="MLflow">MLflow</option>
+                  </optgroup>
+                  <optgroup label="Observability & Safety">
+                    <option value="Model Observability">Model Observability</option>
+                    <option value="Explainability">Explainability</option>
+                    <option value="AI Safety">AI Safety</option>
+                    <option value="Model Evaluation">Model Evaluation</option>
+                  </optgroup>
                 </select>
               </div>
               <div>
@@ -355,7 +386,10 @@ Meeting with John Smith from Acme Financial Corp (Banking, North America)
               <h3 class="text-lg font-semibold text-gray-900">Google Drive Import</h3>
             </div>
             <p class="text-gray-600 mb-4">
-              Sign in with your Google account and pick files directly from Google Drive.
+              <strong>Optional:</strong> Sign in with your Google account to import files from your personal Drive.
+              All interactions are stored in a central team spreadsheet - this is only needed if you want to import files from your own Drive.
+            </p>
+            <p class="text-gray-600 mb-4 text-sm">
               Supports Google Sheets, CSV files, XLSX files, and Google Docs.
             </p>
 
@@ -437,7 +471,7 @@ Meeting with John Smith from Acme Financial Corp (Banking, North America)
 </template>
 
 <script setup>
-import { ref, computed, inject } from 'vue'
+import { ref, computed, inject, onMounted } from 'vue'
 import InfoTooltip from '../components/InfoTooltip.vue'
 import { useGoogleDrive } from '../composables/useGoogleDrive'
 
@@ -466,11 +500,33 @@ const extractedData = ref({
   status: 'Discovery'
 })
 
-const tabs = [
-  { id: 'spreadsheet', label: 'Spreadsheet Import' },
-  { id: 'transcript', label: 'Transcript Import' },
-  { id: 'google-drive', label: 'Google Drive Import (Coming Soon)' }
-]
+// Check if AI features are available by checking for API key in env
+const aiEnabled = ref(false)
+
+onMounted(async () => {
+  // Check if AI extraction is configured
+  try {
+    const response = await fetch('/api/modules/customer-insights/extract/health')
+    aiEnabled.value = response.ok
+  } catch {
+    aiEnabled.value = false
+  }
+})
+
+const tabs = computed(() => {
+  const allTabs = [
+    { id: 'spreadsheet', label: 'Spreadsheet Import' }
+  ]
+
+  // Only show Transcript Import if AI is configured
+  if (aiEnabled.value) {
+    allTabs.push({ id: 'transcript', label: 'Transcript Import' })
+  }
+
+  allTabs.push({ id: 'google-drive', label: 'Google Drive Import (Coming Soon)' })
+
+  return allTabs
+})
 
 const canSubmitTranscript = computed(() => {
   return extractedData.value.customerCompany &&
@@ -681,7 +737,8 @@ async function submitTranscript() {
       environment: extractedData.value.environment || 'Unknown',
       toolsOfChoice: extractedData.value.toolsOfChoice || [],
       futureWishlist: extractedData.value.futureWishlist || [],
-      pmComments: transcriptText.value ? `Transcript: ${transcriptText.value.substring(0, 500)}...` : ''
+      meetingNotes: transcriptText.value || '',
+      pmComments: ''
     }
 
     const response = await fetch('/api/modules/customer-insights/interactions', {
