@@ -194,10 +194,10 @@ module.exports = function registerRoadmapRoutes(router, context) {
 
 CUSTOMER INTERACTIONS (${interactions.length} total, showing top 10):
 ${JSON.stringify(interactions.slice(0, 10).map(i => ({
-  customer: i.customercompany,
-  industry: i.industryvertical,
-  painPoints: i.painpoints?.substring(0, 100) || '',
-  feedback: i.featurefeedback?.substring(0, 100) || ''
+  customer: i.customerCompany,
+  industry: i.industryVertical,
+  painPoints: i.painPoints?.substring(0, 100) || '',
+  feedback: i.featureFeedback?.substring(0, 100) || ''
 })))}
 
 JIRA RFEs (${rfes.length} total, showing top 8):
@@ -210,7 +210,7 @@ Return ONLY valid JSON (no markdown). CRITICAL: Total response must be under 100
   "topRequests": [{"title":"","requestCount":0,"customers":[""]}],
   "aiRecommendations": {
     "quickActions": [{"id":"","type":"update-rfe","title":"","description":"1 sentence","rfeKey":"","suggestedChanges":{"priority":"","summary":"","description":"","labels":[]}}],
-    "suggestedRFEs": [{"id":"","title":"max 60 chars","businessJustification":"1 sentence","technicalDetails":"1 sentence","useCases":"1 sentence","component":"navigator|autox|platform|d2ma|agentic|inferencing","priority":"High|Medium|Low","customerCompany":"","industryVertical":"","arrImpact":0,"sourceCustomers":["2 max"],"estimatedEffort":"Small|Medium|Large","relatedRFEs":[""]}]
+    "suggestedRFEs": [{"id":"","title":"max 60 chars","businessJustification":"1 sentence","technicalDetails":"1 sentence","useCases":"1 sentence","component":"vLLM|Model Serving|RAG + Vector DB|AutoRAG|Training|LlamaStack|Agentic|Project Navigator|Notebooks","priority":"High|Medium|Low","customerCompany":"","industryVertical":"","arrImpact":0,"sourceCustomers":["2 max"],"estimatedEffort":"Small|Medium|Large","relatedRFEs":[""]}]
   }
 }
 
