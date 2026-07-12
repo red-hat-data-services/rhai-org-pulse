@@ -5,6 +5,7 @@ import { useAuth } from '@shared/client/composables/useAuth'
 
 const PackageSearchView = defineAsyncComponent(() => import('./PackageSearchView.vue'))
 const NightlyAnalysisView = defineAsyncComponent(() => import('./NightlyAnalysisView.vue'))
+const VersionMapView = defineAsyncComponent(() => import('./VersionMapView.vue'))
 
 const { isAdmin } = useAuth()
 
@@ -62,7 +63,7 @@ function getInitialTab() {
   if (qIdx !== -1) {
     const params = new URLSearchParams(hash.slice(qIdx + 1))
     const tab = params.get('tab')
-    if (tab === 'search' || tab === 'nightly') return tab
+    if (tab === 'search' || tab === 'nightly' || tab === 'versions') return tab
   }
   return 'onboarded'
 }
@@ -375,6 +376,15 @@ onMounted(() => {
           >
             Nightly Analysis
           </button>
+          <button
+            @click="activeTab = 'versions'"
+            class="py-2.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2"
+            :class="activeTab === 'versions'
+              ? 'border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100'
+              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+          >
+            Version Map
+          </button>
         </nav>
       </div>
 
@@ -495,6 +505,11 @@ onMounted(() => {
       <!-- ==================== NIGHTLY ANALYSIS TAB ==================== -->
       <div v-if="activeTab === 'nightly'">
         <NightlyAnalysisView />
+      </div>
+
+      <!-- ==================== VERSION MAP TAB ==================== -->
+      <div v-if="activeTab === 'versions'">
+        <VersionMapView />
       </div>
 
       <!-- ==================== DAILY REPORT TAB ==================== -->
