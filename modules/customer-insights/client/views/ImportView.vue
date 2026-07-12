@@ -245,42 +245,10 @@ Meeting with John Smith from Acme Financial Corp (Banking, North America)
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
                   <option value="">-- Select Component --</option>
-                  <optgroup label="Inference & Model Serving">
-                    <option value="vLLM">vLLM</option>
-                    <option value="llm-d">llm-d</option>
-                    <option value="Model Serving">Model Serving</option>
-                    <option value="Model Runtimes">Model Runtimes</option>
-                    <option value="LlamaStack">LlamaStack</option>
-                  </optgroup>
-                  <optgroup label="RAG & Data">
-                    <option value="RAG + Vector DB">RAG + Vector DB</option>
-                    <option value="AutoRAG">AutoRAG</option>
-                    <option value="Data Processing">Data Processing</option>
-                    <option value="Feature Store">Feature Store</option>
-                  </optgroup>
-                  <optgroup label="Training">
-                    <option value="Training">Training</option>
-                    <option value="Training Hub">Training Hub</option>
-                    <option value="Fine Tuning">Fine Tuning</option>
-                    <option value="SDG (Synthetic Data Generation)">SDG (Synthetic Data Generation)</option>
-                  </optgroup>
-                  <optgroup label="Agents">
-                    <option value="Agentic">Agentic</option>
-                    <option value="Agent Development">Agent Development</option>
-                    <option value="AgentOps">AgentOps</option>
-                  </optgroup>
-                  <optgroup label="Platform & Tooling">
-                    <option value="Project Navigator">Project Navigator</option>
-                    <option value="Notebooks">Notebooks</option>
-                    <option value="AI Hub">AI Hub</option>
-                    <option value="AI Pipelines">AI Pipelines</option>
-                    <option value="MLflow">MLflow</option>
-                  </optgroup>
-                  <optgroup label="Observability & Safety">
-                    <option value="Model Observability">Model Observability</option>
-                    <option value="Explainability">Explainability</option>
-                    <option value="AI Safety">AI Safety</option>
-                    <option value="Model Evaluation">Model Evaluation</option>
+                  <optgroup v-for="pillar in pillars" :key="pillar.name" :label="pillar.name">
+                    <option v-for="c in pillar.components" :key="c.id" :value="c.id">
+                      {{ c.label }}
+                    </option>
                   </optgroup>
                 </select>
               </div>
@@ -474,6 +442,7 @@ Meeting with John Smith from Acme Financial Corp (Banking, North America)
 import { ref, computed, inject, onMounted } from 'vue'
 import InfoTooltip from '../components/InfoTooltip.vue'
 import { useGoogleDrive } from '../composables/useGoogleDrive'
+import { useComponentSelector } from '../composables/useComponentSelector'
 
 const moduleNav = inject('moduleNav')
 
@@ -487,6 +456,7 @@ const fileInput = ref(null)
 const transcriptText = ref('')
 const extracting = ref(false)
 const googleDrive = useGoogleDrive()
+const { pillars } = useComponentSelector()
 const processingDriveFile = ref(false)
 const extractedData = ref({
   customerCompany: '',

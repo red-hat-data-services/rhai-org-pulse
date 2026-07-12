@@ -167,9 +167,9 @@ module.exports = function registerRoadmapRoutes(router, context) {
           })
 
           const jql = `project = RHAIRFE AND issuetype = "Feature Request" ORDER BY created DESC`
-          const jiraResults = await jiraClient.searchJql(jql, { maxResults: 50 })
+          const issues = await jiraClient.fetchAllJqlResults(jql, 'summary,status,priority,created,description', { maxResults: 50 })
 
-          rfes = jiraResults.issues.map(issue => ({
+          rfes = issues.map(issue => ({
             key: issue.key,
             summary: issue.fields.summary,
             status: issue.fields.status.name,
