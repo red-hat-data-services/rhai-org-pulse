@@ -40,8 +40,8 @@ function parseVersionCell(cell) {
   if (s === '-') return { version: null, dropped: true, tentative: false };
   const tentative = s.includes('(?)') || (s.endsWith('?') && !s.endsWith('(?)'));
   const cleaned = s.replace(/\(\?\)/g, '').replace(/\?$/, '').trim();
-  const parts = cleaned.split(' ', 2);
-  const version = parts.length > 1 ? parts.slice(1).join(' ') : parts[0];
+  const spaceIdx = cleaned.indexOf(' ');
+  const version = spaceIdx > 0 ? cleaned.slice(spaceIdx + 1) : cleaned;
   return { version: version || null, tentative };
 }
 
@@ -279,7 +279,7 @@ module.exports = function registerVersionMapRoutes(router, context) {
    *       503:
    *         description: Google Sheets and snapshot both unavailable
    */
-  router.post('/version-map/refresh', async function (req, res) {
+  router.post('/version-map/refresh', context.requireAdmin, async function (req, res) {
     _cache = null;
     _cacheAt = 0;
     const data = await fetchWithFallback('Refresh');
