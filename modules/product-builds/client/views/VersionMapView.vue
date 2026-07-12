@@ -1,11 +1,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useMilestones } from '../composables/useMilestones.js'
+import { useVersionMap } from '../composables/useVersionMap.js'
 
 const {
-  data, loading, error, loadMilestones, refreshMilestones, refreshing,
-  releases, accelerators, source, allPackageNames, allSubVariants,
-} = useMilestones()
+  data, loading, error, load, refresh, refreshing,
+  releases, accelerators, source, allPackageNames, totalVariants,
+} = useVersionMap()
 
 const packageFilter = ref('')
 const selectedAccelerators = ref([])
@@ -31,24 +31,39 @@ function versionChanged(pkg, release) {
   return cur.version !== old.version
 }
 
-function displayVersion(pkg, release) {
-  const entry = getVersion(pkg, release)
-  if (!entry) return ''
-  if (entry.dropped) return '—'
-  return entry.version || ''
+function isPlanning(acc, release) {
+  const planIdx = acc.planning_from_index
+  if (planIdx == null) return false
+  return releases.value.indexOf(release) >= planIdx
 }
 
-function cellTooltip(pkg, release) {
+function displayVersion(pkg, release, acc) {
   const entry = getVersion(pkg, release)
-  if (!entry) return ''
+  if (!entry) return isPlanning(acc, release) ? 'TBD' : ''
+  if (entry.dropped) return '—'
+  return entry.version || (isPlanning(acc, release) ? 'TBD' : '')
+}
+
+function cellTooltip(pkg, release, acc) {
+  const entry = getVersion(pkg, release)
+  if (!entry) {
+    if (isPlanning(acc, release)) return `${pkg.name}: version not yet decided for ${release}`
+    return ''
+  }
   if (entry.dropped) return `${pkg.name}: dropped in ${release}`
-  const ver = entry.version || '?'
+  const ver = entry.version || 'TBD'
   const prev = prevRelease(release)
   if (!prev) return `${pkg.name} ${ver}`
   const old = getVersion(pkg, prev)
   if (!old || old.dropped) return `${pkg.name} ${ver} (new in ${release})`
   if (old.version === ver) return `${pkg.name} ${ver} (unchanged)`
   return `${pkg.name}: ${old.version} → ${ver}`
+}
+
+function isTbd(pkg, release, acc) {
+  const entry = getVersion(pkg, release)
+  if (!entry) return isPlanning(acc, release)
+  return !entry.dropped && !entry.version && isPlanning(acc, release)
 }
 
 function cellKey(svName, pkgName, release) {
@@ -99,20 +114,20 @@ function isInfra(name) {
   return INFRA_NAMES.has(name.toLowerCase())
 }
 
+const _rowsCache = new WeakMap()
 function allRows(sv) {
-  return [...sv.packages, ...sv.infra]
+  let rows = _rowsCache.get(sv)
+  if (!rows) { rows = [...sv.packages, ...sv.infra]; _rowsCache.set(sv, rows) }
+  return rows
 }
 
 function filteredRows(sv) {
-  return allRows(sv).filter(p => matchesPackageFilter(p.name))
+  const rows = allRows(sv)
+  return packageQuery.value ? rows.filter(p => matchesPackageFilter(p.name)) : rows
 }
 
 function hasVisibleRows(sv) {
   return filteredRows(sv).length > 0
-}
-
-function filteredSubVariants(acc) {
-  return acc.sub_variants
 }
 
 function toggleRelease(r) {
@@ -131,9 +146,8 @@ function clearReleaseFilter() {
 }
 
 const totalPackages = computed(() => allPackageNames.value.length)
-const totalVariants = computed(() => allSubVariants.value.length)
 
-onMounted(() => { loadMilestones() })
+onMounted(() => { load() })
 </script>
 
 <template>
@@ -144,7 +158,7 @@ onMounted(() => { loadMilestones() })
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
       </svg>
-      <div class="mt-4 text-gray-500 dark:text-gray-400">Loading milestones...</div>
+      <div class="mt-4 text-gray-500 dark:text-gray-400">Loading version map...</div>
     </div>
 
     <!-- Error -->
@@ -171,7 +185,7 @@ onMounted(() => { loadMilestones() })
           <span class="text-xs text-gray-400 dark:text-gray-500">{{ totalPackages }} packages</span>
           <button
             :disabled="refreshing"
-            @click="refreshMilestones"
+            @click="refresh"
             class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <svg
@@ -270,12 +284,12 @@ onMounted(() => { loadMilestones() })
               <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
             </svg>
             <h2 class="text-base font-bold text-gray-900 dark:text-white tracking-tight">{{ acc.sheet }}</h2>
-            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ filteredSubVariants(acc).length }} variant{{ filteredSubVariants(acc).length !== 1 ? 's' : '' }}</span>
+            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ acc.sub_variants.length }} variant{{ acc.sub_variants.length !== 1 ? 's' : '' }}</span>
           </summary>
 
           <!-- Sub-variants -->
           <div class="p-4 space-y-3 border-t border-gray-200 dark:border-gray-700">
-            <template v-for="sv in filteredSubVariants(acc)" :key="sv.name">
+            <template v-for="sv in acc.sub_variants" :key="sv.name">
               <details v-if="hasVisibleRows(sv)" open class="rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden group/sv">
                 <!-- Sub-variant header -->
                 <summary class="px-4 py-2.5 cursor-pointer flex items-center gap-3 bg-gray-50 dark:bg-gray-800/80 hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors list-none [&::-webkit-details-marker]:hidden">
@@ -326,18 +340,20 @@ onMounted(() => { loadMilestones() })
                         <td
                           v-for="r in visibleReleases"
                           :key="r"
-                          class="py-1.5 px-3 text-left text-[13px] text-gray-600 dark:text-gray-300 whitespace-nowrap"
+                          class="py-1.5 px-3 text-left text-[13px] whitespace-nowrap"
                           :class="{
                             'bg-blue-50/30 dark:bg-blue-900/10': hoveredCell === cellKey(sv.name, pkg.name, r),
                             'text-gray-400 dark:text-gray-500 italic': getVersion(pkg, r)?.dropped,
+                            'text-blue-400 dark:text-blue-500 italic text-xs': isTbd(pkg, r, acc),
+                            'text-gray-600 dark:text-gray-300': !isTbd(pkg, r, acc) && !getVersion(pkg, r)?.dropped,
                           }"
-                          :title="cellTooltip(pkg, r)"
+                          :title="cellTooltip(pkg, r, acc)"
                           @pointerenter="hoveredCell = cellKey(sv.name, pkg.name, r)"
                           @pointerleave="hoveredCell = null"
                         >
                           <span class="inline-flex items-center gap-1">
-                            <svg v-if="versionChanged(pkg, r) && displayVersion(pkg, r)" class="w-2 h-2 shrink-0" viewBox="0 0 10 10" aria-label="bumped"><polygon points="5,1 9,9 1,9" fill="#0ca30c" /></svg>
-                            <span>{{ displayVersion(pkg, r) }}</span>
+                            <svg v-if="versionChanged(pkg, r) && displayVersion(pkg, r, acc) !== 'TBD'" class="w-2 h-2 shrink-0" viewBox="0 0 10 10" aria-label="bumped"><polygon points="5,1 9,9 1,9" fill="#0ca30c" /></svg>
+                            <span>{{ displayVersion(pkg, r, acc) }}</span>
                             <svg v-if="getVersion(pkg, r)?.tentative" class="w-2 h-2 shrink-0" viewBox="0 0 10 10" aria-label="tentative"><polygon points="5,0 10,5 5,10 0,5" fill="#d97706" /></svg>
                           </span>
                         </td>

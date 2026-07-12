@@ -875,7 +875,8 @@
             }
           ]
         }
-      ]
+      ],
+      "planning_from_index": 7
     },
     {
       "sheet": "ROCm",
@@ -1330,7 +1331,8 @@
           "packages": [],
           "infra": []
         }
-      ]
+      ],
+      "planning_from_index": 8
     },
     {
       "sheet": "Google TPU",
@@ -1581,7 +1583,8 @@
             }
           ]
         }
-      ]
+      ],
+      "planning_from_index": 7
     },
     {
       "sheet": "Spyre",
@@ -1787,7 +1790,8 @@
             }
           ]
         }
-      ]
+      ],
+      "planning_from_index": 7
     },
     {
       "sheet": "AWS Neuron",
@@ -2060,7 +2064,8 @@
             }
           ]
         }
-      ]
+      ],
+      "planning_from_index": 8
     },
     {
       "sheet": "CPU",
@@ -2262,7 +2267,8 @@
             }
           ]
         }
-      ]
+      ],
+      "planning_from_index": 7
     },
     {
       "sheet": "Intel Gaudi",
@@ -2426,7 +2432,8 @@
             }
           ]
         }
-      ]
+      ],
+      "planning_from_index": 7
     }
   ],
   "source": "snapshot",

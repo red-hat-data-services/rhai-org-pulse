@@ -49,6 +49,20 @@ function isInfra(name) {
   return INFRA_KEYWORDS.some(kw => name.includes(kw));
 }
 
+function findPlanningBoundary(headerRow, releaseMap, cleanReleases) {
+  for (let i = 0; i < headerRow.length; i++) {
+    const cell = String(headerRow[i] || '').toLowerCase();
+    if (cell.includes('planning in progress') || cell.includes('planning')) {
+      const relIdx = i - 2;
+      if (releaseMap[relIdx]) return cleanReleases.indexOf(releaseMap[relIdx]);
+      for (let j = relIdx; j < relIdx + 3; j++) {
+        if (releaseMap[j]) return cleanReleases.indexOf(releaseMap[j]);
+      }
+    }
+  }
+  return null;
+}
+
 function parseSheet(sheetName, rows) {
   if (!rows || rows.length < 2) return null;
 
@@ -152,12 +166,15 @@ function parseSheet(sheetName, rows) {
     });
   }
 
-  return { sheet: sheetName, sub_variants: subVariants };
+  const headerRow = rows[0] || [];
+  const planningFromIndex = findPlanningBoundary(headerRow, releaseMap, cleanReleases);
+
+  return { sheet: sheetName, sub_variants: subVariants, planning_from_index: planningFromIndex };
 }
 
 function loadSnapshot() {
   try {
-    return require(path.join(__dirname, 'milestones-snapshot.json'));
+    return require(path.join(__dirname, 'version-map-snapshot.json'));
   } catch {
     return null;
   }
@@ -201,9 +218,9 @@ async function fetchFromSheets(googleKeyFile) {
  * @param {import('express').Router} router
  * @param {import('@shared/server/module-context').ModuleContext} context
  */
-module.exports = function registerMilestonesRoutes(router, context) {
+module.exports = function registerVersionMapRoutes(router, context) {
   if (context.resolveSecret) {
-    const sheetId = context.resolveSecret('MILESTONES_SPREADSHEET_ID');
+    const sheetId = context.resolveSecret('VERSION_MAP_SPREADSHEET_ID');
     if (sheetId) _cfg.spreadsheetId = sheetId;
   }
 
@@ -211,71 +228,62 @@ module.exports = function registerMilestonesRoutes(router, context) {
     ? context.resolveSecret('GOOGLE_SERVICE_ACCOUNT_KEY_FILE')
     : null) || '/etc/secrets/google-sa-key.json';
 
-  /**
-   * @openapi
-   * /api/modules/product-builds/milestones:
-   *   get:
-   *     tags: [Package Analysis]
-   *     summary: Get package version milestones across releases and accelerator variants
-   *     description: Returns planned package versions per release per accelerator variant from the planning spreadsheet. Falls back to a static snapshot when Google Sheets is unavailable.
-   *     responses:
-   *       200:
-   *         description: Milestone data with releases, accelerators, sub-variants, and package versions
-   */
-  router.get('/milestones', async function (req, res) {
-    const now = Date.now();
-    if (_cache && (now - _cacheAt) < CACHE_TTL) {
-      return res.json(_cache);
-    }
-
-    try {
-      const data = await fetchFromSheets(googleKeyFile);
-      _cache = data;
-      _cacheAt = now;
-      return res.json(data);
-    } catch (err) {
-      console.warn('[milestones] Google Sheets unavailable, using snapshot:', err.message);
-      const snapshot = loadSnapshot();
-      if (snapshot) {
-        _cache = snapshot;
-        _cacheAt = now;
-        return res.json(snapshot);
-      }
-      return res.status(503).json({ error: 'Milestones data unavailable' });
-    }
-  });
-
-  /**
-   * @openapi
-   * /api/modules/product-builds/milestones/refresh:
-   *   post:
-   *     tags: [Package Analysis]
-   *     summary: Force refresh milestones data from the planning spreadsheet
-   *     description: Clears the server cache and re-fetches from Google Sheets. Falls back to snapshot if Sheets is unavailable.
-   *     responses:
-   *       200:
-   *         description: Refreshed milestone data
-   *       503:
-   *         description: Google Sheets and snapshot both unavailable
-   */
-  router.post('/milestones/refresh', async function (req, res) {
-    _cache = null;
-    _cacheAt = 0;
-
+  async function fetchWithFallback(label) {
     try {
       const data = await fetchFromSheets(googleKeyFile);
       _cache = data;
       _cacheAt = Date.now();
-      return res.json(data);
+      return data;
     } catch (err) {
-      console.warn('[milestones] Refresh failed, using snapshot:', err.message);
+      console.warn(`[version-map] ${label} failed, using snapshot:`, err.message);
       const snapshot = loadSnapshot();
       if (snapshot) {
         _cache = snapshot;
         _cacheAt = Date.now();
-        return res.json(snapshot);
+        return snapshot;
       }
-      return res.status(503).json({ error: 'Milestones data unavailable' });
+      return null;
     }
+  }
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/version-map:
+   *   get:
+   *     tags: [Package Analysis]
+   *     summary: Get package version map across releases and accelerator variants
+   *     description: Returns planned package versions per release per accelerator variant from the planning spreadsheet. Falls back to a static snapshot when Google Sheets is unavailable.
+   *     responses:
+   *       200:
+   *         description: Version map data with releases, accelerators, sub-variants, and package versions
+   */
+  router.get('/version-map', async function (req, res) {
+    if (_cache && (Date.now() - _cacheAt) < CACHE_TTL) {
+      return res.json(_cache);
+    }
+    const data = await fetchWithFallback('Fetch');
+    if (data) return res.json(data);
+    return res.status(503).json({ error: 'Version map data unavailable' });
+  });
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/version-map/refresh:
+   *   post:
+   *     tags: [Package Analysis]
+   *     summary: Force refresh version map data from the planning spreadsheet
+   *     description: Clears the server cache and re-fetches from Google Sheets. Falls back to snapshot if Sheets is unavailable.
+   *     responses:
+   *       200:
+   *         description: Refreshed version map data
+   *       503:
+   *         description: Google Sheets and snapshot both unavailable
+   */
+  router.post('/version-map/refresh', async function (req, res) {
+    _cache = null;
+    _cacheAt = 0;
+    const data = await fetchWithFallback('Refresh');
+    if (data) return res.json(data);
+    return res.status(503).json({ error: 'Version map data unavailable' });
   });
 };

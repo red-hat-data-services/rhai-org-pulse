@@ -55,7 +55,7 @@
         "required": false
       },
       {
-        "key": "MILESTONES_SPREADSHEET_ID",
+        "key": "VERSION_MAP_SPREADSHEET_ID",
         "description": "Google Sheets spreadsheet ID for accelerator variant planning (defaults to the shared planning spreadsheet)",
         "required": false
       }

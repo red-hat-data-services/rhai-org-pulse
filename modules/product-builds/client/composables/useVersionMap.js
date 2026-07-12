@@ -1,33 +1,33 @@
 import { ref, computed } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 
-const BASE = '/modules/product-builds/milestones'
+const BASE = '/modules/product-builds/version-map'
 
-export function useMilestones() {
+export function useVersionMap() {
   const data = ref(null)
   const loading = ref(false)
   const refreshing = ref(false)
   const error = ref(null)
 
-  async function loadMilestones() {
+  async function load() {
     loading.value = true
     error.value = null
     try {
       data.value = await apiRequest(BASE)
     } catch (e) {
-      error.value = e.message || 'Failed to load milestones'
+      error.value = e.message || 'Failed to load version map'
     } finally {
       loading.value = false
     }
   }
 
-  async function refreshMilestones() {
+  async function refresh() {
     refreshing.value = true
     error.value = null
     try {
       data.value = await apiRequest(`${BASE}/refresh`, { method: 'POST' })
     } catch (e) {
-      error.value = e.message || 'Failed to refresh milestones'
+      error.value = e.message || 'Failed to refresh version map'
     } finally {
       refreshing.value = false
     }
@@ -45,33 +45,30 @@ export function useMilestones() {
     for (const acc of data.value.accelerators) {
       for (const sv of acc.sub_variants) {
         for (const pkg of sv.packages) names.add(pkg.name)
+        for (const inf of sv.infra) names.add(inf.name)
       }
     }
     return [...names].sort()
   })
 
-  const allSubVariants = computed(() => {
-    if (!data.value) return []
-    const result = []
-    for (const acc of data.value.accelerators) {
-      for (const sv of acc.sub_variants) {
-        result.push({ accelerator: acc.sheet, ...sv })
-      }
-    }
-    return result
+  const totalVariants = computed(() => {
+    if (!data.value) return 0
+    let count = 0
+    for (const acc of data.value.accelerators) count += acc.sub_variants.length
+    return count
   })
 
   return {
     data,
     loading,
     error,
-    loadMilestones,
-    refreshMilestones,
+    load,
+    refresh,
     refreshing,
     releases,
     accelerators,
     source,
     allPackageNames,
-    allSubVariants,
+    totalVariants,
   }
 }
