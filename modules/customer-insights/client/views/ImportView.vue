@@ -842,7 +842,7 @@ function goToKanban() {
 
 function goToTable() {
   if (moduleNav) {
-    moduleNav.navigateTo('table')
+    moduleNav.navigateTo('kanban')
   }
 }
 </script>

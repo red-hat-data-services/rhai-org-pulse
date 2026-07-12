@@ -311,7 +311,10 @@ JSON:`
           updates.labels = action.suggestedChanges.labels
         }
 
-        await jiraClient.updateIssue(action.rfeKey, { fields: updates })
+        await jiraClient.jiraRequest(`/rest/api/3/issue/${action.rfeKey}`, {
+          method: 'PUT',
+          body: { fields: updates }
+        })
 
         // Remove this action from recommendations
         roadmap.aiRecommendations.quickActions = roadmap.aiRecommendations.quickActions.filter(a => a.id !== actionId)
