@@ -16,7 +16,11 @@ module.exports = function registerInsightsRoutes(router, context) {
   function getStorage() {
     if (isDemoMode) return null
     if (!sheetsStorage) {
-      sheetsStorage = createStorage(context)
+      try {
+        sheetsStorage = createStorage(context)
+      } catch {
+        return null
+      }
     }
     return sheetsStorage
   }
@@ -153,7 +157,9 @@ module.exports = function registerInsightsRoutes(router, context) {
       } else {
         // Fetch from service account storage
         const store = getStorage()
-        interactions = await store.getAll(component ? { component } : {})
+        if (store) {
+          interactions = await store.getAll(component ? { component } : {})
+        }
       }
 
       if (interactions.length === 0) {

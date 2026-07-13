@@ -15,7 +15,11 @@ module.exports = function registerAnalyticsRoutes(router, context) {
   function getStorage() {
     if (isDemoMode) return null
     if (!sheetsStorage) {
-      sheetsStorage = createStorage(context)
+      try {
+        sheetsStorage = createStorage(context)
+      } catch {
+        return null
+      }
     }
     return sheetsStorage
   }
@@ -49,6 +53,9 @@ module.exports = function registerAnalyticsRoutes(router, context) {
 
       // Get interactions using service account storage
       const store = getStorage()
+      if (!store) {
+        return res.json({})
+      }
       const interactions = await store.getAll()
 
       // Filter by component if specified

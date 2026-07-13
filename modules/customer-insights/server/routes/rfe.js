@@ -192,7 +192,7 @@ module.exports = function registerRfeRoutes(router, context) {
       const jira = createJiraClient({
         email: jiraEmail,
         token: jiraToken,
-        host: process.env.JIRA_HOST,
+        host: context.resolveSecret('JIRA_HOST'),
       })
 
       let issues

@@ -5,7 +5,7 @@ const { createModelsCorpClient } = require('../services/modelsCorpClient')
  * @param {import('@shared/server/module-context').ModuleContext} context
  */
 module.exports = function registerExtractRoutes(router, context) {
-  const { secrets } = context
+  const { requireAuth, secrets } = context
   const isDemoMode = process.env.DEMO_MODE === 'true'
 
   /**
@@ -20,7 +20,7 @@ module.exports = function registerExtractRoutes(router, context) {
    *       503:
    *         description: AI extraction is not configured
    */
-  router.get('/extract/health', (req, res) => {
+  router.get('/extract/health', requireAuth, (req, res) => {
     const apiKey = secrets.MODELS_CORP_API_KEY
     if (!apiKey) {
       return res.status(503).json({ configured: false })

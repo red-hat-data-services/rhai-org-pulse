@@ -292,7 +292,19 @@ JSON:`
       throw new Error('Unexpected response format from models.corp')
     }
 
-    return data.choices[0].message.content.trim()
+    if (data.choices[0].finish_reason === 'length') {
+      console.warn('generateText response was truncated due to token limit')
+    }
+
+    let text = data.choices[0].message.content.trim()
+
+    if (text.startsWith('```markdown')) {
+      text = text.replace(/^```markdown\n/, '').replace(/\n```$/, '')
+    } else if (text.startsWith('```')) {
+      text = text.replace(/^```\n/, '').replace(/\n```$/, '')
+    }
+
+    return text
   }
 
   return {

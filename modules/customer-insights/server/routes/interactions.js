@@ -16,7 +16,11 @@ module.exports = function registerInteractionsRoutes(router, context) {
   function getStorage() {
     if (isDemoMode) return null
     if (!sheetsStorage) {
-      sheetsStorage = createStorage(context)
+      try {
+        sheetsStorage = createStorage(context)
+      } catch {
+        return null
+      }
     }
     return sheetsStorage
   }
@@ -76,6 +80,9 @@ module.exports = function registerInteractionsRoutes(router, context) {
 
       // Use service account storage
       const store = getStorage()
+      if (!store) {
+        return res.json([])
+      }
       const data = await store.getAll(req.query)
       res.json(data)
     } catch (error) {
@@ -107,6 +114,9 @@ module.exports = function registerInteractionsRoutes(router, context) {
       }
 
       const store = getStorage()
+      if (!store) {
+        return res.status(503).json({ error: 'Google Spreadsheet not configured' })
+      }
       const newItem = await store.create(req.body)
       res.status(201).json(newItem)
     } catch (error) {
@@ -144,6 +154,9 @@ module.exports = function registerInteractionsRoutes(router, context) {
       }
 
       const store = getStorage()
+      if (!store) {
+        return res.status(503).json({ error: 'Google Spreadsheet not configured' })
+      }
       const updated = await store.update(req.params.id, req.body)
 
       if (!updated) {
@@ -180,6 +193,9 @@ module.exports = function registerInteractionsRoutes(router, context) {
       }
 
       const store = getStorage()
+      if (!store) {
+        return res.status(503).json({ error: 'Google Spreadsheet not configured' })
+      }
       const deleted = await store.delete(req.params.id)
 
       if (!deleted) {
@@ -229,6 +245,9 @@ module.exports = function registerInteractionsRoutes(router, context) {
       }
 
       const store = getStorage()
+      if (!store) {
+        return res.status(503).json({ error: 'Google Spreadsheet not configured' })
+      }
 
       if (mode === 'upsert') {
         const result = await store.upsertMany(interactions)

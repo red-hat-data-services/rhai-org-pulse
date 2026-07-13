@@ -17,7 +17,11 @@ module.exports = function registerRoadmapRoutes(router, context) {
   function getStorage() {
     if (isDemoMode) return null
     if (!sheetsStorage) {
-      sheetsStorage = createStorage(context)
+      try {
+        sheetsStorage = createStorage(context)
+      } catch {
+        return null
+      }
     }
     return sheetsStorage
   }
@@ -150,7 +154,9 @@ module.exports = function registerRoadmapRoutes(router, context) {
 
       if (!isDemoMode) {
         const store = getStorage()
-        interactions = await store.getAll(component ? { component } : {})
+        if (store) {
+          interactions = await store.getAll(component ? { component } : {})
+        }
       }
 
       // Step 2: Fetch RFEs from Jira
@@ -161,7 +167,7 @@ module.exports = function registerRoadmapRoutes(router, context) {
       if (jiraEmail && jiraToken) {
         try {
           const jiraClient = createJiraClient({
-            host: process.env.JIRA_HOST || 'https://redhat.atlassian.net',
+            host: context.resolveSecret('JIRA_HOST'),
             email: jiraEmail,
             token: jiraToken
           })
@@ -294,7 +300,7 @@ JSON:`
         }
 
         const jiraClient = createJiraClient({
-          host: process.env.JIRA_HOST || 'https://redhat.atlassian.net',
+          host: context.resolveSecret('JIRA_HOST'),
           email: jiraEmail,
           token: jiraToken
         })
