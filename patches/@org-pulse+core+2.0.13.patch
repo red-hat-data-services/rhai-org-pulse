@@ -85,6 +85,383 @@ index 2197cfd..bf52c3c 100644
  | `platform-secrets` | Array of platform secret group definitions (`{ id, label, description, secrets[] }`). Groups: `jira`, `github`, `gitlab`, `ipa`, `google`. |
  | `secret-registry` | `{ SecretRegistry }` — central registry for module secret declaration, resolution, validation, and diagnostics. Methods: `registerModuleSecrets(slug, declaration)`, `resolve()`, `getModuleSecrets(slug)`, `resolveSecret(envVarName)`, `registerValidator(key, fn)`, `validateAll()`, `validateKeys(keys)`, `getStatus()`, `getModuleStatus(slug)`. `validateKeys(keys)` runs only validators whose key is in the provided array. |
  | `smartsheet` | `{ discoverReleases, discoverReleasesWithFreezes, discoverReleasesPartial, isConfigured, SMARTSHEET_SHEET_ID, createSmartsheetClient }` — SmartSheet API for release discovery. `createSmartsheetClient({ apiToken, sheetId? })` returns `{ discoverReleases, discoverReleasesWithFreezes, discoverReleasesPartial, isConfigured, SMARTSHEET_SHEET_ID }` with per-instance cache. |
+diff --git a/node_modules/@org-pulse/core/shared/server/__tests__/search-index-registry.test.js b/node_modules/@org-pulse/core/shared/server/__tests__/search-index-registry.test.js
+new file mode 100644
+index 0000000..a46a501
+--- /dev/null
++++ b/node_modules/@org-pulse/core/shared/server/__tests__/search-index-registry.test.js
+@@ -0,0 +1,371 @@
++const { describe, it, expect, vi, beforeEach } = require('vitest')
++const { createSearchIndexRegistry } = require('../search-index-registry')
++
++function makeStorage(data = {}) {
++  return {
++    readFromStorage(path) {
++      if (path in data) return data[path]
++      return null
++    }
++  }
++}
++
++describe('search-index-registry', () => {
++  describe('getNestedValue (via processDeclaration)', () => {
++    it('resolves nested items path', async () => {
++      const registry = createSearchIndexRegistry()
++      const storage = makeStorage({
++        'features.json': { deep: { list: [{ name: 'A' }] } }
++      })
++      registry.registerDeclarative('mod', [{
++        source: 'features.json',
++        items: 'deep.list',
++        label: 'name',
++        viewId: 'v1',
++        context: 'Ctx'
++      }])
++      const results = await registry.collect(storage)
++      expect(results).toEqual([{
++        label: 'A', context: 'Ctx', viewId: 'v1',
++        params: undefined, keywords: [], module: 'mod'
++      }])
++    })
++
++    it('returns null for null intermediate in path', async () => {
++      const registry = createSearchIndexRegistry()
++      const storage = makeStorage({ 'f.json': { a: null } })
++      registry.registerDeclarative('mod', [{
++        source: 'f.json', items: 'a.b.c', label: 'name', viewId: 'v'
++      }])
++      const results = await registry.collect(storage)
++      expect(results).toEqual([])
++    })
++  })
++
++  describe('matchesFilter (via processDeclaration)', () => {
++    it('includes items when no filter is set', async () => {
++      const registry = createSearchIndexRegistry()
++      const storage = makeStorage({
++        'items.json': [{ name: 'X', status: 'open' }]
++      })
++      registry.registerDeclarative('mod', [{
++        source: 'items.json', label: 'name', viewId: 'v'
++      }])
++      const results = await registry.collect(storage)
++      expect(results.length).toBe(1)
++    })
++
++    it('filters items by single key match', async () => {
++      const registry = createSearchIndexRegistry()
++      const storage = makeStorage({
++        'items.json': [
++          { name: 'A', status: 'open' },
++          { name: 'B', status: 'closed' }
++        ]
++      })
++      registry.registerDeclarative('mod', [{
++        source: 'items.json', label: 'name', viewId: 'v',
++        filter: { status: 'open' }
++      }])
++      const results = await registry.collect(storage)
++      expect(results.length).toBe(1)
++      expect(results[0].label).toBe('A')
++    })
++
++    it('requires all filter keys to match', async () => {
++      const registry = createSearchIndexRegistry()
++      const storage = makeStorage({
++        'items.json': [
++          { name: 'A', status: 'open', priority: 'high' },
++          { name: 'B', status: 'open', priority: 'low' }
++        ]
++      })
++      registry.registerDeclarative('mod', [{
++        source: 'items.json', label: 'name', viewId: 'v',
++        filter: { status: 'open', priority: 'high' }
++      }])
++      const results = await registry.collect(storage)
++      expect(results.length).toBe(1)
++      expect(results[0].label).toBe('A')
++    })
++  })
++
++  describe('resolveParams (via processDeclaration)', () => {
++    it('resolves $field references from item', async () => {
++      const registry = createSearchIndexRegistry()
++      const storage = makeStorage({
++        'items.json': [{ name: 'Feature X', key: 'FX-1' }]
++      })
++      registry.registerDeclarative('mod', [{
++        source: 'items.json', label: 'name', viewId: 'v',
++        params: { feature: '$key' }
++      }])
++      const results = await registry.collect(storage)
++      expect(results[0].params).toEqual({ feature: 'FX-1' })
++    })
++
++    it('passes through literal values', async () => {
++      const registry = createSearchIndexRegistry()
++      const storage = makeStorage({
++        'items.json': [{ name: 'X' }]
++      })
++      registry.registerDeclarative('mod', [{
++        source: 'items.json', label: 'name', viewId: 'v',
++        params: { mode: 'detail' }
++      }])
++      const results = await registry.collect(storage)
++      expect(results[0].params).toEqual({ mode: 'detail' })
++    })
++
++    it('returns undefined when no params template', async () => {
++      const registry = createSearchIndexRegistry()
++      const storage = makeStorage({
++        'items.json': [{ name: 'X' }]
++      })
++      registry.registerDeclarative('mod', [{
++        source: 'items.json', label: 'name', viewId: 'v'
++      }])
++      const results = await registry.collect(storage)
++      expect(results[0].params).toBeUndefined()
++    })
++  })
++
++  describe('resolveKeywords (via processDeclaration)', () => {
++    it('extracts field values as string array', async () => {
++      const registry = createSearchIndexRegistry()
++      const storage = makeStorage({
++        'items.json': [{ name: 'X', status: 'open', tag: 'urgent' }]
++      })
++      registry.registerDeclarative('mod', [{
++        source: 'items.json', label: 'name', viewId: 'v',
++        keywords: ['status', 'tag']
++      }])
++      const results = await registry.collect(storage)
++      expect(results[0].keywords).toEqual(['open', 'urgent'])
++    })
++
++    it('skips missing fields', async () => {
++      const registry = createSearchIndexRegistry()
++      const storage = makeStorage({
++        'items.json': [{ name: 'X', status: 'open' }]
++      })
++      registry.registerDeclarative('mod', [{
++        source: 'items.json', label: 'name', viewId: 'v',
++        keywords: ['status', 'nonexistent']
++      }])
++      const results = await registry.collect(storage)
++      expect(results[0].keywords).toEqual(['open'])
++    })
++
++    it('converts non-string values via String()', async () => {
++      const registry = createSearchIndexRegistry()
++      const storage = makeStorage({
++        'items.json': [{ name: 'X', count: 42 }]
++      })
++      registry.registerDeclarative('mod', [{
++        source: 'items.json', label: 'name', viewId: 'v',
++        keywords: ['count']
++      }])
++      const results = await registry.collect(storage)
++      expect(results[0].keywords).toEqual(['42'])
++    })
++
++    it('returns empty array when keywords not specified', async () => {
++      const registry = createSearchIndexRegistry()
++      const storage = makeStorage({
++        'items.json': [{ name: 'X' }]
++      })
++      registry.registerDeclarative('mod', [{
++        source: 'items.json', label: 'name', viewId: 'v'
++      }])
++      const results = await registry.collect(storage)
++      expect(results[0].keywords).toEqual([])
++    })
++  })
++
++  describe('processDeclaration', () => {
++    it('handles array source data', async () => {
++      const registry = createSearchIndexRegistry()
++      const storage = makeStorage({
++        'list.json': [{ title: 'A' }, { title: 'B' }]
++      })
++      registry.registerDeclarative('mod', [{
++        source: 'list.json', label: 'title', viewId: 'v'
++      }])
++      const results = await registry.collect(storage)
++      expect(results.length).toBe(2)
++    })
++
++    it('handles object source data with $key injection', async () => {
++      const registry = createSearchIndexRegistry()
++      const storage = makeStorage({
++        'map.json': { 'KEY-1': { title: 'First' }, 'KEY-2': { title: 'Second' } }
++      })
++      registry.registerDeclarative('mod', [{
++        source: 'map.json', label: 'title', viewId: 'v',
++        params: { key: '$$$key' }
++      }])
++      const results = await registry.collect(storage)
++      expect(results.length).toBe(2)
++    })
++
++    it('uses fallbackLabel when label field is missing', async () => {
++      const registry = createSearchIndexRegistry()
++      const storage = makeStorage({
++        'items.json': [{ summary: 'Fallback Title' }]
++      })
++      registry.registerDeclarative('mod', [{
++        source: 'items.json', label: 'name', fallbackLabel: 'summary', viewId: 'v'
++      }])
++      const results = await registry.collect(storage)
++      expect(results[0].label).toBe('Fallback Title')
++    })
++
++    it('skips items with no label and no fallbackLabel', async () => {
++      const registry = createSearchIndexRegistry()
++      const storage = makeStorage({
++        'items.json': [{ id: 1 }, { name: 'Has Name' }]
++      })
++      registry.registerDeclarative('mod', [{
++        source: 'items.json', label: 'name', viewId: 'v'
++      }])
++      const results = await registry.collect(storage)
++      expect(results.length).toBe(1)
++      expect(results[0].label).toBe('Has Name')
++    })
++
++    it('uses context from declaration or defaults to slug', async () => {
++      const registry = createSearchIndexRegistry()
++      const storage = makeStorage({
++        'a.json': [{ name: 'X' }],
++        'b.json': [{ name: 'Y' }]
++      })
++      registry.registerDeclarative('my-mod', [
++        { source: 'a.json', label: 'name', viewId: 'v', context: 'Custom Context' },
++        { source: 'b.json', label: 'name', viewId: 'v' }
++      ])
++      const results = await registry.collect(storage)
++      expect(results[0].context).toBe('Custom Context')
++      expect(results[1].context).toBe('my-mod')
++    })
++
++    it('returns empty when storage returns null', async () => {
++      const registry = createSearchIndexRegistry()
++      const storage = makeStorage({})
++      registry.registerDeclarative('mod', [{
++        source: 'missing.json', label: 'name', viewId: 'v'
++      }])
++      const results = await registry.collect(storage)
++      expect(results).toEqual([])
++    })
++
++    it('catches storage errors and returns empty', async () => {
++      const registry = createSearchIndexRegistry()
++      const storage = {
++        readFromStorage() { throw new Error('disk failure') }
++      }
++      const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
++      registry.registerDeclarative('mod', [{
++        source: 'broken.json', label: 'name', viewId: 'v'
++      }])
++      const results = await registry.collect(storage)
++      expect(results).toEqual([])
++      expect(spy).toHaveBeenCalled()
++      spy.mockRestore()
++    })
++
++    it('returns empty for non-array non-object raw data', async () => {
++      const registry = createSearchIndexRegistry()
++      const storage = makeStorage({ 'scalar.json': 'just a string' })
++      registry.registerDeclarative('mod', [{
++        source: 'scalar.json', label: 'name', viewId: 'v'
++      }])
++      const results = await registry.collect(storage)
++      expect(results).toEqual([])
++    })
++  })
++
++  describe('register (custom handler)', () => {
++    it('registers a function handler', async () => {
++      const registry = createSearchIndexRegistry()
++      const handler = vi.fn().mockResolvedValue([{ label: 'Custom', viewId: 'v' }])
++      registry.register('mod', handler)
++      const results = await registry.collect(makeStorage())
++      expect(results.length).toBe(1)
++      expect(results[0].label).toBe('Custom')
++      expect(results[0].module).toBe('mod')
++    })
++
++    it('warns and skips non-function handler', () => {
++      const registry = createSearchIndexRegistry()
++      const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
++      registry.register('mod', 'not a function')
++      spy.mockRestore()
++    })
++
++    it('catches handler errors and continues', async () => {
++      const registry = createSearchIndexRegistry()
++      const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
++      registry.register('broken', () => { throw new Error('boom') })
++      registry.register('good', async () => [{ label: 'OK', viewId: 'v' }])
++      const results = await registry.collect(makeStorage())
++      expect(results.length).toBe(1)
++      expect(results[0].label).toBe('OK')
++      expect(spy).toHaveBeenCalled()
++      spy.mockRestore()
++    })
++
++    it('ignores handler returning non-array', async () => {
++      const registry = createSearchIndexRegistry()
++      registry.register('mod', async () => 'not an array')
++      const results = await registry.collect(makeStorage())
++      expect(results).toEqual([])
++    })
++  })
++
++  describe('registerDeclarative', () => {
++    it('skips non-array entries', async () => {
++      const registry = createSearchIndexRegistry()
++      registry.registerDeclarative('mod', 'not an array')
++      const results = await registry.collect(makeStorage())
++      expect(results).toEqual([])
++    })
++
++    it('skips empty array entries', async () => {
++      const registry = createSearchIndexRegistry()
++      registry.registerDeclarative('mod', [])
++      const results = await registry.collect(makeStorage())
++      expect(results).toEqual([])
++    })
++  })
++
++  describe('collect', () => {
++    it('combines declarative and handler results', async () => {
++      const registry = createSearchIndexRegistry()
++      const storage = makeStorage({
++        'items.json': [{ name: 'Declarative' }]
++      })
++      registry.registerDeclarative('decl-mod', [{
++        source: 'items.json', label: 'name', viewId: 'v'
++      }])
++      registry.register('handler-mod', async () => [{ label: 'Handler', viewId: 'v2' }])
++      const results = await registry.collect(storage)
++      expect(results.length).toBe(2)
++      expect(results[0].module).toBe('decl-mod')
++      expect(results[1].module).toBe('handler-mod')
++    })
++
++    it('returns empty array when nothing is registered', async () => {
++      const registry = createSearchIndexRegistry()
++      const results = await registry.collect(makeStorage())
++      expect(results).toEqual([])
++    })
++
++    it('adds module field to handler results', async () => {
++      const registry = createSearchIndexRegistry()
++      registry.register('my-slug', async () => [{ label: 'X', viewId: 'v' }])
++      const results = await registry.collect(makeStorage())
++      expect(results[0].module).toBe('my-slug')
++    })
++  })
++})
 diff --git a/node_modules/@org-pulse/core/shared/server/module-context.js b/node_modules/@org-pulse/core/shared/server/module-context.js
 index dd3bde4..a758665 100644
 --- a/node_modules/@org-pulse/core/shared/server/module-context.js
@@ -282,13 +659,13 @@ index 0000000..11e4353
 +module.exports = { createSearchIndexRegistry }
 diff --git a/node_modules/@org-pulse/core/src/__tests__/CommandPalette.test.js b/node_modules/@org-pulse/core/src/__tests__/CommandPalette.test.js
 new file mode 100644
-index 0000000..df859ca
+index 0000000..479aaf5
 --- /dev/null
 +++ b/node_modules/@org-pulse/core/src/__tests__/CommandPalette.test.js
-@@ -0,0 +1,127 @@
-+import { describe, it, expect, vi } from 'vitest'
+@@ -0,0 +1,408 @@
++import { describe, it, expect, vi, beforeEach } from 'vitest'
 +import { mount } from '@vue/test-utils'
-+import { defineComponent } from 'vue'
++import { ref, computed, nextTick } from 'vue'
 +
 +vi.mock('virtual:nav-discovery', () => ({
 +  default: [
@@ -309,33 +686,49 @@ index 0000000..df859ca
 +  ]
 +}))
 +
-+vi.mock('../composables/useCommandPalette', () => {
-+  const { ref, computed } = require('vue')
-+  return {
-+    useCommandPalette: () => {
-+      const searchQuery = ref('test')
-+      const selectedIndex = ref(0)
-+      const historyIndex = ref(-1)
-+      const filteredResults = computed(() => [
-+        { id: 'team-tracker::home', label: 'Team Directory', sublabel: 'People & Teams', type: 'page', slug: 'team-tracker', viewId: 'home' },
-+        { id: 'releases::schedule', label: 'Schedule', sublabel: 'Releases', type: 'page', slug: 'releases', viewId: 'schedule' },
-+        { id: 'toggle-theme', label: 'Toggle Theme', sublabel: 'Switch theme', type: 'action' }
-+      ])
-+      return {
-+        searchQuery,
-+        selectedIndex,
-+        filteredResults,
-+        historyIndex,
-+        selectNext: vi.fn(),
-+        selectPrev: vi.fn(),
-+        resetSelection: vi.fn(),
-+        saveQuery: vi.fn(),
-+        historyPrev: vi.fn(),
-+        historyNext: vi.fn()
-+      }
-+    }
-+  }
-+})
++const mockSelectNext = vi.fn()
++const mockSelectPrev = vi.fn()
++const mockResetSelection = vi.fn()
++const mockSaveQuery = vi.fn()
++const mockHistoryPrev = vi.fn()
++const mockHistoryNext = vi.fn()
++
++let mockSearchQuery
++let mockSelectedIndex
++let mockHistoryIndex
++let mockFilteredResults
++
++function resetMocks() {
++  mockSearchQuery = ref('test')
++  mockSelectedIndex = ref(0)
++  mockHistoryIndex = ref(-1)
++  mockFilteredResults = computed(() => [
++    { id: 'team-tracker::home', label: 'Team Directory', sublabel: 'People & Teams', type: 'page', slug: 'team-tracker', viewId: 'home' },
++    { id: 'releases::schedule', label: 'Schedule', sublabel: 'Releases', type: 'page', slug: 'releases', viewId: 'schedule', params: { tab: 'main' } },
++    { id: 'toggle-theme', label: 'Toggle Theme', sublabel: 'Switch theme', type: 'action' }
++  ])
++  mockSelectNext.mockClear()
++  mockSelectPrev.mockClear()
++  mockResetSelection.mockClear()
++  mockSaveQuery.mockClear()
++  mockHistoryPrev.mockClear()
++  mockHistoryNext.mockClear()
++}
++
++vi.mock('../composables/useCommandPalette', () => ({
++  useCommandPalette: () => ({
++    searchQuery: mockSearchQuery,
++    selectedIndex: mockSelectedIndex,
++    filteredResults: mockFilteredResults,
++    historyIndex: mockHistoryIndex,
++    selectNext: mockSelectNext,
++    selectPrev: mockSelectPrev,
++    resetSelection: mockResetSelection,
++    saveQuery: mockSaveQuery,
++    historyPrev: mockHistoryPrev,
++    historyNext: mockHistoryNext
++  })
++}))
 +
 +import CommandPalette from '../components/CommandPalette.vue'
 +
@@ -354,6 +747,11 @@ index 0000000..df859ca
 +    attachTo: document.body
 +  })
 +}
++
++beforeEach(() => {
++  resetMocks()
++  Element.prototype.scrollIntoView = vi.fn()
++})
 +
 +describe('CommandPalette keyboard indicators', () => {
 +  it('selected item shows Enter/Return icon', () => {
@@ -413,12 +811,272 @@ index 0000000..df859ca
 +    wrapper.unmount()
 +  })
 +})
++
++describe('CommandPalette keyboard events', () => {
++  it('Escape emits close', async () => {
++    const wrapper = mountPalette()
++    await wrapper.find('.fixed').trigger('keydown', { key: 'Escape' })
++    expect(wrapper.emitted('close')).toBeTruthy()
++    wrapper.unmount()
++  })
++
++  it('Tab calls selectNext', async () => {
++    const wrapper = mountPalette()
++    await wrapper.find('.fixed').trigger('keydown', { key: 'Tab' })
++    expect(mockSelectNext).toHaveBeenCalledOnce()
++    wrapper.unmount()
++  })
++
++  it('Shift+Tab calls selectPrev', async () => {
++    const wrapper = mountPalette()
++    await wrapper.find('.fixed').trigger('keydown', { key: 'Tab', shiftKey: true })
++    expect(mockSelectPrev).toHaveBeenCalledOnce()
++    wrapper.unmount()
++  })
++
++  it('ArrowDown calls selectNext when not browsing history', async () => {
++    const wrapper = mountPalette()
++    await wrapper.find('.fixed').trigger('keydown', { key: 'ArrowDown' })
++    expect(mockSelectNext).toHaveBeenCalledOnce()
++    wrapper.unmount()
++  })
++
++  it('ArrowDown calls historyNext when browsing history', async () => {
++    mockHistoryIndex.value = 1
++    const wrapper = mountPalette()
++    await wrapper.find('.fixed').trigger('keydown', { key: 'ArrowDown' })
++    expect(mockHistoryNext).toHaveBeenCalledOnce()
++    expect(mockSelectNext).not.toHaveBeenCalled()
++    wrapper.unmount()
++  })
++
++  it('ArrowUp calls selectPrev when results exist and not browsing history', async () => {
++    const wrapper = mountPalette()
++    await wrapper.find('.fixed').trigger('keydown', { key: 'ArrowUp' })
++    expect(mockSelectPrev).toHaveBeenCalledOnce()
++    wrapper.unmount()
++  })
++
++  it('ArrowUp calls historyPrev when browsing history', async () => {
++    mockHistoryIndex.value = 0
++    const wrapper = mountPalette()
++    await wrapper.find('.fixed').trigger('keydown', { key: 'ArrowUp' })
++    expect(mockHistoryPrev).toHaveBeenCalledOnce()
++    expect(mockSelectPrev).not.toHaveBeenCalled()
++    wrapper.unmount()
++  })
++
++  it('ArrowUp calls historyPrev when no results', async () => {
++    mockFilteredResults = computed(() => [])
++    const wrapper = mountPalette()
++    await wrapper.find('.fixed').trigger('keydown', { key: 'ArrowUp' })
++    expect(mockHistoryPrev).toHaveBeenCalledOnce()
++    wrapper.unmount()
++  })
++
++  it('Enter emits navigate for page item', async () => {
++    const wrapper = mountPalette()
++    await wrapper.find('.fixed').trigger('keydown', { key: 'Enter' })
++    expect(wrapper.emitted('navigate')).toBeTruthy()
++    expect(wrapper.emitted('navigate')[0]).toEqual(['team-tracker', 'home', undefined])
++    expect(mockSaveQuery).toHaveBeenCalledWith('test')
++    wrapper.unmount()
++  })
++
++  it('Enter emits action for action item', async () => {
++    mockSelectedIndex.value = 2
++    const wrapper = mountPalette()
++    await wrapper.find('.fixed').trigger('keydown', { key: 'Enter' })
++    expect(wrapper.emitted('action')).toBeTruthy()
++    expect(wrapper.emitted('action')[0]).toEqual(['toggle-theme'])
++    wrapper.unmount()
++  })
++
++  it('Enter does nothing when no results', async () => {
++    mockFilteredResults = computed(() => [])
++    const wrapper = mountPalette()
++    await wrapper.find('.fixed').trigger('keydown', { key: 'Enter' })
++    expect(wrapper.emitted('navigate')).toBeFalsy()
++    expect(wrapper.emitted('action')).toBeFalsy()
++    wrapper.unmount()
++  })
++})
++
++describe('CommandPalette selectItem via click', () => {
++  it('click on page item emits navigate with slug, viewId, and params', async () => {
++    mockSelectedIndex.value = 1
++    const wrapper = mountPalette()
++    const rows = wrapper.findAll('.command-palette-suggestions > div')
++    await rows[1].trigger('click')
++    expect(wrapper.emitted('navigate')).toBeTruthy()
++    expect(wrapper.emitted('navigate')[0]).toEqual(['releases', 'schedule', { tab: 'main' }])
++    expect(mockSaveQuery).toHaveBeenCalledWith('test')
++    wrapper.unmount()
++  })
++
++  it('click on action item emits action', async () => {
++    const wrapper = mountPalette()
++    const rows = wrapper.findAll('.command-palette-suggestions > div')
++    await rows[2].trigger('click')
++    expect(wrapper.emitted('action')).toBeTruthy()
++    expect(wrapper.emitted('action')[0]).toEqual(['toggle-theme'])
++    wrapper.unmount()
++  })
++})
++
++describe('CommandPalette close on backdrop/container click', () => {
++  it('backdrop click emits close', async () => {
++    const wrapper = mountPalette()
++    await wrapper.find('.command-palette-backdrop').trigger('click')
++    expect(wrapper.emitted('close')).toBeTruthy()
++    wrapper.unmount()
++  })
++})
++
++describe('CommandPalette formatLabel rendering', () => {
++  it('page items render sublabel → label format', () => {
++    const wrapper = mountPalette()
++    const rows = wrapper.findAll('.command-palette-suggestions > div')
++    const firstRowText = rows[0].find('.text-gray-700')
++    expect(firstRowText.element.innerHTML).toContain('People &amp; Teams')
++    expect(firstRowText.element.innerHTML).toContain('→')
++    expect(firstRowText.element.innerHTML).toContain('Team Directory')
++    wrapper.unmount()
++  })
++
++  it('action items render label only (no sublabel prefix)', () => {
++    const wrapper = mountPalette()
++    const rows = wrapper.findAll('.command-palette-suggestions > div')
++    const actionText = rows[2].find('.text-gray-700')
++    expect(actionText.element.innerHTML).not.toContain('→')
++    expect(actionText.element.innerHTML).toContain('Toggle Theme')
++    wrapper.unmount()
++  })
++})
++
++describe('CommandPalette highlightMatch rendering', () => {
++  it('highlights matching tokens in label', () => {
++    mockSearchQuery.value = 'team'
++    const wrapper = mountPalette()
++    const rows = wrapper.findAll('.command-palette-suggestions > div')
++    const html = rows[0].find('.text-gray-700').element.innerHTML
++    expect(html).toContain('<span class="text-red-400 font-semibold">')
++    expect(html).toMatch(/Team/i)
++    wrapper.unmount()
++  })
++
++  it('escapes HTML in labels to prevent XSS', () => {
++    mockFilteredResults = computed(() => [
++      { id: 'xss', label: '<script>alert("xss")</script>', sublabel: '', type: 'action' }
++    ])
++    const wrapper = mountPalette()
++    const rows = wrapper.findAll('.command-palette-suggestions > div')
++    const html = rows[0].find('.text-gray-700').element.innerHTML
++    expect(html).not.toContain('<script>')
++    expect(html).toContain('&lt;script&gt;')
++    wrapper.unmount()
++  })
++})
++
++describe('CommandPalette empty state', () => {
++  it('shows "No results" when query non-empty and no results', () => {
++    mockSearchQuery.value = 'xyznonexistent'
++    mockFilteredResults = computed(() => [])
++    const wrapper = mountPalette()
++    expect(wrapper.text()).toContain('No results')
++    wrapper.unmount()
++  })
++
++  it('does not show suggestions or empty state when query is empty', () => {
++    mockSearchQuery.value = ''
++    mockFilteredResults = computed(() => [])
++    const wrapper = mountPalette()
++    expect(wrapper.find('.command-palette-suggestions').exists()).toBe(false)
++    expect(wrapper.text()).not.toContain('No results')
++    wrapper.unmount()
++  })
++})
++
++describe('CommandPalette matchedKeyword display', () => {
++  it('renders matchedKeyword when present', () => {
++    mockFilteredResults = computed(() => [
++      { id: 'test', label: 'Feature X', sublabel: 'Mod', type: 'data', module: 'mod', viewId: 'v', matchedKeyword: 'dark mode' }
++    ])
++    const wrapper = mountPalette()
++    const rows = wrapper.findAll('.command-palette-suggestions > div')
++    const kwSpan = rows[0].find('.text-gray-400.text-xs')
++    expect(kwSpan.exists()).toBe(true)
++    expect(kwSpan.element.innerHTML).toContain('dark mode')
++    wrapper.unmount()
++  })
++
++  it('does not render keyword span when matchedKeyword is absent', () => {
++    const wrapper = mountPalette()
++    const rows = wrapper.findAll('.command-palette-suggestions > div')
++    const kwSpan = rows[0].find('.text-gray-400.text-xs')
++    expect(kwSpan.exists()).toBe(false)
++    wrapper.unmount()
++  })
++})
++
++describe('CommandPalette mousemove', () => {
++  it('updates selectedIndex on mousemove over different row', async () => {
++    const wrapper = mountPalette()
++    const rows = wrapper.findAll('.command-palette-suggestions > div')
++    expect(mockSelectedIndex.value).toBe(0)
++    await rows[2].trigger('mousemove')
++    expect(mockSelectedIndex.value).toBe(2)
++    wrapper.unmount()
++  })
++})
++
++describe('CommandPalette lifecycle', () => {
++  it('focuses input on mount', async () => {
++    const wrapper = mountPalette()
++    await nextTick()
++    await nextTick()
++    const input = wrapper.find('input')
++    expect(input.element).toBe(document.activeElement)
++    wrapper.unmount()
++  })
++
++  it('calls resetSelection on unmount', () => {
++    const wrapper = mountPalette()
++    wrapper.unmount()
++    expect(mockResetSelection).toHaveBeenCalled()
++  })
++})
++
++describe('CommandPalette responsive placeholder', () => {
++  it('shows full placeholder on wide viewport', () => {
++    const wrapper = mountPalette()
++    const input = wrapper.find('input')
++    expect(input.attributes('placeholder')).toBe(
++      window.innerWidth > 480 ? 'Where do you want to go?' : 'Search…'
++    )
++    wrapper.unmount()
++  })
++})
++
++describe('CommandPalette data item click', () => {
++  it('emits navigate with module, viewId, params for data items', async () => {
++    mockFilteredResults = computed(() => [
++      { id: 'mod::data::1', label: 'Data Item', sublabel: 'Module', type: 'data', module: 'releases', viewId: 'execute', params: { feature: 'X-1' } }
++    ])
++    const wrapper = mountPalette()
++    const rows = wrapper.findAll('.command-palette-suggestions > div')
++    await rows[0].trigger('click')
++    expect(wrapper.emitted('navigate')).toBeTruthy()
++    expect(wrapper.emitted('navigate')[0]).toEqual(['releases', 'execute', { feature: 'X-1' }])
++    wrapper.unmount()
++  })
++})
 diff --git a/node_modules/@org-pulse/core/src/__tests__/useCommandPalette.test.js b/node_modules/@org-pulse/core/src/__tests__/useCommandPalette.test.js
 new file mode 100644
-index 0000000..01407bc
+index 0000000..c642992
 --- /dev/null
 +++ b/node_modules/@org-pulse/core/src/__tests__/useCommandPalette.test.js
-@@ -0,0 +1,497 @@
+@@ -0,0 +1,696 @@
 +import { describe, it, expect, vi, beforeEach } from 'vitest'
 +import { ref } from 'vue'
 +
@@ -843,6 +1501,175 @@ index 0000000..01407bc
 +    })
 +  })
 +
++  describe('fuzzyScore edge cases', () => {
++    it('returns 0 for null text', () => {
++      const { searchQuery, filteredResults } = createPalette({
++        searchIndexItems: [
++          { module: 'test', label: null, context: 'Test', viewId: 'v', params: {} }
++        ]
++      })
++      searchQuery.value = 'anything'
++      const match = filteredResults.value.find(r => r.label === null)
++      expect(match).toBeUndefined()
++    })
++
++    it('returns 0 for empty string text', () => {
++      const { searchQuery, filteredResults } = createPalette({
++        searchIndexItems: [
++          { module: 'test', label: '', context: 'Test', viewId: 'v', params: {} }
++        ]
++      })
++      searchQuery.value = 'anything'
++      const match = filteredResults.value.find(r => r.label === '')
++      expect(match).toBeUndefined()
++    })
++
++    it('multi-token query matches when all tokens present', () => {
++      const { searchQuery, filteredResults } = createPalette()
++      searchQuery.value = 'team dir'
++      const match = filteredResults.value.find(r => r.label === 'Team Directory')
++      expect(match).toBeDefined()
++    })
++
++    it('multi-token query does not match when only some tokens present', () => {
++      const { searchQuery, filteredResults } = createPalette()
++      searchQuery.value = 'team zzz'
++      const match = filteredResults.value.find(r => r.label === 'Team Directory')
++      expect(match).toBeUndefined()
++    })
++  })
++
++  describe('scoreItem edge cases', () => {
++    it('sublabel subsequence-only match (score < 70) is ignored', () => {
++      const { searchQuery, filteredResults } = createPalette({
++        searchIndexItems: [
++          { module: 'test', label: 'AAAA', context: 'xyztestxyz', viewId: 'v', params: {} }
++        ]
++      })
++      searchQuery.value = 'xtz'
++      const match = filteredResults.value.find(r => r.label === 'AAAA')
++      expect(match).toBeUndefined()
++    })
++
++    it('keyword subsequence-only match (score < 70) is ignored', () => {
++      const { searchQuery, filteredResults } = createPalette({
++        searchIndexItems: [
++          { module: 'test', label: 'Unrelated', context: 'Test', viewId: 'v', params: {}, keywords: ['abcdef'] }
++        ]
++      })
++      searchQuery.value = 'adf'
++      const match = filteredResults.value.find(r => r.label === 'Unrelated')
++      expect(match).toBeUndefined()
++    })
++  })
++
++  describe('isNavItemVisible edge cases', () => {
++    it('hides item with requireCondition: in-app-mode when teamDataSource is empty', () => {
++      const palette = createPalette({
++        teamDataSource: '',
++        manifests: [{
++          slug: 'test', name: 'Test',
++          client: { navItems: [{ id: 'inapp', label: 'In-App Only', icon: 'Box', requireCondition: 'in-app-mode' }] }
++        }]
++      })
++      palette.searchQuery.value = 'in-app'
++      expect(palette.filteredResults.value.find(r => r.id === 'test::inapp')).toBeUndefined()
++    })
++
++    it('shows item with requireCondition: in-app-mode when teamDataSource is in-app', () => {
++      const palette = createPalette({
++        teamDataSource: 'in-app',
++        manifests: [{
++          slug: 'test', name: 'Test',
++          client: { navItems: [{ id: 'inapp', label: 'In-App Only', icon: 'Box', requireCondition: 'in-app-mode' }] }
++        }]
++      })
++      palette.searchQuery.value = 'in-app'
++      expect(palette.filteredResults.value.find(r => r.id === 'test::inapp')).toBeDefined()
++    })
++
++    it('shows role-gated item when user has matching role in roles array', () => {
++      const palette = createPalette({
++        roles: ['planning-manager'],
++        manifests: [{
++          slug: 'releases', name: 'Releases',
++          client: { navItems: [{ id: 'registry', label: 'Manage', icon: 'Database', requireRole: 'planning-manager' }] }
++        }]
++      })
++      palette.searchQuery.value = 'manage'
++      expect(palette.filteredResults.value.find(r => r.id === 'releases::registry')).toBeDefined()
++    })
++  })
++
++  describe('MAX_RESULTS cap', () => {
++    it('returns at most 50 results', () => {
++      const items = Array.from({ length: 60 }, (_, i) => ({
++        module: 'test', label: 'TestItem ' + i, context: 'Test',
++        viewId: 'v', params: { id: String(i) }, keywords: []
++      }))
++      const { searchQuery, filteredResults } = createPalette({ searchIndexItems: items })
++      searchQuery.value = 'TestItem'
++      expect(filteredResults.value.length).toBeLessThanOrEqual(50)
++    })
++  })
++
++  describe('selectNext/selectPrev with empty results', () => {
++    it('selectNext is no-op when results are empty', () => {
++      const { selectedIndex, selectNext } = createPalette()
++      selectNext()
++      expect(selectedIndex.value).toBe(0)
++    })
++
++    it('selectPrev is no-op when results are empty', () => {
++      const { selectedIndex, selectPrev } = createPalette()
++      selectPrev()
++      expect(selectedIndex.value).toBe(0)
++    })
++  })
++
++  describe('dataItems edge cases', () => {
++    it('handles undefined searchIndexItems gracefully', () => {
++      const palette = useCommandPalette({
++        manifests: ref([]),
++        isAdmin: ref(false),
++        isTeamAdmin: ref(false),
++        isManager: ref(false),
++        roles: ref([]),
++        teamDataSource: ref(''),
++        searchIndexItems: undefined
++      })
++      expect(palette.allItems.value.length).toBeGreaterThan(0)
++    })
++  })
++
++  describe('ACTIONS built-in items', () => {
++    it('includes 5 built-in action items', () => {
++      const { allItems } = createPalette()
++      const actions = allItems.value.filter(r => r.type === 'action')
++      expect(actions.length).toBe(5)
++    })
++
++    it('all action items have correct structure', () => {
++      const { allItems } = createPalette()
++      const actions = allItems.value.filter(r => r.type === 'action')
++      for (const a of actions) {
++        expect(a.id).toBeTruthy()
++        expect(a.label).toBeTruthy()
++        expect(a.type).toBe('action')
++      }
++    })
++
++    it('has expected action IDs', () => {
++      const { allItems } = createPalette()
++      const actionIds = allItems.value.filter(r => r.type === 'action').map(r => r.id)
++      expect(actionIds).toContain('toggle-theme')
++      expect(actionIds).toContain('toggle-sidebar')
++      expect(actionIds).toContain('go-settings')
++      expect(actionIds).toContain('go-about')
++      expect(actionIds).toContain('go-home')
++    })
++  })
++
 +  describe('search history', () => {
 +    beforeEach(() => {
 +      localStorage.removeItem('orgpulse_search_history')
@@ -913,6 +1740,36 @@ index 0000000..01407bc
 +      saveQuery('persisted')
 +      const stored = JSON.parse(localStorage.getItem('orgpulse_search_history'))
 +      expect(stored).toContain('persisted')
++    })
++
++    it('saveQuery caps history at MAX_HISTORY (20)', () => {
++      const { saveQuery, searchHistory } = createPalette()
++      for (let i = 0; i < 25; i++) {
++        saveQuery('query-' + i)
++      }
++      expect(searchHistory.value.length).toBe(20)
++      expect(searchHistory.value[0]).toBe('query-24')
++    })
++
++    it('historyPrev stops at end of history', () => {
++      const { saveQuery, historyPrev } = createPalette()
++      saveQuery('only')
++      expect(historyPrev()).toBe(true)
++      expect(historyPrev()).toBe(false)
++    })
++
++    it('loadHistory handles corrupted localStorage gracefully', () => {
++      localStorage.setItem('orgpulse_search_history', '{invalid json')
++      const { searchHistory } = createPalette()
++      expect(searchHistory.value).toEqual([])
++    })
++
++    it('persistHistory handles unavailable storage gracefully', () => {
++      const original = localStorage.setItem
++      localStorage.setItem = () => { throw new Error('QuotaExceeded') }
++      const { saveQuery } = createPalette()
++      expect(() => saveQuery('test')).not.toThrow()
++      localStorage.setItem = original
 +    })
 +  })
 +})
