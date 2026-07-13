@@ -133,12 +133,13 @@
       <!-- Open Issues to Validate -->
       <div class="mb-6">
         <a
-          :href="openIssuesToValidateUrl"
+          :href="openIssuesToValidate?.jql_url || '#'"
           target="_blank"
           class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-3 hover:border-blue-400 dark:hover:border-blue-600 transition-colors"
         >
           <h3 class="text-sm font-semibold text-blue-700 dark:text-blue-400">Open Issues to Validate</h3>
-          <span class="text-xs text-blue-500 dark:text-blue-400">View in Jira ↗</span>
+          <span v-if="openIssuesToValidate" class="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-medium">{{ openIssuesToValidate.total }} open ↗</span>
+          <span v-else class="text-xs text-blue-500 dark:text-blue-400">View in Jira ↗</span>
         </a>
       </div>
 
@@ -491,15 +492,9 @@ const versionVariants = computed(() => {
   return selectedVersion.value ? [selectedVersion.value] : []
 })
 
-const openIssuesToValidateUrl = computed(() => {
-  const variants = versionVariants.value
-  if (!variants.length) return '#'
-  const esc = v => v.replace(/'/g, "\\'")
-  const versionClauses = variants
-    .map(v => `fixVersion = '${esc(v)}' OR 'Target Version' = '${esc(v)}'`)
-    .join(' OR ')
-  const jql = `project in (RHAIENG, RHOAIENG) AND (labels not in (RHOAI-releases, RHOAI-internal, devtestops-service, test-failed, test-skipped) OR labels IS EMPTY) AND (component not in (Documentation, PXE) OR component is EMPTY) AND status not in (Closed, Resolved) AND (${versionClauses})`
-  return `https://redhat.atlassian.net/issues/?jql=${encodeURIComponent(jql)}`
+const openIssuesToValidate = computed(() => {
+  if (!data.value || !data.value.open_issues_to_validate) return null
+  return data.value.open_issues_to_validate
 })
 
 const productBlockers = computed(() => {
