@@ -166,6 +166,12 @@ describe('draft-plans routes', () => {
       expect(res._status).toBe(400)
     })
 
+    it('accepts version names with spaces', async () => {
+      const { router } = setupRouter()
+      const res = await callRoute(router, 'get', '/:version', { params: { version: 'RHOAI 3.5' } })
+      expect(res._status).not.toBe(400)
+    })
+
     it('returns 404 when no data stored', async () => {
       const { router } = setupRouter()
       const res = await callRoute(router, 'get', '/:version', { params: { version: '3.5' } })
@@ -202,6 +208,12 @@ describe('draft-plans routes', () => {
       const { router } = setupRouter()
       const res = await callRoute(router, 'get', '/:version/health', { params: { version: 'a'.repeat(51) } })
       expect(res._status).toBe(400)
+    })
+
+    it('accepts version names with spaces', async () => {
+      const { router } = setupRouter()
+      const res = await callRoute(router, 'get', '/:version/health', { params: { version: 'RHOAI 3.5' } })
+      expect(res._status).not.toBe(400)
     })
   })
 
