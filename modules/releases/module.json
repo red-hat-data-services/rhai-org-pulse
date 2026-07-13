@@ -82,7 +82,7 @@
       "fallbackLabel": "key",
       "viewId": "execute",
       "params": { "feature": "$key" },
-      "keywords": ["summary", "key", "status", "team"],
+      "keywords": ["key", "status", "team"],
       "context": "Releases"
     }
   ],

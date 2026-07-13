@@ -282,10 +282,10 @@ index 0000000..11e4353
 +module.exports = { createSearchIndexRegistry }
 diff --git a/node_modules/@org-pulse/core/src/__tests__/useCommandPalette.test.js b/node_modules/@org-pulse/core/src/__tests__/useCommandPalette.test.js
 new file mode 100644
-index 0000000..6d7da20
+index 0000000..1bf6f0f
 --- /dev/null
 +++ b/node_modules/@org-pulse/core/src/__tests__/useCommandPalette.test.js
-@@ -0,0 +1,359 @@
+@@ -0,0 +1,405 @@
 +import { describe, it, expect, vi, beforeEach } from 'vitest'
 +import { ref } from 'vue'
 +
@@ -352,7 +352,8 @@ index 0000000..6d7da20
 +    isTeamAdmin: ref(overrides.isTeamAdmin ?? false),
 +    isManager: ref(overrides.isManager ?? false),
 +    roles: ref(overrides.roles ?? []),
-+    teamDataSource: ref(overrides.teamDataSource ?? '')
++    teamDataSource: ref(overrides.teamDataSource ?? ''),
++    searchIndexItems: ref(overrides.searchIndexItems ?? [])
 +  })
 +}
 +
@@ -569,6 +570,51 @@ index 0000000..6d7da20
 +        .filter(r => r.id && r.id.includes('::tab::'))
 +        .map(r => r.id)
 +      expect(new Set(discoveredIds).size).toBe(discoveredIds.length)
++    })
++  })
++
++  describe('keyword-only match scoring', () => {
++    it('caps keyword-only results to prevent tag flooding', () => {
++      const items = Array.from({ length: 10 }, (_, i) => ({
++        module: 'releases', label: 'Feature ' + i, context: 'Releases',
++        viewId: 'execute', params: { feature: 'TEST-' + i }, keywords: ['Conforma']
++      }))
++      const { searchQuery, filteredResults } = createPalette({ searchIndexItems: items })
++      searchQuery.value = 'conforma'
++      const labels = filteredResults.value.map(r => r.label)
++      expect(labels).toContain('Conforma Insights')
++      const kwOnlyItems = filteredResults.value.filter(r => r.label.startsWith('Feature '))
++      expect(kwOnlyItems.length).toBeLessThanOrEqual(3)
++    })
++
++    it('label match ranks above keyword-only match', () => {
++      const { searchQuery, filteredResults } = createPalette({
++        searchIndexItems: [
++          { module: 'releases', label: 'Conforma Overview', context: 'Releases', viewId: 'execute', params: {}, keywords: [] },
++          { module: 'releases', label: 'Unrelated Feature', context: 'Releases', viewId: 'execute', params: {}, keywords: ['Conforma'] },
++        ]
++      })
++      searchQuery.value = 'conforma'
++      const results = filteredResults.value
++      const labelMatch = results.find(r => r.label === 'Conforma Overview')
++      const kwMatch = results.find(r => r.label === 'Unrelated Feature')
++      expect(labelMatch).toBeDefined()
++      if (kwMatch) {
++        expect(results.indexOf(labelMatch)).toBeLessThan(results.indexOf(kwMatch))
++      }
++    })
++
++    it('pages rank above data items at equal scores', () => {
++      const { searchQuery, filteredResults } = createPalette({
++        searchIndexItems: [
++          { module: 'releases', label: 'Schedule View', context: 'Releases', viewId: 'execute', params: {} },
++        ]
++      })
++      searchQuery.value = 'schedule'
++      const results = filteredResults.value.filter(r => r.label === 'Schedule' || r.label === 'Schedule View')
++      if (results.length >= 2) {
++        expect(results[0].type).toBe('page')
++      }
 +    })
 +  })
 +
@@ -1049,10 +1095,10 @@ index 0000000..00c7919
 +</style>
 diff --git a/node_modules/@org-pulse/core/src/composables/useCommandPalette.js b/node_modules/@org-pulse/core/src/composables/useCommandPalette.js
 new file mode 100644
-index 0000000..74a144c
+index 0000000..6799605
 --- /dev/null
 +++ b/node_modules/@org-pulse/core/src/composables/useCommandPalette.js
-@@ -0,0 +1,222 @@
+@@ -0,0 +1,240 @@
 +import { ref, computed } from 'vue'
 +import discoveredNav from 'virtual:nav-discovery'
 +
@@ -1086,6 +1132,9 @@ index 0000000..74a144c
 +  return 0
 +}
 +
++const TYPE_BONUS = { page: 3, data: 0, action: 1 }
++const MAX_KEYWORD_ONLY = 3
++
 +function scoreItem(query, item) {
 +  const labelScore = fuzzyScore(query, item.label)
 +  const rawSublabelScore = fuzzyScore(query, item.sublabel)
@@ -1101,9 +1150,11 @@ index 0000000..74a144c
 +      }
 +    }
 +  }
-+  const best = Math.max(labelScore, sublabelScore, bestKeywordScore)
-+  const keywordOnly = best > 0 && bestKeywordScore === best && bestKeywordScore > labelScore && bestKeywordScore > sublabelScore
-+  return { score: best, matchedKeyword: keywordOnly ? matchedKeyword : null }
++  const primaryScore = Math.max(labelScore, sublabelScore)
++  const best = Math.max(primaryScore, bestKeywordScore)
++  const score = best + (TYPE_BONUS[item.type] || 0)
++  const keywordOnly = primaryScore === 0 && bestKeywordScore > 0
++  return { score, matchedKeyword: keywordOnly ? matchedKeyword : null, keywordOnly }
 +}
 +
 +function isNavItemVisible(item, { isAdmin, roles, isTeamAdmin, isManager, teamDataSource }) {
@@ -1198,15 +1249,28 @@ index 0000000..74a144c
 +      return []
 +    }
 +
-+    return allItems.value
++    const scored = allItems.value
 +      .map(item => {
-+        const { score, matchedKeyword } = scoreItem(q, item)
-+        return { item, score, matchedKeyword }
++        const { score, matchedKeyword, keywordOnly } = scoreItem(q, item)
++        return { item, score, matchedKeyword, keywordOnly }
 +      })
 +      .filter(entry => entry.score >= MIN_SCORE)
-+      .sort((a, b) => b.score - a.score)
-+      .slice(0, MAX_RESULTS)
-+      .map(entry => entry.matchedKeyword ? { ...entry.item, matchedKeyword: entry.matchedKeyword } : entry.item)
++      .sort((a, b) => {
++        if (a.keywordOnly !== b.keywordOnly) return a.keywordOnly ? 1 : -1
++        return b.score - a.score
++      })
++
++    const results = []
++    let kwOnlyCount = 0
++    for (const entry of scored) {
++      if (entry.keywordOnly) {
++        if (kwOnlyCount >= MAX_KEYWORD_ONLY) continue
++        kwOnlyCount++
++      }
++      results.push(entry.matchedKeyword ? { ...entry.item, matchedKeyword: entry.matchedKeyword } : entry.item)
++      if (results.length >= MAX_RESULTS) break
++    }
++    return results
 +  })
 +
 +  function selectNext() {
