@@ -51,7 +51,7 @@
         "required": false
       }
     ],
-    "platform": ["GOOGLE_SERVICE_ACCOUNT_KEY_FILE", "jira"]
+    "platform": ["google", "jira"]
   },
   "defaultEnabled": true,
   "requires": [],
