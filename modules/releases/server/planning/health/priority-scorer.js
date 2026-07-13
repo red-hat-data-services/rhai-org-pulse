@@ -1,3 +1,5 @@
+var { parseVersionComponents } = require('../../version-utils')
+
 var WEIGHTS = {
   rice: 0.30,
   bigRock: 0.30,
@@ -19,6 +21,12 @@ var TARGET_VERSION_POSITION_SCORES = {
   2: 0.2
 }
 
+function getRiceValue(feature) {
+  if (feature.rice && feature.rice.score != null) return feature.rice.score
+  if (feature.riceScore != null) return feature.riceScore
+  return null
+}
+
 function computeBigRockScore(feature, bigRockPriorityMap) {
   if (!bigRockPriorityMap) return 0
   var rockName = feature.bigRock
@@ -38,22 +46,35 @@ function computeBigRockScore(feature, bigRockPriorityMap) {
   return bestScore
 }
 
+function extractMajorMinor(versionStr) {
+  var parsed = parseVersionComponents(versionStr)
+  if (parsed) return parsed.version
+  var m = versionStr.match(/(\d+\.\d+)/)
+  return m ? m[1] : null
+}
+
 function computeTargetVersionScore(feature, configuredVersions) {
   if (!configuredVersions || configuredVersions.length === 0) return 0.1
   var tvs = feature.targetVersions || []
   if (tvs.length === 0) return 0
 
+  var gaVersions = []
+  var seen = {}
+  for (var ci = 0; ci < configuredVersions.length; ci++) {
+    var mm = extractMajorMinor(configuredVersions[ci])
+    if (mm && !seen[mm]) {
+      seen[mm] = true
+      gaVersions.push(mm)
+    }
+  }
+
+  if (gaVersions.length === 0) return 0.1
+
   var bestIndex = -1
   for (var i = 0; i < tvs.length; i++) {
-    var idx = configuredVersions.indexOf(tvs[i])
-    if (idx === -1) {
-      for (var j = 0; j < configuredVersions.length; j++) {
-        if (tvs[i].indexOf(configuredVersions[j]) !== -1 || configuredVersions[j].indexOf(tvs[i]) !== -1) {
-          idx = j
-          break
-        }
-      }
-    }
+    var featureMM = extractMajorMinor(tvs[i])
+    if (!featureMM) continue
+    var idx = gaVersions.indexOf(featureMM)
     if (idx !== -1 && (bestIndex === -1 || idx < bestIndex)) bestIndex = idx
   }
 
@@ -71,9 +92,8 @@ function computePriorityScores(features, opts) {
 
   var riceValues = []
   for (var i = 0; i < features.length; i++) {
-    if (features[i].rice && features[i].rice.score != null) {
-      riceValues.push(features[i].rice.score)
-    }
+    var rv = getRiceValue(features[i])
+    if (rv != null) riceValues.push(rv)
   }
 
   var riceMin = riceValues.length > 0 ? Math.min.apply(null, riceValues) : 0
@@ -95,9 +115,10 @@ function computePriorityScores(features, opts) {
   for (var j = 0; j < features.length; j++) {
     var f = features[j]
 
+    var riceRaw = getRiceValue(f)
     var riceNorm = riceMedian
-    if (f.rice && f.rice.score != null) {
-      riceNorm = riceRange > 0 ? (f.rice.score - riceMin) / riceRange : 0.5
+    if (riceRaw != null) {
+      riceNorm = riceRange > 0 ? (riceRaw - riceMin) / riceRange : 0.5
     }
 
     var bigRockNorm = computeBigRockScore(f, bigRockPriorityMap)
@@ -129,6 +150,7 @@ module.exports = {
   computePriorityScores: computePriorityScores,
   computeBigRockScore: computeBigRockScore,
   computeTargetVersionScore: computeTargetVersionScore,
+  getRiceValue: getRiceValue,
   WEIGHTS: WEIGHTS,
   PRIORITY_SCORES: PRIORITY_SCORES,
   TARGET_VERSION_POSITION_SCORES: TARGET_VERSION_POSITION_SCORES

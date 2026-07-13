@@ -4,6 +4,7 @@ var {
   computePriorityScores,
   computeBigRockScore,
   computeTargetVersionScore,
+  getRiceValue,
   WEIGHTS,
   PRIORITY_SCORES,
   TARGET_VERSION_POSITION_SCORES
@@ -34,6 +35,36 @@ describe('exported constants', function() {
     expect(TARGET_VERSION_POSITION_SCORES[0]).toBe(1.0)
     expect(TARGET_VERSION_POSITION_SCORES[1]).toBe(0.6)
     expect(TARGET_VERSION_POSITION_SCORES[2]).toBe(0.2)
+  })
+})
+
+describe('getRiceValue', function() {
+  it('extracts from rice.score object shape', function() {
+    expect(getRiceValue({ rice: { score: 500 } })).toBe(500)
+  })
+
+  it('extracts from flat riceScore', function() {
+    expect(getRiceValue({ riceScore: 300 })).toBe(300)
+  })
+
+  it('prefers rice.score over riceScore', function() {
+    expect(getRiceValue({ rice: { score: 500 }, riceScore: 300 })).toBe(500)
+  })
+
+  it('falls back to riceScore when rice.score is null', function() {
+    expect(getRiceValue({ rice: { score: null }, riceScore: 300 })).toBe(300)
+  })
+
+  it('returns null when neither exists', function() {
+    expect(getRiceValue({})).toBeNull()
+  })
+
+  it('returns null when both are null', function() {
+    expect(getRiceValue({ rice: null, riceScore: null })).toBeNull()
+  })
+
+  it('returns 0 for riceScore of 0', function() {
+    expect(getRiceValue({ riceScore: 0 })).toBe(0)
   })
 })
 
@@ -91,78 +122,85 @@ describe('computeBigRockScore', function() {
   })
 })
 
-describe('computeTargetVersionScore', function() {
-  it('returns 1.0 for position 0 (first configured version)', function() {
-    var versions = ['v1.0', 'v2.0', 'v3.0']
-    var feature = { targetVersions: ['v1.0'] }
+describe('computeTargetVersionScore (GA-to-GA)', function() {
+  it('returns 1.0 for first configured GA version', function() {
+    var versions = ['3.5', '3.6', '3.7']
+    var feature = { targetVersions: ['3.5 EA1 RHOAI RELEASE'] }
     expect(computeTargetVersionScore(feature, versions)).toBe(1.0)
   })
 
-  it('returns 0.6 for position 1', function() {
-    var versions = ['v1.0', 'v2.0', 'v3.0']
-    var feature = { targetVersions: ['v2.0'] }
+  it('returns 0.6 for second configured GA version', function() {
+    var versions = ['3.5', '3.6', '3.7']
+    var feature = { targetVersions: ['3.6 GA RHOAI RELEASE'] }
     expect(computeTargetVersionScore(feature, versions)).toBe(0.6)
   })
 
-  it('returns 0.2 for position 2', function() {
-    var versions = ['v1.0', 'v2.0', 'v3.0']
-    var feature = { targetVersions: ['v3.0'] }
+  it('returns 0.2 for third configured GA version', function() {
+    var versions = ['3.5', '3.6', '3.7']
+    var feature = { targetVersions: ['3.7'] }
     expect(computeTargetVersionScore(feature, versions)).toBe(0.2)
   })
 
   it('returns 0.1 for positions beyond 2', function() {
-    var versions = ['v1.0', 'v2.0', 'v3.0', 'v4.0']
-    var feature = { targetVersions: ['v4.0'] }
+    var versions = ['3.5', '3.6', '3.7', '3.8']
+    var feature = { targetVersions: ['3.8'] }
     expect(computeTargetVersionScore(feature, versions)).toBe(0.1)
   })
 
-  it('uses fuzzy match when exact match fails', function() {
-    var versions = ['v1.0', 'v2.0']
-    var feature = { targetVersions: ['v1.0-beta'] }
-    // 'v1.0-beta'.indexOf('v1.0') !== -1, so matches position 0
-    expect(computeTargetVersionScore(feature, versions)).toBe(1.0)
+  it('all event types within same X.Y get same score', function() {
+    var versions = ['3.5', '3.6']
+    var ea1 = { targetVersions: ['3.5 EA1 RHOAI RELEASE'] }
+    var ea2 = { targetVersions: ['3.5 EA2 RHOAI RELEASE'] }
+    var ga = { targetVersions: ['3.5 GA RHOAI RELEASE'] }
+    expect(computeTargetVersionScore(ea1, versions)).toBe(1.0)
+    expect(computeTargetVersionScore(ea2, versions)).toBe(1.0)
+    expect(computeTargetVersionScore(ga, versions)).toBe(1.0)
   })
 
-  it('uses fuzzy match when configured version is substring of target', function() {
-    var versions = ['v1.0-rc', 'v2.0']
-    var feature = { targetVersions: ['v1.0'] }
-    // 'v1.0-rc'.indexOf('v1.0') !== -1, so matches position 0
-    expect(computeTargetVersionScore(feature, versions)).toBe(1.0)
+  it('deduplicates configured versions to GA-level', function() {
+    var versions = ['3.5', '3.5', '3.6']
+    var feature = { targetVersions: ['3.6'] }
+    expect(computeTargetVersionScore(feature, versions)).toBe(0.6)
   })
 
   it('returns best position when feature has multiple target versions', function() {
-    var versions = ['v1.0', 'v2.0', 'v3.0']
-    var feature = { targetVersions: ['v3.0', 'v1.0'] }
-    // best match is position 0 (v1.0)
+    var versions = ['3.5', '3.6', '3.7']
+    var feature = { targetVersions: ['3.7', '3.5'] }
     expect(computeTargetVersionScore(feature, versions)).toBe(1.0)
   })
 
   it('returns 0.1 when no target versions match configured versions', function() {
-    var versions = ['v1.0', 'v2.0']
-    var feature = { targetVersions: ['v9.9'] }
+    var versions = ['3.5', '3.6']
+    var feature = { targetVersions: ['9.9'] }
     expect(computeTargetVersionScore(feature, versions)).toBe(0.1)
   })
 
   it('returns 0 when feature has no target versions', function() {
-    var versions = ['v1.0', 'v2.0']
+    var versions = ['3.5', '3.6']
     var feature = { targetVersions: [] }
     expect(computeTargetVersionScore(feature, versions)).toBe(0)
   })
 
   it('returns 0 when feature has undefined target versions', function() {
-    var versions = ['v1.0', 'v2.0']
+    var versions = ['3.5', '3.6']
     var feature = {}
     expect(computeTargetVersionScore(feature, versions)).toBe(0)
   })
 
   it('returns 0.1 when configuredVersions is empty', function() {
-    var feature = { targetVersions: ['v1.0'] }
+    var feature = { targetVersions: ['3.5'] }
     expect(computeTargetVersionScore(feature, [])).toBe(0.1)
   })
 
   it('returns 0.1 when configuredVersions is null', function() {
-    var feature = { targetVersions: ['v1.0'] }
+    var feature = { targetVersions: ['3.5'] }
     expect(computeTargetVersionScore(feature, null)).toBe(0.1)
+  })
+
+  it('handles simple numeric version strings', function() {
+    var versions = ['v1.0', 'v2.0']
+    var feature = { targetVersions: ['v1.0'] }
+    expect(computeTargetVersionScore(feature, versions)).toBe(1.0)
   })
 })
 
@@ -238,6 +276,26 @@ describe('computePriorityScores', function() {
       expect(results.get('T-1').breakdown.rice).toBe(50)
       expect(results.get('T-2').breakdown.rice).toBe(50)
     })
+
+    it('accepts flat riceScore (features list path)', function() {
+      var features = [
+        { key: 'HIGH', riceScore: 200, priority: 'Normal' },
+        { key: 'LOW', riceScore: 50, priority: 'Normal' }
+      ]
+      var results = computePriorityScores(features)
+      expect(results.get('HIGH').breakdown.rice).toBe(100)
+      expect(results.get('LOW').breakdown.rice).toBe(0)
+    })
+
+    it('mixes rice.score and riceScore across features', function() {
+      var features = [
+        { key: 'OBJ', rice: { score: 200 }, priority: 'Normal' },
+        { key: 'FLAT', riceScore: 50, priority: 'Normal' }
+      ]
+      var results = computePriorityScores(features)
+      expect(results.get('OBJ').breakdown.rice).toBe(100)
+      expect(results.get('FLAT').breakdown.rice).toBe(0)
+    })
   })
 
   describe('median fallback for missing RICE', function() {
@@ -307,23 +365,22 @@ describe('computePriorityScores', function() {
 
   describe('target version scoring', function() {
     it('scores feature targeting first configured version', function() {
-      var features = [{ key: 'T-1', rice: null, targetVersions: ['v1.0'], priority: 'Normal' }]
-      var opts = { configuredVersions: ['v1.0', 'v2.0'] }
+      var features = [{ key: 'T-1', rice: null, targetVersions: ['3.5 EA1 RHOAI'], priority: 'Normal' }]
+      var opts = { configuredVersions: ['3.5', '3.6'] }
       var results = computePriorityScores(features, opts)
       expect(results.get('T-1').breakdown.targetVersion).toBe(100)
     })
 
     it('scores 0 when feature has no target versions', function() {
       var features = [{ key: 'T-1', rice: null, targetVersions: [], priority: 'Normal' }]
-      var opts = { configuredVersions: ['v1.0'] }
+      var opts = { configuredVersions: ['3.5'] }
       var results = computePriorityScores(features, opts)
       expect(results.get('T-1').breakdown.targetVersion).toBe(0)
     })
 
     it('scores 10 when no configuredVersions provided', function() {
-      var features = [{ key: 'T-1', rice: null, targetVersions: ['v1.0'], priority: 'Normal' }]
+      var features = [{ key: 'T-1', rice: null, targetVersions: ['3.5'], priority: 'Normal' }]
       var results = computePriorityScores(features)
-      // configuredVersions defaults to [], so computeTargetVersionScore returns 0.1
       expect(results.get('T-1').breakdown.targetVersion).toBe(10)
     })
   })

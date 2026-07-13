@@ -256,8 +256,8 @@ function formatSyncDate(dateStr) {
                       <p class="font-mono text-[10px]">RICE (30w) + Big Rock (30w) + Target Version (25w) + Priority (15w)</p>
                     </div>
                     <div class="pt-1 border-t border-gray-100 dark:border-gray-700">
-                      <p class="font-medium text-gray-700 dark:text-gray-200 mb-0.5">Completeness multiplier:</p>
-                      <p class="font-mono text-[10px]">1 signal = 0.5x &middot; 2 = 0.7x &middot; 3 = 0.85x &middot; 4 = 1.0x</p>
+                      <p class="font-medium text-gray-700 dark:text-gray-200 mb-0.5">Scoring:</p>
+                      <p class="font-mono text-[10px]">Min-max RICE &middot; Positional Big Rock &middot; GA-to-GA version &middot; Jira priority</p>
                     </div>
                   </div>
                 </div>
@@ -287,10 +287,10 @@ function formatSyncDate(dateStr) {
 
           <!-- Rows -->
           <FeatureReadinessRow
-            v-for="(feature, i) in filteredFeatures"
+            v-for="feature in filteredFeatures"
             :key="feature.key"
             :feature="feature"
-            :index="i + 1"
+            :index="feature.rank"
             :jiraBaseUrl="jiraBaseUrl"
             @select="selectedFeature = $event"
             @navigate="navigateToFeature"

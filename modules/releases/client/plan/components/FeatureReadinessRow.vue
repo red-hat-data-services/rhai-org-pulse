@@ -34,12 +34,12 @@ function recommendationLabel(rec) {
 var priorityDisplay = computed(function() {
   var score = props.feature.effectivePriorityScore
   if (score == null) return '—'
-  return props.feature.priorityScoreFallback ? '~' + score : String(score)
+  return String(score)
 })
 
 var scoreBreakdown = computed(function() {
   var bd = props.feature.priorityScoreBreakdown
-  if (!bd || !bd.signals) return null
+  if (!bd) return null
   return bd
 })
 
@@ -68,29 +68,32 @@ var confidenceTooltip = computed(function() {
     <td class="px-3 py-2.5 whitespace-nowrap text-center">
       <span class="relative group inline-flex items-center">
         <span
-          class="text-xs font-semibold tabular-nums cursor-help"
-          :class="feature.priorityScoreFallback
-            ? 'text-amber-600 dark:text-amber-400'
-            : 'text-gray-800 dark:text-gray-200'"
+          class="text-xs font-semibold tabular-nums cursor-help text-gray-800 dark:text-gray-200"
         >{{ priorityDisplay }}</span>
         <div
           v-if="scoreBreakdown"
           class="absolute z-50 top-full mt-1 left-0 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 text-xs text-left font-normal hidden group-hover:block"
         >
           <p class="font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
-            Score: {{ scoreBreakdown.score }} / 100
+            Score: {{ feature.effectivePriorityScore }} / 100
           </p>
           <div class="space-y-1">
-            <div v-for="signal in scoreBreakdown.signals" :key="signal.name" class="flex items-center justify-between">
-              <span class="text-gray-600 dark:text-gray-300">{{ signal.name }}</span>
-              <span class="text-gray-400 dark:text-gray-500 tabular-nums">{{ Math.round(signal.value * 100) }}% &times; {{ signal.weight }}w</span>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-600 dark:text-gray-300">RICE</span>
+              <span class="text-gray-400 dark:text-gray-500 tabular-nums">{{ scoreBreakdown.rice }}% &times; 30w</span>
             </div>
-          </div>
-          <div v-if="scoreBreakdown.completenessMultiplier < 1" class="mt-1.5 pt-1.5 border-t border-gray-100 dark:border-gray-700 text-gray-400 dark:text-gray-500">
-            Raw {{ scoreBreakdown.rawScore }} &times; {{ scoreBreakdown.completenessMultiplier }} ({{ scoreBreakdown.signalCount }}/{{ scoreBreakdown.maxSignals }} signals)
-          </div>
-          <div v-if="scoreBreakdown.missing && scoreBreakdown.missing.length" class="mt-1 text-gray-400 dark:text-gray-500">
-            Missing: {{ scoreBreakdown.missing.join(', ') }}
+            <div class="flex items-center justify-between">
+              <span class="text-gray-600 dark:text-gray-300">Big Rock</span>
+              <span class="text-gray-400 dark:text-gray-500 tabular-nums">{{ scoreBreakdown.bigRock }}% &times; 30w</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-600 dark:text-gray-300">Target Version</span>
+              <span class="text-gray-400 dark:text-gray-500 tabular-nums">{{ scoreBreakdown.targetVersion }}% &times; 25w</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-600 dark:text-gray-300">Priority</span>
+              <span class="text-gray-400 dark:text-gray-500 tabular-nums">{{ scoreBreakdown.priority }}% &times; 15w</span>
+            </div>
           </div>
         </div>
       </span>

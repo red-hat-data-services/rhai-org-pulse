@@ -136,7 +136,7 @@ const priorityDisplay = computed(() => {
   if (!props.feature) return '—'
   const score = props.feature.effectivePriorityScore
   if (score == null) return '—'
-  return props.feature.priorityScoreFallback ? `~${score}` : String(score)
+  return String(score)
 })
 
 const hasBlockers = computed(() =>
@@ -171,7 +171,7 @@ const breakdownExpanded = ref(false)
 
 const scoreBreakdown = computed(() => {
   const bd = props.feature?.priorityScoreBreakdown
-  if (!bd || !bd.signals) return null
+  if (!bd) return null
   return bd
 })
 
@@ -283,8 +283,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Priority Score</p>
             <div class="flex items-center gap-3">
               <span
-                class="text-3xl font-extrabold leading-none tabular-nums"
-                :class="feature.priorityScoreFallback ? 'text-amber-500 dark:text-amber-400' : 'text-gray-900 dark:text-gray-100'"
+                class="text-3xl font-extrabold leading-none tabular-nums text-gray-900 dark:text-gray-100"
               >{{ priorityDisplay }}</span>
               <div class="flex-1">
                 <div class="h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
@@ -294,9 +293,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
                   />
                 </div>
                 <p class="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
-                  {{ feature.priorityScoreFallback
-                    ? 'Estimated — no pipeline score yet (tier + priority)'
-                    : 'From prioritization pipeline' }}
+                  RICE 30% + Big Rock 30% + Target Version 25% + Priority 15%
                 </p>
               </div>
             </div>
@@ -309,13 +306,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
               class="w-full flex items-center justify-between text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
               @click="breakdownExpanded = !breakdownExpanded"
             >
-              <span class="flex items-center gap-2">
-                Score Breakdown
-                <span
-                  v-if="scoreBreakdown.completenessMultiplier < 1"
-                  class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
-                >{{ scoreBreakdown.signalCount }}/{{ scoreBreakdown.maxSignals }} signals</span>
-              </span>
+              <span>Score Breakdown</span>
               <svg
                 class="w-3.5 h-3.5 transition-transform"
                 :class="breakdownExpanded ? 'rotate-180' : ''"
@@ -325,26 +316,41 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
               </svg>
             </button>
             <div v-if="breakdownExpanded" class="space-y-3">
-              <div v-for="signal in scoreBreakdown.signals" :key="signal.name" class="space-y-1">
+              <div class="space-y-1">
                 <div class="flex items-center justify-between text-xs">
-                  <span class="text-gray-700 dark:text-gray-300">{{ signal.name }}</span>
-                  <span class="text-gray-400 dark:text-gray-500 tabular-nums">{{ Math.round(signal.value * 100) }}% &times; {{ signal.weight }}w</span>
+                  <span class="text-gray-700 dark:text-gray-300">RICE</span>
+                  <span class="text-gray-400 dark:text-gray-500 tabular-nums">{{ scoreBreakdown.rice }}% &times; 30w</span>
                 </div>
                 <div class="h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
-                  <div
-                    class="h-full rounded-full bg-gradient-to-r from-primary-500 to-purple-500 transition-all"
-                    :style="{ width: Math.round(signal.value * 100) + '%' }"
-                  />
+                  <div class="h-full rounded-full bg-gradient-to-r from-primary-500 to-purple-500 transition-all" :style="{ width: scoreBreakdown.rice + '%' }" />
                 </div>
               </div>
-              <div v-if="scoreBreakdown.completenessMultiplier < 1" class="pt-2 border-t border-gray-100 dark:border-gray-800">
-                <p class="text-xs text-amber-600 dark:text-amber-400">
-                  Raw score {{ scoreBreakdown.rawScore }} &times; {{ scoreBreakdown.completenessMultiplier }} completeness
-                  = {{ scoreBreakdown.score }}
-                </p>
+              <div class="space-y-1">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-gray-700 dark:text-gray-300">Big Rock</span>
+                  <span class="text-gray-400 dark:text-gray-500 tabular-nums">{{ scoreBreakdown.bigRock }}% &times; 30w</span>
+                </div>
+                <div class="h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                  <div class="h-full rounded-full bg-gradient-to-r from-primary-500 to-purple-500 transition-all" :style="{ width: scoreBreakdown.bigRock + '%' }" />
+                </div>
               </div>
-              <div v-if="scoreBreakdown.missing && scoreBreakdown.missing.length > 0" class="text-xs text-gray-400 dark:text-gray-500">
-                Missing: {{ scoreBreakdown.missing.join(', ') }}
+              <div class="space-y-1">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-gray-700 dark:text-gray-300">Target Version</span>
+                  <span class="text-gray-400 dark:text-gray-500 tabular-nums">{{ scoreBreakdown.targetVersion }}% &times; 25w</span>
+                </div>
+                <div class="h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                  <div class="h-full rounded-full bg-gradient-to-r from-primary-500 to-purple-500 transition-all" :style="{ width: scoreBreakdown.targetVersion + '%' }" />
+                </div>
+              </div>
+              <div class="space-y-1">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-gray-700 dark:text-gray-300">Priority</span>
+                  <span class="text-gray-400 dark:text-gray-500 tabular-nums">{{ scoreBreakdown.priority }}% &times; 15w</span>
+                </div>
+                <div class="h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                  <div class="h-full rounded-full bg-gradient-to-r from-primary-500 to-purple-500 transition-all" :style="{ width: scoreBreakdown.priority + '%' }" />
+                </div>
               </div>
             </div>
           </section>

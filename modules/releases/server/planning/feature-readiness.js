@@ -1,73 +1,11 @@
-var { getConfiguredReleases } = require('./config')
+var { getConfiguredReleases, loadBigRocks } = require('./config')
 var { loadIndex } = require('./cache-reader')
 var { CLOSED_STATUSES, EARLY_STATUSES } = require('./constants')
 var { deriveHumanReviewStatus: sharedDeriveStatus } = require('../execution/ai-review-fields')
 var { computeFPDoRReadiness, extractRubricData } = require('./fpdor')
-var { computeBigRockScore, computeTargetVersionScore: computeTVScore, PRIORITY_SCORES } = require('./health/priority-scorer')
-
-var RICE_MAX = 16900
+var { computePriorityScores } = require('./health/priority-scorer')
 
 var BLOCKING_HYGIENE_RULES = ['missing-assignee', 'open-children-on-closed']
-
-function computeBigRockMembershipScore(feature, bigRockPriorityMap) {
-  return computeBigRockScore(feature, bigRockPriorityMap)
-}
-
-function computeTargetVersionScore(feature, configuredVersions) {
-  return computeTVScore(feature, configuredVersions)
-}
-
-var COMPLETENESS_MULTIPLIERS = [0, 0.5, 0.7, 0.85, 1.0]
-var MAX_SIGNALS = 4
-
-function computeBestAvailableScore(feature, configuredVersions, bigRockPriorityMap) {
-  var signals = []
-  var missing = []
-
-  if (feature.riceScore != null) {
-    signals.push({ name: "RICE Score", value: feature.riceScore / RICE_MAX, weight: 30, raw: feature.riceScore })
-  } else {
-    missing.push("RICE Score")
-  }
-
-  var brScore = computeBigRockMembershipScore(feature, bigRockPriorityMap)
-  if (feature.bigRock) {
-    signals.push({ name: "Big Rock", value: brScore, weight: 30, raw: feature.bigRock })
-  } else {
-    missing.push("Big Rock")
-  }
-
-  var tvScore = computeTargetVersionScore(feature, configuredVersions)
-  if ((feature.targetVersions || []).length > 0) {
-    signals.push({ name: "Target Version", value: tvScore, weight: 25, raw: (feature.targetVersions || []).join(", ") })
-  } else {
-    missing.push("Target Version")
-  }
-
-  signals.push({ name: "Priority", value: PRIORITY_SCORES[feature.priority] || 0.4, weight: 15, raw: feature.priority || "Normal" })
-
-  var totalWeight = 0
-  var weightedSum = 0
-  for (var i = 0; i < signals.length; i++) {
-    totalWeight += signals[i].weight
-    weightedSum += signals[i].value * signals[i].weight
-  }
-
-  var rawScore = Math.round((weightedSum / totalWeight) * 100)
-  var signalCount = signals.length
-  var completenessMultiplier = COMPLETENESS_MULTIPLIERS[Math.min(signalCount, MAX_SIGNALS)]
-  var score = Math.round(rawScore * completenessMultiplier)
-
-  return {
-    score: score,
-    rawScore: rawScore,
-    signals: signals,
-    signalCount: signalCount,
-    maxSignals: MAX_SIGNALS,
-    completenessMultiplier: completenessMultiplier,
-    missing: missing
-  }
-}
 
 function computeBlockers(feature, productPath) {
   var blockingDimensions = []
@@ -549,14 +487,37 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
   var allFixVersions = new Set()
   var allTeams = new Set()
 
+  var bigRockPriorityMap = new Map()
+  for (var bvi = 0; bvi < cacheData.configuredVersions.length; bvi++) {
+    var bigRocks = loadBigRocks(readFromStorage, cacheData.configuredVersions[bvi])
+    for (var bri = 0; bri < bigRocks.length; bri++) {
+      var rockName = bigRocks[bri].name
+      if (!rockName) continue
+      var rockPri = bigRocks[bri].priority || (bri + 1)
+      var existing = bigRockPriorityMap.get(rockName)
+      if (existing == null || rockPri < existing) {
+        bigRockPriorityMap.set(rockName, rockPri)
+      }
+    }
+  }
+
+  var allMerged = []
   canonicalKeys.forEach(function(key) {
     var merged = mergeFeatureData(key, jiraFeatures, execData.aiReviewMap, cacheData.candidateIndex, cacheData.healthIndex, cacheData.hygieneIndex, cacheData.teamIndex, execMap)
-
     if (merged.status && CLOSED_STATUSES.indexOf(merged.status) !== -1) return
+    allMerged.push(merged)
+  })
 
-    var priorityScoreFallback = merged.priorityScore === null
-    var computedBreakdown = computeBestAvailableScore(merged, cacheData.configuredVersions, null)
-    var effectivePriorityScore = priorityScoreFallback ? computedBreakdown.score : merged.priorityScore
+  var batchScores = computePriorityScores(allMerged, {
+    bigRockPriorityMap: bigRockPriorityMap,
+    configuredVersions: cacheData.configuredVersions
+  })
+
+  for (var mi = 0; mi < allMerged.length; mi++) {
+    var merged = allMerged[mi]
+    var scored = batchScores.get(merged.key)
+    var effectivePriorityScore = scored ? scored.score : 0
+    var priorityBreakdown = scored ? scored.breakdown : null
 
     var blockerResult = computeBlockers(merged, merged.dataSource)
 
@@ -590,9 +551,8 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
       rockPriority: merged.rockPriority,
       targetVersions: merged.targetVersions,
       fixVersion: merged.fixVersion,
-      priorityScore: merged.priorityScore,
-      priorityScoreBreakdown: computedBreakdown,
-      priorityScoreFallback: priorityScoreFallback,
+      priorityScore: effectivePriorityScore,
+      priorityScoreBreakdown: priorityBreakdown,
       effectivePriorityScore: effectivePriorityScore,
       blockingDimensions: blockerResult.blockingDimensions,
       actionRequired: blockerResult.actionRequired,
@@ -611,7 +571,7 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
     }
 
     collectFilterMeta(feature, allComponents, allPriorities, allBigRocks, allTargetVersions, allFixVersions, allTeams)
-  })
+  }
 
   function sortFeatures(a, b) {
     if (b.effectivePriorityScore !== a.effectivePriorityScore) {
@@ -622,6 +582,11 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
 
   pendingReview.sort(sortFeatures)
   ready.sort(sortFeatures)
+
+  var allSorted = pendingReview.concat(ready).slice().sort(sortFeatures)
+  for (var ri = 0; ri < allSorted.length; ri++) {
+    allSorted[ri].rank = ri + 1
+  }
 
   var uniqueComponents = Array.from(new Set(allComponents)).sort()
 
@@ -646,5 +611,5 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
   return { pendingReview: pendingReview, ready: ready, filterMeta: filterMeta, meta: meta }
 }
 
-module.exports = { buildFeatureReadiness: buildFeatureReadiness, computeBlockers: computeBlockers, computeBestAvailableScore: computeBestAvailableScore, computeReadiness: computeReadiness, computeBigRockMembershipScore: computeBigRockMembershipScore, computeTargetVersionScore: computeTargetVersionScore, hasBlockingViolations: hasBlockingViolations, computeHygieneStatus: computeHygieneStatus, computeConfidence: computeConfidence, collectFilterMeta: collectFilterMeta, deriveHumanReviewStatusFromLabels: deriveHumanReviewStatusFromLabels, buildCanonicalKeySet: buildCanonicalKeySet, mergeFeatureData: mergeFeatureData, BLOCKING_HYGIENE_RULES: BLOCKING_HYGIENE_RULES, COMPLETENESS_MULTIPLIERS: COMPLETENESS_MULTIPLIERS, MAX_SIGNALS: MAX_SIGNALS }
+module.exports = { buildFeatureReadiness: buildFeatureReadiness, computeBlockers: computeBlockers, computeReadiness: computeReadiness, hasBlockingViolations: hasBlockingViolations, computeHygieneStatus: computeHygieneStatus, computeConfidence: computeConfidence, collectFilterMeta: collectFilterMeta, deriveHumanReviewStatusFromLabels: deriveHumanReviewStatusFromLabels, buildCanonicalKeySet: buildCanonicalKeySet, mergeFeatureData: mergeFeatureData, BLOCKING_HYGIENE_RULES: BLOCKING_HYGIENE_RULES }
 

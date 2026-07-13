@@ -4,16 +4,12 @@ const {
   computeReadiness,
   buildFeatureReadiness,
   computeBlockers,
-  computeBestAvailableScore,
-  computeBigRockMembershipScore,
-  computeTargetVersionScore,
   hasBlockingViolations,
   computeHygieneStatus,
   computeConfidence,
   collectFilterMeta,
   buildCanonicalKeySet,
-  mergeFeatureData,
-  MAX_SIGNALS
+  mergeFeatureData
 } = require('../feature-readiness')
 
 // ---------------------------------------------------------------------------
@@ -168,98 +164,6 @@ function makeReadFromStorage(overrides) {
 
 var CONFIG_3_6 = { releases: { '3.6': { release: '3.6' } } }
 
-// ---------------------------------------------------------------------------
-// computeBigRockMembershipScore
-// ---------------------------------------------------------------------------
-
-describe('computeBigRockMembershipScore', function() {
-  it('position 1 returns 1.0', function() {
-    var map = new Map([['Rock A', 1]])
-    expect(computeBigRockMembershipScore({ bigRock: 'Rock A' }, map)).toBe(1.0)
-  })
-
-  it('position 4 returns 0.7', function() {
-    var map = new Map([['Rock A', 4]])
-    expect(computeBigRockMembershipScore({ bigRock: 'Rock A' }, map)).toBe(0.7)
-  })
-
-  it('position 8 returns 0.3 (floor)', function() {
-    var map = new Map([['Rock A', 8]])
-    expect(computeBigRockMembershipScore({ bigRock: 'Rock A' }, map)).toBe(0.3)
-  })
-
-  it('position 10 clamps to 0.3 (floor)', function() {
-    var map = new Map([['Rock A', 10]])
-    expect(computeBigRockMembershipScore({ bigRock: 'Rock A' }, map)).toBe(0.3)
-  })
-
-  it('no bigRock name returns 0', function() {
-    var map = new Map([['Rock A', 1]])
-    expect(computeBigRockMembershipScore({}, map)).toBe(0)
-    expect(computeBigRockMembershipScore({ bigRock: null }, map)).toBe(0)
-  })
-
-  it('null map returns 0', function() {
-    expect(computeBigRockMembershipScore({ bigRock: 'Rock A' }, null)).toBe(0)
-  })
-
-  it('name not in map returns 0', function() {
-    var map = new Map([['Rock A', 1]])
-    expect(computeBigRockMembershipScore({ bigRock: 'Rock B' }, map)).toBe(0)
-  })
-
-  it('multiple rocks (comma separated) takes best score', function() {
-    var map = new Map([['Rock A', 5], ['Rock B', 1]])
-    expect(computeBigRockMembershipScore({ bigRock: 'Rock A, Rock B' }, map)).toBe(1.0)
-  })
-})
-
-// ---------------------------------------------------------------------------
-// computeTargetVersionScore
-// ---------------------------------------------------------------------------
-
-describe('computeTargetVersionScore', function() {
-  it('returns 0.1 when no configured versions', function() {
-    expect(computeTargetVersionScore({ targetVersions: ['3.6'] }, [])).toBe(0.1)
-    expect(computeTargetVersionScore({ targetVersions: ['3.6'] })).toBe(0.1)
-  })
-
-  it('returns 0.0 when feature has no target versions', function() {
-    expect(computeTargetVersionScore({ targetVersions: [] }, ['3.5', '3.6'])).toBe(0.0)
-  })
-
-  it('returns 1.0 when targeting the first configured version (position 0)', function() {
-    expect(computeTargetVersionScore({ targetVersions: ['3.5'] }, ['3.5', '3.6'])).toBe(1.0)
-  })
-
-  it('returns 0.6 for position 1', function() {
-    var score = computeTargetVersionScore({ targetVersions: ['3.6'] }, ['3.5', '3.6'])
-    expect(score).toBe(0.6)
-  })
-
-  it('returns 0.2 for position 2', function() {
-    var score = computeTargetVersionScore({ targetVersions: ['3.7'] }, ['3.5', '3.6', '3.7'])
-    expect(score).toBe(0.2)
-  })
-
-  it('returns 1.0 when only one configured version and feature targets it', function() {
-    expect(computeTargetVersionScore({ targetVersions: ['3.6'] }, ['3.6'])).toBe(1.0)
-  })
-
-  it('returns 0.1 when target version not in configured list', function() {
-    expect(computeTargetVersionScore({ targetVersions: ['4.0'] }, ['3.5', '3.6'])).toBe(0.1)
-  })
-
-  it('fuzzy matches version strings (e.g. rhoai-3.6 matches 3.6)', function() {
-    var score = computeTargetVersionScore({ targetVersions: ['rhoai-3.6'] }, ['3.6'])
-    expect(score).toBe(1.0)
-  })
-
-  it('uses best (earliest) match when multiple target versions', function() {
-    var score = computeTargetVersionScore({ targetVersions: ['3.6', '3.5'] }, ['3.5', '3.6'])
-    expect(score).toBe(1.0)
-  })
-})
 
 // ---------------------------------------------------------------------------
 // hasBlockingViolations
@@ -321,170 +225,6 @@ describe('computeConfidence', function() {
   })
 })
 
-// ---------------------------------------------------------------------------
-// computeBestAvailableScore
-//
-// New formula: RICE Score (30%), Big Rock (30%), Target Version (25%),
-// Priority (15%). Rubric and Tier signals removed.
-// ---------------------------------------------------------------------------
-
-describe('computeBestAvailableScore', function() {
-  it('returns an object with score, rawScore, signals, and breakdown fields', function() {
-    var result = computeBestAvailableScore({ priority: 'Normal', riceScore: 100, bigRock: 'Rock A', targetVersions: ['3.6'] }, ['3.6'], new Map([['Rock A', 1]]))
-    expect(result).toHaveProperty('score')
-    expect(result).toHaveProperty('rawScore')
-    expect(result).toHaveProperty('signals')
-    expect(result).toHaveProperty('signalCount')
-    expect(result).toHaveProperty('maxSignals', MAX_SIGNALS)
-    expect(result).toHaveProperty('completenessMultiplier')
-    expect(result).toHaveProperty('missing')
-    expect(Array.isArray(result.signals)).toBe(true)
-    expect(Array.isArray(result.missing)).toBe(true)
-  })
-
-  describe('signals: priority only (no riceScore, no bigRock, no target version)', function() {
-    it('Blocker priority only = 1 signal, penalized by completeness', function() {
-      var result = computeBestAvailableScore({ priority: 'Blocker' })
-      expect(result.rawScore).toBe(100)
-      expect(result.signalCount).toBe(1)
-      expect(result.completenessMultiplier).toBe(0.5)
-      expect(result.score).toBe(50)
-    })
-
-    it('Normal priority only = 1 signal', function() {
-      var result = computeBestAvailableScore({ priority: 'Normal' })
-      expect(result.rawScore).toBe(40)
-      expect(result.signalCount).toBe(1)
-      expect(result.completenessMultiplier).toBe(0.5)
-      expect(result.score).toBe(20)
-    })
-
-    it('missing priority uses 0.4 fallback', function() {
-      var result = computeBestAvailableScore({})
-      expect(result.rawScore).toBe(40)
-      expect(result.signalCount).toBe(1)
-      expect(result.score).toBe(20)
-    })
-  })
-
-  describe('signals: RICE + priority (no bigRock, no target version)', function() {
-    it('RICE present adds signal, 2 signals', function() {
-      var result = computeBestAvailableScore({ priority: 'Blocker', riceScore: 16900 })
-      expect(result.signalCount).toBe(2)
-      expect(result.completenessMultiplier).toBe(0.7)
-      expect(result.rawScore).toBe(100)
-      expect(result.score).toBe(70)
-    })
-  })
-
-  describe('signals: Big Rock + priority (no riceScore, no target version)', function() {
-    it('Big Rock position 1 + Blocker = 2 signals', function() {
-      var map = new Map([['Rock A', 1]])
-      var result = computeBestAvailableScore({ priority: 'Blocker', bigRock: 'Rock A' }, [], map)
-      expect(result.signalCount).toBe(2)
-      expect(result.completenessMultiplier).toBe(0.7)
-      expect(result.rawScore).toBe(100)
-      expect(result.score).toBe(70)
-    })
-
-    it('Big Rock position 8 scores lower than position 1', function() {
-      var map = new Map([['Rock A', 1], ['Rock B', 8]])
-      var rock1 = computeBestAvailableScore({ priority: 'Normal', bigRock: 'Rock A' }, [], map)
-      var rock8 = computeBestAvailableScore({ priority: 'Normal', bigRock: 'Rock B' }, [], map)
-      expect(rock1.score).toBeGreaterThan(rock8.score)
-    })
-  })
-
-  describe('signals with target version', function() {
-    it('all 4 signals: no completeness penalty', function() {
-      var map = new Map([['Rock A', 1]])
-      var result = computeBestAvailableScore(
-        { priority: 'Blocker', riceScore: 16900, bigRock: 'Rock A', targetVersions: ['3.6'] },
-        ['3.6'],
-        map
-      )
-      expect(result.signalCount).toBe(4)
-      expect(result.completenessMultiplier).toBe(1.0)
-      expect(result.rawScore).toBe(result.score)
-      expect(result.score).toBe(100)
-    })
-
-    it('later target version lowers score', function() {
-      var map = new Map([['Rock A', 1]])
-      var first = computeBestAvailableScore(
-        { priority: 'Normal', riceScore: 100, bigRock: 'Rock A', targetVersions: ['3.5'] },
-        ['3.5', '3.6', '3.7'],
-        map
-      )
-      var last = computeBestAvailableScore(
-        { priority: 'Normal', riceScore: 100, bigRock: 'Rock A', targetVersions: ['3.7'] },
-        ['3.5', '3.6', '3.7'],
-        map
-      )
-      expect(first.score).toBeGreaterThan(last.score)
-    })
-
-    it('no target version gives lowest tv score', function() {
-      var map = new Map([['Rock A', 1]])
-      var withTv = computeBestAvailableScore(
-        { priority: 'Normal', riceScore: 100, bigRock: 'Rock A', targetVersions: ['3.6'] },
-        ['3.6'],
-        map
-      )
-      var noTv = computeBestAvailableScore(
-        { priority: 'Normal', riceScore: 100, bigRock: 'Rock A', targetVersions: [] },
-        ['3.6'],
-        map
-      )
-      expect(withTv.score).toBeGreaterThan(noTv.score)
-    })
-  })
-
-  describe('completeness penalty', function() {
-    it('4 signals get no penalty (1.0x)', function() {
-      var map = new Map([['Rock A', 2]])
-      var result = computeBestAvailableScore(
-        { priority: 'Major', riceScore: 100, bigRock: 'Rock A', targetVersions: ['3.6'] },
-        ['3.6'],
-        map
-      )
-      expect(result.signalCount).toBe(4)
-      expect(result.completenessMultiplier).toBe(1.0)
-      expect(result.score).toBe(result.rawScore)
-    })
-
-    it('fewer signals produce lower scores for same raw inputs', function() {
-      var map = new Map([['Rock A', 2]])
-      var four = computeBestAvailableScore(
-        { priority: 'Major', riceScore: 100, bigRock: 'Rock A', targetVersions: ['3.6'] },
-        ['3.6'],
-        map
-      )
-      var one = computeBestAvailableScore(
-        { priority: 'Major' }
-      )
-      expect(four.score).toBeGreaterThan(one.score)
-    })
-
-    it('missing signals are listed in the missing array', function() {
-      var result = computeBestAvailableScore({ priority: 'Major' })
-      expect(result.missing).toContain('RICE Score')
-      expect(result.missing).toContain('Big Rock')
-      expect(result.missing).toContain('Target Version')
-    })
-
-    it('signal objects have name, value, weight, and raw', function() {
-      var map = new Map([['Rock A', 1]])
-      var result = computeBestAvailableScore({ priority: 'Major', riceScore: 100, bigRock: 'Rock A' }, [], map)
-      for (var i = 0; i < result.signals.length; i++) {
-        expect(result.signals[i]).toHaveProperty('name')
-        expect(result.signals[i]).toHaveProperty('value')
-        expect(result.signals[i]).toHaveProperty('weight')
-        expect(result.signals[i]).toHaveProperty('raw')
-      }
-    })
-  })
-})
 
 // ---------------------------------------------------------------------------
 // computeBlockers
@@ -1124,12 +864,12 @@ describe('buildFeatureReadiness', function() {
   describe('health cache cross-reference', function() {
     var healthKey = 'releases/planning/health-cache-3.6-all.json'
 
-    it('feature in health cache gets priorityScore from cache, priorityScoreFallback=false', function() {
+    it('feature gets batch-computed priorityScore', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
       var healthCache = {
-        features: [{ key: 'RHAISTRAT-1', priorityScore: 87, priorityBreakdown: { rice: 50, bigRock: 100 }, deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' }]
+        features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' }]
       }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
@@ -1138,40 +878,16 @@ describe('buildFeatureReadiness', function() {
       })
       var result = buildFeatureReadiness(readFromStorage)
       var f = result.ready[0]
-      expect(f.priorityScore).toBe(87)
-      expect(f.effectivePriorityScore).toBe(87)
-      expect(f.priorityScoreFallback).toBe(false)
-    })
-
-    it('feature NOT in health cache gets best-available score, priorityScoreFallback=true', function() {
-      var store = makeFeaturesStore({
-        'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
-      })
-      var candidateCache = {
-        data: { features: [{ issueKey: 'RHAISTRAT-1', tier: null, bigRock: null }] }
-      }
-      var healthCache = {
-        features: [{ key: 'RHAISTRAT-999', priorityScore: 50 }]
-      }
-      var readFromStorage = makeReadFromStorage({
-        ...convertToUnifiedFormat(store),
-        'releases/planning/config.json': CONFIG_3_6,
-        'releases/planning/candidates-cache-3.6.json': candidateCache,
-        [healthKey]: healthCache
-      })
-      var result = buildFeatureReadiness(readFromStorage)
-      var f = result.pendingReview.concat(result.ready).find(function(feat) { return feat.key === 'RHAISTRAT-1' })
-      expect(f.priorityScore).toBeNull()
-      expect(f.priorityScoreFallback).toBe(true)
+      expect(typeof f.effectivePriorityScore).toBe('number')
       expect(f.effectivePriorityScore).toBeGreaterThan(0)
     })
 
-    it('priorityScoreBreakdown always has signals array for popover rendering', function() {
+    it('priorityScoreBreakdown has rice, bigRock, targetVersion, priority fields', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
       var healthCache = {
-        features: [{ key: 'RHAISTRAT-1', priorityScore: 70, priorityBreakdown: { rice: 60 }, deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' }]
+        features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' }]
       }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
@@ -1180,10 +896,128 @@ describe('buildFeatureReadiness', function() {
       })
       var result = buildFeatureReadiness(readFromStorage)
       var bd = result.ready[0].priorityScoreBreakdown
-      expect(bd.signals).toBeDefined()
-      expect(bd.signals.length).toBeGreaterThan(0)
-      expect(bd.score).toBeGreaterThan(0)
-      expect(result.ready[0].effectivePriorityScore).toBe(70)
+      expect(typeof bd.rice).toBe('number')
+      expect(typeof bd.bigRock).toBe('number')
+      expect(typeof bd.targetVersion).toBe('number')
+      expect(typeof bd.priority).toBe('number')
+    })
+  })
+
+  describe('batch scoring', function() {
+    it('all features get batch-computed scores from computePriorityScores', function() {
+      var store = makeFeaturesStore({
+        'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved', priority: 'Blocker', riceScore: 200 }) },
+        'RHAISTRAT-2': { latest: makeLatest({ key: 'RHAISTRAT-2', humanReviewStatus: 'approved', priority: 'Minor', riceScore: 10 }) }
+      })
+      var healthCache = {
+        features: [
+          { key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' },
+          { key: 'RHAISTRAT-2', deliveryOwner: 'Bob', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' }
+        ]
+      }
+      var readFromStorage = makeReadFromStorage({
+        ...convertToUnifiedFormat(store),
+        'releases/planning/config.json': CONFIG_3_6,
+        'releases/planning/health-cache-3.6-all.json': healthCache
+      })
+      var result = buildFeatureReadiness(readFromStorage)
+      var all = result.pendingReview.concat(result.ready)
+      var f1 = all.find(function(f) { return f.key === 'RHAISTRAT-1' })
+      var f2 = all.find(function(f) { return f.key === 'RHAISTRAT-2' })
+      expect(f1.effectivePriorityScore).toBeGreaterThan(f2.effectivePriorityScore)
+      expect(f1.priorityScoreBreakdown).toBeDefined()
+      expect(f2.priorityScoreBreakdown).toBeDefined()
+    })
+
+    it('RICE scores are min-max normalized across the batch', function() {
+      var store = makeFeaturesStore({
+        'RHAISTRAT-HIGH': { latest: makeLatest({ humanReviewStatus: 'approved', riceScore: 1000 }) },
+        'RHAISTRAT-LOW': { latest: makeLatest({ key: 'RHAISTRAT-LOW', humanReviewStatus: 'approved', riceScore: 10 }) }
+      })
+      var readFromStorage = makeReadFromStorage({
+        ...convertToUnifiedFormat(store),
+        'releases/planning/config.json': CONFIG_3_6
+      })
+      var result = buildFeatureReadiness(readFromStorage)
+      var all = result.pendingReview.concat(result.ready)
+      var high = all.find(function(f) { return f.key === 'RHAISTRAT-HIGH' })
+      var low = all.find(function(f) { return f.key === 'RHAISTRAT-LOW' })
+      expect(high.priorityScoreBreakdown.rice).toBe(100)
+      expect(low.priorityScoreBreakdown.rice).toBe(0)
+    })
+  })
+
+  describe('stable rank', function() {
+    it('assigns rank numbers based on global sort position', function() {
+      var store = makeFeaturesStore({
+        'RHAISTRAT-A': { latest: makeLatest({ key: 'RHAISTRAT-A', humanReviewStatus: 'approved', priority: 'Blocker' }) },
+        'RHAISTRAT-B': { latest: makeLatest({ key: 'RHAISTRAT-B', humanReviewStatus: null, priority: 'Minor' }) },
+        'RHAISTRAT-C': { latest: makeLatest({ key: 'RHAISTRAT-C', humanReviewStatus: null, priority: 'Normal' }) }
+      })
+      var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
+      var result = buildFeatureReadiness(readFromStorage)
+      var all = result.pendingReview.concat(result.ready)
+      for (var i = 0; i < all.length; i++) {
+        expect(typeof all[i].rank).toBe('number')
+        expect(all[i].rank).toBeGreaterThanOrEqual(1)
+      }
+    })
+
+    it('rank values are unique and contiguous starting from 1', function() {
+      var store = makeFeaturesStore({
+        'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved', priority: 'Blocker' }) },
+        'RHAISTRAT-2': { latest: makeLatest({ key: 'RHAISTRAT-2', humanReviewStatus: null, priority: 'Normal' }) },
+        'RHAISTRAT-3': { latest: makeLatest({ key: 'RHAISTRAT-3', humanReviewStatus: null, priority: 'Minor' }) }
+      })
+      var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
+      var result = buildFeatureReadiness(readFromStorage)
+      var all = result.pendingReview.concat(result.ready)
+      var ranks = all.map(function(f) { return f.rank }).sort(function(a, b) { return a - b })
+      for (var i = 0; i < ranks.length; i++) {
+        expect(ranks[i]).toBe(i + 1)
+      }
+    })
+
+    it('highest-scored feature gets rank 1', function() {
+      var store = makeFeaturesStore({
+        'RHAISTRAT-LOW': { latest: makeLatest({ key: 'RHAISTRAT-LOW', humanReviewStatus: null, priority: 'Minor', riceScore: 10 }) },
+        'RHAISTRAT-HIGH': { latest: makeLatest({ key: 'RHAISTRAT-HIGH', humanReviewStatus: null, priority: 'Blocker', riceScore: 1000 }) }
+      })
+      var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
+      var result = buildFeatureReadiness(readFromStorage)
+      var all = result.pendingReview.concat(result.ready)
+      var high = all.find(function(f) { return f.key === 'RHAISTRAT-HIGH' })
+      var low = all.find(function(f) { return f.key === 'RHAISTRAT-LOW' })
+      expect(high.rank).toBe(1)
+      expect(low.rank).toBe(2)
+    })
+  })
+
+  describe('cross-version bigRockPriorityMap', function() {
+    it('uses best (lowest) priority number when a rock appears in multiple releases', function() {
+      var store = makeFeaturesStore({
+        'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: null }) }
+      })
+      var config = { releases: { '3.5': { release: '3.5' }, '3.6': { release: '3.6' } } }
+      var candidateCache35 = {
+        data: { features: [{ issueKey: 'RHAISTRAT-1', bigRock: 'AI Efficiency', tier: 1 }] }
+      }
+      var candidateCache36 = {
+        data: { features: [] }
+      }
+      var readFromStorage = makeReadFromStorage({
+        ...convertToUnifiedFormat(store),
+        'releases/planning/config.json': config,
+        'releases/planning/candidates-cache-3.5.json': candidateCache35,
+        'releases/planning/candidates-cache-3.6.json': candidateCache36,
+        'releases/planning/releases/3.5.json': { release: '3.5', bigRocks: [{ name: 'AI Efficiency', priority: 1 }] },
+        'releases/planning/releases/3.6.json': { release: '3.6', bigRocks: [{ name: 'AI Efficiency', priority: 3 }] }
+      })
+      var result = buildFeatureReadiness(readFromStorage)
+      var all = result.pendingReview.concat(result.ready)
+      var feat = all.find(function(f) { return f.key === 'RHAISTRAT-1' })
+      expect(feat).toBeDefined()
+      expect(feat.priorityScoreBreakdown.bigRock).toBeGreaterThan(0)
     })
   })
 
@@ -1786,13 +1620,13 @@ describe('buildFeatureReadiness', function() {
       expect(keys).toContain('AIPCC-100')
     })
 
-    it('uses health pipeline priorityScore when available', function() {
+    it('health-pipeline features get batch-computed priority score', function() {
       var store = makeFeaturesStore({})
       var healthCache = {
         features: [{
           key: 'AIPCC-500', summary: 'Scored', status: 'In Progress',
           priority: 'Major', deliveryOwner: 'Alice', blockerCount: 0,
-          targetRelease: 'rhoai-3.6', priorityScore: 85
+          targetRelease: 'rhoai-3.6'
         }]
       }
       var readFromStorage = makeReadFromStorage({
@@ -1802,31 +1636,7 @@ describe('buildFeatureReadiness', function() {
       })
       var result = buildFeatureReadiness(readFromStorage)
       var feat = result.pendingReview[0]
-      expect(feat.effectivePriorityScore).toBe(85)
-      expect(feat.priorityScoreFallback).toBe(false)
-    })
-
-    it('falls back to computeBestAvailableScore when priorityScore is null', function() {
-      var store = makeFeaturesStore({})
-      var healthCache = {
-        features: [{
-          key: 'AIPCC-600', summary: 'No score', status: 'In Progress',
-          priority: 'Major', deliveryOwner: 'Alice', blockerCount: 0,
-          targetRelease: 'rhoai-3.6', priorityScore: null, tier: 'T1', tshirtSize: 'M'
-        }]
-      }
-      var candidateCache = {
-        data: { features: [{ issueKey: 'AIPCC-600', tier: 1 }] }
-      }
-      var readFromStorage = makeReadFromStorage({
-        ...convertToUnifiedFormat(store),
-        'releases/planning/config.json': CONFIG_3_6,
-        'releases/planning/health-cache-3.6-all.json': healthCache,
-        'releases/planning/candidates-cache-3.6.json': candidateCache
-      })
-      var result = buildFeatureReadiness(readFromStorage)
-      var feat = result.pendingReview[0]
-      expect(feat.priorityScoreFallback).toBe(true)
+      expect(typeof feat.effectivePriorityScore).toBe('number')
       expect(feat.effectivePriorityScore).toBeGreaterThan(0)
     })
 
