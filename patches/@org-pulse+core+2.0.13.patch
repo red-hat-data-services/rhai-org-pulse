@@ -280,12 +280,145 @@ index 0000000..11e4353
 +}
 +
 +module.exports = { createSearchIndexRegistry }
+diff --git a/node_modules/@org-pulse/core/src/__tests__/CommandPalette.test.js b/node_modules/@org-pulse/core/src/__tests__/CommandPalette.test.js
+new file mode 100644
+index 0000000..df859ca
+--- /dev/null
++++ b/node_modules/@org-pulse/core/src/__tests__/CommandPalette.test.js
+@@ -0,0 +1,127 @@
++import { describe, it, expect, vi } from 'vitest'
++import { mount } from '@vue/test-utils'
++import { defineComponent } from 'vue'
++
++vi.mock('virtual:nav-discovery', () => ({
++  default: [
++    {
++      slug: 'releases',
++      viewId: 'deliver',
++      label: 'Conforma Insights',
++      context: 'Releases → Deliver',
++      params: { tab: 'conforma-insights' }
++    },
++    {
++      slug: 'releases',
++      viewId: 'deliver',
++      label: 'Risk Dashboard',
++      context: 'Releases → Deliver',
++      params: { tab: 'risk-dashboard' }
++    }
++  ]
++}))
++
++vi.mock('../composables/useCommandPalette', () => {
++  const { ref, computed } = require('vue')
++  return {
++    useCommandPalette: () => {
++      const searchQuery = ref('test')
++      const selectedIndex = ref(0)
++      const historyIndex = ref(-1)
++      const filteredResults = computed(() => [
++        { id: 'team-tracker::home', label: 'Team Directory', sublabel: 'People & Teams', type: 'page', slug: 'team-tracker', viewId: 'home' },
++        { id: 'releases::schedule', label: 'Schedule', sublabel: 'Releases', type: 'page', slug: 'releases', viewId: 'schedule' },
++        { id: 'toggle-theme', label: 'Toggle Theme', sublabel: 'Switch theme', type: 'action' }
++      ])
++      return {
++        searchQuery,
++        selectedIndex,
++        filteredResults,
++        historyIndex,
++        selectNext: vi.fn(),
++        selectPrev: vi.fn(),
++        resetSelection: vi.fn(),
++        saveQuery: vi.fn(),
++        historyPrev: vi.fn(),
++        historyNext: vi.fn()
++      }
++    }
++  }
++})
++
++import CommandPalette from '../components/CommandPalette.vue'
++
++function mountPalette(props = {}) {
++  return mount(CommandPalette, {
++    props: {
++      manifests: [],
++      isAdmin: false,
++      isTeamAdmin: false,
++      isManager: false,
++      roles: [],
++      teamDataSource: '',
++      searchIndexItems: [],
++      ...props
++    },
++    attachTo: document.body
++  })
++}
++
++describe('CommandPalette keyboard indicators', () => {
++  it('selected item shows Enter/Return icon', () => {
++    const wrapper = mountPalette()
++    const rows = wrapper.findAll('.command-palette-suggestions > div')
++    expect(rows.length).toBe(3)
++
++    const selectedRow = rows[0]
++    const kbd = selectedRow.find('kbd')
++    expect(kbd.exists()).toBe(true)
++    const svg = kbd.find('svg')
++    const paths = svg.findAll('path')
++    expect(paths.some(p => p.attributes('d').includes('M9 10l-5 5 5 5'))).toBe(true)
++    wrapper.unmount()
++  })
++
++  it('non-selected items show TAB text badge', () => {
++    const wrapper = mountPalette()
++    const rows = wrapper.findAll('.command-palette-suggestions > div')
++
++    for (let i = 1; i < rows.length; i++) {
++      const kbd = rows[i].find('kbd')
++      expect(kbd.exists()).toBe(true)
++      expect(kbd.text()).toBe('TAB')
++    }
++    wrapper.unmount()
++  })
++
++  it('every result row has exactly one kbd element', () => {
++    const wrapper = mountPalette()
++    const rows = wrapper.findAll('.command-palette-suggestions > div')
++
++    for (const row of rows) {
++      const kbds = row.findAll('kbd')
++      expect(kbds.length).toBe(1)
++    }
++    wrapper.unmount()
++  })
++
++  it('selected item does NOT show TAB text', () => {
++    const wrapper = mountPalette()
++    const rows = wrapper.findAll('.command-palette-suggestions > div')
++    const selectedKbd = rows[0].find('kbd')
++    expect(selectedKbd.text()).not.toBe('TAB')
++    wrapper.unmount()
++  })
++
++  it('non-selected items do NOT show Enter icon', () => {
++    const wrapper = mountPalette()
++    const rows = wrapper.findAll('.command-palette-suggestions > div')
++
++    for (let i = 1; i < rows.length; i++) {
++      const kbd = rows[i].find('kbd')
++      const paths = kbd.findAll('path')
++      expect(paths.some(p => p.attributes('d').includes('M9 10l-5 5 5 5'))).toBe(false)
++    }
++    wrapper.unmount()
++  })
++})
 diff --git a/node_modules/@org-pulse/core/src/__tests__/useCommandPalette.test.js b/node_modules/@org-pulse/core/src/__tests__/useCommandPalette.test.js
 new file mode 100644
-index 0000000..1bf6f0f
+index 0000000..01407bc
 --- /dev/null
 +++ b/node_modules/@org-pulse/core/src/__tests__/useCommandPalette.test.js
-@@ -0,0 +1,405 @@
+@@ -0,0 +1,497 @@
 +import { describe, it, expect, vi, beforeEach } from 'vitest'
 +import { ref } from 'vue'
 +
@@ -571,6 +704,20 @@ index 0000000..1bf6f0f
 +        .map(r => r.id)
 +      expect(new Set(discoveredIds).size).toBe(discoveredIds.length)
 +    })
++
++    it('data items with same label but different params have unique ids', () => {
++      const { allItems } = createPalette({
++        searchIndexItems: [
++          { module: 'releases', label: 'Update configuration settings', context: 'Releases', viewId: 'execute', params: { feature: 'TEST-1' }, keywords: [] },
++          { module: 'releases', label: 'Update configuration settings', context: 'Releases', viewId: 'execute', params: { feature: 'TEST-2' }, keywords: [] },
++          { module: 'releases', label: 'Update configuration settings', context: 'Releases', viewId: 'execute', params: { feature: 'TEST-3' }, keywords: [] },
++        ]
++      })
++      const dataIds = allItems.value
++        .filter(r => r.type === 'data')
++        .map(r => r.id)
++      expect(new Set(dataIds).size).toBe(dataIds.length)
++    })
 +  })
 +
 +  describe('keyword-only match scoring', () => {
@@ -615,6 +762,84 @@ index 0000000..1bf6f0f
 +      if (results.length >= 2) {
 +        expect(results[0].type).toBe('page')
 +      }
++    })
++  })
++
++  describe('all item IDs are unique (prevents stale DOM from duplicate v-for keys)', () => {
++    it('no duplicate IDs across all item types', () => {
++      const { allItems } = createPalette({
++        searchIndexItems: [
++          { module: 'releases', label: 'Update configuration settings', context: 'Releases', viewId: 'execute', params: { feature: 'TEST-1' }, keywords: [] },
++          { module: 'releases', label: 'Update configuration settings', context: 'Releases', viewId: 'execute', params: { feature: 'TEST-2' }, keywords: [] },
++          { module: 'releases', label: 'Fix concurrent access issue', context: 'Releases', viewId: 'execute', params: { feature: 'TEST-3' }, keywords: [] },
++          { module: 'releases', label: 'Fix concurrent access issue', context: 'Releases', viewId: 'execute', params: { feature: 'TEST-4' }, keywords: [] },
++        ]
++      })
++      const ids = allItems.value.map(r => r.id)
++      const dupes = ids.filter((id, i) => ids.indexOf(id) !== i)
++      expect(dupes).toEqual([])
++    })
++  })
++
++  describe('search accuracy — no partial-prefix false positives', () => {
++    it('typing "conforma" does NOT match items containing "con" or "config"', () => {
++      const noiseItems = [
++        { module: 'releases', label: 'Update configuration settings', context: 'Releases', viewId: 'execute', params: { feature: 'TEST-1' }, keywords: ['TEST-1', 'Closed'] },
++        { module: 'releases', label: 'Update access controls', context: 'Releases', viewId: 'execute', params: { feature: 'TEST-2' }, keywords: ['TEST-2', 'In Progress'] },
++        { module: 'releases', label: 'Fix concurrent access issue', context: 'Releases', viewId: 'execute', params: { feature: 'TEST-3' }, keywords: ['TEST-3', 'New'] },
++      ]
++      const { searchQuery, filteredResults } = createPalette({ searchIndexItems: noiseItems })
++      searchQuery.value = 'conforma'
++      const labels = filteredResults.value.map(r => r.label)
++      expect(labels).toContain('Conforma Insights')
++      expect(labels).not.toContain('Update configuration settings')
++      expect(labels).not.toContain('Update access controls')
++      expect(labels).not.toContain('Fix concurrent access issue')
++    })
++
++    it('typing "conform" does NOT match items containing "con" or "config"', () => {
++      const noiseItems = [
++        { module: 'releases', label: 'Update configuration settings', context: 'Releases', viewId: 'execute', params: { feature: 'TEST-1' }, keywords: ['TEST-1'] },
++        { module: 'releases', label: 'Fix concurrent access issue', context: 'Releases', viewId: 'execute', params: { feature: 'TEST-2' }, keywords: ['TEST-2'] },
++      ]
++      const { searchQuery, filteredResults } = createPalette({ searchIndexItems: noiseItems })
++      searchQuery.value = 'conform'
++      const labels = filteredResults.value.map(r => r.label)
++      expect(labels).toContain('Conforma Insights')
++      expect(labels).not.toContain('Update configuration settings')
++      expect(labels).not.toContain('Fix concurrent access issue')
++    })
++
++    it('results narrow progressively as query lengthens', () => {
++      const noiseItems = [
++        { module: 'releases', label: 'Update configuration settings', context: 'Releases', viewId: 'execute', params: { feature: 'TEST-1' }, keywords: ['TEST-1'] },
++        { module: 'releases', label: 'Connect to database', context: 'Releases', viewId: 'execute', params: { feature: 'TEST-2' }, keywords: ['TEST-2'] },
++      ]
++      const { searchQuery, filteredResults } = createPalette({ searchIndexItems: noiseItems })
++
++      searchQuery.value = 'con'
++      const countAtCon = filteredResults.value.length
++
++      searchQuery.value = 'confo'
++      const countAtConfo = filteredResults.value.length
++
++      searchQuery.value = 'conforma'
++      const countAtConforma = filteredResults.value.length
++
++      expect(countAtCon).toBeGreaterThan(countAtConfo)
++      expect(countAtConfo).toBeGreaterThanOrEqual(countAtConforma)
++      expect(countAtConforma).toBeGreaterThanOrEqual(1)
++    })
++
++    it('sublabel match requires full substring (not subsequence)', () => {
++      const { searchQuery, filteredResults } = createPalette({
++        searchIndexItems: [
++          { module: 'test', label: 'Some Item', context: 'App configuration panel', viewId: 'v', params: {} },
++        ]
++      })
++      searchQuery.value = 'conforma'
++      const labels = filteredResults.value.map(r => r.label)
++      expect(labels).not.toContain('Some Item')
 +    })
 +  })
 +
@@ -829,10 +1054,10 @@ index b10dc4a..8f29f69 100644
      async loadInitialData() {
 diff --git a/node_modules/@org-pulse/core/src/components/CommandPalette.vue b/node_modules/@org-pulse/core/src/components/CommandPalette.vue
 new file mode 100644
-index 0000000..00c7919
+index 0000000..d9a5ff2
 --- /dev/null
 +++ b/node_modules/@org-pulse/core/src/components/CommandPalette.vue
-@@ -0,0 +1,260 @@
+@@ -0,0 +1,266 @@
 +<template>
 +  <div
 +    class="fixed inset-0 z-50"
@@ -886,6 +1111,12 @@ index 0000000..00c7919
 +            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-70">
 +              <path d="M9 10l-5 5 5 5" /><path d="M20 4v7a4 4 0 0 1-4 4H4" />
 +            </svg>
++          </kbd>
++          <kbd
++            v-else
++            class="inline-flex items-center px-1.5 py-0.5 text-[9px] font-medium text-gray-400/60 bg-gray-100/50 rounded border border-gray-200/40 flex-shrink-0 ml-1 tracking-wide"
++          >
++            TAB
 +          </kbd>
 +        </div>
 +      </div>
@@ -1095,7 +1326,7 @@ index 0000000..00c7919
 +</style>
 diff --git a/node_modules/@org-pulse/core/src/composables/useCommandPalette.js b/node_modules/@org-pulse/core/src/composables/useCommandPalette.js
 new file mode 100644
-index 0000000..6799605
+index 0000000..3c647d0
 --- /dev/null
 +++ b/node_modules/@org-pulse/core/src/composables/useCommandPalette.js
 @@ -0,0 +1,240 @@
@@ -1216,9 +1447,9 @@ index 0000000..6799605
 +
 +  const dataItems = computed(() => {
 +    const raw = searchIndexItems?.value ?? searchIndexItems ?? []
-+    return raw.map(item => ({
++    return raw.map((item, idx) => ({
 +      type: 'data',
-+      id: (item.module || 'data') + '::data::' + item.label,
++      id: (item.module || 'data') + '::data::' + (item.params ? Object.values(item.params).join('-') : idx) + '::' + item.label,
 +      label: item.label,
 +      sublabel: item.context,
 +      module: item.module,
