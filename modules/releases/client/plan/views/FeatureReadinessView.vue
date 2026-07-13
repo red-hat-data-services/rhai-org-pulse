@@ -7,6 +7,11 @@ import { apiRequest } from '@shared/client/services/api'
 import FeatureReadinessFilterBar from '../components/FeatureReadinessFilterBar.vue'
 import FeatureReadinessRow from '../components/FeatureReadinessRow.vue'
 import FeatureReadinessDrawer from '../components/FeatureReadinessDrawer.vue'
+import {
+  featureMatchesProduct,
+  featureFailsSelectedFpdorItems,
+  exportFeatureReadinessCsv
+} from '../utils/feature-readiness-export.js'
 
 const nav = inject('moduleNav')
 const jiraBaseUrl = 'https://issues.redhat.com/browse'
@@ -61,6 +66,8 @@ const filters = ref({
   component: [],
   priority: [],
   team: [],
+  product: [],
+  fpdorItems: [],
   readiness: null
 })
 
@@ -75,6 +82,8 @@ function matchesFilters(feature) {
   if (f.component.length && !(feature.components || []).some(function(c) { return f.component.includes(c) })) return false
   if (f.priority.length && !f.priority.includes(feature.priority)) return false
   if (f.team.length && !f.team.includes(feature.team)) return false
+  if (f.product.length && !featureMatchesProduct(feature, f.product)) return false
+  if (f.fpdorItems.length && !featureFailsSelectedFpdorItems(feature, f.fpdorItems)) return false
   if (f.readiness === 'ready' && feature.confidence === 'not-ready') return false
   if (f.readiness === 'not-ready' && feature.confidence !== 'not-ready') return false
   if (selectedVersion.value) {
@@ -107,6 +116,8 @@ const readyCounts = computed(() => {
     if (fv.component.length && !(f.components || []).some(function(c) { return fv.component.includes(c) })) return false
     if (fv.priority.length && !fv.priority.includes(f.priority)) return false
     if (fv.team.length && !fv.team.includes(f.team)) return false
+    if (fv.product.length && !featureMatchesProduct(f, fv.product)) return false
+    if (fv.fpdorItems.length && !featureFailsSelectedFpdorItems(f, fv.fpdorItems)) return false
     if (selectedVersion.value) {
       if (!(f.targetVersions || []).some(function(tv) {
         return tv === selectedVersion.value || tv.indexOf(selectedVersion.value) !== -1 || selectedVersion.value.indexOf(tv) !== -1
@@ -130,6 +141,10 @@ const releaseOptions = computed(() => {
   }
   return opts
 })
+
+function exportCsv() {
+  exportFeatureReadinessCsv(filteredFeatures.value)
+}
 
 const headers = [
   { id: 'h-num',        label: '#',               scope: 'col' },
@@ -186,6 +201,13 @@ function formatSyncDate(dateStr) {
           class="ml-2 px-3 py-1 text-xs font-medium rounded-md bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           :title="refreshing ? refreshStatus : 'Refresh hygiene data from Jira'"
         >{{ refreshing ? 'Refreshing...' : 'Refresh Hygiene' }}</button>
+        <button
+          type="button"
+          @click="exportCsv"
+          :disabled="filteredFeatures.length === 0"
+          class="px-3 py-1 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          title="Export current filtered view as CSV"
+        >Export CSV</button>
       </div>
     </div>
 
