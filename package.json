@@ -8,7 +8,7 @@
   "scripts": {
     "postinstall": "patch-package",
     "setup": "node scripts/setup.js",
-    "dev": "vite",
+    "dev": "rm -rf node_modules/.vite && vite",
     "dev:server": "node -r dotenv/config server/index.js",
     "dev:full": "concurrently \"npm run dev\" \"npm run dev:server\"",
     "build": "vite build",
