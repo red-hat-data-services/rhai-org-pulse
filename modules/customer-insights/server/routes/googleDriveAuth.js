@@ -22,7 +22,7 @@ module.exports = function registerGoogleDriveAuthRoutes(router, context) {
     const clientSecret = secrets.GOOGLE_OAUTH_CLIENT_SECRET
 
     const callbackUrl = process.env.GOOGLE_OAUTH_CALLBACK_URL ||
-                       `${process.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/modules/customer-insights/auth/google/callback`
+                       `${process.env.API_PUBLIC_URL || process.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/modules/customer-insights/auth/google/callback`
 
     if (!clientId || !clientSecret) {
       throw new Error('Google OAuth credentials not configured. Set GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET.')
