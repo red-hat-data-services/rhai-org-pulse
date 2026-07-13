@@ -153,7 +153,7 @@ jobs:
         if: steps.check_sensitive_files.outputs.detected == 'true'
         uses: actions/create-github-app-token@v3
         with:
-          client-id: ${{ secrets.APP_ID }}
+          app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - name: Check for team approval and set status
