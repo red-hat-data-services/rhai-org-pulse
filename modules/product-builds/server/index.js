@@ -922,6 +922,9 @@ module.exports = function registerRoutes(router, context) {
   // --- Version Map ---
   require('./version-map')(router, context);
 
+  // --- Package Tracker ---
+  require('./package-tracker')(router, context);
+
   if (context.registerDiagnostics) {
     context.registerDiagnostics(async function() {
       const index = readFromStorage(PKG_INDEX_PATH);

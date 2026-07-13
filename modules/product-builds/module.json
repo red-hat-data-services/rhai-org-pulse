@@ -58,6 +58,16 @@
         "key": "VERSION_MAP_SPREADSHEET_ID",
         "description": "Google Sheets spreadsheet ID for accelerator variant planning (defaults to the shared planning spreadsheet)",
         "required": false
+      },
+      {
+        "key": "TRACKER_TARGET_VERSION_FIELD",
+        "description": "JIRA custom field ID for target version (defaults to customfield_10855)",
+        "required": false
+      },
+      {
+        "key": "TRACKER_SIZE_FIELD",
+        "description": "JIRA custom field ID for size (defaults to customfield_10795)",
+        "required": false
       }
     ]
   },
