@@ -113,8 +113,6 @@ const groupedRfes = computed(() => {
                   :flags="rfeKeyToHealth[item.data.issueKey].risk ? rfeKeyToHealth[item.data.issueKey].risk.flags : []"
                   :flagCount="rfeKeyToHealth[item.data.issueKey].risk ? rfeKeyToHealth[item.data.issueKey].risk.flags.length : 0"
                   :override="rfeKeyToHealth[item.data.issueKey].risk ? rfeKeyToHealth[item.data.issueKey].risk.override : null"
-                  :dor="rfeKeyToHealth[item.data.issueKey].dor || null"
-                  :dod="rfeKeyToHealth[item.data.issueKey].dod || null"
                   :planningStatus="rfeKeyToHealth[item.data.issueKey].planningStatus || ''"
                   variant="full"
                 >

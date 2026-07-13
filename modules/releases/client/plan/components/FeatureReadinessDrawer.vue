@@ -145,7 +145,19 @@ const hasBlockers = computed(() =>
     !!props.feature.actionRequired)
 )
 
-const readinessGates = computed(() => props.feature?.readinessGates || null)
+const FPDOR_TO_HYGIENE = {
+  'Requirements Clarity': 'Add requirement details to the Jira description',
+  'Acceptance Criteria': 'Add acceptance criteria to the Jira description',
+  'Scope Defined': 'Add child epics, set sizing (story points/t-shirt), or link an RFE',
+  'RICE Score': 'Set RICE score in Jira',
+  'Cross-functional Engagement': 'Add both Documentation and UXD components',
+  'Architectural Alignment': 'Add architecture review signals to description',
+  'Risks & Assumptions': 'Document risks and assumptions in description',
+  'Release Type': 'Set release type (phase) in Jira',
+  'Target Version': 'Set target version in Jira',
+  'Assignee': 'Assign a delivery owner',
+  'PM Assigned': 'Assign a product manager'
+}
 
 const fpdorItems = computed(() => {
   var fpdor = props.feature?.fpdor
@@ -155,12 +167,19 @@ const fpdorItems = computed(() => {
 
 const fpdorSummary = computed(() => {
   var fpdor = props.feature?.fpdor
-  if (!fpdor) return { passedCount: 0, evaluatedCount: 0, allPassed: false }
+  if (!fpdor) return { passedCount: 0, totalCount: 0, allPassed: false }
   return {
     passedCount: fpdor.passedCount || 0,
-    evaluatedCount: fpdor.evaluatedCount || 0,
-    allPassed: fpdor.passedCount === fpdor.evaluatedCount && fpdor.evaluatedCount > 0
+    totalCount: fpdor.totalCount || 0,
+    allPassed: fpdor.passedCount === fpdor.totalCount && fpdor.totalCount > 0
   }
+})
+
+const failedFpdorActions = computed(() => {
+  if (!fpdorItems.value) return []
+  return fpdorItems.value
+    .filter(item => item.pass === false && FPDOR_TO_HYGIENE[item.name])
+    .map(item => ({ name: item.name, action: FPDOR_TO_HYGIENE[item.name], detail: item.detail }))
 })
 
 const violationsList = computed(() => props.feature?.violations || [])
@@ -359,7 +378,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
           <section v-if="fpdorItems" class="px-4 py-4">
             <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">
               FPDoR Readiness
-              <span class="font-normal ml-1" :class="fpdorSummary.allPassed ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'">({{ fpdorSummary.passedCount }}/{{ fpdorSummary.evaluatedCount }} passed)</span>
+              <span class="font-normal ml-1" :class="fpdorSummary.allPassed ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'">({{ fpdorSummary.passedCount }}/{{ fpdorSummary.totalCount }} passed)</span>
             </p>
             <div class="space-y-2">
               <div v-for="item in fpdorItems" :key="item.name" class="flex items-start gap-2 text-xs">
@@ -374,12 +393,22 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
                 </svg>
                 <div class="flex-1 min-w-0">
                   <span :class="item.pass === true ? 'text-gray-700 dark:text-gray-300' : item.pass === false ? 'text-gray-500 dark:text-gray-400' : 'text-gray-400 dark:text-gray-500'">{{ item.name }}</span>
-                  <span v-if="item.state === 'not-evaluated'" class="text-[10px] text-gray-400 dark:text-gray-500 ml-1">(not evaluated)</span>
+                  <span v-if="item.humanVerified" class="inline-flex items-center ml-1 px-1 py-0 rounded text-[10px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" title="Human verified via strat-creator sign-off">Verified</span>
                   <div v-if="item.detail && item.pass !== true" class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 truncate">{{ item.detail }}</div>
                 </div>
               </div>
             </div>
 
+            <!-- Readiness-to-Hygiene Action Bridge -->
+            <div v-if="failedFpdorActions.length > 0" class="mt-4 p-3 rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700">
+              <p class="text-xs font-semibold text-amber-800 dark:text-amber-300 mb-2">Actions to resolve</p>
+              <ul class="space-y-1.5">
+                <li v-for="act in failedFpdorActions" :key="act.name" class="flex items-start gap-2 text-xs text-amber-700 dark:text-amber-400">
+                  <span class="mt-0.5 shrink-0" aria-hidden="true">&#x2022;</span>
+                  <span>{{ act.action }}</span>
+                </li>
+              </ul>
+            </div>
           </section>
 
           <!-- Hygiene Violations -->
@@ -392,13 +421,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
               <span class="flex items-center gap-2">
                 Hygiene
                 <span
-                  v-if="violationCount > 0 && feature.hygieneStatus === 'blocking'"
-                  class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
-                >{{ violationCount }}</span>
-                <span
-                  v-else-if="violationCount > 0"
-                  class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
-                >{{ violationCount }}</span>
+                  v-if="violationCount > 0"
+                  class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                >{{ violationCount }} {{ violationCount === 1 ? 'warning' : 'warnings' }}</span>
                 <span
                   v-else-if="feature && feature.hygieneStatus === 'unknown'"
                   class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
@@ -417,22 +442,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
               </svg>
             </button>
             <div v-if="hygieneExpanded">
-              <div class="space-y-1 mb-3">
-                <div class="flex items-center gap-2 text-xs">
-                  <span :class="readinessGates?.pastRefinement ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'">
-                    {{ readinessGates?.pastRefinement ? '●' : '○' }}
-                  </span>
-                  <span class="text-gray-700 dark:text-gray-300">Past Refinement</span>
-                  <span class="text-gray-400 dark:text-gray-500 ml-auto">{{ feature.status || 'Unknown' }}</span>
-                </div>
-                <div class="flex items-center gap-2 text-xs">
-                  <span :class="readinessGates?.noBlockingViolations ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'">
-                    {{ readinessGates?.noBlockingViolations ? '●' : '○' }}
-                  </span>
-                  <span class="text-gray-700 dark:text-gray-300">No Blocking Violations</span>
-                  <span class="text-gray-400 dark:text-gray-500 ml-auto">{{ readinessGates?.noBlockingViolations ? 'All clear' : violationCount + ' violations' }}</span>
-                </div>
-              </div>
               <HygieneViolations :violations="violationsList" :feature-key="feature?.key" :jira-base-url="jiraBaseUrl" />
             </div>
           </section>

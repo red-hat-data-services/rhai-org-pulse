@@ -118,77 +118,56 @@ describe('RiskPopover', function() {
   })
 
   it('shows planning status in full variant', async function() {
-    var dod = { gate: 'dod', passed: false, checks: [
-      { id: 'DoD-1', label: 'Owner Assigned', passed: true },
-      { id: 'DoD-2', label: 'Fix Version Set', passed: false }
-    ] }
     var flags = [{ category: 'MILESTONE_MISS', severity: 'medium', message: 'Behind deadline' }]
     var wrapper = mount(RiskPopover, {
-      props: { level: 'yellow', flags: flags, flagCount: 1, dod: dod, planningStatus: 'in-planning', variant: 'full' },
+      props: { level: 'yellow', flags: flags, flagCount: 1, planningStatus: 'in-planning', variant: 'full' },
       slots: { default: '<span>dot</span>' },
       attachTo: document.body
     })
     await wrapper.find('[role="button"]').trigger('click')
     await nextTick()
     expect(wrapper.text()).toContain('Planning: In Planning')
-    expect(wrapper.text()).toContain('1 DoD check remaining')
     wrapper.unmount()
   })
 
-  it('shows DoR blocked message when DoR fails', async function() {
-    var dor = { gate: 'dor', passed: false, blockers: [
-      { id: 'DoR-B1', label: 'Strategy Human Sign-off', passed: false, detail: 'not-assessed' },
-      { id: 'DoR-B2', label: 'RICE Score Present', passed: true, detail: 'complete' }
-    ], warnings: [] }
+  it('shows FPDoR summary in full variant footer', async function() {
     var flags = [{ category: 'MILESTONE_MISS', severity: 'medium', message: 'Behind deadline' }]
+    var fpdor = { passedCount: 8, totalCount: 11 }
     var wrapper = mount(RiskPopover, {
-      props: { level: 'yellow', flags: flags, flagCount: 1, dor: dor, planningStatus: 'not-ready', variant: 'full' },
+      props: { level: 'yellow', flags: flags, flagCount: 1, planningStatus: 'not-ready', fpdor: fpdor, variant: 'full' },
       slots: { default: '<span>dot</span>' },
       attachTo: document.body
     })
     await wrapper.find('[role="button"]').trigger('click')
     await nextTick()
-    expect(wrapper.text()).toContain('DoR blocked: Strategy Human Sign-off')
+    expect(wrapper.text()).toContain('FPDoR: 8/11 items passed')
     wrapper.unmount()
   })
 
-  it('shows DoR warning count when warnings fail', async function() {
-    var dor = { gate: 'dor', passed: true, blockers: [
-      { id: 'DoR-B1', label: 'Strategy Human Sign-off', passed: true, detail: 'strat-creator-disabled' },
-      { id: 'DoR-B2', label: 'RICE Score Present', passed: true, detail: 'rice-disabled' }
-    ], warnings: [
-      { id: 'DoR-W1', label: 'Owner Assigned', passed: false, detail: null },
-      { id: 'DoR-W2', label: 'Version Set', passed: false, detail: 'No fixVersion or targetVersion' },
-      { id: 'DoR-W3', label: 'Blockers Resolved', passed: true, detail: null }
-    ] }
+  it('does not show FPDoR summary when fpdor is null', async function() {
     var flags = [{ category: 'MILESTONE_MISS', severity: 'medium', message: 'Behind deadline' }]
     var wrapper = mount(RiskPopover, {
-      props: { level: 'yellow', flags: flags, flagCount: 1, dor: dor, planningStatus: 'ready-for-execution', variant: 'full' },
+      props: { level: 'yellow', flags: flags, flagCount: 1, planningStatus: 'ready-for-execution', variant: 'full' },
       slots: { default: '<span>dot</span>' },
       attachTo: document.body
     })
     await wrapper.find('[role="button"]').trigger('click')
     await nextTick()
-    expect(wrapper.text()).toContain('2 DoR warnings')
+    expect(wrapper.text()).not.toContain('FPDoR')
     wrapper.unmount()
   })
 
-  it('does not show DoR info when DoR passes with no warnings', async function() {
-    var dor = { gate: 'dor', passed: true, blockers: [
-      { id: 'DoR-B1', label: 'Strategy Human Sign-off', passed: true, detail: 'strat-creator-disabled' }
-    ], warnings: [
-      { id: 'DoR-W1', label: 'Owner Assigned', passed: true, detail: 'jdoe@redhat.com' }
-    ] }
+  it('does not show DoR or DoD content (removed)', async function() {
     var flags = [{ category: 'MILESTONE_MISS', severity: 'medium', message: 'Behind deadline' }]
     var wrapper = mount(RiskPopover, {
-      props: { level: 'yellow', flags: flags, flagCount: 1, dor: dor, planningStatus: 'ready-for-execution', variant: 'full' },
+      props: { level: 'yellow', flags: flags, flagCount: 1, planningStatus: 'ready-for-execution', variant: 'full' },
       slots: { default: '<span>dot</span>' },
       attachTo: document.body
     })
     await wrapper.find('[role="button"]').trigger('click')
     await nextTick()
-    expect(wrapper.text()).not.toContain('DoR blocked')
-    expect(wrapper.text()).not.toContain('DoR warning')
+    expect(wrapper.text()).not.toContain('DoR')
+    expect(wrapper.text()).not.toContain('DoD')
     wrapper.unmount()
   })
 

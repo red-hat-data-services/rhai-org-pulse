@@ -187,8 +187,6 @@ var flagSeverityClass = {
           :flags="riskFlags"
           :flagCount="riskFlags.length"
           :override="riskOverride"
-          :dor="feature.dor"
-          :dod="feature.dod"
           :planningStatus="feature.planningStatus"
           :fpdor="feature.fpdor"
           variant="full"
@@ -253,10 +251,7 @@ var flagSeverityClass = {
           <!-- Planning Gate Status -->
           <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
             <PlanningGateStatus
-              :dor="feature.dor"
-              :dod="feature.dod"
               :planningStatus="feature.planningStatus"
-              :planningChecks="feature.planningChecks"
               :fpdor="feature.fpdor"
             />
           </div>

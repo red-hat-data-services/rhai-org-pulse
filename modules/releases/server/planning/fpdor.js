@@ -26,6 +26,10 @@ function hasAcceptanceCriteria(feature, rubricData) {
   return false
 }
 
+function hasRfeLink(feature) {
+  return !!(feature.sourceRfe || feature.rfe || feature.linkedRfeKey)
+}
+
 function hasScopeDefined(feature, rubricData) {
   if (rubricData && rubricData.scored && rubricData.scope != null) {
     return rubricData.scope >= RUBRIC_PASS_THRESHOLD
@@ -34,7 +38,7 @@ function hasScopeDefined(feature, rubricData) {
   var hasSizing = (feature.storyPoints != null && feature.storyPoints > 0)
     || !!feature.tshirtSize
     || (feature.effort != null && feature.effort > 0)
-  return hasBreakdown || hasSizing
+  return hasBreakdown || hasSizing || hasRfeLink(feature)
 }
 
 function hasArchitecturalAlignment(feature, rubricData) {
@@ -59,15 +63,27 @@ function hasRisksAndAssumptions(feature, rubricData) {
   return false
 }
 
-function hasCrossFunctionalEngagement(feature) {
+function hasDocsEngagement(feature) {
+  if (feature.docsRequired && feature.docsRequired !== 'No') return true
   var comps = feature.components || []
   if (!Array.isArray(comps)) return false
-  var hasDocumentation = false
   for (var i = 0; i < comps.length; i++) {
-    if (comps[i] && comps[i] === 'Documentation') hasDocumentation = true
+    if (comps[i] && comps[i] === 'Documentation') return true
   }
-  if (hasDocumentation) return comps.length >= 3
-  return comps.length > 1
+  return false
+}
+
+function hasUxdEngagement(feature) {
+  var comps = feature.components || []
+  if (!Array.isArray(comps)) return false
+  for (var i = 0; i < comps.length; i++) {
+    if (comps[i] && comps[i] === 'UXD') return true
+  }
+  return false
+}
+
+function hasCrossFunctionalEngagement(feature) {
+  return hasDocsEngagement(feature) && hasUxdEngagement(feature)
 }
 
 function hasReleaseType(feature) {
@@ -102,6 +118,14 @@ function extractRubricData(feature) {
   }
 }
 
+function hasStratCreatorSignOff(feature) {
+  var labels = feature.labels || []
+  for (var i = 0; i < labels.length; i++) {
+    if (labels[i] === 'strat-creator-human-sign-off') return true
+  }
+  return false
+}
+
 function evalJiraItem(name, passed, detail) {
   return { name: name, pass: passed, source: 'jira', state: passed ? 'passed' : 'failed', detail: passed ? null : (detail || null) }
 }
@@ -120,7 +144,7 @@ function scopeDetail(feature, rubricData) {
   var hasSizing = (feature.storyPoints != null && feature.storyPoints > 0)
     || !!feature.tshirtSize
     || (feature.effort != null && feature.effort > 0)
-  if (!hasBreakdown && !hasSizing) return 'No child epics and no sizing (story points, t-shirt size, or effort)'
+  if (!hasBreakdown && !hasSizing && !hasRfeLink(feature)) return 'No child epics, no sizing (story points, t-shirt size, or effort), and no RFE link'
   return null
 }
 
@@ -157,15 +181,19 @@ function risksDetail(feature, rubricData) {
 }
 
 function crossFunctionalDetail(feature) {
-  var comps = feature.components || []
-  if (!Array.isArray(comps) || comps.length === 0) return 'No components assigned'
-  var hasDocumentation = false
-  for (var i = 0; i < comps.length; i++) {
-    if (comps[i] && comps[i] === 'Documentation') hasDocumentation = true
-  }
-  if (hasDocumentation && comps.length < 3) return 'Documentation present but need at least 3 components (have ' + comps.length + ')'
-  if (comps.length <= 1) return 'Only 1 component assigned; need more than 1 for cross-functional engagement'
-  return null
+  var hasDocs = hasDocsEngagement(feature)
+  var hasUxd = hasUxdEngagement(feature)
+  var parts = []
+  if (!hasDocs) parts.push('missing Documentation component or docsRequired')
+  if (!hasUxd) parts.push('missing UXD component')
+  return parts.join('; ') || null
+}
+
+var HUMAN_VERIFIED_ITEMS = {
+  'Requirements Clarity': true,
+  'Acceptance Criteria': true,
+  'Architectural Alignment': true,
+  'Risks & Assumptions': true
 }
 
 function computeFPDoRReadiness(feature, rubricData) {
@@ -182,6 +210,15 @@ function computeFPDoRReadiness(feature, rubricData) {
     evalJiraItem('Assignee', hasAssignee(feature), 'No assignee set'),
     evalJiraItem('PM Assigned', hasPmAssigned(feature), 'No PM assigned')
   ]
+
+  var signedOff = hasStratCreatorSignOff(feature)
+  if (signedOff) {
+    for (var hi = 0; hi < items.length; hi++) {
+      if (HUMAN_VERIFIED_ITEMS[items[hi].name]) {
+        items[hi].humanVerified = true
+      }
+    }
+  }
 
   var passedCount = 0
   var evaluatedCount = 0
@@ -208,9 +245,13 @@ module.exports = {
   hasArchitecturalAlignment: hasArchitecturalAlignment,
   hasRisksAndAssumptions: hasRisksAndAssumptions,
   hasCrossFunctionalEngagement: hasCrossFunctionalEngagement,
+  hasDocsEngagement: hasDocsEngagement,
+  hasUxdEngagement: hasUxdEngagement,
   hasReleaseType: hasReleaseType,
   hasTargetVersion: hasTargetVersion,
   hasAssignee: hasAssignee,
   hasPmAssigned: hasPmAssigned,
+  hasRfeLink: hasRfeLink,
+  hasStratCreatorSignOff: hasStratCreatorSignOff,
   RUBRIC_PASS_THRESHOLD: RUBRIC_PASS_THRESHOLD
 }

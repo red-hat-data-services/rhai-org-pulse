@@ -150,11 +150,11 @@ describe('FPDoR in health pipeline', function() {
     expect(riskItem.pass).toBe(false)
   })
 
-  it('passes cross-functional check when multiple non-doc components', async function() {
+  it('passes cross-functional check when Documentation and UXD components present', async function() {
     var storage = makeStorage(makeCandidatesCache([
       {
         issueKey: 'T-1', summary: 'F1', status: 'In Progress',
-        components: ['Dashboard', 'API'], fixVersion: '', deliveryOwner: 'Jane', tier: 1
+        components: ['Documentation', 'UXD', 'Dashboard'], fixVersion: '', deliveryOwner: 'Jane', tier: 1
       }
     ]))
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
@@ -164,7 +164,20 @@ describe('FPDoR in health pipeline', function() {
     expect(cfItem.state).toBe('passed')
   })
 
-  it('fails cross-functional check when single component', async function() {
+  it('fails cross-functional check when only Documentation present, no UXD', async function() {
+    var storage = makeStorage(makeCandidatesCache([
+      {
+        issueKey: 'T-1', summary: 'F1', status: 'In Progress',
+        components: ['Dashboard', 'Documentation'], fixVersion: '', deliveryOwner: 'Jane', tier: 1
+      }
+    ]))
+    var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
+    var items = result.features[0].fpdor.items
+    var cfItem = items.find(function(i) { return i.name === 'Cross-functional Engagement' })
+    expect(cfItem.pass).toBe(false)
+  })
+
+  it('fails cross-functional check when no Documentation and no UXD', async function() {
     var storage = makeStorage(makeCandidatesCache([
       { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: ['Dashboard'], fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
     ]))
@@ -239,11 +252,11 @@ describe('FPDoR in health pipeline', function() {
     expect(rtItem.pass).toBe(true)
   })
 
-  it('passes cross-functional check when Documentation present with >= 3 components', async function() {
+  it('passes cross-functional check with Documentation and UXD components', async function() {
     var storage = makeStorage(makeCandidatesCache([
       {
         issueKey: 'T-1', summary: 'F1', status: 'In Progress',
-        components: ['Dashboard', 'Documentation', 'API'], fixVersion: '', deliveryOwner: 'Jane', tier: 1
+        components: ['UXD', 'Documentation', 'Dashboard'], fixVersion: '', deliveryOwner: 'Jane', tier: 1
       }
     ]))
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
@@ -256,7 +269,7 @@ describe('FPDoR in health pipeline', function() {
     var storage = makeStorage(makeCandidatesCache([
       {
         issueKey: 'T-1', summary: 'F1', status: 'In Progress',
-        components: ['Dashboard', 'Documentation', 'API'], fixVersion: '', deliveryOwner: 'Jane',
+        components: ['Documentation', 'UXD', 'Dashboard'], fixVersion: '', deliveryOwner: 'Jane',
         pm: 'Rick', tier: 1, targetRelease: '3.5', phase: 'GA'
       }
     ]))
@@ -278,7 +291,7 @@ describe('FPDoR in health pipeline', function() {
     var storage = makeStorage(makeCandidatesCache([
       {
         issueKey: 'T-1', summary: 'F1', status: 'In Progress',
-        components: ['Dashboard', 'Documentation', 'API'], fixVersion: '', deliveryOwner: 'Jane',
+        components: ['Documentation', 'UXD', 'Dashboard'], fixVersion: '', deliveryOwner: 'Jane',
         pm: 'Rick', tier: 1, targetRelease: '3.5', phase: 'GA'
       },
       {
@@ -303,10 +316,8 @@ describe('FPDoR in health pipeline', function() {
     ]))
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
     var f = result.features[0]
-    expect(f.dor).toBeDefined()
-    expect(f.dor.gate).toBe('dor')
-    expect(f.dod).toBeDefined()
-    expect(f.dod.gate).toBe('dod')
+    expect(f.dor).toBeUndefined()
+    expect(f.dod).toBeUndefined()
     expect(f.planningStatus).toBeDefined()
     expect(f.fpdor).toBeDefined()
   })

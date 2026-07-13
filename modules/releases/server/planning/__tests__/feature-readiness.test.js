@@ -30,7 +30,7 @@ function makeLatest(overrides) {
     scores: { feasibility: 2, testability: 2, scope: 2, architecture: 2 },
     reviewers: { feasibility: 'approve', testability: 'approve', scope: 'approve', architecture: 'approve' },
     reviewedAt: '2026-01-01T00:00:00.000Z',
-    components: ['Platform', 'Serving'],
+    components: ['Platform', 'Serving', 'UXD'],
     approvedBy: null,
     approvedAt: null,
     riceScore: 100,
@@ -176,9 +176,12 @@ describe('hasBlockingViolations', function() {
     expect(hasBlockingViolations([])).toBe(false)
   })
 
-  it('returns true when violations contain a blocking rule', function() {
-    expect(hasBlockingViolations([{ id: 'missing-assignee' }])).toBe(true)
-    expect(hasBlockingViolations([{ id: 'open-children-on-closed' }])).toBe(true)
+  it('returns false for missing-assignee (no longer blocking)', function() {
+    expect(hasBlockingViolations([{ id: 'missing-assignee' }])).toBe(false)
+  })
+
+  it('returns false for open-children-on-closed (no longer blocking)', function() {
+    expect(hasBlockingViolations([{ id: 'open-children-on-closed' }])).toBe(false)
   })
 
   it('returns false for missing-fix-version (no longer blocking)', function() {
@@ -197,11 +200,11 @@ describe('hasBlockingViolations', function() {
     ])).toBe(false)
   })
 
-  it('returns true when mix of blocking and non-blocking', function() {
+  it('returns false when mix includes formerly-blocking rules', function() {
     expect(hasBlockingViolations([
       { id: 'stale-status-summary' },
       { id: 'missing-assignee' }
-    ])).toBe(true)
+    ])).toBe(false)
   })
 })
 
@@ -396,7 +399,7 @@ describe('buildFeatureReadiness', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving', 'UXD'], docsRequired: 'Required' }] }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
@@ -459,7 +462,7 @@ describe('buildFeatureReadiness', function() {
       var candidateCache = {
         data: { features: [{ issueKey: 'RHAISTRAT-1', tier: 1, fixVersion: '3.6.0', targetRelease: 'rhoai-3.6' }] }
       }
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving', 'UXD'], docsRequired: 'Required' }] }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
@@ -474,7 +477,7 @@ describe('buildFeatureReadiness', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving', 'UXD'], docsRequired: 'Required' }] }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
@@ -540,7 +543,7 @@ describe('buildFeatureReadiness', function() {
       var hygieneCache = {
         features: { 'RHAISTRAT-1': { key: 'RHAISTRAT-1', team: 'Alpha', violations: violations } }
       }
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving', 'UXD'], docsRequired: 'Required' }] }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
@@ -569,7 +572,7 @@ describe('buildFeatureReadiness', function() {
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.pendingReview).toHaveLength(1)
       expect(result.pendingReview[0].confidence).toBe('not-ready')
-      expect(result.pendingReview[0].readinessGates.noBlockingViolations).toBe(false)
+      expect(result.pendingReview[0].readinessGates.noBlockingViolations).toBe(true)
     })
 
     it('non-blocking violations do not affect readiness', function() {
@@ -580,7 +583,7 @@ describe('buildFeatureReadiness', function() {
       var hygieneCache = {
         features: { 'RHAISTRAT-1': { key: 'RHAISTRAT-1', team: 'Alpha', violations: violations } }
       }
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving', 'UXD'], docsRequired: 'Required' }] }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
@@ -592,7 +595,7 @@ describe('buildFeatureReadiness', function() {
       expect(result.ready[0].readinessGates.noBlockingViolations).toBe(true)
     })
 
-    it('health-pipeline feature with blocking hygiene goes to pendingReview', function() {
+    it('health-pipeline feature with hygiene violations still has noBlockingViolations=true (hygiene decoupled)', function() {
       var store = makeFeaturesStore({})
       var healthCache = {
         features: [{
@@ -612,7 +615,7 @@ describe('buildFeatureReadiness', function() {
       })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.pendingReview).toHaveLength(1)
-      expect(result.pendingReview[0].readinessGates.noBlockingViolations).toBe(false)
+      expect(result.pendingReview[0].readinessGates.noBlockingViolations).toBe(true)
     })
   })
 
@@ -703,7 +706,7 @@ describe('buildFeatureReadiness', function() {
           ]
         }
       }
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving', 'UXD'], docsRequired: 'Required' }] }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
@@ -801,7 +804,7 @@ describe('buildFeatureReadiness', function() {
           storyPoints: 5,
           epicCount: 3,
           releaseType: 'GA',
-          components: ['Platform', 'Serving'],
+          components: ['Platform', 'Serving', 'UXD'],
           docsRequired: 'Required'
         }]
       }
@@ -827,7 +830,7 @@ describe('buildFeatureReadiness', function() {
         data: { features: [{ issueKey: 'RHAISTRAT-1', tier: 1, bigRock: 'AI Speed', targetRelease: 'rhoai-3.6-cand', fixVersion: '3.6.0-cand' }] }
       }
       var healthCache = {
-        features: [{ key: 'RHAISTRAT-1', tier: 'T3', bigRock: 'Platform', targetRelease: 'rhoai-3.6-health', fixVersions: '3.6.0-health', deliveryOwner: 'Alice', pmOwner: 'Jane', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' }]
+        features: [{ key: 'RHAISTRAT-1', tier: 'T3', bigRock: 'Platform', targetRelease: 'rhoai-3.6-health', fixVersions: '3.6.0-health', deliveryOwner: 'Alice', pmOwner: 'Jane', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving', 'UXD'], docsRequired: 'Required' }]
       }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
@@ -869,7 +872,7 @@ describe('buildFeatureReadiness', function() {
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
       var healthCache = {
-        features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' }]
+        features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving', 'UXD'], docsRequired: 'Required' }]
       }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
@@ -887,7 +890,7 @@ describe('buildFeatureReadiness', function() {
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
       var healthCache = {
-        features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' }]
+        features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving', 'UXD'], docsRequired: 'Required' }]
       }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
@@ -911,8 +914,8 @@ describe('buildFeatureReadiness', function() {
       })
       var healthCache = {
         features: [
-          { key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' },
-          { key: 'RHAISTRAT-2', deliveryOwner: 'Bob', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' }
+          { key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving', 'UXD'], docsRequired: 'Required' },
+          { key: 'RHAISTRAT-2', deliveryOwner: 'Bob', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving', 'UXD'], docsRequired: 'Required' }
         ]
       }
       var readFromStorage = makeReadFromStorage({
@@ -1080,7 +1083,7 @@ describe('buildFeatureReadiness', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'wrong-owner', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'wrong-owner', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving', 'UXD'], docsRequired: 'Required' }] }
       var hygieneCache = { features: { 'RHAISTRAT-1': { key: 'RHAISTRAT-1', team: 'Real Team' } } }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
@@ -1104,7 +1107,7 @@ describe('buildFeatureReadiness', function() {
       })
       var healthCache = {
         features: [
-          { key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' },
+          { key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving', 'UXD'], docsRequired: 'Required' },
           { key: 'RHAISTRAT-2', priorityScore: null },
           { key: 'RHAISTRAT-3', priorityScore: null }
         ]
@@ -1167,7 +1170,7 @@ describe('buildFeatureReadiness', function() {
         features: [{
           key: 'AIPCC-500', summary: 'Health Feature', status: 'In Progress',
           priority: 'Major', deliveryOwner: 'Jane', pm: 'Rick',
-          components: ['Dashboard', 'Documentation'], targetRelease: 'rhoai-3.6',
+          components: ['Documentation', 'UXD', 'Dashboard'], targetRelease: 'rhoai-3.6',
           scores: { feasibility: 2, testability: 2, scope: 2, architecture: 2 }
         }]
       }
@@ -1255,8 +1258,8 @@ describe('buildFeatureReadiness', function() {
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
         'releases/planning/config.json': config,
-        'releases/planning/health-cache-3.5-all.json': { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.5', priorityScore: 80, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' }] },
-        'releases/planning/health-cache-3.6-all.json': { features: [{ key: 'RHAISTRAT-2', deliveryOwner: 'Bob', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: 60, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' }] }
+        'releases/planning/health-cache-3.5-all.json': { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.5', priorityScore: 80, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving', 'UXD'], docsRequired: 'Required' }] },
+        'releases/planning/health-cache-3.6-all.json': { features: [{ key: 'RHAISTRAT-2', deliveryOwner: 'Bob', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: 60, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving', 'UXD'], docsRequired: 'Required' }] }
       })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.ready).toHaveLength(2)
@@ -1309,7 +1312,7 @@ describe('buildFeatureReadiness', function() {
         releaseType: 'GA',
         deliveryOwner: 'Alice',
         pmOwner: 'Jane',
-        components: ['Platform', 'Serving'],
+        components: ['Documentation', 'UXD', 'Platform'],
         docsRequired: 'Required',
         effort: 5,
         scores: { testability: 2, architecture: 2, feasibility: 2, scope: 2 },
@@ -1363,13 +1366,15 @@ describe('buildFeatureReadiness', function() {
     })
 
     it('returns isReady=false when components is empty', function() {
-      var result = computeReadiness(readyFeature({ components: [] }))
+      var result = computeReadiness(readyFeature({ components: [], docsRequired: null }))
       expect(result.isReady).toBe(false)
     })
 
-    it('cross-functional passes with multiple components even without docs', function() {
+    it('cross-functional fails with multiple components but no Documentation or UXD', function() {
       var result = computeReadiness(readyFeature({ components: ['Platform', 'UI'], docsRequired: null }))
-      expect(result.isReady).toBe(true)
+      expect(result.isReady).toBe(false)
+      var cfItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engagement' })
+      expect(cfItem.pass).toBe(false)
     })
 
     it('cross-functional fails with single non-doc component and no docsRequired', function() {
@@ -1395,10 +1400,10 @@ describe('buildFeatureReadiness', function() {
       expect(result.gates.pastRefinement).toBe(false)
     })
 
-    it('returns isReady=false when blocking violations exist', function() {
+    it('hygiene violations do not gate readiness (BLOCKING_HYGIENE_RULES is empty)', function() {
       var result = computeReadiness(readyFeature({ violations: [{ id: 'missing-assignee' }] }))
-      expect(result.isReady).toBe(false)
-      expect(result.gates.noBlockingViolations).toBe(false)
+      expect(result.isReady).toBe(true)
+      expect(result.gates.noBlockingViolations).toBe(true)
     })
 
     it('non-blocking violations do not fail the gate', function() {
@@ -1462,30 +1467,85 @@ describe('buildFeatureReadiness', function() {
       expect(scopeItem.pass).toBe(true)
     })
 
-    // --- Cross-functional tests ---
+    it('scope defined passes with RFE link as fallback (no pipeline, no sizing)', function() {
+      var result = computeReadiness(readyFeature({ scores: {}, epicCount: 0, storyPoints: 0, effort: null, tshirtSize: null, sourceRfe: 'RFE-123' }))
+      var scopeItem = result.fpdor.items.find(function(i) { return i.name === 'Scope Defined' })
+      expect(scopeItem.pass).toBe(true)
+    })
 
-    it('cross-functional passes with 2 non-doc components', function() {
-      var result = computeReadiness(readyFeature({ components: ['Platform', 'Serving'] }))
+    it('scope defined passes with linkedRfeKey as fallback', function() {
+      var result = computeReadiness(readyFeature({ scores: {}, epicCount: 0, storyPoints: 0, effort: null, tshirtSize: null, linkedRfeKey: 'RFE-456' }))
+      var scopeItem = result.fpdor.items.find(function(i) { return i.name === 'Scope Defined' })
+      expect(scopeItem.pass).toBe(true)
+    })
+
+    // --- Strat-creator sign-off (humanVerified) tests ---
+
+    it('humanVerified is set on rubric items when strat-creator-human-sign-off label present', function() {
+      var result = computeReadiness(readyFeature({ labels: ['strat-creator-human-sign-off'] }))
+      var items = result.fpdor.items
+      var reqItem = items.find(function(i) { return i.name === 'Requirements Clarity' })
+      var acItem = items.find(function(i) { return i.name === 'Acceptance Criteria' })
+      var archItem = items.find(function(i) { return i.name === 'Architectural Alignment' })
+      var riskItem = items.find(function(i) { return i.name === 'Risks & Assumptions' })
+      expect(reqItem.humanVerified).toBe(true)
+      expect(acItem.humanVerified).toBe(true)
+      expect(archItem.humanVerified).toBe(true)
+      expect(riskItem.humanVerified).toBe(true)
+    })
+
+    it('humanVerified is not set on non-rubric items when sign-off label present', function() {
+      var result = computeReadiness(readyFeature({ labels: ['strat-creator-human-sign-off'] }))
+      var items = result.fpdor.items
+      var riceItem = items.find(function(i) { return i.name === 'RICE Score' })
+      var cfItem = items.find(function(i) { return i.name === 'Cross-functional Engagement' })
+      var tvItem = items.find(function(i) { return i.name === 'Target Version' })
+      expect(riceItem.humanVerified).toBeUndefined()
+      expect(cfItem.humanVerified).toBeUndefined()
+      expect(tvItem.humanVerified).toBeUndefined()
+    })
+
+    it('humanVerified is not set when sign-off label is absent', function() {
+      var result = computeReadiness(readyFeature({ labels: [] }))
+      var items = result.fpdor.items
+      var reqItem = items.find(function(i) { return i.name === 'Requirements Clarity' })
+      expect(reqItem.humanVerified).toBeUndefined()
+    })
+
+    // --- Cross-functional tests (Documentation AND UXD required) ---
+
+    it('cross-functional passes with Documentation and UXD components', function() {
+      var result = computeReadiness(readyFeature({ components: ['Documentation', 'UXD'], docsRequired: null }))
       var cfItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engagement' })
       expect(cfItem.pass).toBe(true)
     })
 
-    it('cross-functional fails with single component', function() {
-      var result = computeReadiness(readyFeature({ components: ['Platform'] }))
-      var cfItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engagement' })
-      expect(cfItem.pass).toBe(false)
-    })
-
-    it('cross-functional fails with Documentation + 1 other (need >= 3)', function() {
-      var result = computeReadiness(readyFeature({ components: ['Documentation', 'Platform'] }))
-      var cfItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engagement' })
-      expect(cfItem.pass).toBe(false)
-    })
-
-    it('cross-functional passes with Documentation + 2 others (>= 3)', function() {
-      var result = computeReadiness(readyFeature({ components: ['Documentation', 'Platform', 'Serving'] }))
+    it('cross-functional passes with docsRequired and UXD component', function() {
+      var result = computeReadiness(readyFeature({ components: ['UXD', 'Platform'], docsRequired: 'Required' }))
       var cfItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engagement' })
       expect(cfItem.pass).toBe(true)
+    })
+
+    it('cross-functional fails with only Documentation, no UXD', function() {
+      var result = computeReadiness(readyFeature({ components: ['Documentation', 'Platform'], docsRequired: null }))
+      var cfItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engagement' })
+      expect(cfItem.pass).toBe(false)
+      expect(cfItem.detail).toContain('missing UXD component')
+    })
+
+    it('cross-functional fails with only UXD, no Documentation or docsRequired', function() {
+      var result = computeReadiness(readyFeature({ components: ['UXD', 'Platform'], docsRequired: null }))
+      var cfItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engagement' })
+      expect(cfItem.pass).toBe(false)
+      expect(cfItem.detail).toContain('missing Documentation component')
+    })
+
+    it('cross-functional fails with no Documentation, no UXD, no docsRequired', function() {
+      var result = computeReadiness(readyFeature({ components: ['Platform'], docsRequired: null }))
+      var cfItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engagement' })
+      expect(cfItem.pass).toBe(false)
+      expect(cfItem.detail).toContain('missing Documentation')
+      expect(cfItem.detail).toContain('missing UXD')
     })
 
     // --- Requirements Clarity tests ---
@@ -1586,7 +1646,7 @@ describe('buildFeatureReadiness', function() {
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
       var healthCache = {
-        features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: 70, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' }]
+        features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: 70, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving', 'UXD'], docsRequired: 'Required' }]
       }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
@@ -1684,7 +1744,7 @@ describe('buildFeatureReadiness', function() {
       })
       var healthCache = {
         features: [
-          { key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: 70, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' },
+          { key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: 70, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving', 'UXD'], docsRequired: 'Required' },
           { key: 'AIPCC-1000', summary: 'AIPCC Ready', status: 'In Progress', priority: 'Major', deliveryOwner: 'Alice', blockerCount: 0, targetRelease: 'rhoai-3.6' }
         ]
       }
@@ -1708,7 +1768,7 @@ describe('buildFeatureReadiness', function() {
       var hygieneCache = {
         features: { 'RHAISTRAT-1': { key: 'RHAISTRAT-1', team: 'Alpha', violations: violations } }
       }
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving', 'UXD'], docsRequired: 'Required' }] }
       var registryData = {
         releases: [
           { id: 'rhoai-3.6', displayName: 'RHOAI 3.6', fixVersions: ['RHOAI-3.6'], state: 'active', milestones: {} }
@@ -1749,7 +1809,7 @@ describe('buildFeatureReadiness', function() {
       })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.pendingReview[0].violations).toEqual(violations)
-      expect(result.pendingReview[0].readinessGates.noBlockingViolations).toBe(false)
+      expect(result.pendingReview[0].readinessGates.noBlockingViolations).toBe(true)
     })
 
     it('prefers direct config key match over alias', function() {
@@ -1758,7 +1818,7 @@ describe('buildFeatureReadiness', function() {
       })
       var directViolations = [{ id: 'stale-status-summary', name: 'Direct', category: 'timeliness', message: 'Direct' }]
       var aliasViolations = [{ id: 'missing-assignee', name: 'Alias', category: 'ownership', message: 'Alias' }]
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving'], docsRequired: 'Required' }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null, storyPoints: 5, epicCount: 3, releaseType: 'GA', components: ['Platform', 'Serving', 'UXD'], docsRequired: 'Required' }] }
       var registryData = {
         releases: [
           { id: 'rhoai-3.6', displayName: 'RHOAI 3.6', fixVersions: [], state: 'active', milestones: {} }
@@ -2908,9 +2968,12 @@ describe('computeHygieneStatus', function() {
     expect(computeHygieneStatus([{ id: 'some-minor-issue' }])).toBe('warning')
   })
 
-  it('returns blocking when a blocking violation is present', function() {
-    expect(computeHygieneStatus([{ id: 'missing-assignee' }])).toBe('blocking')
-    expect(computeHygieneStatus([{ id: 'open-children-on-closed' }])).toBe('blocking')
+  it('returns warning for missing-assignee (no longer blocking)', function() {
+    expect(computeHygieneStatus([{ id: 'missing-assignee' }])).toBe('warning')
+  })
+
+  it('returns warning for open-children-on-closed (no longer blocking)', function() {
+    expect(computeHygieneStatus([{ id: 'open-children-on-closed' }])).toBe('warning')
   })
 
   it('returns warning for missing-fix-version (no longer blocking)', function() {
@@ -2921,11 +2984,11 @@ describe('computeHygieneStatus', function() {
     expect(computeHygieneStatus([{ id: 'missing-target-version' }])).toBe('warning')
   })
 
-  it('returns blocking when mix of blocking and non-blocking', function() {
+  it('returns warning when mix includes formerly-blocking rules', function() {
     expect(computeHygieneStatus([
       { id: 'some-minor-issue' },
       { id: 'missing-assignee' }
-    ])).toBe('blocking')
+    ])).toBe('warning')
   })
 })
 
@@ -3021,7 +3084,7 @@ describe('mergeFeatureData', function() {
   it('computes hygieneStatus from violations', function() {
     var hygieneIndex = new Map([['K-1', [{ id: 'missing-assignee' }]]])
     var r1 = mergeFeatureData('K-1', null, {}, new Map(), new Map(), hygieneIndex, new Map(), new Map())
-    expect(r1.hygieneStatus).toBe('blocking')
+    expect(r1.hygieneStatus).toBe('warning')
 
     var r2 = mergeFeatureData('K-2', null, {}, new Map(), new Map(), new Map(), new Map(), new Map())
     expect(r2.hygieneStatus).toBe('unknown')

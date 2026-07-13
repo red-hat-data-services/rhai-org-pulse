@@ -5,10 +5,9 @@
  *   1. Load features from Big Rocks candidates cache
  *   2. Load milestone dates (Product Pages → Smartsheet fallback for freeze dates)
  *   3. Run Jira enrichment (two-pass)
- *   4. Evaluate DoR for each feature
+ *   4. Evaluate FPDoR readiness for each feature
  *   5. Compute risk for each feature
- *   6. Compute RICE scores (if enabled)
- *   7. Build and write health cache
+ *   6. Build and write health cache
  *
  * Graceful degradation at every step -- if any data source is unavailable,
  * the pipeline continues with reduced accuracy rather than failing entirely.
@@ -16,15 +15,47 @@
 
 const { loadIndex, loadFeatureDetail } = require('../cache-reader')
 const { getConfig, getConfiguredReleases, loadBigRocks } = require('../config')
-const { JIRA_BROWSE_URL, CLOSED_STATUSES, PLANNING_DEADLINE_OFFSET_DAYS, VALID_PHASES } = require('../constants')
+const { JIRA_BROWSE_URL, CLOSED_STATUSES, PLANNING_DEADLINE_OFFSET_DAYS, VALID_PHASES, STRAT_CREATOR_LABELS } = require('../constants')
 const { enrichFeatures } = require('./jira-enrichment')
-const { computeDoR, computeDoD, computePlanningChecks, derivePlanningStatus, applyBlockerEscalation, parseStratCreatorStatus } = require('./planning-gates')
 const { computeFeatureRisk } = require('./risk-engine')
 var { computeFPDoRReadiness, extractRubricData } = require('../fpdor')
 const { computePriorityScores } = require('./priority-scorer')
 const smartsheetClient = require('../../../../../shared/server/smartsheet')
 
 var DATA_PREFIX = 'releases/planning'
+
+function parseStratCreatorStatus(labels) {
+  if (!labels || !Array.isArray(labels) || labels.length === 0) return 'not-assessed'
+  if (labels.indexOf(STRAT_CREATOR_LABELS.HUMAN_SIGN_OFF) !== -1) return 'human-sign-off'
+  if (labels.indexOf(STRAT_CREATOR_LABELS.RUBRIC_PASS) !== -1) return 'rubric-pass'
+  if (labels.indexOf(STRAT_CREATOR_LABELS.NEEDS_ATTENTION) !== -1) return 'needs-attention'
+  return 'not-assessed'
+}
+
+function computePlanningChecks(feature) {
+  var checks = []
+  var components = feature.components || []
+  var hasComponents = Array.isArray(components) ? components.length > 0 : (typeof components === 'string' && components.trim().length > 0)
+  checks.push({ id: 'DoR-P1', label: 'Components Set', passed: hasComponents, severity: 'hard-blocker', detail: hasComponents ? (Array.isArray(components) ? components.join(', ') : components) : 'No components assigned' })
+  var pm = feature.pm || ''
+  var hasPM = typeof pm === 'object' ? !!(pm.displayName || pm.name) : pm.length > 0
+  checks.push({ id: 'DoR-P2', label: 'Product Manager Assigned', passed: hasPM, severity: 'hard-blocker', detail: hasPM ? (typeof pm === 'object' ? pm.displayName || pm.name : pm) : null })
+  var phase = feature.phase || feature.releaseType || ''
+  checks.push({ id: 'DoR-P3', label: 'Release Type Set', passed: phase.length > 0, severity: 'hard-blocker', detail: phase || 'No release type (DP/TP/GA) specified' })
+  var epicCount = feature.epicCount || 0
+  checks.push({ id: 'DoR-P4', label: 'Child Epics Created', passed: epicCount > 0, severity: 'hard-blocker', detail: epicCount > 0 ? epicCount + ' epic(s)' : 'No child epics linked' })
+  var hasRfe = !!(feature.rfe || feature.parentKey)
+  checks.push({ id: 'DoR-P5', label: 'RFE Linked', passed: hasRfe, severity: 'hard-blocker', detail: hasRfe ? (feature.rfe || feature.parentKey) : 'No source RFE linked' })
+  var hardBlockersFailed = checks.filter(function(c) { return c.severity === 'hard-blocker' && !c.passed })
+  return { checks: checks, passedCount: checks.filter(function(c) { return c.passed }).length, totalCount: checks.length, hasHardBlockers: hardBlockersFailed.length > 0, hardBlockersFailed: hardBlockersFailed }
+}
+
+function derivePlanningStatus(fpdorResult) {
+  if (!fpdorResult) return 'not-ready'
+  if (fpdorResult.passedCount === fpdorResult.totalCount) return 'ready-for-execution'
+  if (fpdorResult.passedCount >= Math.ceil(fpdorResult.totalCount / 2)) return 'in-planning'
+  return 'not-ready'
+}
 
 /**
  * Get a display name from an assignee/pm field that may be a string or object.
@@ -690,21 +721,15 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   var blockedCount = 0
   var byPlanningStatus = { 'not-ready': 0, 'in-planning': 0, 'ready-for-execution': 0 }
   var cardCounts = {
-    total: 0, dorPassed: 0, dodPassed: 0, stratSignedOff: 0,
+    total: 0, stratSignedOff: 0,
     riceComplete: 0, ownerAssigned: 0, versionSet: 0, unblocked: 0, escalatedBlockers: 0
   }
   var stratCreatorCoverage = { signedOff: 0, rubricPass: 0, needsAttention: 0, notAssessed: 0 }
-  var dorOpts = { enableStratCreator: !!healthConfig.enableStratCreator, enableRice: !!healthConfig.enableRice }
 
   for (var i = 0; i < features.length; i++) {
     var feature = features[i]
     var key = feature.key
     var enrichment = enrichResult.enrichments.get(key) || null
-    // Evaluate planning gates
-    var dorResult = computeDoR(feature, enrichment, dorOpts)
-    var dodResult = computeDoD(feature, enrichment)
-    var planningStatus = derivePlanningStatus(dorResult, dodResult)
-    byPlanningStatus[planningStatus] = (byPlanningStatus[planningStatus] || 0) + 1
 
     // Derive phase for risk engine
     var featurePhase = getFeaturePhase(feature)
@@ -728,6 +753,9 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     })
     var rubricData = extractRubricData(featureForFpdor)
     var fpdorResult = computeFPDoRReadiness(featureForFpdor, rubricData)
+
+    var planningStatus = derivePlanningStatus(fpdorResult)
+    byPlanningStatus[planningStatus] = (byPlanningStatus[planningStatus] || 0) + 1
 
     // Compute risk
     var riskResult = computeFeatureRisk(featureForRisk, milestones, enrichment, {
@@ -792,8 +820,6 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
         flags: riskResult.flags,
         override: override
       },
-      dor: dorResult,
-      dod: dodResult,
       planningStatus: planningStatus,
       rice: riceResult,
       planningChecks: planningChecksResult,
@@ -811,8 +837,6 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
 
     // Accumulate card counts
     cardCounts.total++
-    if (dorResult.passed) cardCounts.dorPassed++
-    if (dodResult.passed) cardCounts.dodPassed++
 
     // strat-creator coverage
     var featureLabels = (feature.labels && feature.labels.length > 0) ? feature.labels : (enrichment ? enrichment.labels : null) || []
@@ -822,18 +846,16 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     else if (stratStatus === 'needs-attention') stratCreatorCoverage.needsAttention++
     else stratCreatorCoverage.notAssessed++
 
-    // Warning-level card counts from DoR warnings
-    for (var wi = 0; wi < dorResult.warnings.length; wi++) {
-      var w = dorResult.warnings[wi]
-      if (w.id === 'DoR-W1' && w.passed) cardCounts.ownerAssigned++
-      if (w.id === 'DoR-W2' && w.passed) cardCounts.versionSet++
-      if (w.id === 'DoR-W3' && w.passed) cardCounts.unblocked++
-    }
-
-    // RICE complete from DoR blockers
-    for (var bi = 0; bi < dorResult.blockers.length; bi++) {
-      if (dorResult.blockers[bi].id === 'DoR-B2' && dorResult.blockers[bi].passed) cardCounts.riceComplete++
-    }
+    // Card counts derived from direct field checks (no longer from DoR/DoD)
+    if (feature.deliveryOwner || feature.assignee) cardCounts.ownerAssigned++
+    var fv = feature.fixVersions || []
+    var tv = feature.targetVersions || []
+    if (fv.length > 0 || tv.length > 0) cardCounts.versionSet++
+    if (riceResult) cardCounts.riceComplete++
+    var safeEnrichment = enrichment || {}
+    var depLinks = safeEnrichment.dependencyLinks || []
+    var hasUnresolved = depLinks.some(function(d) { return d.direction === 'inward' && d.type === 'Blocks' && CLOSED_STATUSES.indexOf(d.linkedStatus) === -1 })
+    if (!hasUnresolved) cardCounts.unblocked++
   }
 
   // Step 6b: Build Big Rock priority map and compute composite priority scores
@@ -851,9 +873,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     healthFeatures[pi].priorityBreakdown = pResult ? pResult.breakdown : null
   }
 
-  // Step 6a: Blocker escalation pass
-  var escalatedCount = applyBlockerEscalation(healthFeatures)
-  cardCounts.escalatedBlockers = escalatedCount
+  cardCounts.escalatedBlockers = 0
 
   // Degradation logging
   if (healthConfig.enableStratCreator && stratCreatorCoverage.signedOff === 0 && stratCreatorCoverage.rubricPass === 0 && stratCreatorCoverage.needsAttention === 0) {
@@ -1011,5 +1031,8 @@ module.exports = {
   buildEmptyCache: buildEmptyCache,
   splitCommaString: splitCommaString,
   passesPhaseFilter: passesPhaseFilter,
-  mapCandidateToHealthFeature: mapCandidateToHealthFeature
+  mapCandidateToHealthFeature: mapCandidateToHealthFeature,
+  computePlanningChecks: computePlanningChecks,
+  parseStratCreatorStatus: parseStratCreatorStatus,
+  derivePlanningStatus: derivePlanningStatus
 }

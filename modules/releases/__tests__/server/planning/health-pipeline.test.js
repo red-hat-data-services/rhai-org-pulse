@@ -784,13 +784,12 @@ describe('runHealthPipeline', function() {
     expect(result.summary.stratCreatorCoverage).toBeDefined()
     expect(result.features[0]).toHaveProperty('key')
     expect(result.features[0]).toHaveProperty('risk')
-    expect(result.features[0]).toHaveProperty('dor')
-    expect(result.features[0]).toHaveProperty('dod')
+    expect(result.features[0]).toHaveProperty('fpdor')
     expect(result.features[0]).toHaveProperty('planningStatus')
     expect(result.features[0]).toHaveProperty('issueType')
     expect(result.features[0]).toHaveProperty('versionStatus')
-    expect(result.features[0].dor.gate).toBe('dor')
-    expect(result.features[0].dod.gate).toBe('dod')
+    expect(result.features[0].dor).toBeUndefined()
+    expect(result.features[0].dod).toBeUndefined()
   })
 
   it('computes planningFreezes from previous phase code freeze minus 7 days', async function() {

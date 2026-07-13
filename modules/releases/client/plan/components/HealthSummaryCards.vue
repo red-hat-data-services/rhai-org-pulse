@@ -40,10 +40,10 @@ function handleCardClick(card) {
 }
 
 var primaryCards = computed(function() {
-  var c = props.cardCounts || { total: 0, dorPassed: 0, dodPassed: 0, stratSignedOff: 0, riceComplete: 0 }
+  var c = props.cardCounts || { total: 0, stratSignedOff: 0, riceComplete: 0 }
+  var fr = props.fpdorReadiness || null
   return [
-    { label: 'DoR Passed', count: c.dorPassed, total: c.total, color: 'indigo' },
-    { label: 'DoD Passed', count: c.dodPassed, total: c.total, color: 'amber' },
+    { label: 'FPDoR Ready', count: fr ? fr.fullyPassed : 0, total: fr ? fr.totalFeatures : c.total, color: 'indigo' },
     { label: 'Strategy Signed Off', count: c.stratSignedOff, total: c.total, color: 'blue' },
     { label: 'RICE Complete', count: c.riceComplete, total: c.total, color: 'green' }
   ]

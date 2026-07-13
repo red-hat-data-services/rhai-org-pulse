@@ -64,7 +64,7 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
       var level = effectiveLevel(h)
       var existing = map[f.rfe]
       if (!existing || isWorse(level, effectiveLevel(existing))) {
-        map[f.rfe] = { risk: { ...h.risk, level: level }, dor: h.dor || null, dod: h.dod || null, planningStatus: h.planningStatus || '' }
+        map[f.rfe] = { risk: { ...h.risk, level: level }, planningStatus: h.planningStatus || '' }
       }
     }
     return map
@@ -108,7 +108,7 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
       for (var ri = 0; ri < rockNames.length; ri++) {
         var rockName = rockNames[ri]
         if (!result[rockName]) {
-          result[rockName] = { worstLevel: 'green', totalFlags: 0, featureCount: 0, dorPassedCount: 0, dodPassedCount: 0, planningReady: 0, planningTotal: 0, planningBlockers: 0, fpdorReady: 0, fpdorTotal: 0, versionedCount: 0, missingVersionCount: 0, committedCount: 0, targetedCount: 0, distinctVersions: new Set(), releaseTypes: new Set() }
+          result[rockName] = { worstLevel: 'green', totalFlags: 0, featureCount: 0, planningReady: 0, planningTotal: 0, planningBlockers: 0, fpdorReady: 0, fpdorTotal: 0, versionedCount: 0, missingVersionCount: 0, committedCount: 0, targetedCount: 0, distinctVersions: new Set(), releaseTypes: new Set() }
         }
 
         // Collect release type from candidates data (available on all features)
@@ -123,8 +123,6 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
 
         result[rockName].featureCount++
         result[rockName].totalFlags += (h.risk.score || 0)
-        if (h.dor && h.dor.passed) result[rockName].dorPassedCount++
-        if (h.dod && h.dod.passed) result[rockName].dodPassedCount++
         var level = effectiveLevel(h)
         if (isWorse(level, result[rockName].worstLevel)) {
           result[rockName].worstLevel = level
@@ -197,8 +195,6 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
           flagCount: flags.length,
           flagCategories: flags.map(function(fl) { return fl.category }),
           summary: h ? (h.summary || '') : '',
-          dorPassed: h && h.dor ? h.dor.passed : null,
-          dodPassed: h && h.dod ? h.dod.passed : null,
           planningStatus: h ? (h.planningStatus || '') : '',
           deliveryOwner: h ? (h.deliveryOwner || '') : '',
           jiraUrl: h ? (h.jiraUrl || '') : '',

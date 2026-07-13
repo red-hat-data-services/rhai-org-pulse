@@ -5,7 +5,7 @@ var { deriveHumanReviewStatus: sharedDeriveStatus } = require('../execution/ai-r
 var { computeFPDoRReadiness, extractRubricData } = require('./fpdor')
 var { computePriorityScores } = require('./health/priority-scorer')
 
-var BLOCKING_HYGIENE_RULES = ['missing-assignee', 'open-children-on-closed']
+var BLOCKING_HYGIENE_RULES = []
 
 function computeBlockers(feature, productPath) {
   var blockingDimensions = []
@@ -42,10 +42,8 @@ function computeReadiness(feature) {
   var pastRefinement = !!feature.status && EARLY_STATUSES.indexOf(feature.status) === -1
   var noBlockingViolations = !hasBlockingViolations(feature.violations)
 
-  var isReady = fpdor.passedCount === fpdor.evaluatedCount
-    && fpdor.evaluatedCount >= 7
-    && pastRefinement
-    && noBlockingViolations
+  var isReady = pastRefinement
+    && fpdor.passedCount === fpdor.totalCount
 
   var gates = {
     fpDorPassed: fpdor.passedCount,
@@ -418,7 +416,7 @@ function mergeFeatureData(key, jiraFeatures, aiReviewMap, candidateIndex, health
   var releaseType = (health && health.releaseType) || (candidate && candidate.phase) || (jira && jira.releaseType) || null
   var assignee = deliveryOwner
   var pm = pmOwner || (health && health.pm) || (candidate && candidate.pm) || null
-  var docsRequired = (jira && jira.docsRequired) || null
+  var docsRequired = (health && health.docsRequired) || (jira && jira.docsRequired) || null
   var effort = (jira && jira.effort) || null
   var tshirtSize = (health && health.tshirtSize) || (aiReview && aiReview.size) || null
   var descriptionSignals = (jira && jira.descriptionSignals) || (health && health.descriptionSignals) || null
