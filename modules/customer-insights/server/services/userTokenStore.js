@@ -53,38 +53,10 @@ function createUserTokenStore(storageBackend) {
     writeToStorage(TOKEN_KEY, allTokens)
   }
 
-  /**
-   * Get spreadsheet config for a user
-   * @param {string} userEmail
-   * @returns {Promise<object|null>}
-   */
-  async function getSpreadsheetConfig(userEmail) {
-    const tokens = await getTokens(userEmail)
-    return tokens ? {
-      spreadsheetId: tokens.spreadsheetId || null,
-      spreadsheetName: tokens.spreadsheetName || null
-    } : null
-  }
-
-  /**
-   * Save spreadsheet config for a user
-   * @param {string} userEmail
-   * @param {string} spreadsheetId
-   * @param {string} spreadsheetName
-   */
-  async function saveSpreadsheetConfig(userEmail, spreadsheetId, spreadsheetName) {
-    const tokens = await getTokens(userEmail) || {}
-    tokens.spreadsheetId = spreadsheetId
-    tokens.spreadsheetName = spreadsheetName
-    await saveTokens(userEmail, tokens)
-  }
-
   return {
     getTokens,
     saveTokens,
-    deleteTokens,
-    getSpreadsheetConfig,
-    saveSpreadsheetConfig
+    deleteTokens
   }
 }
 

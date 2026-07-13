@@ -12,7 +12,8 @@
       { "id": "roadmap", "label": "Roadmap", "icon": "Map", "separatorBefore": true },
       { "id": "rfe-creator", "label": "Create RFE", "icon": "PenSquare" },
       { "id": "import", "label": "Import Data", "icon": "FileUp" }
-    ]
+    ],
+    "settingsComponent": "./client/components/CustomerInsightsSettings.vue"
   },
   "server": {
     "entry": "./server/index.js"
@@ -22,7 +23,7 @@
       {
         "key": "GOOGLE_SPREADSHEET_ID",
         "description": "Central Google Spreadsheet ID for customer interactions (service account access required)",
-        "required": true
+        "required": false
       },
       {
         "key": "GOOGLE_OAUTH_CLIENT_ID",

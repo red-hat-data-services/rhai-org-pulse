@@ -380,6 +380,4 @@ module.exports = function registerGoogleDriveAuthRoutes(router, context) {
       res.status(500).json({ error: error.message })
     }
   })
-
-  // Spreadsheet config endpoints removed - central spreadsheet is now configured via module secrets (GOOGLE_SPREADSHEET_ID)
 }
