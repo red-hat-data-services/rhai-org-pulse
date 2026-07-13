@@ -22,6 +22,16 @@
   "secrets": {
     "platform": ["github"]
   },
+  "searchIndex": [
+    {
+      "source": "system-health/disconnected/reports.json",
+      "items": "repos",
+      "label": "$key",
+      "context": "Disconnected Readiness",
+      "viewId": "component-maturity",
+      "params": { "tab": "disconnected" }
+    }
+  ],
   "export": {
     "files": [
       { "path": "system-health/disconnected/reports.json", "notes": "Disconnected readiness reports with history for all tracked repos" }

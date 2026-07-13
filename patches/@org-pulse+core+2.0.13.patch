@@ -1,0 +1,1293 @@
+diff --git a/node_modules/@org-pulse/core/server/dev-server.js b/node_modules/@org-pulse/core/server/dev-server.js
+index cde76d6..617b9af 100644
+--- a/node_modules/@org-pulse/core/server/dev-server.js
++++ b/node_modules/@org-pulse/core/server/dev-server.js
+@@ -331,6 +331,8 @@ async function startServer(options = {}) {
+   const { createExportRegistry } = require('../shared/server/export-registry');
+   const refreshRegistry = createRefreshRegistry(storageModule);
+   const exportRegistry = createExportRegistry();
++  const { createSearchIndexRegistry } = require('../shared/server/search-index-registry');
++  const searchIndexRegistry = createSearchIndexRegistry();
+ 
+   // Rate limiter for expensive export endpoints
+   const EXPORT_RATE_MAX = 5;
+@@ -409,6 +411,38 @@ async function startServer(options = {}) {
+   registerTokenRoutes(app, routeContext);
+   registerRoleRoutes(app, routeContext);
+ 
++  // ─── Routes: Search Index ───
++
++  let searchIndexCache = null;
++  let searchIndexCacheTime = 0;
++  const SEARCH_INDEX_TTL = 5 * 60 * 1000;
++
++  /**
++   * @openapi
++   * /api/search-index:
++   *   get:
++   *     summary: Aggregated search index from all modules
++   *     description: Returns searchable items from modules with searchIndex declarations or custom handlers. Cached for 5 minutes.
++   *     responses:
++   *       200:
++   *         description: Array of searchable items
++   */
++  app.get('/api/search-index', async function (_req, res) {
++    try {
++      const now = Date.now();
++      if (searchIndexCache && (now - searchIndexCacheTime) < SEARCH_INDEX_TTL) {
++        return res.json(searchIndexCache);
++      }
++      const items = await searchIndexRegistry.collect(storageModule);
++      searchIndexCache = items;
++      searchIndexCacheTime = now;
++      res.json(items);
++    } catch (err) {
++      console.error('[search-index] Failed to collect:', err.message);
++      res.status(500).json({ error: 'Failed to collect search index' });
++    }
++  });
++
+   // ─── Platform extension loading ───
+ 
+   const allocationStrategy = loadAllocationStrategy(platformPaths);
+@@ -421,7 +455,7 @@ async function startServer(options = {}) {
+   // ─── Module State ───
+ 
+   const coreServices = { storage: storageModule, requireAuth: authMiddleware, requireAdmin, requireTeamAdmin, requireRole, requireScope, roleStore, roleRegistry, scopeRegistry, secretRegistry, allocationStrategy };
+-  const registries = { diagnostics: diagnosticsRegistry, messages: messageRegistry, refresh: refreshRegistry, exports: exportRegistry };
++  const registries = { diagnostics: diagnosticsRegistry, messages: messageRegistry, refresh: refreshRegistry, exports: exportRegistry, searchIndex: searchIndexRegistry };
+ 
+   const persistedState = loadModuleState(storageModule);
+   const startupState = Object.assign({}, persistedState);
+diff --git a/node_modules/@org-pulse/core/server/module-loader.js b/node_modules/@org-pulse/core/server/module-loader.js
+index 688b9d0..95a79ac 100644
+--- a/node_modules/@org-pulse/core/server/module-loader.js
++++ b/node_modules/@org-pulse/core/server/module-loader.js
+@@ -220,6 +220,9 @@ function createModuleRouters(modules, coreServices, enabledSlugs, registries) {
+       const moduleCtx = buildModuleContext(coreServices, mod.slug, registries)
+       exported(router, moduleCtx)
+       routers[mod.slug] = router
++      if (mod.searchIndex && registries.searchIndex) {
++        registries.searchIndex.registerDeclarative(mod.slug, mod.searchIndex)
++      }
+       _mountedAtStartup.add(mod.slug)
+       console.log(`[module-loader] Created router for "${mod.slug}"`)
+     } catch (err) {
+diff --git a/node_modules/@org-pulse/core/shared/API.md b/node_modules/@org-pulse/core/shared/API.md
+index 2197cfd..bf52c3c 100644
+--- a/node_modules/@org-pulse/core/shared/API.md
++++ b/node_modules/@org-pulse/core/shared/API.md
+@@ -80,6 +80,7 @@ Core team owns `shared/` via CODEOWNERS. Changes require core team review.
+ | `module-context` | `{ buildModuleContext, createTestContext }` — builds per-module frozen context with scoped registration hooks. Context includes `secrets` (frozen object), `resolveSecret(envVarName)`, and `registerSecretValidator(key, fn)`. `createTestContext(overrides)` provides a mock context for unit tests (defaults: `secrets: {}`, `resolveSecret: () => undefined`). |
+ | `refresh-registry` | `{ createRefreshRegistry, parseCadence, RefreshSkip }` — ordered execution of module refresh handlers with per-handler cadence. `RefreshSkip` is a class: `new RefreshSkip(reason)` — return from a refresh handler to signal a skip without consuming cadence (`lastSuccessfulRun` is preserved). Registry with `register`, `get`, `getAll`, `runAll` (sequential by order, cadence-aware), `runModule` (ignores cadence), `getStatus` (includes cadence info), `isRunning`, `setCadenceOverride`, `getCadenceOverrides`, `parseCadence`. `parseCadence(str)` converts cadence strings (`'15m'`, `'12h'`, `'1d'`) to milliseconds. `register(id, config)` accepts optional `cadence` (default `'24h'`). `runAll({ force })` skips cadence checks when `force: true`; returns `{ counts, execution? }` where `counts = { total, due, skipped }`. `setCadenceOverride(handlerId, cadence)` sets admin override (min `'15m'`, `null` to clear), persisted in `refresh-cadence-overrides.json`. |
+ | `export-registry` | `{ createExportRegistry }` — module data export hooks. Registry with `register`, `getAll`, `run` (iterates with error isolation). |
++| `search-index-registry` | `{ createSearchIndexRegistry }` — module search index providers. Two modes: (1) **Declarative** — `searchIndex` array in `module.json` auto-generates from data files via `registerDeclarative(slug, entries)`. (2) **Custom** — `context.registerSearchIndex(fn)` for complex logic; fn receives `storage` and returns `[{ label, context, viewId, params?, keywords? }]`. Routes are built by the frontend from `module` + `viewId` + `params`. Registry with `register`, `registerDeclarative`, `collect` (aggregates both modes, error-isolated). Served at `GET /api/search-index` with 5-minute cache. |
+ | `platform-secrets` | Array of platform secret group definitions (`{ id, label, description, secrets[] }`). Groups: `jira`, `github`, `gitlab`, `ipa`, `google`. |
+ | `secret-registry` | `{ SecretRegistry }` — central registry for module secret declaration, resolution, validation, and diagnostics. Methods: `registerModuleSecrets(slug, declaration)`, `resolve()`, `getModuleSecrets(slug)`, `resolveSecret(envVarName)`, `registerValidator(key, fn)`, `validateAll()`, `validateKeys(keys)`, `getStatus()`, `getModuleStatus(slug)`. `validateKeys(keys)` runs only validators whose key is in the provided array. |
+ | `smartsheet` | `{ discoverReleases, discoverReleasesWithFreezes, discoverReleasesPartial, isConfigured, SMARTSHEET_SHEET_ID, createSmartsheetClient }` — SmartSheet API for release discovery. `createSmartsheetClient({ apiToken, sheetId? })` returns `{ discoverReleases, discoverReleasesWithFreezes, discoverReleasesPartial, isConfigured, SMARTSHEET_SHEET_ID }` with per-instance cache. |
+diff --git a/node_modules/@org-pulse/core/shared/server/module-context.js b/node_modules/@org-pulse/core/shared/server/module-context.js
+index dd3bde4..a758665 100644
+--- a/node_modules/@org-pulse/core/shared/server/module-context.js
++++ b/node_modules/@org-pulse/core/shared/server/module-context.js
+@@ -46,6 +46,7 @@
+  * @property {Function} registerMessageProvider - Register a message provider (id, fn)
+  * @property {Function} registerRefresh - Register a refresh handler (id, config)
+  * @property {Function} registerExport - Register a data export hook (fn)
++ * @property {Function} registerSearchIndex - Register a search index provider (fn returning searchable items)
+  * @property {Function} registerRole - Register a module role (id, config)
+  * @property {Function} registerScopes - Register module scopes (configs[])
+  * @property {Function} isRefreshRunning - Check if a global refresh-all is in progress
+@@ -63,6 +64,7 @@
+  * @property {object} [messages]     - Message registry with registerProvider method
+  * @property {object} [refresh]      - Refresh registry with register method
+  * @property {object} [exports]      - Export registry with register method
++ * @property {object} [searchIndex]  - Search index registry with register method
+  */
+ 
+ /**
+@@ -74,7 +76,7 @@
+  * @returns {ModuleContext}
+  */
+ function buildModuleContext(coreServices, slug, registries = {}) {
+-  const { diagnostics, messages, refresh, exports: exportRegistry } = registries
++  const { diagnostics, messages, refresh, exports: exportRegistry, searchIndex } = registries
+   const roleRegistry = coreServices.roleRegistry || null
+   const scopeRegistry = coreServices.scopeRegistry || null
+   const secretRegistry = coreServices.secretRegistry || null
+@@ -123,6 +125,10 @@ function buildModuleContext(coreServices, slug, registries = {}) {
+       ? function (fn) { exportRegistry.register(slug, fn) }
+       : function () {},
+ 
++    registerSearchIndex: searchIndex
++      ? function (fn) { searchIndex.register(slug, fn) }
++      : function () {},
++
+     isRefreshRunning: refresh
+       ? function () { return refresh.isRunning() }
+       : function () { return false },
+@@ -202,6 +208,7 @@ function createTestContext(overrides = {}) {
+     registerMessageProvider: noop,
+     registerRefresh: noop,
+     registerExport: noop,
++    registerSearchIndex: noop,
+     registerRole: noop,
+     registerScopes: noop,
+     isRefreshRunning: function () { return false },
+diff --git a/node_modules/@org-pulse/core/shared/server/search-index-registry.js b/node_modules/@org-pulse/core/shared/server/search-index-registry.js
+new file mode 100644
+index 0000000..11e4353
+--- /dev/null
++++ b/node_modules/@org-pulse/core/shared/server/search-index-registry.js
+@@ -0,0 +1,141 @@
++/**
++ * Search index registry — module-contributed searchable items.
++ *
++ * Supports two modes:
++ * 1. Declarative: module.json `searchIndex` array — auto-generates from data files
++ * 2. Custom handler: `context.registerSearchIndex(fn)` — for complex logic
++ *
++ * @module shared/server/search-index-registry
++ */
++
++function getNestedValue(obj, path) {
++  if (!path) return obj
++  var parts = path.split('.')
++  var current = obj
++  for (var i = 0; i < parts.length; i++) {
++    if (current == null) return null
++    current = current[parts[i]]
++  }
++  return current
++}
++
++function matchesFilter(item, filter) {
++  if (!filter) return true
++  var keys = Object.keys(filter)
++  for (var i = 0; i < keys.length; i++) {
++    if (item[keys[i]] !== filter[keys[i]]) return false
++  }
++  return true
++}
++
++function resolveParams(template, item) {
++  if (!template) return undefined
++  var result = {}
++  var keys = Object.keys(template)
++  for (var i = 0; i < keys.length; i++) {
++    var val = template[keys[i]]
++    if (typeof val === 'string' && val.startsWith('$')) {
++      result[keys[i]] = item[val.slice(1)]
++    } else {
++      result[keys[i]] = val
++    }
++  }
++  return result
++}
++
++function resolveKeywords(fields, item) {
++  if (!fields || !Array.isArray(fields)) return []
++  var kw = []
++  for (var i = 0; i < fields.length; i++) {
++    var val = item[fields[i]]
++    if (val) kw.push(String(val))
++  }
++  return kw
++}
++
++function processDeclaration(slug, decl, storage) {
++  var results = []
++  try {
++    var data = storage.readFromStorage(decl.source)
++    if (!data) return results
++    var raw = decl.items ? getNestedValue(data, decl.items) : data
++    var arr
++    if (Array.isArray(raw)) {
++      arr = raw
++    } else if (raw && typeof raw === 'object') {
++      arr = Object.keys(raw).map(function(k) { return Object.assign({ $key: k }, raw[k]) })
++    } else {
++      return results
++    }
++    for (var i = 0; i < arr.length; i++) {
++      var item = arr[i]
++      if (!matchesFilter(item, decl.filter)) continue
++      var label = item[decl.label]
++      if (!label && decl.fallbackLabel) label = item[decl.fallbackLabel]
++      if (!label) continue
++      results.push({
++        label: String(label),
++        context: decl.context || slug,
++        viewId: decl.viewId,
++        params: resolveParams(decl.params, item),
++        keywords: resolveKeywords(decl.keywords, item),
++        module: slug
++      })
++    }
++  } catch (err) {
++    console.error('[search-index] Declarative index for "' + slug + '" failed:', err.message)
++  }
++  return results
++}
++
++function createSearchIndexRegistry() {
++  var handlers = new Map()
++  var declarations = new Map()
++
++  function register(slug, fn) {
++    if (typeof fn !== 'function') {
++      console.warn('[search-index] Handler for "' + slug + '" is not a function, skipping')
++      return
++    }
++    handlers.set(slug, fn)
++  }
++
++  function registerDeclarative(slug, entries) {
++    if (!Array.isArray(entries) || entries.length === 0) return
++    declarations.set(slug, entries)
++  }
++
++  async function collect(storage) {
++    var results = []
++
++    for (var entry of declarations) {
++      var slug = entry[0]
++      var entries = entry[1]
++      for (var i = 0; i < entries.length; i++) {
++        var items = processDeclaration(slug, entries[i], storage)
++        results.push.apply(results, items)
++      }
++    }
++
++    for (var handlerEntry of handlers) {
++      var handlerSlug = handlerEntry[0]
++      var fn = handlerEntry[1]
++      try {
++        var handlerItems = await fn(storage)
++        if (Array.isArray(handlerItems)) {
++          for (var j = 0; j < handlerItems.length; j++) {
++            results.push(Object.assign({}, handlerItems[j], { module: handlerSlug }))
++          }
++        }
++      } catch (err) {
++        console.error('[search-index] Module "' + handlerSlug + '" handler failed:', err.message)
++      }
++    }
++
++    return results
++  }
++
++  return { register, registerDeclarative, collect }
++}
++
++module.exports = { createSearchIndexRegistry }
+diff --git a/node_modules/@org-pulse/core/src/__tests__/useCommandPalette.test.js b/node_modules/@org-pulse/core/src/__tests__/useCommandPalette.test.js
+new file mode 100644
+index 0000000..6d7da20
+--- /dev/null
++++ b/node_modules/@org-pulse/core/src/__tests__/useCommandPalette.test.js
+@@ -0,0 +1,359 @@
++import { describe, it, expect, vi, beforeEach } from 'vitest'
++import { ref } from 'vue'
++
++vi.mock('virtual:nav-discovery', () => ({
++  default: [
++    {
++      slug: 'releases',
++      viewId: 'deliver',
++      label: 'Conforma Insights',
++      context: 'Releases → Deliver',
++      params: { tab: 'conforma-insights' }
++    },
++    {
++      slug: 'releases',
++      viewId: 'deliver',
++      label: 'Risk Dashboard',
++      context: 'Releases → Deliver',
++      params: { tab: 'risk-dashboard' }
++    },
++    {
++      slug: 'releases',
++      viewId: 'reports',
++      label: 'Commitment Tracking',
++      context: 'Releases → Reports',
++      params: { report: 'commitment-tracking' }
++    }
++  ]
++}))
++
++import { useCommandPalette } from '../composables/useCommandPalette.js'
++
++function makeManifests(items = []) {
++  return ref(items.length > 0 ? items : [
++    {
++      slug: 'team-tracker',
++      name: 'People & Teams',
++      client: {
++        navItems: [
++          { id: 'home', label: 'Team Directory', icon: 'Users' },
++          { id: 'people', label: 'People', icon: 'User' },
++          { id: 'reports', label: 'Reports', icon: 'BarChart3' },
++          { id: 'manage', label: 'Manage', icon: 'Settings', requireRole: 'team-admin' }
++        ]
++      }
++    },
++    {
++      slug: 'releases',
++      name: 'Releases',
++      client: {
++        navItems: [
++          { id: 'registry', label: 'Manage', icon: 'Database', requireRole: 'planning-manager' },
++          { id: 'schedule', label: 'Schedule', icon: 'CalendarDays' },
++          { id: 'execute', label: 'Execute', icon: 'GitBranch' }
++        ]
++      }
++    }
++  ])
++}
++
++function createPalette(overrides = {}) {
++  return useCommandPalette({
++    manifests: makeManifests(overrides.manifests),
++    isAdmin: ref(overrides.isAdmin ?? false),
++    isTeamAdmin: ref(overrides.isTeamAdmin ?? false),
++    isManager: ref(overrides.isManager ?? false),
++    roles: ref(overrides.roles ?? []),
++    teamDataSource: ref(overrides.teamDataSource ?? '')
++  })
++}
++
++describe('useCommandPalette', () => {
++  describe('filteredResults', () => {
++    it('returns empty array when query is empty', () => {
++      const { filteredResults } = createPalette()
++      expect(filteredResults.value).toEqual([])
++    })
++
++    it('returns pages and actions when query matches', () => {
++      const { searchQuery, filteredResults } = createPalette()
++      searchQuery.value = 'e'
++      const pages = filteredResults.value.filter(r => r.type === 'page')
++      const actions = filteredResults.value.filter(r => r.type === 'action')
++      expect(pages.length).toBeGreaterThan(0)
++      expect(actions.length).toBeGreaterThan(0)
++    })
++
++    it('filters pages by label', () => {
++      const { searchQuery, filteredResults } = createPalette()
++      searchQuery.value = 'people'
++      const pages = filteredResults.value.filter(r => r.type === 'page')
++      expect(pages.some(p => p.label === 'People')).toBe(true)
++    })
++
++    it('filters actions by keyword', () => {
++      const { searchQuery, filteredResults } = createPalette()
++      searchQuery.value = 'dark'
++      const actions = filteredResults.value.filter(r => r.type === 'action')
++      expect(actions.some(a => a.id === 'toggle-theme')).toBe(true)
++    })
++
++    it('returns empty when no match', () => {
++      const { searchQuery, filteredResults } = createPalette()
++      searchQuery.value = 'xyznonexistent'
++      expect(filteredResults.value.length).toBe(0)
++    })
++
++    it('includes sublabel (module name) in page results', () => {
++      const { searchQuery, filteredResults } = createPalette()
++      searchQuery.value = 'Team Directory'
++      const teamPage = filteredResults.value.find(r => r.label === 'Team Directory')
++      expect(teamPage.sublabel).toBe('People & Teams')
++    })
++
++    it('matches by sublabel', () => {
++      const { searchQuery, filteredResults } = createPalette()
++      searchQuery.value = 'releases'
++      const pages = filteredResults.value.filter(r => r.type === 'page')
++      expect(pages.some(p => p.sublabel === 'Releases')).toBe(true)
++    })
++  })
++
++  describe('role filtering', () => {
++    it('hides role-gated items for unprivileged users', () => {
++      const { searchQuery, filteredResults } = createPalette()
++      searchQuery.value = 'manage'
++      const allIds = filteredResults.value.map(r => r.id)
++      expect(allIds).not.toContain('team-tracker::manage')
++      expect(allIds).not.toContain('releases::registry')
++    })
++
++    it('shows role-gated items for admins', () => {
++      const { searchQuery, filteredResults } = createPalette({ isAdmin: true })
++      searchQuery.value = 'manage'
++      const allIds = filteredResults.value.map(r => r.id)
++      expect(allIds).toContain('team-tracker::manage')
++      expect(allIds).toContain('releases::registry')
++    })
++
++    it('shows team-admin items for team-admins', () => {
++      const { searchQuery, filteredResults } = createPalette({ isTeamAdmin: true })
++      searchQuery.value = 'manage'
++      const allIds = filteredResults.value.map(r => r.id)
++      expect(allIds).toContain('team-tracker::manage')
++    })
++
++    it('shows manager items for managers', () => {
++      const palette = createPalette({
++        isManager: true,
++        manifests: [{
++          slug: 'team-tracker',
++          name: 'People & Teams',
++          client: {
++            navItems: [
++              { id: 'manager-dashboard', label: 'My Teams', icon: 'LayoutDashboard', requireRole: 'manager' }
++            ]
++          }
++        }]
++      })
++      palette.searchQuery.value = 'teams'
++      const allIds = palette.filteredResults.value.map(r => r.id)
++      expect(allIds).toContain('team-tracker::manager-dashboard')
++    })
++
++    it('hides disabled items', () => {
++      const palette = createPalette({
++        manifests: [{
++          slug: 'ai-impact',
++          name: 'AI Impact',
++          client: {
++            navItems: [
++              { id: 'implementation', label: 'Implementation', icon: 'GitBranch', disabled: true },
++              { id: 'rfe-review', label: 'RFE Review', icon: 'ClipboardList' }
++            ]
++          }
++        }]
++      })
++      palette.searchQuery.value = 'rfe'
++      const allIds = palette.filteredResults.value.map(r => r.id)
++      expect(allIds).not.toContain('ai-impact::implementation')
++      expect(allIds).toContain('ai-impact::rfe-review')
++    })
++  })
++
++  describe('keyboard navigation', () => {
++    it('selectNext wraps around', () => {
++      const { searchQuery, selectedIndex, filteredResults, selectNext } = createPalette()
++      searchQuery.value = 'e'
++      const len = filteredResults.value.length
++      for (let i = 0; i < len; i++) selectNext()
++      expect(selectedIndex.value).toBe(0)
++    })
++
++    it('selectPrev wraps to end', () => {
++      const { searchQuery, selectedIndex, filteredResults, selectPrev } = createPalette()
++      searchQuery.value = 'e'
++      selectPrev()
++      expect(selectedIndex.value).toBe(filteredResults.value.length - 1)
++    })
++
++    it('resetSelection clears query and index', () => {
++      const { searchQuery, selectedIndex, selectNext, resetSelection } = createPalette()
++      searchQuery.value = 'test'
++      selectNext()
++      resetSelection()
++      expect(searchQuery.value).toBe('')
++      expect(selectedIndex.value).toBe(0)
++    })
++  })
++
++  describe('fuzzy matching', () => {
++    it('ranks exact match highest', () => {
++      const { searchQuery, filteredResults } = createPalette()
++      searchQuery.value = 'People'
++      const first = filteredResults.value[0]
++      expect(first.label).toBe('People')
++    })
++
++    it('prefix match ranks higher than substring', () => {
++      const { searchQuery, filteredResults } = createPalette({
++        manifests: [{
++          slug: 'test',
++          name: 'Test',
++          client: {
++            navItems: [
++              { id: 'a', label: 'Schedule View', icon: 'Box' },
++              { id: 'b', label: 'Sched', icon: 'Box' }
++            ]
++          }
++        }]
++      })
++      searchQuery.value = 'sched'
++      const pages = filteredResults.value.filter(r => r.type === 'page')
++      expect(pages[0].label).toBe('Sched')
++    })
++
++    it('filters out weak character-order-only matches', () => {
++      const { searchQuery, filteredResults } = createPalette()
++      searchQuery.value = 'tdr'
++      const pages = filteredResults.value.filter(r => r.type === 'page')
++      expect(pages.some(p => p.label === 'Team Directory')).toBe(false)
++    })
++  })
++
++  describe('discovered navigation (tabs and reports)', () => {
++    it('includes discovered tab items in search results', () => {
++      const { searchQuery, filteredResults } = createPalette()
++      searchQuery.value = 'conforma'
++      const match = filteredResults.value.find(r => r.label === 'Conforma Insights')
++      expect(match).toBeDefined()
++      expect(match.type).toBe('page')
++      expect(match.slug).toBe('releases')
++      expect(match.viewId).toBe('deliver')
++    })
++
++    it('discovered tab items include params for navigation', () => {
++      const { searchQuery, filteredResults } = createPalette()
++      searchQuery.value = 'conforma'
++      const match = filteredResults.value.find(r => r.label === 'Conforma Insights')
++      expect(match.params).toEqual({ tab: 'conforma-insights' })
++    })
++
++    it('discovered tab items have context as sublabel', () => {
++      const { searchQuery, filteredResults } = createPalette()
++      searchQuery.value = 'risk dashboard'
++      const match = filteredResults.value.find(r => r.label === 'Risk Dashboard')
++      expect(match.sublabel).toBe('Releases → Deliver')
++    })
++
++    it('includes discovered report items in search results', () => {
++      const { searchQuery, filteredResults } = createPalette()
++      searchQuery.value = 'commitment'
++      const match = filteredResults.value.find(r => r.label === 'Commitment Tracking')
++      expect(match).toBeDefined()
++      expect(match.params).toEqual({ report: 'commitment-tracking' })
++      expect(match.sublabel).toBe('Releases → Reports')
++    })
++
++    it('discovered items have unique ids', () => {
++      const { allItems } = createPalette()
++      const discoveredIds = allItems.value
++        .filter(r => r.id && r.id.includes('::tab::'))
++        .map(r => r.id)
++      expect(new Set(discoveredIds).size).toBe(discoveredIds.length)
++    })
++  })
++
++  describe('search history', () => {
++    beforeEach(() => {
++      localStorage.removeItem('orgpulse_search_history')
++    })
++
++    it('saveQuery stores query in history', () => {
++      const { saveQuery, searchHistory } = createPalette()
++      saveQuery('conforma')
++      expect(searchHistory.value[0]).toBe('conforma')
++    })
++
++    it('saveQuery deduplicates and moves to front', () => {
++      const { saveQuery, searchHistory } = createPalette()
++      saveQuery('alpha')
++      saveQuery('beta')
++      saveQuery('alpha')
++      expect(searchHistory.value).toEqual(['alpha', 'beta'])
++    })
++
++    it('saveQuery ignores empty strings', () => {
++      const { saveQuery, searchHistory } = createPalette()
++      saveQuery('')
++      saveQuery('  ')
++      expect(searchHistory.value).toEqual([])
++    })
++
++    it('historyPrev cycles through history', () => {
++      const { saveQuery, searchQuery, historyPrev } = createPalette()
++      saveQuery('first')
++      saveQuery('second')
++      historyPrev()
++      expect(searchQuery.value).toBe('second')
++      historyPrev()
++      expect(searchQuery.value).toBe('first')
++    })
++
++    it('historyPrev returns false when no history', () => {
++      const { historyPrev } = createPalette()
++      expect(historyPrev()).toBe(false)
++    })
++
++    it('historyNext returns to pending query', () => {
++      const { saveQuery, searchQuery, historyPrev, historyNext } = createPalette()
++      saveQuery('old')
++      searchQuery.value = 'current'
++      historyPrev()
++      expect(searchQuery.value).toBe('old')
++      historyNext()
++      expect(searchQuery.value).toBe('current')
++    })
++
++    it('historyNext returns false when not browsing', () => {
++      const { historyNext } = createPalette()
++      expect(historyNext()).toBe(false)
++    })
++
++    it('resetSelection resets history browsing state', () => {
++      const { saveQuery, historyPrev, historyIndex, resetSelection } = createPalette()
++      saveQuery('test')
++      historyPrev()
++      expect(historyIndex.value).toBe(0)
++      resetSelection()
++      expect(historyIndex.value).toBe(-1)
++    })
++
++    it('persists history to localStorage', () => {
++      const { saveQuery } = createPalette()
++      saveQuery('persisted')
++      const stored = JSON.parse(localStorage.getItem('orgpulse_search_history'))
++      expect(stored).toContain('persisted')
++    })
++  })
++})
+diff --git a/node_modules/@org-pulse/core/src/components/App.vue b/node_modules/@org-pulse/core/src/components/App.vue
+index b10dc4a..8f29f69 100644
+--- a/node_modules/@org-pulse/core/src/components/App.vue
++++ b/node_modules/@org-pulse/core/src/components/App.vue
+@@ -48,7 +48,7 @@
+ 
+       <!-- Top bar -->
+       <header class="sticky top-0 z-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200/60 dark:border-gray-700/60">
+-        <div class="flex items-center justify-between px-6 lg:px-8 h-16">
++        <div class="relative flex items-center justify-between px-6 lg:px-8 h-16">
+           <div class="flex items-center gap-4">
+             <!-- Mobile menu button -->
+             <button
+@@ -67,6 +67,15 @@
+               </div>
+             </div>
+           </div>
++          <button
++            v-if="searchUseCount < 5 && !showCommandPalette"
++            @click="showCommandPalette = true; incrementSearchCount(); fetchSearchIndex()"
++            class="absolute left-1/2 -translate-x-1/2 hidden sm:flex items-center gap-2 px-4 py-1.5 text-sm rounded-full cursor-pointer transition-colors duration-200 search-hint-breathe text-amber-600 dark:text-amber-300 bg-amber-100/70 dark:bg-amber-900/30 border border-amber-300/60 dark:border-amber-600/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 hover:text-amber-700 dark:hover:text-amber-200"
++          >
++            <span class="font-medium tracking-wide">press</span>
++            <kbd class="px-2 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-200 bg-white/90 dark:bg-amber-800/50 rounded-md border border-amber-400/60 dark:border-amber-500/50 shadow-sm">/</kbd>
++            <span class="font-medium tracking-wide">to explore</span>
++          </button>
+           <div class="flex items-center gap-3">
+             <!-- Open in new tab for git-static modules -->
+             <a
+@@ -191,6 +200,20 @@
+     />
+ 
+     <BackendConnectivityModal />
++
++    <CommandPalette
++      v-if="showCommandPalette"
++      :manifests="builtInManifests"
++      :is-admin="authIsAdmin"
++      :is-team-admin="authIsTeamAdmin"
++      :is-manager="authIsManager"
++      :roles="authRoles"
++      :team-data-source="rosterData?.teamDataSource || ''"
++      :search-index-items="searchIndexItems"
++      @navigate="handlePaletteNavigate"
++      @action="handlePaletteAction"
++      @close="showCommandPalette = false"
++    />
+   </div>
+ </template>
+ 
+@@ -206,6 +229,7 @@ import AppSidebar from './AppSidebar.vue'
+ import LandingPage from './LandingPage.vue'
+ import ModuleIframeView from './ModuleIframeView.vue'
+ import BackendConnectivityModal from './BackendConnectivityModal.vue'
++import CommandPalette from './CommandPalette.vue'
+ import AppMessages from '@shared/client/components/AppMessages.vue'
+ import { computed, ref, readonly, provide, onUnmounted, watch } from 'vue'
+ import { useAuth } from '@shared/client/composables/useAuth'
+@@ -243,6 +267,7 @@ export default {
+     LandingPage,
+     ModuleIframeView,
+     BackendConnectivityModal,
++    CommandPalette,
+     AppMessages
+   },
+   setup() {
+@@ -499,6 +524,9 @@ export default {
+       showRefreshModal: false,
+       sidebarCollapsed: false,
+       mobileMenuOpen: false,
++      showCommandPalette: false,
++      searchUseCount: 0,
++      searchIndexItems: [],
+       settingsInitialTab: null,
+       aboutInitialTab: null,
+       toasts: []
+@@ -538,6 +566,7 @@ export default {
+     }
+   },
+   async mounted() {
++    try { this.searchUseCount = parseInt(localStorage.getItem('orgpulse_search_use_count'), 10) || 0 } catch { /* storage unavailable */ }
+     window.addEventListener('hashchange', this.onHashChange)
+     window.addEventListener('popstate', this.onPopState)
+     window.addEventListener('keydown', this.onKeyDown)
+@@ -557,6 +586,51 @@ export default {
+         e.preventDefault()
+         this.sidebarCollapsed = !this.sidebarCollapsed
+       }
++      if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey) {
++        const el = document.activeElement
++        if (el?.tagName === 'INPUT' || el?.tagName === 'TEXTAREA' || el?.isContentEditable) return
++        if (this.showCommandPalette) return
++        e.preventDefault()
++        this.showCommandPalette = true
++        this.incrementSearchCount()
++        this.fetchSearchIndex()
++      }
++    },
++
++    incrementSearchCount() {
++      this.searchUseCount++
++      try { localStorage.setItem('orgpulse_search_use_count', String(this.searchUseCount)) } catch { /* storage unavailable */ }
++    },
++
++    handlePaletteNavigate(slug, viewId, params) {
++      this.showCommandPalette = false
++      let hash = '#/' + slug + '/' + viewId
++      if (params) {
++        const qs = new URLSearchParams(params).toString()
++        if (qs) hash += '?' + qs
++      }
++      window.location.hash = hash
++    },
++
++    handlePaletteAction(actionId) {
++      this.showCommandPalette = false
++      if (actionId === 'toggle-theme') this.cycleTheme()
++      else if (actionId === 'toggle-sidebar') this.sidebarCollapsed = !this.sidebarCollapsed
++      else if (actionId === 'go-settings') window.location.hash = '#/settings'
++      else if (actionId === 'go-about') window.location.hash = '#/about'
++      else if (actionId === 'go-home') window.location.hash = '#/'
++    },
++
++    async fetchSearchIndex() {
++      if (this.searchIndexItems.length > 0) return
++      try {
++        const res = await fetch('/api/search-index')
++        if (res.ok) {
++          this.searchIndexItems = await res.json()
++        }
++      } catch {
++        // search index is optional
++      }
+     },
+ 
+     async loadInitialData() {
+diff --git a/node_modules/@org-pulse/core/src/components/CommandPalette.vue b/node_modules/@org-pulse/core/src/components/CommandPalette.vue
+new file mode 100644
+index 0000000..00c7919
+--- /dev/null
++++ b/node_modules/@org-pulse/core/src/components/CommandPalette.vue
+@@ -0,0 +1,260 @@
++<template>
++  <div
++    class="fixed inset-0 z-50"
++    @click.self="$emit('close')"
++    @keydown="onKeydown"
++  >
++    <!-- Backdrop -->
++    <div class="fixed inset-0 command-palette-backdrop" @click="$emit('close')" />
++
++    <!-- Search bar + suggestions (single connected unit) -->
++    <div class="absolute left-4 right-4 max-w-4xl mx-auto" style="top: 41vh;">
++      <!-- The thick glass search bar -->
++      <div
++        class="relative flex items-center gap-4 px-4 sm:px-6 h-12 sm:h-16 rounded-lg border border-black/25 command-palette-bar"
++      >
++        <input
++          ref="inputRef"
++          v-model="searchQuery"
++          type="text"
++          :placeholder="windowWidth > 480 ? 'Where do you want to go?' : 'Search…'"
++          class="flex-1 bg-transparent text-gray-800 text-lg sm:text-lg text-base font-light tracking-wide placeholder-gray-400 outline-none"
++        />
++        <kbd class="hidden sm:inline-flex items-center px-2 py-1 text-[11px] font-medium text-gray-400 bg-gray-200/60 rounded-md border border-gray-300/50">ESC</kbd>
++      </div>
++
++      <!-- Suggestions as indented floating rows -->
++      <div
++        v-if="filteredResults.length > 0"
++        class="mt-2 mx-4 command-palette-suggestions overflow-y-auto"
++        style="max-height: 19.25rem;"
++      >
++        <div
++          v-for="(item, i) in filteredResults"
++          :key="item.id"
++          :ref="el => setItemRef(el, i)"
++          class="flex items-center gap-4 px-5 h-11 cursor-pointer rounded-md"
++          :class="i === selectedIndex
++            ? 'bg-gray-100 text-gray-900'
++            : 'hover:bg-gray-50'"
++          @click="selectItem(item)"
++          @mousemove="selectedIndex !== i && (selectedIndex = i)"
++        >
++          <span class="flex-1 min-w-0 text-sm font-light tracking-wide truncate">
++            <span class="text-gray-700" v-html="highlightMatch(formatLabel(item))" />
++            <span v-if="item.matchedKeyword" class="text-gray-400 text-xs ml-1.5" v-html="'— ' + highlightMatch(truncateAroundMatch(item.matchedKeyword))" />
++          </span>
++          <kbd
++            v-if="i === selectedIndex"
++            class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium text-gray-400 bg-gray-200/50 rounded border border-gray-300/50 flex-shrink-0 ml-1"
++          >
++            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-70">
++              <path d="M9 10l-5 5 5 5" /><path d="M20 4v7a4 4 0 0 1-4 4H4" />
++            </svg>
++          </kbd>
++        </div>
++      </div>
++
++      <!-- Empty state -->
++      <div
++        v-else-if="searchQuery.trim().length > 0"
++        class="mt-2 mx-4 command-palette-suggestions"
++      >
++        <div class="flex items-center justify-center h-11 text-sm text-gray-400 rounded-md">
++          No results
++        </div>
++      </div>
++    </div>
++  </div>
++</template>
++
++<script setup>
++import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
++import { useCommandPalette } from '../composables/useCommandPalette'
++
++const props = defineProps({
++  manifests: { type: Array, required: true },
++  isAdmin: { type: Boolean, default: false },
++  isTeamAdmin: { type: Boolean, default: false },
++  isManager: { type: Boolean, default: false },
++  roles: { type: Array, default: () => [] },
++  teamDataSource: { type: String, default: '' },
++  searchIndexItems: { type: Array, default: () => [] }
++})
++
++const emit = defineEmits(['navigate', 'action', 'close'])
++
++const inputRef = ref(null)
++const windowWidth = ref(window.innerWidth)
++const itemRefs = {}
++
++function setItemRef(el, index) {
++  if (el) itemRefs[index] = el
++}
++
++const {
++  searchQuery,
++  selectedIndex,
++  filteredResults,
++  historyIndex,
++  selectNext,
++  selectPrev,
++  resetSelection,
++  saveQuery,
++  historyPrev,
++  historyNext
++} = useCommandPalette({
++  manifests: computed(() => props.manifests),
++  isAdmin: computed(() => props.isAdmin),
++  isTeamAdmin: computed(() => props.isTeamAdmin),
++  isManager: computed(() => props.isManager),
++  roles: computed(() => props.roles),
++  teamDataSource: computed(() => props.teamDataSource),
++  searchIndexItems: computed(() => props.searchIndexItems)
++})
++
++function escapeHtml(text) {
++  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
++}
++
++function highlightMatch(text) {
++  const q = searchQuery.value.trim()
++  if (!q) return escapeHtml(text)
++  const escaped = escapeHtml(text)
++  const tokens = q.split(/[^a-zA-Z0-9]+/).filter(t => t.length > 0)
++  if (tokens.length === 0) return escaped
++  const pattern = tokens.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')
++  return escaped.replace(new RegExp('(' + pattern + ')', 'gi'), '<span class="text-red-400 font-semibold">$1</span>')
++}
++
++watch(searchQuery, () => {
++  selectedIndex.value = 0
++})
++
++watch(selectedIndex, (idx) => {
++  nextTick(() => {
++    const el = itemRefs[idx]
++    if (el) el.scrollIntoView({ block: 'nearest' })
++  })
++})
++
++function truncateAroundMatch(text, maxLen = 50) {
++  if (text.length <= maxLen) return text
++  const q = searchQuery.value.trim().toLowerCase()
++  const idx = text.toLowerCase().indexOf(q)
++  if (idx === -1) return text.slice(0, maxLen) + '…'
++  const start = Math.max(0, idx - 15)
++  const end = Math.min(text.length, start + maxLen)
++  let result = text.slice(start, end)
++  if (start > 0) result = '…' + result
++  if (end < text.length) result += '…'
++  return result
++}
++
++function formatLabel(item) {
++  if ((item.type === 'page' || item.type === 'data') && item.sublabel) {
++    return item.sublabel + ' → ' + item.label
++  }
++  return item.label
++}
++
++function selectItem(item) {
++  saveQuery(searchQuery.value)
++  if (item.type === 'page') {
++    emit('navigate', item.slug, item.viewId, item.params)
++  } else if (item.type === 'data') {
++    emit('navigate', item.module, item.viewId, item.params)
++  } else if (item.type === 'action') {
++    emit('action', item.id)
++  }
++}
++
++function onKeydown(e) {
++  if (e.key === 'Escape') {
++    e.preventDefault()
++    emit('close')
++  } else if (e.key === 'Tab') {
++    e.preventDefault()
++    if (e.shiftKey) selectPrev()
++    else selectNext()
++  } else if (e.key === 'ArrowDown') {
++    e.preventDefault()
++    if (historyIndex.value >= 0) {
++      historyNext()
++    } else {
++      selectNext()
++    }
++  } else if (e.key === 'ArrowUp') {
++    e.preventDefault()
++    if (filteredResults.value.length === 0 || historyIndex.value >= 0) {
++      historyPrev()
++    } else {
++      selectPrev()
++    }
++  } else if (e.key === 'Enter') {
++    e.preventDefault()
++    const item = filteredResults.value[selectedIndex.value]
++    if (item) selectItem(item)
++  }
++}
++
++function onResize() { windowWidth.value = window.innerWidth }
++
++onMounted(() => {
++  window.addEventListener('resize', onResize)
++  nextTick(() => {
++    inputRef.value?.focus()
++  })
++})
++
++onBeforeUnmount(() => {
++  window.removeEventListener('resize', onResize)
++  resetSelection()
++})
++</script>
++
++<style scoped>
++.command-palette-backdrop {
++  backdrop-filter: blur(6px);
++  -webkit-backdrop-filter: blur(6px);
++  background:
++    radial-gradient(circle, rgba(0, 0, 0, 0.08) 1px, transparent 1px),
++    radial-gradient(circle, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
++    rgba(0, 0, 0, 0.2);
++  background-size: 4px 4px, 4px 4px, auto;
++}
++.command-palette-bar {
++  background: linear-gradient(135deg, rgba(255, 255, 255, 0.97), rgba(255, 255, 255, 0.93));
++  backdrop-filter: blur(24px) saturate(1.4);
++  -webkit-backdrop-filter: blur(24px) saturate(1.4);
++  box-shadow:
++    0 8px 32px rgba(0, 0, 0, 0.12),
++    0 2px 8px rgba(0, 0, 0, 0.06),
++    inset 0 1px 0 rgba(255, 255, 255, 1),
++    inset 0 -1px 0 rgba(255, 255, 255, 0.5);
++  position: relative;
++  overflow: hidden;
++}
++.command-palette-bar::before {
++  content: '';
++  position: absolute;
++  inset: 0;
++  z-index: 0;
++  background:
++    radial-gradient(circle, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
++  background-size: 4px 4px;
++  pointer-events: none;
++}
++.command-palette-bar > * {
++  position: relative;
++  z-index: 1;
++}
++.command-palette-suggestions {
++  background: rgba(255, 255, 255, 0.92);
++  backdrop-filter: blur(16px);
++  -webkit-backdrop-filter: blur(16px);
++  border-radius: 0.5rem;
++  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
++  border: 1px solid rgba(0, 0, 0, 0.06);
++}
++</style>
+diff --git a/node_modules/@org-pulse/core/src/composables/useCommandPalette.js b/node_modules/@org-pulse/core/src/composables/useCommandPalette.js
+new file mode 100644
+index 0000000..74a144c
+--- /dev/null
++++ b/node_modules/@org-pulse/core/src/composables/useCommandPalette.js
+@@ -0,0 +1,222 @@
++import { ref, computed } from 'vue'
++import discoveredNav from 'virtual:nav-discovery'
++
++const ACTIONS = [
++  { type: 'action', id: 'toggle-theme', label: 'Toggle Theme', sublabel: 'Switch between light, dark, and system', icon: 'Sun', keywords: ['dark', 'light', 'mode', 'theme'] },
++  { type: 'action', id: 'toggle-sidebar', label: 'Toggle Sidebar', sublabel: 'Collapse or expand the sidebar', icon: 'PanelLeftClose', keywords: ['collapse', 'expand', 'sidebar', 'panel'] },
++  { type: 'action', id: 'go-settings', label: 'Open Settings', sublabel: 'App configuration', icon: 'Settings', keywords: ['settings', 'config', 'preferences'] },
++  { type: 'action', id: 'go-about', label: 'About', sublabel: 'App info and documentation', icon: 'Info', keywords: ['about', 'help', 'docs', 'version'] },
++  { type: 'action', id: 'go-home', label: 'Go Home', sublabel: 'Return to the landing page', icon: 'Home', keywords: ['home', 'dashboard', 'landing'] }
++]
++
++const MAX_RESULTS = 50
++const MIN_SCORE = 50
++const HISTORY_KEY = 'orgpulse_search_history'
++const MAX_HISTORY = 20
++
++function fuzzyScore(query, text) {
++  if (!text) return 0
++  const lower = text.toLowerCase()
++  const q = query.toLowerCase()
++  if (lower === q) return 100
++  if (lower.startsWith(q)) return 90
++  if (lower.includes(q)) return 70
++  const tokens = q.split(/[^a-z0-9]+/).filter(t => t.length > 0)
++  if (tokens.length > 1 && tokens.every(t => lower.includes(t))) return 60
++  let qi = 0
++  for (let i = 0; i < lower.length && qi < q.length; i++) {
++    if (lower[i] === q[qi]) qi++
++  }
++  if (qi === q.length) return 30 + (q.length / lower.length * 20)
++  return 0
++}
++
++function scoreItem(query, item) {
++  const labelScore = fuzzyScore(query, item.label)
++  const rawSublabelScore = fuzzyScore(query, item.sublabel)
++  const sublabelScore = rawSublabelScore >= 70 ? rawSublabelScore : 0
++  let bestKeywordScore = 0
++  let matchedKeyword = null
++  if (item.keywords) {
++    for (const kw of item.keywords) {
++      const s = fuzzyScore(query, kw)
++      if (s >= 70 && s > bestKeywordScore) {
++        bestKeywordScore = s
++        matchedKeyword = kw
++      }
++    }
++  }
++  const best = Math.max(labelScore, sublabelScore, bestKeywordScore)
++  const keywordOnly = best > 0 && bestKeywordScore === best && bestKeywordScore > labelScore && bestKeywordScore > sublabelScore
++  return { score: best, matchedKeyword: keywordOnly ? matchedKeyword : null }
++}
++
++function isNavItemVisible(item, { isAdmin, roles, isTeamAdmin, isManager, teamDataSource }) {
++  if (item.disabled) return false
++  if (item.requireCondition === 'in-app-mode' && teamDataSource !== 'in-app') return false
++  if (!item.requireRole) return true
++  if (isAdmin) return true
++  if (roles.includes(item.requireRole)) return true
++  if (item.requireRole === 'manager' && (isTeamAdmin || isManager)) return true
++  if (item.requireRole === 'team-admin' && isTeamAdmin) return true
++  return false
++}
++
++function loadHistory() {
++  try {
++    const raw = localStorage.getItem(HISTORY_KEY)
++    return raw ? JSON.parse(raw) : []
++  } catch { return [] }
++}
++
++function persistHistory(history) {
++  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)) } catch { /* storage unavailable */ }
++}
++
++export function useCommandPalette({ manifests, isAdmin, roles, isTeamAdmin, isManager, teamDataSource, searchIndexItems }) {
++  const searchQuery = ref('')
++  const selectedIndex = ref(0)
++  const searchHistory = ref(loadHistory())
++  const historyIndex = ref(-1)
++  let pendingQuery = ''
++
++  const pageItems = computed(() => {
++    const items = []
++    const manifestList = manifests.value || manifests
++    for (const manifest of manifestList) {
++      const navItems = manifest.client?.navItems || []
++      for (const item of navItems) {
++        if (!isNavItemVisible(item, {
++          isAdmin: isAdmin.value ?? isAdmin,
++          roles: roles.value ?? roles,
++          isTeamAdmin: isTeamAdmin.value ?? isTeamAdmin,
++          isManager: isManager.value ?? isManager,
++          teamDataSource: teamDataSource.value ?? teamDataSource
++        })) continue
++        items.push({
++          type: 'page',
++          id: manifest.slug + '::' + item.id,
++          label: item.label,
++          sublabel: manifest.name,
++          icon: item.icon,
++          slug: manifest.slug,
++          viewId: item.id,
++          keywords: []
++        })
++      }
++    }
++    return items
++  })
++
++  const dataItems = computed(() => {
++    const raw = searchIndexItems?.value ?? searchIndexItems ?? []
++    return raw.map(item => ({
++      type: 'data',
++      id: (item.module || 'data') + '::data::' + item.label,
++      label: item.label,
++      sublabel: item.context,
++      module: item.module,
++      viewId: item.viewId,
++      params: item.params,
++      keywords: item.keywords || []
++    }))
++  })
++
++  const discoveredItems = discoveredNav.map(entry => ({
++    type: 'page',
++    id: entry.slug + '::tab::' + entry.viewId + '::' + (entry.params.tab || entry.params.report),
++    label: entry.label,
++    sublabel: entry.context,
++    slug: entry.slug,
++    viewId: entry.viewId,
++    params: entry.params,
++    keywords: []
++  }))
++
++  const allItems = computed(() => {
++    return [...pageItems.value, ...discoveredItems, ...dataItems.value, ...ACTIONS]
++  })
++
++  const filteredResults = computed(() => {
++    const q = searchQuery.value.trim()
++    if (!q) {
++      return []
++    }
++
++    return allItems.value
++      .map(item => {
++        const { score, matchedKeyword } = scoreItem(q, item)
++        return { item, score, matchedKeyword }
++      })
++      .filter(entry => entry.score >= MIN_SCORE)
++      .sort((a, b) => b.score - a.score)
++      .slice(0, MAX_RESULTS)
++      .map(entry => entry.matchedKeyword ? { ...entry.item, matchedKeyword: entry.matchedKeyword } : entry.item)
++  })
++
++  function selectNext() {
++    const len = filteredResults.value.length
++    if (len === 0) return
++    selectedIndex.value = (selectedIndex.value + 1) % len
++  }
++
++  function selectPrev() {
++    const len = filteredResults.value.length
++    if (len === 0) return
++    selectedIndex.value = (selectedIndex.value - 1 + len) % len
++  }
++
++  function saveQuery(query) {
++    const q = (query || '').trim()
++    if (!q) return
++    const h = searchHistory.value.filter(item => item !== q)
++    h.unshift(q)
++    if (h.length > MAX_HISTORY) h.length = MAX_HISTORY
++    searchHistory.value = h
++    persistHistory(h)
++  }
++
++  function historyPrev() {
++    if (searchHistory.value.length === 0) return false
++    if (historyIndex.value === -1) pendingQuery = searchQuery.value
++    if (historyIndex.value < searchHistory.value.length - 1) {
++      historyIndex.value++
++      searchQuery.value = searchHistory.value[historyIndex.value]
++      return true
++    }
++    return false
++  }
++
++  function historyNext() {
++    if (historyIndex.value <= -1) return false
++    historyIndex.value--
++    if (historyIndex.value === -1) {
++      searchQuery.value = pendingQuery
++    } else {
++      searchQuery.value = searchHistory.value[historyIndex.value]
++    }
++    return true
++  }
++
++  function resetSelection() {
++    selectedIndex.value = 0
++    searchQuery.value = ''
++    historyIndex.value = -1
++    pendingQuery = ''
++  }
++
++  return {
++    searchQuery,
++    selectedIndex,
++    filteredResults,
++    allItems,
++    searchHistory,
++    historyIndex,
++    selectNext,
++    selectPrev,
++    resetSelection,
++    saveQuery,
++    historyPrev,
++    historyNext
++  }
++}
+diff --git a/node_modules/@org-pulse/core/src/style.css b/node_modules/@org-pulse/core/src/style.css
+index 56e17b5..0a5b843 100644
+--- a/node_modules/@org-pulse/core/src/style.css
++++ b/node_modules/@org-pulse/core/src/style.css
+@@ -20,3 +20,11 @@
+ .fade-leave-to {
+   opacity: 0;
+ }
++
++@keyframes search-hint-breathe {
++  0%, 100% { opacity: 0.55; box-shadow: 0 0 4px 1px rgba(251, 191, 36, 0.15); }
++  50% { opacity: 1; box-shadow: 0 0 18px 4px rgba(251, 191, 36, 0.4); }
++}
++.search-hint-breathe {
++  animation: search-hint-breathe 1.5s ease-in-out infinite;
++}

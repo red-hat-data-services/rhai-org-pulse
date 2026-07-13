@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
+import navDiscovery from './build/vite-plugin-nav-discovery.js'
 import path from 'path'
 
 let coreDir
@@ -19,7 +20,7 @@ const sharedExclude = [
 ]
 
 const sharedConfig = {
-  plugins: [vue()],
+  plugins: [vue(), navDiscovery()],
   resolve: {
     alias: {
       '@/': path.resolve(coreDir, 'src') + '/',

@@ -715,6 +715,69 @@ The `org-pulse/no-module-process-env` ESLint rule prevents `process.env` access 
 - `POST /api/admin/secrets/validate` — runs registered validators
 - Must-gather bundle includes `bundle.secrets` with full status
 
+## Search Index
+
+Modules contribute searchable items to the command palette (`/` key), allowing module-specific data (feature keys, repo names, releases) to appear in global search alongside page navigation and quick actions.
+
+### Declarative (preferred)
+
+Add a `searchIndex` array to `module.json`. The system auto-generates search entries from your data files — no code needed:
+
+```json
+{
+  "searchIndex": [
+    {
+      "source": "my-module/items.json",
+      "items": "records",
+      "label": "name",
+      "context": "My Module → Items",
+      "viewId": "detail",
+      "params": { "id": "$id" },
+      "filter": { "status": "active" },
+      "keywords": ["category", "description"]
+    }
+  ]
+}
+```
+
+#### Declaration Fields
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `source` | Yes | Storage key of the data file to read |
+| `items` | Yes | Dot-path to the array (or object) within the JSON (e.g. `"features"`, `"data.repos"`) |
+| `label` | Yes | Field name to use as the display label. Use `"$key"` when `items` is an object to use object keys as labels |
+| `fallbackLabel` | No | Field name to use if `label` field is empty |
+| `context` | Yes | Breadcrumb text shown in suggestions (e.g. "Releases → Schedule") |
+| `viewId` | Yes | View ID from the module's `routes` export |
+| `params` | No | Query parameters object. Values starting with `$` are field references (e.g. `{ "key": "$key" }` substitutes from each item) |
+| `filter` | No | Object with field=value conditions. Only matching items are indexed |
+| `keywords` | No | Array of field names whose values become extra search terms |
+
+When `items` points to an object (not an array), each key-value pair becomes an entry with `$key` available as a field reference.
+
+### Custom Handler (advanced)
+
+For complex logic that can't be expressed declaratively, use `context.registerSearchIndex(fn)`:
+
+```javascript
+module.exports = function registerRoutes(router, context) {
+  context.registerSearchIndex(async function(storage) {
+    return [{ label: 'Item', context: 'My Module', viewId: 'view', params: { id: '1' } }]
+  })
+}
+```
+
+Both modes can coexist — declarative entries from `module.json` and custom handlers are merged.
+
+### How It Works
+
+- Items are served at `GET /api/search-index` with a 5-minute server-side cache
+- The command palette fetches the index on first open and merges results with page navigation and quick actions
+- Fuzzy matching applies to `label`, `context`, and `keywords`
+- Routes are built automatically as `#/<module-slug>/<viewId>?<params>`
+- Errors in one module's handler don't affect others
+
 ## PR Checklist
 
 - [ ] `module.json` has all required fields

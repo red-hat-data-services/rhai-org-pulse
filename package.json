@@ -6,6 +6,7 @@
     "node": ">=22"
   },
   "scripts": {
+    "postinstall": "patch-package",
     "setup": "node scripts/setup.js",
     "dev": "vite",
     "dev:server": "node -r dotenv/config server/index.js",
@@ -54,6 +55,7 @@
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
     "lint-staged": "^17.0.8",
+    "patch-package": "^8.0.1",
     "postcss": "^8.5.16",
     "puppeteer": "^25.3.0",
     "tailwindcss": "^3.4.17",

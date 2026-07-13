@@ -74,6 +74,18 @@
       }
     ]
   },
+  "searchIndex": [
+    {
+      "source": "releases/execution/index.json",
+      "items": "features",
+      "label": "summary",
+      "fallbackLabel": "key",
+      "viewId": "execute",
+      "params": { "feature": "$key" },
+      "keywords": ["summary", "key", "status", "team"],
+      "context": "Releases"
+    }
+  ],
   "export": {
     "files": [
       { "path": "releases/registry.json", "notes": "Canonical release registry" },
