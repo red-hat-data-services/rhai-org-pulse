@@ -1,11 +1,11 @@
 var { adfToText } = require('./tshirt-parser')
 
-var AC_PATTERN = /\b(given\s.*?\b(when|then)\b|acceptance\s+criter|AC\s*:)/i
+var AC_PATTERN = /\b(given\s.*?\b(when|then)\b|acceptance\s+criter|success\s+criter|AC\s*:)/i
 var USE_CASE_PATTERN = /\b(use\s+case|user\s+stor|as\s+a\s+.*?\bso\s+that\b)/i
 var SCOPE_PATTERN = /\b(in\s+scope|out\s+of\s+scope|\bscope\b\s*[:=-])/i
 var REQUIREMENTS_PATTERN = /\b(requirement|HLR|NFR|non[\s-]?functional)/i
-var RISKS_PATTERN = /\b(risk|assumption|constraint|dependency|blocker)\s*[:=-]/i
-var ARCHITECTURE_PATTERN = /\b(architect|arch[\s-]?review|technical\s+design|system\s+design)\b/i
+var RISKS_PATTERN = /\b(risks?\s*(and|&)\s*assumptions?|dependencies?|blockers?|constraints?|risks?\s*[:=-]|assumptions?\s*[:=-])/i
+var ARCHITECTURE_PATTERN = /\b(architect|arch[\s-]?review|technical\s+(design|approach)|system\s+design)\b/i
 
 function parseDescriptionSignals(description) {
   if (!description) return { hasContent: false, hasAcceptanceCriteria: false, hasUseCases: false, hasScopeDefinition: false, hasRequirements: false, hasRisks: false, hasArchitectureSignal: false, signalCount: 0 }

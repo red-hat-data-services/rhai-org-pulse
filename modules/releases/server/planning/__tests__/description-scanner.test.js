@@ -44,6 +44,11 @@ describe('parseDescriptionSignals', function() {
     expect(result.hasAcceptanceCriteria).toBe(true)
   })
 
+  it('detects success criteria keyword', function() {
+    var result = parseDescriptionSignals('Success Criteria\n- Users can log in with SSO')
+    expect(result.hasAcceptanceCriteria).toBe(true)
+  })
+
   it('detects use case signals', function() {
     var result = parseDescriptionSignals('Use case: A developer wants to deploy their app')
     expect(result.hasUseCases).toBe(true)
@@ -92,6 +97,31 @@ describe('parseDescriptionSignals', function() {
   it('detects constraint signals', function() {
     var result = parseDescriptionSignals('Constraint: Must work on RHEL 9')
     expect(result.hasRisks).toBe(true)
+  })
+
+  it('detects risks and assumptions heading without colon', function() {
+    var result = parseDescriptionSignals('Risks and Assumptions\n- API may change\n- Team capacity limited')
+    expect(result.hasRisks).toBe(true)
+  })
+
+  it('detects dependencies heading without colon', function() {
+    var result = parseDescriptionSignals('Dependencies\n- Requires auth service v2\n- Needs DB migration')
+    expect(result.hasRisks).toBe(true)
+  })
+
+  it('detects blockers heading without colon', function() {
+    var result = parseDescriptionSignals('Blockers\n- Waiting on legal review')
+    expect(result.hasRisks).toBe(true)
+  })
+
+  it('detects constraints heading without colon', function() {
+    var result = parseDescriptionSignals('Constraints\n- Must run on RHEL 9\n- Budget limit $50k')
+    expect(result.hasRisks).toBe(true)
+  })
+
+  it('detects architecture signal with technical approach heading', function() {
+    var result = parseDescriptionSignals('Technical Approach\nWe will use a microservices architecture with event-driven communication')
+    expect(result.hasArchitectureSignal).toBe(true)
   })
 
   it('counts multiple signals correctly', function() {
