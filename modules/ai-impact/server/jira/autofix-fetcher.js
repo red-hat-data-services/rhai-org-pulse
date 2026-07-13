@@ -190,8 +190,41 @@ function getLastWeekBounds() {
   return { start: lastMonday.getTime(), end: thisMonday.getTime() };
 }
 
-function issueInWindow(issue, windowStart, windowEnd, isLastWeek) {
-  if (isLastWeek && TERMINAL_STATES.has(issue.pipelineState) && issue.terminalAt) {
+function getWindowBounds(timeWindow) {
+  const now = new Date();
+  switch (timeWindow) {
+    case 'week': {
+      const day = now.getUTCDay();
+      const diffToMonday = day === 0 ? 6 : day - 1;
+      const thisMonday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - diffToMonday));
+      return { start: thisMonday.getTime(), end: Date.now(), useTerminalDate: false };
+    }
+    case 'lastWeek': {
+      const bounds = getLastWeekBounds();
+      return { start: bounds.start, end: bounds.end, useTerminalDate: true };
+    }
+    case 'last7':
+      return { start: Date.now() - 7 * 24 * 60 * 60 * 1000, end: Date.now(), useTerminalDate: false };
+    case 'month': {
+      const firstOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+      return { start: firstOfMonth.getTime(), end: Date.now(), useTerminalDate: false };
+    }
+    case 'lastMonth': {
+      const firstOfThisMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+      const firstOfLastMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+      return { start: firstOfLastMonth.getTime(), end: firstOfThisMonth.getTime(), useTerminalDate: true };
+    }
+    case 'last30':
+      return { start: Date.now() - 30 * 24 * 60 * 60 * 1000, end: Date.now(), useTerminalDate: false };
+    case 'last90':
+      return { start: Date.now() - 90 * 24 * 60 * 60 * 1000, end: Date.now(), useTerminalDate: false };
+    default:
+      return { start: Date.now() - 30 * 24 * 60 * 60 * 1000, end: Date.now(), useTerminalDate: false };
+  }
+}
+
+function issueInWindow(issue, windowStart, windowEnd, useTerminalDate) {
+  if (useTerminalDate && TERMINAL_STATES.has(issue.pipelineState) && issue.terminalAt) {
     const t = new Date(issue.terminalAt).getTime();
     return t >= windowStart && t < windowEnd;
   }
@@ -200,24 +233,13 @@ function issueInWindow(issue, windowStart, windowEnd, isLastWeek) {
 }
 
 function computeAutofixMetrics(issues, timeWindow) {
-  const isLastWeek = timeWindow === 'lastWeek';
-  let windowStart, windowEnd;
-
-  if (isLastWeek) {
-    const bounds = getLastWeekBounds();
-    windowStart = bounds.start;
-    windowEnd = bounds.end;
-  } else {
-    const days = timeWindow === 'week' ? 7 : timeWindow === 'month' ? 30 : 90;
-    windowEnd = Date.now();
-    windowStart = windowEnd - days * 24 * 60 * 60 * 1000;
-  }
+  const { start: windowStart, end: windowEnd, useTerminalDate } = getWindowBounds(timeWindow);
 
   const counts = {};
   let windowTotal = 0;
 
   for (const issue of issues) {
-    if (!issueInWindow(issue, windowStart, windowEnd, isLastWeek)) continue;
+    if (!issueInWindow(issue, windowStart, windowEnd, useTerminalDate)) continue;
     windowTotal++;
     counts[issue.pipelineState] = (counts[issue.pipelineState] || 0) + 1;
   }
@@ -257,11 +279,11 @@ function computeAutofixMetrics(issues, timeWindow) {
     : 0;
 
   const priorityBreakdown = computePriorityBreakdown(
-    issues.filter(function(issue) { return issueInWindow(issue, windowStart, windowEnd, isLastWeek); })
+    issues.filter(function(issue) { return issueInWindow(issue, windowStart, windowEnd, useTerminalDate); })
   );
 
   const mergedWindowIssues = issues.filter(function(issue) {
-    return issue.pipelineState === 'autofix-merged' && issueInWindow(issue, windowStart, windowEnd, isLastWeek);
+    return issue.pipelineState === 'autofix-merged' && issueInWindow(issue, windowStart, windowEnd, useTerminalDate);
   });
 
   const medianTimeToFixDays = computeMedianTimeToFix(mergedWindowIssues);
@@ -298,12 +320,27 @@ function computeAutofixMetrics(issues, timeWindow) {
 // limitation — Jira labels don't carry timestamps for state transitions.
 // The 'lastWeek' time window mitigates this for terminal states by using
 // terminalAt (from the Jira changelog) instead of created.
+function getTrendWeekCount(timeWindow) {
+  if (timeWindow === 'week' || timeWindow === 'lastWeek' || timeWindow === 'last7') return 4;
+  if (timeWindow === 'month' || timeWindow === 'lastMonth' || timeWindow === 'last30') return 8;
+  return 13;
+}
+
+function getTrendAnchor(timeWindow) {
+  if (timeWindow === 'lastWeek') return getLastWeekBounds().end;
+  if (timeWindow === 'lastMonth') {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).getTime();
+  }
+  return Date.now();
+}
+
 function buildTrendData(issues, timeWindow) {
-  const isLastWeek = timeWindow === 'lastWeek';
-  const weekCounts = (timeWindow === 'week' || isLastWeek) ? 4 : timeWindow === 'month' ? 8 : 13;
+  const { useTerminalDate } = getWindowBounds(timeWindow);
+  const weekCounts = getTrendWeekCount(timeWindow);
   const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
 
-  const anchor = isLastWeek ? getLastWeekBounds().end : Date.now();
+  const anchor = getTrendAnchor(timeWindow);
 
   const buckets = [];
   for (let w = weekCounts - 1; w >= 0; w--) {
@@ -323,7 +360,7 @@ function buildTrendData(issues, timeWindow) {
 
   for (const issue of issues) {
     const state = issue.pipelineState;
-    const useTerminalAt = isLastWeek && TERMINAL_STATES.has(state) && issue.terminalAt;
+    const useTerminalAt = useTerminalDate && TERMINAL_STATES.has(state) && issue.terminalAt;
     const ts = useTerminalAt
       ? new Date(issue.terminalAt).getTime()
       : new Date(issue.created).getTime();
@@ -429,6 +466,7 @@ module.exports = {
   computePriorityBreakdown,
   computeMedianTimeToFix,
   getLastWeekBounds,
+  getWindowBounds,
   computeAutofixMetrics,
   buildTrendData,
   ALL_PIPELINE_LABELS,

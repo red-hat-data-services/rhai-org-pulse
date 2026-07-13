@@ -70,8 +70,41 @@ function getLastWeekBounds() {
   return { start: lastMonday.getTime(), end: thisMonday.getTime() }
 }
 
-function issueTimestamp(issue, isLastWeek) {
-  if (isLastWeek && TERMINAL_STATES.has(issue.pipelineState) && issue.terminalAt) {
+function getWindowBounds(timeWindow) {
+  const now = new Date()
+  switch (timeWindow) {
+    case 'week': {
+      const day = now.getUTCDay()
+      const diffToMonday = day === 0 ? 6 : day - 1
+      const thisMonday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - diffToMonday))
+      return { start: thisMonday.getTime(), end: Date.now(), useTerminalDate: false }
+    }
+    case 'lastWeek': {
+      const bounds = getLastWeekBounds()
+      return { start: bounds.start, end: bounds.end, useTerminalDate: true }
+    }
+    case 'last7':
+      return { start: Date.now() - 7 * 24 * 60 * 60 * 1000, end: Date.now(), useTerminalDate: false }
+    case 'month': {
+      const firstOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
+      return { start: firstOfMonth.getTime(), end: Date.now(), useTerminalDate: false }
+    }
+    case 'lastMonth': {
+      const firstOfThisMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
+      const firstOfLastMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1))
+      return { start: firstOfLastMonth.getTime(), end: firstOfThisMonth.getTime(), useTerminalDate: true }
+    }
+    case 'last30':
+      return { start: Date.now() - 30 * 24 * 60 * 60 * 1000, end: Date.now(), useTerminalDate: false }
+    case 'last90':
+      return { start: Date.now() - 90 * 24 * 60 * 60 * 1000, end: Date.now(), useTerminalDate: false }
+    default:
+      return { start: Date.now() - 30 * 24 * 60 * 60 * 1000, end: Date.now(), useTerminalDate: false }
+  }
+}
+
+function issueTimestamp(issue, useTerminalDate) {
+  if (useTerminalDate && TERMINAL_STATES.has(issue.pipelineState) && issue.terminalAt) {
     return new Date(issue.terminalAt).getTime()
   }
   return new Date(issue.created).getTime()
@@ -83,16 +116,18 @@ function formatUTCShortDate(d) {
 }
 
 const windowDateRange = computed(() => {
+  const { start, end } = getWindowBounds(props.timeWindow)
   if (props.timeWindow === 'lastWeek') {
-    const { start, end } = getLastWeekBounds()
     const s = new Date(start)
     const e = new Date(end - 86400000)
     return 'Mon ' + formatUTCShortDate(s) + ' – Sun ' + formatUTCShortDate(e)
   }
-  const days = props.timeWindow === 'week' ? 7 : props.timeWindow === 'month' ? 30 : 90
-  const endDate = new Date()
-  const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-  return formatUTCShortDate(startDate) + ' – ' + formatUTCShortDate(endDate)
+  if (props.timeWindow === 'lastMonth') {
+    const s = new Date(start)
+    const e = new Date(end - 86400000)
+    return formatUTCShortDate(s) + ' – ' + formatUTCShortDate(e)
+  }
+  return formatUTCShortDate(new Date(start)) + ' – ' + formatUTCShortDate(new Date(end))
 })
 
 const jiraHost = computed(() => props.autofixData?.jiraHost || 'https://redhat.atlassian.net')
@@ -205,21 +240,10 @@ const metrics = computed(() => {
   if (!hasActiveFilter.value) return props.autofixData.metrics
 
   const issues = projectFilteredIssues.value
-  const isLastWeek = props.timeWindow === 'lastWeek'
-  let windowStart, windowEnd
-
-  if (isLastWeek) {
-    const bounds = getLastWeekBounds()
-    windowStart = bounds.start
-    windowEnd = bounds.end
-  } else {
-    const days = props.timeWindow === 'week' ? 7 : props.timeWindow === 'month' ? 30 : 90
-    windowEnd = Date.now()
-    windowStart = windowEnd - days * 24 * 60 * 60 * 1000
-  }
+  const { start: windowStart, end: windowEnd, useTerminalDate } = getWindowBounds(props.timeWindow)
 
   const windowIssues = issues.filter(i => {
-    const ts = issueTimestamp(i, isLastWeek)
+    const ts = issueTimestamp(i, useTerminalDate)
     return ts >= windowStart && ts < windowEnd
   })
 
@@ -285,13 +309,16 @@ const trendData = computed(() => {
   if (!hasActiveFilter.value) return props.autofixData?.trendData || []
 
   const issues = projectFilteredIssues.value
-  const isLW = props.timeWindow === 'lastWeek'
-  const weekCounts = (props.timeWindow === 'week' || isLW) ? 4 : props.timeWindow === 'month' ? 8 : 13
+  const { useTerminalDate } = getWindowBounds(props.timeWindow)
+  const tw = props.timeWindow
+  const weekCounts = (tw === 'week' || tw === 'lastWeek' || tw === 'last7') ? 4 : (tw === 'month' || tw === 'lastMonth' || tw === 'last30') ? 8 : 13
   const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000
   let anchor
-  if (isLW) {
-    const { end: thisMonday } = getLastWeekBounds()
-    anchor = thisMonday
+  if (tw === 'lastWeek') {
+    anchor = getLastWeekBounds().end
+  } else if (tw === 'lastMonth') {
+    const now = new Date()
+    anchor = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).getTime()
   } else {
     anchor = Date.now()
   }
@@ -300,7 +327,7 @@ const trendData = computed(() => {
     const weekEnd = new Date(anchor - w * MS_PER_WEEK)
     const weekStart = new Date(weekEnd.getTime() - MS_PER_WEEK)
     const weekIssues = issues.filter(i => {
-      const ts = issueTimestamp(i, isLW)
+      const ts = issueTimestamp(i, useTerminalDate)
       return ts >= weekStart.getTime() && ts < weekEnd.getTime()
     })
     const triaged = weekIssues.filter(i => i.pipelineState.startsWith('triage-') || i.pipelineState.startsWith('autofix-')).length
@@ -344,21 +371,10 @@ const stateFilterOptions = STATE_OPTIONS.filter(o => o.value !== 'all')
 
 const timeFilteredIssues = computed(() => {
   if (!projectFilteredIssues.value.length) return []
-  const isLastWeek = props.timeWindow === 'lastWeek'
-  let windowStart, windowEnd
-
-  if (isLastWeek) {
-    const bounds = getLastWeekBounds()
-    windowStart = bounds.start
-    windowEnd = bounds.end
-  } else {
-    const days = props.timeWindow === 'week' ? 7 : props.timeWindow === 'month' ? 30 : 90
-    windowEnd = Date.now()
-    windowStart = windowEnd - days * 24 * 60 * 60 * 1000
-  }
+  const { start: windowStart, end: windowEnd, useTerminalDate } = getWindowBounds(props.timeWindow)
 
   return projectFilteredIssues.value.filter(i => {
-    const ts = issueTimestamp(i, isLastWeek)
+    const ts = issueTimestamp(i, useTerminalDate)
     return ts >= windowStart && ts < windowEnd
   })
 })
@@ -602,8 +618,9 @@ const effortSegmentTotal = computed(() => effortSegments.value.reduce((s, v) => 
 
 function buildJiraLabelUrl(jiraLabels, excludeLabels) {
   const host = jiraHost.value
+  const { start: windowStart, end: windowEnd, useTerminalDate } = getWindowBounds(props.timeWindow)
 
-  if (props.timeWindow === 'lastWeek') {
+  if (useTerminalDate) {
     const isTerminalLabel = jiraLabels.some(l =>
       l === 'jira-autofix-merged' || l === 'jira-autofix-rejected' ||
       l === 'jira-autofix-max-retries'
@@ -642,14 +659,12 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
   if (selectedComponent.value !== 'all') {
     jql += ` AND component = "${selectedComponent.value}"`
   }
-  if (props.timeWindow === 'lastWeek') {
-    const { start, end } = getLastWeekBounds()
-    jql += ` AND created >= "${new Date(start).toISOString().slice(0, 10)}"`
-    jql += ` AND created < "${new Date(end).toISOString().slice(0, 10)}"`
+  if (useTerminalDate) {
+    jql += ` AND created >= "${new Date(windowStart).toISOString().slice(0, 10)}"`
+    jql += ` AND created < "${new Date(windowEnd).toISOString().slice(0, 10)}"`
     jql += ' ORDER BY created DESC'
   } else {
-    const days = props.timeWindow === 'week' ? 7 : props.timeWindow === 'month' ? 30 : 90
-    const windowCutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+    const windowCutoff = new Date(windowStart)
     const earliestIssue = projectFilteredIssues.value.length > 0
       ? projectFilteredIssues.value.reduce((min, i) => i.created < min ? i.created : min, projectFilteredIssues.value[0].created)
       : null
@@ -735,8 +750,11 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
         >
           <option value="week">This Week</option>
           <option value="lastWeek">Last Week</option>
+          <option value="last7">Last 7 Days</option>
           <option value="month">This Month</option>
-          <option value="3months">Last 3 Months</option>
+          <option value="lastMonth">Last Month</option>
+          <option value="last30">Last 30 Days</option>
+          <option value="last90">Last 90 Days</option>
         </select>
       </div>
     </header>

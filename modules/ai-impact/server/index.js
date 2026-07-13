@@ -113,7 +113,7 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Autofix data ───
 
-  const VALID_AUTOFIX_TIME_WINDOWS = ['week', 'lastWeek', 'month', '3months'];
+  const VALID_AUTOFIX_TIME_WINDOWS = ['week', 'lastWeek', 'last7', 'month', 'lastMonth', 'last30', 'last90'];
 
   let autofixDataCache = null;
 
@@ -180,9 +180,9 @@ module.exports = function registerRoutes(router, context) {
    *         name: timeWindow
    *         schema:
    *           type: string
-   *           enum: [week, lastWeek, month, 3months]
+   *           enum: [week, lastWeek, last7, month, lastMonth, last30, last90]
    *           default: month
-   *         description: Time window for metric computation. lastWeek uses calendar week (Mon-Sun) with terminalAt for resolved issues.
+   *         description: Time window for metric computation. Calendar windows (week, lastWeek, month, lastMonth) use fixed boundaries. Rolling windows (last7, last30, last90) count back from now. Past windows (lastWeek, lastMonth) use terminalAt for resolved issues.
    *       - in: query
    *         name: components
    *         schema:
