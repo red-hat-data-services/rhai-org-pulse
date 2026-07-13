@@ -76,6 +76,7 @@ const filteredReleases = computed(() => {
 
 const milestoneTypes = [
   { key: 'planningFreeze', label: 'Plan Freeze' },
+  { key: 'featureFreeze', label: 'Feature Freeze' },
   { key: 'codeFreeze', label: 'Code Freeze' },
   { key: 'ga', label: 'Release' }
 ]

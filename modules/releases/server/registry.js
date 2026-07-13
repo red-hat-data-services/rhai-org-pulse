@@ -407,6 +407,7 @@ async function runRegistrySync(storage, options) {
           ...(existing.milestones || {}),
           ga: ppRelease.dueDate || existing.milestones?.ga || null,
           codeFreeze: ppRelease.codeFreezeDate || existing.milestones?.codeFreeze || null,
+          featureFreeze: ppRelease.featureFreezeDate || existing.milestones?.featureFreeze || null,
           planningFreeze: ppRelease.planningFreezeDate || existing.milestones?.planningFreeze || null
         };
         existing.updatedAt = new Date().toISOString();
@@ -421,6 +422,7 @@ async function runRegistrySync(storage, options) {
         milestones: {
           ga: ppRelease.dueDate || null,
           codeFreeze: ppRelease.codeFreezeDate || null,
+          featureFreeze: ppRelease.featureFreezeDate || null,
           planningFreeze: ppRelease.planningFreezeDate || null
         },
         source: 'product-pages',
