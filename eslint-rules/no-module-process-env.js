@@ -48,8 +48,7 @@ const ALLOWED = new Set([
   // AI Eng: customer-insights module
   'SHEETS_CACHE_TTL_MS',
   'GOOGLE_OAUTH_CALLBACK_URL',
-  'VITE_API_BASE_URL',
-  'API_PUBLIC_URL'
+  'VITE_API_BASE_URL'
 ])
 
 module.exports = {
