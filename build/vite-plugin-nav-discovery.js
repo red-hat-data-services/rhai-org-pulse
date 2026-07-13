@@ -264,7 +264,7 @@ export default function navDiscovery() {
 
       const isRelevant =
         file.endsWith('View.vue') ||
-        file.endsWith('.vue') && file.includes('/views/') ||
+        (file.endsWith('.vue') && file.includes('/views/')) ||
         file.endsWith('module.json') ||
         file.endsWith('client/index.js') ||
         file.includes('/reports/registry.js')
