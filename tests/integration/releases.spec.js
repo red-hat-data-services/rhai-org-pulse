@@ -598,16 +598,16 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     expect(sample.fpdor).toHaveProperty('totalCount');
     expect(sample.fpdor).toHaveProperty('evaluatedCount');
     expect(Array.isArray(sample.fpdor.items)).toBe(true);
-    expect(sample.fpdor.totalCount).toBe(10);
-    expect(sample.fpdor.items.length).toBe(10);
+    expect(sample.fpdor.totalCount).toBe(11);
+    expect(sample.fpdor.items.length).toBe(11);
 
     var item = sample.fpdor.items[0];
     expect(item).toHaveProperty('name');
     expect(item).toHaveProperty('pass');
     expect(item).toHaveProperty('source');
     expect(item).toHaveProperty('state');
-    expect(['jira', 'strat-pipeline']).toContain(item.source);
-    expect(['passed', 'failed', 'not-evaluated']).toContain(item.state);
+    expect(item.source).toBe('jira');
+    expect(['passed', 'failed']).toContain(item.state);
 
     expect(sample).toHaveProperty('readinessGates');
     expect(sample.readinessGates).toHaveProperty('fpDorPassed');

@@ -105,7 +105,7 @@ function computeReadiness(feature) {
   var noBlockingViolations = !hasBlockingViolations(feature.violations)
 
   var isReady = fpdor.passedCount === fpdor.evaluatedCount
-    && fpdor.evaluatedCount >= 6
+    && fpdor.evaluatedCount >= 7
     && pastRefinement
     && noBlockingViolations
 

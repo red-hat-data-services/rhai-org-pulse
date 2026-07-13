@@ -4,43 +4,6 @@ function hasRiceScore(feature) {
   return feature.riceScore != null && feature.riceScore > 0
 }
 
-function hasSizing(feature) {
-  var hasSize = (feature.storyPoints != null && feature.storyPoints > 0)
-    || !!feature.tshirtSize
-    || (feature.effort != null && feature.effort > 0)
-  var hasBreakdown = feature.epicCount != null && feature.epicCount > 0
-  return hasSize && hasBreakdown
-}
-
-function hasTargetAndReleaseType(feature) {
-  var tvs = feature.targetVersions || []
-  var hasTarget = tvs.length > 0
-  var hasReleaseType = !!(feature.releaseType || feature.phase)
-  return hasTarget && hasReleaseType
-}
-
-function hasOwners(feature) {
-  var hasDelivery = !!(feature.deliveryOwner || feature.assignee)
-  var hasPM = !!(feature.pmOwner || feature.pm)
-  return hasDelivery && hasPM
-}
-
-function hasComponents(feature) {
-  var comps = feature.components || []
-  return Array.isArray(comps) ? comps.length > 0 : !!(comps && String(comps).trim())
-}
-
-function hasCrossFunctional(feature) {
-  if (feature.docsRequired && feature.docsRequired !== 'No') return true
-  var comps = feature.components || []
-  if (!Array.isArray(comps)) return false
-  if (comps.length > 1) return true
-  for (var i = 0; i < comps.length; i++) {
-    if (comps[i] && comps[i].toLowerCase().indexOf('doc') !== -1) return true
-  }
-  return false
-}
-
 function hasRequirementsClarity(feature, rubricData) {
   if (rubricData && rubricData.scored && rubricData.scope != null) {
     return rubricData.scope >= RUBRIC_PASS_THRESHOLD
@@ -50,6 +13,78 @@ function hasRequirementsClarity(feature, rubricData) {
     return signals.signalCount >= 2
   }
   return false
+}
+
+function hasAcceptanceCriteria(feature, rubricData) {
+  if (rubricData && rubricData.scored && rubricData.testability != null) {
+    return rubricData.testability >= RUBRIC_PASS_THRESHOLD
+  }
+  var signals = feature.descriptionSignals
+  if (signals && signals.hasContent) {
+    return !!signals.hasAcceptanceCriteria
+  }
+  return false
+}
+
+function hasScopeDefined(feature, rubricData) {
+  if (rubricData && rubricData.scored && rubricData.scope != null) {
+    return rubricData.scope >= RUBRIC_PASS_THRESHOLD
+  }
+  var hasBreakdown = feature.epicCount != null && feature.epicCount > 0
+  var hasSizing = (feature.storyPoints != null && feature.storyPoints > 0)
+    || !!feature.tshirtSize
+    || (feature.effort != null && feature.effort > 0)
+  return hasBreakdown || hasSizing
+}
+
+function hasArchitecturalAlignment(feature, rubricData) {
+  if (rubricData && rubricData.scored && rubricData.architecture != null) {
+    return rubricData.architecture >= RUBRIC_PASS_THRESHOLD
+  }
+  var signals = feature.descriptionSignals
+  if (signals && signals.hasContent) {
+    return !!signals.hasArchitectureSignal
+  }
+  return false
+}
+
+function hasRisksAndAssumptions(feature, rubricData) {
+  if (rubricData && rubricData.scored && rubricData.feasibility != null) {
+    return rubricData.feasibility >= RUBRIC_PASS_THRESHOLD
+  }
+  var signals = feature.descriptionSignals
+  if (signals && signals.hasContent) {
+    return !!signals.hasRisks
+  }
+  return false
+}
+
+function hasCrossFunctionalEngagement(feature) {
+  var comps = feature.components || []
+  if (!Array.isArray(comps)) return false
+  var hasDocumentation = false
+  for (var i = 0; i < comps.length; i++) {
+    if (comps[i] && comps[i] === 'Documentation') hasDocumentation = true
+  }
+  if (hasDocumentation) return comps.length >= 3
+  return comps.length > 1
+}
+
+function hasReleaseType(feature) {
+  return !!(feature.releaseType || feature.phase)
+}
+
+function hasTargetVersion(feature) {
+  var tvs = feature.targetVersions || []
+  return tvs.length > 0
+}
+
+function hasAssignee(feature) {
+  return !!(feature.deliveryOwner || feature.assignee)
+}
+
+function hasPmAssigned(feature) {
+  return !!(feature.pmOwner || feature.pm)
 }
 
 function extractRubricData(feature) {
@@ -67,14 +102,6 @@ function extractRubricData(feature) {
   }
 }
 
-function evalRubricItem(name, rubricData, dimension, detail) {
-  if (!rubricData || !rubricData.scored || rubricData[dimension] == null) {
-    return { name: name, pass: null, source: 'strat-pipeline', state: 'not-evaluated', detail: 'No rubric data available' }
-  }
-  var passed = rubricData[dimension] >= RUBRIC_PASS_THRESHOLD
-  return { name: name, pass: passed, source: 'strat-pipeline', state: passed ? 'passed' : 'failed', detail: passed ? null : (detail || 'Score below threshold (' + rubricData[dimension] + '/' + RUBRIC_PASS_THRESHOLD + ')') }
-}
-
 function evalJiraItem(name, passed, detail) {
   return { name: name, pass: passed, source: 'jira', state: passed ? 'passed' : 'failed', detail: passed ? null : (detail || null) }
 }
@@ -85,38 +112,16 @@ function riceDetail(feature) {
   return null
 }
 
-function sizingDetail(feature) {
-  var hasSize = (feature.storyPoints != null && feature.storyPoints > 0)
+function scopeDetail(feature, rubricData) {
+  if (rubricData && rubricData.scored && rubricData.scope != null) {
+    return 'Scope score below threshold (' + rubricData.scope + '/' + RUBRIC_PASS_THRESHOLD + ')'
+  }
+  var hasBreakdown = feature.epicCount != null && feature.epicCount > 0
+  var hasSizing = (feature.storyPoints != null && feature.storyPoints > 0)
     || !!feature.tshirtSize
     || (feature.effort != null && feature.effort > 0)
-  var hasBreakdown = feature.epicCount != null && feature.epicCount > 0
-  if (!hasSize && !hasBreakdown) return 'No sizing and no child work items'
-  if (!hasSize) return 'No sizing (set story points, t-shirt size, or effort)'
-  if (!hasBreakdown) return 'No child work items (create child epics)'
+  if (!hasBreakdown && !hasSizing) return 'No child epics and no sizing (story points, t-shirt size, or effort)'
   return null
-}
-
-function targetDetail(feature) {
-  var tvs = feature.targetVersions || []
-  var hasTarget = tvs.length > 0
-  var hasReleaseType = !!(feature.releaseType || feature.phase)
-  var parts = []
-  if (!hasTarget) parts.push('missing target version')
-  if (!hasReleaseType) parts.push('missing release type')
-  return parts.join(', ') || null
-}
-
-function ownersDetail(feature) {
-  var hasDelivery = !!(feature.deliveryOwner || feature.assignee)
-  var hasPM = !!(feature.pmOwner || feature.pm)
-  var parts = []
-  if (!hasDelivery) parts.push('no assignee')
-  if (!hasPM) parts.push('no PM assigned')
-  return parts.join(', ') || null
-}
-
-function crossFunctionalDetail(_feature) {
-  return 'No cross-functional engagement (add docs component, set docsRequired, or add multiple components)'
 }
 
 function requirementsDetail(feature, rubricData) {
@@ -130,18 +135,52 @@ function requirementsDetail(feature, rubricData) {
   return 'No requirements clarity data available'
 }
 
+function acceptanceCriteriaDetail(feature, rubricData) {
+  if (rubricData && rubricData.scored && rubricData.testability != null) {
+    return 'Testability score below threshold (' + rubricData.testability + '/' + RUBRIC_PASS_THRESHOLD + ')'
+  }
+  return 'No acceptance criteria found in description'
+}
+
+function architectureDetail(feature, rubricData) {
+  if (rubricData && rubricData.scored && rubricData.architecture != null) {
+    return 'Architecture score below threshold (' + rubricData.architecture + '/' + RUBRIC_PASS_THRESHOLD + ')'
+  }
+  return 'No architecture review signals in description'
+}
+
+function risksDetail(feature, rubricData) {
+  if (rubricData && rubricData.scored && rubricData.feasibility != null) {
+    return 'Feasibility score below threshold (' + rubricData.feasibility + '/' + RUBRIC_PASS_THRESHOLD + ')'
+  }
+  return 'No risks or assumptions documented in description'
+}
+
+function crossFunctionalDetail(feature) {
+  var comps = feature.components || []
+  if (!Array.isArray(comps) || comps.length === 0) return 'No components assigned'
+  var hasDocumentation = false
+  for (var i = 0; i < comps.length; i++) {
+    if (comps[i] && comps[i] === 'Documentation') hasDocumentation = true
+  }
+  if (hasDocumentation && comps.length < 3) return 'Documentation present but need at least 3 components (have ' + comps.length + ')'
+  if (comps.length <= 1) return 'Only 1 component assigned; need more than 1 for cross-functional engagement'
+  return null
+}
+
 function computeFPDoRReadiness(feature, rubricData) {
   var items = [
     evalJiraItem('Requirements Clarity', hasRequirementsClarity(feature, rubricData), requirementsDetail(feature, rubricData)),
+    evalJiraItem('Acceptance Criteria', hasAcceptanceCriteria(feature, rubricData), acceptanceCriteriaDetail(feature, rubricData)),
+    evalJiraItem('Scope Defined', hasScopeDefined(feature, rubricData), scopeDetail(feature, rubricData)),
     evalJiraItem('RICE Score', hasRiceScore(feature), riceDetail(feature)),
-    evalJiraItem('Sizing & Breakdown', hasSizing(feature), sizingDetail(feature)),
-    evalJiraItem('Target Version + Release Type', hasTargetAndReleaseType(feature), targetDetail(feature)),
-    evalJiraItem('Assignee + PM', hasOwners(feature), ownersDetail(feature)),
-    evalJiraItem('Components', hasComponents(feature), 'No components set'),
-    evalJiraItem('Cross-functional Engagement', hasCrossFunctional(feature), crossFunctionalDetail(feature)),
-    evalRubricItem('Acceptance Criteria', rubricData, 'testability'),
-    evalRubricItem('Architecture Review', rubricData, 'architecture'),
-    evalRubricItem('Risks & Assumptions', rubricData, 'feasibility')
+    evalJiraItem('Cross-functional Engagement', hasCrossFunctionalEngagement(feature), crossFunctionalDetail(feature)),
+    evalJiraItem('Architectural Alignment', hasArchitecturalAlignment(feature, rubricData), architectureDetail(feature, rubricData)),
+    evalJiraItem('Risks & Assumptions', hasRisksAndAssumptions(feature, rubricData), risksDetail(feature, rubricData)),
+    evalJiraItem('Release Type', hasReleaseType(feature), 'No release type set'),
+    evalJiraItem('Target Version', hasTargetVersion(feature), 'No target version set'),
+    evalJiraItem('Assignee', hasAssignee(feature), 'No assignee set'),
+    evalJiraItem('PM Assigned', hasPmAssigned(feature), 'No PM assigned')
   ]
 
   var passedCount = 0
@@ -154,7 +193,7 @@ function computeFPDoRReadiness(feature, rubricData) {
   return {
     items: items,
     passedCount: passedCount,
-    totalCount: 10,
+    totalCount: 11,
     evaluatedCount: evaluatedCount
   }
 }
@@ -162,14 +201,16 @@ function computeFPDoRReadiness(feature, rubricData) {
 module.exports = {
   computeFPDoRReadiness: computeFPDoRReadiness,
   extractRubricData: extractRubricData,
-  evalRubricItem: evalRubricItem,
   hasRiceScore: hasRiceScore,
-  hasSizing: hasSizing,
-  hasTargetAndReleaseType: hasTargetAndReleaseType,
-  hasOwners: hasOwners,
-  hasComponents: hasComponents,
-  hasCrossFunctional: hasCrossFunctional,
+  hasScopeDefined: hasScopeDefined,
   hasRequirementsClarity: hasRequirementsClarity,
+  hasAcceptanceCriteria: hasAcceptanceCriteria,
+  hasArchitecturalAlignment: hasArchitecturalAlignment,
+  hasRisksAndAssumptions: hasRisksAndAssumptions,
+  hasCrossFunctionalEngagement: hasCrossFunctionalEngagement,
+  hasReleaseType: hasReleaseType,
+  hasTargetVersion: hasTargetVersion,
+  hasAssignee: hasAssignee,
+  hasPmAssigned: hasPmAssigned,
   RUBRIC_PASS_THRESHOLD: RUBRIC_PASS_THRESHOLD
 }
-
