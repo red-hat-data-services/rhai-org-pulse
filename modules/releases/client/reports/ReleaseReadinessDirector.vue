@@ -487,11 +487,6 @@ const overallPct = computed(() => {
   return Math.round(gates.reduce((s, g) => s + g.pct, 0) / gates.length)
 })
 
-const versionVariants = computed(() => {
-  if (data.value && data.value.version_variants) return data.value.version_variants
-  return selectedVersion.value ? [selectedVersion.value] : []
-})
-
 const openIssuesToValidate = computed(() => {
   if (!data.value || !data.value.open_issues_to_validate) return null
   return data.value.open_issues_to_validate
