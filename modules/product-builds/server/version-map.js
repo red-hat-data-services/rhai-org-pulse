@@ -1,5 +1,6 @@
 const path = require('path');
 const { createGoogleSheetsClient } = require('../../../shared/server/google-sheets');
+const { createJiraClient } = require('../../../shared/server/jira');
 
 const DEFAULTS = {
   spreadsheetId: '1cFIL4klt4uRflIsTH2pigls1_3RdzyGx8sXZ6F2UtQ0',
@@ -214,6 +215,114 @@ async function fetchFromSheets(googleKeyFile) {
   };
 }
 
+// --- JIRA variant feature links ---
+
+let _jiraLinksCache = null;
+let _jiraLinksCacheAt = 0;
+const JIRA_LINKS_CACHE_TTL = 60 * 60 * 1000;
+
+const VARIANT_FEATURE_RE = /^(.+?)-ubi9\s+for\s+(.+)$/i;
+
+function parseFeatureSummary(summary) {
+  const m = summary.match(VARIANT_FEATURE_RE);
+  if (!m) return null;
+  return { variant: m[1].toLowerCase().trim(), release: m[2].trim() };
+}
+
+function normalizeRelease(raw) {
+  return raw
+    .replace(/^RHAI\s+/i, '')
+    .replace(/[-\s]+(EA|GA)/gi, ' $1')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+const VARIANT_TO_SHEET = {
+  cuda: 'CUDA',
+  rocm: 'ROCm',
+  cpu: 'CPU',
+  gaudi: 'Intel Gaudi',
+  tpu: 'Google TPU',
+  neuron: 'AWS Neuron',
+  spyre: 'Spyre',
+};
+
+function extractVariantBase(variant) {
+  const m = variant.match(/^([a-z]+)/);
+  return m ? m[1] : variant;
+}
+
+function extractPackageFromEpic(summary) {
+  const lower = summary.toLowerCase();
+  let m = lower.match(/update\s+(.+?)\s+to\s+/);
+  if (m) return m[1].replace(/-ubi9.*/, '').trim();
+  m = lower.match(/upgrade\s+(.+?)\s+to\s+/);
+  if (m) return m[1].replace(/-ubi9.*/, '').trim();
+  m = lower.match(/wheels\s+for\s+(\S+)/);
+  if (m) return m[1].trim();
+  return null;
+}
+
+const VARIANT_LABELS = [
+  'aipcc-ae-cuda', 'aipcc-ae-rocm', 'aipcc-ae-gaudi',
+  'aipcc-ae-cpu', 'aipcc-ae-tpu', 'aipcc-ae-neuron', 'aipcc-ae-spyre',
+];
+
+async function buildJiraLinks(jira) {
+  const labels = VARIANT_LABELS.map(l => `"${l}"`).join(', ');
+  const jql = `project = AIPCC AND issuetype = Feature AND labels in (${labels}) ORDER BY created DESC`;
+  const features = await jira.fetchAllJqlResults(jql, 'key,summary,status');
+
+  const links = {};
+  const featureMap = {};
+  const BATCH = 10;
+
+  for (let i = 0; i < features.length; i += BATCH) {
+    const batch = features.slice(i, i + BATCH);
+    const childResults = await Promise.all(
+      batch.map(f =>
+        jira.fetchAllJqlResults(`parent = ${f.key}`, 'key,summary,status', { maxResults: 50 })
+          .catch(() => [])
+      )
+    );
+
+    for (let j = 0; j < batch.length; j++) {
+      const feature = batch[j];
+      const children = childResults[j];
+      const parsed = parseFeatureSummary(feature.fields.summary);
+      if (!parsed) continue;
+
+      const variantBase = extractVariantBase(parsed.variant);
+      const normRelease = normalizeRelease(parsed.release);
+
+      const featureKey = `${parsed.variant}:${normRelease}`;
+      featureMap[featureKey] = {
+        key: feature.key,
+        summary: feature.fields.summary,
+        variant: parsed.variant,
+        variantBase,
+        sheet: VARIANT_TO_SHEET[variantBase] || null,
+        release: normRelease,
+        status: (feature.fields.status && feature.fields.status.name) || '',
+      };
+
+      for (const child of children) {
+        const pkg = extractPackageFromEpic(child.fields.summary);
+        if (!pkg) continue;
+        const linkKey = `${parsed.variant}:${normRelease}:${pkg}`;
+        links[linkKey] = {
+          key: child.key,
+          summary: child.fields.summary,
+          status: (child.fields.status && child.fields.status.name) || '',
+          status_category: (child.fields.status && child.fields.status.statusCategory && child.fields.status.statusCategory.key) || 'undefined',
+        };
+      }
+    }
+  }
+
+  return { links, features: featureMap, generated_at: new Date().toISOString() };
+}
+
 /**
  * @param {import('express').Router} router
  * @param {import('@shared/server/module-context').ModuleContext} context
@@ -285,5 +394,47 @@ module.exports = function registerVersionMapRoutes(router, context) {
     const data = await fetchWithFallback('Refresh');
     if (data) return res.json(data);
     return res.status(503).json({ error: 'Version map data unavailable' });
+  });
+
+  // --- JIRA links for version map cells ---
+
+  let _jira;
+  function getJira() {
+    if (!_jira) {
+      _jira = createJiraClient({
+        email: (context.secrets && context.secrets.JIRA_EMAIL) || '',
+        token: (context.secrets && context.secrets.JIRA_TOKEN) || '',
+      });
+    }
+    return _jira;
+  }
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/version-map/jira-links:
+   *   get:
+   *     tags: [Package Analysis]
+   *     summary: Get JIRA links for version map cells
+   *     description: Returns a lookup map of variant feature epics and their child work items, matched by variant, release, and package name. Cached for 1 hour.
+   *     responses:
+   *       200:
+   *         description: JIRA links map with features and per-package epics
+   *       500:
+   *         description: Failed to fetch JIRA data
+   */
+  router.get('/version-map/jira-links', async function (req, res) {
+    const now = Date.now();
+    if (_jiraLinksCache && (now - _jiraLinksCacheAt) < JIRA_LINKS_CACHE_TTL) {
+      return res.json(_jiraLinksCache);
+    }
+    try {
+      _jiraLinksCache = await buildJiraLinks(getJira());
+      _jiraLinksCacheAt = Date.now();
+      res.json(_jiraLinksCache);
+    } catch (err) {
+      console.error('[version-map] JIRA links fetch failed:', err.message);
+      if (_jiraLinksCache) return res.json(_jiraLinksCache);
+      res.status(500).json({ error: 'Failed to fetch JIRA links' });
+    }
   });
 };

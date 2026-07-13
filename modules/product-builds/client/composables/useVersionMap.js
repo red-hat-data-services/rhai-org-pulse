@@ -58,6 +58,20 @@ export function useVersionMap() {
     return count
   })
 
+  const jiraLinks = ref(null)
+  const jiraLinksLoading = ref(false)
+
+  async function loadJiraLinks() {
+    jiraLinksLoading.value = true
+    try {
+      jiraLinks.value = await apiRequest(`${BASE}/jira-links`)
+    } catch {
+      jiraLinks.value = null
+    } finally {
+      jiraLinksLoading.value = false
+    }
+  }
+
   return {
     data,
     loading,
@@ -70,5 +84,8 @@ export function useVersionMap() {
     source,
     allPackageNames,
     totalVariants,
+    jiraLinks,
+    jiraLinksLoading,
+    loadJiraLinks,
   }
 }

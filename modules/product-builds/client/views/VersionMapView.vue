@@ -5,7 +5,10 @@ import { useVersionMap } from '../composables/useVersionMap.js'
 const {
   data, loading, error, load, refresh, refreshing,
   releases, accelerators, source, allPackageNames, totalVariants,
+  jiraLinks, loadJiraLinks,
 } = useVersionMap()
+
+const JIRA_BASE = 'https://redhat.atlassian.net/browse'
 
 const packageFilter = ref('')
 const selectedAccelerators = ref([])
@@ -147,7 +150,65 @@ function clearReleaseFilter() {
 
 const totalPackages = computed(() => allPackageNames.value.length)
 
-onMounted(() => { load() })
+const SHEET_TO_JIRA_BASE = {
+  'CUDA': 'cuda', 'ROCm': 'rocm', 'Google TPU': 'tpu', 'CPU': 'cpu',
+  'Intel Gaudi': 'gaudi', 'AWS Neuron': 'neuron', 'Spyre': 'spyre',
+}
+
+function extractVariantSlug(sheetName, svName) {
+  const base = SHEET_TO_JIRA_BASE[sheetName] || sheetName.toLowerCase()
+  const stripped = svName.replace(new RegExp('^' + sheetName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*', 'i'), '').replace(/[^a-z0-9.]/gi, '')
+  return stripped ? `${base}${stripped}` : base
+}
+
+function normalizeRelease(r) {
+  return r.replace(/^RHAI\s+/i, '').replace(/\.+\s/g, ' ').replace(/[-\s]+(EA|GA)/gi, ' $1').replace(/\s+/g, ' ').trim()
+}
+
+function findJiraLink(sheetName, svName, pkgName, release) {
+  if (!jiraLinks.value) return null
+  const variant = extractVariantSlug(sheetName, svName)
+  const pkg = pkgName.toLowerCase()
+  const normR = normalizeRelease(release)
+  const releases = normR.includes('EA') ? [normR] : [`${normR} GA`, normR]
+  for (const rel of releases) {
+    const epicLink = jiraLinks.value.links[`${variant}:${rel}:${pkg}`]
+    if (epicLink) return { key: epicLink.key, type: 'epic' }
+  }
+  for (const fk of Object.keys(jiraLinks.value.features)) {
+    if (!fk.startsWith(variant)) continue
+    const fRelease = fk.split(':')[1]
+    if (releases.includes(fRelease)) {
+      const epicLink = jiraLinks.value.links[`${fk}:${pkg}`]
+      if (epicLink) return { key: epicLink.key, type: 'epic' }
+    }
+  }
+  for (const rel of releases) {
+    const featureLink = jiraLinks.value.features[`${variant}:${rel}`]
+    if (featureLink) return { key: featureLink.key, type: 'feature' }
+  }
+  for (const fk of Object.keys(jiraLinks.value.features)) {
+    if (!fk.startsWith(variant)) continue
+    const fRelease = fk.split(':')[1]
+    if (releases.includes(fRelease)) return { key: jiraLinks.value.features[fk].key, type: 'feature' }
+  }
+  return null
+}
+
+function cellHasJiraLink(pkg, release, acc, sv) {
+  if (!jiraLinks.value) return false
+  const entry = getVersion(pkg, release)
+  if (!entry) return false
+  if (entry.dropped || versionChanged(pkg, release)) {
+    return !!findJiraLink(acc.sheet, sv.name, pkg.name, release)
+  }
+  return false
+}
+
+onMounted(() => {
+  load()
+  loadJiraLinks()
+})
 </script>
 
 <template>
@@ -351,7 +412,19 @@ onMounted(() => { load() })
                           @pointerenter="hoveredCell = cellKey(sv.name, pkg.name, r)"
                           @pointerleave="hoveredCell = null"
                         >
-                          <span class="inline-flex items-center gap-1">
+                          <a
+                            v-if="cellHasJiraLink(pkg, r, acc, sv)"
+                            :href="`${JIRA_BASE}/${findJiraLink(acc.sheet, sv.name, pkg.name, r).key}`"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-flex items-center gap-1 hover:underline"
+                            @click.stop
+                          >
+                            <svg v-if="versionChanged(pkg, r) && displayVersion(pkg, r, acc) !== 'TBD'" class="w-2 h-2 shrink-0" viewBox="0 0 10 10" aria-label="bumped"><polygon points="5,1 9,9 1,9" fill="#0ca30c" /></svg>
+                            <span>{{ displayVersion(pkg, r, acc) }}</span>
+                            <svg v-if="getVersion(pkg, r)?.tentative" class="w-2 h-2 shrink-0" viewBox="0 0 10 10" aria-label="tentative"><polygon points="5,0 10,5 5,10 0,5" fill="#d97706" /></svg>
+                          </a>
+                          <span v-else class="inline-flex items-center gap-1">
                             <svg v-if="versionChanged(pkg, r) && displayVersion(pkg, r, acc) !== 'TBD'" class="w-2 h-2 shrink-0" viewBox="0 0 10 10" aria-label="bumped"><polygon points="5,1 9,9 1,9" fill="#0ca30c" /></svg>
                             <span>{{ displayVersion(pkg, r, acc) }}</span>
                             <svg v-if="getVersion(pkg, r)?.tentative" class="w-2 h-2 shrink-0" viewBox="0 0 10 10" aria-label="tentative"><polygon points="5,0 10,5 5,10 0,5" fill="#d97706" /></svg>
