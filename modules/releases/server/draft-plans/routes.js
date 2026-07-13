@@ -321,7 +321,7 @@ module.exports = function registerDraftPlanRoutes(router, context) {
    */
   router.get('/:version', requireAuth, requireScope('releases:read'), function(req, res) {
     var version = req.params.version;
-    if (!/^[a-zA-Z0-9._-]{1,50}$/.test(version)) {
+    if (!/^[a-zA-Z0-9 ._-]{1,50}$/.test(version)) {
       return res.status(400).json({ error: 'Invalid version format' });
     }
 
@@ -386,7 +386,7 @@ module.exports = function registerDraftPlanRoutes(router, context) {
    */
   router.get('/:version/health', requireAuth, requireScope('releases:read'), function(req, res) {
     var version = req.params.version;
-    if (!/^[a-zA-Z0-9._-]{1,50}$/.test(version)) {
+    if (!/^[a-zA-Z0-9 ._-]{1,50}$/.test(version)) {
       return res.status(400).json({ error: 'Invalid version format' });
     }
 
