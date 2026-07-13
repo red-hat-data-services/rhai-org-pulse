@@ -17,15 +17,6 @@
         </div>
         <div class="flex items-center space-x-3">
           <button
-            @click="goToTable"
-            class="px-4 py-2 border border-primary-600 text-primary-600 rounded-lg hover:bg-primary-50 font-medium flex items-center space-x-2 transition-colors"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-            <span>Table View</span>
-          </button>
-          <button
             @click="goToKanban"
             class="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium flex items-center space-x-2 shadow-sm transition-colors"
           >
@@ -840,9 +831,4 @@ function goToKanban() {
   }
 }
 
-function goToTable() {
-  if (moduleNav) {
-    moduleNav.navigateTo('kanban')
-  }
-}
 </script>

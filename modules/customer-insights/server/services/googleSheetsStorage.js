@@ -29,6 +29,8 @@ const HEADERS = [
   'status',
   'createdAt',
   'updatedAt',
+  'owner',
+  'meetingNotes',
 ]
 
 const ARRAY_FIELDS = new Set(['toolsOfChoice', 'futureWishlist'])
@@ -76,7 +78,7 @@ async function getAllFromSheet(sheets, spreadsheetId) {
   if (cached) return cached
 
   await ensureHeaders(sheets, spreadsheetId, SHEET_NAME, HEADERS)
-  const rows = await readSheet(sheets, spreadsheetId, `${SHEET_NAME}!A2:R`)
+  const rows = await readSheet(sheets, spreadsheetId, `${SHEET_NAME}!A2:T`)
   const data = rows.map(deserializeRow)
 
   setCache(CACHE_KEY, data)

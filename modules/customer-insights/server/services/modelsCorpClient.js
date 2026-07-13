@@ -141,7 +141,7 @@ JSON:`
 
       return {
         ...extracted,
-        component: 'platform', // Default, user can change
+        component: extracted.component || '',
       }
     } catch (error) {
       console.error('Error extracting from transcript:', error)
