@@ -337,7 +337,7 @@
                         <div v-else class="h-full bg-gray-500 flex items-center justify-center text-xs font-bold text-white" style="width:100%">0</div>
                       </div>
                     </a>
-                    <a :href="tile.skipped_jql_url || '#'" target="_blank" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    <a v-if="tile.skipped_enabled !== false" :href="tile.skipped_jql_url || '#'" target="_blank" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
                       <span class="text-xs text-gray-400 w-16">Skipped ↗</span>
                       <div class="flex-1 h-6 bg-gray-200 dark:bg-gray-800 rounded overflow-hidden flex">
                         <template v-if="skippedBd(tile).total > 0">
@@ -348,6 +348,10 @@
                         <div v-else class="h-full bg-gray-500 flex items-center justify-center text-xs font-bold text-white" style="width:100%">0</div>
                       </div>
                     </a>
+                    <div v-else class="flex items-center gap-2">
+                      <span class="text-xs text-gray-400 w-16">Skipped</span>
+                      <span class="text-xs text-gray-400 dark:text-gray-500 italic">Yet to be enabled</span>
+                    </div>
                   </div>
                 </div>
               </div>
