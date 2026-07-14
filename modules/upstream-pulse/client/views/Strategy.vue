@@ -7,6 +7,16 @@
       :loading="loading"
     />
 
+    <div v-if="canManageStrategy && !loading && !error" class="flex justify-end mb-4">
+      <button
+        @click="openAddStrategy"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/40 border border-blue-200 dark:border-blue-800 rounded-lg transition-colors"
+      >
+        <PlusIcon :size="15" :stroke-width="2.5" />
+        Add to Strategy
+      </button>
+    </div>
+
     <!-- Loading -->
     <div v-if="loading">
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-3">
@@ -35,7 +45,12 @@
         <TargetIcon :size="28" class="text-gray-400 dark:text-gray-500" />
       </div>
       <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">No strategic classifications assigned</h3>
-      <p class="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">Tag organizations in the org registry with strategic participation or leadership goals to track them here.</p>
+      <p v-if="canManageStrategy" class="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-4">No strategic classifications yet. Add organizations to start tracking progress.</p>
+      <button v-if="canManageStrategy" @click="openAddStrategy" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-sm">
+        <PlusIcon :size="15" />
+        Add to Strategy
+      </button>
+      <p v-else class="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">Tag organizations in the org registry with strategic participation or leadership goals to track them here.</p>
     </div>
 
     <!-- Content -->
@@ -136,6 +151,7 @@
                 <th class="px-4 py-2.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Maintainers</th>
                 <th class="px-4 py-2.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Projects</th>
                 <th v-if="selectedDays !== '0'" class="px-4 py-2.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Trend</th>
+                <th v-if="canManageStrategy" class="px-3 py-2.5 w-10"></th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700/50">
@@ -189,6 +205,15 @@
                     {{ org.percentChange > 0 ? '↑' : org.percentChange < 0 ? '↓' : '→' }}{{ Math.abs(org.percentChange).toFixed(1) }}%
                   </span>
                 </td>
+                <td v-if="canManageStrategy" class="px-3 py-3 text-right">
+                  <button
+                    @click.stop="openEditStrategy(org)"
+                    class="p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    title="Edit strategy"
+                  >
+                    <PencilIcon :size="14" />
+                  </button>
+                </td>
               </tr>
             </tbody>
             <!-- Subtotal row -->
@@ -215,12 +240,21 @@
                     {{ tierSummaries[tier].avgChange > 0 ? '↑' : tierSummaries[tier].avgChange < 0 ? '↓' : '→' }}{{ Math.abs(tierSummaries[tier].avgChange).toFixed(1) }}% avg
                   </span>
                 </td>
+                <td v-if="canManageStrategy" class="px-3 py-2.5"></td>
               </tr>
             </tfoot>
           </table>
         </div>
       </div>
     </template>
+
+    <StrategyEditModal
+      :open="showEditModal"
+      :org="editingOrg"
+      :all-orgs="orgs"
+      @close="showEditModal = false"
+      @saved="onStrategySaved"
+    />
   </div>
 </template>
 
@@ -230,19 +264,27 @@ import {
   Target as TargetIcon,
   Crown as CrownIcon,
   Shield as ShieldIcon,
+  Plus as PlusIcon,
+  Pencil as PencilIcon,
 } from 'lucide-vue-next'
 import { apiRequest } from '@shared/client/services/api'
 import { StatCardSkeleton, TableRowSkeleton } from '../components/SkeletonLoaders.vue'
 import StickyPageHeader from '../components/StickyPageHeader.vue'
+import StrategyEditModal from '../components/StrategyEditModal.vue'
 import {
   getStrategicTier, TIER_CONFIG,
   getStrategicLabel, getStrategicBadgeClass,
 } from '../composables/useStrategicClassification.js'
+import { useStrategyPermissions } from '../composables/useStrategyPermissions.js'
 
 const nav = inject('moduleNav')
 const MODULE_API = '/modules/upstream-pulse'
 
 const tierOrder = ['increasing', 'sustaining', 'evaluating']
+
+const { canManageStrategy, loadPermissions } = useStrategyPermissions()
+const showEditModal = ref(false)
+const editingOrg = ref(null)
 
 const selectedDays = ref('30')
 const selectedTier = ref(null)
@@ -314,6 +356,25 @@ async function loadData() {
   }
 }
 
+function openAddStrategy() {
+  editingOrg.value = null
+  showEditModal.value = true
+}
+
+function openEditStrategy(org) {
+  editingOrg.value = org
+  showEditModal.value = true
+}
+
+function onStrategySaved() {
+  showEditModal.value = false
+  editingOrg.value = null
+  loadData()
+}
+
 watch(selectedDays, () => loadData())
-onMounted(() => loadData())
+onMounted(() => {
+  loadData()
+  loadPermissions()
+})
 </script>

@@ -67,13 +67,13 @@ function buildIdentityHeaders(req) {
   return headers;
 }
 
-async function proxyMutatingRequest(path, body, req) {
+async function proxyMutatingRequest(path, body, req, method = 'POST') {
   const base = getBaseUrl();
   const url = new URL(path, base);
   const headers = buildIdentityHeaders(req);
 
   const response = await fetch(url.toString(), {
-    method: 'POST',
+    method: method,
     signal: AbortSignal.timeout(PROXY_TIMEOUT),
     headers,
     body: JSON.stringify(body),
@@ -259,7 +259,7 @@ function startPeriodicRosterPush(storage) {
 }
 
 module.exports = function registerRoutes(router, context) {
-  const { requireScope, secrets } = context;
+  const { requireScope, requireRole, secrets } = context;
   _moduleSecrets = secrets;
   const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
@@ -268,6 +268,13 @@ module.exports = function registerRoutes(router, context) {
     { key: 'upstream-pulse:read', label: 'Upstream Pulse (Read)', description: 'Read upstream pulse data', category: 'Upstream Pulse' },
     { key: 'upstream-pulse:write', label: 'Upstream Pulse (Write)', description: 'Mutate upstream pulse data', category: 'Upstream Pulse' }
   ]);
+
+  // Register upstream-pulse-admin role
+  context.registerRole('upstream-pulse-admin', {
+    label: 'Upstream Pulse Admin',
+    description: 'Manage strategic classifications and upstream pulse configuration'
+  });
+  const requireUpstreamAdmin = requireRole('upstream-pulse-admin');
 
   function handleProxyError(res, err) {
     const status = err.upstreamStatus || 502;
@@ -570,6 +577,33 @@ module.exports = function registerRoutes(router, context) {
       const data = await response.json();
       const jobs = (data.recentJobs || []).filter(j => j.projectId === projectId);
       res.json({ jobs });
+    } catch (err) {
+      handleProxyError(res, err);
+    }
+  });
+
+  // ── Strategy management ──────────────────────────────────────
+
+  router.get('/strategy/permissions', requireScope('upstream-pulse:read'), function(req, res) {
+    if (DEMO_MODE) return res.json({ canManageStrategy: false });
+    var canManageStrategy = req.isAdmin || (req.userRoles || []).includes('upstream-pulse-admin');
+    res.json({ canManageStrategy: canManageStrategy });
+  });
+
+  router.patch('/orgs/:githubOrg/strategy', requireUpstreamAdmin, requireScope('upstream-pulse:write'), async function(req, res) {
+    try {
+      if (DEMO_MODE) return res.status(403).json({ error: 'Not available in demo mode' });
+      var data = await proxyMutatingRequest(
+        '/api/orgs/' + encodeURIComponent(req.params.githubOrg) + '/strategy',
+        req.body, req, 'PATCH'
+      );
+      // Invalidate orgs and dashboard cache
+      for (var key of responseCache.keys()) {
+        if (key.startsWith('/api/orgs') || key.startsWith('/api/metrics/dashboard')) {
+          responseCache.delete(key);
+        }
+      }
+      res.json(data);
     } catch (err) {
       handleProxyError(res, err);
     }
