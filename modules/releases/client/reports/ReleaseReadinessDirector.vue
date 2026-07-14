@@ -375,7 +375,7 @@
                     </a>
                     <div v-else class="flex items-center gap-2">
                       <span class="text-xs text-gray-400 w-16">Skipped</span>
-                      <span class="text-xs text-gray-400 dark:text-gray-500 italic">Available from 3.6 GA onwards</span>
+                      <span class="text-xs text-gray-400 dark:text-gray-500 italic">{{ tile.skipped_label || 'Not yet enabled' }}</span>
                     </div>
                   </div>
                 </div>
