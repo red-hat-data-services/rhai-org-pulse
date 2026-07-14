@@ -37,7 +37,7 @@ const STORAGE_PREFIX = 'releases/release-readiness';
  *     summary: List available release readiness versions
  *     responses:
  *       200:
- *         description: Array of version strings with stored metrics
+ *         description: Object with versions array and default_version
  */
 
 /**
@@ -82,14 +82,16 @@ function registerReleaseReadinessRoutes(router, { storage, requireAuth, requireS
     try {
       files = storage.listStorageFiles(STORAGE_PREFIX);
     } catch {
-      return res.json({ versions: [] });
+      return res.json({ versions: [], default_version: null });
     }
 
     const versions = (files || [])
       .filter(f => f.endsWith('.json'))
       .map(f => f.replace('.json', '').replace(/_/g, ' '));
 
-    res.json({ versions });
+    const defaultVersion = findUpcomingVersion(versions, storage);
+
+    res.json({ versions, default_version: defaultVersion });
   });
 
   router.post('/upload', requireAuth, requireScope('releases:write'), (req, res) => {
@@ -128,10 +130,37 @@ function registerReleaseReadinessRoutes(router, { storage, requireAuth, requireS
   });
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────────
 
 function sanitizeFilename(version) {
   return version.replace(/[^a-zA-Z0-9._-]/g, '_');
+}
+
+/**
+ * Scan stored metrics to find the version with the nearest upcoming GA date.
+ * Returns null if no upcoming version is found (falls back to first version
+ * on the client side).
+ */
+function findUpcomingVersion(versions, storage) {
+  const today = new Date().toISOString().slice(0, 10);
+  let best = null;
+  let bestGa = null;
+
+  for (const v of versions) {
+    try {
+      const filename = sanitizeFilename(v);
+      const data = storage.readFromStorage(`${STORAGE_PREFIX}/${filename}.json`);
+      const gaDate = data?.release_schedule?.ga_date;
+      if (gaDate && gaDate >= today) {
+        if (!bestGa || gaDate < bestGa) {
+          bestGa = gaDate;
+          best = v;
+        }
+      }
+    } catch { /* skip unreadable files */ }
+  }
+
+  return best;
 }
 
 module.exports = registerReleaseReadinessRoutes;
