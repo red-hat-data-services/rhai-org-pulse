@@ -101,7 +101,9 @@ To use the Google Sheets roster sync:
 
 ```bash
 npm run dev:full              # Start frontend + backend
+npm run dev:full:patch        # Start after modifying @org-pulse/core patch (see below)
 npm run dev                   # Frontend only (Vite)
+npm run dev:patch             # Frontend only, force-clear Vite transform cache
 npm run dev:server            # Backend only (Express, needs .env)
 npm test                      # Run all tests
 npm run test:watch            # Tests in watch mode
@@ -116,6 +118,20 @@ npm run validate:dockerfile-deps  # Verify Dockerfile deps match package.json
 make smoke-test                 # Run smoke tests against AI Eng images
 make test-module MODULE=<name>  # Run integration tests for a module
 ```
+
+## Patching @org-pulse/core
+
+This repo uses `patch-package` to apply local modifications to `@org-pulse/core` in `node_modules`. Patches live in `patches/`.
+
+**Workflow:**
+
+1. Edit files directly in `node_modules/@org-pulse/core/`
+2. Run `npx patch-package @org-pulse/core` to regenerate the patch
+3. **Kill the running dev server** and restart with `npm run dev:full:patch`
+
+**Why `dev:full:patch`?** Vite caches compiled Vue SFC transforms in memory. Deleting `node_modules/.vite` (which `npm run dev` does) clears the pre-bundle cache, but Vite's module graph still holds stale compiled output from before the patch. The `--force` flag (`dev:patch` / `dev:full:patch`) invalidates the full optimize + transform cache so patched files are recompiled from disk. Without it, the old compiled template keeps being served even though the source file is correct.
+
+**Never manually edit `.patch` files** — whitespace and line-count headers break easily. Always edit `node_modules/` and regenerate with `npx patch-package`.
 
 ## Tech Stack
 
