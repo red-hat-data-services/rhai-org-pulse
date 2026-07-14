@@ -157,12 +157,13 @@ const SHEET_TO_JIRA_BASE = {
 
 function extractVariantSlug(sheetName, svName) {
   const base = SHEET_TO_JIRA_BASE[sheetName] || sheetName.toLowerCase()
-  const stripped = svName.replace(new RegExp('^' + sheetName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*', 'i'), '').replace(/[^a-z0-9.]/gi, '')
-  return stripped ? `${base}${stripped}` : base
+  const stripped = svName.replace(new RegExp('^' + sheetName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*', 'i'), '')
+  const versionMatch = stripped.match(/^(\d[\d.]*)/)
+  return versionMatch ? `${base}${versionMatch[1]}` : base
 }
 
 function normalizeRelease(r) {
-  return r.replace(/^RHAI\s+/i, '').replace(/\.+\s/g, ' ').replace(/[-\s]+(EA|GA)/gi, ' $1').replace(/\s+/g, ' ').trim()
+  return r.replace(/^RHAI\s+/i, '').replace(/\.+\s/g, ' ').replace(/[-\s]*(EA|GA)[-\s]*/gi, ' $1').replace(/\s+/g, ' ').trim()
 }
 
 function findJiraLink(sheetName, svName, pkgName, release) {

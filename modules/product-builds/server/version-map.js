@@ -232,7 +232,8 @@ function parseFeatureSummary(summary) {
 function normalizeRelease(raw) {
   return raw
     .replace(/^RHAI\s+/i, '')
-    .replace(/[-\s]+(EA|GA)/gi, ' $1')
+    .replace(/\.+\s/g, ' ')
+    .replace(/[-\s]*(EA|GA)[-\s]*/gi, ' $1')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -263,15 +264,10 @@ function extractPackageFromEpic(summary) {
   return null;
 }
 
-const VARIANT_LABELS = [
-  'aipcc-ae-cuda', 'aipcc-ae-rocm', 'aipcc-ae-gaudi',
-  'aipcc-ae-cpu', 'aipcc-ae-tpu', 'aipcc-ae-neuron', 'aipcc-ae-spyre',
-];
-
 async function buildJiraLinks(jira) {
-  const labels = VARIANT_LABELS.map(l => `"${l}"`).join(', ');
-  const jql = `project = AIPCC AND issuetype = Feature AND labels in (${labels}) ORDER BY created DESC`;
-  const features = await jira.fetchAllJqlResults(jql, 'key,summary,status');
+  const jql = 'project = AIPCC AND issuetype = Feature AND "Target Version" is not EMPTY ORDER BY created DESC';
+  const allFeatures = await jira.fetchAllJqlResults(jql, 'key,summary,status');
+  const features = allFeatures.filter(f => VARIANT_FEATURE_RE.test(f.fields.summary));
 
   const links = {};
   const featureMap = {};
