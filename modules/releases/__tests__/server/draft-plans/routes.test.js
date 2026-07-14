@@ -28,8 +28,8 @@ const HEALTH_DATA = {
 function makeStorage(data = {}) {
   const store = { ...data }
   return {
-    readFromStorage(key) { return store[key] ? JSON.parse(JSON.stringify(store[key])) : null },
-    writeToStorage(key, value) { store[key] = value },
+    async readFromStorage(key) { return store[key] ? JSON.parse(JSON.stringify(store[key])) : null },
+    async writeToStorage(key, value) { store[key] = value },
     _store: store
   }
 }
@@ -55,14 +55,14 @@ function makeRes() {
 
 function passthrough(req, res, next) { if (next) next(); }
 
-function setupRouter(storageData = {}, secretsOverride = null) {
+async function setupRouter(storageData = {}, secretsOverride = null) {
   const storage = makeStorage(storageData)
   const router = makeRouter()
   const refreshHandlers = {}
   const diagnosticsFn = vi.fn()
 
   const registerDraftPlanRoutes = require('../../../server/draft-plans/routes')
-  registerDraftPlanRoutes(router, {
+  await registerDraftPlanRoutes(router, {
     storage,
     requireAuth: passthrough,
     requireScope: () => passthrough,
@@ -96,7 +96,7 @@ describe('draft-plans routes', () => {
 
   describe('GET /releases', () => {
     it('returns empty products when no data stored', async () => {
-      const { router } = setupRouter()
+      const { router } = await setupRouter()
       const res = await callRoute(router, 'get', '/releases')
 
       expect(res._json.products).toEqual([])
@@ -104,7 +104,7 @@ describe('draft-plans routes', () => {
     })
 
     it('returns release list with health summary when data is stored', async () => {
-      const { router } = setupRouter({
+      const { router } = await setupRouter({
         [`${DATA_PREFIX}/RHOAI/release-plan.json`]: PLAN_DATA,
         [`${DATA_PREFIX}/RHOAI/release-health.json`]: HEALTH_DATA,
         [`${DATA_PREFIX}/last-fetch.json`]: { timestamp: '2026-07-08T12:00:00Z' }
@@ -125,7 +125,7 @@ describe('draft-plans routes', () => {
     })
 
     it('filters by product query param', async () => {
-      const { router } = setupRouter({
+      const { router } = await setupRouter({
         [`${DATA_PREFIX}/RHOAI/release-plan.json`]: PLAN_DATA
       })
 
@@ -136,7 +136,7 @@ describe('draft-plans routes', () => {
 
   describe('GET /:version', () => {
     it('returns full version plan data', async () => {
-      const { router } = setupRouter({
+      const { router } = await setupRouter({
         [`${DATA_PREFIX}/RHOAI/release-plan.json`]: PLAN_DATA
       })
 
@@ -152,7 +152,7 @@ describe('draft-plans routes', () => {
     })
 
     it('returns 404 for unknown version', async () => {
-      const { router } = setupRouter({
+      const { router } = await setupRouter({
         [`${DATA_PREFIX}/RHOAI/release-plan.json`]: PLAN_DATA
       })
 
@@ -161,19 +161,19 @@ describe('draft-plans routes', () => {
     })
 
     it('returns 400 for invalid version format', async () => {
-      const { router } = setupRouter()
+      const { router } = await setupRouter()
       const res = await callRoute(router, 'get', '/:version', { params: { version: '../etc/passwd' } })
       expect(res._status).toBe(400)
     })
 
     it('accepts version names with spaces', async () => {
-      const { router } = setupRouter()
+      const { router } = await setupRouter()
       const res = await callRoute(router, 'get', '/:version', { params: { version: 'RHOAI 3.5' } })
       expect(res._status).not.toBe(400)
     })
 
     it('returns 404 when no data stored', async () => {
-      const { router } = setupRouter()
+      const { router } = await setupRouter()
       const res = await callRoute(router, 'get', '/:version', { params: { version: '3.5' } })
       expect(res._status).toBe(404)
     })
@@ -181,7 +181,7 @@ describe('draft-plans routes', () => {
 
   describe('GET /:version/health', () => {
     it('returns health data for a version', async () => {
-      const { router } = setupRouter({
+      const { router } = await setupRouter({
         [`${DATA_PREFIX}/RHOAI/release-health.json`]: HEALTH_DATA
       })
 
@@ -196,7 +196,7 @@ describe('draft-plans routes', () => {
     })
 
     it('returns 404 for unknown version', async () => {
-      const { router } = setupRouter({
+      const { router } = await setupRouter({
         [`${DATA_PREFIX}/RHOAI/release-health.json`]: HEALTH_DATA
       })
 
@@ -205,13 +205,13 @@ describe('draft-plans routes', () => {
     })
 
     it('returns 400 for invalid version format', async () => {
-      const { router } = setupRouter()
+      const { router } = await setupRouter()
       const res = await callRoute(router, 'get', '/:version/health', { params: { version: 'a'.repeat(51) } })
       expect(res._status).toBe(400)
     })
 
     it('accepts version names with spaces', async () => {
-      const { router } = setupRouter()
+      const { router } = await setupRouter()
       const res = await callRoute(router, 'get', '/:version/health', { params: { version: 'RHOAI 3.5' } })
       expect(res._status).not.toBe(400)
     })
@@ -219,7 +219,7 @@ describe('draft-plans routes', () => {
 
   describe('GET /config', () => {
     it('returns default config with token status', async () => {
-      const { router } = setupRouter()
+      const { router } = await setupRouter()
       const res = await callRoute(router, 'get', '/config')
 
       expect(res._json.enabled).toBe(false)
@@ -229,7 +229,7 @@ describe('draft-plans routes', () => {
     })
 
     it('reports DRAFT_PLANS_GITLAB_TOKEN as preferred source', async () => {
-      const { router } = setupRouter({}, { DRAFT_PLANS_GITLAB_TOKEN: 'dp-token', GITLAB_TOKEN: 'gl-token' })
+      const { router } = await setupRouter({}, { DRAFT_PLANS_GITLAB_TOKEN: 'dp-token', GITLAB_TOKEN: 'gl-token' })
       const res = await callRoute(router, 'get', '/config')
 
       expect(res._json.tokenConfigured).toBe(true)
@@ -237,7 +237,7 @@ describe('draft-plans routes', () => {
     })
 
     it('reports no token when secrets are empty', async () => {
-      const { router } = setupRouter({}, {})
+      const { router } = await setupRouter({}, {})
       const res = await callRoute(router, 'get', '/config')
 
       expect(res._json.tokenConfigured).toBe(false)
@@ -247,7 +247,7 @@ describe('draft-plans routes', () => {
 
   describe('POST /config', () => {
     it('saves valid config without enabling', async () => {
-      const { router, storage } = setupRouter()
+      const { router, storage } = await setupRouter()
       const res = await callRoute(router, 'post', '/config', {
         body: { projectId: '12345', refreshIntervalHours: 12 }
       })
@@ -265,7 +265,7 @@ describe('draft-plans routes', () => {
         text: () => Promise.resolve(JSON.stringify(PLAN_DATA))
       })
 
-      const { router } = setupRouter()
+      const { router } = await setupRouter()
       const res = await callRoute(router, 'post', '/config', {
         body: { enabled: true, projectId: '12345' }
       })
@@ -275,7 +275,7 @@ describe('draft-plans routes', () => {
     })
 
     it('rejects invalid projectId', async () => {
-      const { router } = setupRouter()
+      const { router } = await setupRouter()
       const res = await callRoute(router, 'post', '/config', {
         body: { projectId: 'not-a-number' }
       })
@@ -285,7 +285,7 @@ describe('draft-plans routes', () => {
     })
 
     it('rejects non-https gitlabBaseUrl', async () => {
-      const { router } = setupRouter()
+      const { router } = await setupRouter()
       const res = await callRoute(router, 'post', '/config', {
         body: { gitlabBaseUrl: 'http://gitlab.internal' }
       })
@@ -295,7 +295,7 @@ describe('draft-plans routes', () => {
     })
 
     it('rejects refreshIntervalHours out of range', async () => {
-      const { router } = setupRouter()
+      const { router } = await setupRouter()
       const res = await callRoute(router, 'post', '/config', {
         body: { refreshIntervalHours: 0 }
       })
@@ -306,7 +306,7 @@ describe('draft-plans routes', () => {
 
   describe('POST /refresh', () => {
     it('returns 500 when no token configured', async () => {
-      const { router } = setupRouter(
+      const { router } = await setupRouter(
         { [`${DATA_PREFIX}/config.json`]: { ...PLAN_DATA, enabled: true } },
         {}
       )
@@ -317,7 +317,7 @@ describe('draft-plans routes', () => {
     })
 
     it('returns 400 when fetch is disabled', async () => {
-      const { router } = setupRouter()
+      const { router } = await setupRouter()
       const res = await callRoute(router, 'post', '/refresh')
 
       expect(res._status).toBe(400)
@@ -331,7 +331,7 @@ describe('draft-plans routes', () => {
         text: () => Promise.resolve(JSON.stringify(PLAN_DATA))
       })
 
-      const { router } = setupRouter({
+      const { router } = await setupRouter({
         [`${DATA_PREFIX}/config.json`]: { enabled: true, projectId: '81798612', branch: 'main', gitlabBaseUrl: 'https://gitlab.com' }
       })
 
@@ -343,7 +343,7 @@ describe('draft-plans routes', () => {
 
   describe('GET /refresh/status', () => {
     it('returns status with no prior fetch', async () => {
-      const { router } = setupRouter()
+      const { router } = await setupRouter()
       const res = await callRoute(router, 'get', '/refresh/status')
 
       expect(res._json.running).toBe(false)
@@ -351,7 +351,7 @@ describe('draft-plans routes', () => {
     })
 
     it('returns last fetch info when available', async () => {
-      const { router } = setupRouter({
+      const { router } = await setupRouter({
         [`${DATA_PREFIX}/last-fetch.json`]: { status: 'success', timestamp: '2026-07-08T12:00:00Z', fileCount: 2 }
       })
 
@@ -362,8 +362,8 @@ describe('draft-plans routes', () => {
   })
 
   describe('registerRefresh', () => {
-    it('registers a draft-plans refresh handler', () => {
-      const { refreshHandlers } = setupRouter()
+    it('registers a draft-plans refresh handler', async () => {
+      const { refreshHandlers } = await setupRouter()
 
       expect(refreshHandlers['draft-plans']).toBeDefined()
       expect(refreshHandlers['draft-plans'].order).toBe(80)
@@ -372,14 +372,14 @@ describe('draft-plans routes', () => {
     })
 
     it('refresh handler skips when disabled', async () => {
-      const { refreshHandlers } = setupRouter()
+      const { refreshHandlers } = await setupRouter()
       const result = await refreshHandlers['draft-plans'].handler()
 
       expect(result.status).toBe('skipped')
     })
 
     it('refresh handler skips when no token', async () => {
-      const { refreshHandlers } = setupRouter(
+      const { refreshHandlers } = await setupRouter(
         { [`${DATA_PREFIX}/config.json`]: { enabled: true, projectId: '81798612' } },
         {}
       )
@@ -391,14 +391,14 @@ describe('draft-plans routes', () => {
   })
 
   describe('registerDiagnostics', () => {
-    it('registers a diagnostics function', () => {
-      const { diagnosticsFn } = setupRouter()
+    it('registers a diagnostics function', async () => {
+      const { diagnosticsFn } = await setupRouter()
       expect(diagnosticsFn).toHaveBeenCalledOnce()
       expect(diagnosticsFn.mock.calls[0][0]).toBeTypeOf('function')
     })
 
     it('diagnostics returns status info', async () => {
-      const { diagnosticsFn } = setupRouter({
+      const { diagnosticsFn } = await setupRouter({
         [`${DATA_PREFIX}/last-fetch.json`]: { status: 'success', timestamp: '2026-07-08T12:00:00Z', fileCount: 2 }
       })
 

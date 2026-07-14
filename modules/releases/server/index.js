@@ -30,7 +30,7 @@ const { getAuditLog } = require('./planning/audit-log');
  *   feature-traffic/  → releases/execution/
  *   release-analysis/ → releases/delivery/
  */
-function migrateStoragePaths(storage) {
+async function migrateStoragePaths(storage) {
   const { readFromStorage, writeToStorage, listStorageFiles } = storage;
 
   const migrations = [
@@ -42,17 +42,17 @@ function migrateStoragePaths(storage) {
   // Also migrate the unified audit log from old planning path
   const auditOld = 'release-planning/audit-log.json';
   const auditNew = 'releases/audit-log.json';
-  const oldAudit = readFromStorage(auditOld);
-  const newAudit = readFromStorage(auditNew);
+  const oldAudit = await readFromStorage(auditOld);
+  const newAudit = await readFromStorage(auditNew);
   if (oldAudit && !newAudit) {
-    writeToStorage(auditNew, oldAudit);
+    await writeToStorage(auditNew, oldAudit);
     console.log('[releases] Migrated audit-log.json to releases/audit-log.json');
   }
 
   for (const { oldPrefix, newPrefix } of migrations) {
     let files;
     try {
-      files = listStorageFiles(oldPrefix);
+      files = await listStorageFiles(oldPrefix);
     } catch {
       // Directory doesn't exist — nothing to migrate
       continue;
@@ -68,13 +68,13 @@ function migrateStoragePaths(storage) {
       const oldPath = `${oldPrefix}/${fileName}`;
       const newPath = `${newPrefix}/${fileName}`;
 
-      const oldData = readFromStorage(oldPath);
+      const oldData = await readFromStorage(oldPath);
       if (!oldData) continue;
 
-      const existing = readFromStorage(newPath);
+      const existing = await readFromStorage(newPath);
       if (existing) continue;
 
-      writeToStorage(newPath, oldData);
+      await writeToStorage(newPath, oldData);
       migrated++;
     }
     }
@@ -84,7 +84,7 @@ function migrateStoragePaths(storage) {
     for (const subdir of subdirs) {
       let subFiles;
       try {
-        subFiles = listStorageFiles(`${oldPrefix}/${subdir}`);
+        subFiles = await listStorageFiles(`${oldPrefix}/${subdir}`);
       } catch {
         continue;
       }
@@ -96,13 +96,13 @@ function migrateStoragePaths(storage) {
         const oldPath = `${oldPrefix}/${subdir}/${fileName}`;
         const newPath = `${newPrefix}/${subdir}/${fileName}`;
 
-        const oldData = readFromStorage(oldPath);
+        const oldData = await readFromStorage(oldPath);
         if (!oldData) continue;
 
-        const existing = readFromStorage(newPath);
+        const existing = await readFromStorage(newPath);
         if (existing) continue;
 
-        writeToStorage(newPath, oldData);
+        await writeToStorage(newPath, oldData);
         migrated++;
       }
     }
@@ -113,7 +113,7 @@ function migrateStoragePaths(storage) {
   }
 }
 
-module.exports = function registerRoutes(router, context) {
+module.exports = async function registerRoutes(router, context) {
   const { storage, requireAuth, requireAdmin, requireRole, requireScope, roleStore, secrets } = context;
   const requirePlanningManager = requireRole('planning-manager');
 
@@ -147,7 +147,7 @@ module.exports = function registerRoutes(router, context) {
   // Uses raw storage manipulation (not roleStore API) because the old role
   // is no longer registered and roleStore.revokeRole() would reject it.
   try {
-    const rolesData = storage.readFromStorage('roles.json');
+    const rolesData = await storage.readFromStorage('roles.json');
     if (rolesData && rolesData.assignments) {
       let migrated = 0;
       for (const [, entry] of Object.entries(rolesData.assignments)) {
@@ -158,7 +158,7 @@ module.exports = function registerRoutes(router, context) {
       if (migrated > 0) {
         // Backup before overwriting, following migrateEmailDomains() pattern
         const backupKey = 'roles-backup-premigration.json';
-        storage.writeToStorage(backupKey, JSON.parse(JSON.stringify(rolesData)));
+        await storage.writeToStorage(backupKey, JSON.parse(JSON.stringify(rolesData)));
         console.log(`[releases] Backup saved to ${backupKey}`);
 
         for (const [, entry] of Object.entries(rolesData.assignments)) {
@@ -169,7 +169,7 @@ module.exports = function registerRoutes(router, context) {
             }
           }
         }
-        storage.writeToStorage('roles.json', rolesData);
+        await storage.writeToStorage('roles.json', rolesData);
         console.log(`[releases] Migrated ${migrated} user(s) from release-manager to planning-manager`);
       }
     }
@@ -178,11 +178,11 @@ module.exports = function registerRoutes(router, context) {
   }
 
   // Run storage path migration on module startup (skip if already done)
-  const migrationMarker = storage.readFromStorage('releases/.migration-complete');
+  const migrationMarker = await storage.readFromStorage('releases/.migration-complete');
   if (!migrationMarker) {
     try {
-      migrateStoragePaths(storage);
-      storage.writeToStorage('releases/.migration-complete', { completedAt: new Date().toISOString() });
+      await migrateStoragePaths(storage);
+      await storage.writeToStorage('releases/.migration-complete', { completedAt: new Date().toISOString() });
     } catch (err) {
       console.error('[releases] Storage migration failed:', err.message);
     }
@@ -339,7 +339,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Audit log entries
    */
-  router.get('/audit-log', requireAuth, requireScope('releases:read'), function(req, res) {
+  router.get('/audit-log', requireAuth, requireScope('releases:read'), async function(req, res) {
     const options = {};
     if (req.query.version) options.version = req.query.version;
     if (req.query.action) options.action = req.query.action;
@@ -347,7 +347,7 @@ module.exports = function registerRoutes(router, context) {
     if (req.query.limit) options.limit = parseInt(req.query.limit, 10) || 100;
     if (req.query.offset) options.offset = parseInt(req.query.offset, 10) || 0;
 
-    const result = getAuditLog(storage.readFromStorage, options);
+    const result = await getAuditLog(storage.readFromStorage, options);
     res.json(result);
   });
 
@@ -364,7 +364,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Migration cleanup results
    */
-  router.post('/admin/migrate-storage', requireAdmin, requireScope('releases:write'), function(req, res) {
+  router.post('/admin/migrate-storage', requireAdmin, requireScope('releases:write'), async function(req, res) {
     const { readFromStorage, listStorageFiles, deleteFromStorage } = storage;
 
     const migrations = [
@@ -378,7 +378,7 @@ module.exports = function registerRoutes(router, context) {
     for (const { oldPrefix, newPrefix } of migrations) {
       let files;
       try {
-        files = listStorageFiles(oldPrefix);
+        files = await listStorageFiles(oldPrefix);
       } catch {
         continue;
       }
@@ -388,14 +388,14 @@ module.exports = function registerRoutes(router, context) {
         const oldPath = `${oldPrefix}/${fileName}`;
         const newPath = `${newPrefix}/${fileName}`;
 
-        const newData = readFromStorage(newPath);
+        const newData = await readFromStorage(newPath);
         if (!newData) {
           results.skipped++;
           continue;
         }
 
         try {
-          deleteFromStorage(oldPath);
+          await deleteFromStorage(oldPath);
           results.deleted++;
         } catch (err) {
           results.errors.push({ path: oldPath, error: err.message });
@@ -408,7 +408,7 @@ module.exports = function registerRoutes(router, context) {
       for (const subdir of subdirs) {
         let subFiles;
         try {
-          subFiles = listStorageFiles(`${oldPrefix}/${subdir}`);
+          subFiles = await listStorageFiles(`${oldPrefix}/${subdir}`);
         } catch {
           continue;
         }
@@ -419,14 +419,14 @@ module.exports = function registerRoutes(router, context) {
           const oldPath = `${oldPrefix}/${subdir}/${fileName}`;
           const newPath = `${newPrefix}/${subdir}/${fileName}`;
 
-          const newData = readFromStorage(newPath);
+          const newData = await readFromStorage(newPath);
           if (!newData) {
             results.skipped++;
             continue;
           }
 
           try {
-            deleteFromStorage(oldPath);
+            await deleteFromStorage(oldPath);
             results.deleted++;
           } catch (err) {
             results.errors.push({ path: oldPath, error: err.message });

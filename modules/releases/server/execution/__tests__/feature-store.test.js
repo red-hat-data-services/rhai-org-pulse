@@ -67,11 +67,11 @@ describe('mergeFeatureData — aiReview handling', function() {
 })
 
 describe('rebuildIndex — aiReview summary', function() {
-  it('includes slim aiReview in index entries for features with aiReview', function() {
+  it('includes slim aiReview in index entries for features with aiReview', async function() {
     const stored = {}
     const storage = {
-      listStorageFiles: function() { return ['TEST-1.json'] },
-      readFromStorage: function(path) {
+      listStorageFiles: async function() { return ['TEST-1.json'] },
+      readFromStorage: async function(path) {
         if (path.endsWith('TEST-1.json')) {
           return {
             key: 'TEST-1',
@@ -89,12 +89,12 @@ describe('rebuildIndex — aiReview summary', function() {
         }
         return null
       },
-      writeToStorage: function(path, data) {
+      writeToStorage: async function(path, data) {
         stored[path] = data
       }
     }
 
-    rebuildIndex(storage)
+    await rebuildIndex(storage)
 
     const index = stored['releases/execution/index.json']
     expect(index.features[0].aiReview).toEqual({
@@ -109,22 +109,22 @@ describe('rebuildIndex — aiReview summary', function() {
     expect(index.features[0].aiReview.history).toBeUndefined()
   })
 
-  it('sets aiReview to null in index for features without aiReview', function() {
+  it('sets aiReview to null in index for features without aiReview', async function() {
     const stored = {}
     const storage = {
-      listStorageFiles: function() { return ['TEST-2.json'] },
-      readFromStorage: function(path) {
+      listStorageFiles: async function() { return ['TEST-2.json'] },
+      readFromStorage: async function(path) {
         if (path.endsWith('TEST-2.json')) {
           return { key: 'TEST-2', summary: 'No AI review' }
         }
         return null
       },
-      writeToStorage: function(path, data) {
+      writeToStorage: async function(path, data) {
         stored[path] = data
       }
     }
 
-    rebuildIndex(storage)
+    await rebuildIndex(storage)
 
     const index = stored['releases/execution/index.json']
     expect(index.features[0].aiReview).toBeNull()

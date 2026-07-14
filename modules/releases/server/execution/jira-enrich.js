@@ -303,7 +303,7 @@ async function fetchSignOffDetails(keys, storage, jiraRequestFn, fetchAllJqlResu
   // Filter to only keys that need sign-off backfill
   const needsSignOff = [];
   for (let i = 0; i < keys.length; i++) {
-    const feature = storage.readFromStorage(DATA_PREFIX + '/features/' + keys[i] + '.json');
+    const feature = await storage.readFromStorage(DATA_PREFIX + '/features/' + keys[i] + '.json');
     if (!feature || !feature.aiReview) continue;
     if (feature.aiReview.humanReviewStatus === 'approved' &&
         !feature.aiReview.approvedBy && !feature.aiReview.approvedAt) {

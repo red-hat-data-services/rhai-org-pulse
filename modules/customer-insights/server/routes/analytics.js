@@ -12,11 +12,11 @@ module.exports = function registerAnalyticsRoutes(router, context) {
 
   // Lazy initialization of service account storage
   let sheetsStorage = null
-  function getStorage() {
+  async function getStorage() {
     if (isDemoMode) return null
     if (!sheetsStorage) {
       try {
-        sheetsStorage = createStorage(context)
+        sheetsStorage = await createStorage(context)
       } catch {
         return null
       }
@@ -44,7 +44,7 @@ module.exports = function registerAnalyticsRoutes(router, context) {
     try {
       if (isDemoMode) {
         // Return demo fixtures
-        const analytics = readFromStorage('customer-insights/analytics.json')
+        const analytics = await readFromStorage('customer-insights/analytics.json')
         if (!analytics) {
           return res.status(404).json({ error: 'Analytics fixtures not found' })
         }
@@ -52,7 +52,7 @@ module.exports = function registerAnalyticsRoutes(router, context) {
       }
 
       // Get interactions using service account storage
-      const store = getStorage()
+      const store = await getStorage()
       if (!store) {
         return res.json({})
       }

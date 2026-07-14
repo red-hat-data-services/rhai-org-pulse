@@ -1,16 +1,16 @@
 const STORAGE_KEY = 'ai-impact/component-onboarding-data.json';
 const MAX_HISTORY = 20;
 
-function readComponentOnboarding(readFromStorage) {
-  const data = readFromStorage(STORAGE_KEY);
+async function readComponentOnboarding(readFromStorage) {
+  const data = await readFromStorage(STORAGE_KEY);
   if (!data || typeof data !== 'object' || !data.components) {
     return { fetchedAt: null, totalComponents: 0, components: {} };
   }
   return data;
 }
 
-function writeComponentOnboardingAtomic(writeToStorageAtomic, data) {
-  writeToStorageAtomic(STORAGE_KEY, data);
+async function writeComponentOnboardingAtomic(writeToStorage, data) {
+  await writeToStorage(STORAGE_KEY, data);
 }
 
 function trimForHistory(component) {

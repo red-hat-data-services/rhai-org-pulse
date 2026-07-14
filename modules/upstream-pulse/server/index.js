@@ -232,9 +232,9 @@ async function pushRosterToUpstream(storage) {
 function startPeriodicRosterPush(storage) {
   if (process.env.DEMO_MODE === 'true') return;
 
-  function checkAndPush() {
+  async function checkAndPush() {
     try {
-      const registry = storage.readFromStorage('team-data/registry.json');
+      const registry = await storage.readFromStorage('team-data/registry.json');
       if (!registry || !registry.meta || !registry.meta.generatedAt) return;
 
       const generatedAt = registry.meta.generatedAt;
@@ -624,7 +624,7 @@ module.exports = function registerRoutes(router, context) {
     try {
       const result = await pushRosterToUpstream(context.storage);
       if (!result.skipped) {
-        const registry = context.storage.readFromStorage('team-data/registry.json');
+        const registry = await context.storage.readFromStorage('team-data/registry.json');
         if (registry && registry.meta) _lastPushGeneratedAt = registry.meta.generatedAt;
       }
       res.json(result);

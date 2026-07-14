@@ -19,7 +19,7 @@ function sortByPriority(a, b) {
   return a.issueKey.localeCompare(b.issueKey)
 }
 
-function runPipeline(config, bigRocks, release, readFromStorage, opts) {
+async function runPipeline(config, bigRocks, release, readFromStorage, opts) {
   const rockFilter = opts && opts.rockFilter
 
   const rocksToProcess = rockFilter
@@ -53,7 +53,7 @@ function runPipeline(config, bigRocks, release, readFromStorage, opts) {
   }
 
   // Load the execution feature index once
-  const index = loadIndex(readFromStorage)
+  const index = await loadIndex(readFromStorage)
 
   if (!index.features || index.features.length === 0) {
     warnings.push('Feature index is empty — pipeline data may be incomplete. Run an execution data refresh first.')
@@ -87,7 +87,7 @@ function runPipeline(config, bigRocks, release, readFromStorage, opts) {
 
     // Find Tier 1 features for this rock's outcomes (with stats tracking)
     var rockStats = { totalMatches: 0, closedFiltered: 0, noTargetVersion: 0 }
-    const rawFeatures = findTier1Features(readFromStorage, index, rock.outcomeKeys, rockStats)
+    const rawFeatures = await findTier1Features(readFromStorage, index, rock.outcomeKeys, rockStats)
     var rockTerminalFiltered = 0
     var rockReleaseMismatch = 0
     for (let fi = 0; fi < rawFeatures.length; fi++) {
@@ -126,7 +126,7 @@ function runPipeline(config, bigRocks, release, readFromStorage, opts) {
     }
 
     // Find Tier 1 RFEs for this rock's outcomes
-    const rawRfes = findTier1Rfes(readFromStorage, index, rock.outcomeKeys, release)
+    const rawRfes = await findTier1Rfes(readFromStorage, index, rock.outcomeKeys, release)
     for (let rfi = 0; rfi < rawRfes.length; rfi++) {
       const rfe = rawRfes[rfi]
       const rfeCandidate = mapToCandidate(rfe, rock.name, 'outcome')
@@ -204,8 +204,8 @@ function runPipeline(config, bigRocks, release, readFromStorage, opts) {
   const tier1FeatureKeys = new Set(tier1Features.map(function(c) { return c.issueKey }))
   const tier1RfeKeys = new Set(tier1Rfes.map(function(c) { return c.issueKey }))
 
-  const rawTier2Features = findTier2Features(readFromStorage, index, release, tier1FeatureKeys)
-  const rawTier2Rfes = findTier2Rfes(readFromStorage, index, release, tier1RfeKeys)
+  const rawTier2Features = await findTier2Features(readFromStorage, index, release, tier1FeatureKeys)
+  const rawTier2Rfes = await findTier2Rfes(readFromStorage, index, release, tier1RfeKeys)
 
   // Post-filter terminal statuses on Tier 2 features
   const tier2Features = []
@@ -241,7 +241,7 @@ function runPipeline(config, bigRocks, release, readFromStorage, opts) {
   tier1FeatureKeys.forEach(function(k) { tier3Exclude.add(k) })
   tier2FeatureKeys.forEach(function(k) { tier3Exclude.add(k) })
 
-  const rawTier3Features = findTier3Features(readFromStorage, index, tier3Exclude)
+  const rawTier3Features = await findTier3Features(readFromStorage, index, tier3Exclude)
 
   const tier3Features = []
   for (let t3i = 0; t3i < rawTier3Features.length; t3i++) {

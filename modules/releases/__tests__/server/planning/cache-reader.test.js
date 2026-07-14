@@ -183,7 +183,7 @@ describe('findRfeFromLinks', () => {
 })
 
 describe('findTier1Features', () => {
-  it('finds features whose parentKey matches outcome keys', () => {
+  it('finds features whose parentKey matches outcome keys', async () => {
     const index = {
       features: [
         makeFeatureIndex('RHAISTRAT-100', { parentKey: 'KEY-1', targetVersions: ['rhoai-3.5'], status: 'In Progress' }),
@@ -198,12 +198,12 @@ describe('findTier1Features', () => {
     ]
     const readFromStorage = createMockStorage(details)
 
-    const results = findTier1Features(readFromStorage, index, ['KEY-1'])
+    const results = await findTier1Features(readFromStorage, index, ['KEY-1'])
     expect(results).toHaveLength(1)
     expect(results[0].key).toBe('RHAISTRAT-100')
   })
 
-  it('excludes closed statuses', () => {
+  it('excludes closed statuses', async () => {
     const index = {
       features: [
         makeFeatureIndex('RHAISTRAT-100', { parentKey: 'KEY-1', targetVersions: ['rhoai-3.5'], status: 'Closed' })
@@ -212,11 +212,11 @@ describe('findTier1Features', () => {
     }
     const readFromStorage = createMockStorage([])
 
-    const results = findTier1Features(readFromStorage, index, ['KEY-1'])
+    const results = await findTier1Features(readFromStorage, index, ['KEY-1'])
     expect(results).toHaveLength(0)
   })
 
-  it('excludes features without target versions', () => {
+  it('excludes features without target versions', async () => {
     const index = {
       features: [
         makeFeatureIndex('RHAISTRAT-100', { parentKey: 'KEY-1', targetVersions: null, status: 'In Progress' })
@@ -225,11 +225,11 @@ describe('findTier1Features', () => {
     }
     const readFromStorage = createMockStorage([])
 
-    const results = findTier1Features(readFromStorage, index, ['KEY-1'])
+    const results = await findTier1Features(readFromStorage, index, ['KEY-1'])
     expect(results).toHaveLength(0)
   })
 
-  it('populates stats object when provided', () => {
+  it('populates stats object when provided', async () => {
     const index = {
       features: [
         makeFeatureIndex('RHAISTRAT-100', { parentKey: 'KEY-1', targetVersions: ['rhoai-3.5'], status: 'In Progress' }),
@@ -245,7 +245,7 @@ describe('findTier1Features', () => {
     const readFromStorage = createMockStorage(details)
     const stats = {}
 
-    const results = findTier1Features(readFromStorage, index, ['KEY-1'], stats)
+    const results = await findTier1Features(readFromStorage, index, ['KEY-1'], stats)
 
     expect(results).toHaveLength(1)
     expect(stats.totalMatches).toBe(3)
@@ -253,7 +253,7 @@ describe('findTier1Features', () => {
     expect(stats.closedFiltered).toBe(1)
   })
 
-  it('works unchanged when stats parameter is not provided', () => {
+  it('works unchanged when stats parameter is not provided', async () => {
     const index = {
       features: [
         makeFeatureIndex('RHAISTRAT-100', { parentKey: 'KEY-1', targetVersions: ['rhoai-3.5'], status: 'In Progress' })
@@ -266,14 +266,14 @@ describe('findTier1Features', () => {
     const readFromStorage = createMockStorage(details)
 
     // Call without stats parameter -- should work exactly as before
-    const results = findTier1Features(readFromStorage, index, ['KEY-1'])
+    const results = await findTier1Features(readFromStorage, index, ['KEY-1'])
     expect(results).toHaveLength(1)
     expect(results[0].key).toBe('RHAISTRAT-100')
   })
 })
 
 describe('findTier1Rfes', () => {
-  it('finds RFEs linked to outcome keys with candidate label', () => {
+  it('finds RFEs linked to outcome keys with candidate label', async () => {
     const index = {
       features: [],
       rfes: [
@@ -293,12 +293,12 @@ describe('findTier1Rfes', () => {
     ]
     const readFromStorage = createMockStorage([], rfeDetails)
 
-    const results = findTier1Rfes(readFromStorage, index, ['KEY-1'], '3.5')
+    const results = await findTier1Rfes(readFromStorage, index, ['KEY-1'], '3.5')
     expect(results).toHaveLength(1)
     expect(results[0].key).toBe('RHAIRFE-100')
   })
 
-  it('excludes Approved RFEs', () => {
+  it('excludes Approved RFEs', async () => {
     const index = {
       features: [],
       rfes: [
@@ -307,11 +307,11 @@ describe('findTier1Rfes', () => {
     }
     const readFromStorage = createMockStorage([], [])
 
-    const results = findTier1Rfes(readFromStorage, index, ['KEY-1'], '3.5')
+    const results = await findTier1Rfes(readFromStorage, index, ['KEY-1'], '3.5')
     expect(results).toHaveLength(0)
   })
 
-  it('excludes closed RFEs', () => {
+  it('excludes closed RFEs', async () => {
     const index = {
       features: [],
       rfes: [
@@ -320,13 +320,13 @@ describe('findTier1Rfes', () => {
     }
     const readFromStorage = createMockStorage([], [])
 
-    const results = findTier1Rfes(readFromStorage, index, ['KEY-1'], '3.5')
+    const results = await findTier1Rfes(readFromStorage, index, ['KEY-1'], '3.5')
     expect(results).toHaveLength(0)
   })
 })
 
 describe('findOutcomeSummaries', () => {
-  it('returns summaries for outcome keys found in features', () => {
+  it('returns summaries for outcome keys found in features', async () => {
     const index = {
       features: [
         makeFeatureIndex('KEY-1', { summary: 'Outcome A' }),
@@ -336,27 +336,27 @@ describe('findOutcomeSummaries', () => {
       rfes: []
     }
 
-    const result = findOutcomeSummaries(index, ['KEY-1', 'KEY-2'])
+    const result = await findOutcomeSummaries(index, ['KEY-1', 'KEY-2'])
     expect(result).toEqual({
       'KEY-1': 'Outcome A',
       'KEY-2': 'Outcome B'
     })
   })
 
-  it('returns empty for missing keys', () => {
+  it('returns empty for missing keys', async () => {
     const index = { features: [], rfes: [] }
-    const result = findOutcomeSummaries(index, ['KEY-999'])
+    const result = await findOutcomeSummaries(index, ['KEY-999'])
     expect(result).toEqual({})
   })
 
-  it('returns empty for empty input', () => {
-    const result = findOutcomeSummaries({ features: [] }, [])
+  it('returns empty for empty input', async () => {
+    const result = await findOutcomeSummaries({ features: [] }, [])
     expect(result).toEqual({})
   })
 })
 
 describe('findTier2Features', () => {
-  it('finds features with matching target version, excluding Tier 1', () => {
+  it('finds features with matching target version, excluding Tier 1', async () => {
     const index = {
       features: [
         makeFeatureIndex('RHAISTRAT-100', { targetVersions: ['rhoai-3.5'] }),
@@ -371,12 +371,12 @@ describe('findTier2Features', () => {
     const readFromStorage = createMockStorage(details)
     const excludeKeys = new Set(['RHAISTRAT-100'])
 
-    const results = findTier2Features(readFromStorage, index, '3.5', excludeKeys)
+    const results = await findTier2Features(readFromStorage, index, '3.5', excludeKeys)
     expect(results).toHaveLength(1)
     expect(results[0].key).toBe('RHAISTRAT-101')
   })
 
-  it('excludes closed statuses', () => {
+  it('excludes closed statuses', async () => {
     const index = {
       features: [
         makeFeatureIndex('RHAISTRAT-100', { targetVersions: ['rhoai-3.5'], status: 'Done' })
@@ -385,13 +385,13 @@ describe('findTier2Features', () => {
     }
     const readFromStorage = createMockStorage([])
 
-    const results = findTier2Features(readFromStorage, index, '3.5', new Set())
+    const results = await findTier2Features(readFromStorage, index, '3.5', new Set())
     expect(results).toHaveLength(0)
   })
 })
 
 describe('findTier2Rfes', () => {
-  it('finds RFEs with candidate label, excluding Tier 1', () => {
+  it('finds RFEs with candidate label, excluding Tier 1', async () => {
     const index = {
       features: [],
       rfes: [
@@ -406,14 +406,14 @@ describe('findTier2Rfes', () => {
     const readFromStorage = createMockStorage([], rfeDetails)
     const excludeKeys = new Set(['RHAIRFE-100'])
 
-    const results = findTier2Rfes(readFromStorage, index, '3.5', excludeKeys)
+    const results = await findTier2Rfes(readFromStorage, index, '3.5', excludeKeys)
     expect(results).toHaveLength(1)
     expect(results[0].key).toBe('RHAIRFE-101')
   })
 })
 
 describe('findTier3Features', () => {
-  it('finds In Progress features without target version or fix version', () => {
+  it('finds In Progress features without target version or fix version', async () => {
     const index = {
       features: [
         makeFeatureIndex('RHAISTRAT-100', { status: 'In Progress', targetVersions: null, fixVersions: [] }),
@@ -428,12 +428,12 @@ describe('findTier3Features', () => {
     ]
     const readFromStorage = createMockStorage(details)
 
-    const results = findTier3Features(readFromStorage, index, new Set())
+    const results = await findTier3Features(readFromStorage, index, new Set())
     expect(results).toHaveLength(1)
     expect(results[0].key).toBe('RHAISTRAT-100')
   })
 
-  it('excludes already-discovered keys', () => {
+  it('excludes already-discovered keys', async () => {
     const index = {
       features: [
         makeFeatureIndex('RHAISTRAT-100', { status: 'In Progress', targetVersions: null, fixVersions: [] })
@@ -442,7 +442,7 @@ describe('findTier3Features', () => {
     }
     const readFromStorage = createMockStorage([])
 
-    const results = findTier3Features(readFromStorage, index, new Set(['RHAISTRAT-100']))
+    const results = await findTier3Features(readFromStorage, index, new Set(['RHAISTRAT-100']))
     expect(results).toHaveLength(0)
   })
 })

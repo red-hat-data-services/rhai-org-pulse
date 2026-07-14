@@ -417,8 +417,8 @@ function findFixVersionRemovedDate(changelog, fixVersionNames) {
  * Returns a map: { "rhoai-3.5.EA1": "2026-05-15", "rhelai-3.5.EA1": "2026-04-17", ... }
  * Also returns the earliest date across products as a portfolio-level fallback.
  */
-function getFeatureFreezeDatesFromCache(portfolioVersion, readFromStorage) {
-  const ppCache = readFromStorage(PP_CACHE_FILE)
+async function getFeatureFreezeDatesFromCache(portfolioVersion, readFromStorage) {
+  const ppCache = await readFromStorage(PP_CACHE_FILE)
   const ppReleases = Array.isArray(ppCache) ? ppCache : (ppCache && ppCache.releases) || []
 
   const normalizedPortfolio = normalizeVersionName(portfolioVersion)
@@ -536,18 +536,18 @@ function validateTrackingConfig(body) {
   return null
 }
 
-function loadTrackingConfig(readFromStorage) {
-  var config = readFromStorage(TRACKING_CONFIG_FILE)
+async function loadTrackingConfig(readFromStorage) {
+  var config = await readFromStorage(TRACKING_CONFIG_FILE)
   return config || { releases: {} }
 }
 
-module.exports = function registerFeatureTrackingRoutes(router, context) {
+module.exports = async function registerFeatureTrackingRoutes(router, context) {
   const storage = context.storage
   const requireAuth = context.requireAuth
   const requireScope = context.requireScope
 
   // GET /tracking/versions
-  router.get('/tracking/versions', requireAuth, requireScope('releases:read'), function (req, res) {
+  router.get('/tracking/versions', requireAuth, requireScope('releases:read'), async function (req, res) {
     const versionMap = {}
 
     function addVersion(releaseNumber) {
@@ -565,7 +565,7 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
       }
     }
 
-    const registry = readRegistry(storage.readFromStorage)
+    const registry = await readRegistry(storage.readFromStorage)
     const registryReleases = registry.releases || []
     for (let ri = 0; ri < registryReleases.length; ri++) {
       const rel = registryReleases[ri]
@@ -573,13 +573,13 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
       addVersion(rel.displayName || rel.id || '')
     }
 
-    const ppCache = storage.readFromStorage(PP_CACHE_FILE)
+    const ppCache = await storage.readFromStorage(PP_CACHE_FILE)
     const ppReleases = Array.isArray(ppCache) ? ppCache : (ppCache && ppCache.releases) || []
     for (let pi = 0; pi < ppReleases.length; pi++) {
       if (ppReleases[pi].releaseNumber) addVersion(ppReleases[pi].releaseNumber)
     }
 
-    const planningConfig = storage.readFromStorage(PLANNING_CONFIG_FILE)
+    const planningConfig = await storage.readFromStorage(PLANNING_CONFIG_FILE)
     if (planningConfig && planningConfig.releases) {
       const configVersions = Object.keys(planningConfig.releases)
       for (let ci = 0; ci < configVersions.length; ci++) {
@@ -591,7 +591,7 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
     }
 
     // Source 4: feature tracking config (user-defined releases)
-    const trackingConfig = loadTrackingConfig(storage.readFromStorage)
+    const trackingConfig = await loadTrackingConfig(storage.readFromStorage)
     if (trackingConfig.releases) {
       const trackingVersions = Object.keys(trackingConfig.releases)
       for (let ti = 0; ti < trackingVersions.length; ti++) {
@@ -623,7 +623,7 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
       if (userDate) {
         versions[vi].planningFreezeDate = userDate
       } else {
-        const fd = getFeatureFreezeDatesFromCache(vKey, storage.readFromStorage)
+        const fd = await getFeatureFreezeDatesFromCache(vKey, storage.readFromStorage)
         versions[vi].planningFreezeDate = fd.earliest || null
       }
     }
@@ -649,7 +649,7 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
 
     try {
       if (!forceRefresh) {
-        const cached = storage.readFromStorage(cacheKey(version))
+        const cached = await storage.readFromStorage(cacheKey(version))
         if (cached && cached.fetchedAt) {
           const age = Date.now() - new Date(cached.fetchedAt).getTime()
           if (age < CACHE_TTL_MS) {
@@ -665,9 +665,9 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
       const jiraRequest = jira.jiraRequest
       const fetchAllJqlResults = jira.fetchAllJqlResults
 
-      const tConfig = loadTrackingConfig(storage.readFromStorage)
+      const tConfig = await loadTrackingConfig(storage.readFromStorage)
       const productVersions = await resolveProductVersionsFromJira(version, jiraRequest, tConfig)
-      const freezeDates = getFeatureFreezeDatesFromCache(version, storage.readFromStorage)
+      const freezeDates = await getFeatureFreezeDatesFromCache(version, storage.readFromStorage)
       const cacheDates = Object.assign({}, freezeDates.byProduct)
 
       // Always try the schedule API — it returns EA-specific freeze dates
@@ -791,7 +791,7 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
         _freezeDatesFinal: Object.assign({}, freezeDates.byProduct)
       }
 
-      storage.writeToStorage(cacheKey(version), responseData)
+      await storage.writeToStorage(cacheKey(version), responseData)
 
       res.json(responseData)
     } catch (err) {
@@ -801,16 +801,16 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
   })
 
   // GET /tracking/config
-  router.get('/tracking/config', requireAuth, requireScope('releases:read'), function (req, res) {
-    res.json(loadTrackingConfig(storage.readFromStorage))
+  router.get('/tracking/config', requireAuth, requireScope('releases:read'), async function (req, res) {
+    res.json(await loadTrackingConfig(storage.readFromStorage))
   })
 
   // PUT /tracking/config
-  router.put('/tracking/config', requireAuth, requireScope('releases:write'), function (req, res) {
+  router.put('/tracking/config', requireAuth, requireScope('releases:write'), async function (req, res) {
     var err = validateTrackingConfig(req.body)
     if (err) return res.status(400).json({ error: err })
     var config = { releases: req.body.releases }
-    storage.writeToStorage(TRACKING_CONFIG_FILE, config)
+    await storage.writeToStorage(TRACKING_CONFIG_FILE, config)
     res.json(config)
   })
 

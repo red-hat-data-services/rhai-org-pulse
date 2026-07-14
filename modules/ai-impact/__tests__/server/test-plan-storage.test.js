@@ -34,25 +34,25 @@ function makeEmptyData() {
 }
 
 describe('readTestPlans', () => {
-  it('returns empty state when storage returns null', () => {
-    const read = vi.fn().mockReturnValue(null);
-    expect(readTestPlans(read)).toEqual({ lastSyncedAt: null, lastJiraSyncAt: null, totalTestPlans: 0, testPlans: {} });
+  it('returns empty state when storage returns null', async () => {
+    const read = vi.fn().mockResolvedValue(null);
+    expect(await readTestPlans(read)).toEqual({ lastSyncedAt: null, lastJiraSyncAt: null, totalTestPlans: 0, testPlans: {} });
   });
 
-  it('returns empty state when storage returns undefined', () => {
-    const read = vi.fn().mockReturnValue(undefined);
-    expect(readTestPlans(read)).toEqual({ lastSyncedAt: null, lastJiraSyncAt: null, totalTestPlans: 0, testPlans: {} });
+  it('returns empty state when storage returns undefined', async () => {
+    const read = vi.fn().mockResolvedValue(undefined);
+    expect(await readTestPlans(read)).toEqual({ lastSyncedAt: null, lastJiraSyncAt: null, totalTestPlans: 0, testPlans: {} });
   });
 
-  it('returns empty state when data is malformed', () => {
-    const read = vi.fn().mockReturnValue({ lastSyncedAt: 'x' });
-    expect(readTestPlans(read)).toEqual({ lastSyncedAt: null, lastJiraSyncAt: null, totalTestPlans: 0, testPlans: {} });
+  it('returns empty state when data is malformed', async () => {
+    const read = vi.fn().mockResolvedValue({ lastSyncedAt: 'x' });
+    expect(await readTestPlans(read)).toEqual({ lastSyncedAt: null, lastJiraSyncAt: null, totalTestPlans: 0, testPlans: {} });
   });
 
-  it('returns valid data unchanged', () => {
+  it('returns valid data unchanged', async () => {
     const data = { lastSyncedAt: '2026-05-10T12:00:00Z', totalTestPlans: 1, testPlans: { A: {} } };
-    const read = vi.fn().mockReturnValue(data);
-    expect(readTestPlans(read)).toBe(data);
+    const read = vi.fn().mockResolvedValue(data);
+    expect(await readTestPlans(read)).toBe(data);
   });
 });
 

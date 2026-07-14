@@ -61,14 +61,14 @@ const STORAGE_PREFIX = 'releases/release-readiness';
 
 function registerReleaseReadinessRoutes(router, { storage, requireAuth, requireScope }) {
 
-  router.get('/', requireAuth, requireScope('releases:read'), (req, res) => {
+  router.get('/', requireAuth, requireScope('releases:read'), async (req, res) => {
     const version = req.query.version;
     if (!version) {
       return res.status(400).json({ error: 'version query parameter is required' });
     }
 
     const filename = sanitizeFilename(version);
-    const data = storage.readFromStorage(`${STORAGE_PREFIX}/${filename}.json`);
+    const data = await storage.readFromStorage(`${STORAGE_PREFIX}/${filename}.json`);
 
     if (!data) {
       return res.status(404).json({ error: `No release readiness metrics found for version "${version}"` });
@@ -77,10 +77,10 @@ function registerReleaseReadinessRoutes(router, { storage, requireAuth, requireS
     res.json(data);
   });
 
-  router.get('/versions', requireAuth, requireScope('releases:read'), (req, res) => {
+  router.get('/versions', requireAuth, requireScope('releases:read'), async (req, res) => {
     let files;
     try {
-      files = storage.listStorageFiles(STORAGE_PREFIX);
+      files = await storage.listStorageFiles(STORAGE_PREFIX);
     } catch {
       return res.json({ versions: [] });
     }
@@ -92,7 +92,7 @@ function registerReleaseReadinessRoutes(router, { storage, requireAuth, requireS
     res.json({ versions });
   });
 
-  router.post('/upload', requireAuth, requireScope('releases:write'), (req, res) => {
+  router.post('/upload', requireAuth, requireScope('releases:write'), async (req, res) => {
     const payload = req.body;
 
     if (!payload || !payload.version || !payload.summary) {
@@ -100,7 +100,7 @@ function registerReleaseReadinessRoutes(router, { storage, requireAuth, requireS
     }
 
     const filename = sanitizeFilename(payload.version);
-    storage.writeToStorage(`${STORAGE_PREFIX}/${filename}.json`, payload);
+    await storage.writeToStorage(`${STORAGE_PREFIX}/${filename}.json`, payload);
 
     res.json({ status: 'stored', version: payload.version, filename: `${filename}.json` });
   });

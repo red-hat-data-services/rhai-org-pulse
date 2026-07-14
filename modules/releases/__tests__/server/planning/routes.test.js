@@ -47,14 +47,14 @@ function makeStorage(data) {
     for (const k in data) store[k] = data[k]
   }
   return {
-    readFromStorage: function(key) {
+    readFromStorage: async function(key) {
       return store[key] ? JSON.parse(JSON.stringify(store[key])) : null
     },
-    writeToStorage: function(key, value) {
+    writeToStorage: async function(key, value) {
       store[key] = value
     },
-    listStorageFiles: vi.fn().mockReturnValue([]),
-    deleteFromStorage: vi.fn(),
+    listStorageFiles: vi.fn().mockResolvedValue([]),
+    deleteFromStorage: vi.fn().mockResolvedValue(undefined),
     _store: store
   }
 }
@@ -214,14 +214,14 @@ describe('release-planning routes', function() {
   // ─── GET /releases ───
 
   describe('GET /releases', function() {
-    it('returns configured releases', function() {
-      const res = callRoute(router._routes, 'GET', '/releases')
+    it('returns configured releases', async function() {
+      const res = await callRoute(router._routes, 'GET', '/releases')
       expect(res._json).toEqual([{ version: '3.5', bigRockCount: 0 }])
     })
 
-    it('returns empty array when no releases configured', function() {
+    it('returns empty array when no releases configured', async function() {
       storage._store['releases/planning/config.json'] = { releases: {} }
-      const res = callRoute(router._routes, 'GET', '/releases')
+      const res = await callRoute(router._routes, 'GET', '/releases')
       expect(res._json).toEqual([])
     })
   })
@@ -229,63 +229,63 @@ describe('release-planning routes', function() {
   // ─── GET /releases/:version/candidates ───
 
   describe('GET /releases/:version/candidates', function() {
-    it('rejects invalid version format', function() {
+    it('rejects invalid version format', async function() {
       const req = makeReq({ params: { version: '../etc/passwd' } })
-      const res = callRoute(router._routes, 'GET', '/releases/:version/candidates', req)
+      const res = await callRoute(router._routes, 'GET', '/releases/:version/candidates', req)
       expect(res._status).toBe(400)
       expect(res._json.error).toMatch(/Invalid version/)
     })
 
-    it('returns cached data when available', function() {
+    it('returns cached data when available', async function() {
       storage._store['releases/planning/candidates-cache-3.5.json'] = {
         cachedAt: new Date().toISOString(),
         data: { features: [{ issueKey: 'TEST-1' }], rfes: [], bigRocks: [], summary: null }
       }
       const req = makeReq({ params: { version: '3.5' }, query: {} })
-      const res = callRoute(router._routes, 'GET', '/releases/:version/candidates', req)
+      const res = await callRoute(router._routes, 'GET', '/releases/:version/candidates', req)
       expect(res._json.features).toHaveLength(1)
     })
 
-    it('returns 202 when no cache exists', function() {
+    it('returns 202 when no cache exists', async function() {
       const req = makeReq({ params: { version: '3.5' }, query: {} })
-      const res = callRoute(router._routes, 'GET', '/releases/:version/candidates', req)
+      const res = await callRoute(router._routes, 'GET', '/releases/:version/candidates', req)
       expect(res._status).toBe(202)
       expect(res._json._noCache).toBe(true)
     })
 
-    it('returns ETag header with cached response', function() {
+    it('returns ETag header with cached response', async function() {
       storage._store['releases/planning/candidates-cache-3.5.json'] = {
         cachedAt: new Date().toISOString(),
         data: { features: [], rfes: [], bigRocks: [], summary: null }
       }
       const req = makeReq({ params: { version: '3.5' }, query: {} })
-      const res = callRoute(router._routes, 'GET', '/releases/:version/candidates', req)
+      const res = await callRoute(router._routes, 'GET', '/releases/:version/candidates', req)
       expect(res._headers['ETag']).toBeDefined()
       expect(res._headers['ETag']).toMatch(/^"[a-f0-9]+"$/)
     })
 
-    it('returns 304 when If-None-Match matches ETag', function() {
+    it('returns 304 when If-None-Match matches ETag', async function() {
       storage._store['releases/planning/candidates-cache-3.5.json'] = {
         cachedAt: new Date().toISOString(),
         data: { features: [], rfes: [], bigRocks: [], summary: null }
       }
       const req1 = makeReq({ params: { version: '3.5' }, query: {} })
-      const res1 = callRoute(router._routes, 'GET', '/releases/:version/candidates', req1)
+      const res1 = await callRoute(router._routes, 'GET', '/releases/:version/candidates', req1)
       const etag = res1._headers['ETag']
 
       const req2 = makeReq({ params: { version: '3.5' }, query: {}, headers: { 'if-none-match': etag } })
-      const res2 = callRoute(router._routes, 'GET', '/releases/:version/candidates', req2)
+      const res2 = await callRoute(router._routes, 'GET', '/releases/:version/candidates', req2)
       expect(res2._status).toBe(304)
       expect(res2._ended).toBe(true)
     })
 
-    it('returns 200 when If-None-Match does not match', function() {
+    it('returns 200 when If-None-Match does not match', async function() {
       storage._store['releases/planning/candidates-cache-3.5.json'] = {
         cachedAt: new Date().toISOString(),
         data: { features: [{ issueKey: 'TEST-1' }], rfes: [], bigRocks: [], summary: null }
       }
       const req = makeReq({ params: { version: '3.5' }, query: {}, headers: { 'if-none-match': '"stale-etag"' } })
-      const res = callRoute(router._routes, 'GET', '/releases/:version/candidates', req)
+      const res = await callRoute(router._routes, 'GET', '/releases/:version/candidates', req)
       expect(res._status).toBe(200)
       expect(res._json.features).toHaveLength(1)
     })
@@ -296,19 +296,19 @@ describe('release-planning routes', function() {
   describe('version validation', function() {
     it('rejects reserved version names', async function() {
       const req = makeReq({ params: { version: '__proto__' } })
-      const res = callRoute(router._routes, 'POST', '/releases/:version/refresh', req)
+      const res = await callRoute(router._routes, 'POST', '/releases/:version/refresh', req)
       expect(res._status).toBe(400)
     })
 
     it('rejects versions with special characters', async function() {
       const req = makeReq({ params: { version: 'v1;rm -rf' } })
-      const res = callRoute(router._routes, 'POST', '/releases/:version/refresh', req)
+      const res = await callRoute(router._routes, 'POST', '/releases/:version/refresh', req)
       expect(res._status).toBe(400)
     })
 
     it('accepts valid version formats', async function() {
       const req = makeReq({ params: { version: '3.5' } })
-      const res = callRoute(router._routes, 'POST', '/releases/:version/refresh', req)
+      const res = await callRoute(router._routes, 'POST', '/releases/:version/refresh', req)
       expect(res._status).toBe(200)
     })
   })
@@ -477,27 +477,27 @@ describe('release-planning routes', function() {
   // ─── GET /permissions ───
 
   describe('GET /permissions', function() {
-    it('returns canEdit true for admin', function() {
+    it('returns canEdit true for admin', async function() {
       const req = makeReq({ isAdmin: true, userEmail: 'admin@test.com' })
-      const res = callRoute(router._routes, 'GET', '/permissions', req)
+      const res = await callRoute(router._routes, 'GET', '/permissions', req)
       expect(res._json.canEdit).toBe(true)
     })
 
-    it('returns canEdit true for planning manager', function() {
+    it('returns canEdit true for planning manager', async function() {
       const req = makeReq({ isAdmin: false, isPlanningManager: true, userEmail: 'pm@test.com' })
-      const res = callRoute(router._routes, 'GET', '/permissions', req)
+      const res = await callRoute(router._routes, 'GET', '/permissions', req)
       expect(res._json.canEdit).toBe(true)
     })
 
-    it('returns canEdit true for regular user', function() {
+    it('returns canEdit true for regular user', async function() {
       const req = makeReq({ isAdmin: false, isPlanningManager: false, userEmail: 'user@test.com' })
-      const res = callRoute(router._routes, 'GET', '/permissions', req)
+      const res = await callRoute(router._routes, 'GET', '/permissions', req)
       expect(res._json.canEdit).toBe(true)
     })
 
-    it('returns granular flags for admin', function() {
+    it('returns granular flags for admin', async function() {
       const req = makeReq({ isAdmin: true, isPlanningManager: false, userEmail: 'admin@test.com' })
-      const res = callRoute(router._routes, 'GET', '/permissions', req)
+      const res = await callRoute(router._routes, 'GET', '/permissions', req)
       expect(res._json).toEqual({
         canEdit: true,
         canAdd: true,
@@ -506,9 +506,9 @@ describe('release-planning routes', function() {
       })
     })
 
-    it('returns granular flags for planning-manager', function() {
+    it('returns granular flags for planning-manager', async function() {
       const req = makeReq({ isAdmin: false, isPlanningManager: true, userEmail: 'pm@test.com' })
-      const res = callRoute(router._routes, 'GET', '/permissions', req)
+      const res = await callRoute(router._routes, 'GET', '/permissions', req)
       expect(res._json).toEqual({
         canEdit: true,
         canAdd: true,
@@ -517,9 +517,9 @@ describe('release-planning routes', function() {
       })
     })
 
-    it('returns restricted flags for regular user', function() {
+    it('returns restricted flags for regular user', async function() {
       const req = makeReq({ isAdmin: false, isPlanningManager: false, userEmail: 'user@test.com' })
-      const res = callRoute(router._routes, 'GET', '/permissions', req)
+      const res = await callRoute(router._routes, 'GET', '/permissions', req)
       expect(res._json).toEqual({
         canEdit: true,
         canAdd: false,
@@ -532,14 +532,14 @@ describe('release-planning routes', function() {
   // ─── Audit Log ───
 
   describe('GET /audit-log', function() {
-    it('returns empty entries when no log exists', function() {
+    it('returns empty entries when no log exists', async function() {
       const req = makeReq({ query: {} })
-      const res = callRoute(router._routes, 'GET', '/audit-log', req)
+      const res = await callRoute(router._routes, 'GET', '/audit-log', req)
       expect(res._json.entries).toEqual([])
       expect(res._json.total).toBe(0)
     })
 
-    it('returns entries filtered by version', function() {
+    it('returns entries filtered by version', async function() {
       storage._store['releases/audit-log.json'] = {
         entries: [
           { id: '1', timestamp: '2026-01-01T00:00:00Z', version: '3.5', action: 'create_rock', user: 'a@b.com', summary: 'test' },
@@ -547,12 +547,12 @@ describe('release-planning routes', function() {
         ]
       }
       const req = makeReq({ query: { version: '3.5' } })
-      const res = callRoute(router._routes, 'GET', '/audit-log', req)
+      const res = await callRoute(router._routes, 'GET', '/audit-log', req)
       expect(res._json.entries).toHaveLength(1)
       expect(res._json.total).toBe(1)
     })
 
-    it('returns entries filtered by action', function() {
+    it('returns entries filtered by action', async function() {
       storage._store['releases/audit-log.json'] = {
         entries: [
           { id: '1', timestamp: '2026-01-01T00:00:00Z', version: '3.5', action: 'create_rock', user: 'a@b.com', summary: 'test' },
@@ -560,26 +560,26 @@ describe('release-planning routes', function() {
         ]
       }
       const req = makeReq({ query: { action: 'delete_rock' } })
-      const res = callRoute(router._routes, 'GET', '/audit-log', req)
+      const res = await callRoute(router._routes, 'GET', '/audit-log', req)
       expect(res._json.entries).toHaveLength(1)
       expect(res._json.entries[0].action).toBe('delete_rock')
     })
 
-    it('respects limit and offset', function() {
+    it('respects limit and offset', async function() {
       const entries = []
       for (let i = 0; i < 10; i++) {
         entries.push({ id: String(i), timestamp: '2026-01-0' + (i + 1) + 'T00:00:00Z', version: '3.5', action: 'create_rock', user: 'a@b.com', summary: 'entry ' + i })
       }
       storage._store['releases/audit-log.json'] = { entries: entries }
       const req = makeReq({ query: { limit: '3', offset: '2' } })
-      const res = callRoute(router._routes, 'GET', '/audit-log', req)
+      const res = await callRoute(router._routes, 'GET', '/audit-log', req)
       expect(res._json.entries).toHaveLength(3)
       expect(res._json.total).toBe(10)
     })
 
-    it('clamps limit to max 500', function() {
+    it('clamps limit to max 500', async function() {
       const req = makeReq({ query: { limit: '1000' } })
-      const res = callRoute(router._routes, 'GET', '/audit-log', req)
+      const res = await callRoute(router._routes, 'GET', '/audit-log', req)
       expect(res._json).toBeDefined()
     })
   })
@@ -617,21 +617,21 @@ describe('release-planning routes', function() {
   // ─── Refresh Status ───
 
   describe('GET /refresh/status', function() {
-    it('returns initial refresh state', function() {
-      const res = callRoute(router._routes, 'GET', '/refresh/status')
+    it('returns initial refresh state', async function() {
+      const res = await callRoute(router._routes, 'GET', '/refresh/status')
       expect(res._json.running).toBe(false)
     })
 
-    it('returns aggregate state when no version specified', function() {
+    it('returns aggregate state when no version specified', async function() {
       const req = makeReq({ query: {} })
-      const res = callRoute(router._routes, 'GET', '/refresh/status', req)
+      const res = await callRoute(router._routes, 'GET', '/refresh/status', req)
       expect(res._json.running).toBe(false)
       expect(res._json.lastResult).toBe(null)
     })
 
-    it('returns per-version state when version specified', function() {
+    it('returns per-version state when version specified', async function() {
       const req = makeReq({ query: { version: '3.5' } })
-      const res = callRoute(router._routes, 'GET', '/refresh/status', req)
+      const res = await callRoute(router._routes, 'GET', '/refresh/status', req)
       expect(res._json.running).toBe(false)
       expect(res._json.lastResult).toBe(null)
     })
@@ -750,7 +750,7 @@ describe('release-planning routes', function() {
   // ─── GET /pillar-options ───
 
   describe('GET /pillar-options', function() {
-    it('returns pillar names from PM Hub config', function() {
+    it('returns pillar names from PM Hub config', async function() {
       storage._store['releases/pm-hub/pillar-config.json'] = {
         pillars: [
           { name: 'Inference', components: [] },
@@ -758,17 +758,17 @@ describe('release-planning routes', function() {
         ]
       }
       const req = makeReq()
-      const res = callRoute(router._routes, 'GET', '/pillar-options', req)
+      const res = await callRoute(router._routes, 'GET', '/pillar-options', req)
       expect(res._json.options).toEqual(['Inference', 'Platform'])
     })
 
-    it('returns empty array when no PM Hub config exists', function() {
+    it('returns empty array when no PM Hub config exists', async function() {
       const req = makeReq()
-      const res = callRoute(router._routes, 'GET', '/pillar-options', req)
+      const res = await callRoute(router._routes, 'GET', '/pillar-options', req)
       expect(res._json.options).toEqual([])
     })
 
-    it('filters out empty pillar names', function() {
+    it('filters out empty pillar names', async function() {
       storage._store['releases/pm-hub/pillar-config.json'] = {
         pillars: [
           { name: 'Inference', components: [] },
@@ -777,7 +777,7 @@ describe('release-planning routes', function() {
         ]
       }
       const req = makeReq()
-      const res = callRoute(router._routes, 'GET', '/pillar-options', req)
+      const res = await callRoute(router._routes, 'GET', '/pillar-options', req)
       expect(res._json.options).toEqual(['Inference', 'Platform'])
     })
   })

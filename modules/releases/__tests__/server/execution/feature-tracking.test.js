@@ -440,7 +440,7 @@ describe('normalizeVersionName', function () {
 
 // ─── fetchDroppedFeatures — freeze date filtering ─────────────────
 
-describe('fetchDroppedFeatures — freeze date filtering', function () {
+describe('fetchDroppedFeatures — freeze date filtering', function() {
   function makeDroppedRawIssue(key, removedAt) {
     return {
       key: key,

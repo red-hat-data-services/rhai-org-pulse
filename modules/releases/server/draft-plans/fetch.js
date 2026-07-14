@@ -80,7 +80,7 @@ async function fetchDraftPlans(storage, config, token) {
           continue;
         }
 
-        storage.writeToStorage(`${DATA_PREFIX}/${product}/${fileName}`, parsed);
+        await storage.writeToStorage(`${DATA_PREFIX}/${product}/${fileName}`, parsed);
         productResults[product].files++;
         fileCount++;
       } catch (err) {
@@ -109,7 +109,7 @@ async function fetchDraftPlans(storage, config, token) {
     warnings: warnings.length > 0 ? warnings : undefined
   };
 
-  storage.writeToStorage(`${DATA_PREFIX}/last-fetch.json`, result);
+  await storage.writeToStorage(`${DATA_PREFIX}/last-fetch.json`, result);
 
   return result;
 }

@@ -153,10 +153,10 @@ function mapCandidateToHealthFeature(candidate) {
  * @param {string|null} phase - Phase filter (EA1/EA2/GA) or null for all
  * @returns {{ features: Array<object>, warnings: Array<string> }}
  */
-function loadFeaturesFromCandidates(readFromStorage, version, phase) {
+async function loadFeaturesFromCandidates(readFromStorage, version, phase) {
   var warnings = []
   var cacheKey = DATA_PREFIX + '/candidates-cache-' + version + '.json'
-  var cached = readFromStorage(cacheKey)
+  var cached = await readFromStorage(cacheKey)
 
   if (!cached || !cached.data || !cached.data.features) {
     warnings.push('No candidates found -- run a Big Rocks refresh first')
@@ -264,8 +264,8 @@ function getFeaturePhase(feature) {
  * @param {string} version - Release version (e.g., '3.5')
  * @returns {object|null} Milestone dates or null
  */
-function loadMilestones(readFromStorage, version) {
-  var cached = readFromStorage('releases/delivery/product-pages-releases-cache.json')
+async function loadMilestones(readFromStorage, version) {
+  var cached = await readFromStorage('releases/delivery/product-pages-releases-cache.json')
   if (!cached || !cached.releases || !Array.isArray(cached.releases)) {
     return null
   }
@@ -327,7 +327,7 @@ async function loadPreviousGaFreeze(readFromStorage, version) {
   var prevVersion = parts[0] + '.' + prevMinor
 
   // Try Product Pages cache first
-  var cached = readFromStorage('releases/delivery/product-pages-releases-cache.json')
+  var cached = await readFromStorage('releases/delivery/product-pages-releases-cache.json')
   if (cached && cached.releases && Array.isArray(cached.releases)) {
     for (var i = 0; i < cached.releases.length; i++) {
       var r = cached.releases[i]
@@ -496,8 +496,8 @@ function deriveFreezeDates(milestones) {
  * @param {string} version - Release version (e.g., '3.5')
  * @returns {{ features: Array<object>, warnings: Array<string> }}
  */
-function loadFeaturesForRelease(readFromStorage, version) {
-  var index = loadIndex(readFromStorage)
+async function loadFeaturesForRelease(readFromStorage, version) {
+  var index = await loadIndex(readFromStorage)
   var warnings = []
 
   if (!index.features || index.features.length === 0) {
@@ -536,7 +536,7 @@ function loadFeaturesForRelease(readFromStorage, version) {
     if (CLOSED_STATUSES.indexOf(status) !== -1) continue
 
     // Load detail file for additional fields
-    var detail = loadFeatureDetail(readFromStorage, f.key)
+    var detail = await loadFeatureDetail(readFromStorage, f.key)
 
     // Merge index + detail data, preferring detail where available
     var merged = Object.assign({}, f)
@@ -639,7 +639,7 @@ function deriveReleasePhaseMode(currentPhase) {
  * @returns {Promise<object>} Health cache data
  */
 async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraRequest, fetchAllJqlResults, phase) {
-  var config = getConfig(readFromStorage)
+  var config = await getConfig(readFromStorage)
   var healthConfig = config.healthConfig || {}
   var warnings = []
   var today = new Date()
@@ -648,14 +648,14 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   console.log('[health] Starting health pipeline for version ' + version + ' phase ' + phaseKey)
 
   // Step 1: Load features from Big Rocks candidates cache
-  var featureResult = loadFeaturesFromCandidates(readFromStorage, version, phase)
+  var featureResult = await loadFeaturesFromCandidates(readFromStorage, version, phase)
   var features = featureResult.features
   warnings = warnings.concat(featureResult.warnings)
 
   if (features.length === 0) {
     console.warn('[health] No features found for version ' + version + ' phase ' + phaseKey)
     var emptyCache = buildEmptyCache(version, warnings)
-    writeToStorage(DATA_PREFIX + '/health-cache-' + version + '-' + phaseKey + '.json', emptyCache)
+    await writeToStorage(DATA_PREFIX + '/health-cache-' + version + '-' + phaseKey + '.json', emptyCache)
     return emptyCache
   }
 
@@ -664,7 +664,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   // Step 1b: Enrich epicCount + scores from execution index
   // mapCandidateToHealthFeature() does not map epicCount; source it from execution index.
   // Also bridge aiReview.scores from feature detail files so FPDoR rubric items can be evaluated.
-  var execIndex = loadIndex(readFromStorage)
+  var execIndex = await loadIndex(readFromStorage)
   if (execIndex && execIndex.features) {
     var execByKey = {}
     for (var ei = 0; ei < execIndex.features.length; ei++) {
@@ -679,7 +679,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
         features[fi].completionPct = execFeature.completionPct
       }
       if (execFeature && !features[fi].scores) {
-        var execDetail = loadFeatureDetail(readFromStorage, features[fi].key)
+        var execDetail = await loadFeatureDetail(readFromStorage, features[fi].key)
         if (execDetail && execDetail.aiReview && execDetail.aiReview.scores) {
           features[fi].scores = execDetail.aiReview.scores
         }
@@ -688,7 +688,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   }
 
   // Step 2: Load milestone dates (Product Pages → Smartsheet fallback → derived from targets)
-  var milestones = loadMilestones(readFromStorage, version)
+  var milestones = await loadMilestones(readFromStorage, version)
   var fallbackResult = await backfillFreezeDatesFromSmartsheet(milestones, version)
   milestones = fallbackResult.milestones
   warnings = warnings.concat(fallbackResult.warnings)
@@ -708,7 +708,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   }
 
   // Step 4: Load overrides
-  var overrides = readFromStorage(DATA_PREFIX + '/health-overrides-' + version + '.json') || { overrides: {} }
+  var overrides = await readFromStorage(DATA_PREFIX + '/health-overrides-' + version + '.json') || { overrides: {} }
 
   // Step 5: Build per-feature health assessments
   var planningDeadline = computePlanningDeadline(milestones, phase, prevGaFreeze)
@@ -859,12 +859,12 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   }
 
   // Step 6b: Build Big Rock priority map and compute composite priority scores
-  var bigRocks = loadBigRocks(readFromStorage, version)
+  var bigRocks = await loadBigRocks(readFromStorage, version)
   var bigRockPriorityMap = new Map()
   for (var bri = 0; bri < bigRocks.length; bri++) {
     if (bigRocks[bri].name) bigRockPriorityMap.set(bigRocks[bri].name, bigRocks[bri].priority || (bri + 1))
   }
-  var configuredVersions = getConfiguredReleases(readFromStorage).map(function(r) { return r.version })
+  var configuredVersions = (await getConfiguredReleases(readFromStorage)).map(function(r) { return r.version })
   var priorityScores = computePriorityScores(healthFeatures, { bigRockPriorityMap: bigRockPriorityMap, configuredVersions: configuredVersions })
   for (var pi = 0; pi < healthFeatures.length; pi++) {
     var pKey = healthFeatures[pi].key
@@ -969,7 +969,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   }
 
   // Step 7: Write health cache
-  writeToStorage(DATA_PREFIX + '/health-cache-' + version + '-' + phaseKey + '.json', cache)
+  await writeToStorage(DATA_PREFIX + '/health-cache-' + version + '-' + phaseKey + '.json', cache)
   console.log('[health] Health pipeline completed for version ' + version + ' phase ' + phaseKey + ': ' + features.length + ' features assessed')
 
   return cache

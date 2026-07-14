@@ -428,7 +428,7 @@ function extractTargetVersions(rawIssue) {
  * @param {import('express').Router} router
  * @param {{ requireAuth: Function, requireScope: Function, jira: object, storage: object }} context
  */
-module.exports = function registerPmHubRoutes(router, context) {
+module.exports = async function registerPmHubRoutes(router, context) {
   var jiraClient = context.jira || null
 
   /**
@@ -554,16 +554,16 @@ module.exports = function registerPmHubRoutes(router, context) {
    *       200:
    *         description: Pillar config object with pillars array
    */
-  router.get('/pillar-config', context.requireAuth, context.requireScope('releases:read'), function(req, res) {
+  router.get('/pillar-config', context.requireAuth, context.requireScope('releases:read'), async function(req, res) {
     var storage = context.storage
-    var config = storage.readFromStorage(PILLAR_CONFIG_FILE)
+    var config = await storage.readFromStorage(PILLAR_CONFIG_FILE)
     if (!config) {
       config = DEFAULT_PILLAR_CONFIG
-      storage.writeToStorage(PILLAR_CONFIG_FILE, config)
+      await storage.writeToStorage(PILLAR_CONFIG_FILE, config)
     } else {
       var migrated = backfillLeads(config)
       if (migrated) {
-        storage.writeToStorage(PILLAR_CONFIG_FILE, config)
+        await storage.writeToStorage(PILLAR_CONFIG_FILE, config)
       }
     }
     res.json(config)
@@ -605,13 +605,13 @@ module.exports = function registerPmHubRoutes(router, context) {
    *       400:
    *         description: Invalid config shape
    */
-  router.put('/pillar-config', context.requireAuth, blockDuringImpersonation, context.requireScope('releases:write'), function(req, res) {
+  router.put('/pillar-config', context.requireAuth, blockDuringImpersonation, context.requireScope('releases:write'), async function(req, res) {
     var err = validatePillarConfig(req.body)
     if (err) {
       return res.status(400).json({ error: err })
     }
     var config = { pillars: req.body.pillars }
-    context.storage.writeToStorage(PILLAR_CONFIG_FILE, config)
+    await context.storage.writeToStorage(PILLAR_CONFIG_FILE, config)
     res.json(config)
   })
 

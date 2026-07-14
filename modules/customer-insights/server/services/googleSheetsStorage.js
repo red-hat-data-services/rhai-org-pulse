@@ -93,8 +93,8 @@ async function getAllFromSheet(sheets, spreadsheetId) {
  * @param {object} context - Module context from route handler
  * @returns {object} Storage instance with CRUD methods
  */
-function createStorage(context) {
-  const configSheetId = getConfig(context.storage.readFromStorage).sheetId
+async function createStorage(context) {
+  const configSheetId = (await getConfig(context.storage.readFromStorage)).sheetId
   const spreadsheetId = configSheetId || context.secrets.GOOGLE_SPREADSHEET_ID
   if (!spreadsheetId) {
     throw new Error('Google Spreadsheet ID not configured — set it in Settings or via GOOGLE_SPREADSHEET_ID secret')

@@ -11,16 +11,16 @@ const FT_PREFIX = 'releases/execution'
 
 // ─── Data Loading ───
 
-function loadIndex(readFromStorage) {
-  return readFromStorage(FT_PREFIX + '/index.json') || { features: [], rfes: [] }
+async function loadIndex(readFromStorage) {
+  return await readFromStorage(FT_PREFIX + '/index.json') || { features: [], rfes: [] }
 }
 
-function loadFeatureDetail(readFromStorage, key) {
-  return readFromStorage(FT_PREFIX + '/features/' + key + '.json')
+async function loadFeatureDetail(readFromStorage, key) {
+  return await readFromStorage(FT_PREFIX + '/features/' + key + '.json')
 }
 
-function loadRfeDetail(readFromStorage, key) {
-  return readFromStorage(FT_PREFIX + '/rfes/' + key + '.json')
+async function loadRfeDetail(readFromStorage, key) {
+  return await readFromStorage(FT_PREFIX + '/rfes/' + key + '.json')
 }
 
 // ─── Field Extraction Helpers ───
@@ -159,7 +159,7 @@ function rfeLinksToOutcome(issueLinks, outcomeSet) {
  * Find Tier 1 features: children of outcome keys with matching target version.
  * Uses parentKey from the index to identify outcome children.
  */
-function findTier1Features(readFromStorage, index, outcomeKeys, stats) {
+async function findTier1Features(readFromStorage, index, outcomeKeys, stats) {
   const outcomeSet = new Set(outcomeKeys)
   const results = []
 
@@ -189,7 +189,7 @@ function findTier1Features(readFromStorage, index, outcomeKeys, stats) {
     }
 
     // Load detail for components and issueLinks
-    const detail = loadFeatureDetail(readFromStorage, f.key)
+    const detail = await loadFeatureDetail(readFromStorage, f.key)
     if (detail) {
       detail._indexEntry = f
     }
@@ -206,7 +206,7 @@ function findTier1Features(readFromStorage, index, outcomeKeys, stats) {
  * Note: RFEs don't have parentKey in the pipeline data, so we use
  * issueLinks to find connections to outcome keys.
  */
-function findTier1Rfes(readFromStorage, index, outcomeKeys, release) {
+async function findTier1Rfes(readFromStorage, index, outcomeKeys, release) {
   const outcomeSet = new Set(outcomeKeys)
   const results = []
   const candidateLabel = release + '-candidate'
@@ -222,7 +222,7 @@ function findTier1Rfes(readFromStorage, index, outcomeKeys, release) {
     if (labels.indexOf(candidateLabel) === -1) continue
 
     // Need detail file to check issueLinks
-    const detail = loadRfeDetail(readFromStorage, r.key)
+    const detail = await loadRfeDetail(readFromStorage, r.key)
     if (!detail) continue
 
     if (!rfeLinksToOutcome(detail.issueLinks, outcomeSet)) continue
@@ -256,7 +256,7 @@ function findOutcomeSummaries(index, outcomeKeys) {
  * Find Tier 2 features: features with target version matching the release,
  * excluding already-discovered Tier 1 keys.
  */
-function findTier2Features(readFromStorage, index, release, excludeKeys) {
+async function findTier2Features(readFromStorage, index, release, excludeKeys) {
   const results = []
   const features = index.features || []
 
@@ -277,7 +277,7 @@ function findTier2Features(readFromStorage, index, release, excludeKeys) {
     const status = f.status || ''
     if (CLOSED_STATUSES.indexOf(status) !== -1) continue
 
-    const detail = loadFeatureDetail(readFromStorage, f.key)
+    const detail = await loadFeatureDetail(readFromStorage, f.key)
     results.push(detail || f)
   }
 
@@ -288,7 +288,7 @@ function findTier2Features(readFromStorage, index, release, excludeKeys) {
  * Find Tier 2 RFEs: RFEs with {release}-candidate label,
  * not closed, not Approved, excluding Tier 1 keys.
  */
-function findTier2Rfes(readFromStorage, index, release, excludeKeys) {
+async function findTier2Rfes(readFromStorage, index, release, excludeKeys) {
   const results = []
   const candidateLabel = release + '-candidate'
   const rfes = index.rfes || []
@@ -304,7 +304,7 @@ function findTier2Rfes(readFromStorage, index, release, excludeKeys) {
     const labels = getLabels(r)
     if (labels.indexOf(candidateLabel) === -1) continue
 
-    const detail = loadRfeDetail(readFromStorage, r.key)
+    const detail = await loadRfeDetail(readFromStorage, r.key)
     results.push(detail || r)
   }
 
@@ -314,7 +314,7 @@ function findTier2Rfes(readFromStorage, index, release, excludeKeys) {
 /**
  * Find Tier 3 features: In Progress, no target version, no fix version.
  */
-function findTier3Features(readFromStorage, index, excludeKeys) {
+async function findTier3Features(readFromStorage, index, excludeKeys) {
   const results = []
   const features = index.features || []
 
@@ -330,7 +330,7 @@ function findTier3Features(readFromStorage, index, excludeKeys) {
     const fixVersions = getFixVersions(f)
     if (fixVersions.length > 0) continue
 
-    const detail = loadFeatureDetail(readFromStorage, f.key)
+    const detail = await loadFeatureDetail(readFromStorage, f.key)
     results.push(detail || f)
   }
 

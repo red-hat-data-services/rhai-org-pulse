@@ -607,7 +607,7 @@ describe('transformIssue', function () {
 
 const { fetchHygieneFeatures } = require('../../../server/hygiene/jira-fetch')
 
-describe('fetchHygieneFeatures jqlVersions option', function () {
+describe('fetchHygieneFeatures jqlVersions option', function() {
   // Capture JQL queries without hitting Jira
   function createMockJira() {
     var capturedJqls = []

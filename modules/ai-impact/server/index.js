@@ -78,12 +78,12 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: RFE dataset with metrics, trend data, breakdown, and pipeline friction
    */
-  router.get('/rfe-data', requireScope('ai-impact:read'), function(req, res) {
+  router.get('/rfe-data', requireScope('ai-impact:read'), async function(req, res) {
     const timeWindow = VALID_TIME_WINDOWS.includes(req.query.timeWindow)
       ? req.query.timeWindow
       : 'month';
 
-    const data = readFromStorage('ai-impact/rfe-data.json');
+    const data = await readFromStorage('ai-impact/rfe-data.json');
     if (!data || !data.issues) {
       return res.json({
         fetchedAt: null,
@@ -97,7 +97,7 @@ module.exports = function registerRoutes(router, context) {
     }
 
     // Compute metrics server-side from cached issues
-    const config = getConfig(readFromStorage);
+    const config = await getConfig(readFromStorage);
     const { metrics, trendData, breakdown, pipelineFriction } = computeAllMetrics(data.issues, timeWindow, config);
 
     res.json({
@@ -139,9 +139,9 @@ module.exports = function registerRoutes(router, context) {
     };
   }
 
-  function getAutofixData() {
+  async function getAutofixData() {
     if (!autofixDataCache) {
-      const raw = readFromStorage('ai-impact/autofix-data.json');
+      const raw = await readFromStorage('ai-impact/autofix-data.json');
       autofixDataCache = DEMO_MODE ? shiftAutofixDates(raw) : raw;
     }
     return autofixDataCache;
@@ -192,12 +192,12 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Autofix dataset with metrics, trend data, and issues
    */
-  router.get('/autofix-data', requireScope('ai-impact:read'), function(req, res) {
+  router.get('/autofix-data', requireScope('ai-impact:read'), async function(req, res) {
     const timeWindow = VALID_AUTOFIX_TIME_WINDOWS.includes(req.query.timeWindow)
       ? req.query.timeWindow
       : 'month';
 
-    const data = getAutofixData();
+    const data = await getAutofixData();
     if (!data || !data.issues) {
       return res.json({
         fetchedAt: null,
@@ -265,8 +265,8 @@ module.exports = function registerRoutes(router, context) {
     };
   }
 
-  router.get('/doc-data', requireScope('ai-impact:read'), function(req, res) {
-    const rawData = readFromStorage('ai-impact/doc-data.json');
+  router.get('/doc-data', requireScope('ai-impact:read'), async function(req, res) {
+    const rawData = await readFromStorage('ai-impact/doc-data.json');
     if (!rawData || !rawData.issues) {
       return res.json({
         fetchedAt: null,
@@ -303,33 +303,33 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: MR KPI data with merge request metrics
    */
-  router.get('/doc-mr-kpi-data', requireScope('ai-impact:read'), function(req, res) {
-    const data = readFromStorage('ai-impact/doc-mr-kpi-data.json');
+  router.get('/doc-mr-kpi-data', requireScope('ai-impact:read'), async function(req, res) {
+    const data = await readFromStorage('ai-impact/doc-mr-kpi-data.json');
     if (!data || !data.mergeRequests) {
       return res.json({ fetchedAt: null, mergeRequests: [] });
     }
     res.json(data);
   });
 
-  router.get('/config', requireAdmin, requireScope('ai-impact:write'), function(req, res) {
-    res.json(getConfig(readFromStorage));
+  router.get('/config', requireAdmin, requireScope('ai-impact:write'), async function(req, res) {
+    res.json(await getConfig(readFromStorage));
   });
 
-  router.post('/config', requireAdmin, requireScope('ai-impact:write'), function(req, res) {
+  router.post('/config', requireAdmin, requireScope('ai-impact:write'), async function(req, res) {
     try {
-      saveConfig(writeToStorage, req.body);
+      await saveConfig(writeToStorage, req.body);
       res.json({ status: 'saved' });
     } catch (err) {
       res.status(400).json({ error: err.message });
     }
   });
 
-  router.delete('/cache', requireAdmin, requireScope('ai-impact:write'), function(req, res) {
-    writeToStorage('ai-impact/rfe-data.json', null);
-    writeToStorage('ai-impact/autofix-data.json', null);
+  router.delete('/cache', requireAdmin, requireScope('ai-impact:write'), async function(req, res) {
+    await writeToStorage('ai-impact/rfe-data.json', null);
+    await writeToStorage('ai-impact/autofix-data.json', null);
     invalidateAutofixCache();
-    writeToStorage('ai-impact/doc-data.json', null);
-    writeToStorage('ai-impact/doc-mr-kpi-data.json', null);
+    await writeToStorage('ai-impact/doc-data.json', null);
+    await writeToStorage('ai-impact/doc-mr-kpi-data.json', null);
     res.json({ status: 'cleared' });
   });
 
@@ -340,11 +340,11 @@ module.exports = function registerRoutes(router, context) {
   async function runAiImpactRefresh() {
     if (DEMO_MODE) return;
 
-    const config = getConfig(readFromStorage);
+    const config = await getConfig(readFromStorage);
 
     const issues = await fetchRFEData(jiraRequest, config);
     const withLinks = await resolveLinkedFeatures(jiraRequest, issues, config);
-    writeToStorage('ai-impact/rfe-data.json', {
+    await writeToStorage('ai-impact/rfe-data.json', {
       fetchedAt: new Date().toISOString(),
       issues: withLinks
     });
@@ -352,7 +352,7 @@ module.exports = function registerRoutes(router, context) {
     let autofixCount = 0;
     try {
       const autofixIssues = await fetchAutofixData(jiraRequest, config);
-      writeToStorage('ai-impact/autofix-data.json', {
+      await writeToStorage('ai-impact/autofix-data.json', {
         fetchedAt: new Date().toISOString(),
         issues: autofixIssues
       });
@@ -370,7 +370,7 @@ module.exports = function registerRoutes(router, context) {
         fetchedAt: new Date().toISOString(),
         mergeRequests: mrKpiResult.mergeRequests
       };
-      writeToStorage('ai-impact/doc-mr-kpi-data.json', mrKpiData);
+      await writeToStorage('ai-impact/doc-mr-kpi-data.json', mrKpiData);
       mrKpiCount = mrKpiResult.mergeRequests.length;
     } catch (mrKpiErr) {
       console.error('[ai-impact] MR KPI data refresh failed:', mrKpiErr.message);
@@ -406,7 +406,7 @@ module.exports = function registerRoutes(router, context) {
       } catch (mrErr) {
         console.error('[ai-impact] MR status enrichment failed:', mrErr.message);
       }
-      writeToStorage('ai-impact/doc-data.json', {
+      await writeToStorage('ai-impact/doc-data.json', {
         fetchedAt: new Date().toISOString(),
         issues: docResult.issues,
         labelEvents: docResult.labelEvents,
@@ -470,10 +470,10 @@ module.exports = function registerRoutes(router, context) {
 
   if (context.registerDiagnostics) {
     context.registerDiagnostics(async function() {
-      const rfeData = readFromStorage('ai-impact/rfe-data.json');
-      const autofixData = readFromStorage('ai-impact/autofix-data.json');
-      const docData = readFromStorage('ai-impact/doc-data.json');
-      const coData = readFromStorage('ai-impact/component-onboarding-data.json');
+      const rfeData = await readFromStorage('ai-impact/rfe-data.json');
+      const autofixData = await readFromStorage('ai-impact/autofix-data.json');
+      const docData = await readFromStorage('ai-impact/doc-data.json');
+      const coData = await readFromStorage('ai-impact/component-onboarding-data.json');
       return {
         refreshState,
         rfe: {

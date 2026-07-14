@@ -22,7 +22,7 @@ async function syncAllFeatures(storage, jiraRequestFn, fetchAllJqlResultsFn) {
   const startTime = Date.now();
 
   // List all feature files
-  const fileNames = storage.listStorageFiles(DATA_PREFIX + '/features');
+  const fileNames = await storage.listStorageFiles(DATA_PREFIX + '/features');
   if (!fileNames || fileNames.length === 0) {
     return {
       status: 'skipped',
@@ -48,7 +48,7 @@ async function syncAllFeatures(storage, jiraRequestFn, fetchAllJqlResultsFn) {
   const mergedFeatures = [];
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
-    const existing = storage.readFromStorage(DATA_PREFIX + '/features/' + key + '.json');
+    const existing = await storage.readFromStorage(DATA_PREFIX + '/features/' + key + '.json');
     const jiraData = enrichmentMap.get(key) || null;
     const merged = mergeFeatureData(existing, null, jiraData);
     mergedFeatures.push(merged);
@@ -64,7 +64,7 @@ async function syncAllFeatures(storage, jiraRequestFn, fetchAllJqlResultsFn) {
     if (signOffMap.size > 0) {
       const signOffUpdates = [];
       for (const [key, signOff] of signOffMap) {
-        const feature = storage.readFromStorage(DATA_PREFIX + '/features/' + key + '.json');
+        const feature = await storage.readFromStorage(DATA_PREFIX + '/features/' + key + '.json');
         if (feature && feature.aiReview) {
           feature.aiReview.approvedBy = signOff.approvedBy;
           feature.aiReview.approvedAt = signOff.approvedAt;
@@ -91,7 +91,7 @@ async function syncAllFeatures(storage, jiraRequestFn, fetchAllJqlResultsFn) {
   };
 
   // Write enrichment metadata
-  storage.writeToStorage(DATA_PREFIX + '/last-enrichment.json', result);
+  await storage.writeToStorage(DATA_PREFIX + '/last-enrichment.json', result);
 
   console.log('[jira-sync] Sync complete: ' + enrichmentMap.size + '/' + keys.length + ' enriched in ' + duration + 'ms');
 
@@ -119,7 +119,7 @@ async function discoverFromJira(storage, jiraRequestFn, fetchAllJqlResultsFn, co
   const newFeatures = [];
   for (let i = 0; i < discovered.length; i++) {
     const feature = discovered[i];
-    const existing = storage.readFromStorage(DATA_PREFIX + '/features/' + feature.key + '.json');
+    const existing = await storage.readFromStorage(DATA_PREFIX + '/features/' + feature.key + '.json');
     if (!existing) {
       // Create new entry from Jira data
       const merged = mergeFeatureData(null, null, feature);
@@ -147,7 +147,7 @@ async function discoverFromJira(storage, jiraRequestFn, fetchAllJqlResultsFn, co
  */
 async function reconcileTrackingData(storage) {
   // Find all tracking-data-*.json files
-  const files = storage.listStorageFiles(DATA_PREFIX);
+  const files = await storage.listStorageFiles(DATA_PREFIX);
   const trackingFiles = [];
   for (let i = 0; i < files.length; i++) {
     if (files[i].startsWith('tracking-data-') && files[i].endsWith('.json')) {
@@ -157,7 +157,7 @@ async function reconcileTrackingData(storage) {
 
   const discoveredKeys = new Set();
   for (let i = 0; i < trackingFiles.length; i++) {
-    const data = storage.readFromStorage(DATA_PREFIX + '/' + trackingFiles[i]);
+    const data = await storage.readFromStorage(DATA_PREFIX + '/' + trackingFiles[i]);
     if (!data || !data.features) continue;
 
     // data.features is either an array or an object keyed by issue key
@@ -175,7 +175,7 @@ async function reconcileTrackingData(storage) {
   // Check which keys don't have feature files yet
   const newFeatures = [];
   for (const key of discoveredKeys) {
-    const existing = storage.readFromStorage(DATA_PREFIX + '/features/' + key + '.json');
+    const existing = await storage.readFromStorage(DATA_PREFIX + '/features/' + key + '.json');
     if (!existing) {
       newFeatures.push({
         key,

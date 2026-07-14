@@ -6,9 +6,9 @@ function makeStorage() {
   const store = {}
   return {
     data: store,
-    readFromStorage: (key) => store[key] || null,
-    writeToStorage: (key, val) => { store[key] = val },
-    deleteFromStorage: (key) => { delete store[key] }
+    readFromStorage: async (key) => store[key] || null,
+    writeToStorage: async (key, val) => { store[key] = val },
+    deleteFromStorage: async (key) => { delete store[key] }
   }
 }
 
@@ -33,11 +33,11 @@ function makeRouter() {
       }
       // Run middleware then handler (skip requireAuth/requireAdmin by calling next)
       let i = 0
-      const next = () => {
+      const next = async () => {
         const fn = fns[i++]
-        if (fn) fn(req, res, next)
+        if (fn) await fn(req, res, next)
       }
-      next()
+      await next()
       return res
     }
   }
@@ -152,7 +152,7 @@ describe('conforma backend routes', () => {
       expect(res._body.count).toBe(1)
       expect(res._body.savedAt).toBeDefined()
 
-      const stored = storage.readFromStorage('releases/delivery/conforma.json')
+      const stored = await storage.readFromStorage('releases/delivery/conforma.json')
       expect(stored.releases).toHaveLength(1)
       expect(stored.releases[0].version).toBe('rhoai-3.4')
     })
@@ -189,7 +189,7 @@ describe('conforma backend routes', () => {
       storage.writeToStorage('releases/delivery/conforma.json', { releases: [SAMPLE_RELEASE] })
       const res = await router._dispatch('DELETE', '/conforma')
       expect(res._status).toBe(204)
-      expect(storage.readFromStorage('releases/delivery/conforma.json')).toBeNull()
+      expect(await storage.readFromStorage('releases/delivery/conforma.json')).toBeNull()
     })
 
     it('returns 204 even when no data exists', async () => {
@@ -223,7 +223,7 @@ describe('conforma backend routes — demo mode', () => {
     const res = await router._dispatch('POST', '/conforma/bulk', req)
     expect(res._status).toBe(200)
     expect(res._body.status).toBe('skipped')
-    expect(storage.readFromStorage('releases/delivery/conforma.json')).toBeNull()
+    expect(await storage.readFromStorage('releases/delivery/conforma.json')).toBeNull()
   })
 
   it('DELETE /conforma returns 400 in demo mode', async () => {

@@ -27,8 +27,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Current spreadsheet configuration
    */
-  router.get('/sheet-config', requireAdmin, function(req, res) {
-    res.json(getSheetConfig(readFromStorage))
+  router.get('/sheet-config', requireAdmin, async function(req, res) {
+    res.json(await getSheetConfig(readFromStorage))
   })
 
   /**
@@ -43,9 +43,9 @@ module.exports = function registerRoutes(router, context) {
    *       400:
    *         description: Validation error
    */
-  router.post('/sheet-config', requireAdmin, function(req, res) {
+  router.post('/sheet-config', requireAdmin, async function(req, res) {
     try {
-      saveSheetConfig(writeToStorage, req.body)
+      await saveSheetConfig(writeToStorage, req.body)
       res.json({ status: 'saved' })
     } catch (err) {
       res.status(400).json({ error: err.message })

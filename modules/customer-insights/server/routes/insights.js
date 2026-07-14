@@ -13,11 +13,11 @@ module.exports = function registerInsightsRoutes(router, context) {
 
   // Lazy initialization of service account storage
   let sheetsStorage = null
-  function getStorage() {
+  async function getStorage() {
     if (isDemoMode) return null
     if (!sheetsStorage) {
       try {
-        sheetsStorage = createStorage(context)
+        sheetsStorage = await createStorage(context)
       } catch {
         return null
       }
@@ -45,7 +45,7 @@ module.exports = function registerInsightsRoutes(router, context) {
     try {
       if (isDemoMode) {
         // Return demo fixtures
-        const insights = readFromStorage('customer-insights/insights.json')
+        const insights = await readFromStorage('customer-insights/insights.json')
         if (!insights) {
           return res.status(404).json({ error: 'Insights fixtures not found' })
         }
@@ -53,7 +53,7 @@ module.exports = function registerInsightsRoutes(router, context) {
       }
 
       // Check if insights have been generated
-      const insights = readFromStorage('customer-insights/insights.json')
+      const insights = await readFromStorage('customer-insights/insights.json')
       if (!insights) {
         return res.json({
           message: 'No insights generated yet. Click "Generate Insights" to analyze customer interactions.',
@@ -92,7 +92,7 @@ module.exports = function registerInsightsRoutes(router, context) {
     try {
       if (isDemoMode) {
         // In demo mode, return a simple history array
-        const latest = readFromStorage('customer-insights/insights.json')
+        const latest = await readFromStorage('customer-insights/insights.json')
         if (!latest) {
           return res.json([])
         }
@@ -106,7 +106,7 @@ module.exports = function registerInsightsRoutes(router, context) {
       }
 
       // For now, just return the latest insights as a single history item
-      const latest = readFromStorage('customer-insights/insights.json')
+      const latest = await readFromStorage('customer-insights/insights.json')
       if (!latest) {
         return res.json([])
       }
@@ -153,10 +153,10 @@ module.exports = function registerInsightsRoutes(router, context) {
 
       if (isDemoMode) {
         // Load from fixtures in demo mode
-        interactions = readFromStorage('customer-insights/interactions.json') || []
+        interactions = await readFromStorage('customer-insights/interactions.json') || []
       } else {
         // Fetch from service account storage
-        const store = getStorage()
+        const store = await getStorage()
         if (store) {
           interactions = await store.getAll(component ? { component } : {})
         }
@@ -222,7 +222,7 @@ JSON:`
       }
 
       // Save insights
-      writeToStorage('customer-insights/insights.json', insights)
+      await writeToStorage('customer-insights/insights.json', insights)
 
       res.json(insights)
     } catch (error) {

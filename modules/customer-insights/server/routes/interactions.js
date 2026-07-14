@@ -13,11 +13,11 @@ module.exports = function registerInteractionsRoutes(router, context) {
 
   // Lazy initialization of service account storage
   let sheetsStorage = null
-  function getStorage() {
+  async function getStorage() {
     if (isDemoMode) return null
     if (!sheetsStorage) {
       try {
-        sheetsStorage = createStorage(context)
+        sheetsStorage = await createStorage(context)
       } catch {
         return null
       }
@@ -58,7 +58,7 @@ module.exports = function registerInteractionsRoutes(router, context) {
     try {
       if (isDemoMode) {
         // Return demo fixtures (readFromStorage already returns parsed JSON)
-        let data = readFromStorage('customer-insights/interactions.json') || []
+        let data = await readFromStorage('customer-insights/interactions.json') || []
 
         // Apply filters
         const { component, status, geo, industryVertical } = req.query
@@ -79,7 +79,7 @@ module.exports = function registerInteractionsRoutes(router, context) {
       }
 
       // Use service account storage
-      const store = getStorage()
+      const store = await getStorage()
       if (!store) {
         return res.json([])
       }
@@ -113,7 +113,7 @@ module.exports = function registerInteractionsRoutes(router, context) {
         return res.status(400).json({ error: 'Cannot create interactions in demo mode' })
       }
 
-      const store = getStorage()
+      const store = await getStorage()
       if (!store) {
         return res.status(503).json({ error: 'Google Spreadsheet not configured' })
       }
@@ -153,7 +153,7 @@ module.exports = function registerInteractionsRoutes(router, context) {
         return res.status(400).json({ error: 'Cannot update interactions in demo mode' })
       }
 
-      const store = getStorage()
+      const store = await getStorage()
       if (!store) {
         return res.status(503).json({ error: 'Google Spreadsheet not configured' })
       }
@@ -192,7 +192,7 @@ module.exports = function registerInteractionsRoutes(router, context) {
         return res.status(400).json({ error: 'Cannot delete interactions in demo mode' })
       }
 
-      const store = getStorage()
+      const store = await getStorage()
       if (!store) {
         return res.status(503).json({ error: 'Google Spreadsheet not configured' })
       }
@@ -244,7 +244,7 @@ module.exports = function registerInteractionsRoutes(router, context) {
         return res.status(400).json({ error: 'interactions must be an array' })
       }
 
-      const store = getStorage()
+      const store = await getStorage()
       if (!store) {
         return res.status(503).json({ error: 'Google Spreadsheet not configured' })
       }

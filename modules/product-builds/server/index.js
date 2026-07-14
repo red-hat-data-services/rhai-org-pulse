@@ -29,8 +29,8 @@ const DEFAULT_CONFIG = {
   baseUrl: ''
 };
 
-function getConfig(readFromStorage) {
-  const saved = readFromStorage(CONFIG_PATH);
+async function getConfig(readFromStorage) {
+  const saved = await readFromStorage(CONFIG_PATH);
   if (saved && typeof saved === 'object' && !saved._deleted && saved.baseUrl) {
     return { ...DEFAULT_CONFIG, ...saved };
   }
@@ -57,8 +57,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Current configuration including AIPCC Dashboard API base URL
    */
-  router.get('/config', requireAdmin, function(req, res) {
-    res.json(getConfig(readFromStorage));
+  router.get('/config', requireAdmin, async function(req, res) {
+    res.json(await getConfig(readFromStorage));
   });
 
   /**
@@ -83,7 +83,7 @@ module.exports = function registerRoutes(router, context) {
    *       400:
    *         description: Invalid baseUrl (must be HTTP/HTTPS or empty string)
    */
-  router.post('/config', requireAdmin, function(req, res) {
+  router.post('/config', requireAdmin, async function(req, res) {
     const { baseUrl } = req.body;
     if (typeof baseUrl !== 'string') {
       return res.status(400).json({ error: 'baseUrl must be a string' });
@@ -92,7 +92,7 @@ module.exports = function registerRoutes(router, context) {
     if (trimmed && !/^https?:\/\//i.test(trimmed)) {
       return res.status(400).json({ error: 'baseUrl must be an HTTP or HTTPS URL' });
     }
-    writeToStorage(CONFIG_PATH, { baseUrl: trimmed });
+    await writeToStorage(CONFIG_PATH, { baseUrl: trimmed });
     res.json({ status: 'ok', baseUrl: trimmed });
   });
 
@@ -107,7 +107,7 @@ module.exports = function registerRoutes(router, context) {
    *         description: Health status with latency
    */
   router.get('/health', async function(req, res) {
-    const { baseUrl } = getConfig(readFromStorage);
+    const { baseUrl } = await getConfig(readFromStorage);
     if (!baseUrl) {
       return res.json({ status: 'not_configured' });
     }
@@ -131,8 +131,8 @@ module.exports = function registerRoutes(router, context) {
 
   // --- Helper to get baseUrl for proxy ---
 
-  function upstream(upstreamPath, req, res) {
-    const { baseUrl } = getConfig(readFromStorage);
+  async function upstream(upstreamPath, req, res) {
+    const { baseUrl } = await getConfig(readFromStorage);
     return proxyGet(baseUrl, upstreamPath, req.query, res);
   }
 
@@ -160,8 +160,8 @@ module.exports = function registerRoutes(router, context) {
    *       503:
    *         description: AIPCC Dashboard API not configured
    */
-  router.get('/products/:key', function(req, res) {
-    upstream(`/products/${encodeURIComponent(req.params.key)}`, req, res);
+  router.get('/products/:key', async function(req, res) {
+    await upstream(`/products/${encodeURIComponent(req.params.key)}`, req, res);
   });
 
   /**
@@ -211,8 +211,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Array of Drop objects (key, name, product_key, product_version, git_branch, environments, release_timings, created_at)
    */
-  router.get('/drops', function(req, res) {
-    upstream('/drops', req, res);
+  router.get('/drops', async function(req, res) {
+    await upstream('/drops', req, res);
   });
 
   /**
@@ -235,8 +235,8 @@ module.exports = function registerRoutes(router, context) {
    *       404:
    *         description: Drop not found
    */
-  router.get('/drops/:key', function(req, res) {
-    upstream(`/drops/${encodeURIComponent(req.params.key)}`, req, res);
+  router.get('/drops/:key', async function(req, res) {
+    await upstream(`/drops/${encodeURIComponent(req.params.key)}`, req, res);
   });
 
   /**
@@ -259,8 +259,8 @@ module.exports = function registerRoutes(router, context) {
    *       404:
    *         description: Drop not found
    */
-  router.get('/drops/:key/changelog', function(req, res) {
-    upstream(`/drops/${encodeURIComponent(req.params.key)}/changelog`, req, res);
+  router.get('/drops/:key/changelog', async function(req, res) {
+    await upstream(`/drops/${encodeURIComponent(req.params.key)}/changelog`, req, res);
   });
 
   /**
@@ -283,8 +283,8 @@ module.exports = function registerRoutes(router, context) {
    *       404:
    *         description: Drop not found
    */
-  router.get('/drops/:key/metrics', function(req, res) {
-    upstream(`/drops/${encodeURIComponent(req.params.key)}/metrics`, req, res);
+  router.get('/drops/:key/metrics', async function(req, res) {
+    await upstream(`/drops/${encodeURIComponent(req.params.key)}/metrics`, req, res);
   });
 
   /**
@@ -305,8 +305,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Array of series name strings
    */
-  router.get('/series', function(req, res) {
-    upstream('/series', req, res);
+  router.get('/series', async function(req, res) {
+    await upstream('/series', req, res);
   });
 
   /**
@@ -329,8 +329,8 @@ module.exports = function registerRoutes(router, context) {
    *       400:
    *         description: Too many keys (over 50)
    */
-  router.get('/artifacts/build-sequences', function(req, res) {
-    upstream('/artifacts/build-sequences', req, res);
+  router.get('/artifacts/build-sequences', async function(req, res) {
+    await upstream('/artifacts/build-sequences', req, res);
   });
 
   /**
@@ -344,8 +344,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Object with product_keys (string[]) and variants (string[])
    */
-  router.get('/artifacts/wheels-collections/filters', function(req, res) {
-    upstream('/artifacts/wheels-collections/filters', req, res);
+  router.get('/artifacts/wheels-collections/filters', async function(req, res) {
+    await upstream('/artifacts/wheels-collections/filters', req, res);
   });
 
   /**
@@ -391,8 +391,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Array of objects with artifact_key, variant, package_version, created_at
    */
-  router.get('/artifacts/wheels/build-history/:packageName', function(req, res) {
-    upstream(`/artifacts/wheels/build-history/${encodeURIComponent(req.params.packageName)}`, req, res);
+  router.get('/artifacts/wheels/build-history/:packageName', async function(req, res) {
+    await upstream(`/artifacts/wheels/build-history/${encodeURIComponent(req.params.packageName)}`, req, res);
   });
 
   /**
@@ -436,8 +436,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Array of Artifact objects (key, type, variant, archs, environments, commit, created_at, sha_digest, labels, konflux_data, constraints_file, build_sequence_summary)
    */
-  router.get('/artifacts', function(req, res) {
-    upstream('/artifacts', req, res);
+  router.get('/artifacts', async function(req, res) {
+    await upstream('/artifacts', req, res);
   });
 
   /**
@@ -460,8 +460,8 @@ module.exports = function registerRoutes(router, context) {
    *       404:
    *         description: Artifact not found
    */
-  router.get('/artifacts/:key', function(req, res) {
-    upstream(`/artifacts/${encodeURIComponent(req.params.key)}`, req, res);
+  router.get('/artifacts/:key', async function(req, res) {
+    await upstream(`/artifacts/${encodeURIComponent(req.params.key)}`, req, res);
   });
 
   /**
@@ -484,8 +484,8 @@ module.exports = function registerRoutes(router, context) {
    *       404:
    *         description: Artifact not found
    */
-  router.get('/artifacts/:key/wheels', function(req, res) {
-    upstream(`/artifacts/${encodeURIComponent(req.params.key)}/wheels`, req, res);
+  router.get('/artifacts/:key/wheels', async function(req, res) {
+    await upstream(`/artifacts/${encodeURIComponent(req.params.key)}/wheels`, req, res);
   });
 
   /**
@@ -510,8 +510,8 @@ module.exports = function registerRoutes(router, context) {
    *       404:
    *         description: Artifact not found
    */
-  router.get('/artifacts/:key/containers', function(req, res) {
-    upstream(`/artifacts/${encodeURIComponent(req.params.key)}/containers`, req, res);
+  router.get('/artifacts/:key/containers', async function(req, res) {
+    await upstream(`/artifacts/${encodeURIComponent(req.params.key)}/containers`, req, res);
   });
 
   // --- Package Analysis ---
@@ -527,12 +527,12 @@ module.exports = function registerRoutes(router, context) {
     return _jira;
   }
 
-  function rebuildPackageIndex() {
-    const files = storage.listStorageFiles(PKG_STORAGE_PREFIX + '/');
+  async function rebuildPackageIndex() {
+    const files = await storage.listStorageFiles(PKG_STORAGE_PREFIX + '/');
     const index = [];
     for (const file of files) {
       if (file === 'index.json' || !file.endsWith('.json')) continue;
-      const report = readFromStorage(`${PKG_STORAGE_PREFIX}/${file}`);
+      const report = await readFromStorage(`${PKG_STORAGE_PREFIX}/${file}`);
       if (report && report.summary) {
         index.push({
           report_date: report.report_date,
@@ -547,9 +547,9 @@ module.exports = function registerRoutes(router, context) {
 
   async function generatePackageReport(reportDate) {
     const report = await buildReport(getJira(), { reportDate });
-    writeToStorage(`${PKG_STORAGE_PREFIX}/${report.report_date}.json`, report);
-    const index = rebuildPackageIndex();
-    writeToStorage(PKG_INDEX_PATH, index);
+    await writeToStorage(`${PKG_STORAGE_PREFIX}/${report.report_date}.json`, report);
+    const index = await rebuildPackageIndex();
+    await writeToStorage(PKG_INDEX_PATH, index);
     return report;
   }
 
@@ -563,8 +563,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Array of report summaries sorted by date descending
    */
-  router.get('/package-reports', function(req, res) {
-    const index = readFromStorage(PKG_INDEX_PATH);
+  router.get('/package-reports', async function(req, res) {
+    const index = await readFromStorage(PKG_INDEX_PATH);
     res.json(index || []);
   });
 
@@ -580,12 +580,12 @@ module.exports = function registerRoutes(router, context) {
    *       404:
    *         description: No reports available
    */
-  router.get('/package-reports/latest', function(req, res) {
-    const index = readFromStorage(PKG_INDEX_PATH);
+  router.get('/package-reports/latest', async function(req, res) {
+    const index = await readFromStorage(PKG_INDEX_PATH);
     if (!index || index.length === 0) {
       return res.status(404).json({ error: 'No reports available' });
     }
-    const latest = readFromStorage(`${PKG_STORAGE_PREFIX}/${index[0].report_date}.json`);
+    const latest = await readFromStorage(`${PKG_STORAGE_PREFIX}/${index[0].report_date}.json`);
     if (!latest) {
       return res.status(404).json({ error: 'Report file not found' });
     }
@@ -642,12 +642,12 @@ module.exports = function registerRoutes(router, context) {
    *       404:
    *         description: No report for the specified date
    */
-  router.get('/package-reports/:date', function(req, res) {
+  router.get('/package-reports/:date', async function(req, res) {
     const date = req.params.date;
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return res.status(400).json({ error: 'Invalid date format, expected YYYY-MM-DD' });
     }
-    const report = readFromStorage(`${PKG_STORAGE_PREFIX}/${date}.json`);
+    const report = await readFromStorage(`${PKG_STORAGE_PREFIX}/${date}.json`);
     if (!report) {
       return res.status(404).json({ error: `No report for ${date}` });
     }
@@ -689,7 +689,7 @@ module.exports = function registerRoutes(router, context) {
           return new RefreshSkip('Before 6am UTC');
         }
         const today = now.toISOString().slice(0, 10);
-        const existing = readFromStorage(`${PKG_STORAGE_PREFIX}/${today}.json`);
+        const existing = await readFromStorage(`${PKG_STORAGE_PREFIX}/${today}.json`);
         if (existing) {
           return new RefreshSkip('Report already exists for ' + today);
         }
@@ -927,7 +927,7 @@ module.exports = function registerRoutes(router, context) {
 
   if (context.registerDiagnostics) {
     context.registerDiagnostics(async function() {
-      const index = readFromStorage(PKG_INDEX_PATH);
+      const index = await readFromStorage(PKG_INDEX_PATH);
       const hasReports = index && index.length > 0;
       return {
         status: hasReports ? 'ok' : 'no_data',

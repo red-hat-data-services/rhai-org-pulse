@@ -12,14 +12,14 @@ function makeStorage(data) {
 }
 
 describe('getConfig', () => {
-  it('returns default config when storage is empty', () => {
-    const config = getConfig(makeStorage())
+  it('returns default config when storage is empty', async () => {
+    const config = await getConfig(makeStorage())
     expect(config.fieldMapping).toEqual(DEFAULT_CONFIG.fieldMapping)
     expect(config.customFieldIds).toEqual(DEFAULT_CONFIG.customFieldIds)
     expect(config.releases).toEqual({})
   })
 
-  it('merges stored config with defaults', () => {
+  it('merges stored config with defaults', async () => {
     const readFromStorage = makeStorage({
       'releases/planning/config.json': {
         releases: { '3.5': { release: '3.5' } },
@@ -27,30 +27,30 @@ describe('getConfig', () => {
       }
     })
 
-    const config = getConfig(readFromStorage)
+    const config = await getConfig(readFromStorage)
     expect(config.releases['3.5']).toBeDefined()
     expect(config.fieldMapping.team).toBe('customfield_12345')
     expect(config.fieldMapping.rfeLinkType).toBe('is required by')
     expect(config.customFieldIds.targetVersion).toBe('customfield_10855')
   })
 
-  it('handles non-object storage values', () => {
+  it('handles non-object storage values', async () => {
     const readFromStorage = makeStorage({ 'releases/planning/config.json': 'invalid' })
-    const config = getConfig(readFromStorage)
+    const config = await getConfig(readFromStorage)
     expect(config).toEqual(DEFAULT_CONFIG)
   })
 })
 
 describe('loadBigRocks', () => {
-  it('returns empty array when release not found', () => {
+  it('returns empty array when release not found', async () => {
     const readFromStorage = makeStorage({
       'releases/planning/config.json': { releases: {} }
     })
-    const rocks = loadBigRocks(readFromStorage, '3.5')
+    const rocks = await loadBigRocks(readFromStorage, '3.5')
     expect(rocks).toEqual([])
   })
 
-  it('returns big rocks from per-release file', () => {
+  it('returns big rocks from per-release file', async () => {
     const readFromStorage = makeStorage({
       'releases/planning/config.json': { releases: { '3.5': { release: '3.5' } } },
       'releases/planning/releases/3.5.json': {
@@ -62,7 +62,7 @@ describe('loadBigRocks', () => {
       }
     })
 
-    const rocks = loadBigRocks(readFromStorage, '3.5')
+    const rocks = await loadBigRocks(readFromStorage, '3.5')
     expect(rocks).toHaveLength(2)
     expect(rocks[0].name).toBe('MaaS')
     expect(rocks[1].name).toBe('Gen AI Studio')
@@ -70,30 +70,30 @@ describe('loadBigRocks', () => {
 })
 
 describe('loadFieldMapping', () => {
-  it('returns default mapping when storage is empty', () => {
-    const mapping = loadFieldMapping(makeStorage())
+  it('returns default mapping when storage is empty', async () => {
+    const mapping = await loadFieldMapping(makeStorage())
     expect(mapping.rfeLinkType).toBe('is required by')
   })
 
-  it('returns stored mapping', () => {
+  it('returns stored mapping', async () => {
     const readFromStorage = makeStorage({
       'releases/planning/config.json': {
         fieldMapping: { team: 'customfield_99999', rfeLinkType: 'blocks' }
       }
     })
-    const mapping = loadFieldMapping(readFromStorage)
+    const mapping = await loadFieldMapping(readFromStorage)
     expect(mapping.team).toBe('customfield_99999')
     expect(mapping.rfeLinkType).toBe('blocks')
   })
 })
 
 describe('getConfiguredReleases', () => {
-  it('returns empty array when no releases configured', () => {
-    const releases = getConfiguredReleases(makeStorage())
+  it('returns empty array when no releases configured', async () => {
+    const releases = await getConfiguredReleases(makeStorage())
     expect(releases).toEqual([])
   })
 
-  it('returns release list with rock counts from per-release files', () => {
+  it('returns release list with rock counts from per-release files', async () => {
     const readFromStorage = makeStorage({
       'releases/planning/config.json': {
         releases: { '3.5': { release: '3.5' }, '3.4': { release: '3.4' } }
@@ -107,7 +107,7 @@ describe('getConfiguredReleases', () => {
         bigRocks: [{ name: 'C' }]
       }
     })
-    const releases = getConfiguredReleases(readFromStorage)
+    const releases = await getConfiguredReleases(readFromStorage)
     expect(releases).toHaveLength(2)
 
     const r35 = releases.find(r => r.version === '3.5')

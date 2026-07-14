@@ -11,10 +11,10 @@ function makeStorage(data) {
     for (var k in data) store[k] = data[k]
   }
   return {
-    readFromStorage: function(key) {
+    readFromStorage: async function(key) {
       return store[key] ? JSON.parse(JSON.stringify(store[key])) : null
     },
-    writeToStorage: function(key, value) {
+    writeToStorage: async function(key, value) {
       store[key] = value
     },
     _store: store

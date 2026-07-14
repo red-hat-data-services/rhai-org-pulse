@@ -3,7 +3,7 @@ const { logAudit } = require('../planning/audit-log');
 
 const COOLDOWN_MS = 5 * 60 * 1000;
 
-module.exports = function registerDraftPlanRoutes(router, context) {
+module.exports = async function registerDraftPlanRoutes(router, context) {
   const { storage, requireAuth, requireScope, secrets, registerRefresh, isRefreshRunning } = context;
 
   let fetchInProgress = false;
@@ -22,13 +22,13 @@ module.exports = function registerDraftPlanRoutes(router, context) {
     return null;
   }
 
-  function loadConfig() {
-    var stored = storage.readFromStorage(DATA_PREFIX + '/config.json');
+  async function loadConfig() {
+    var stored = await storage.readFromStorage(DATA_PREFIX + '/config.json');
     return Object.assign({}, DEFAULT_CONFIG, stored || {});
   }
 
-  function saveConfig(config) {
-    storage.writeToStorage(DATA_PREFIX + '/config.json', config);
+  async function saveConfig(config) {
+    await storage.writeToStorage(DATA_PREFIX + '/config.json', config);
   }
 
   function validateConfig(input) {
@@ -60,7 +60,7 @@ module.exports = function registerDraftPlanRoutes(router, context) {
     if (!token) {
       return { status: 'error', message: 'No GitLab token configured. Set DRAFT_PLANS_GITLAB_TOKEN or GITLAB_TOKEN.' };
     }
-    var config = loadConfig();
+    var config = await loadConfig();
     if (!config.enabled) {
       return { status: 'skipped', message: 'Draft plans fetch is disabled' };
     }
@@ -75,7 +75,7 @@ module.exports = function registerDraftPlanRoutes(router, context) {
       return result;
     } catch (err) {
       var errorResult = { status: 'error', message: err.message, timestamp: new Date().toISOString() };
-      storage.writeToStorage(DATA_PREFIX + '/last-fetch.json', errorResult);
+      await storage.writeToStorage(DATA_PREFIX + '/last-fetch.json', errorResult);
       refreshState = { running: false, lastResult: errorResult };
       throw err;
     } finally {
@@ -100,7 +100,7 @@ module.exports = function registerDraftPlanRoutes(router, context) {
    *       200:
    *         description: Draft plan releases with health data
    */
-  router.get('/releases', requireAuth, requireScope('releases:read'), function(req, res) {
+  router.get('/releases', requireAuth, requireScope('releases:read'), async function(req, res) {
     var productFilter = req.query.product || null;
     var results = [];
 
@@ -108,8 +108,8 @@ module.exports = function registerDraftPlanRoutes(router, context) {
       var product = KNOWN_PRODUCTS[i];
       if (productFilter && product !== productFilter) continue;
 
-      var plan = storage.readFromStorage(DATA_PREFIX + '/' + product + '/release-plan.json');
-      var health = storage.readFromStorage(DATA_PREFIX + '/' + product + '/release-health.json');
+      var plan = await storage.readFromStorage(DATA_PREFIX + '/' + product + '/release-plan.json');
+      var health = await storage.readFromStorage(DATA_PREFIX + '/' + product + '/release-health.json');
 
       if (!plan && !health) continue;
 
@@ -146,7 +146,7 @@ module.exports = function registerDraftPlanRoutes(router, context) {
       });
     }
 
-    var lastFetch = storage.readFromStorage(DATA_PREFIX + '/last-fetch.json');
+    var lastFetch = await storage.readFromStorage(DATA_PREFIX + '/last-fetch.json');
     res.json({
       fetchedAt: lastFetch ? lastFetch.timestamp : null,
       products: results
@@ -192,14 +192,14 @@ module.exports = function registerDraftPlanRoutes(router, context) {
       return res.status(500).json({ status: 'error', message: 'No GitLab token configured. Set DRAFT_PLANS_GITLAB_TOKEN or GITLAB_TOKEN.' });
     }
 
-    var config = loadConfig();
+    var config = await loadConfig();
     if (!config.enabled) {
       return res.status(400).json({ status: 'error', message: 'Draft plans fetch is disabled. Enable it in config.' });
     }
 
     try {
       var result = await doFetch();
-      logAudit(storage.readFromStorage, storage.writeToStorage, {
+      await logAudit(storage.readFromStorage, storage.writeToStorage, {
         domain: 'draft-plans',
         action: 'manual_refresh',
         user: req.userEmail || 'unknown',
@@ -222,8 +222,8 @@ module.exports = function registerDraftPlanRoutes(router, context) {
    *       200:
    *         description: Refresh status
    */
-  router.get('/refresh/status', requireAuth, requireScope('releases:read'), function(req, res) {
-    var lastFetch = storage.readFromStorage(DATA_PREFIX + '/last-fetch.json');
+  router.get('/refresh/status', requireAuth, requireScope('releases:read'), async function(req, res) {
+    var lastFetch = await storage.readFromStorage(DATA_PREFIX + '/last-fetch.json');
     res.json({
       running: refreshState.running,
       startedAt: refreshState.startedAt || null,
@@ -242,8 +242,8 @@ module.exports = function registerDraftPlanRoutes(router, context) {
    *       200:
    *         description: Current configuration with token status
    */
-  router.get('/config', requireAuth, requireScope('releases:write'), function(req, res) {
-    var config = loadConfig();
+  router.get('/config', requireAuth, requireScope('releases:write'), async function(req, res) {
+    var config = await loadConfig();
     res.json(Object.assign({}, config, {
       tokenConfigured: !!getToken(),
       tokenSource: getTokenSource()
@@ -265,11 +265,11 @@ module.exports = function registerDraftPlanRoutes(router, context) {
   router.post('/config', requireAuth, requireScope('releases:write'), async function(req, res) {
     try {
       validateConfig(req.body);
-      var oldConfig = loadConfig();
+      var oldConfig = await loadConfig();
       var config = Object.assign({}, oldConfig, req.body);
-      saveConfig(config);
+      await saveConfig(config);
 
-      logAudit(storage.readFromStorage, storage.writeToStorage, {
+      await logAudit(storage.readFromStorage, storage.writeToStorage, {
         domain: 'draft-plans',
         action: 'config_save',
         user: req.userEmail || 'unknown',
@@ -319,7 +319,7 @@ module.exports = function registerDraftPlanRoutes(router, context) {
    *       404:
    *         description: No data found for version
    */
-  router.get('/:version', requireAuth, requireScope('releases:read'), function(req, res) {
+  router.get('/:version', requireAuth, requireScope('releases:read'), async function(req, res) {
     var version = req.params.version;
     if (!/^[a-zA-Z0-9 ._-]{1,50}$/.test(version)) {
       return res.status(400).json({ error: 'Invalid version format' });
@@ -332,7 +332,7 @@ module.exports = function registerDraftPlanRoutes(router, context) {
       var product = KNOWN_PRODUCTS[i];
       if (productFilter && product !== productFilter) continue;
 
-      var plan = storage.readFromStorage(DATA_PREFIX + '/' + product + '/release-plan.json');
+      var plan = await storage.readFromStorage(DATA_PREFIX + '/' + product + '/release-plan.json');
       if (!plan || !Array.isArray(plan.releases)) continue;
 
       var match = null;
@@ -384,7 +384,7 @@ module.exports = function registerDraftPlanRoutes(router, context) {
    *       404:
    *         description: No health data found for version
    */
-  router.get('/:version/health', requireAuth, requireScope('releases:read'), function(req, res) {
+  router.get('/:version/health', requireAuth, requireScope('releases:read'), async function(req, res) {
     var version = req.params.version;
     if (!/^[a-zA-Z0-9 ._-]{1,50}$/.test(version)) {
       return res.status(400).json({ error: 'Invalid version format' });
@@ -397,7 +397,7 @@ module.exports = function registerDraftPlanRoutes(router, context) {
       var product = KNOWN_PRODUCTS[i];
       if (productFilter && product !== productFilter) continue;
 
-      var health = storage.readFromStorage(DATA_PREFIX + '/' + product + '/release-health.json');
+      var health = await storage.readFromStorage(DATA_PREFIX + '/' + product + '/release-health.json');
       if (!health || !Array.isArray(health.releases)) continue;
 
       var match = null;
@@ -428,7 +428,7 @@ module.exports = function registerDraftPlanRoutes(router, context) {
   // ─── registerRefresh ──────────────────────────────────────────────
 
   if (registerRefresh) {
-    var initialConfig = loadConfig();
+    var initialConfig = await loadConfig();
 
     registerRefresh('draft-plans', {
       order: 80,
@@ -436,7 +436,7 @@ module.exports = function registerDraftPlanRoutes(router, context) {
       description: 'Fetches draft release plan data from the release-planning-data GitLab repository.',
       cadence: initialConfig.refreshIntervalHours + 'h',
       handler: async function() {
-        var config = loadConfig();
+        var config = await loadConfig();
         if (!config.enabled) {
           return { status: 'skipped', message: 'Draft plans fetch is disabled' };
         }
@@ -461,8 +461,8 @@ module.exports = function registerDraftPlanRoutes(router, context) {
 
   if (context.registerDiagnostics) {
     context.registerDiagnostics(async function() {
-      var lastFetch = storage.readFromStorage(DATA_PREFIX + '/last-fetch.json');
-      var config = loadConfig();
+      var lastFetch = await storage.readFromStorage(DATA_PREFIX + '/last-fetch.json');
+      var config = await loadConfig();
       return {
         lastFetchStatus: lastFetch ? lastFetch.status : null,
         lastFetchTimestamp: lastFetch ? lastFetch.timestamp : null,

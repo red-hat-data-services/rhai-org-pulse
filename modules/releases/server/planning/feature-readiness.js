@@ -104,14 +104,14 @@ function deriveHumanReviewStatusFromLabels(labels) {
 }
 
 
-function loadExecutionData(readFromStorage) {
-  var execIndexData = loadIndex(readFromStorage)
+async function loadExecutionData(readFromStorage) {
+  var execIndexData = await loadIndex(readFromStorage)
   var aiReviewMap = {}
   var execFeatures = execIndexData.features || []
   for (var ari = 0; ari < execFeatures.length; ari++) {
     var arEntry = execFeatures[ari]
     if (arEntry.key && arEntry.aiReview) {
-      var fullFeature = readFromStorage('releases/execution/features/' + arEntry.key + '.json')
+      var fullFeature = await readFromStorage('releases/execution/features/' + arEntry.key + '.json')
       if (fullFeature && fullFeature.aiReview) {
         aiReviewMap[arEntry.key] = {
           latest: {
@@ -145,13 +145,13 @@ function loadExecutionData(readFromStorage) {
   }
 }
 
-function loadCacheIndexes(readFromStorage, listStorageFiles) {
+async function loadCacheIndexes(readFromStorage, listStorageFiles) {
   var candidateIndex = new Map()
   var healthIndex = new Map()
   var teamIndex = new Map()
   var hygieneIndex = new Map()
 
-  var registry = readFromStorage('releases/registry.json')
+  var registry = await readFromStorage('releases/registry.json')
   var registryReleases = (registry && registry.releases) || []
 
   var versionAliasMap = {}
@@ -163,7 +163,7 @@ function loadCacheIndexes(readFromStorage, listStorageFiles) {
     }
   }
 
-  var configuredVersions = getConfiguredReleases(readFromStorage).map(function(r) { return r.version })
+  var configuredVersions = (await getConfiguredReleases(readFromStorage)).map(function(r) { return r.version })
 
   for (var cvi = 0; cvi < configuredVersions.length; cvi++) {
     var cv = configuredVersions[cvi]
@@ -184,7 +184,7 @@ function loadCacheIndexes(readFromStorage, listStorageFiles) {
 
   for (var vi = 0; vi < configuredVersions.length; vi++) {
     var ver = configuredVersions[vi]
-    var candidateCache = readFromStorage('releases/planning/candidates-cache-' + ver + '.json')
+    var candidateCache = await readFromStorage('releases/planning/candidates-cache-' + ver + '.json')
     if (candidateCache && candidateCache.data && Array.isArray(candidateCache.data.features)) {
       var candidates = candidateCache.data.features
       for (var ci = 0; ci < candidates.length; ci++) {
@@ -193,7 +193,7 @@ function loadCacheIndexes(readFromStorage, listStorageFiles) {
       }
     }
 
-    var healthCache = readFromStorage('releases/planning/health-cache-' + ver + '-all.json')
+    var healthCache = await readFromStorage('releases/planning/health-cache-' + ver + '-all.json')
     if (healthCache && Array.isArray(healthCache.features)) {
       var hf = healthCache.features
       for (var hi = 0; hi < hf.length; hi++) {
@@ -202,12 +202,12 @@ function loadCacheIndexes(readFromStorage, listStorageFiles) {
       }
     }
 
-    var hygieneData = readFromStorage('releases/hygiene/features-' + ver + '.json')
+    var hygieneData = await readFromStorage('releases/hygiene/features-' + ver + '.json')
     if (!hygieneData && versionAliasMap[ver]) {
       var hygieneAliases = versionAliasMap[ver]
       for (var ali = 0; ali < hygieneAliases.length && !hygieneData; ali++) {
         if (hygieneAliases[ali] !== ver) {
-          hygieneData = readFromStorage('releases/hygiene/features-' + hygieneAliases[ali] + '.json')
+          hygieneData = await readFromStorage('releases/hygiene/features-' + hygieneAliases[ali] + '.json')
         }
       }
     }
@@ -225,12 +225,12 @@ function loadCacheIndexes(readFromStorage, listStorageFiles) {
 
   if (listStorageFiles) {
     var hygieneFiles = []
-    try { hygieneFiles = listStorageFiles('releases/hygiene') } catch { /* directory may not exist */ }
+    try { hygieneFiles = await listStorageFiles('releases/hygiene') } catch { /* directory may not exist */ }
     for (var hfi = 0; hfi < hygieneFiles.length; hfi++) {
       var hfMatch = hygieneFiles[hfi].match(/^features-(.+)\.json$/)
       if (!hfMatch) continue
       try {
-        var hfData = readFromStorage('releases/hygiene/' + hygieneFiles[hfi])
+        var hfData = await readFromStorage('releases/hygiene/' + hygieneFiles[hfi])
         if (!hfData || !hfData.features) continue
         var hfKeys = Object.keys(hfData.features)
         for (var hfki = 0; hfki < hfKeys.length; hfki++) {
@@ -465,9 +465,9 @@ function mergeFeatureData(key, jiraFeatures, aiReviewMap, candidateIndex, health
   }
 }
 
-function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) {
-  var execData = loadExecutionData(readFromStorage)
-  var cacheData = loadCacheIndexes(readFromStorage, listStorageFiles)
+async function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) {
+  var execData = await loadExecutionData(readFromStorage)
+  var cacheData = await loadCacheIndexes(readFromStorage, listStorageFiles)
 
   var execMap = new Map()
   for (var emi = 0; emi < execData.execFeatures.length; emi++) {
@@ -487,7 +487,7 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
 
   var bigRockPriorityMap = new Map()
   for (var bvi = 0; bvi < cacheData.configuredVersions.length; bvi++) {
-    var bigRocks = loadBigRocks(readFromStorage, cacheData.configuredVersions[bvi])
+    var bigRocks = await loadBigRocks(readFromStorage, cacheData.configuredVersions[bvi])
     for (var bri = 0; bri < bigRocks.length; bri++) {
       var rockName = bigRocks[bri].name
       if (!rockName) continue

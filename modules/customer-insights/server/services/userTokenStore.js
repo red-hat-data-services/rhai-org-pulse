@@ -23,7 +23,7 @@ function createUserTokenStore(storageBackend) {
    * @returns {Promise<object|null>}
    */
   async function getTokens(userEmail) {
-    const allTokens = readFromStorage(TOKEN_KEY) || {}
+    const allTokens = await readFromStorage(TOKEN_KEY) || {}
     return allTokens[userEmail] || null
   }
 
@@ -33,14 +33,14 @@ function createUserTokenStore(storageBackend) {
    * @param {object} tokens
    */
   async function saveTokens(userEmail, tokens) {
-    const allTokens = readFromStorage(TOKEN_KEY) || {}
+    const allTokens = await readFromStorage(TOKEN_KEY) || {}
 
     allTokens[userEmail] = {
       ...tokens,
       updatedAt: new Date().toISOString()
     }
 
-    writeToStorage(TOKEN_KEY, allTokens)
+    await writeToStorage(TOKEN_KEY, allTokens)
   }
 
   /**
@@ -48,9 +48,9 @@ function createUserTokenStore(storageBackend) {
    * @param {string} userEmail
    */
   async function deleteTokens(userEmail) {
-    const allTokens = readFromStorage(TOKEN_KEY) || {}
+    const allTokens = await readFromStorage(TOKEN_KEY) || {}
     delete allTokens[userEmail]
-    writeToStorage(TOKEN_KEY, allTokens)
+    await writeToStorage(TOKEN_KEY, allTokens)
   }
 
   return {

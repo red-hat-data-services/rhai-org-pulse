@@ -14,11 +14,11 @@ module.exports = function registerRoadmapRoutes(router, context) {
 
   // Lazy initialization of service account storage
   let sheetsStorage = null
-  function getStorage() {
+  async function getStorage() {
     if (isDemoMode) return null
     if (!sheetsStorage) {
       try {
-        sheetsStorage = createStorage(context)
+        sheetsStorage = await createStorage(context)
       } catch {
         return null
       }
@@ -70,7 +70,7 @@ module.exports = function registerRoadmapRoutes(router, context) {
 
       if (isDemoMode) {
         // Return demo fixtures
-        let roadmap = readFromStorage('customer-insights/roadmap.json')
+        let roadmap = await readFromStorage('customer-insights/roadmap.json')
         if (!roadmap) {
           return res.status(404).json({ error: 'Roadmap fixtures not found' })
         }
@@ -92,7 +92,7 @@ module.exports = function registerRoadmapRoutes(router, context) {
       }
 
       // Check if roadmap has been generated
-      const roadmap = readFromStorage('customer-insights/roadmap.json')
+      const roadmap = await readFromStorage('customer-insights/roadmap.json')
       if (!roadmap) {
         // Return empty structure
         return res.json({
@@ -153,7 +153,7 @@ module.exports = function registerRoadmapRoutes(router, context) {
       let interactions = []
 
       if (!isDemoMode) {
-        const store = getStorage()
+        const store = await getStorage()
         if (store) {
           interactions = await store.getAll(component ? { component } : {})
         }
@@ -239,7 +239,7 @@ JSON:`
         component: component || 'all'
       }
 
-      writeToStorage('customer-insights/roadmap.json', roadmap)
+      await writeToStorage('customer-insights/roadmap.json', roadmap)
 
       res.json(roadmap)
     } catch (error) {
@@ -280,7 +280,7 @@ JSON:`
       const { actionId } = req.body
 
       // Load current roadmap
-      const roadmap = readFromStorage('customer-insights/roadmap.json')
+      const roadmap = await readFromStorage('customer-insights/roadmap.json')
       if (!roadmap?.aiRecommendations?.quickActions) {
         return res.status(404).json({ error: 'No recommendations found' })
       }
@@ -324,7 +324,7 @@ JSON:`
 
         // Remove this action from recommendations
         roadmap.aiRecommendations.quickActions = roadmap.aiRecommendations.quickActions.filter(a => a.id !== actionId)
-        writeToStorage('customer-insights/roadmap.json', roadmap)
+        await writeToStorage('customer-insights/roadmap.json', roadmap)
 
         res.json({ success: true, message: `Updated ${action.rfeKey}` })
       } else {
@@ -360,7 +360,7 @@ JSON:`
       const { suggestionId } = req.body
 
       // Load current roadmap
-      const roadmap = readFromStorage('customer-insights/roadmap.json')
+      const roadmap = await readFromStorage('customer-insights/roadmap.json')
       if (!roadmap?.aiRecommendations?.suggestedRFEs) {
         return res.status(404).json({ error: 'No suggestions found' })
       }

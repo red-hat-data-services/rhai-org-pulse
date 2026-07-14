@@ -69,7 +69,7 @@ module.exports = function registerRoutes(router, context) {
     try {
       var since = req.query.since || '2026-04-01'
 
-      var overrides = storage.readFromStorage('okr-hub/on-time-overrides.json')
+      var overrides = await storage.readFromStorage('okr-hub/on-time-overrides.json')
       var overrideMap = {}
       var removedIds = {}
       var customReleases = []
@@ -82,7 +82,7 @@ module.exports = function registerRoutes(router, context) {
         }
       }
 
-      var registry = storage.readFromStorage('releases/registry.json')
+      var registry = await storage.readFromStorage('releases/registry.json')
       var registryReleases = (registry && Array.isArray(registry.releases)) ? registry.releases : []
 
       var candidates = []
@@ -222,8 +222,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Override entries
    */
-  router.get('/reports/on-time-releases/overrides', requireScope('okr-hub:read'), function(req, res) {
-    var saved = storage.readFromStorage('okr-hub/on-time-overrides.json')
+  router.get('/reports/on-time-releases/overrides', requireScope('okr-hub:read'), async function(req, res) {
+    var saved = await storage.readFromStorage('okr-hub/on-time-overrides.json')
     res.json(saved || { releases: [] })
   })
 
@@ -242,13 +242,13 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Saved
    */
-  router.put('/reports/on-time-releases/overrides', requireScope('okr-hub:write'), function(req, res) {
+  router.put('/reports/on-time-releases/overrides', requireScope('okr-hub:write'), async function(req, res) {
     try {
       var body = req.body
       if (!body || !Array.isArray(body.releases)) {
         return res.status(400).json({ error: 'Invalid payload: requires releases array' })
       }
-      storage.writeToStorage('okr-hub/on-time-overrides.json', body)
+      await storage.writeToStorage('okr-hub/on-time-overrides.json', body)
       res.json({ ok: true })
     } catch (err) {
       console.error('[okr-hub] on-time-overrides save error:', err)
@@ -295,8 +295,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: CVE SLA dataset
    */
-  router.get('/reports/cve-sla', requireScope('okr-hub:read'), function(req, res) {
-    var saved = storage.readFromStorage('okr-hub/cve-sla-data.json')
+  router.get('/reports/cve-sla', requireScope('okr-hub:read'), async function(req, res) {
+    var saved = await storage.readFromStorage('okr-hub/cve-sla-data.json')
     if (saved && saved.products && saved.months) {
       return res.json(saved)
     }
@@ -318,13 +318,13 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Saved successfully
    */
-  router.put('/reports/cve-sla', requireScope('okr-hub:write'), function(req, res) {
+  router.put('/reports/cve-sla', requireScope('okr-hub:write'), async function(req, res) {
     try {
       var body = req.body
       if (!body || !Array.isArray(body.products) || !body.months) {
         return res.status(400).json({ error: 'Invalid payload: requires products array and months object' })
       }
-      storage.writeToStorage('okr-hub/cve-sla-data.json', body)
+      await storage.writeToStorage('okr-hub/cve-sla-data.json', body)
       res.json({ ok: true })
     } catch (err) {
       console.error('[okr-hub] cve-sla save error:', err)
@@ -609,8 +609,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Support case data by quarter and product
    */
-  router.get('/reports/support-cases', requireScope('okr-hub:read'), function(req, res) {
-    var saved = storage.readFromStorage('okr-hub/support-case-data.json')
+  router.get('/reports/support-cases', requireScope('okr-hub:read'), async function(req, res) {
+    var saved = await storage.readFromStorage('okr-hub/support-case-data.json')
     if (saved && saved.products && saved.quarters) {
       return res.json(saved)
     }
@@ -632,13 +632,13 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Saved
    */
-  router.put('/reports/support-cases', requireScope('okr-hub:write'), function(req, res) {
+  router.put('/reports/support-cases', requireScope('okr-hub:write'), async function(req, res) {
     try {
       var body = req.body
       if (!body || !Array.isArray(body.products) || !body.quarters) {
         return res.status(400).json({ error: 'Invalid payload: requires products array and quarters object' })
       }
-      storage.writeToStorage('okr-hub/support-case-data.json', body)
+      await storage.writeToStorage('okr-hub/support-case-data.json', body)
       res.json({ ok: true })
     } catch (err) {
       console.error('[okr-hub] support-cases save error:', err)
@@ -656,8 +656,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Version configuration per release family
    */
-  router.get('/reports/90day-tracking-config', requireScope('okr-hub:read'), function(req, res) {
-    var saved = storage.readFromStorage('okr-hub/90day-tracking-config.json')
+  router.get('/reports/90day-tracking-config', requireScope('okr-hub:read'), async function(req, res) {
+    var saved = await storage.readFromStorage('okr-hub/90day-tracking-config.json')
     if (saved && Array.isArray(saved.releases)) {
       return res.json(saved)
     }
@@ -679,13 +679,13 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Saved
    */
-  router.put('/reports/90day-tracking-config', requireScope('okr-hub:write'), function(req, res) {
+  router.put('/reports/90day-tracking-config', requireScope('okr-hub:write'), async function(req, res) {
     try {
       var body = req.body
       if (!body || !Array.isArray(body.releases)) {
         return res.status(400).json({ error: 'Invalid payload: requires releases array' })
       }
-      storage.writeToStorage('okr-hub/90day-tracking-config.json', body)
+      await storage.writeToStorage('okr-hub/90day-tracking-config.json', body)
       res.json({ ok: true })
     } catch (err) {
       console.error('[okr-hub] 90day-tracking-config save error:', err)
@@ -703,8 +703,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Release configuration with product versions and dates
    */
-  router.get('/reports/feature-delivery-config', requireScope('okr-hub:read'), function(req, res) {
-    var saved = storage.readFromStorage('okr-hub/feature-delivery-config.json')
+  router.get('/reports/feature-delivery-config', requireScope('okr-hub:read'), async function(req, res) {
+    var saved = await storage.readFromStorage('okr-hub/feature-delivery-config.json')
     if (saved && Array.isArray(saved.releases)) {
       return res.json(saved)
     }
@@ -726,13 +726,13 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Saved
    */
-  router.put('/reports/feature-delivery-config', requireScope('okr-hub:write'), function(req, res) {
+  router.put('/reports/feature-delivery-config', requireScope('okr-hub:write'), async function(req, res) {
     try {
       var body = req.body
       if (!body || !Array.isArray(body.releases)) {
         return res.status(400).json({ error: 'Invalid payload: requires releases array' })
       }
-      storage.writeToStorage('okr-hub/feature-delivery-config.json', body)
+      await storage.writeToStorage('okr-hub/feature-delivery-config.json', body)
       featureDeliveryCache = {}
       res.json({ ok: true })
     } catch (err) {
@@ -753,7 +753,7 @@ module.exports = function registerRoutes(router, context) {
    */
   router.get('/reports/feature-delivery', requireScope('okr-hub:read'), async function(req, res) {
     try {
-      var config = storage.readFromStorage('okr-hub/feature-delivery-config.json')
+      var config = await storage.readFromStorage('okr-hub/feature-delivery-config.json')
       if (!config || !Array.isArray(config.releases) || config.releases.length === 0) {
         return res.json({ releases: [], summary: { committed: 0, delivered: 0, accuracy: 0 } })
       }

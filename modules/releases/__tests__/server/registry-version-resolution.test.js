@@ -6,8 +6,8 @@ const { loadRegistryConfig, saveRegistryConfig, STORAGE_KEY } = require('../../s
 function createMockStorage(initial = {}) {
   const store = { ...initial };
   return {
-    readFromStorage(key) { return store[key] ? JSON.parse(JSON.stringify(store[key])) : null; },
-    writeToStorage(key, data) { store[key] = JSON.parse(JSON.stringify(data)); },
+    async readFromStorage(key) { return store[key] ? JSON.parse(JSON.stringify(store[key])) : null; },
+    async writeToStorage(key, data) { store[key] = JSON.parse(JSON.stringify(data)); },
     _store: store
   };
 }
@@ -234,41 +234,41 @@ describe('matchVersionsToReleases', () => {
 });
 
 describe('registry-config', () => {
-  it('returns defaults when no config exists', () => {
+  it('returns defaults when no config exists', async () => {
     const storage = createMockStorage();
-    const config = loadRegistryConfig(storage);
+    const config = await loadRegistryConfig(storage);
     expect(config.jiraProjects).toEqual(['RHAISTRAT', 'RHOAIENG']);
   });
 
-  it('loads stored config', () => {
+  it('loads stored config', async () => {
     const storage = createMockStorage({
       [STORAGE_KEY]: { jiraProjects: ['PROJ1', 'PROJ2'] }
     });
-    const config = loadRegistryConfig(storage);
+    const config = await loadRegistryConfig(storage);
     expect(config.jiraProjects).toEqual(['PROJ1', 'PROJ2']);
   });
 
-  it('falls back to defaults for malformed data', () => {
+  it('falls back to defaults for malformed data', async () => {
     const storage = createMockStorage({ [STORAGE_KEY]: 'not-object' });
-    const config = loadRegistryConfig(storage);
+    const config = await loadRegistryConfig(storage);
     expect(config.jiraProjects).toEqual(['RHAISTRAT', 'RHOAIENG']);
   });
 
-  it('saves config to storage', () => {
+  it('saves config to storage', async () => {
     const storage = createMockStorage();
-    saveRegistryConfig(storage, { jiraProjects: ['A', 'B'] });
+    await saveRegistryConfig(storage, { jiraProjects: ['A', 'B'] });
     expect(storage._store[STORAGE_KEY].jiraProjects).toEqual(['A', 'B']);
   });
 
-  it('filters out non-string and empty project values', () => {
+  it('filters out non-string and empty project values', async () => {
     const storage = createMockStorage();
-    saveRegistryConfig(storage, { jiraProjects: ['A', '', null, 42, 'B'] });
+    await saveRegistryConfig(storage, { jiraProjects: ['A', '', null, 42, 'B'] });
     expect(storage._store[STORAGE_KEY].jiraProjects).toEqual(['A', 'B']);
   });
 
-  it('throws on non-object config', () => {
+  it('throws on non-object config', async () => {
     const storage = createMockStorage();
-    expect(() => saveRegistryConfig(storage, null)).toThrow('Config must be an object');
+    await expect(saveRegistryConfig(storage, null)).rejects.toThrow('Config must be an object');
   });
 });
 
@@ -458,9 +458,9 @@ describe('migration + auto-resolve pipeline (integration)', () => {
     });
 
     // Step 1: Migration merges .z entries into clean entries, carrying fixVersions
-    const registry = storage.readFromStorage(REGISTRY_FILE);
+    const registry = await storage.readFromStorage(REGISTRY_FILE);
     const migrated = migrateNormalizedIds(registry);
-    storage.writeToStorage(REGISTRY_FILE, registry);
+    await storage.writeToStorage(REGISTRY_FILE, registry);
 
     expect(migrated).toBe(3); // 3 groups merged
     expect(registry.releases).toHaveLength(4); // 7 → 4
@@ -500,9 +500,9 @@ describe('migration + auto-resolve pipeline (integration)', () => {
     });
 
     // Step 1: Migration is a no-op (IDs already clean)
-    const registry = storage.readFromStorage(REGISTRY_FILE);
+    const registry = await storage.readFromStorage(REGISTRY_FILE);
     const migrated = migrateNormalizedIds(registry);
-    storage.writeToStorage(REGISTRY_FILE, registry);
+    await storage.writeToStorage(REGISTRY_FILE, registry);
     expect(migrated).toBe(0);
 
     // Step 2: Auto-resolve populates fixVersions from Jira
@@ -510,7 +510,7 @@ describe('migration + auto-resolve pipeline (integration)', () => {
     expect(result.status).toBe('ok');
     expect(result.resolved).toBe(2);
 
-    const final = storage.readFromStorage(REGISTRY_FILE);
+    const final = await storage.readFromStorage(REGISTRY_FILE);
     expect(final.releases.find(r => r.id === 'rhoai-3.5').fixVersions).toContain('rhoai-3.5');
     expect(final.releases.find(r => r.id === 'rhoai-3.5.ea1').fixVersions).toContain('rhoai-3.5.EA1');
   });
@@ -533,9 +533,9 @@ describe('migration + auto-resolve pipeline (integration)', () => {
     });
 
     // Migration should carry the manual fixVersion
-    const registry = storage.readFromStorage(REGISTRY_FILE);
+    const registry = await storage.readFromStorage(REGISTRY_FILE);
     migrateNormalizedIds(registry);
-    storage.writeToStorage(REGISTRY_FILE, registry);
+    await storage.writeToStorage(REGISTRY_FILE, registry);
 
     const merged = registry.releases.find(r => r.id === 'rhoai-3.5');
     expect(merged.fixVersions).toContain('manual-custom-fv');

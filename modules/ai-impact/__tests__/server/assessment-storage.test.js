@@ -27,31 +27,31 @@ function makeEmptyData() {
 }
 
 describe('readAssessments', () => {
-  it('returns empty state when storage returns null', () => {
-    const read = vi.fn().mockReturnValue(null);
-    const result = readAssessments(read);
+  it('returns empty state when storage returns null', async () => {
+    const read = vi.fn().mockResolvedValue(null);
+    const result = await readAssessments(read);
     expect(result).toEqual({ lastSyncedAt: null, totalAssessed: 0, assessments: {} });
   });
 
-  it('returns empty state when storage returns undefined', () => {
-    const read = vi.fn().mockReturnValue(undefined);
-    expect(readAssessments(read)).toEqual({ lastSyncedAt: null, totalAssessed: 0, assessments: {} });
+  it('returns empty state when storage returns undefined', async () => {
+    const read = vi.fn().mockResolvedValue(undefined);
+    expect(await readAssessments(read)).toEqual({ lastSyncedAt: null, totalAssessed: 0, assessments: {} });
   });
 
-  it('returns empty state when data is malformed (missing assessments key)', () => {
-    const read = vi.fn().mockReturnValue({ lastSyncedAt: 'x' });
-    expect(readAssessments(read)).toEqual({ lastSyncedAt: null, totalAssessed: 0, assessments: {} });
+  it('returns empty state when data is malformed (missing assessments key)', async () => {
+    const read = vi.fn().mockResolvedValue({ lastSyncedAt: 'x' });
+    expect(await readAssessments(read)).toEqual({ lastSyncedAt: null, totalAssessed: 0, assessments: {} });
   });
 
-  it('returns empty state when data is a non-object', () => {
-    const read = vi.fn().mockReturnValue('null');
-    expect(readAssessments(read)).toEqual({ lastSyncedAt: null, totalAssessed: 0, assessments: {} });
+  it('returns empty state when data is a non-object', async () => {
+    const read = vi.fn().mockResolvedValue('null');
+    expect(await readAssessments(read)).toEqual({ lastSyncedAt: null, totalAssessed: 0, assessments: {} });
   });
 
-  it('returns valid data unchanged', () => {
+  it('returns valid data unchanged', async () => {
     const data = { lastSyncedAt: '2026-04-19T12:00:00Z', totalAssessed: 5, assessments: { A: {} } };
-    const read = vi.fn().mockReturnValue(data);
-    expect(readAssessments(read)).toBe(data);
+    const read = vi.fn().mockResolvedValue(data);
+    expect(await readAssessments(read)).toBe(data);
   });
 });
 

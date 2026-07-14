@@ -21,10 +21,10 @@ function makeStorage(data) {
     for (var k in data) store[k] = data[k]
   }
   return {
-    readFromStorage: function(key) {
+    readFromStorage: async function(key) {
       return store[key] ? JSON.parse(JSON.stringify(store[key])) : null
     },
-    writeToStorage: function(key, value) {
+    writeToStorage: async function(key, value) {
       store[key] = value
     },
     _store: store
@@ -217,14 +217,14 @@ describe('computePlanningDeadline', function() {
 })
 
 describe('loadFeaturesFromCandidates', function() {
-  it('returns warning when candidates cache is empty', function() {
+  it('returns warning when candidates cache is empty', async function() {
     var storage = makeStorage({})
-    var result = loadFeaturesFromCandidates(storage.readFromStorage, '3.5', null)
+    var result = await loadFeaturesFromCandidates(storage.readFromStorage, '3.5', null)
     expect(result.features).toEqual([])
     expect(result.warnings[0]).toContain('No candidates found')
   })
 
-  it('maps candidate fields to health feature shape', function() {
+  it('maps candidate fields to health feature shape', async function() {
     var storage = makeStorage({
       'releases/planning/candidates-cache-3.5.json': {
         cachedAt: '2026-04-26T00:00:00Z',
@@ -248,7 +248,7 @@ describe('loadFeaturesFromCandidates', function() {
         }
       }
     })
-    var result = loadFeaturesFromCandidates(storage.readFromStorage, '3.5', null)
+    var result = await loadFeaturesFromCandidates(storage.readFromStorage, '3.5', null)
     expect(result.features).toHaveLength(1)
     var f = result.features[0]
     expect(f.key).toBe('RHOAIENG-1001')
@@ -262,7 +262,7 @@ describe('loadFeaturesFromCandidates', function() {
     expect(f.labels).toEqual(['test', 'feature'])
   })
 
-  it('excludes closed features', function() {
+  it('excludes closed features', async function() {
     var storage = makeStorage({
       'releases/planning/candidates-cache-3.5.json': {
         cachedAt: '2026-04-26T00:00:00Z',
@@ -274,12 +274,12 @@ describe('loadFeaturesFromCandidates', function() {
         }
       }
     })
-    var result = loadFeaturesFromCandidates(storage.readFromStorage, '3.5', null)
+    var result = await loadFeaturesFromCandidates(storage.readFromStorage, '3.5', null)
     expect(result.features).toHaveLength(1)
     expect(result.features[0].key).toBe('T-2')
   })
 
-  it('applies phase filter', function() {
+  it('applies phase filter', async function() {
     var storage = makeStorage({
       'releases/planning/candidates-cache-3.5.json': {
         cachedAt: '2026-04-26T00:00:00Z',
@@ -292,7 +292,7 @@ describe('loadFeaturesFromCandidates', function() {
         }
       }
     })
-    var result = loadFeaturesFromCandidates(storage.readFromStorage, '3.5', 'EA2')
+    var result = await loadFeaturesFromCandidates(storage.readFromStorage, '3.5', 'EA2')
     expect(result.features).toHaveLength(2)
     var keys = result.features.map(function(f) { return f.key })
     expect(keys).toContain('T-2')
@@ -302,14 +302,14 @@ describe('loadFeaturesFromCandidates', function() {
 })
 
 describe('loadFeaturesForRelease', function() {
-  it('returns warning when index is empty', function() {
+  it('returns warning when index is empty', async function() {
     var storage = makeStorage({})
-    var result = loadFeaturesForRelease(storage.readFromStorage, '3.5')
+    var result = await loadFeaturesForRelease(storage.readFromStorage, '3.5')
     expect(result.features).toEqual([])
     expect(result.warnings).toContain('Feature index is empty -- run an execution data refresh first')
   })
 
-  it('filters features by targetVersions match', function() {
+  it('filters features by targetVersions match', async function() {
     var storage = makeStorage({
       'releases/execution/index.json': {
         features: [
@@ -318,12 +318,12 @@ describe('loadFeaturesForRelease', function() {
         ]
       }
     })
-    var result = loadFeaturesForRelease(storage.readFromStorage, '3.5')
+    var result = await loadFeaturesForRelease(storage.readFromStorage, '3.5')
     expect(result.features).toHaveLength(1)
     expect(result.features[0].key).toBe('T-1')
   })
 
-  it('filters features by fixVersions match', function() {
+  it('filters features by fixVersions match', async function() {
     var storage = makeStorage({
       'releases/execution/index.json': {
         features: [
@@ -331,11 +331,11 @@ describe('loadFeaturesForRelease', function() {
         ]
       }
     })
-    var result = loadFeaturesForRelease(storage.readFromStorage, '3.5')
+    var result = await loadFeaturesForRelease(storage.readFromStorage, '3.5')
     expect(result.features).toHaveLength(1)
   })
 
-  it('excludes closed features', function() {
+  it('excludes closed features', async function() {
     var storage = makeStorage({
       'releases/execution/index.json': {
         features: [
@@ -343,11 +343,11 @@ describe('loadFeaturesForRelease', function() {
         ]
       }
     })
-    var result = loadFeaturesForRelease(storage.readFromStorage, '3.5')
+    var result = await loadFeaturesForRelease(storage.readFromStorage, '3.5')
     expect(result.features).toHaveLength(0)
   })
 
-  it('merges detail data onto features', function() {
+  it('merges detail data onto features', async function() {
     var storage = makeStorage({
       'releases/execution/index.json': {
         features: [
@@ -360,7 +360,7 @@ describe('loadFeaturesForRelease', function() {
         releaseType: 'General Availability'
       }
     })
-    var result = loadFeaturesForRelease(storage.readFromStorage, '3.5')
+    var result = await loadFeaturesForRelease(storage.readFromStorage, '3.5')
     expect(result.features[0].pm).toEqual({ displayName: 'Jane PM' })
     expect(result.features[0].components).toEqual(['Model Serving'])
     expect(result.features[0].releaseType).toBe('General Availability')
@@ -378,13 +378,13 @@ describe('loadMilestones', function() {
     }
   }
 
-  it('returns milestones from Product Pages cache', function() {
+  it('returns milestones from Product Pages cache', async function() {
     var storage = makeStorage(ppCache([
       { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA1', dueDate: '2026-05-15', codeFreezeDate: '2026-05-01' },
       { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA2', dueDate: '2026-07-01', codeFreezeDate: '2026-06-15' },
       { productName: 'rhoai', releaseNumber: 'rhoai-3.5', dueDate: '2026-08-15', codeFreezeDate: '2026-08-01' }
     ]))
-    var result = loadMilestones(storage.readFromStorage, '3.5')
+    var result = await loadMilestones(storage.readFromStorage, '3.5')
     expect(result).not.toBeNull()
     expect(result.ea1Freeze).toBe('2026-05-01')
     expect(result.ea1Target).toBe('2026-05-15')
@@ -394,24 +394,24 @@ describe('loadMilestones', function() {
     expect(result.gaTarget).toBe('2026-08-15')
   })
 
-  it('returns null when cache is missing', function() {
+  it('returns null when cache is missing', async function() {
     var storage = makeStorage({})
-    expect(loadMilestones(storage.readFromStorage, '3.5')).toBeNull()
+    expect(await loadMilestones(storage.readFromStorage, '3.5')).toBeNull()
   })
 
-  it('returns null when no matching version', function() {
+  it('returns null when no matching version', async function() {
     var storage = makeStorage(ppCache([
       { productName: 'rhoai', releaseNumber: 'rhoai-3.4', dueDate: '2026-03-01', codeFreezeDate: '2026-02-15' }
     ]))
-    expect(loadMilestones(storage.readFromStorage, '3.5')).toBeNull()
+    expect(await loadMilestones(storage.readFromStorage, '3.5')).toBeNull()
   })
 
-  it('handles missing codeFreezeDate', function() {
+  it('handles missing codeFreezeDate', async function() {
     var storage = makeStorage(ppCache([
       { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA1', dueDate: '2026-05-15', codeFreezeDate: null },
       { productName: 'rhoai', releaseNumber: 'rhoai-3.5', dueDate: '2026-08-15', codeFreezeDate: null }
     ]))
-    var result = loadMilestones(storage.readFromStorage, '3.5')
+    var result = await loadMilestones(storage.readFromStorage, '3.5')
     expect(result).not.toBeNull()
     expect(result.ea1Freeze).toBeNull()
     expect(result.ea1Target).toBe('2026-05-15')
@@ -419,11 +419,11 @@ describe('loadMilestones', function() {
     expect(result.gaTarget).toBe('2026-08-15')
   })
 
-  it('returns partial milestones when only some phases exist', function() {
+  it('returns partial milestones when only some phases exist', async function() {
     var storage = makeStorage(ppCache([
       { productName: 'rhoai', releaseNumber: 'rhoai-3.5', dueDate: '2026-08-15', codeFreezeDate: '2026-08-01' }
     ]))
-    var result = loadMilestones(storage.readFromStorage, '3.5')
+    var result = await loadMilestones(storage.readFromStorage, '3.5')
     expect(result).not.toBeNull()
     expect(result.ea1Freeze).toBeNull()
     expect(result.ea1Target).toBeNull()
@@ -433,13 +433,13 @@ describe('loadMilestones', function() {
     expect(result.gaTarget).toBe('2026-08-15')
   })
 
-  it('matches space-separated EA release numbers (expanded milestone format)', function() {
+  it('matches space-separated EA release numbers (expanded milestone format)', async function() {
     var storage = makeStorage(ppCache([
       { productName: 'rhelai', releaseNumber: 'rhelai-3.5 EA1 release', dueDate: '2026-06-18', codeFreezeDate: null },
       { productName: 'rhelai', releaseNumber: 'rhelai-3.5 EA2 release', dueDate: '2026-07-16', codeFreezeDate: null },
       { productName: 'rhelai', releaseNumber: 'rhelai-3.5 GA', dueDate: '2026-08-20', codeFreezeDate: null }
     ]))
-    var result = loadMilestones(storage.readFromStorage, '3.5')
+    var result = await loadMilestones(storage.readFromStorage, '3.5')
     expect(result).not.toBeNull()
     expect(result.ea1Target).toBe('2026-06-18')
     expect(result.ea2Target).toBe('2026-07-16')
@@ -449,13 +449,13 @@ describe('loadMilestones', function() {
     expect(result._matched.ga).toBe('rhelai-3.5 GA')
   })
 
-  it('does not match EA releases as GA', function() {
+  it('does not match EA releases as GA', async function() {
     var storage = makeStorage(ppCache([
       { productName: 'RHAII', releaseNumber: 'RHAII-3.5 EA1', dueDate: '2026-06-02', codeFreezeDate: null },
       { productName: 'RHAII', releaseNumber: 'RHAII-3.5 EA2', dueDate: '2026-07-01', codeFreezeDate: null },
       { productName: 'RHAII', releaseNumber: 'RHAII-3.5 GA', dueDate: '2026-08-04', codeFreezeDate: null }
     ]))
-    var result = loadMilestones(storage.readFromStorage, '3.5')
+    var result = await loadMilestones(storage.readFromStorage, '3.5')
     expect(result).not.toBeNull()
     expect(result.ea1Target).toBe('2026-06-02')
     expect(result.ea2Target).toBe('2026-07-01')
@@ -463,26 +463,26 @@ describe('loadMilestones', function() {
     expect(result._matched.ga).toBe('RHAII-3.5 GA')
   })
 
-  it('prefers rhoai/rhelai product when multiple products match', function() {
+  it('prefers rhoai/rhelai product when multiple products match', async function() {
     var storage = makeStorage(ppCache([
       { productName: 'RHAII', releaseNumber: 'RHAII-3.5 EA1', dueDate: '2026-06-02', codeFreezeDate: null },
       { productName: 'rhelai', releaseNumber: 'rhelai-3.5 EA1 release', dueDate: '2026-06-18', codeFreezeDate: null },
       { productName: 'RHAII', releaseNumber: 'RHAII-3.5 GA', dueDate: '2026-08-04', codeFreezeDate: null },
       { productName: 'rhelai', releaseNumber: 'rhelai-3.5 GA', dueDate: '2026-08-20', codeFreezeDate: null }
     ]))
-    var result = loadMilestones(storage.readFromStorage, '3.5')
+    var result = await loadMilestones(storage.readFromStorage, '3.5')
     expect(result.ea1Target).toBe('2026-06-18')
     expect(result.gaTarget).toBe('2026-08-20')
     expect(result._matched.ea1).toBe('rhelai-3.5 EA1 release')
     expect(result._matched.ga).toBe('rhelai-3.5 GA')
   })
 
-  it('returns _matched with release numbers for debugging', function() {
+  it('returns _matched with release numbers for debugging', async function() {
     var storage = makeStorage(ppCache([
       { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA1', dueDate: '2026-05-15', codeFreezeDate: '2026-05-01' },
       { productName: 'rhoai', releaseNumber: 'rhoai-3.5', dueDate: '2026-08-15', codeFreezeDate: '2026-08-01' }
     ]))
-    var result = loadMilestones(storage.readFromStorage, '3.5')
+    var result = await loadMilestones(storage.readFromStorage, '3.5')
     expect(result._matched).toEqual({
       ea1: 'rhoai-3.5.EA1',
       ea2: null,

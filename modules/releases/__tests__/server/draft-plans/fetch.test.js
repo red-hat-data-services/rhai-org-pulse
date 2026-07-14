@@ -7,8 +7,8 @@ const mockFetch = vi.fn()
 function makeStorage() {
   const written = {}
   return {
-    writeToStorage(key, data) { written[key] = data },
-    readFromStorage(key) { return written[key] || null },
+    async writeToStorage(key, data) { written[key] = data },
+    async readFromStorage(key) { return written[key] || null },
     _written: written
   }
 }
