@@ -6,6 +6,7 @@ const data = ref(null)
 const loading = ref(false)
 const error = ref(null)
 const versions = ref([])
+const defaultVersion = ref(null)
 const versionsLoading = ref(false)
 const refreshing = ref(false)
 
@@ -48,9 +49,11 @@ export function useReleaseReadiness() {
       }
       const result = await response.json()
       versions.value = result.versions || []
+      defaultVersion.value = result.default_version || null
     } catch (err) {
       console.error('Failed to load release readiness versions:', err)
       versions.value = []
+      defaultVersion.value = null
     } finally {
       versionsLoading.value = false
     }
@@ -83,6 +86,7 @@ export function useReleaseReadiness() {
     loading,
     error,
     versions,
+    defaultVersion,
     versionsLoading,
     refreshing,
     loadMetrics,
