@@ -584,12 +584,40 @@ module.exports = function registerRoutes(router, context) {
 
   // ── Strategy management ──────────────────────────────────────
 
+  /**
+   * @openapi
+   * /api/modules/upstream-pulse/strategy/permissions:
+   *   get:
+   *     tags: [Upstream Pulse]
+   *     summary: Check strategy management permissions for current user
+   *     responses:
+   *       200:
+   *         description: Permission flags for strategy management
+   */
   router.get('/strategy/permissions', requireScope('upstream-pulse:read'), function(req, res) {
     if (DEMO_MODE) return res.json({ canManageStrategy: false });
     var canManageStrategy = req.isAdmin || (req.userRoles || []).includes('upstream-pulse-admin');
     res.json({ canManageStrategy: canManageStrategy });
   });
 
+  /**
+   * @openapi
+   * /api/modules/upstream-pulse/orgs/{githubOrg}/strategy:
+   *   patch:
+   *     tags: [Upstream Pulse]
+   *     summary: Update strategic classification for a GitHub organization
+   *     parameters:
+   *       - in: path
+   *         name: githubOrg
+   *         required: true
+   *         schema:
+   *           type: string
+   *     responses:
+   *       200:
+   *         description: Updated strategy classification
+   *       403:
+   *         description: Not available in demo mode or insufficient permissions
+   */
   router.patch('/orgs/:githubOrg/strategy', requireUpstreamAdmin, requireScope('upstream-pulse:write'), async function(req, res) {
     try {
       if (DEMO_MODE) return res.status(403).json({ error: 'Not available in demo mode' });
