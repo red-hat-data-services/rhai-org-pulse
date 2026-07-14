@@ -350,6 +350,27 @@ module.exports = function registerRoutes(router, context) {
 
   /**
    * @openapi
+   * /api/modules/product-builds/wheel-overrides:
+   *   get:
+   *     tags: [Product Builds]
+   *     summary: List pre-built wheel packages
+   *     description: Returns packages that are pre-built (binary-only) in at least one variant, sourced from builder repo override files.
+   *     parameters:
+   *       - name: variant
+   *         in: query
+   *         schema:
+   *           type: string
+   *         description: Filter by variant (e.g. cpu-ubi9, cuda-ubi9, rocm-ubi9)
+   *     responses:
+   *       200:
+   *         description: Array of wheel override objects with package_name, pre_built_variants, reason, source_file, commit_sha
+   */
+  router.get('/wheel-overrides', function(req, res) {
+    upstream('/wheel-overrides', req, res);
+  });
+
+  /**
+   * @openapi
    * /api/modules/product-builds/artifacts/wheels/build-history/{packageName}:
    *   get:
    *     tags: [Product Builds]
