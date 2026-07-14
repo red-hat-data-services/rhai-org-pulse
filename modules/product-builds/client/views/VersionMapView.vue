@@ -47,20 +47,30 @@ function displayVersion(pkg, release, acc) {
   return entry.version || (isPlanning(acc, release) ? 'TBD' : '')
 }
 
-function cellTooltip(pkg, release, acc) {
+function cellTooltip(pkg, release, acc, sv) {
   const entry = getVersion(pkg, release)
+  let tip
   if (!entry) {
-    if (isPlanning(acc, release)) return `${pkg.name}: version not yet decided for ${release}`
-    return ''
+    if (isPlanning(acc, release)) tip = `${pkg.name}: version not yet decided for ${release}`
+    else return ''
+  } else if (entry.dropped) {
+    tip = `${pkg.name}: dropped in ${release}`
+  } else {
+    const ver = entry.version || 'TBD'
+    const prev = prevRelease(release)
+    if (!prev) tip = `${pkg.name} ${ver}`
+    else {
+      const old = getVersion(pkg, prev)
+      if (!old || old.dropped) tip = `${pkg.name} ${ver} (new in ${release})`
+      else if (old.version === ver) tip = `${pkg.name} ${ver} (unchanged)`
+      else tip = `${pkg.name}: ${old.version} → ${ver}`
+    }
   }
-  if (entry.dropped) return `${pkg.name}: dropped in ${release}`
-  const ver = entry.version || 'TBD'
-  const prev = prevRelease(release)
-  if (!prev) return `${pkg.name} ${ver}`
-  const old = getVersion(pkg, prev)
-  if (!old || old.dropped) return `${pkg.name} ${ver} (new in ${release})`
-  if (old.version === ver) return `${pkg.name} ${ver} (unchanged)`
-  return `${pkg.name}: ${old.version} → ${ver}`
+  if (sv) {
+    const link = findJiraLink(acc.sheet, sv.name, pkg.name, release)
+    if (link) tip += ` — ${link.key}`
+  }
+  return tip
 }
 
 function isTbd(pkg, release, acc) {
@@ -200,10 +210,7 @@ function cellHasJiraLink(pkg, release, acc, sv) {
   if (!jiraLinks.value) return false
   const entry = getVersion(pkg, release)
   if (!entry) return false
-  if (entry.dropped || versionChanged(pkg, release)) {
-    return !!findJiraLink(acc.sheet, sv.name, pkg.name, release)
-  }
-  return false
+  return !!findJiraLink(acc.sheet, sv.name, pkg.name, release)
 }
 
 onMounted(() => {
@@ -409,7 +416,7 @@ onMounted(() => {
                             'text-blue-400 dark:text-blue-500 italic text-xs': isTbd(pkg, r, acc),
                             'text-gray-600 dark:text-gray-300': !isTbd(pkg, r, acc) && !getVersion(pkg, r)?.dropped,
                           }"
-                          :title="cellTooltip(pkg, r, acc)"
+                          :title="cellTooltip(pkg, r, acc, sv)"
                           @pointerenter="hoveredCell = cellKey(sv.name, pkg.name, r)"
                           @pointerleave="hoveredCell = null"
                         >
@@ -418,7 +425,7 @@ onMounted(() => {
                             :href="`${JIRA_BASE}/${findJiraLink(acc.sheet, sv.name, pkg.name, r).key}`"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="inline-flex items-center gap-1 hover:underline"
+                            class="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline"
                             @click.stop
                           >
                             <svg v-if="versionChanged(pkg, r) && displayVersion(pkg, r, acc) !== 'TBD'" class="w-2 h-2 shrink-0" viewBox="0 0 10 10" aria-label="bumped"><polygon points="5,1 9,9 1,9" fill="#0ca30c" /></svg>
