@@ -151,7 +151,7 @@ const FPDOR_TO_HYGIENE = {
   'Scope Defined': 'Add child epics, set sizing (story points/t-shirt), or link an RFE',
   'RICE Score': 'Set RICE score in Jira',
   'Cross-functional Engineering': 'Assign ≥2 engineering components (excl. Docs/UXD) or document cross-team dependencies',
-  'Documentation': 'Set docsRequired for the release type, or add Documentation component',
+  'Documentation': 'Set docsRequired (or Documentation component); without release type, docs stay not-checked until assessed',
   'UXD': 'Add the UXD component',
   'Architectural Alignment': 'Add architecture review artifacts (ADR/RFC/design doc/arch review)',
   'Risks & Assumptions': 'Document risks and assumptions in description',

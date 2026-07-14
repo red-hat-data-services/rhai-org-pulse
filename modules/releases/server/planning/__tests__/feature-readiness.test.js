@@ -1579,6 +1579,41 @@ describe('buildFeatureReadiness', function() {
       expect(docsItem.pass).toBe(false)
     })
 
+    it('documentation is not-checked when release type is null and docsRequired unset', function() {
+      var result = computeReadiness(readyFeature({
+        components: ['Platform', 'Serving', 'UXD'],
+        docsRequired: null,
+        releaseType: null
+      }))
+      var docsItem = result.fpdor.items.find(function(i) { return i.name === 'Documentation' })
+      expect(docsItem.pass).toBeNull()
+      expect(docsItem.state).toBe('not-checked')
+      expect(docsItem.detail).toContain('Not checked')
+      expect(result.isReady).toBe(false)
+      expect(result.fpdor.evaluatedCount).toBe(12)
+    })
+
+    it('documentation passes when release type is null but docsRequired is filled', function() {
+      var result = computeReadiness(readyFeature({
+        components: ['Platform', 'Serving', 'UXD'],
+        docsRequired: 'Yes',
+        releaseType: null
+      }))
+      var docsItem = result.fpdor.items.find(function(i) { return i.name === 'Documentation' })
+      expect(docsItem.pass).toBe(true)
+      expect(docsItem.state).toBe('passed')
+    })
+
+    it('documentation passes when release type is null but Documentation component is present', function() {
+      var result = computeReadiness(readyFeature({
+        components: ['Platform', 'Serving', 'UXD', 'Documentation'],
+        docsRequired: null,
+        releaseType: null
+      }))
+      var docsItem = result.fpdor.items.find(function(i) { return i.name === 'Documentation' })
+      expect(docsItem.pass).toBe(true)
+    })
+
     it('UXD fails without UXD component', function() {
       var result = computeReadiness(readyFeature({ components: ['Platform', 'Serving', 'Documentation'], docsRequired: 'Required' }))
       var uxdItem = result.fpdor.items.find(function(i) { return i.name === 'UXD' })

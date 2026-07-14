@@ -104,13 +104,22 @@ function getReleaseType(feature) {
   return feature.releaseType || feature.phase || null
 }
 
+function isDocsAssessed(feature) {
+  var docsRequired = feature.docsRequired
+  if (docsRequired != null && docsRequired !== '') return true
+  return hasDocumentationComponent(feature)
+}
+
 function hasDocsEngagement(feature) {
   var releaseType = getReleaseType(feature)
   var docsRequired = feature.docsRequired
   var hasDocComp = hasDocumentationComponent(feature)
 
+  // No release type: not checked unless docs were explicitly assessed.
   if (!releaseType) {
-    return true
+    if (!isDocsAssessed(feature)) return null
+    if (hasDocComp) return true
+    return docsRequired != null && docsRequired !== ''
   }
 
   if (DOCS_REQUIRED_RELEASE_TYPES[releaseType]) {
@@ -204,7 +213,22 @@ function hasStratCreatorSignOff(feature) {
 }
 
 function evalJiraItem(name, passed, detail) {
-  return { name: name, pass: passed, source: 'jira', state: passed ? 'passed' : 'failed', detail: passed ? null : (detail || null) }
+  if (passed === null) {
+    return {
+      name: name,
+      pass: null,
+      source: 'jira',
+      state: 'not-checked',
+      detail: detail || null
+    }
+  }
+  return {
+    name: name,
+    pass: passed,
+    source: 'jira',
+    state: passed ? 'passed' : 'failed',
+    detail: passed ? null : (detail || null)
+  }
 }
 
 function riceDetail(feature) {
@@ -266,7 +290,12 @@ function crossFunctionalEngineeringDetail(feature) {
 
 function documentationDetail(feature) {
   var releaseType = getReleaseType(feature)
-  if (!releaseType) return null
+  if (!releaseType) {
+    if (!isDocsAssessed(feature)) {
+      return 'Not checked — no release type and docsRequired not set'
+    }
+    return null
+  }
   if (DOCS_REQUIRED_RELEASE_TYPES[releaseType]) {
     return 'GA/Tech Preview requires docsRequired (not No) or Documentation component'
   }
