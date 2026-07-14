@@ -4,6 +4,7 @@ const { getConfig, saveConfig, deleteConfig } = require('./config')
 const productPages = require('./product-pages')
 const { fetchProductsByShortname, fetchAllProducts, getProductPagesToken, getAuthStatus } = productPages
 const registerConformaRoutes = require('./conforma')
+const { registerConformaFetcher } = require('./conforma-fetcher')
 const { logAudit } = require('../planning/audit-log')
 const { stripZStream: sharedStripZStream, normalizeVersionName, extractProduct: sharedExtractProduct } = require('../version-utils')
 
@@ -1049,6 +1050,7 @@ module.exports = async function registerRoutes(router, context) {
   }
 
   registerConformaRoutes(router, context)
+  registerConformaFetcher(router, context)
 
   const { storage, requireAuth, requireAdmin, requireScope } = context
   const { readFromStorage, writeToStorage } = storage

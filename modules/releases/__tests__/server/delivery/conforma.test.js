@@ -57,6 +57,16 @@ const SAMPLE_RELEASE = {
   }
 }
 
+const SAMPLE_PRODUCT_LAYER = {
+  version: 'rhaii',
+  gaDate: null,
+  productLayer: true,
+  displayName: 'RHAII',
+  exceptions: {
+    policy: { configExcludes: ['cve.cve_blockers', 'hermetic_task'], volatileExcludes: [] }
+  }
+}
+
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
 describe('conforma backend routes', () => {
@@ -181,6 +191,81 @@ describe('conforma backend routes', () => {
       const req = { body: { releases: [{ version: '', gaDate: '' }] } }
       const res = await router._dispatch('POST', '/conforma/bulk', req)
       expect(res._status).toBe(400)
+    })
+  })
+
+  describe('POST /conforma/bulk with product layers', () => {
+    it('accepts releases with productLayer and no gaDate', async () => {
+      const req = { body: { releases: [SAMPLE_PRODUCT_LAYER] } }
+      const res = await router._dispatch('POST', '/conforma/bulk', req)
+      expect(res._status).toBe(200)
+      expect(res._body.count).toBe(1)
+    })
+
+    it('rejects releases without gaDate and without productLayer', async () => {
+      const req = { body: { releases: [{ version: 'bad', exceptions: {} }] } }
+      const res = await router._dispatch('POST', '/conforma/bulk', req)
+      expect(res._status).toBe(400)
+    })
+  })
+
+  describe('merged RHOAI + AIPCC data', () => {
+    it('GET /conforma/releases returns releases from both storage keys', async () => {
+      storage.writeToStorage('releases/delivery/conforma.json', {
+        fetchedAt: '2026-05-10T00:00:00.000Z',
+        minDate: '2025-05-22',
+        count: 1,
+        releases: [SAMPLE_RELEASE]
+      })
+      storage.writeToStorage('releases/delivery/conforma-aipcc.json', {
+        fetchedAt: '2026-07-10T00:00:00.000Z',
+        count: 1,
+        releases: [SAMPLE_PRODUCT_LAYER]
+      })
+      const res = await router._dispatch('GET', '/conforma/releases')
+      expect(res._status).toBe(200)
+      expect(res._body.releases).toHaveLength(2)
+      expect(res._body.count).toBe(2)
+      expect(res._body.releases.map(r => r.version)).toEqual(['rhoai-3.4', 'rhaii'])
+    })
+
+    it('GET /conforma/releases/:version finds AIPCC product layer', async () => {
+      storage.writeToStorage('releases/delivery/conforma-aipcc.json', {
+        fetchedAt: '2026-07-10T00:00:00.000Z',
+        count: 1,
+        releases: [SAMPLE_PRODUCT_LAYER]
+      })
+      const res = await router._dispatch('GET', '/conforma/releases/:version', { params: { version: 'rhaii' } })
+      expect(res._status).toBe(200)
+      expect(res._body.productLayer).toBe(true)
+      expect(res._body.displayName).toBe('RHAII')
+    })
+
+    it('GET /conforma/status reports combined count', async () => {
+      storage.writeToStorage('releases/delivery/conforma.json', {
+        fetchedAt: '2026-05-10T00:00:00.000Z',
+        count: 1,
+        releases: [SAMPLE_RELEASE]
+      })
+      storage.writeToStorage('releases/delivery/conforma-aipcc.json', {
+        fetchedAt: '2026-07-10T00:00:00.000Z',
+        count: 1,
+        releases: [SAMPLE_PRODUCT_LAYER]
+      })
+      const res = await router._dispatch('GET', '/conforma/status')
+      expect(res._body.count).toBe(2)
+      expect(res._body.fetchedAt).toBe('2026-07-10T00:00:00.000Z')
+    })
+
+    it('GET /conforma/releases works with only AIPCC data', async () => {
+      storage.writeToStorage('releases/delivery/conforma-aipcc.json', {
+        fetchedAt: '2026-07-10T00:00:00.000Z',
+        count: 1,
+        releases: [SAMPLE_PRODUCT_LAYER]
+      })
+      const res = await router._dispatch('GET', '/conforma/releases')
+      expect(res._status).toBe(200)
+      expect(res._body.releases).toHaveLength(1)
     })
   })
 

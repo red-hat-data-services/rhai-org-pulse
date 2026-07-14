@@ -12,7 +12,8 @@ const DEFAULT_CONFIG = {
   productPagesTokenUrl: 'https://auth.redhat.com/auth/realms/EmployeeIDP/protocol/openid-connect/token',
   jiraAllProjects: false,
   targetVersionJqlFragment: '',
-  commitmentTrackingJql: 'cf[10855] is not EMPTY'
+  commitmentTrackingJql: 'cf[10855] is not EMPTY',
+  conformaEcpBaseUrl: ''
 };
 
 const PROJECT_KEY_PATTERN = /^[A-Z][A-Z0-9_]+$/;
@@ -58,6 +59,9 @@ function applyEnvOverrides(config) {
   }
   if (env.PRODUCT_PAGES_TOKEN_URL) {
     config.productPagesTokenUrl = env.PRODUCT_PAGES_TOKEN_URL;
+  }
+  if (env.CONFORMA_ECP_BASE_URL) {
+    config.conformaEcpBaseUrl = env.CONFORMA_ECP_BASE_URL;
   }
   if (env.RELEASE_ANALYSIS_JIRA_ALL_PROJECTS) {
     config.jiraAllProjects = ['1', 'true', 'yes'].includes(
@@ -262,6 +266,18 @@ async function saveConfig(writeToStorage, config) {
       throw new Error('commitmentTrackingJql contains invalid characters');
     }
     merged.commitmentTrackingJql = fragment;
+  }
+
+  // conformaEcpBaseUrl — empty or valid HTTP(S) URL
+  if (config.conformaEcpBaseUrl !== undefined) {
+    if (typeof config.conformaEcpBaseUrl !== 'string') {
+      throw new Error('conformaEcpBaseUrl must be a string');
+    }
+    const url = config.conformaEcpBaseUrl.trim();
+    if (url && !/^https?:\/\//i.test(url)) {
+      throw new Error('conformaEcpBaseUrl must be an HTTP or HTTPS URL');
+    }
+    merged.conformaEcpBaseUrl = url;
   }
 
   await writeToStorage('releases/delivery/config.json', merged);
