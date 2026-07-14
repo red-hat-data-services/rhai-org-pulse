@@ -1,6 +1,9 @@
 const path = require('path');
 const { createGoogleSheetsClient } = require('../../../shared/server/google-sheets');
 const { createJiraClient } = require('../../../shared/server/jira');
+const { normalizeRelease } = require('../lib/normalize-release');
+
+const JIRA_KEY_RE = /^[A-Z]+-\d+$/;
 
 const DEFAULTS = {
   spreadsheetId: '1cFIL4klt4uRflIsTH2pigls1_3RdzyGx8sXZ6F2UtQ0',
@@ -229,15 +232,6 @@ function parseFeatureSummary(summary) {
   return { variant: m[1].toLowerCase().trim(), release: m[2].trim() };
 }
 
-function normalizeRelease(raw) {
-  return raw
-    .replace(/^RHAI\s+/i, '')
-    .replace(/\.+\s/g, ' ')
-    .replace(/[-\s]*(EA|GA)[-\s]*/gi, ' $1')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
 const VARIANT_TO_SHEET = {
   cuda: 'CUDA',
   rocm: 'ROCm',
@@ -277,8 +271,9 @@ async function buildJiraLinks(jira) {
     const batch = features.slice(i, i + BATCH);
     const childResults = await Promise.all(
       batch.map(f =>
-        jira.fetchAllJqlResults(`parent = ${f.key}`, 'key,summary,status', { maxResults: 50 })
-          .catch(() => [])
+        JIRA_KEY_RE.test(f.key)
+          ? jira.fetchAllJqlResults(`parent = ${f.key}`, 'key,summary,status', { maxResults: 50 }).catch(() => [])
+          : Promise.resolve([])
       )
     );
 

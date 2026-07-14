@@ -124,6 +124,7 @@ function extractTargetVersions(field) {
 
 const RISK_PRIORITY = { overdue: 0, at_risk: 1, on_track: 2, no_date: 3 };
 const CHILDREN_CONCURRENCY = 10;
+const JIRA_KEY_RE = /^[A-Z]+-\d+$/;
 
 async function buildReleaseTracker(jira) {
   const labels = _cfg.epicLabels.map(l => `"${l}"`).join(', ');
@@ -145,8 +146,9 @@ async function buildReleaseTracker(jira) {
     const batch = epics.slice(i, i + CHILDREN_CONCURRENCY);
     const childResults = await Promise.all(
       batch.map(epic =>
-        jira.fetchAllJqlResults(childrenJql(epic.key), childFields, { maxResults: 100 })
-          .catch(() => [])
+        JIRA_KEY_RE.test(epic.key)
+          ? jira.fetchAllJqlResults(childrenJql(epic.key), childFields, { maxResults: 100 }).catch(() => [])
+          : Promise.resolve([])
       )
     );
     for (let j = 0; j < batch.length; j++) {
