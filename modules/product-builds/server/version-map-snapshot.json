@@ -1321,15 +1321,6 @@
               }
             }
           ]
-        },
-        {
-          "name": "ROCm 7.2",
-          "architectures": "x86_64",
-          "first_release_index": 0,
-          "last_release_index": null,
-          "sdk_versions": {},
-          "packages": [],
-          "infra": []
         }
       ],
       "planning_from_index": 8

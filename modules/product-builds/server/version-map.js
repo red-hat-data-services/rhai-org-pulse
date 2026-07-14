@@ -159,6 +159,8 @@ function parseSheet(sheetName, rows) {
       }
     }
 
+    if (packages.length === 0 && infra.length === 0) continue;
+
     subVariants.push({
       name: variantName,
       architectures: arch,
