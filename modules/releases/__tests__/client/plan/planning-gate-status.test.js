@@ -4,14 +4,16 @@ import PlanningGateStatus from '../../../client/plan/components/PlanningGateStat
 
 function makeFpdor(overrides) {
   return Object.assign({
-    passedCount: 9,
-    totalCount: 11,
+    passedCount: 10,
+    totalCount: 13,
     items: [
       { name: 'Requirements Clarity', pass: true, detail: 'scope >= 2', humanVerified: false },
       { name: 'Acceptance Criteria', pass: true, detail: 'testability >= 2', humanVerified: false },
       { name: 'Scope Defined', pass: true, detail: '3 epics', humanVerified: false },
       { name: 'RICE Score', pass: true, detail: 'riceScore = 42', humanVerified: false },
-      { name: 'Cross-functional Engagement', pass: false, detail: 'only 1 component', humanVerified: false },
+      { name: 'Cross-functional Engineering', pass: false, detail: 'only 1 eng component', humanVerified: false },
+      { name: 'Documentation', pass: true, detail: 'docsRequired Yes', humanVerified: false },
+      { name: 'UXD', pass: true, detail: 'UXD component', humanVerified: false },
       { name: 'Architectural Alignment', pass: true, detail: 'architecture >= 2', humanVerified: false },
       { name: 'Risks & Assumptions', pass: true, detail: 'feasibility >= 2', humanVerified: false },
       { name: 'Release Type', pass: true, detail: 'GA', humanVerified: false },
@@ -49,9 +51,9 @@ describe('PlanningGateStatus', function() {
       props: { planningStatus: 'in-planning', fpdor: makeFpdor() }
     })
     expect(wrapper.text()).toContain('FPDoR Readiness')
-    expect(wrapper.text()).toContain('9/11 passed')
+    expect(wrapper.text()).toContain('10/13 passed')
     expect(wrapper.text()).toContain('Requirements Clarity')
-    expect(wrapper.text()).toContain('Cross-functional Engagement')
+    expect(wrapper.text()).toContain('Cross-functional Engineering')
     expect(wrapper.text()).toContain('Target Version')
   })
 
@@ -59,7 +61,7 @@ describe('PlanningGateStatus', function() {
     var wrapper = mount(PlanningGateStatus, {
       props: { planningStatus: 'in-planning', fpdor: makeFpdor() }
     })
-    expect(wrapper.text()).toContain('only 1 component')
+    expect(wrapper.text()).toContain('only 1 eng component')
     expect(wrapper.text()).toContain('no target version')
   })
 
@@ -72,13 +74,13 @@ describe('PlanningGateStatus', function() {
 
   it('shows all-passed count with green styling', function() {
     var fpdor = makeFpdor({
-      passedCount: 11,
+      passedCount: 13,
       items: makeFpdor().items.map(function(item) { return Object.assign({}, item, { pass: true }) })
     })
     var wrapper = mount(PlanningGateStatus, {
       props: { planningStatus: 'ready-for-execution', fpdor: fpdor }
     })
-    expect(wrapper.text()).toContain('11/11 passed')
+    expect(wrapper.text()).toContain('13/13 passed')
   })
 
   it('shows humanVerified badge on items with sign-off', function() {

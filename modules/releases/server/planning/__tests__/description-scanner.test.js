@@ -124,6 +124,26 @@ describe('parseDescriptionSignals', function() {
     expect(result.hasArchitectureSignal).toBe(true)
   })
 
+  it('detects architecture heading as review artifact', function() {
+    var result = parseDescriptionSignals('## Architecture\nService mesh topology and API boundaries')
+    expect(result.hasArchitectureSignal).toBe(true)
+  })
+
+  it('detects ADR and design doc as architecture signals', function() {
+    expect(parseDescriptionSignals('See ADR-12 for the chosen approach').hasArchitectureSignal).toBe(true)
+    expect(parseDescriptionSignals('Design doc: https://example.com/doc').hasArchitectureSignal).toBe(true)
+  })
+
+  it('does not treat bare narrative architecture as a review signal', function() {
+    var result = parseDescriptionSignals('The agent architecture matters for latency in production workloads')
+    expect(result.hasArchitectureSignal).toBe(false)
+  })
+
+  it('detects cross-functional dependency language', function() {
+    var result = parseDescriptionSignals('This feature depends on Serving API v2 and is cross-team with Model Mesh')
+    expect(result.hasCrossFunctionalDependency).toBe(true)
+  })
+
   it('counts multiple signals correctly', function() {
     var text = 'AC: Feature supports dark mode\nUse case: Developer deploys app\nScope: Backend only\nRisk: API dependency'
     var result = parseDescriptionSignals(text)

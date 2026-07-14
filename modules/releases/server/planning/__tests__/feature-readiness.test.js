@@ -1312,26 +1312,28 @@ describe('buildFeatureReadiness', function() {
         releaseType: 'GA',
         deliveryOwner: 'Alice',
         pmOwner: 'Jane',
-        components: ['Documentation', 'UXD', 'Platform'],
+        components: ['Documentation', 'UXD', 'Platform', 'Serving'],
         docsRequired: 'Required',
         effort: 5,
         scores: { testability: 2, architecture: 2, feasibility: 2, scope: 2 },
-        descriptionSignals: { hasContent: true, signalCount: 3, hasAcceptanceCriteria: true, hasUseCases: true, hasScopeDefinition: true, hasRequirements: false, hasRisks: true, hasArchitectureSignal: true },
+        descriptionSignals: { hasContent: true, signalCount: 3, hasAcceptanceCriteria: true, hasUseCases: true, hasScopeDefinition: true, hasRequirements: false, hasRisks: true, hasArchitectureSignal: true, hasCrossFunctionalDependency: false },
         status: 'In Progress',
         violations: null
       }, overrides)
     }
 
-    it('returns isReady=true when all FPDoR items pass, past refinement, no blocking violations', function() {
+    it('returns isReady=true when all FPDoR items pass (FPDoR-only; pastRefinement informational)', function() {
       var result = computeReadiness(readyFeature())
       expect(result.isReady).toBe(true)
-      expect(result.gates.fpDorPassed).toBeGreaterThanOrEqual(6)
-      expect(result.gates.fpDorEvaluated).toBeGreaterThanOrEqual(6)
+      expect(result.gates.fpDorPassed).toBe(13)
+      expect(result.gates.fpDorTotal).toBe(13)
+      expect(result.gates.fpDorEvaluated).toBe(13)
       expect(result.gates.pastRefinement).toBe(true)
       expect(result.gates.noBlockingViolations).toBe(true)
       expect(result.fpdor).toBeDefined()
       expect(result.fpdor.items).toBeDefined()
       expect(Array.isArray(result.fpdor.items)).toBe(true)
+      expect(result.fpdor.totalCount).toBe(13)
     })
 
     it('returns isReady=false when riceScore is 0', function() {
@@ -1370,33 +1372,39 @@ describe('buildFeatureReadiness', function() {
       expect(result.isReady).toBe(false)
     })
 
-    it('cross-functional fails with multiple components but no Documentation or UXD', function() {
+    it('isReady=false when Docs/UXD missing even if engineering is cross-functional', function() {
       var result = computeReadiness(readyFeature({ components: ['Platform', 'UI'], docsRequired: null }))
       expect(result.isReady).toBe(false)
-      var cfItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engagement' })
-      expect(cfItem.pass).toBe(false)
+      var engItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engineering' })
+      var docsItem = result.fpdor.items.find(function(i) { return i.name === 'Documentation' })
+      var uxdItem = result.fpdor.items.find(function(i) { return i.name === 'UXD' })
+      expect(engItem.pass).toBe(true)
+      expect(docsItem.pass).toBe(false)
+      expect(uxdItem.pass).toBe(false)
     })
 
-    it('cross-functional fails with single non-doc component and no docsRequired', function() {
+    it('isReady=false with single eng component and no docs/UXD', function() {
       var result = computeReadiness(readyFeature({ components: ['Platform'], docsRequired: null }))
       expect(result.isReady).toBe(false)
+      var engItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engineering' })
+      expect(engItem.pass).toBe(false)
     })
 
-    it('returns isReady=false when status is New', function() {
+    it('returns isReady=true when status is New if all FPDoR items pass', function() {
       var result = computeReadiness(readyFeature({ status: 'New' }))
-      expect(result.isReady).toBe(false)
+      expect(result.isReady).toBe(true)
       expect(result.gates.pastRefinement).toBe(false)
     })
 
-    it('returns isReady=false when status is Refinement', function() {
+    it('returns isReady=true when status is Refinement if all FPDoR items pass', function() {
       var result = computeReadiness(readyFeature({ status: 'Refinement' }))
-      expect(result.isReady).toBe(false)
+      expect(result.isReady).toBe(true)
       expect(result.gates.pastRefinement).toBe(false)
     })
 
-    it('returns isReady=false when status is null', function() {
+    it('returns isReady=true when status is null if all FPDoR items pass', function() {
       var result = computeReadiness(readyFeature({ status: null }))
-      expect(result.isReady).toBe(false)
+      expect(result.isReady).toBe(true)
       expect(result.gates.pastRefinement).toBe(false)
     })
 
@@ -1498,10 +1506,12 @@ describe('buildFeatureReadiness', function() {
       var result = computeReadiness(readyFeature({ labels: ['strat-creator-human-sign-off'] }))
       var items = result.fpdor.items
       var riceItem = items.find(function(i) { return i.name === 'RICE Score' })
-      var cfItem = items.find(function(i) { return i.name === 'Cross-functional Engagement' })
+      var engItem = items.find(function(i) { return i.name === 'Cross-functional Engineering' })
+      var docsItem = items.find(function(i) { return i.name === 'Documentation' })
       var tvItem = items.find(function(i) { return i.name === 'Target Version' })
       expect(riceItem.humanVerified).toBeUndefined()
-      expect(cfItem.humanVerified).toBeUndefined()
+      expect(engItem.humanVerified).toBeUndefined()
+      expect(docsItem.humanVerified).toBeUndefined()
       expect(tvItem.humanVerified).toBeUndefined()
     })
 
@@ -1512,40 +1522,74 @@ describe('buildFeatureReadiness', function() {
       expect(reqItem.humanVerified).toBeUndefined()
     })
 
-    // --- Cross-functional tests (Documentation AND UXD required) ---
+    // --- Cross-functional Engineering / Documentation / UXD ---
 
-    it('cross-functional passes with Documentation and UXD components', function() {
-      var result = computeReadiness(readyFeature({ components: ['Documentation', 'UXD'], docsRequired: null }))
-      var cfItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engagement' })
-      expect(cfItem.pass).toBe(true)
+    it('cross-functional engineering passes with ≥2 eng components (Docs/UXD excluded)', function() {
+      var result = computeReadiness(readyFeature({ components: ['Platform', 'Serving', 'Documentation', 'UXD'] }))
+      var engItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engineering' })
+      expect(engItem.pass).toBe(true)
     })
 
-    it('cross-functional passes with docsRequired and UXD component', function() {
-      var result = computeReadiness(readyFeature({ components: ['UXD', 'Platform'], docsRequired: 'Required' }))
-      var cfItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engagement' })
-      expect(cfItem.pass).toBe(true)
+    it('cross-functional engineering fails with only Documentation and UXD (no eng multi-comp)', function() {
+      var result = computeReadiness(readyFeature({ components: ['Documentation', 'UXD'], docsRequired: 'Required' }))
+      var engItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engineering' })
+      expect(engItem.pass).toBe(false)
     })
 
-    it('cross-functional fails with only Documentation, no UXD', function() {
-      var result = computeReadiness(readyFeature({ components: ['Documentation', 'Platform'], docsRequired: null }))
-      var cfItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engagement' })
-      expect(cfItem.pass).toBe(false)
-      expect(cfItem.detail).toContain('missing UXD component')
+    it('cross-functional engineering passes with single eng component plus dependency signal', function() {
+      var result = computeReadiness(readyFeature({
+        components: ['Platform'],
+        descriptionSignals: {
+          hasContent: true,
+          signalCount: 3,
+          hasAcceptanceCriteria: true,
+          hasUseCases: true,
+          hasScopeDefinition: true,
+          hasRequirements: false,
+          hasRisks: true,
+          hasArchitectureSignal: true,
+          hasCrossFunctionalDependency: true
+        }
+      }))
+      var engItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engineering' })
+      expect(engItem.pass).toBe(true)
     })
 
-    it('cross-functional fails with only UXD, no Documentation or docsRequired', function() {
-      var result = computeReadiness(readyFeature({ components: ['UXD', 'Platform'], docsRequired: null }))
-      var cfItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engagement' })
-      expect(cfItem.pass).toBe(false)
-      expect(cfItem.detail).toContain('missing Documentation component')
+    it('documentation passes for GA with docsRequired', function() {
+      var result = computeReadiness(readyFeature({ components: ['Platform', 'Serving', 'UXD'], docsRequired: 'Yes', releaseType: 'GA' }))
+      var docsItem = result.fpdor.items.find(function(i) { return i.name === 'Documentation' })
+      expect(docsItem.pass).toBe(true)
     })
 
-    it('cross-functional fails with no Documentation, no UXD, no docsRequired', function() {
-      var result = computeReadiness(readyFeature({ components: ['Platform'], docsRequired: null }))
-      var cfItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-functional Engagement' })
-      expect(cfItem.pass).toBe(false)
-      expect(cfItem.detail).toContain('missing Documentation')
-      expect(cfItem.detail).toContain('missing UXD')
+    it('documentation fails for GA when docsRequired is No and no Doc component', function() {
+      var result = computeReadiness(readyFeature({ components: ['Platform', 'Serving', 'UXD'], docsRequired: 'No', releaseType: 'GA' }))
+      var docsItem = result.fpdor.items.find(function(i) { return i.name === 'Documentation' })
+      expect(docsItem.pass).toBe(false)
+    })
+
+    it('documentation for Dev Preview passes when docsRequired is No (assessed)', function() {
+      var result = computeReadiness(readyFeature({ components: ['Platform', 'Serving', 'UXD'], docsRequired: 'No', releaseType: 'Dev Preview' }))
+      var docsItem = result.fpdor.items.find(function(i) { return i.name === 'Documentation' })
+      expect(docsItem.pass).toBe(true)
+    })
+
+    it('documentation for Dev Preview fails when docsRequired unset', function() {
+      var result = computeReadiness(readyFeature({ components: ['Platform', 'Serving', 'UXD'], docsRequired: null, releaseType: 'Dev Preview' }))
+      var docsItem = result.fpdor.items.find(function(i) { return i.name === 'Documentation' })
+      expect(docsItem.pass).toBe(false)
+    })
+
+    it('UXD fails without UXD component', function() {
+      var result = computeReadiness(readyFeature({ components: ['Platform', 'Serving', 'Documentation'], docsRequired: 'Required' }))
+      var uxdItem = result.fpdor.items.find(function(i) { return i.name === 'UXD' })
+      expect(uxdItem.pass).toBe(false)
+      expect(uxdItem.detail).toContain('UXD')
+    })
+
+    it('UXD passes with UXD component', function() {
+      var result = computeReadiness(readyFeature({ components: ['Platform', 'Serving', 'UXD'] }))
+      var uxdItem = result.fpdor.items.find(function(i) { return i.name === 'UXD' })
+      expect(uxdItem.pass).toBe(true)
     })
 
     // --- Requirements Clarity tests ---
@@ -1574,10 +1618,10 @@ describe('buildFeatureReadiness', function() {
       expect(reqItem.pass).toBe(false)
     })
 
-    it('FPDoR has 11 items total', function() {
+    it('FPDoR has 13 items total', function() {
       var result = computeReadiness(readyFeature())
-      expect(result.fpdor.items.length).toBe(11)
-      expect(result.fpdor.totalCount).toBe(11)
+      expect(result.fpdor.items.length).toBe(13)
+      expect(result.fpdor.totalCount).toBe(13)
     })
   })
 

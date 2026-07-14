@@ -1,4 +1,22 @@
 var RUBRIC_PASS_THRESHOLD = 2
+var FPDOR_TOTAL_COUNT = 13
+
+var NON_ENG_COMPONENTS = {
+  Documentation: true,
+  Docs: true,
+  UXD: true
+}
+
+var DOCS_REQUIRED_RELEASE_TYPES = {
+  GA: true,
+  'Tech Preview': true,
+  'Technical Preview': true
+}
+
+var DOCS_ASSESSED_RELEASE_TYPES = {
+  'Dev Preview': true,
+  'Developer Preview': true
+}
 
 function hasRiceScore(feature) {
   return feature.riceScore != null && feature.riceScore > 0
@@ -63,31 +81,90 @@ function hasRisksAndAssumptions(feature, rubricData) {
   return false
 }
 
-function hasDocsEngagement(feature) {
-  if (feature.docsRequired && feature.docsRequired !== 'No') return true
+function normalizeComponentName(name) {
+  if (!name || typeof name !== 'string') return ''
+  return name.trim()
+}
+
+function isNonEngComponent(name) {
+  return !!NON_ENG_COMPONENTS[normalizeComponentName(name)]
+}
+
+function hasDocumentationComponent(feature) {
   var comps = feature.components || []
   if (!Array.isArray(comps)) return false
   for (var i = 0; i < comps.length; i++) {
-    if (comps[i] && comps[i] === 'Documentation') return true
+    var name = normalizeComponentName(comps[i])
+    if (name === 'Documentation' || name === 'Docs') return true
   }
   return false
+}
+
+function getReleaseType(feature) {
+  return feature.releaseType || feature.phase || null
+}
+
+function hasDocsEngagement(feature) {
+  var releaseType = getReleaseType(feature)
+  var docsRequired = feature.docsRequired
+  var hasDocComp = hasDocumentationComponent(feature)
+
+  if (!releaseType) {
+    return true
+  }
+
+  if (DOCS_REQUIRED_RELEASE_TYPES[releaseType]) {
+    if (hasDocComp) return true
+    return !!docsRequired && docsRequired !== 'No'
+  }
+
+  if (DOCS_ASSESSED_RELEASE_TYPES[releaseType]) {
+    return docsRequired != null && docsRequired !== ''
+  }
+
+  if (hasDocComp) return true
+  return !!docsRequired && docsRequired !== 'No'
 }
 
 function hasUxdEngagement(feature) {
   var comps = feature.components || []
   if (!Array.isArray(comps)) return false
   for (var i = 0; i < comps.length; i++) {
-    if (comps[i] && comps[i] === 'UXD') return true
+    if (normalizeComponentName(comps[i]) === 'UXD') return true
   }
   return false
 }
 
+function countEngineeringComponents(feature) {
+  var comps = feature.components || []
+  if (!Array.isArray(comps)) return 0
+  var seen = {}
+  var count = 0
+  for (var i = 0; i < comps.length; i++) {
+    var name = normalizeComponentName(comps[i])
+    if (!name || isNonEngComponent(name) || seen[name]) continue
+    seen[name] = true
+    count++
+  }
+  return count
+}
+
+function hasCrossFunctionalDependencySignal(feature) {
+  var signals = feature.descriptionSignals
+  return !!(signals && signals.hasContent && signals.hasCrossFunctionalDependency)
+}
+
+function hasCrossFunctionalEngineering(feature) {
+  return countEngineeringComponents(feature) >= 2 || hasCrossFunctionalDependencySignal(feature)
+}
+
+/** @deprecated Use hasCrossFunctionalEngineering; retained for callers during transition */
 function hasCrossFunctionalEngagement(feature) {
-  return hasDocsEngagement(feature) && hasUxdEngagement(feature)
+  return hasCrossFunctionalEngineering(feature)
 }
 
 function hasReleaseType(feature) {
-  return !!(feature.releaseType || feature.phase)
+  return !!getReleaseType(feature)
 }
 
 function hasTargetVersion(feature) {
@@ -180,13 +257,27 @@ function risksDetail(feature, rubricData) {
   return 'No risks or assumptions documented in description'
 }
 
-function crossFunctionalDetail(feature) {
-  var hasDocs = hasDocsEngagement(feature)
-  var hasUxd = hasUxdEngagement(feature)
-  var parts = []
-  if (!hasDocs) parts.push('missing Documentation component or docsRequired')
-  if (!hasUxd) parts.push('missing UXD component')
-  return parts.join('; ') || null
+function crossFunctionalEngineeringDetail(feature) {
+  var engCount = countEngineeringComponents(feature)
+  if (engCount >= 2) return null
+  if (hasCrossFunctionalDependencySignal(feature)) return null
+  return 'Need ≥2 engineering components (excluding Documentation/UXD) or cross-team dependency language in description (found ' + engCount + ' eng component' + (engCount === 1 ? '' : 's') + ')'
+}
+
+function documentationDetail(feature) {
+  var releaseType = getReleaseType(feature)
+  if (!releaseType) return null
+  if (DOCS_REQUIRED_RELEASE_TYPES[releaseType]) {
+    return 'GA/Tech Preview requires docsRequired (not No) or Documentation component'
+  }
+  if (DOCS_ASSESSED_RELEASE_TYPES[releaseType]) {
+    return 'Dev Preview requires docsRequired to be assessed (Yes or No)'
+  }
+  return 'Missing Documentation component or docsRequired'
+}
+
+function uxdDetail() {
+  return 'Missing UXD component'
 }
 
 var HUMAN_VERIFIED_ITEMS = {
@@ -202,7 +293,9 @@ function computeFPDoRReadiness(feature, rubricData) {
     evalJiraItem('Acceptance Criteria', hasAcceptanceCriteria(feature, rubricData), acceptanceCriteriaDetail(feature, rubricData)),
     evalJiraItem('Scope Defined', hasScopeDefined(feature, rubricData), scopeDetail(feature, rubricData)),
     evalJiraItem('RICE Score', hasRiceScore(feature), riceDetail(feature)),
-    evalJiraItem('Cross-functional Engagement', hasCrossFunctionalEngagement(feature), crossFunctionalDetail(feature)),
+    evalJiraItem('Cross-functional Engineering', hasCrossFunctionalEngineering(feature), crossFunctionalEngineeringDetail(feature)),
+    evalJiraItem('Documentation', hasDocsEngagement(feature), documentationDetail(feature)),
+    evalJiraItem('UXD', hasUxdEngagement(feature), uxdDetail()),
     evalJiraItem('Architectural Alignment', hasArchitecturalAlignment(feature, rubricData), architectureDetail(feature, rubricData)),
     evalJiraItem('Risks & Assumptions', hasRisksAndAssumptions(feature, rubricData), risksDetail(feature, rubricData)),
     evalJiraItem('Release Type', hasReleaseType(feature), 'No release type set'),
@@ -230,7 +323,7 @@ function computeFPDoRReadiness(feature, rubricData) {
   return {
     items: items,
     passedCount: passedCount,
-    totalCount: 11,
+    totalCount: FPDOR_TOTAL_COUNT,
     evaluatedCount: evaluatedCount
   }
 }
@@ -244,14 +337,17 @@ module.exports = {
   hasAcceptanceCriteria: hasAcceptanceCriteria,
   hasArchitecturalAlignment: hasArchitecturalAlignment,
   hasRisksAndAssumptions: hasRisksAndAssumptions,
+  hasCrossFunctionalEngineering: hasCrossFunctionalEngineering,
   hasCrossFunctionalEngagement: hasCrossFunctionalEngagement,
   hasDocsEngagement: hasDocsEngagement,
   hasUxdEngagement: hasUxdEngagement,
+  countEngineeringComponents: countEngineeringComponents,
   hasReleaseType: hasReleaseType,
   hasTargetVersion: hasTargetVersion,
   hasAssignee: hasAssignee,
   hasPmAssigned: hasPmAssigned,
   hasRfeLink: hasRfeLink,
   hasStratCreatorSignOff: hasStratCreatorSignOff,
-  RUBRIC_PASS_THRESHOLD: RUBRIC_PASS_THRESHOLD
+  RUBRIC_PASS_THRESHOLD: RUBRIC_PASS_THRESHOLD,
+  FPDOR_TOTAL_COUNT: FPDOR_TOTAL_COUNT
 }

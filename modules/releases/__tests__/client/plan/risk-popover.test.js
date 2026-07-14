@@ -132,7 +132,7 @@ describe('RiskPopover', function() {
 
   it('shows FPDoR summary in full variant footer', async function() {
     var flags = [{ category: 'MILESTONE_MISS', severity: 'medium', message: 'Behind deadline' }]
-    var fpdor = { passedCount: 8, totalCount: 11 }
+    var fpdor = { passedCount: 8, totalCount: 13 }
     var wrapper = mount(RiskPopover, {
       props: { level: 'yellow', flags: flags, flagCount: 1, planningStatus: 'not-ready', fpdor: fpdor, variant: 'full' },
       slots: { default: '<span>dot</span>' },
@@ -140,7 +140,7 @@ describe('RiskPopover', function() {
     })
     await wrapper.find('[role="button"]').trigger('click')
     await nextTick()
-    expect(wrapper.text()).toContain('FPDoR: 8/11 items passed')
+    expect(wrapper.text()).toContain('FPDoR: 8/13 items passed')
     wrapper.unmount()
   })
 

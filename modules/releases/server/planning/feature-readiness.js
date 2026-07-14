@@ -39,11 +39,11 @@ function computeReadiness(feature) {
   var rubricData = extractRubricData(feature)
   var fpdor = computeFPDoRReadiness(feature, rubricData)
 
+  // Informational only — early status does not gate readiness (FPDoR-only ready).
   var pastRefinement = !!feature.status && EARLY_STATUSES.indexOf(feature.status) === -1
   var noBlockingViolations = !hasBlockingViolations(feature.violations)
 
-  var isReady = pastRefinement
-    && fpdor.passedCount === fpdor.totalCount
+  var isReady = fpdor.passedCount === fpdor.totalCount
 
   var gates = {
     fpDorPassed: fpdor.passedCount,

@@ -44,20 +44,20 @@ describe('FPDoR in health pipeline', function() {
     expect(result.features).toHaveLength(1)
     var f = result.features[0]
     expect(f.fpdor).toBeDefined()
-    expect(f.fpdor.items).toHaveLength(11)
-    expect(f.fpdor.totalCount).toBe(11)
+    expect(f.fpdor.items).toHaveLength(13)
+    expect(f.fpdor.totalCount).toBe(13)
     expect(typeof f.fpdor.passedCount).toBe('number')
     expect(typeof f.fpdor.evaluatedCount).toBe('number')
   })
 
-  it('all 11 items have source jira', async function() {
+  it('all 13 items have source jira', async function() {
     var storage = makeStorage(makeCandidatesCache([
       { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
     ]))
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
     var items = result.features[0].fpdor.items
     var jiraItems = items.filter(function(i) { return i.source === 'jira' })
-    expect(jiraItems).toHaveLength(11)
+    expect(jiraItems).toHaveLength(13)
   })
 
   it('pipeline-backed items fail when no execution detail has scores', async function() {
@@ -150,21 +150,21 @@ describe('FPDoR in health pipeline', function() {
     expect(riskItem.pass).toBe(false)
   })
 
-  it('passes cross-functional check when Documentation and UXD components present', async function() {
+  it('passes cross-functional engineering when ≥2 eng components present', async function() {
     var storage = makeStorage(makeCandidatesCache([
       {
         issueKey: 'T-1', summary: 'F1', status: 'In Progress',
-        components: ['Documentation', 'UXD', 'Dashboard'], fixVersion: '', deliveryOwner: 'Jane', tier: 1
+        components: ['Documentation', 'UXD', 'Dashboard', 'Platform'], fixVersion: '', deliveryOwner: 'Jane', tier: 1
       }
     ]))
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
     var items = result.features[0].fpdor.items
-    var cfItem = items.find(function(i) { return i.name === 'Cross-functional Engagement' })
-    expect(cfItem.pass).toBe(true)
-    expect(cfItem.state).toBe('passed')
+    var engItem = items.find(function(i) { return i.name === 'Cross-functional Engineering' })
+    expect(engItem.pass).toBe(true)
+    expect(engItem.state).toBe('passed')
   })
 
-  it('fails cross-functional check when only Documentation present, no UXD', async function() {
+  it('fails cross-functional engineering when only one eng component (Docs/UXD excluded)', async function() {
     var storage = makeStorage(makeCandidatesCache([
       {
         issueKey: 'T-1', summary: 'F1', status: 'In Progress',
@@ -173,19 +173,19 @@ describe('FPDoR in health pipeline', function() {
     ]))
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
     var items = result.features[0].fpdor.items
-    var cfItem = items.find(function(i) { return i.name === 'Cross-functional Engagement' })
-    expect(cfItem.pass).toBe(false)
+    var engItem = items.find(function(i) { return i.name === 'Cross-functional Engineering' })
+    expect(engItem.pass).toBe(false)
   })
 
-  it('fails cross-functional check when no Documentation and no UXD', async function() {
+  it('fails cross-functional engineering when only one eng component and no dependency signal', async function() {
     var storage = makeStorage(makeCandidatesCache([
       { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: ['Dashboard'], fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
     ]))
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
     var items = result.features[0].fpdor.items
-    var cfItem = items.find(function(i) { return i.name === 'Cross-functional Engagement' })
-    expect(cfItem.pass).toBe(false)
-    expect(cfItem.state).toBe('failed')
+    var engItem = items.find(function(i) { return i.name === 'Cross-functional Engineering' })
+    expect(engItem.pass).toBe(false)
+    expect(engItem.state).toBe('failed')
   })
 
   it('passes assignee check when deliveryOwner is set', async function() {
@@ -252,38 +252,46 @@ describe('FPDoR in health pipeline', function() {
     expect(rtItem.pass).toBe(true)
   })
 
-  it('passes cross-functional check with Documentation and UXD components', async function() {
+  it('passes documentation and UXD as separate items when components present', async function() {
     var storage = makeStorage(makeCandidatesCache([
       {
         issueKey: 'T-1', summary: 'F1', status: 'In Progress',
-        components: ['UXD', 'Documentation', 'Dashboard'], fixVersion: '', deliveryOwner: 'Jane', tier: 1
+        components: ['UXD', 'Documentation', 'Dashboard', 'Platform'], fixVersion: '', deliveryOwner: 'Jane', tier: 1,
+        phase: 'GA', docsRequired: 'Yes'
       }
     ]))
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
     var items = result.features[0].fpdor.items
-    var cfItem = items.find(function(i) { return i.name === 'Cross-functional Engagement' })
-    expect(cfItem.pass).toBe(true)
+    var engItem = items.find(function(i) { return i.name === 'Cross-functional Engineering' })
+    var docsItem = items.find(function(i) { return i.name === 'Documentation' })
+    var uxdItem = items.find(function(i) { return i.name === 'UXD' })
+    expect(engItem.pass).toBe(true)
+    expect(docsItem.pass).toBe(true)
+    expect(uxdItem.pass).toBe(true)
   })
 
-  it('passes 5 of 11 jira items with correct candidate data (no enrichment)', async function() {
+  it('passes 7 of 13 jira items with correct candidate data (no enrichment)', async function() {
     var storage = makeStorage(makeCandidatesCache([
       {
         issueKey: 'T-1', summary: 'F1', status: 'In Progress',
-        components: ['Documentation', 'UXD', 'Dashboard'], fixVersion: '', deliveryOwner: 'Jane',
-        pm: 'Rick', tier: 1, targetRelease: '3.5', phase: 'GA'
+        components: ['Documentation', 'UXD', 'Dashboard', 'Platform'], fixVersion: '', deliveryOwner: 'Jane',
+        pm: 'Rick', tier: 1, targetRelease: '3.5', phase: 'GA', docsRequired: 'Yes'
       }
     ]))
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
     var fpdor = result.features[0].fpdor
-    expect(fpdor.evaluatedCount).toBe(11)
+    expect(fpdor.evaluatedCount).toBe(13)
+    expect(fpdor.totalCount).toBe(13)
     var passed = fpdor.items.filter(function(i) { return i.pass === true })
     var passedNames = passed.map(function(i) { return i.name }).sort()
     expect(passedNames).toEqual([
       'Assignee',
-      'Cross-functional Engagement',
+      'Cross-functional Engineering',
+      'Documentation',
       'PM Assigned',
       'Release Type',
-      'Target Version'
+      'Target Version',
+      'UXD'
     ])
   })
 
