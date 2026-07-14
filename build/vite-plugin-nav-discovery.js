@@ -99,7 +99,7 @@ export default function navDiscovery() {
     const content = fs.readFileSync(filePath, 'utf-8')
 
     // Extract <script setup> or <script> block
-    const scriptMatch = content.match(/<script[^>]*>([\s\S]*?)<\/script>/)
+    const scriptMatch = content.match(/<script[^>]*>([\s\S]*?)<\/script>/i)
     if (!scriptMatch) return []
 
     const script = scriptMatch[1]
