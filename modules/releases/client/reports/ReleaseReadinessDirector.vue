@@ -14,6 +14,28 @@
       </div>
     </div>
 
+    <!-- Release Schedule Bar (from Product Pages) -->
+    <div v-if="releaseSchedule" class="rounded-lg px-6 py-4 mb-6 flex items-center justify-between" style="background: linear-gradient(135deg, #1e3a5f 0%, #6b21a8 50%, #9d4edd 100%)">
+      <div>
+        <p class="text-xs font-medium uppercase tracking-wider text-purple-200 mb-1">Viewing Release</p>
+        <p class="text-xl font-bold text-white">{{ selectedVersion }}</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <div v-if="releaseSchedule.code_freeze_date" class="text-center">
+          <p class="text-xs font-medium uppercase tracking-wider text-purple-200 mb-1">Code Freeze</p>
+          <p class="text-sm font-semibold text-white bg-white/10 rounded-md px-3 py-1">{{ formatScheduleDate(releaseSchedule.code_freeze_date) }}</p>
+        </div>
+        <div v-if="releaseSchedule.ga_date" class="text-center">
+          <p class="text-xs font-medium uppercase tracking-wider text-purple-200 mb-1">GA Date</p>
+          <p class="text-sm font-semibold text-white bg-white/10 rounded-md px-3 py-1">{{ formatScheduleDate(releaseSchedule.ga_date) }}</p>
+        </div>
+        <div class="text-center">
+          <p class="text-xs font-medium uppercase tracking-wider text-purple-200 mb-1">Status</p>
+          <p class="text-sm font-semibold rounded-md px-3 py-1" :class="releaseSchedule.status === 'Released' ? 'bg-green-500/20 text-green-300' : 'bg-purple-500/20 text-purple-200'">{{ releaseSchedule.status }}</p>
+        </div>
+      </div>
+    </div>
+
     <!-- Release section with version + decision status -->
     <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
       <div class="flex items-center gap-5">
@@ -474,6 +496,12 @@ function formatDate(iso) {
   return iso ? new Date(iso).toLocaleString() : ''
 }
 
+function formatScheduleDate(dateStr) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr + 'T00:00:00')
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
 function togglePhase(epicKey) {
   expandedPhases[epicKey] = !expandedPhases[epicKey]
 }
@@ -489,6 +517,11 @@ const overallPct = computed(() => {
   const gates = director.value.gate_statuses
   if (!gates.length) return 0
   return Math.round(gates.reduce((s, g) => s + g.pct, 0) / gates.length)
+})
+
+const releaseSchedule = computed(() => {
+  if (!data.value || !data.value.release_schedule) return null
+  return data.value.release_schedule
 })
 
 const openIssuesToValidate = computed(() => {
