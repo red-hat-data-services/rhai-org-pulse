@@ -8,8 +8,7 @@ import FeatureReadinessFilterBar from '../components/FeatureReadinessFilterBar.v
 import FeatureReadinessRow from '../components/FeatureReadinessRow.vue'
 import FeatureReadinessDrawer from '../components/FeatureReadinessDrawer.vue'
 import {
-  featureMatchesProduct,
-  featureFailsSelectedFpdorItems,
+  featureMatchesSharedFilters,
   exportFeatureReadinessCsv
 } from '../utils/feature-readiness-export.js'
 
@@ -72,26 +71,7 @@ const filters = ref({
 })
 
 function matchesFilters(feature) {
-  const f = filters.value
-  if (f.outcome.length) {
-    var featureRocks = feature.bigRock ? feature.bigRock.split(', ') : []
-    if (!featureRocks.some(function(r) { return f.outcome.includes(r) })) return false
-  }
-  if (f.targetVersion.length && !(feature.targetVersions || []).some(function(tv) { return f.targetVersion.includes(tv) })) return false
-  if (f.fixVersion.length && !f.fixVersion.includes(feature.fixVersion)) return false
-  if (f.component.length && !(feature.components || []).some(function(c) { return f.component.includes(c) })) return false
-  if (f.priority.length && !f.priority.includes(feature.priority)) return false
-  if (f.team.length && !f.team.includes(feature.team)) return false
-  if (f.product.length && !featureMatchesProduct(feature, f.product)) return false
-  if (f.fpdorItems.length && !featureFailsSelectedFpdorItems(feature, f.fpdorItems)) return false
-  if (f.readiness === 'ready' && feature.confidence === 'not-ready') return false
-  if (f.readiness === 'not-ready' && feature.confidence !== 'not-ready') return false
-  if (selectedVersion.value) {
-    if (!(feature.targetVersions || []).some(function(tv) {
-      return tv === selectedVersion.value || tv.indexOf(selectedVersion.value) !== -1 || selectedVersion.value.indexOf(tv) !== -1
-    })) return false
-  }
-  return true
+  return featureMatchesSharedFilters(feature, filters.value, selectedVersion.value, { applyReadiness: true })
 }
 
 const filteredFeatures = computed(() => {
@@ -106,24 +86,7 @@ const filteredFeatures = computed(() => {
 
 const readyCounts = computed(() => {
   var all = pendingReview.value.concat(ready.value).filter(function(f) {
-    const fv = filters.value
-    if (fv.outcome.length) {
-      var countRocks = f.bigRock ? f.bigRock.split(', ') : []
-      if (!countRocks.some(function(r) { return fv.outcome.includes(r) })) return false
-    }
-    if (fv.targetVersion.length && !(f.targetVersions || []).some(function(tv) { return fv.targetVersion.includes(tv) })) return false
-    if (fv.fixVersion.length && !fv.fixVersion.includes(f.fixVersion)) return false
-    if (fv.component.length && !(f.components || []).some(function(c) { return fv.component.includes(c) })) return false
-    if (fv.priority.length && !fv.priority.includes(f.priority)) return false
-    if (fv.team.length && !fv.team.includes(f.team)) return false
-    if (fv.product.length && !featureMatchesProduct(f, fv.product)) return false
-    if (fv.fpdorItems.length && !featureFailsSelectedFpdorItems(f, fv.fpdorItems)) return false
-    if (selectedVersion.value) {
-      if (!(f.targetVersions || []).some(function(tv) {
-        return tv === selectedVersion.value || tv.indexOf(selectedVersion.value) !== -1 || selectedVersion.value.indexOf(tv) !== -1
-      })) return false
-    }
-    return true
+    return featureMatchesSharedFilters(f, filters.value, selectedVersion.value, { applyReadiness: false })
   })
   var readyCount = 0
   var notReadyCount = 0

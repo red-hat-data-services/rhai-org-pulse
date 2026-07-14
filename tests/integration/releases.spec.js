@@ -553,6 +553,20 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('Feature List shows Product, Failed FPDoR filters and Export CSV', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=feature-readiness');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.getByText('Product', { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: /All products/i })).toBeVisible();
+    await expect(page.getByText('Failed FPDoR', { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: /Any failed item/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Export CSV/i })).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
   test('PM Hub view loads with priority scores visible', async ({ page }) => {
     await page.goto('/#/releases/plan');
     await page.waitForLoadState('networkidle');
