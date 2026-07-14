@@ -15,23 +15,26 @@
     </div>
 
     <!-- Release Schedule Bar (from Product Pages) -->
-    <div v-if="releaseSchedule" class="rounded-lg px-6 py-4 mb-6 flex items-center justify-between" style="background: linear-gradient(135deg, #1e3a5f 0%, #6b21a8 50%, #9d4edd 100%)">
-      <div>
-        <p class="text-xs font-medium uppercase tracking-wider text-purple-200 mb-1">Viewing Release</p>
-        <p class="text-xl font-bold text-white">{{ selectedVersion }}</p>
-      </div>
-      <div class="flex items-center gap-4">
-        <div v-if="releaseSchedule.code_freeze_date" class="text-center">
-          <p class="text-xs font-medium uppercase tracking-wider text-purple-200 mb-1">Code Freeze</p>
-          <p class="text-sm font-semibold text-white bg-white/10 rounded-md px-3 py-1">{{ formatScheduleDate(releaseSchedule.code_freeze_date) }}</p>
+    <div v-if="releaseSchedule" class="rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 dark:from-blue-700 dark:via-indigo-700 dark:to-violet-700 px-6 py-5 shadow-lg text-white mb-6">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-widest text-blue-200 mb-1">Viewing Release</p>
+          <h3 class="text-3xl font-extrabold tracking-tight leading-none">{{ selectedVersion }}</h3>
         </div>
-        <div v-if="releaseSchedule.ga_date" class="text-center">
-          <p class="text-xs font-medium uppercase tracking-wider text-purple-200 mb-1">GA Date</p>
-          <p class="text-sm font-semibold text-white bg-white/10 rounded-md px-3 py-1">{{ formatScheduleDate(releaseSchedule.ga_date) }}</p>
-        </div>
-        <div class="text-center">
-          <p class="text-xs font-medium uppercase tracking-wider text-purple-200 mb-1">Status</p>
-          <p class="text-sm font-semibold rounded-md px-3 py-1" :class="releaseSchedule.status === 'Released' ? 'bg-green-500/20 text-green-300' : 'bg-purple-500/20 text-purple-200'">{{ releaseSchedule.status }}</p>
+        <div class="flex flex-wrap gap-3">
+          <div v-if="releaseSchedule.code_freeze_date" class="flex flex-col items-center bg-white/15 backdrop-blur-sm rounded-xl px-5 py-2.5 min-w-[90px]">
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">Code Freeze</span>
+            <span class="text-sm font-bold">{{ formatScheduleDate(releaseSchedule.code_freeze_date) }}</span>
+          </div>
+          <div v-if="releaseSchedule.ga_date" class="flex flex-col items-center bg-white/15 backdrop-blur-sm rounded-xl px-5 py-2.5 min-w-[90px]">
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">GA Date</span>
+            <span class="text-sm font-bold">{{ formatScheduleDate(releaseSchedule.ga_date) }}</span>
+          </div>
+          <div class="flex flex-col items-center rounded-xl px-5 py-2.5 min-w-[90px]"
+            :class="releaseSchedule.status === 'Released' ? 'bg-emerald-500/30' : 'bg-amber-500/30'">
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">Status</span>
+            <span class="text-sm font-bold">{{ releaseSchedule.status }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -465,14 +468,37 @@ const expandedPhases = reactive({})
 
 onMounted(async () => {
   await loadVersions()
-  if (versions.value.length === 1) {
-    selectedVersion.value = versions.value[0]
-    await loadMetrics(selectedVersion.value)
+  if (versions.value.length > 0) {
+    const defaultVersion = await findUpcomingVersion(versions.value)
+    selectedVersion.value = defaultVersion
+    await loadMetrics(defaultVersion)
     if (data.value && data.value.component_readiness) {
       selectedComponents.value = [...(data.value.component_readiness.all_components || [])]
     }
   }
 })
+
+async function findUpcomingVersion(versionList) {
+  const today = new Date().toISOString().slice(0, 10)
+  let best = null
+  let bestGa = null
+
+  for (const v of versionList) {
+    try {
+      await loadMetrics(v)
+      const schedule = data.value?.release_schedule
+      if (schedule && schedule.ga_date) {
+        if (schedule.ga_date >= today) {
+          if (!bestGa || schedule.ga_date < bestGa) {
+            bestGa = schedule.ga_date
+            best = v
+          }
+        }
+      }
+    } catch (_) { /* skip */ }
+  }
+  return best || versionList[0]
+}
 
 function goBack() {
   if (moduleNav && moduleNav.navigateTo) moduleNav.navigateTo('reports')
