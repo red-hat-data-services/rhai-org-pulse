@@ -458,6 +458,7 @@ const {
   loading,
   error,
   versions,
+  defaultVersion,
   loadMetrics,
   loadVersions
 } = useReleaseReadiness()
@@ -469,36 +470,14 @@ const expandedPhases = reactive({})
 onMounted(async () => {
   await loadVersions()
   if (versions.value.length > 0) {
-    const defaultVersion = await findUpcomingVersion(versions.value)
-    selectedVersion.value = defaultVersion
-    await loadMetrics(defaultVersion)
+    const initial = defaultVersion.value || versions.value[0]
+    selectedVersion.value = initial
+    await loadMetrics(initial)
     if (data.value && data.value.component_readiness) {
       selectedComponents.value = [...(data.value.component_readiness.all_components || [])]
     }
   }
 })
-
-async function findUpcomingVersion(versionList) {
-  const today = new Date().toISOString().slice(0, 10)
-  let best = null
-  let bestGa = null
-
-  for (const v of versionList) {
-    try {
-      await loadMetrics(v)
-      const schedule = data.value?.release_schedule
-      if (schedule && schedule.ga_date) {
-        if (schedule.ga_date >= today) {
-          if (!bestGa || schedule.ga_date < bestGa) {
-            bestGa = schedule.ga_date
-            best = v
-          }
-        }
-      }
-    } catch (_) { /* skip */ }
-  }
-  return best || versionList[0]
-}
 
 function goBack() {
   if (moduleNav && moduleNav.navigateTo) moduleNav.navigateTo('reports')
@@ -580,7 +559,6 @@ const productBlockers = computed(() => {
   return { ...raw, components: openComponents, total_open: totalOpen, jql_url: jqlUrl }
 })
 
-// Overall Summary: TFA Sign-Off counts from full JQL query
 const testSignOffDone = computed(() => {
   if (!data.value) return 0
   return data.value.tfa_signoff_done ?? 0
