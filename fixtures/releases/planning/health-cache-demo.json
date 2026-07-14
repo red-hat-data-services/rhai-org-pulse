@@ -242,7 +242,19 @@
             "state": "passed"
           },
           {
-            "name": "Cross-functional Engagement",
+            "name": "Cross-functional Engineering",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Documentation",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "UXD",
             "pass": false,
             "source": "jira",
             "state": "failed"
@@ -267,8 +279,8 @@
           }
         ],
         "passedCount": 5,
-        "totalCount": 10,
-        "evaluatedCount": 6
+        "totalCount": 13,
+        "evaluatedCount": 8
       },
       "issueType": "Feature",
       "versionStatus": "committed",
@@ -406,7 +418,19 @@
             "state": "passed"
           },
           {
-            "name": "Cross-functional Engagement",
+            "name": "Cross-functional Engineering",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Documentation",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "UXD",
             "pass": false,
             "source": "jira",
             "state": "failed"
@@ -431,8 +455,8 @@
           }
         ],
         "passedCount": 5,
-        "totalCount": 10,
-        "evaluatedCount": 6
+        "totalCount": 13,
+        "evaluatedCount": 8
       },
       "issueType": "Feature",
       "versionStatus": "targeted",
@@ -579,7 +603,19 @@
             "state": "passed"
           },
           {
-            "name": "Cross-functional Engagement",
+            "name": "Cross-functional Engineering",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Documentation",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "UXD",
             "pass": false,
             "source": "jira",
             "state": "failed"
@@ -604,8 +640,8 @@
           }
         ],
         "passedCount": 4,
-        "totalCount": 10,
-        "evaluatedCount": 6
+        "totalCount": 13,
+        "evaluatedCount": 8
       },
       "issueType": "Feature",
       "versionStatus": "committed",
@@ -749,7 +785,19 @@
             "state": "passed"
           },
           {
-            "name": "Cross-functional Engagement",
+            "name": "Cross-functional Engineering",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Documentation",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "UXD",
             "pass": false,
             "source": "jira",
             "state": "failed"
@@ -774,8 +822,8 @@
           }
         ],
         "passedCount": 5,
-        "totalCount": 10,
-        "evaluatedCount": 6
+        "totalCount": 13,
+        "evaluatedCount": 8
       },
       "issueType": "Feature",
       "versionStatus": "targeted",
@@ -927,7 +975,19 @@
             "state": "passed"
           },
           {
-            "name": "Cross-functional Engagement",
+            "name": "Cross-functional Engineering",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Documentation",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "UXD",
             "pass": false,
             "source": "jira",
             "state": "failed"
@@ -952,8 +1012,8 @@
           }
         ],
         "passedCount": 3,
-        "totalCount": 10,
-        "evaluatedCount": 6
+        "totalCount": 13,
+        "evaluatedCount": 8
       },
       "issueType": "Feature",
       "versionStatus": "committed",
@@ -1165,7 +1225,19 @@
             "state": "passed"
           },
           {
-            "name": "Cross-functional Engagement",
+            "name": "Cross-functional Engineering",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Documentation",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "UXD",
             "pass": false,
             "source": "jira",
             "state": "failed"
@@ -1190,8 +1262,8 @@
           }
         ],
         "passedCount": 3,
-        "totalCount": 10,
-        "evaluatedCount": 6
+        "totalCount": 13,
+        "evaluatedCount": 8
       },
       "issueType": "Feature",
       "versionStatus": "none",
@@ -1418,7 +1490,19 @@
             "state": "failed"
           },
           {
-            "name": "Cross-functional Engagement",
+            "name": "Cross-functional Engineering",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Documentation",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "UXD",
             "pass": false,
             "source": "jira",
             "state": "failed"
@@ -1443,8 +1527,8 @@
           }
         ],
         "passedCount": 1,
-        "totalCount": 10,
-        "evaluatedCount": 6
+        "totalCount": 13,
+        "evaluatedCount": 8
       },
       "issueType": "Feature",
       "versionStatus": "targeted",
@@ -1600,7 +1684,19 @@
             "state": "passed"
           },
           {
-            "name": "Cross-functional Engagement",
+            "name": "Cross-functional Engineering",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Documentation",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "UXD",
             "pass": false,
             "source": "jira",
             "state": "failed"
@@ -1625,8 +1721,8 @@
           }
         ],
         "passedCount": 5,
-        "totalCount": 10,
-        "evaluatedCount": 6
+        "totalCount": 13,
+        "evaluatedCount": 8
       },
       "issueType": "Feature",
       "versionStatus": "committed",
@@ -1773,7 +1869,19 @@
             "state": "passed"
           },
           {
-            "name": "Cross-functional Engagement",
+            "name": "Cross-functional Engineering",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Documentation",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "UXD",
             "pass": false,
             "source": "jira",
             "state": "failed"
@@ -1798,8 +1906,8 @@
           }
         ],
         "passedCount": 4,
-        "totalCount": 10,
-        "evaluatedCount": 6
+        "totalCount": 13,
+        "evaluatedCount": 8
       },
       "issueType": "Feature",
       "versionStatus": "committed",
@@ -1937,7 +2045,19 @@
             "state": "passed"
           },
           {
-            "name": "Cross-functional Engagement",
+            "name": "Cross-functional Engineering",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Documentation",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "UXD",
             "pass": false,
             "source": "jira",
             "state": "failed"
@@ -1962,8 +2082,8 @@
           }
         ],
         "passedCount": 5,
-        "totalCount": 10,
-        "evaluatedCount": 6
+        "totalCount": 13,
+        "evaluatedCount": 8
       },
       "issueType": "Initiative",
       "versionStatus": "targeted",
@@ -2115,7 +2235,19 @@
             "state": "passed"
           },
           {
-            "name": "Cross-functional Engagement",
+            "name": "Cross-functional Engineering",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Documentation",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "UXD",
             "pass": false,
             "source": "jira",
             "state": "failed"
@@ -2140,8 +2272,8 @@
           }
         ],
         "passedCount": 3,
-        "totalCount": 10,
-        "evaluatedCount": 6
+        "totalCount": 13,
+        "evaluatedCount": 8
       },
       "issueType": "Feature",
       "versionStatus": "none",
@@ -2285,7 +2417,19 @@
             "state": "passed"
           },
           {
-            "name": "Cross-functional Engagement",
+            "name": "Cross-functional Engineering",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Documentation",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "UXD",
             "pass": false,
             "source": "jira",
             "state": "failed"
@@ -2310,8 +2454,8 @@
           }
         ],
         "passedCount": 5,
-        "totalCount": 10,
-        "evaluatedCount": 6
+        "totalCount": 13,
+        "evaluatedCount": 8
       },
       "issueType": "Feature",
       "versionStatus": "committed",
@@ -2461,7 +2605,19 @@
             "state": "passed"
           },
           {
-            "name": "Cross-functional Engagement",
+            "name": "Cross-functional Engineering",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "Documentation",
+            "pass": false,
+            "source": "jira",
+            "state": "failed"
+          },
+          {
+            "name": "UXD",
             "pass": false,
             "source": "jira",
             "state": "failed"
@@ -2486,8 +2642,8 @@
           }
         ],
         "passedCount": 5,
-        "totalCount": 10,
-        "evaluatedCount": 6
+        "totalCount": 13,
+        "evaluatedCount": 8
       },
       "issueType": "Feature",
       "versionStatus": "committed",
