@@ -429,3 +429,7 @@ module.exports = function registerVersionMapRoutes(router, context) {
     }
   });
 };
+
+module.exports._testExports = {
+  parseFeatureSummary, extractVariantBase, extractPackageFromEpic,
+};

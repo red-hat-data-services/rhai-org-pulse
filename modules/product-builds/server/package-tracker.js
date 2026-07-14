@@ -300,3 +300,8 @@ module.exports = function registerPackageTrackerRoutes(router, context) {
     }
   });
 };
+
+module.exports._testExports = {
+  extractAdfText, extractJiraLinks, parseDescriptionFields,
+  computeRisk, computeLeadTime, extractTargetVersions,
+};
