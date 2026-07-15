@@ -31,9 +31,9 @@ var saving = ref(false)
 var error = ref(null)
 var dirty = ref(false)
 var pendingCapacity = ref(null)
-var selectedProduct = ref('RHOAI')
+var selectedProduct = ref('') // '' = all products in the plan
 var selectedVersion = ref('3.6')
-var availableProducts = ref(['RHOAI'])
+var availableProducts = ref(['RHOAI', 'RHAII'])
 var availableCycles = ref([])
 var filterEvent = ref('')
 var filterComponent = ref('')
@@ -45,9 +45,11 @@ export function useDraftPlans() {
   })
 
   var cycleLabel = computed(function() {
-    var product = selectedProduct.value || 'RHOAI'
     var ver = (draft.value && draft.value.version) || selectedVersion.value || ''
-    return ver ? product + ' ' + ver : product
+    var prod = selectedProduct.value
+    if (!ver) return prod || 'Draft Plan'
+    if (!prod) return 'RHOAI + RHAII ' + ver
+    return prod + ' ' + ver
   })
 
   var activeCycleMeta = computed(function() {
@@ -72,9 +74,17 @@ export function useDraftPlans() {
     return rows
   })
 
+  var productScopedRows = computed(function() {
+    var prod = selectedProduct.value
+    if (!prod) return viewRows.value
+    return viewRows.value.filter(function(row) {
+      return row.productFamily === prod
+    })
+  })
+
   var filteredRows = computed(function() {
     var q = String(filterText.value || '').trim().toLowerCase()
-    return viewRows.value.filter(function(row) {
+    return productScopedRows.value.filter(function(row) {
       if (filterEvent.value && row.event !== filterEvent.value) return false
       if (filterComponent.value && row.component !== filterComponent.value) return false
       if (!q) return true
@@ -88,7 +98,7 @@ export function useDraftPlans() {
 
   var components = computed(function() {
     var set = {}
-    var list = candidates.value
+    var list = productScopedRows.value
     for (var i = 0; i < list.length; i++) {
       if (list[i].component) set[list[i].component] = true
     }
@@ -97,7 +107,7 @@ export function useDraftPlans() {
 
   var assignees = computed(function() {
     var set = {}
-    var list = candidates.value
+    var list = productScopedRows.value
     for (var i = 0; i < list.length; i++) {
       if (list[i].assignee && list[i].assignee !== '—') set[list[i].assignee] = true
     }
@@ -106,7 +116,7 @@ export function useDraftPlans() {
 
   var counts = computed(function() {
     var c = { EA1: 0, EA2: 0, GA: 0, 'Below cut': 0, Descope: 0 }
-    var rows = viewRows.value
+    var rows = productScopedRows.value
     for (var i = 0; i < rows.length; i++) {
       var ev = rows[i].event
       if (c[ev] != null) c[ev] += 1
@@ -122,16 +132,24 @@ export function useDraftPlans() {
     return isFinalFrozen(editor.value.meta)
   })
 
+  function scopedCandidates() {
+    var prod = selectedProduct.value
+    if (!prod) return candidates.value
+    return candidates.value.filter(function(row) {
+      return row.productFamily === prod
+    })
+  }
+
   function eventLoadBars(eventName) {
-    return loadBarsByComponent(candidates.value, editor.value.edits, ceilings.value, eventName)
+    return loadBarsByComponent(scopedCandidates(), editor.value.edits, ceilings.value, eventName)
   }
 
   async function loadCycles(product) {
-    var prod = product || selectedProduct.value || 'RHOAI'
-    selectedProduct.value = prod
+    // Cycles are version-scoped; product query is for catalog lookup (default RHOAI storage)
+    var prod = product || 'RHOAI'
     try {
       var data = await apiRequest(API_BASE + '/cycles?product=' + encodeURIComponent(prod))
-      availableProducts.value = data.products && data.products.length ? data.products : ['RHOAI']
+      availableProducts.value = data.products && data.products.length ? data.products : ['RHOAI', 'RHAII']
       availableCycles.value = Array.isArray(data.cycles) ? data.cycles : []
       if (!selectedVersion.value && data.defaultVersion) {
         selectedVersion.value = data.defaultVersion
@@ -154,17 +172,16 @@ export function useDraftPlans() {
     }
   }
 
-  async function loadEditor(version, product) {
+  async function loadEditor(version) {
     loading.value = true
     error.value = null
     pendingCapacity.value = null
     try {
-      if (product) selectedProduct.value = product
-      var prod = selectedProduct.value || 'RHOAI'
       var ver = version || selectedVersion.value || '3.6'
       selectedVersion.value = ver
+      // Shared cycle draft storage key (RHOAI namespace); product UI filters within the plan
       var data = await apiRequest(
-        API_BASE + '/editor/' + encodeURIComponent(ver) + '?product=' + encodeURIComponent(prod)
+        API_BASE + '/editor/' + encodeURIComponent(ver) + '?product=RHOAI'
       )
       var normalized = normalizeDraft(data.draft || data)
       draft.value = normalized
@@ -190,13 +207,11 @@ export function useDraftPlans() {
     if (!draft.value || !draft.value.version) return
     saving.value = true
     try {
-      var prod = selectedProduct.value || 'RHOAI'
       await apiRequest(
         API_BASE +
           '/editor/' +
           encodeURIComponent(draft.value.version) +
-          '?product=' +
-          encodeURIComponent(prod),
+          '?product=RHOAI',
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -316,6 +331,10 @@ export function useDraftPlans() {
     markDirty()
   }
 
+  function setProductFilter(product) {
+    selectedProduct.value = product || ''
+  }
+
   return {
     ADMIN,
     PLACEMENTS,
@@ -338,6 +357,7 @@ export function useDraftPlans() {
     filterText,
     candidates,
     viewRows,
+    productScopedRows,
     filteredRows,
     components,
     assignees,
@@ -362,7 +382,8 @@ export function useDraftPlans() {
     unfreezeAll,
     freezeFinalGa,
     reset,
-    setCurrentUser
+    setCurrentUser,
+    setProductFilter
   }
 }
 
@@ -376,9 +397,9 @@ export function _resetDraftPlansForTests() {
   error.value = null
   dirty.value = false
   pendingCapacity.value = null
-  selectedProduct.value = 'RHOAI'
+  selectedProduct.value = ''
   selectedVersion.value = '3.6'
-  availableProducts.value = ['RHOAI']
+  availableProducts.value = ['RHOAI', 'RHAII']
   availableCycles.value = []
   filterEvent.value = ''
   filterComponent.value = ''

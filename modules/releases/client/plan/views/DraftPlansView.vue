@@ -28,6 +28,7 @@
               :disabled="loading || saving"
               @change="onProductChange($event.target.value)"
             >
+              <option value="">All (RHOAI + RHAII)</option>
               <option v-for="p in availableProducts" :key="p" :value="p">{{ p }}</option>
             </select>
           </label>
@@ -387,7 +388,8 @@ var {
   unfreezeAll,
   freezeFinalGa,
   reset,
-  setCurrentUser
+  setCurrentUser,
+  setProductFilter
 } = useDraftPlans()
 
 var scheduledEvents = ['EA1', 'EA2', 'GA']
@@ -395,7 +397,7 @@ var filterPlacements = PLACEMENTS.concat(['Descope'])
 
 var summaryStats = computed(function() {
   return [
-    { label: 'Candidates', value: draft.value && draft.value.summary ? draft.value.summary.candidateCount : filteredRows.value.length },
+    { label: 'Candidates', value: filteredRows.value.length },
     { label: 'EA1', value: counts.value.EA1 || 0 },
     { label: 'EA2', value: counts.value.EA2 || 0 },
     { label: 'GA', value: counts.value.GA || 0 },
@@ -438,20 +440,17 @@ function onReset() {
 
 function onReload() {
   if (dirty.value && !window.confirm('Discard unsaved changes and reload?')) return
-  loadEditor(selectedVersion.value, selectedProduct.value)
+  loadEditor(selectedVersion.value)
 }
 
-async function onProductChange(product) {
-  if (product === selectedProduct.value) return
-  if (dirty.value && !window.confirm('Discard unsaved changes and switch product?')) return
-  await loadCycles(product)
-  await loadEditor(selectedVersion.value, product)
+function onProductChange(product) {
+  setProductFilter(product)
 }
 
 async function onVersionChange(version) {
   if (version === selectedVersion.value) return
   if (dirty.value && !window.confirm('Discard unsaved changes and switch cycle?')) return
-  await loadEditor(version, selectedProduct.value)
+  await loadEditor(version)
 }
 
 function formatTs(ts) {
@@ -463,10 +462,10 @@ function formatTs(ts) {
 
 onMounted(async function() {
   try {
-    await loadCycles(selectedProduct.value)
+    await loadCycles('RHOAI')
   } catch {
     // loadEditor still tries demo/editor path
   }
-  await loadEditor(selectedVersion.value, selectedProduct.value)
+  await loadEditor(selectedVersion.value)
 })
 </script>

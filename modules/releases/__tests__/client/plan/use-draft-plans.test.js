@@ -83,7 +83,7 @@ describe('useDraftPlans', function() {
       if (String(path).indexOf('/cycles') !== -1) {
         return Promise.resolve({
           product: 'RHOAI',
-          products: ['RHOAI'],
+          products: ['RHOAI', 'RHAII'],
           defaultVersion: '3.6',
           cycles: [
             {
@@ -115,12 +115,15 @@ describe('useDraftPlans', function() {
     expect(api.dirty.value).toBe(false)
   })
 
-  it('loads available cycles for the product', async function() {
+  it('loads available cycles and labels both products by default', async function() {
     var api = mountComposable()
     await api.loadCycles('RHOAI')
     await flushPromises()
+    expect(api.availableProducts.value).toEqual(['RHOAI', 'RHAII'])
     expect(api.availableCycles.value).toHaveLength(1)
-    expect(api.cycleLabel.value).toBe('RHOAI 3.6')
+    expect(api.cycleLabel.value).toBe('RHOAI + RHAII 3.6')
+    api.setProductFilter('RHAII')
+    expect(api.cycleLabel.value).toBe('RHAII 3.6')
   })
 
   it('filters rows by event and search text', async function() {

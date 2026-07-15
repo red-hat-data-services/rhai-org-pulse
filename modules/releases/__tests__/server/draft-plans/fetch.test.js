@@ -37,14 +37,6 @@ const PLAN_DATA = {
   ]
 }
 
-const HEALTH_DATA = {
-  generatedAt: '2026-07-08',
-  releases: [
-    { version: '3.5', totalFeatures: 156, healthStatus: 'critical', featureHealth: { ready: 127 } },
-    { version: '3.6', totalFeatures: 80, healthStatus: 'healthy', featureHealth: { ready: 75 } }
-  ]
-}
-
 describe('fetchDraftPlans', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -52,23 +44,21 @@ describe('fetchDraftPlans', () => {
   })
 
   it('fetches and stores both JSON files for each product', async () => {
-    mockFetch
-      .mockResolvedValueOnce(mockJsonResponse(PLAN_DATA))
-      .mockResolvedValueOnce(mockJsonResponse(HEALTH_DATA))
+    mockFetch.mockResolvedValue(mockJsonResponse(PLAN_DATA))
 
     const storage = makeStorage()
     const result = await fetchDraftPlans(storage, baseConfig, 'test-token')
 
     expect(result.status).toBe('success')
-    expect(result.fileCount).toBe(2)
+    expect(result.fileCount).toBe(4)
     expect(storage._written[`${DATA_PREFIX}/RHOAI/release-plan.json`]).toEqual(PLAN_DATA)
-    expect(storage._written[`${DATA_PREFIX}/RHOAI/release-health.json`]).toEqual(HEALTH_DATA)
+    expect(storage._written[`${DATA_PREFIX}/RHOAI/release-health.json`]).toEqual(PLAN_DATA)
+    expect(storage._written[`${DATA_PREFIX}/RHAII/release-plan.json`]).toEqual(PLAN_DATA)
+    expect(storage._written[`${DATA_PREFIX}/RHAII/release-health.json`]).toEqual(PLAN_DATA)
   })
 
   it('constructs correct GitLab Repository Files API URLs', async () => {
-    mockFetch
-      .mockResolvedValueOnce(mockJsonResponse(PLAN_DATA))
-      .mockResolvedValueOnce(mockJsonResponse(HEALTH_DATA))
+    mockFetch.mockResolvedValue(mockJsonResponse(PLAN_DATA))
 
     const storage = makeStorage()
     await fetchDraftPlans(storage, baseConfig, 'my-token')
@@ -78,6 +68,9 @@ describe('fetchDraftPlans', () => {
 
     const healthUrl = mockFetch.mock.calls[1][0]
     expect(healthUrl).toBe('https://gitlab.com/api/v4/projects/81798612/repository/files/RHOAI%2Flatest%2Frelease-health.json/raw?ref=main')
+
+    const rhaiiPlan = mockFetch.mock.calls[2][0]
+    expect(rhaiiPlan).toBe('https://gitlab.com/api/v4/projects/81798612/repository/files/RHAII%2Flatest%2Frelease-plan.json/raw?ref=main')
   })
 
   it('sends Bearer token in Authorization header', async () => {

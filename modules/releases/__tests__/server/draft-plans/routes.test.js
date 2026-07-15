@@ -424,12 +424,13 @@ describe('draft-plans routes', () => {
   })
 
   describe('GET /cycles', () => {
-    it('returns demo 3.6 cycle when no stored drafts', async () => {
+    it('returns demo 3.6 cycle and both products', async () => {
       const { router } = await setupRouter()
       const res = await callRoute(router, 'get', '/cycles', { query: { product: 'RHOAI' } })
 
       expect(res._status).toBe(200)
       expect(res._json.product).toBe('RHOAI')
+      expect(res._json.products).toEqual(['RHOAI', 'RHAII'])
       expect(res._json.defaultVersion).toBe('3.6')
       expect(res._json.cycles.some(c => c.version === '3.6' && c.demoMode)).toBe(true)
     })

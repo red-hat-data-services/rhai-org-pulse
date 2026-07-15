@@ -2,7 +2,7 @@ let _fetch = globalThis.fetch;
 
 const DATA_PREFIX = 'releases/draft-plans';
 
-const KNOWN_PRODUCTS = ['RHOAI'];
+const KNOWN_PRODUCTS = ['RHOAI', 'RHAII'];
 
 const FILES_TO_FETCH = ['release-plan.json', 'release-health.json'];
 

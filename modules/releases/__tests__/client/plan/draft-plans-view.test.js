@@ -76,7 +76,7 @@ describe('DraftPlansView', function() {
       if (String(path).indexOf('/cycles') !== -1) {
         return Promise.resolve({
           product: 'RHOAI',
-          products: ['RHOAI'],
+          products: ['RHOAI', 'RHAII'],
           defaultVersion: '3.6',
           cycles: [
             {
@@ -103,8 +103,9 @@ describe('DraftPlansView', function() {
     var wrapper = mountView()
     await flushPromises()
 
-    expect(wrapper.text()).toContain('RHOAI 3.6 Draft Plan')
+    expect(wrapper.text()).toContain('RHOAI + RHAII 3.6 Draft Plan')
     expect(wrapper.text()).toContain('Release cycle')
+    expect(wrapper.text()).toContain('All (RHOAI + RHAII)')
     expect(wrapper.text()).toContain('Demo fixture')
     expect(wrapper.text()).toContain('RHAISTRAT-1')
     expect(wrapper.text()).toContain('RHAISTRAT-2')
