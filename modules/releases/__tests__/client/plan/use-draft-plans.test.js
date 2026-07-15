@@ -79,7 +79,26 @@ describe('useDraftPlans', function() {
   beforeEach(function() {
     vi.clearAllMocks()
     _resetDraftPlansForTests()
-    mockApiRequest.mockResolvedValue(JSON.parse(JSON.stringify(FIXTURE)))
+    mockApiRequest.mockImplementation(function(path) {
+      if (String(path).indexOf('/cycles') !== -1) {
+        return Promise.resolve({
+          product: 'RHOAI',
+          products: ['RHOAI'],
+          defaultVersion: '3.6',
+          cycles: [
+            {
+              version: '3.6',
+              product: 'RHOAI',
+              label: 'RHOAI 3.6',
+              source: 'demo',
+              demoMode: true,
+              candidateCount: 2
+            }
+          ]
+        })
+      }
+      return Promise.resolve(JSON.parse(JSON.stringify(FIXTURE)))
+    })
   })
 
   it('loads editor payload into draft and view rows', async function() {
@@ -94,6 +113,14 @@ describe('useDraftPlans', function() {
     expect(api.viewRows.value).toHaveLength(2)
     expect(api.counts.value.EA1).toBe(1)
     expect(api.dirty.value).toBe(false)
+  })
+
+  it('loads available cycles for the product', async function() {
+    var api = mountComposable()
+    await api.loadCycles('RHOAI')
+    await flushPromises()
+    expect(api.availableCycles.value).toHaveLength(1)
+    expect(api.cycleLabel.value).toBe('RHOAI 3.6')
   })
 
   it('filters rows by event and search text', async function() {
@@ -148,7 +175,7 @@ describe('useDraftPlans', function() {
     await flushPromises()
 
     expect(mockApiRequest).toHaveBeenCalledWith(
-      '/modules/releases/draft-plans/editor/3.6',
+      '/modules/releases/draft-plans/editor/3.6?product=RHOAI',
       expect.objectContaining({ method: 'PUT' })
     )
     expect(api.dirty.value).toBe(false)

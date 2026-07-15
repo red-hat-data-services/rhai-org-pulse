@@ -72,7 +72,26 @@ describe('DraftPlansView', function() {
   beforeEach(function() {
     vi.clearAllMocks()
     _resetDraftPlansForTests()
-    mockApiRequest.mockResolvedValue(JSON.parse(JSON.stringify(FIXTURE)))
+    mockApiRequest.mockImplementation(function(path) {
+      if (String(path).indexOf('/cycles') !== -1) {
+        return Promise.resolve({
+          product: 'RHOAI',
+          products: ['RHOAI'],
+          defaultVersion: '3.6',
+          cycles: [
+            {
+              version: '3.6',
+              product: 'RHOAI',
+              label: 'RHOAI 3.6',
+              source: 'demo',
+              demoMode: true,
+              candidateCount: 2
+            }
+          ]
+        })
+      }
+      return Promise.resolve(JSON.parse(JSON.stringify(FIXTURE)))
+    })
     confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
   })
 
@@ -80,14 +99,15 @@ describe('DraftPlansView', function() {
     confirmSpy.mockRestore()
   })
 
-  it('loads demo draft and shows banner + feature keys', async function() {
+  it('loads demo draft and shows cycle header + feature keys', async function() {
     var wrapper = mountView()
     await flushPromises()
 
+    expect(wrapper.text()).toContain('RHOAI 3.6 Draft Plan')
+    expect(wrapper.text()).toContain('Release cycle')
     expect(wrapper.text()).toContain('Demo fixture')
     expect(wrapper.text()).toContain('RHAISTRAT-1')
     expect(wrapper.text()).toContain('RHAISTRAT-2')
-    expect(wrapper.text()).toContain('Draft Plans')
     wrapper.unmount()
   })
 
@@ -139,7 +159,17 @@ describe('DraftPlansView', function() {
   })
 
   it('shows empty state when load fails', async function() {
-    mockApiRequest.mockRejectedValueOnce(new Error('boom'))
+    mockApiRequest.mockImplementation(function(path) {
+      if (String(path).indexOf('/cycles') !== -1) {
+        return Promise.resolve({
+          product: 'RHOAI',
+          products: ['RHOAI'],
+          defaultVersion: '3.6',
+          cycles: [{ version: '3.6', label: 'RHOAI 3.6', source: 'demo', demoMode: true }]
+        })
+      }
+      return Promise.reject(new Error('boom'))
+    })
     var wrapper = mountView()
     await flushPromises()
 

@@ -30,6 +30,16 @@ function makeStorage(data = {}) {
   return {
     async readFromStorage(key) { return store[key] ? JSON.parse(JSON.stringify(store[key])) : null },
     async writeToStorage(key, value) { store[key] = value },
+    async listStorageFiles(dir) {
+      const prefix = dir.endsWith('/') ? dir : dir + '/'
+      const names = []
+      for (const key of Object.keys(store)) {
+        if (!key.startsWith(prefix)) continue
+        const rest = key.slice(prefix.length)
+        if (rest && rest.indexOf('/') === -1 && rest.endsWith('.json')) names.push(rest)
+      }
+      return names
+    },
     _store: store
   }
 }
@@ -410,6 +420,37 @@ describe('draft-plans routes', () => {
       expect(result.lastFetchTimestamp).toBe('2026-07-08T12:00:00Z')
       expect(result.fileCount).toBe(2)
       expect(result.tokenSource).toBe('GITLAB_TOKEN')
+    })
+  })
+
+  describe('GET /cycles', () => {
+    it('returns demo 3.6 cycle when no stored drafts', async () => {
+      const { router } = await setupRouter()
+      const res = await callRoute(router, 'get', '/cycles', { query: { product: 'RHOAI' } })
+
+      expect(res._status).toBe(200)
+      expect(res._json.product).toBe('RHOAI')
+      expect(res._json.defaultVersion).toBe('3.6')
+      expect(res._json.cycles.some(c => c.version === '3.6' && c.demoMode)).toBe(true)
+    })
+
+    it('prefers stored pipeline draft over demo for same version', async () => {
+      const { router } = await setupRouter({
+        [`${DATA_PREFIX}/drafts/RHOAI/3.6.json`]: {
+          version: '3.6',
+          generatedAt: '2026-07-15T00:00:00Z',
+          candidates: [
+            { key: 'RHAISTRAT-1', summary: 'Stored', basePlacement: 'EA1', component: 'KubeRay' }
+          ],
+          ceilingsByComponent: {}
+        }
+      })
+
+      const res = await callRoute(router, 'get', '/cycles', { query: { product: 'RHOAI' } })
+      const cycle = res._json.cycles.find(c => c.version === '3.6')
+      expect(cycle.source).toBe('pipeline')
+      expect(cycle.demoMode).toBe(false)
+      expect(cycle.candidateCount).toBe(1)
     })
   })
 

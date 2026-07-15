@@ -36,6 +36,89 @@ function emptyEditorEnvelope(planVersion, baseGeneratedAt) {
   };
 }
 
+async function listCyclesForProduct(storage, product) {
+  var byVersion = {};
+
+  // Published pipeline drafts (post-!25 storage layout)
+  if (storage.listStorageFiles) {
+    try {
+      var files = await storage.listStorageFiles(DATA_PREFIX + '/drafts/' + product);
+      for (var i = 0; i < files.length; i++) {
+        var name = files[i];
+        if (!name.endsWith('.json')) continue;
+        var ver = name.replace(/\.json$/, '');
+        var raw = await storage.readFromStorage(DATA_PREFIX + '/drafts/' + product + '/' + name);
+        if (!raw) continue;
+        var normalized = normalizeDraft(raw);
+        byVersion[ver] = {
+          version: normalized.version || ver,
+          product: product,
+          label: product + ' ' + (normalized.version || ver),
+          source: 'pipeline',
+          demoMode: !!normalized.demoMode,
+          generatedAt: normalized.generatedAt || null,
+          candidateCount: normalized.summary && normalized.summary.candidateCount != null
+            ? normalized.summary.candidateCount
+            : (normalized.candidates ? normalized.candidates.length : null)
+        };
+      }
+    } catch (err) {
+      console.warn('[releases/draft-plans] list drafts failed:', err.message);
+    }
+  }
+
+  // Legacy release-plan.json versions (planner catalog, may lack editor draft)
+  var plan = await storage.readFromStorage(DATA_PREFIX + '/' + product + '/release-plan.json');
+  if (plan && Array.isArray(plan.releases)) {
+    for (var p = 0; p < plan.releases.length; p++) {
+      var pr = plan.releases[p];
+      if (!pr || !pr.version) continue;
+      if (byVersion[pr.version]) continue;
+      byVersion[pr.version] = {
+        version: pr.version,
+        product: product,
+        label: product + ' ' + pr.version,
+        source: 'release-plan',
+        demoMode: false,
+        generatedAt: plan.generatedAt || null,
+        candidateCount: null,
+        editorAvailable: false
+      };
+    }
+  }
+
+  // Demo fixture fills gaps (and is default when nothing else exists)
+  var demo = loadDemoFixture();
+  if (demo && demo.version) {
+    if (!byVersion[demo.version] || byVersion[demo.version].source === 'release-plan') {
+      byVersion[demo.version] = {
+        version: demo.version,
+        product: product,
+        label: product + ' ' + demo.version,
+        source: byVersion[demo.version] ? 'demo+release-plan' : 'demo',
+        demoMode: true,
+        generatedAt: demo.generatedAt || null,
+        candidateCount: demo.summary && demo.summary.candidateCount != null
+          ? demo.summary.candidateCount
+          : (demo.candidates ? demo.candidates.length : 0),
+        editorAvailable: true
+      };
+    }
+  }
+
+  var cycles = Object.keys(byVersion)
+    .map(function(k) { return byVersion[k]; })
+    .sort(function(a, b) {
+      return String(b.version).localeCompare(String(a.version), undefined, { numeric: true });
+    });
+
+  for (var c = 0; c < cycles.length; c++) {
+    if (cycles[c].editorAvailable === undefined) cycles[c].editorAvailable = true;
+  }
+
+  return cycles;
+}
+
 module.exports = async function registerDraftPlanRoutes(router, context) {
   const { storage, requireAuth, requireScope, secrets, registerRefresh, isRefreshRunning } = context;
 
@@ -117,6 +200,43 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
   }
 
   // ─── Fixed-path routes (before parameterized) ──────────────────────
+
+  /**
+   * @openapi
+   * /api/modules/releases/draft-plans/cycles:
+   *   get:
+   *     tags: [Releases]
+   *     summary: List available draft-plan cycles for the red-pen editor
+   *     parameters:
+   *       - in: query
+   *         name: product
+   *         schema: { type: string }
+   *         description: Product family (e.g. RHOAI)
+   *     responses:
+   *       200:
+   *         description: Available cycles (pipeline drafts, release-plan catalog, demo fixture)
+   */
+  router.get('/cycles', requireAuth, requireScope('releases:read'), async function(req, res) {
+    var product = req.query.product || 'RHOAI';
+    if (KNOWN_PRODUCTS.indexOf(product) === -1) {
+      return res.status(400).json({ error: 'Unknown product. Expected one of: ' + KNOWN_PRODUCTS.join(', ') });
+    }
+    var cycles = await listCyclesForProduct(storage, product);
+    var defaultVersion = cycles.length > 0 ? cycles[0].version : null;
+    // Prefer demo/pipeline editor-ready cycle over catalog-only entries
+    for (var i = 0; i < cycles.length; i++) {
+      if (cycles[i].editorAvailable !== false) {
+        defaultVersion = cycles[i].version;
+        break;
+      }
+    }
+    res.json({
+      product: product,
+      products: KNOWN_PRODUCTS.slice(),
+      defaultVersion: defaultVersion,
+      cycles: cycles
+    });
+  });
 
   /**
    * @openapi

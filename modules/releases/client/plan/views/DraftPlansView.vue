@@ -1,41 +1,78 @@
 <template>
   <div class="space-y-4">
-    <div class="flex flex-wrap items-start justify-between gap-3">
-      <div>
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Draft Plans</h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-          View / red-pen / freeze over pipeline draft JSON. Keep is implicit — use Move or Descope.
-        </p>
-      </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <label class="text-xs text-gray-500 dark:text-gray-400">
-          Acting as
-          <select
-            class="ml-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1"
-            :value="editor.meta.currentUser"
-            @change="setCurrentUser($event.target.value)"
+    <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            Release cycle
+          </p>
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 truncate">
+            {{ cycleLabel }} Draft Plan
+          </h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+            View / red-pen / freeze over pipeline draft JSON. Keep is implicit — use Move or Descope.
+          </p>
+          <p v-if="draft" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <span v-if="draft.generatedAt">Generated {{ formatTs(draft.generatedAt) }}</span>
+            <span v-if="draft.generatedAt && draft.summary"> · </span>
+            <span v-if="draft.summary">{{ draft.summary.candidateCount }} candidates</span>
+            <span v-if="activeCycleMeta && activeCycleMeta.source"> · source: {{ activeCycleMeta.source }}</span>
+          </p>
+        </div>
+        <div class="flex flex-wrap items-end gap-2">
+          <label class="text-xs text-gray-500 dark:text-gray-400">
+            Product
+            <select
+              class="mt-0.5 block rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5 text-gray-900 dark:text-gray-100"
+              :value="selectedProduct"
+              :disabled="loading || saving"
+              @change="onProductChange($event.target.value)"
+            >
+              <option v-for="p in availableProducts" :key="p" :value="p">{{ p }}</option>
+            </select>
+          </label>
+          <label class="text-xs text-gray-500 dark:text-gray-400">
+            Cycle
+            <select
+              class="mt-0.5 block min-w-[6rem] rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5 font-medium text-gray-900 dark:text-gray-100"
+              :value="selectedVersion"
+              :disabled="loading || saving || availableCycles.length === 0"
+              @change="onVersionChange($event.target.value)"
+            >
+              <option v-for="c in availableCycles" :key="c.version" :value="c.version">
+                {{ c.label || c.version }}{{ c.demoMode ? ' (demo)' : '' }}
+              </option>
+            </select>
+          </label>
+          <label class="text-xs text-gray-500 dark:text-gray-400">
+            Acting as
+            <select
+              class="mt-0.5 block rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5"
+              :value="editor.meta.currentUser"
+              @change="setCurrentUser($event.target.value)"
+            >
+              <option :value="ADMIN">{{ ADMIN }}</option>
+              <option v-for="a in assignees" :key="a" :value="a">{{ a }}</option>
+            </select>
+          </label>
+          <button
+            type="button"
+            class="rounded-md px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
+            :disabled="loading || saving"
+            @click="onReload"
           >
-            <option :value="ADMIN">{{ ADMIN }}</option>
-            <option v-for="a in assignees" :key="a" :value="a">{{ a }}</option>
-          </select>
-        </label>
-        <button
-          type="button"
-          class="rounded-md px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
-          :disabled="loading || saving"
-          @click="onReload"
-        >
-          Reload
-        </button>
-        <button
-          type="button"
-          class="rounded-md px-3 py-1.5 text-sm bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50"
-          :disabled="!dirty || saving || loading"
-          @click="persist"
-        >
-          {{ saving ? 'Saving…' : dirty ? 'Save*' : 'Save' }}
-        </button>
-        <span v-if="dirty" class="text-xs text-amber-600 dark:text-amber-400">Unsaved changes</span>
+            Reload
+          </button>
+          <button
+            type="button"
+            class="rounded-md px-3 py-1.5 text-sm bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50"
+            :disabled="!dirty || saving || loading"
+            @click="persist"
+          >
+            {{ saving ? 'Saving…' : dirty ? 'Save*' : 'Save' }}
+          </button>
+          <span v-if="dirty" class="text-xs text-amber-600 dark:text-amber-400 self-center">Unsaved changes</span>
+        </div>
       </div>
     </div>
 
@@ -319,7 +356,12 @@ var {
   error,
   dirty,
   pendingCapacity,
+  selectedProduct,
   selectedVersion,
+  availableProducts,
+  availableCycles,
+  cycleLabel,
+  activeCycleMeta,
   filterEvent,
   filterComponent,
   filterText,
@@ -331,6 +373,7 @@ var {
   finalFrozen,
   eventFrozen,
   eventLoadBars,
+  loadCycles,
   loadEditor,
   persist,
   moveFeature,
@@ -395,7 +438,20 @@ function onReset() {
 
 function onReload() {
   if (dirty.value && !window.confirm('Discard unsaved changes and reload?')) return
-  loadEditor(selectedVersion.value)
+  loadEditor(selectedVersion.value, selectedProduct.value)
+}
+
+async function onProductChange(product) {
+  if (product === selectedProduct.value) return
+  if (dirty.value && !window.confirm('Discard unsaved changes and switch product?')) return
+  await loadCycles(product)
+  await loadEditor(selectedVersion.value, product)
+}
+
+async function onVersionChange(version) {
+  if (version === selectedVersion.value) return
+  if (dirty.value && !window.confirm('Discard unsaved changes and switch cycle?')) return
+  await loadEditor(version, selectedProduct.value)
 }
 
 function formatTs(ts) {
@@ -405,7 +461,12 @@ function formatTs(ts) {
   return d.toLocaleString()
 }
 
-onMounted(function() {
-  loadEditor(selectedVersion.value)
+onMounted(async function() {
+  try {
+    await loadCycles(selectedProduct.value)
+  } catch {
+    // loadEditor still tries demo/editor path
+  }
+  await loadEditor(selectedVersion.value, selectedProduct.value)
 })
 </script>

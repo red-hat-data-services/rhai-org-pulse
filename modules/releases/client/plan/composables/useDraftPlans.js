@@ -31,7 +31,10 @@ var saving = ref(false)
 var error = ref(null)
 var dirty = ref(false)
 var pendingCapacity = ref(null)
+var selectedProduct = ref('RHOAI')
 var selectedVersion = ref('3.6')
+var availableProducts = ref(['RHOAI'])
+var availableCycles = ref([])
 var filterEvent = ref('')
 var filterComponent = ref('')
 var filterText = ref('')
@@ -39,6 +42,21 @@ var filterText = ref('')
 export function useDraftPlans() {
   var candidates = computed(function() {
     return draft.value && draft.value.candidates ? draft.value.candidates : []
+  })
+
+  var cycleLabel = computed(function() {
+    var product = selectedProduct.value || 'RHOAI'
+    var ver = (draft.value && draft.value.version) || selectedVersion.value || ''
+    return ver ? product + ' ' + ver : product
+  })
+
+  var activeCycleMeta = computed(function() {
+    var ver = selectedVersion.value
+    var list = availableCycles.value || []
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].version === ver) return list[i]
+    }
+    return null
   })
 
   var viewRows = computed(function() {
@@ -108,14 +126,46 @@ export function useDraftPlans() {
     return loadBarsByComponent(candidates.value, editor.value.edits, ceilings.value, eventName)
   }
 
-  async function loadEditor(version) {
+  async function loadCycles(product) {
+    var prod = product || selectedProduct.value || 'RHOAI'
+    selectedProduct.value = prod
+    try {
+      var data = await apiRequest(API_BASE + '/cycles?product=' + encodeURIComponent(prod))
+      availableProducts.value = data.products && data.products.length ? data.products : ['RHOAI']
+      availableCycles.value = Array.isArray(data.cycles) ? data.cycles : []
+      if (!selectedVersion.value && data.defaultVersion) {
+        selectedVersion.value = data.defaultVersion
+      } else if (selectedVersion.value) {
+        var found = false
+        for (var i = 0; i < availableCycles.value.length; i++) {
+          if (availableCycles.value[i].version === selectedVersion.value) {
+            found = true
+            break
+          }
+        }
+        if (!found && data.defaultVersion) selectedVersion.value = data.defaultVersion
+      } else if (data.defaultVersion) {
+        selectedVersion.value = data.defaultVersion
+      }
+      return data
+    } catch (err) {
+      availableCycles.value = []
+      throw err
+    }
+  }
+
+  async function loadEditor(version, product) {
     loading.value = true
     error.value = null
     pendingCapacity.value = null
     try {
+      if (product) selectedProduct.value = product
+      var prod = selectedProduct.value || 'RHOAI'
       var ver = version || selectedVersion.value || '3.6'
       selectedVersion.value = ver
-      var data = await apiRequest(API_BASE + '/editor/' + encodeURIComponent(ver) + '?product=RHOAI')
+      var data = await apiRequest(
+        API_BASE + '/editor/' + encodeURIComponent(ver) + '?product=' + encodeURIComponent(prod)
+      )
       var normalized = normalizeDraft(data.draft || data)
       draft.value = normalized
       ceilings.value = data.ceilingsByComponent || normalized.ceilingsByComponent || {}
@@ -140,15 +190,23 @@ export function useDraftPlans() {
     if (!draft.value || !draft.value.version) return
     saving.value = true
     try {
-      await apiRequest(API_BASE + '/editor/' + encodeURIComponent(draft.value.version), {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          edits: editor.value.edits,
-          meta: editor.value.meta,
-          audit: editor.value.audit
-        })
-      })
+      var prod = selectedProduct.value || 'RHOAI'
+      await apiRequest(
+        API_BASE +
+          '/editor/' +
+          encodeURIComponent(draft.value.version) +
+          '?product=' +
+          encodeURIComponent(prod),
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            edits: editor.value.edits,
+            meta: editor.value.meta,
+            audit: editor.value.audit
+          })
+        }
+      )
       dirty.value = false
     } catch (err) {
       error.value = err.message || 'Failed to save editor state'
@@ -269,7 +327,12 @@ export function useDraftPlans() {
     error,
     dirty,
     pendingCapacity,
+    selectedProduct,
     selectedVersion,
+    availableProducts,
+    availableCycles,
+    cycleLabel,
+    activeCycleMeta,
     filterEvent,
     filterComponent,
     filterText,
@@ -285,6 +348,7 @@ export function useDraftPlans() {
       return eventFrozen(editor.value.meta, ev)
     },
     eventLoadBars,
+    loadCycles,
     loadEditor,
     persist,
     moveFeature,
@@ -312,7 +376,10 @@ export function _resetDraftPlansForTests() {
   error.value = null
   dirty.value = false
   pendingCapacity.value = null
+  selectedProduct.value = 'RHOAI'
   selectedVersion.value = '3.6'
+  availableProducts.value = ['RHOAI']
+  availableCycles.value = []
   filterEvent.value = ''
   filterComponent.value = ''
   filterText.value = ''
