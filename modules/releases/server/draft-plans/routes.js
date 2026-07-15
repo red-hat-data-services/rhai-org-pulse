@@ -332,6 +332,21 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
    *   get:
    *     tags: [Releases]
    *     summary: Get draft plan base + red-pen editor state for a version
+   *     parameters:
+   *       - in: path
+   *         name: version
+   *         required: true
+   *         schema: { type: string }
+   *       - in: query
+   *         name: product
+   *         schema: { type: string }
+   *     responses:
+   *       200:
+   *         description: Draft plan with editor state (edits, meta, audit)
+   *       400:
+   *         description: Invalid version format
+   *       404:
+   *         description: No draft plan data found
    */
   router.get('/editor/:version', requireAuth, requireScope('releases:read'), async function(req, res) {
     var version = req.params.version;
@@ -379,6 +394,19 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
    *   put:
    *     tags: [Releases]
    *     summary: Persist red-pen edits, meta, and audit for a draft plan version
+   *     parameters:
+   *       - in: path
+   *         name: version
+   *         required: true
+   *         schema: { type: string }
+   *       - in: query
+   *         name: product
+   *         schema: { type: string }
+   *     responses:
+   *       200:
+   *         description: Editor state saved
+   *       400:
+   *         description: Invalid version format or missing required fields
    */
   router.put('/editor/:version', requireAuth, requireScope('releases:write'), async function(req, res) {
     var version = req.params.version;
