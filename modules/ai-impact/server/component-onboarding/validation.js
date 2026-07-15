@@ -44,6 +44,9 @@ function deriveCompletionStatus(status, completionStatus, context) {
     if (normalized === 'resolved' || normalized === 'closed' || normalized === 'done' || normalized === 'cancelled') {
       return 'completed';
     }
+    if (completionStatus === 'in_queue') {
+      return 'in_queue';
+    }
     return 'in-progress';
   }
 
