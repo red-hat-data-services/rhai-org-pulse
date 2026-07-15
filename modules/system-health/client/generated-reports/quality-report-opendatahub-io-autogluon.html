@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:08 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 03:48 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/autogluon</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#fd7e14"
+                                stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="231.84934199999992"
+                                stroke-dashoffset="203.57503199999996"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">5.9</div>
+                        <div class="score-value">6.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">206 test files with 1,239+ test functions across 7 packages; pytest with slow/regression markers</div>
+                            <div class="scorecard-status">Good coverage across all 7 modules with pytest; 206 test files, ~40K lines of tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Smoke tests and regression tests exist but are CI-only; no dedicated E2E framework</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Regression and smoke test tiers exist but limited to tabular/timeseries; no cross-module integration tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">No PR-time image build validation; nightly-only Docker builds on AWS ECR</div>
+                            <div class="scorecard-status">No PR-time container image build validation; images built on schedule only</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">4 Dockerfiles built nightly but no runtime validation, startup testing, or vulnerability scanning</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.5/10</div>
+                            <div class="scorecard-status">8 Dockerfiles for CI/inference but no runtime validation or startup testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">Only EDA package has coverage config (fail_under=90); 6 of 7 packages have zero coverage tracking</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No coverage tool integration (no codecov, coveralls, or .coveragerc); no thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Comprehensive AWS Batch-based CI with concurrency control and path filtering; uses outdated actions</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">Comprehensive AWS Batch-based CI with per-module tests, concurrency control, and path filtering</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">CLAUDE.md and AGENTS.md present with build/test/lint commands and architecture docs; no .claude/rules/</div>
+                            <div class="scorecard-status">AGENTS.md present with build/test/lint commands and architecture docs; no .claude/rules/ for test patterns</div>
                         </div>
                     </div>
                 </div>
@@ -411,8 +411,16 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No coverage tracking for 6 of 7 packages</div>
-                            <p>Test regressions go undetected; no visibility into which code paths are exercised</p>
+                            <div class="item-description">No test coverage tracking or enforcement</div>
+                            <p>Impossible to measure test quality, detect coverage regressions, or enforce minimum thresholds</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No PR-time container image build validation</div>
+                            <p>Image build failures discovered only in scheduled nightly builds, not at PR time</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">8-12 hours</span>
@@ -420,39 +428,23 @@
                         </li>
                         <li class="item-card high">
                             <div class="item-description">No container vulnerability scanning</div>
-                            <p>Known CVEs in base images or dependencies ship to production undetected</p>
+                            <p>Security vulnerabilities in base images and dependencies go undetected until production</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">No PR-time Docker image build validation</div>
-                            <p>Image build failures discovered only after merge in nightly builds</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No container runtime validation</div>
-                            <p>Import errors, missing dependencies, or startup failures not caught until deployment</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">Outdated GitHub Actions versions (v1/v2)</div>
-                            <p>Deprecated Node.js runtimes; potential security exposure from unpatched action versions</p>
+                            <div class="item-description">No cross-module integration tests</div>
+                            <p>Dependency chain breakages (common -&gt; core -&gt; tabular) not caught until full install</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">8-16 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No dependency vulnerability scanning (Dependabot/Renovate)</div>
-                            <p>Known CVEs in Python dependencies not flagged or auto-patched</p>
+                            <div class="item-description">Bandit only runs on multimodal module</div>
+                            <p>Security analysis misses 6 of 7 sub-packages</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
@@ -472,40 +464,40 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to nightly image build workflow</div>
-                            <p>Detect CVEs in all 4 Docker images before they reach ECR</p>
+                            <div class="item-description">Add pytest-cov and codecov integration</div>
+                            <p>Immediate visibility into test coverage across all modules with PR-level reporting</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Enable Dependabot for Python dependency updates</div>
-                            <p>Automated PRs for security patches in pip dependencies</p>
+                            <div class="item-description">Extend bandit scanning to all modules</div>
+                            <p>Security analysis covers entire codebase instead of just multimodal</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">30 minutes</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Upgrade GitHub Actions to latest versions (v4)</div>
-                            <p>Fix deprecation warnings and reduce security surface</p>
+                            <div class="item-description">Add Trivy container scanning workflow</div>
+                            <p>Automated vulnerability detection for all 8 Dockerfiles</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add pytest-cov to all package test runs</div>
-                            <p>Immediate visibility into test coverage across all 7 packages</p>
+                            <div class="item-description">Add pyright/mypy type checking for more modules</div>
+                            <p>Catch type errors at CI time; currently only timeseries mentions pyright</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">3-4 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add .claude/rules/ for test automation guidance</div>
-                            <p>AI-generated tests follow project conventions consistently</p>
+                            <div class="item-description">Create .claude/rules/ with test creation guidelines</div>
+                            <p>Standardize AI-generated test quality with module-specific patterns</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -525,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add pytest-cov and coverage thresholds to all 7 packages (currently only EDA has coverage at 90%)</li><li>Add Trivy container scanning to the build_latest_image workflow before pushing to ECR</li><li>Add PR-time Docker build validation to catch image build failures before merge</li></ul>
+                            <ul><li>Implement pytest-cov with codecov integration and enforce minimum coverage thresholds per module</li><li>Add Trivy or Snyk container scanning for all Dockerfiles in CI</li><li>Extend bandit security scanning to all 7 sub-packages, not just multimodal</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Upgrade all GitHub Actions from v1/v2 to v4 (checkout, configure-aws-credentials, etc.)</li><li>Enable Dependabot or Renovate for automated dependency security updates</li><li>Add container runtime validation (import checks, model loading) to image build pipeline</li><li>Create .claude/rules/ directory with test patterns for each package type</li></ul>
+                            <ul><li>Add PR-time container image build validation (at least a docker build test)</li><li>Implement cross-module integration tests for the dependency chain</li><li>Add type checking (pyright or mypy) across all modules, not just timeseries</li><li>Create .claude/rules/ directory with test creation guidelines for unit, regression, and smoke tests</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add Codecov/Coveralls integration with PR coverage reporting</li><li>Consolidate codespell workflow triggers (currently master-only, not matching main CI triggers)</li><li>Add SBOM generation for Docker images</li><li>Add multi-architecture Docker builds (currently amd64-only)</li></ul>
+                            <ul><li>Add dependency scanning (Dependabot or Renovate) for Python dependencies</li><li>Implement performance regression benchmarks in PR CI (not just scheduled)</li><li>Add secret detection (gitleaks) to PR workflow</li><li>Consider adding contract tests between sub-package boundaries</li></ul>
                         </div>
                     </div>
                 </div>

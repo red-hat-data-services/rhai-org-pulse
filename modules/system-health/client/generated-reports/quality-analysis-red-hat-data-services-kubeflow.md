@@ -1,412 +1,357 @@
 ---
 repository: "red-hat-data-services/kubeflow"
-overall_score: 7.6
+overall_score: 8.5
 scorecard:
   - dimension: "Unit Tests"
     score: 8.5
-    status: "Strong envtest-based unit tests with Ginkgo/Gomega; excellent 1.29 test-to-code LOC ratio; dual RBAC coverage modes"
+    status: "Strong envtest/Ginkgo suite with RBAC toggle and webhook coverage across both controllers"
   - dimension: "Integration/E2E"
-    score: 8.0
-    status: "KinD-based integration tests with real image builds, Istio, and kustomize; E2E suite validates notebook lifecycle"
+    score: 9.0
+    status: "KinD-based E2E with real Notebook CR lifecycle + operator-chaos shift-left validation"
   - dimension: "Build Integration"
-    score: 7.0
-    status: "Konflux PR builds via Tekton with multi-arch and hermetic builds; triggered by label/comment, not automatic"
+    score: 8.0
+    status: "PR-time image builds + KinD deploy in GHA, plus Tekton/Konflux multi-arch PR builds"
   - dimension: "Image Testing"
-    score: 6.0
-    status: "PR integration tests build and deploy images into KinD; no standalone runtime validation or startup checks"
-  - dimension: "Coverage Tracking"
     score: 7.5
-    status: "Codecov integration with per-component flags and carryforward; threshold is 'auto' with 2% tolerance, not a hard floor"
+    status: "Multi-arch UBI9 FIPS builds, but no container vulnerability scanning in GHA PR workflow"
+  - dimension: "Coverage Tracking"
+    score: 8.0
+    status: "Codecov with per-component flags, auto targets, 2% threshold, and carryforward"
   - dimension: "CI/CD Automation"
-    score: 8.5
-    status: "11 workflows covering unit, integration, linting, vuln checks, release pipeline, and branch sync; well-organized"
+    score: 9.0
+    status: "13 workflows covering quality, testing, release automation, branch sync, and chaos validation"
   - dimension: "Agent Rules"
-    score: 7.0
-    status: "AGENTS.md present with comprehensive build/test/debug/deploy instructions; no .claude/rules/ directory for test patterns"
+    score: 6.0
+    status: "Good AGENTS.md with build/test/deploy, but no .claude/rules/ for test creation patterns"
 critical_gaps:
-  - title: "Konflux PR builds are opt-in (label/comment), not automatic"
-    impact: "Build failures in hermetic/multi-arch mode may not be caught before merge"
-    severity: "HIGH"
+  - title: "No container vulnerability scanning in PR workflows"
+    impact: "CVEs in base images or dependencies not caught until Konflux post-merge pipeline"
+    severity: "MEDIUM"
     effort: "2-4 hours"
-  - title: "No standalone container image runtime validation"
-    impact: "Image startup failures or missing runtime dependencies not caught until deployment"
-    severity: "MEDIUM"
-    effort: "4-6 hours"
-  - title: "No hard coverage threshold enforcement"
-    impact: "Coverage can gradually regress; 'auto' target with 2% tolerance allows slow decline"
-    severity: "MEDIUM"
-    effort: "1-2 hours"
-  - title: "notebook-controller ENVTEST_K8S_VERSION not explicitly set"
-    impact: "Upstream controller may test against wrong Kubernetes version"
+  - title: "No .claude/rules/ for AI-assisted test creation"
+    impact: "AI agents lack structured guidance for writing tests matching project patterns"
     severity: "LOW"
-    effort: "30 minutes"
-  - title: "Several golangci-lint linters disabled with TODOs"
-    impact: "Code duplication, cyclomatic complexity, and line length issues not caught"
+    effort: "3-4 hours"
+  - title: "Several golangci-lint linters disabled (dupl, gocyclo, lll, unparam)"
+    impact: "Duplicate code, cyclomatic complexity, and unused parameters not caught by linting"
     severity: "LOW"
     effort: "4-8 hours"
 quick_wins:
-  - title: "Set hard coverage threshold in .codecov.yml"
-    effort: "30 minutes"
-    impact: "Prevent gradual coverage regression by enforcing a minimum (e.g., 60%)"
-  - title: "Enable Konflux PR builds automatically on all PRs"
-    effort: "2 hours"
-    impact: "Catch hermetic build and multi-arch failures before merge"
-  - title: "Add container startup smoke test to integration workflows"
+  - title: "Add Trivy scanning to PR workflow"
+    effort: "1-2 hours"
+    impact: "Catch CVEs in container images before merge"
+  - title: "Create .claude/rules/ with test creation patterns"
     effort: "2-3 hours"
-    impact: "Verify image entrypoint executes and controller starts without errors"
-  - title: "Create .claude/rules/ with unit test and E2E patterns"
-    effort: "2-3 hours"
-    impact: "Improve AI-generated test quality and consistency with project conventions"
+    impact: "Guide AI agents to produce consistent, high-quality tests using existing Ginkgo/envtest patterns"
+  - title: "Enable additional golangci-lint linters incrementally"
+    effort: "2-4 hours per linter"
+    impact: "Catch code quality issues like duplication and excessive complexity"
 recommendations:
   priority_0:
-    - "Make Konflux PR builds automatic (remove label/comment gate) to catch hermetic build issues before merge"
-    - "Add explicit container image startup validation in integration test workflows"
+    - "Add Trivy or Grype container scanning to PR workflows for both controller images"
+    - "Consider adding govulncheck to PR workflow (currently only on push to main)"
   priority_1:
-    - "Set hard coverage floor (e.g., target: 60%) in .codecov.yml instead of 'auto'"
-    - "Enable disabled golangci-lint linters (dupl, gocyclo, lll, unparam) incrementally"
-    - "Create .claude/rules/ directory with test creation patterns for unit, integration, and E2E tests"
+    - "Create .claude/rules/ directory with test patterns (unit-tests.md, e2e-tests.md)"
+    - "Enable commented-out golangci-lint linters (dupl, gocyclo, lll, unparam) incrementally"
+    - "Add SBOM generation to GHA image build workflows"
   priority_2:
-    - "Add Trivy/vulnerability scanning to container images in PR workflow"
-    - "Add multi-version Kubernetes testing in integration tests (not just K8s 1.32)"
-    - "Implement performance/load testing for notebook controller under scale"
+    - "Add performance/load testing for controller reconciliation under high notebook count"
+    - "Add Dockerfile linting (hadolint) to PR workflows"
+    - "Consider adding OpenTelemetry integration test coverage"
 ---
 
 # Quality Analysis: red-hat-data-services/kubeflow
 
 ## Executive Summary
 
-- **Overall Score: 7.6/10**
-- **Repository Type**: Kubernetes operator (Go) — ODH fork of kubeflow/kubeflow
-- **Components**: Two Go-based controllers — `notebook-controller` (upstream) and `odh-notebook-controller` (ODH-specific)
-- **Key Strengths**: Excellent test-to-code ratio, comprehensive CI/CD with 11 workflows, strong security tooling (Semgrep, Gitleaks, govulncheck, Snyk), well-structured integration tests with KinD
-- **Critical Gaps**: Konflux PR builds are opt-in (not automatic), no standalone image runtime validation, no hard coverage threshold
-- **Agent Rules Status**: AGENTS.md present and comprehensive; no `.claude/rules/` directory
+- **Overall Score: 8.5/10**
+- **Repository Type**: Kubernetes operator (Go), ODH fork of kubeflow/kubeflow
+- **Components**: notebook-controller (upstream), odh-notebook-controller (downstream)
+- **Primary Language**: Go 1.26.3 with controller-runtime v0.23.3
+- **Key Strengths**: Comprehensive E2E testing with KinD, operator-chaos shift-left validation, multi-arch Konflux builds, robust CI/CD with 13 workflows, excellent coverage infrastructure
+- **Critical Gaps**: No container vulnerability scanning in PR workflows, no `.claude/rules/` for AI-assisted test patterns
+- **Agent Rules Status**: Present (AGENTS.md) but incomplete (no `.claude/rules/`)
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 8.5/10 | Strong envtest-based unit tests with Ginkgo/Gomega; 1.29:1 test-to-code LOC ratio; dual RBAC modes |
-| Integration/E2E | 8.0/10 | KinD-based integration tests with real image builds, Istio install, and kustomize deploy |
-| **Build Integration** | **7.0/10** | **Konflux PR builds via Tekton with multi-arch hermetic builds; triggered by label/comment, not automatic** |
-| Image Testing | 6.0/10 | Integration tests build+deploy images into KinD; no standalone runtime validation |
-| Coverage Tracking | 7.5/10 | Codecov with per-component flags and carryforward; 'auto' target with 2% tolerance |
-| CI/CD Automation | 8.5/10 | 11 workflows covering unit, integration, linting, vuln checks, release, branch sync |
-| Agent Rules | 7.0/10 | AGENTS.md present with build/test/debug/deploy; no .claude/rules/ for test patterns |
+| Unit Tests | 8.5/10 | Strong envtest/Ginkgo suite with RBAC toggle and webhook coverage |
+| Integration/E2E | 9.0/10 | KinD-based E2E with real Notebook CR lifecycle + chaos validation |
+| **Build Integration** | **8.0/10** | **PR-time image builds + KinD deploy, Tekton/Konflux multi-arch PR builds** |
+| Image Testing | 7.5/10 | Multi-arch UBI9 FIPS builds, but no CVE scanning in GHA |
+| Coverage Tracking | 8.0/10 | Codecov with per-component flags, thresholds, and carryforward |
+| CI/CD Automation | 9.0/10 | 13 workflows: quality, testing, release, sync, chaos |
+| Agent Rules | 6.0/10 | AGENTS.md present, no .claude/rules/ |
 
 ## Critical Gaps
 
-### 1. Konflux PR Builds Are Opt-In, Not Automatic
-- **Severity**: HIGH
-- **Impact**: Hermetic, multi-arch Konflux builds are only triggered by the `kfbuild-all` or `kfbuild-kubeflow` label or `/build-konflux` comment. PRs can merge without validating that the Konflux pipeline succeeds.
-- **Evidence**: `.tekton/odh-notebook-controller-pull-request.yaml` uses `on-label` and `on-comment` triggers rather than `on-event: [pull_request]` alone.
-- **Effort**: 2-4 hours to change triggers and validate
-
-### 2. No Standalone Container Image Runtime Validation
+### 1. No Container Vulnerability Scanning in PR Workflows
+- **Impact**: CVEs in base images or Go dependencies not caught until Konflux post-merge pipeline runs
 - **Severity**: MEDIUM
-- **Impact**: The integration tests build and deploy images into KinD, which implicitly validates startup, but there's no explicit image startup smoke test (e.g., `podman run --entrypoint /manager --help`). Missing runtime dependencies or entrypoint issues could be masked by deployment-level retries.
-- **Evidence**: No image startup test step in any workflow
-- **Effort**: 4-6 hours
+- **Effort**: 2-4 hours
+- **Details**: The repository relies on Konflux for container scanning, but there is no PR-time scanning via Trivy, Grype, or similar tools in the GitHub Actions workflows. The `govulncheck` workflow runs only on push to main, not on PRs.
 
-### 3. No Hard Coverage Threshold Enforcement
-- **Severity**: MEDIUM
-- **Impact**: `.codecov.yml` uses `target: auto` with `threshold: 2%`, meaning coverage just needs to be within 2% of the rolling average. Over time, coverage can slowly drift down without triggering failures.
-- **Evidence**: `.codecov.yml` line `target: auto`
-- **Effort**: 1-2 hours to set explicit floor
-
-### 4. notebook-controller Missing Explicit ENVTEST_K8S_VERSION
+### 2. No `.claude/rules/` for AI-Assisted Test Creation
+- **Impact**: AI agents lack structured guidance for writing tests matching existing project patterns (Ginkgo/envtest/testify)
 - **Severity**: LOW
-- **Impact**: The upstream `notebook-controller` Makefile references `ENVTEST_K8S_VERSION` but doesn't define it, relying on whatever default the environment provides. The ODH controller properly pins to K8s 1.32.
-- **Evidence**: `components/notebook-controller/Makefile` uses variable without setting it
-- **Effort**: 30 minutes
+- **Effort**: 3-4 hours
+- **Details**: While AGENTS.md provides excellent build/test/deploy instructions, there are no dedicated test creation rules. AI agents must infer patterns from existing test files.
 
-### 5. Several golangci-lint Linters Disabled with TODOs
+### 3. Several golangci-lint Linters Disabled
+- **Impact**: Code duplication, high cyclomatic complexity, and unused parameters not flagged
 - **Severity**: LOW
-- **Impact**: `dupl`, `gocyclo`, `lll`, and `unparam` are commented out with TODO notes. Code duplication, high cyclomatic complexity, and unused parameters go undetected.
-- **Evidence**: `.golangci.yaml` in both components
-- **Effort**: 4-8 hours to incrementally enable and fix
+- **Effort**: 4-8 hours (incremental enablement with fixes)
+- **Details**: `dupl`, `gocyclo`, `lll`, and `unparam` are commented out in `.golangci.yaml` with TODO markers.
 
 ## Quick Wins
 
-### 1. Set Hard Coverage Threshold (30 minutes)
+### 1. Add Trivy Scanning to PR Workflow (1-2 hours)
+- **Impact**: Catch CVEs in container images before merge
+- **Implementation**: Add Trivy action after image build steps in existing integration test workflows
 ```yaml
-# .codecov.yml
-coverage:
-  status:
-    project:
-      default:
-        target: 60%    # Changed from 'auto'
-        threshold: 2%
+- name: Run Trivy vulnerability scanner
+  uses: aquasecurity/trivy-action@master
+  with:
+    image-ref: 'localhost/${{ env.IMG }}:${{ env.TAG }}'
+    format: 'table'
+    exit-code: '1'
+    severity: 'CRITICAL,HIGH'
 ```
-**Impact**: Prevents gradual coverage erosion by establishing a floor
 
-### 2. Enable Automatic Konflux PR Builds (2 hours)
-Change `.tekton/*-pull-request.yaml` to trigger on all PRs:
-```yaml
-pipelinesascode.tekton.dev/on-event: "[pull_request]"
-# Remove on-label and on-comment triggers
-```
-**Impact**: Every PR validates the hermetic multi-arch build pipeline
+### 2. Create `.claude/rules/` with Test Patterns (2-3 hours)
+- **Impact**: Guide AI agents to produce consistent, high-quality tests
+- **Implementation**: Use `/test-rules-generator` to analyze existing test patterns and generate rules covering Ginkgo/envtest unit tests, E2E patterns, webhook testing, and RBAC variations.
 
-### 3. Add Container Startup Smoke Test (2-3 hours)
-Add to integration test workflow:
-```yaml
-- name: Verify image starts
-  run: |
-    podman run --rm --entrypoint /manager localhost/${{env.IMG}}:${{env.TAG}} --help || \
-    echo "Controller starts successfully (no --help flag, but entrypoint works)"
-```
-**Impact**: Catches missing libraries, broken entrypoints, or runtime issues early
-
-### 4. Create `.claude/rules/` for Test Patterns (2-3 hours)
-**Impact**: Standardize AI-generated tests to match project conventions (Ginkgo, envtest, testify)
+### 3. Move govulncheck to PR Workflow (1 hour)
+- **Impact**: Catch known Go vulnerabilities before merge instead of only on main
+- **Implementation**: Change `govulncheck.yaml` trigger from `push: branches: [main]` to include `pull_request`.
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows (11 total)**:
+**Workflow Inventory (13 workflows)**:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `code-quality.yaml` | push, PR | Pre-commit hooks + golangci-lint (matrix over both components) |
-| `notebook_controller_unit_test.yaml` | push, PR | Unit tests for upstream controller with Codecov upload |
-| `odh_notebook_controller_unit_test.yaml` | push, PR | Unit tests for ODH controller (RBAC=true + RBAC=false) with Codecov |
-| `notebook_controller_integration_test.yaml` | push, PR | KinD cluster + Istio + image deploy + manifest validation |
-| `odh_notebook_controller_integration_test.yaml` | push, PR | KinD cluster + both controllers + notebook lifecycle test |
-| `govulncheck.yaml` | push (main), dispatch | Go vulnerability scanning with JSON+text reports |
-| `go-directive-updater.yaml` | weekly cron, dispatch | Keeps go.mod go directive aligned with latest patch |
-| `notebook-controller-images-updater.yaml` | dispatch | Updates controller image tags |
-| `odh-kubeflow-release-pipeline.yaml` | dispatch | Branch sync + image update + PR creation + Tekton tag |
-| `odh-kubeflow-release-tag.yaml` | push (v1.10-branch) | Creates GitHub releases from Tekton tag updates |
-| `sync-branches.yaml` | dispatch, callable | Fast-forward merge between branches (main→stable→v1.10-branch) |
+| `code-quality.yaml` | PR + push | Pre-commit, golangci-lint, generated code check, kustomize validation |
+| `notebook_controller_unit_test.yaml` | PR + push | Unit tests + Codecov for notebook-controller |
+| `odh_notebook_controller_unit_test.yaml` | PR + push | Unit tests + Codecov for odh-notebook-controller |
+| `notebook_controller_integration_test.yaml` | PR + push | Build image → KinD → deploy → validate |
+| `odh_notebook_controller_integration_test.yaml` | PR + push | Full E2E: both controllers + real Notebook CR |
+| `operator_chaos_validation.yaml` | PR | operator-chaos: knowledge validation, CRD diff, breaking changes |
+| `govulncheck.yaml` | push (main) | Go vulnerability scanning with reports |
+| `go-directive-updater.yaml` | weekly cron | Auto-bump go.mod patch versions |
+| `notebook-controller-images-updater.yaml` | manual | Update controller image tags |
+| `odh-kubeflow-release-pipeline.yaml` | manual | Release: branch sync → version update → PR |
+| `odh-kubeflow-release-tag.yaml` | push (v1.10-branch) | Auto-create GitHub Release |
+| `sync-branches.yaml` | manual/callable | Branch sync (main→stable→v1.10-branch) |
 
 **Strengths**:
-- Path-filtered triggers avoid unnecessary runs
-- Go dependency caching via `cache-dependency-path`
-- Matrix strategy for golangci-lint across both components
-- Pre-commit skips linters that have dedicated CI jobs (avoids duplication)
-- Release pipeline follows Bodies of Water branching model
+- All critical quality checks run on PRs (unit tests, integration, code quality, chaos)
+- Path-based triggering to avoid unnecessary runs
+- Matrix strategy for per-component builds
+- Concurrency controls in Tekton (`cancel-in-progress: true`)
+- Branch sync preserves `.tekton/` from target branch
+- Release automation with version validation
 
 **Gaps**:
-- No concurrency groups on integration tests (could run multiple in parallel)
-- govulncheck only runs on push to main, not on PRs
+- No concurrency controls in most GHA workflows (could run redundant builds on rapid pushes)
+- No test execution time tracking or parallelization optimizations
 
 ### Test Coverage
 
-**Test-to-Code Ratio**: Excellent
-- 22 Go test files / 30 non-test Go files = 0.73 file ratio
-- 9,881 test LOC / 7,653 code LOC = **1.29:1 test-to-code ratio**
+**Test-to-Code Ratio**: 22 test files / 33 source files = **0.67** (strong)
 
 **Unit Tests (envtest-based, Ginkgo/Gomega)**:
-- `odh-notebook-controller`: 13 test files covering controller logic, webhooks (validating + mutating), auth proxy, MLflow, Feast config, DSPA secrets, matchers, OpenTelemetry
-- `notebook-controller`: 4 test files covering controller, culling, and BDD-style tests
-- Dual RBAC mode testing (SET_PIPELINE_RBAC=true/false) in ODH controller
-- envtest targets K8s 1.32 (aligned with oldest supported OCP 4.19)
 
-**Integration Tests (KinD-based)**:
-- Builds actual container images with Podman
-- Creates KinD cluster (K8s 1.32)
-- Installs Istio service mesh
-- Deploys controller via kustomize
-- Validates controller pod readiness
-- ODH integration test deploys a real notebook CR and validates StatefulSet creation
+| Component | Test Files | Key Coverage Areas |
+|-----------|-----------|-------------------|
+| notebook-controller | 4 | Controller reconciliation, BDD scenarios, culling |
+| odh-notebook-controller | 12 | Controllers, webhooks (mutating + validating), auth proxy, feast config, DSPA secrets, MLflow, OpenTelemetry, runtime, matchers |
+
+- **Framework**: Ginkgo v1 + Gomega + testify + envtest
+- **RBAC Testing**: ODH controller runs tests twice (`SET_PIPELINE_RBAC=false` and `true`)
+- **Coverage Profiles**: `cover.out`, `cover-rbac-false.out`, `cover-rbac-true.out`
+- **envtest version**: Targeting Kubernetes 1.32 (OCP 4.19 compatibility)
+- **Debug options**: `DEBUG_WRITE_KUBECONFIG`, `DEBUG_WRITE_AUDITLOG`, `DISABLE_WEBHOOK`
 
 **E2E Tests**:
-- Dedicated `e2e/` directory in ODH controller
-- Tests: notebook creation, update, deletion, controller validation
-- Uses `testify/require` for assertions
-- Configurable skip-deletion flag
-- 30-minute timeout for notebook lifecycle tests
+- Located in `components/odh-notebook-controller/e2e/`
+- 6 test files: setup, controller validation, creation, update, deletion, helpers
+- Tests against real KinD cluster with Istio, Gateway API, and fake OpenShift CRDs
+- Validates: Notebook CR CRUD, HTTPRoute creation, network policies, StatefulSet lifecycle, RBAC proxy sidecar
+- Configurable: `--skip-deletion`, `--nb-namespace`, 30-minute timeout
+- Integration test workflow creates actual Notebook workload and validates it reaches Ready
+
+**Chaos Testing (operator-chaos)**:
+- Knowledge model at `chaos/knowledge/workbenches.yaml`
+- Describes full operator topology: Deployments, ServiceAccounts, ClusterRoleBindings, Services, Secrets, Webhooks
+- PR-time validation: knowledge model check, preflight, breaking change diff, CRD schema diff, upgrade simulation
+- Triggered on changes to API types, controllers, CRDs, or knowledge model
 
 ### Code Quality
 
 **Linting**:
-- golangci-lint v2.8.0 with 9 enabled linters: errcheck, goconst, govet, ineffassign, misspell, nakedret, prealloc, staticcheck, unconvert, unused
-- gofmt and goimports formatters enabled
-- 5-minute timeout with parallel runners
-- 5 linters disabled with TODO notes (dupl, gocyclo, lll, unparam, and exclusion rules)
+- golangci-lint v2.12.2 with 9 linters enabled:
+  - `errcheck`, `goconst`, `govet`, `ineffassign`, `misspell`, `nakedret`, `prealloc`, `staticcheck`, `unconvert`, `unused`
+- Formatters: `gofmt`, `goimports`
+- `only-new-issues: true` for incremental adoption
+- Per-component configuration with independent `.golangci.yaml` files
 
-**Pre-commit Hooks** (8 hooks):
-- Standard: trailing-whitespace, end-of-file-fixer, check-yaml, check-merge-conflict, check-added-large-files
-- Go-specific: golangci-lint (per component), go-mod-tidy (per component), go-vet (per component)
-- CI skips golangci-lint pre-commit hooks (dedicated CI job has richer PR integration)
+**Pre-commit Hooks** (`.pre-commit-config.yaml`):
+- `trailing-whitespace`, `end-of-file-fixer`, `check-yaml`, `check-merge-conflict`, `check-added-large-files`
+- golangci-lint per component (skipped in GHA pre-commit in favor of dedicated job)
+- `go mod tidy -diff` per component
+- `go vet` per component
 
 **Static Analysis**:
-- Semgrep with 62 rules covering Go, Python, TypeScript, YAML, generic secrets, K8s RBAC, GitHub Actions
-- govulncheck with JSON+text reports and step summaries
+- Semgrep: Extensive unified security rules (800+ lines) covering Go, Python, TS, YAML, generic secrets detection
+- Generated code verification (ensures `ci/generate_code.sh` output is committed)
+- Kustomize manifest validation across two versions (5.0.3 and 5.7.1)
 
 ### Container Images
 
-**Dockerfiles (5 total)**:
-- `odh-notebook-controller/Dockerfile` — multi-stage, UBI9 go-toolset builder, ubi-minimal runtime
-- `odh-notebook-controller/Dockerfile.konflux` — pinned digests, hermetic, no `go mod download`
-- `notebook-controller/Dockerfile` — multi-stage, UBI9 go-toolset builder
-- `notebook-controller/Dockerfile.konflux` — pinned digests, hermetic
-- `notebook-controller/Dockerfile.ci` — legacy CI image (Go 1.15, distroless)
+**Build Configuration**:
+- 5 Dockerfiles across two components
+- Multi-stage builds: UBI9 go-toolset builder → UBI9 ubi-minimal runtime
+- FIPS-compatible: `CGO_ENABLED=1`, `GOEXPERIMENT=strictfipsruntime`, `-tags strictfipsruntime`
+- Non-root execution (UID 1001)
+- Proper labeling with Red Hat container metadata (Konflux Dockerfiles)
 
-**Strengths**:
-- All production images use UBI9 base (FIPS-compatible with `strictfipsruntime`)
-- Non-root user (UID 1001)
-- Separate Konflux Dockerfiles with pinned digests for reproducibility
-- TARGETARCH/TARGETOS support for multi-arch builds
+**Tekton/Konflux Pipeline**:
+- PR-triggered multi-arch builds (x86_64, ppc64le, s390x, arm64)
+- Hermetic builds with Go module prefetching
+- Source image generation
+- Image index creation
+- 5-day expiry for PR images
+- Managed via `konflux-central` repository (not direct edit)
 
 **Gaps**:
-- No Trivy or container scanning in any GitHub Actions workflow
-- No SBOM generation in GitHub workflows (Konflux pipeline handles this)
-- No image startup validation
+- No container vulnerability scanning in GHA workflows
+- No SBOM generation in GHA (likely handled by Konflux)
+- No `.dockerignore` file (could slow build context)
 
 ### Security
 
-**Security Tooling**:
-| Tool | Scope | Configuration |
-|------|-------|---------------|
-| Gitleaks | Secret detection | `.gitleaks.toml` with test file exclusions |
-| Snyk | Dependency scanning | `.snyk` policy excluding docs/testing |
-| govulncheck | Go vulnerability scanning | Dedicated workflow with JSON+text reports |
-| Semgrep | SAST (62 rules) | Comprehensive ruleset covering 6 languages |
-| Pre-commit | Quality gates | 8 hooks including yaml validation |
+| Tool | Coverage | Trigger |
+|------|----------|---------|
+| Gitleaks | Secret detection with comprehensive allowlist | Pre-commit + CI |
+| Semgrep | Unified rules: secrets, Go, Python, TS, YAML | CI (code-quality.yaml) |
+| Snyk | Policy file excluding docs/testing | Likely external |
+| govulncheck | Go dependency vulnerability scanning | Push to main |
+| Codecov | Coverage tracking with thresholds | PR unit tests |
 
 **Strengths**:
-- Comprehensive secret detection with sensible test exclusions
-- Go-specific vulnerability scanning with govulncheck
-- Semgrep covers K8s RBAC anti-patterns, injection flaws, and secrets
-- `.gitleaksignore` for known false positives
+- Multi-layered secret detection (Gitleaks + Semgrep generic patterns)
+- Go-specific vulnerability scanning with report artifacts
+- Well-structured Gitleaks allowlist for test fixtures
+- Semgrep covers CWE-798 (hardcoded secrets), AWS keys, private keys, and more
 
 **Gaps**:
-- No container image scanning (Trivy/Grype) in GitHub Actions (Konflux handles it)
-- No CodeQL integration
-- govulncheck only runs on push to main, not on PRs
-
-### Tekton/Konflux Pipelines
-
-**PR Pipelines (2)**:
-- `odh-notebook-controller-pull-request.yaml` — multi-arch (x86_64, ppc64le, s390x, arm64), hermetic, prefetch gomod, 5-day image expiry
-- `odh-kf-notebook-controller-pull-request.yaml` — same configuration for upstream controller
-
-**Push Pipelines (2)**:
-- `odh-notebook-controller-push.yaml` — triggers on v1.10-branch push, Slack failure notifications, SBOM generation
-- `odh-kf-notebook-controller-push.yaml` — same for upstream controller
-
-**Strengths**:
-- Full multi-arch builds (4 architectures)
-- Hermetic builds with prefetch
-- Source image building
-- Slack notifications on push failures
-- Cancel-in-progress for PR builds
-
-**Gaps**:
-- PR builds are opt-in (label/comment triggered), not automatic
-- No test execution within Tekton pipelines (only build validation)
+- No Trivy/Grype container image scanning in PR workflows
+- govulncheck only on push to main (not on PRs)
+- No CodeQL/SAST integration
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status**: Present (AGENTS.md) — Good but incomplete
+- **Status**: Present but Incomplete
+- **CLAUDE.md**: Symlink to AGENTS.md (present)
+- **AGENTS.md**: Comprehensive — covers build, test (unit + E2E), chaos validation, debug, lint, deploy, conventions
+- **ARCHITECTURE.md**: Detailed architecture documentation with component descriptions and CRD specifications
+- **CONTRIBUTING.md**: Developer workflow and review process
+- **.claude/ directory**: Not present
+- **.claude/rules/**: Not present — no structured test creation patterns for AI agents
+- **.claude/skills/**: Not present
 
-**AGENTS.md Coverage**:
-- Build instructions for both components
-- Unit test commands with envtest
-- E2E test commands with namespace configuration
-- Debug instructions (webhook tunnel, envtest debug vars)
-- Lint and format commands
-- Deploy/undeploy instructions
-- Conventions (Go version sync, code generation, review process)
+**Coverage Assessment**:
+- Build instructions: Excellent (per-component, Docker, make targets)
+- Test instructions: Good (unit test commands, E2E with flags, chaos validation)
+- Missing: Specific patterns for *writing new tests* (Ginkgo structure, envtest setup, webhook test patterns, E2E test context setup)
+- Missing: Test quality checklists (required assertions, coverage expectations, RBAC variations)
 
-**Gaps**:
-- No `.claude/rules/` directory for structured test patterns
-- No test creation guidance (what assertions to use, how to structure new tests)
-- No Ginkgo-specific patterns or envtest setup boilerplate
-- No webhook testing patterns
-- Missing E2E test creation guidance
-
-**Recommendation**: Generate `.claude/rules/` with `/test-rules-generator` to create:
-- `unit-tests.md` — Ginkgo/Gomega patterns, envtest setup, RBAC mode testing
-- `e2e-tests.md` — testify patterns, notebook lifecycle patterns, KinD setup
-- `webhook-tests.md` — validating/mutating webhook test patterns
+**Recommendation**: Generate `.claude/rules/` using `/test-rules-generator` to capture:
+- Ginkgo/Gomega unit test patterns with envtest
+- Webhook test patterns (mutating + validating)
+- E2E test patterns (testContext setup, notebook lifecycle)
+- RBAC toggle testing pattern
+- Coverage expectations
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-
-1. **Make Konflux PR builds automatic** — Remove `on-label`/`on-comment` gates from `.tekton/*-pull-request.yaml`. Every PR should validate the hermetic multi-arch build pipeline to catch issues before merge.
-
-2. **Add container image startup validation** — Add a simple smoke test step to integration workflows that verifies the built image's entrypoint executes without error.
+1. **Add container vulnerability scanning to PR workflows** — Integrate Trivy or Grype action after image build in integration test workflows. This catches CVEs before merge instead of relying solely on Konflux.
+2. **Move govulncheck to PR trigger** — Currently only runs on push to main. Running on PRs catches known Go vulnerabilities earlier.
 
 ### Priority 1 (High Value)
-
-3. **Set hard coverage floor** — Change `.codecov.yml` from `target: auto` to `target: 60%` (or appropriate baseline) to prevent gradual regression.
-
-4. **Enable disabled golangci-lint linters** — Incrementally enable `dupl`, `gocyclo`, `lll`, and `unparam` to catch code quality issues. Start with `gocyclo` (identifies overly complex functions).
-
-5. **Create `.claude/rules/` test patterns** — Add structured test creation rules for Ginkgo unit tests, testify E2E tests, and webhook testing patterns.
-
-6. **Run govulncheck on PRs** — Currently only runs on push to main. PR-time vulnerability checking prevents new vulnerabilities from being introduced.
+1. **Create `.claude/rules/` for test automation guidance** — Use `/test-rules-generator` to document Ginkgo/envtest patterns, webhook testing approaches, E2E context setup, and RBAC toggle testing.
+2. **Enable additional golangci-lint linters** — Incrementally enable `dupl`, `gocyclo`, `lll`, and `unparam` with appropriate thresholds and existing code exclusions.
+3. **Add SBOM generation to GHA workflows** — Even if Konflux generates SBOMs, having them in GHA provides early visibility.
+4. **Add `.dockerignore`** — Exclude unnecessary files from Docker build context to speed up builds.
 
 ### Priority 2 (Nice-to-Have)
-
-7. **Add Trivy scanning to PR workflow** — While Konflux handles scanning, GitHub Actions Trivy scanning provides faster PR feedback without waiting for Konflux.
-
-8. **Multi-version K8s testing** — Currently tests only target K8s 1.32. Adding K8s 1.30/1.31 would validate against all supported OCP versions.
-
-9. **Set ENVTEST_K8S_VERSION in notebook-controller** — Explicitly set the version to match ODH controller's 1.32 setting.
-
-10. **Add concurrency groups to integration tests** — Prevent multiple integration tests from running simultaneously on the same PR.
+1. **Add performance/load testing** — Test controller reconciliation under high notebook counts to catch performance regressions.
+2. **Add Dockerfile linting** — Integrate `hadolint` in code-quality workflow for Dockerfile best practices.
+3. **Expand OpenTelemetry test coverage** — Only `opentelemetry_test.go` exists; consider testing trace propagation through the full request flow.
+4. **Add concurrency controls to GHA workflows** — Prevent redundant workflow runs on rapid pushes (currently only Tekton has `cancel-in-progress`).
+5. **Consider upgrading to Ginkgo v2** — Ginkgo v1 is used; v2 provides better structured specs, improved reporting, and `SpecTimeout`.
 
 ## Comparison to Gold Standards
 
-| Dimension | kubeflow | odh-dashboard | notebooks | kserve |
-|-----------|----------|---------------|-----------|--------|
-| Unit Tests | 8.5 | 9.0 | 7.0 | 9.0 |
-| Integration/E2E | 8.0 | 9.0 | 8.0 | 9.0 |
-| Build Integration | 7.0 | 7.0 | 8.0 | 7.0 |
-| Image Testing | 6.0 | 7.0 | 9.0 | 6.0 |
-| Coverage Tracking | 7.5 | 9.0 | 6.0 | 9.0 |
-| CI/CD Automation | 8.5 | 9.0 | 8.0 | 9.0 |
-| Agent Rules | 7.0 | 8.0 | 4.0 | 3.0 |
-| **Overall** | **7.6** | **8.4** | **7.3** | **7.5** |
+| Dimension | kubeflow (this repo) | odh-dashboard | notebooks | kserve |
+|-----------|---------------------|---------------|-----------|--------|
+| Unit Tests | 8.5 — envtest/Ginkgo, RBAC toggle | 9.0 — Jest, multi-layer | 7.0 — Image-focused | 9.0 — envtest, conformance |
+| Integration/E2E | 9.0 — KinD + chaos validation | 9.5 — Cypress, contract | 8.0 — Multi-image validation | 8.5 — Multi-version |
+| Build Integration | 8.0 — GHA + Tekton PR builds | 8.5 — Module Federation | 7.5 — Image matrix | 7.5 — Multi-runtime |
+| Image Testing | 7.5 — Multi-arch, FIPS, no CVE scan | 7.0 — Basic builds | 9.5 — 5-layer validation | 7.0 — Basic builds |
+| Coverage | 8.0 — Codecov with flags | 9.0 — Enforcement | 6.0 — Limited tracking | 9.0 — Codecov + enforcement |
+| CI/CD | 9.0 — 13 workflows, automation | 9.0 — Comprehensive | 8.5 — Matrix builds | 8.5 — Prow + GHA |
+| Agent Rules | 6.0 — AGENTS.md, no rules/ | 8.5 — Rules + skills | 5.0 — Basic README | 4.0 — Minimal |
 
-**Key Differentiators vs Gold Standards**:
-- **vs odh-dashboard**: Kubeflow lacks contract tests, hard coverage enforcement, and comprehensive `.claude/rules/`
-- **vs notebooks**: Kubeflow has better unit test coverage but weaker image testing (no 5-layer validation)
-- **vs kserve**: Similar overall quality; kubeflow has better agent rules but weaker coverage enforcement
+**Notable Strengths vs Gold Standards**:
+- **Chaos validation** is unique among these repos — operator-chaos shift-left is a differentiator
+- **Release automation** (pipeline + tag + branch sync) is more mature than most
+- **Multi-arch Tekton/Konflux builds** with hermetic mode is production-grade
+- **FIPS compliance** built into Dockerfiles is a Red Hat requirement well-handled
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/code-quality.yaml` — Pre-commit + golangci-lint
-- `.github/workflows/notebook_controller_unit_test.yaml` — Upstream unit tests
-- `.github/workflows/odh_notebook_controller_unit_test.yaml` — ODH unit tests
-- `.github/workflows/notebook_controller_integration_test.yaml` — Upstream integration
-- `.github/workflows/odh_notebook_controller_integration_test.yaml` — ODH integration
-- `.github/workflows/govulncheck.yaml` — Go vulnerability scanning
-- `.github/workflows/odh-kubeflow-release-pipeline.yaml` — Release automation
+- `.github/workflows/*.yaml` (13 workflow files)
+- `.tekton/odh-notebook-controller-pull-request.yaml`
+- `.tekton/odh-kf-notebook-controller-pull-request.yaml`
+- `ci/generate_code.sh`, `ci/kustomize.sh`, `ci/bump-go-mod-go-version.sh`
 
 ### Testing
-- `components/odh-notebook-controller/controllers/*_test.go` — 13 unit test files
-- `components/odh-notebook-controller/e2e/` — E2E test suite
-- `components/notebook-controller/controllers/*_test.go` — 4 unit test files
+- `components/notebook-controller/controllers/*_test.go` (4 files)
+- `components/odh-notebook-controller/controllers/*_test.go` (12 files)
+- `components/odh-notebook-controller/e2e/*_test.go` (6 files)
+- `components/odh-notebook-controller/main_test.go`
 
-### Quality Tools
-- `.golangci.yaml` (per component) — 9 enabled linters
-- `.pre-commit-config.yaml` — 8 hooks
-- `.codecov.yml` — Per-component coverage flags
-- `semgrep.yaml` — 62 security rules
-- `.gitleaks.toml` — Secret detection config
-- `.snyk` — Dependency scanning policy
+### Code Quality
+- `components/notebook-controller/.golangci.yaml`
+- `components/odh-notebook-controller/.golangci.yaml`
+- `.pre-commit-config.yaml`
+- `semgrep.yaml`
 
 ### Container Images
-- `components/odh-notebook-controller/Dockerfile` — Production image
-- `components/odh-notebook-controller/Dockerfile.konflux` — Hermetic build
-- `components/notebook-controller/Dockerfile` — Production image
-- `components/notebook-controller/Dockerfile.konflux` — Hermetic build
+- `components/notebook-controller/Dockerfile`, `Dockerfile.ci`, `Dockerfile.konflux`
+- `components/odh-notebook-controller/Dockerfile`, `Dockerfile.konflux`
 
-### Tekton/Konflux
-- `.tekton/odh-notebook-controller-pull-request.yaml` — PR build (opt-in)
-- `.tekton/odh-notebook-controller-push.yaml` — Push build
-- `.tekton/odh-kf-notebook-controller-pull-request.yaml` — PR build (opt-in)
-- `.tekton/odh-kf-notebook-controller-push.yaml` — Push build
+### Coverage
+- `.codecov.yml`
+
+### Security
+- `.gitleaks.toml`, `.gitleaksignore`
+- `semgrep.yaml`
+- `.snyk`
 
 ### Agent Rules
-- `AGENTS.md` — Build/test/debug/deploy instructions
-- `ARCHITECTURE.md` — Component architecture documentation
-- `CONTRIBUTING.md` — Developer workflow and review process
+- `CLAUDE.md` → `AGENTS.md` (symlink)
+- `ARCHITECTURE.md`
+- `CONTRIBUTING.md`
+
+### Chaos Testing
+- `chaos/knowledge/workbenches.yaml`
+- `.github/workflows/operator_chaos_validation.yaml`

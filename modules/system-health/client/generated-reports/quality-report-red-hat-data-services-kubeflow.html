@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:40 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:58 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/kubeflow</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#ffc107"
+                                stroke="#28a745"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="135.71668799999998"
+                                stroke-dashoffset="84.82293"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.6</div>
+                        <div class="score-value">8.5</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Strong envtest-based unit tests with Ginkgo/Gomega; excellent 1.29 test-to-code LOC ratio; dual RBAC coverage modes</div>
+                            <div class="scorecard-status">Strong envtest/Ginkgo suite with RBAC toggle and webhook coverage across both controllers</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">KinD-based integration tests with real image builds, Istio, and kustomize; E2E suite validates notebook lifecycle</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">KinD-based E2E with real Notebook CR lifecycle + operator-chaos shift-left validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Konflux PR builds via Tekton with multi-arch and hermetic builds; triggered by label/comment, not automatic</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">PR-time image builds + KinD deploy in GHA, plus Tekton/Konflux multi-arch PR builds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">PR integration tests build and deploy images into KinD; no standalone runtime validation or startup checks</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">Multi-arch UBI9 FIPS builds, but no container vulnerability scanning in GHA PR workflow</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Codecov integration with per-component flags and carryforward; threshold is &#x27;auto&#x27; with 2% tolerance, not a hard floor</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Codecov with per-component flags, auto targets, 2% threshold, and carryforward</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">11 workflows covering unit, integration, linting, vuln checks, release pipeline, and branch sync; well-organized</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">13 workflows covering quality, testing, release automation, branch sync, and chaos validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">AGENTS.md present with comprehensive build/test/debug/deploy instructions; no .claude/rules/ directory for test patterns</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Good AGENTS.md with build/test/deploy, but no .claude/rules/ for test creation patterns</div>
                         </div>
                     </div>
                 </div>
@@ -410,41 +410,25 @@
                 <div class="section-content">
                     <ul class="items-list">
                         
-                        <li class="item-card high">
-                            <div class="item-description">Konflux PR builds are opt-in (label/comment), not automatic</div>
-                            <p>Build failures in hermetic/multi-arch mode may not be caught before merge</p>
+                        <li class="item-card medium">
+                            <div class="item-description">No container vulnerability scanning in PR workflows</div>
+                            <p>CVEs in base images or dependencies not caught until Konflux post-merge pipeline</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No standalone container image runtime validation</div>
-                            <p>Image startup failures or missing runtime dependencies not caught until deployment</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No hard coverage threshold enforcement</div>
-                            <p>Coverage can gradually regress; &#x27;auto&#x27; target with 2% tolerance allows slow decline</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
                         <li class="item-card low">
-                            <div class="item-description">notebook-controller ENVTEST_K8S_VERSION not explicitly set</div>
-                            <p>Upstream controller may test against wrong Kubernetes version</p>
+                            <div class="item-description">No .claude/rules/ for AI-assisted test creation</div>
+                            <p>AI agents lack structured guidance for writing tests matching project patterns</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">30 minutes</span>
+                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card low">
-                            <div class="item-description">Several golangci-lint linters disabled with TODOs</div>
-                            <p>Code duplication, cyclomatic complexity, and line length issues not caught</p>
+                            <div class="item-description">Several golangci-lint linters disabled (dupl, gocyclo, lll, unparam)</div>
+                            <p>Duplicate code, cyclomatic complexity, and unused parameters not caught by linting</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-low">LOW</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
@@ -464,35 +448,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Set hard coverage threshold in .codecov.yml</div>
-                            <p>Prevent gradual coverage regression by enforcing a minimum (e.g., 60%)</p>
+                            <div class="item-description">Add Trivy scanning to PR workflow</div>
+                            <p>Catch CVEs in container images before merge</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">30 minutes</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Enable Konflux PR builds automatically on all PRs</div>
-                            <p>Catch hermetic build and multi-arch failures before merge</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add container startup smoke test to integration workflows</div>
-                            <p>Verify image entrypoint executes and controller starts without errors</p>
+                            <div class="item-description">Create .claude/rules/ with test creation patterns</div>
+                            <p>Guide AI agents to produce consistent, high-quality tests using existing Ginkgo/envtest patterns</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create .claude/rules/ with unit test and E2E patterns</div>
-                            <p>Improve AI-generated test quality and consistency with project conventions</p>
+                            <div class="item-description">Enable additional golangci-lint linters incrementally</div>
+                            <p>Catch code quality issues like duplication and excessive complexity</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours per linter</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +485,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Make Konflux PR builds automatic (remove label/comment gate) to catch hermetic build issues before merge</li><li>Add explicit container image startup validation in integration test workflows</li></ul>
+                            <ul><li>Add Trivy or Grype container scanning to PR workflows for both controller images</li><li>Consider adding govulncheck to PR workflow (currently only on push to main)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Set hard coverage floor (e.g., target: 60%) in .codecov.yml instead of &#x27;auto&#x27;</li><li>Enable disabled golangci-lint linters (dupl, gocyclo, lll, unparam) incrementally</li><li>Create .claude/rules/ directory with test creation patterns for unit, integration, and E2E tests</li></ul>
+                            <ul><li>Create .claude/rules/ directory with test patterns (unit-tests.md, e2e-tests.md)</li><li>Enable commented-out golangci-lint linters (dupl, gocyclo, lll, unparam) incrementally</li><li>Add SBOM generation to GHA image build workflows</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add Trivy/vulnerability scanning to container images in PR workflow</li><li>Add multi-version Kubernetes testing in integration tests (not just K8s 1.32)</li><li>Implement performance/load testing for notebook controller under scale</li></ul>
+                            <ul><li>Add performance/load testing for controller reconciliation under high notebook count</li><li>Add Dockerfile linting (hadolint) to PR workflows</li><li>Consider adding OpenTelemetry integration test coverage</li></ul>
                         </div>
                     </div>
                 </div>

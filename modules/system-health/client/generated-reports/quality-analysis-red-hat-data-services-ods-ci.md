@@ -1,406 +1,404 @@
 ---
 repository: "red-hat-data-services/ods-ci"
-overall_score: 5.8
+overall_score: 5.6
 scorecard:
   - dimension: "Unit Tests"
-    score: 3.0
-    status: "Minimal Python selftests (1 file); no unit tests for keyword libraries or utilities"
+    score: 2.5
+    status: "Minimal pytest selftests (1 file); vast majority of logic is in Robot keywords with no unit-level testing"
   - dimension: "Integration/E2E"
     score: 8.0
-    status: "Extensive Robot Framework E2E suite with 110 test files, ~431 test cases, tiered tagging"
+    status: "247 Robot Framework E2E test cases across 110 .robot files covering RHOAI platform, IDE, upgrades, distributed workloads"
   - dimension: "Build Integration"
     score: 3.0
-    status: "Dry-run validation only; no container build or image startup testing in CI"
+    status: "Robot dry-run on PRs validates syntax only; no container build or runtime validation on PR"
   - dimension: "Image Testing"
     score: 2.0
-    status: "3 Dockerfiles exist but no CI builds, no runtime validation, no scanning"
+    status: "3 Dockerfiles present but no CI image build, no startup validation, no vulnerability scanning"
   - dimension: "Coverage Tracking"
     score: 1.0
-    status: "No coverage tool integration; no test coverage metrics generated or enforced"
+    status: "No code coverage tooling, no codecov/coveralls integration, no coverage thresholds"
   - dimension: "CI/CD Automation"
-    score: 6.0
-    status: "Lint + dry-run on PRs; selftests in CI; but no E2E, no image builds, no security scanning in CI"
+    score: 5.5
+    status: "4 GitHub Actions workflows: lint (shellcheck, Robocop, ruff, pyright), selftests, dry-run, PR comment; no concurrency control or caching beyond Poetry cache"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance"
+    status: "No CLAUDE.md, no .claude/ directory, no AI agent rules or test creation guidance"
 critical_gaps:
-  - title: "No test coverage tracking or enforcement"
-    impact: "Cannot measure or enforce Python code coverage; regressions go undetected"
+  - title: "No code coverage tracking"
+    impact: "Impossible to measure or enforce test coverage for Python libraries and utility code; regressions go undetected"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No container image build or scanning in CI"
-    impact: "Dockerfile breakage and vulnerabilities discovered only during manual builds or downstream consumption"
+  - title: "No container image build/test in CI"
+    impact: "Dockerfile breakage discovered only at release time; no image startup validation, no vulnerability scanning"
     severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "No CodeQL, SAST, or dependency scanning in CI"
-    impact: "Security vulnerabilities in Python code and dependencies go undetected"
+    effort: "6-8 hours"
+  - title: "Minimal unit testing of Python keyword libraries"
+    impact: "1,496 Robot keywords backed by 42 Python files have only 1 pytest file; logic errors in helpers caught only during full E2E runs on live clusters"
+    severity: "HIGH"
+    effort: "20-40 hours"
+  - title: "No security scanning (Trivy/Snyk) in CI"
+    impact: "Container vulnerabilities and dependency CVEs not caught before merge; .snyk policy file exists but no CI integration"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "Minimal unit test coverage for Python libraries"
-    impact: "Utility functions and keyword libraries lack unit testing; bugs caught only during full E2E runs"
+  - title: "Robocop linter runs with continue-on-error and quality gates commented out"
+    impact: "Robot Framework code quality issues never block PRs; linting is advisory-only"
     severity: "MEDIUM"
-    effort: "8-16 hours"
-  - title: "No agent rules for AI-assisted test development"
-    impact: "AI agents cannot follow project-specific patterns when creating or modifying Robot tests"
+    effort: "2-3 hours"
+  - title: "No agent rules for AI-assisted test creation"
+    impact: "AI coding agents have no guidance for creating tests following project conventions, leading to inconsistent contributions"
     severity: "MEDIUM"
-    effort: "4-6 hours"
+    effort: "3-4 hours"
 quick_wins:
-  - title: "Add pytest coverage reporting with pytest-cov"
+  - title: "Enable Robocop quality gates (uncomment threshold config)"
     effort: "1-2 hours"
-    impact: "Baseline visibility into Python code coverage"
+    impact: "Enforce Robot Framework coding standards on every PR; gates already defined but commented out"
   - title: "Add Trivy container scanning workflow"
-    effort: "1-2 hours"
-    impact: "Detect vulnerabilities in container images before they ship"
-  - title: "Add CodeQL or Bandit SAST scanning"
-    effort: "1-2 hours"
-    impact: "Catch security issues in Python code automatically"
-  - title: "Add Dependabot or Renovate for dependency updates"
+    effort: "2-3 hours"
+    impact: "Catch CVEs in base images and dependencies before they reach production"
+  - title: "Add pytest coverage with codecov integration"
+    effort: "3-4 hours"
+    impact: "Track and enforce coverage on Python utility libraries and keyword helpers"
+  - title: "Add concurrency control to GitHub Actions workflows"
     effort: "30 minutes"
-    impact: "Automated dependency security patches"
-  - title: "Enable Robocop quality gates (currently continue-on-error)"
-    effort: "1-2 hours"
-    impact: "Enforce Robot Framework coding standards in CI"
+    impact: "Cancel stale PR runs, save CI minutes, speed up feedback loop"
+  - title: "Generate CLAUDE.md and .claude/rules/ for test patterns"
+    effort: "2-3 hours"
+    impact: "Enable AI agents to create consistent tests following Robot Framework conventions"
 recommendations:
   priority_0:
-    - "Add pytest-cov to CI pipeline and establish baseline coverage threshold"
+    - "Add pytest coverage measurement and codecov integration for Python code"
     - "Add container image build and Trivy scanning to PR workflow"
-    - "Add CodeQL or Bandit SAST scanning workflow"
+    - "Enforce Robocop quality gates (uncomment existing thresholds in .robocop)"
   priority_1:
-    - "Write unit tests for Python utility functions (util.py, Helpers.py, awsOps.py, etc.)"
-    - "Enable Robocop as a blocking quality gate instead of continue-on-error"
-    - "Add Dependabot/Renovate for automated dependency updates"
-    - "Create CLAUDE.md and .claude/rules/ for AI-assisted test development"
-  priority_2:
+    - "Expand pytest selftests for Python keyword libraries (DataSciencePipelinesAPI, Helpers, util.py)"
     - "Add container image startup validation in CI"
-    - "Add Robot Framework test result trend tracking"
-    - "Expand self-tests to cover keyword libraries"
-    - "Add performance/timing benchmarks for test execution"
+    - "Create comprehensive agent rules for Robot Framework test patterns"
+  priority_2:
+    - "Add SBOM generation for container images"
+    - "Add pre-commit hook for Robocop (currently only ruff)"
+    - "Add concurrency groups and build caching to GitHub Actions workflows"
 ---
 
 # Quality Analysis: ods-ci
 
 ## Executive Summary
 
-- **Overall Score: 5.8/10**
-- **Repository Type**: Robot Framework E2E test suite for Red Hat OpenShift AI / Open Data Hub
-- **Primary Languages**: Robot Framework (110 .robot files), Python (68 .py files), Shell (28 .sh files)
-- **Key Strengths**: Comprehensive E2E test coverage across RHOAI components with well-structured tiered tagging (Smoke/Tier1/Tier2/Tier3), mature Robot Framework patterns with ~1,410 reusable keywords across 81 resource files, good linting setup (Ruff, Pyright, Robocop, ShellCheck)
-- **Critical Gaps**: No test coverage tracking, no container image building/scanning in CI, no SAST/CodeQL, minimal unit tests for Python code
-- **Agent Rules Status**: Missing — no CLAUDE.md, no `.claude/` directory
+- **Overall Score: 5.6/10**
+- **Repository Type**: Robot Framework E2E test automation suite for Red Hat OpenShift AI (RHOAI)
+- **Primary Languages**: Robot Framework (110 .robot files, 53 .resource files), Python (42 .py files)
+- **Framework**: Robot Framework with SeleniumLibrary, OpenShiftLibrary, JupyterLibrary
+- **Key Strengths**: Comprehensive E2E test suite with 247 test cases, well-organized tiered test structure, strong Python linting (ruff + pyright), Robot Framework linting (Robocop with SARIF reporting), pre-commit hooks
+- **Critical Gaps**: No code coverage tracking, no container scanning, Robocop quality gates disabled, minimal unit testing of Python utilities, no AI agent rules
+- **Agent Rules Status**: Missing — no CLAUDE.md, .claude/, or agent guidance of any kind
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 3.0/10 | Minimal Python selftests (1 test file); no unit tests for keyword libraries |
-| Integration/E2E | 8.0/10 | Extensive Robot Framework suite: 110 files, ~431 test cases, tiered tagging |
-| **Build Integration** | **3.0/10** | **Dry-run validation only; no container build or image startup in CI** |
-| Image Testing | 2.0/10 | 3 Dockerfiles but no CI build, no runtime validation, no scanning |
-| Coverage Tracking | 1.0/10 | No coverage tools, no metrics, no enforcement |
-| CI/CD Automation | 6.0/10 | Good lint pipeline but no E2E, no image builds, no security scanning |
-| Agent Rules | 0.0/10 | No agent rules or AI-assisted test development guidance |
+| Unit Tests | 2.5/10 | Minimal pytest selftests (1 test file); Python keyword libraries essentially untested at unit level |
+| Integration/E2E | 8.0/10 | 247 Robot Framework test cases across 6 major categories with tier-based tagging |
+| **Build Integration** | **3.0/10** | **Dry-run syntax check only; no container build or runtime validation on PR** |
+| Image Testing | 2.0/10 | 3 Dockerfiles present but no CI build, startup validation, or vulnerability scanning |
+| Coverage Tracking | 1.0/10 | No coverage tooling whatsoever — no codecov, no .coveragerc, no thresholds |
+| CI/CD Automation | 5.5/10 | 4 GH Actions workflows with decent lint coverage but no caching, no concurrency control |
+| Agent Rules | 0.0/10 | No CLAUDE.md, no .claude/ directory, no test creation guidance |
 
 ## Critical Gaps
 
-### 1. No Test Coverage Tracking or Enforcement
-- **Impact**: Cannot measure Python code coverage; regressions in utility code go undetected
-- **Severity**: HIGH
+### 1. No Code Coverage Tracking (HIGH)
+- **Impact**: Impossible to measure test coverage for 42 Python files containing keyword libraries, utilities, and helpers
+- **Current State**: No `.coveragerc`, no codecov.yml, no coverage generation in CI
 - **Effort**: 4-6 hours
-- **Details**: No `.codecov.yml`, no `pytest-cov` integration, no coverage thresholds in CI. The project has `pytest` configured for selftests but generates no coverage reports.
+- **Why It Matters**: The Python code underpinning Robot keywords (DataSciencePipelinesAPI, Helpers, ocm, rosaOps, util) has no visibility into what's tested vs. untested
 
-### 2. No Container Image Build or Scanning in CI
-- **Impact**: Dockerfile breakage and vulnerabilities only discovered during manual builds or downstream consumption
-- **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Details**: Three Dockerfiles exist (`Dockerfile`, `Dockerfile_interop`, `Dockerfile_smtpserver`) but none are built or validated in any GitHub Actions workflow. No Trivy, Snyk, or Grype scanning configured.
+### 2. No Container Image Build/Test in CI (HIGH)
+- **Impact**: 3 Dockerfiles (main, interop, smtp server) are never built or tested in CI; breakage discovered only at release
+- **Current State**: Dockerfiles exist in `ods_ci/build/` but no GitHub Actions workflow builds them
+- **Effort**: 6-8 hours
+- **Risk**: CentOS Stream 9 base image updates, Python dependency conflicts, and binary tool version mismatches go undetected
 
-### 3. No SAST/CodeQL or Dependency Scanning
-- **Impact**: Security vulnerabilities in Python code and dependencies go undetected
-- **Severity**: HIGH
+### 3. Minimal Unit Testing of Python Libraries (HIGH)
+- **Impact**: 1,496 Robot keywords are backed by Python libraries with only 1 pytest file (`test_util.py`) containing doctest-level tests
+- **Current State**: Libraries like `DataSciencePipelinesAPI.py`, `DataSciencePipelinesKfp.py`, `Helpers.py` have zero unit tests
+- **Effort**: 20-40 hours (incremental)
+- **Risk**: Logic errors in helpers are only caught during full E2E runs on live OpenShift clusters — expensive and slow feedback
+
+### 4. No Security Scanning in CI (HIGH)
+- **Impact**: Container images and Python dependencies not scanned for CVEs before merge
+- **Current State**: `.snyk` policy file exists (ignoring 1 vulnerability until 2026-07-18) but Snyk is not integrated into CI; no Trivy/Grype scanning
 - **Effort**: 2-4 hours
-- **Details**: While `.gitleaks.toml` and `.snyk` configs exist, there is no CodeQL workflow, no Bandit integration, and no dependency scanning (Dependabot/Renovate) configured. The Snyk config only has a single ignore entry.
+- **Risk**: Known vulnerabilities in base images and pip packages ship undetected
 
-### 4. Minimal Unit Test Coverage for Python Libraries
-- **Impact**: Utility functions and keyword libraries lack unit testing; bugs caught only during slow full E2E runs
-- **Severity**: MEDIUM
-- **Effort**: 8-16 hours
-- **Details**: Only 1 self-test file (`test_util.py`) covering `execute_command()`. No tests for: `Helpers.py` (lib), `awsOps.py`, `logger.py`, `SplitSuite.py`, `read_pr.py`, `generateTestConfigFile.py`, `fetch_tests.py`, or any of the 30 Python files under `tests/Resources/`.
+### 5. Robocop Quality Gates Disabled (MEDIUM)
+- **Impact**: Robot Framework coding standard violations never block PRs
+- **Current State**: `.robocop` config has quality gates commented out (`#--configure return_status:quality_gate:E=0:W=769:I=79`), and the CI job uses `continue-on-error: true` with `|| true`
+- **Effort**: 2-3 hours to enable gates and fix initial violations
 
-### 5. No Agent Rules for AI-Assisted Development
-- **Impact**: AI agents produce inconsistent test patterns when creating or modifying Robot Framework tests
-- **Severity**: MEDIUM
-- **Effort**: 4-6 hours
-- **Details**: No `CLAUDE.md`, no `.claude/` directory, no documented patterns for Robot test creation, keyword naming conventions, or tag usage.
+### 6. No AI Agent Rules (MEDIUM)
+- **Impact**: AI coding agents contributing tests have no guidance on Robot Framework conventions, keyword patterns, tag usage, or resource organization
+- **Current State**: No CLAUDE.md, no .claude/ directory, no AGENTS.md
+- **Effort**: 3-4 hours
 
 ## Quick Wins
 
-### 1. Add pytest Coverage Reporting (1-2 hours)
-Add `pytest-cov` to dev dependencies and update CI:
+### 1. Enable Robocop Quality Gates (~1-2 hours)
+Uncomment the existing threshold in `.robocop` and remove `continue-on-error` from CI:
 ```yaml
-- run: poetry run pytest --cov=ods_ci --cov-report=xml --cov-report=term
+# .robocop — uncomment:
+--configure return_status:quality_gate:E=0:W=769:I=79
+
+# .github/workflows/code_quality.yaml — remove:
+continue-on-error: true
+# And remove the || true from the run command
 ```
 
-### 2. Add Trivy Container Scanning (1-2 hours)
+### 2. Add Trivy Container Scanning (~2-3 hours)
 ```yaml
-# .github/workflows/container-scan.yml
-name: Container Security Scan
+# .github/workflows/security.yaml
+name: Security Scan
 on: [pull_request]
 jobs:
-  scan:
+  trivy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build image
-        run: docker build -t ods-ci:test -f ods_ci/build/Dockerfile .
-      - name: Run Trivy
-        uses: aquasecurity/trivy-action@master
+      - uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'ods-ci:test'
+          scan-type: 'fs'
+          scan-ref: '.'
           severity: 'CRITICAL,HIGH'
-          exit-code: '1'
 ```
 
-### 3. Add CodeQL or Bandit SAST (1-2 hours)
+### 3. Add Pytest Coverage + Codecov (~3-4 hours)
+```toml
+# pyproject.toml additions
+[tool.pytest.ini_options]
+addopts = "-rfEX -p doctest --doctest-modules --strict-markers --import-mode=importlib --cov=ods_ci --cov-report=xml"
+
+[tool.coverage.run]
+source = ["ods_ci"]
+omit = ["ods_ci/tests/*", "ods_ci/selftests/*"]
+```
+
+### 4. Add Concurrency Control (~30 minutes)
 ```yaml
-# Add to code_quality.yaml
-bandit:
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v4
-    - run: pipx install bandit
-    - run: bandit -r ods_ci/ -x ods_ci/tests/Resources/Files/pipeline-samples
+# Add to each workflow:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 ```
 
-### 4. Add Dependabot (30 minutes)
-```yaml
-# .github/dependabot.yml
-version: 2
-updates:
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-```
-
-### 5. Enable Robocop Quality Gates (1-2 hours)
-Remove `continue-on-error: true` from the Robocop job and configure thresholds in `.robocop`:
-```
---configure return_status:quality_gate:E=0:W=769:I=79
-```
+### 5. Generate Agent Rules (~2-3 hours)
+Use `/test-rules-generator` to create `.claude/rules/` with:
+- Robot Framework test patterns
+- Keyword naming conventions
+- Tag usage guidelines
+- Resource file organization
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows (3 total):**
+**Workflows (4 total):**
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `code_quality.yaml` | push, PR | ShellCheck, Robocop (non-blocking), Ruff, Ruff format, Pyright, pytest selftests |
-| `dry_run.yml` | PR | Robot Framework dry-run validation (syntax check, no execution) |
-| `comment.yml` | workflow_run (after dry_run) | Posts dry-run results as PR comment |
+| `code_quality.yaml` | push, PR | Shellcheck, Robocop (SARIF), ruff, pyright, pytest selftests |
+| `dry_run.yml` | PR | Robot Framework `--dryrun` syntax validation |
+| `comment.yml` | workflow_run (after dry_run) | Post Robot Framework report as PR comment |
 
 **Strengths:**
-- Comprehensive Python linting (Ruff with 25+ rule categories, Pyright for type checking)
-- ShellCheck for shell scripts with PR review integration via reviewdog
-- Robocop for Robot Framework code quality (SARIF upload to CodeQL)
-- Dry-run validates all Robot tests parse correctly on every PR
-- Poetry lock file validation (`poetry check --lock`)
-- Selftests run in CI via pytest
+- Multi-tool linting: shellcheck for bash, Robocop for Robot Framework, ruff + pyright for Python
+- Robocop SARIF output uploaded to GitHub Code Scanning (CodeQL SARIF action)
+- Dry-run validates Robot syntax on every PR
+- PR comment with Robot report via `robotframework-reporter-action`
 
-**Gaps:**
-- Robocop runs with `continue-on-error: true` — findings are informational only
-- No concurrency control on workflows (duplicate runs possible)
-- No caching for Poetry dependencies in the lint workflow
-- No E2E test execution in CI (expected for a test framework repo, but limits validation)
-- No Makefile — all execution via shell scripts
+**Weaknesses:**
+- No concurrency control — stale runs waste CI minutes
+- Poetry cache used only in Python linters job, not in selftests or dry-run
+- Robocop job has `continue-on-error: true` — findings are advisory only
+- No image build, no deployment testing, no integration testing in CI
+- No scheduled/periodic workflows for longer-running tests
 
 ### Test Coverage
 
 **Robot Framework E2E Tests:**
-- **110 .robot test files** across 6 major categories
-- **~431 test cases** with structured tagging
-- **81 resource/keyword files** providing ~1,410 reusable keywords
-- **Test categories**: Platform (15), Upgrade (3), IDE/Notebooks (31), Distributed Workloads (3), Feature Store (3), Other Components (7)
+- **247 test cases** across 62 test suite files (110 `.robot` files total including resources)
+- **1,496 reusable keywords** across `.robot` and `.resource` files
+- **53 resource files** providing shared keywords and variables
 
-**Tag hierarchy:**
-- `Smoke` (16 tests) — critical path validation
-- `Tier1` (22 tests) — core functionality
-- `Tier2` (59 tests) — extended functionality
-- `Tier3` (8 tests) — edge cases
-- `Sanity` (9 tests) — health checks
-- Jira ticket tags (e.g., `ODS-1255`, `RHOAIENG-4837`)
-- Execution-time tags (e.g., `Execution-Time-Over-15m`)
-- Resource requirement tags (e.g., `Resources-GPU`, `Resources-2GPUS`)
+**Test Categories:**
+| Category | Robot Files | Focus |
+|----------|-------------|-------|
+| `0100__platform` | 14 | Installation, RBAC, auth, operators, must-gather |
+| `0200__rhoai_upgrade` | 3 | Pre/during/post upgrade verification |
+| `0500__ide` | 32 | JupyterHub, Elyra, culler, notebooks, GPU |
+| `0600__distributed_workloads` | 3 | Training operator, distributed workloads |
+| `0700__feature_store` | 3 | Feast operator, notebook tests |
+| `2000__other_components` | 7 | Sandbox, Pachyderm, RHOAM |
 
-**Python Self-tests:**
-- 1 test file: `selftests/utils/scripts/test_util.py`
-- Tests `execute_command()` utility function thoroughly (13 test methods)
-- Uses doctest for `capture_logging` utility
-- Configured via pytest with strict markers and `importlib` mode
+**Test Tiering:**
+| Tier | Count | Purpose |
+|------|-------|---------|
+| Tier1 | 40 | Critical path, must-pass |
+| Tier2 | 69 | Extended coverage |
+| Tier3 | 9 | Edge cases, longer-running |
+| Smoke | 21 | Quick validation |
+| Upgrade | 25+ | Upgrade path verification |
 
-**Python Code Without Tests:**
-- `libs/Helpers.py` — helper library (no tests)
-- `utils/scripts/awsOps.py` — AWS operations (no tests)
-- `utils/scripts/logger.py` — logging configuration (no tests)
-- `utils/scripts/SplitSuite.py` — test suite splitting (no tests)
-- `utils/scripts/read_pr.py` — PR reading utility (no tests)
-- `utils/scripts/fetch_tests.py` — test fetching (no tests)
-- `utils/scripts/generateTestConfigFile.py` — config generation (no tests)
-- 30 Python files under `tests/Resources/` (no unit tests)
+**Python Selftests:**
+- Only 1 test file: `ods_ci/selftests/utils/scripts/test_util.py`
+- Uses pytest with doctest discovery
+- Tests only `util.py` utilities — nothing for API libraries, helpers, or keyword implementations
+
+**Libraries Used:**
+- SeleniumLibrary (browser automation)
+- OpenShiftLibrary (OCP/K8s interaction)
+- JupyterLibrary (notebook interaction)
+- DebugLibrary (debugging helpers)
+- Custom Python libraries: DataSciencePipelinesAPI, DataSciencePipelinesKfp, Helpers, ocm.py
 
 ### Code Quality
 
-**Linting (Strong):**
-- **Ruff**: Comprehensive configuration with 25+ rule categories, preview mode enabled, 120 char line length
-- **Ruff Format**: Enforced formatting with LF line endings, double quotes
-- **Pyright**: Type checking (mode: off for general, but `reportMissingImports`, `reportUnboundVariable`, `reportGeneralTypeIssues` set to error)
-- **Robocop**: Robot Framework linter with SARIF output uploaded to CodeQL (but non-blocking)
-- **ShellCheck**: Shell script linting via reviewdog
-- **EditorConfig**: Consistent formatting rules
+**Strengths:**
+- **Ruff**: Comprehensive configuration with 25+ rule categories enabled, preview mode on, 120 char line length
+- **Pyright**: Type checking enabled (mode "off" for gradual adoption, but key error rules enforced)
+- **Pre-commit hooks**: ruff lint + format via `ruff-pre-commit`
+- **EditorConfig**: Consistent formatting across file types
+- **Robocop**: Robot Framework-specific linting with SARIF output to GitHub Code Scanning
 
-**Pre-commit Hooks (Minimal):**
-- Only Ruff (lint + format) configured
-- Missing: ShellCheck, Robocop, Pyright, gitleaks, trailing whitespace
-
-**Static Analysis:**
-- SonarCloud configured (`.sonarcloud.properties`) for `ods_ci/` directory
-- Gitleaks configuration for secret detection (allowlist for test credentials)
-- No CodeQL, Bandit, or Semgrep
+**Weaknesses:**
+- Pyright `typeCheckingMode = "off"` — only specific rules enforced, not comprehensive type checking
+- Pre-commit hooks only include ruff — missing shellcheck, robocop, pyright, gitleaks
+- Robocop quality gates commented out, CI job never fails
 
 ### Container Images
 
-**Dockerfiles (3):**
-1. **`Dockerfile`** — Main test execution image (CentOS Stream 9, Python 3.11, Chromium, Poetry)
-2. **`Dockerfile_interop`** — Interop testing image (similar but with grpcurl, different layout)
-3. **`Dockerfile_smtpserver`** — SMTP test server (CentOS Stream 8, Postfix)
+**Dockerfiles:**
+
+| File | Base | Purpose |
+|------|------|---------|
+| `Dockerfile` | centos:stream9 | Main test runner image with oc, ocm, chromium, Poetry deps |
+| `Dockerfile_interop` | centos:stream9 | Interop testing image with additional tools (grpcurl, terraform) |
+| `Dockerfile_smtpserver` | — | SMTP server for email testing |
 
 **Issues:**
-- No image builds in CI
-- No multi-architecture support
-- No security scanning
+- No multi-stage builds — all Dockerfiles are single-stage with large image sizes
+- No image build in CI — breakage from base image updates, binary tool downloads, or pip changes is invisible
+- No startup validation or health checks
+- No vulnerability scanning
 - No SBOM generation
-- No image signing or attestation
-- Base images not pinned to digest (uses tag `stream9`)
-- `Dockerfile_smtpserver` uses CentOS Stream 8 (EOL concerns)
-- No `.dockerignore` (large poetry.lock and .git copied into context)
+- Hard-coded binary versions (yq v4.34.1, ocm v0.1.62, grpcurl v1.8.7) — no automated update mechanism
+- `curl` downloads without checksum verification
 
 ### Security
 
-| Tool | Status | Notes |
-|------|--------|-------|
-| Gitleaks | Configured | `.gitleaks.toml` with test credential allowlist |
-| Snyk | Configured | `.snyk` policy with 1 ignore entry (expires 2026-07-18) |
-| SonarCloud | Configured | `.sonarcloud.properties` scans `ods_ci/` |
-| CodeQL | Not present | No workflow, no configuration |
-| Dependabot | Not present | No automated dependency updates |
-| Trivy/Grype | Not present | No container scanning |
-| Bandit | Not present | No Python SAST |
-| Secret scanning | Partial | Gitleaks config exists but no CI workflow runs it |
+**Present:**
+- `.gitleaks.toml` — Secret detection configuration with allowlist for test credentials
+- `.snyk` — Snyk policy with 1 vulnerability ignore (expires 2026-07-18)
+- SonarCloud configuration (`.sonarcloud.properties`)
+- Robocop SARIF uploaded to GitHub Code Scanning
+
+**Missing:**
+- No Trivy/Grype container scanning in CI
+- No Snyk CI integration (policy file exists but not enforced)
+- No dependency scanning workflow
+- No CodeQL analysis for Python code
+- No SBOM generation
+- SonarCloud configuration exists but no evidence of active enforcement
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: No test types have rules
+- **Coverage**: None — no CLAUDE.md, no .claude/ directory, no AGENTS.md
 - **Quality**: N/A
 - **Gaps**:
-  - No `CLAUDE.md` or `AGENTS.md`
-  - No `.claude/` directory
-  - No documented Robot Framework test patterns for AI agents
-  - No keyword naming conventions
-  - No tag usage guidelines
-  - No test file organization rules
-- **Recommendation**: Generate rules with `/test-rules-generator` covering:
-  - Robot Framework test case creation patterns
-  - Keyword library development guidelines
-  - Tag assignment rules (Smoke/Tier1/Tier2/Tier3)
+  - No Robot Framework test creation guidelines for AI agents
+  - No keyword naming conventions documented for agents
+  - No tag usage patterns documented
+  - No resource file organization guidance
+  - No Python library test patterns
+- **Recommendation**: Generate comprehensive rules using `/test-rules-generator` covering:
+  - Robot Framework test case structure and naming
+  - Keyword implementation patterns
+  - Tag strategy (Tier1/2/3, Smoke, Sanity, E2E)
   - Resource file organization
-  - Python utility function patterns
+  - Python keyword library testing patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add pytest-cov coverage tracking** — Install `pytest-cov`, generate XML reports, establish baseline threshold. Block PRs that drop coverage.
-
-2. **Add container image build and Trivy scanning** — Build all 3 Dockerfiles in CI and scan with Trivy. Fail on CRITICAL/HIGH vulnerabilities.
-
-3. **Add CodeQL or Bandit SAST** — Enable Python security scanning. CodeQL provides broader coverage; Bandit is simpler to set up.
-
-4. **Add Dependabot/Renovate** — Automate dependency updates for pip and GitHub Actions. Poetry lock file already validates versions.
+1. **Add code coverage tracking** — Add `pytest-cov` to dev dependencies, configure `.coveragerc`, integrate with codecov.io, set minimum threshold at 30% initially
+2. **Build container images in CI** — Add workflow to build all 3 Dockerfiles on PR; fail on build errors
+3. **Add container vulnerability scanning** — Integrate Trivy to scan Dockerfiles and Python dependencies on every PR
+4. **Enforce Robocop quality gates** — Uncomment thresholds in `.robocop`, remove `continue-on-error`, fix existing violations
 
 ### Priority 1 (High Value)
 
-5. **Expand Python unit tests** — Priority targets: `Helpers.py`, `awsOps.py`, `SplitSuite.py`, `generateTestConfigFile.py`. Aim for 60%+ coverage of utility code.
-
-6. **Enable Robocop as blocking quality gate** — Remove `continue-on-error: true`, configure error/warning thresholds, enforce coding standards.
-
-7. **Create agent rules** — Write `CLAUDE.md` and `.claude/rules/` covering Robot Framework test patterns, keyword conventions, tag hierarchy.
-
-8. **Add Gitleaks to CI** — The `.gitleaks.toml` config exists but no workflow runs it. Add a pre-commit hook and CI job.
+5. **Expand Python unit tests** — Priority targets: `DataSciencePipelinesAPI.py`, `DataSciencePipelinesKfp.py`, `Helpers.py`, `ocm.py`, `util.py`
+6. **Add comprehensive pre-commit hooks** — Add shellcheck, robocop, pyright, gitleaks to `.pre-commit-config.yaml`
+7. **Create AI agent rules** — Generate `.claude/rules/` with Robot Framework and Python testing patterns
+8. **Add CodeQL analysis** — Enable CodeQL for Python SAST on PRs
 
 ### Priority 2 (Nice-to-Have)
 
-9. **Add container image startup validation** — After building, verify the image starts and Robot Framework loads correctly.
-
-10. **Add workflow concurrency control** — Prevent duplicate workflow runs on rapid pushes.
-
-11. **Add `.dockerignore`** — Exclude `.git/`, `poetry.lock`, `docs/` from Docker context to speed up builds.
-
-12. **Expand pre-commit hooks** — Add ShellCheck, Robocop, Pyright, gitleaks, trailing whitespace.
-
-13. **Add test execution reporting/trends** — Track Robot Framework test pass/fail rates over time via ReportPortal (already a dependency).
+9. **Add SBOM generation** — Generate SBOMs for container images using Syft/Trivy
+10. **Enable Pyright strict mode** — Gradually increase type checking coverage
+11. **Add concurrency control** — Cancel stale workflow runs on force-push
+12. **Add scheduled CI runs** — Periodic builds to catch dependency/base image drift
+13. **Add Dockerfile linting** — Integrate hadolint for Dockerfile best practices
+14. **Pin and auto-update binary dependencies** — Use Dependabot or Renovate for Dockerfile binary versions
 
 ## Comparison to Gold Standards
 
-| Dimension | ods-ci | odh-dashboard | notebooks | Best Practice |
+| Dimension | ods-ci | odh-dashboard | notebooks | Gold Standard |
 |-----------|--------|---------------|-----------|---------------|
-| Unit Tests | 1 file (selftests only) | Comprehensive Jest suite | N/A (image-focused) | Per-module test files |
-| Integration/E2E | 110 Robot files, 431 cases | Cypress E2E + contract tests | Multi-layer image validation | Automated in CI |
-| Build Integration | Dry-run only | PR-time builds | Image build + test | Konflux simulation |
-| Image Testing | No CI builds | Image build in CI | 5-layer validation | Build + scan + startup |
-| Coverage Tracking | None | Codecov with enforcement | N/A | Threshold + PR reports |
-| CI/CD Automation | Lint + dry-run | Multi-stage pipeline | Image pipeline | Full lifecycle |
-| Linting | Ruff + Pyright + Robocop + ShellCheck | ESLint + TypeScript strict | Hadolint + ShellCheck | Multi-tool enforcement |
-| Security Scanning | Gitleaks config (not in CI) | Snyk + CodeQL | Trivy | SAST + container scan |
-| Agent Rules | None | Comprehensive .claude/rules/ | None | Test patterns + guidelines |
-| Pre-commit | Ruff only | Multi-hook config | N/A | Full quality suite |
+| Unit Tests | 2.5 | 9.0 | 6.0 | Coverage >80%, unit tests for all libraries |
+| Integration/E2E | 8.0 | 9.0 | 7.0 | Tiered suites, automated on PR |
+| Build Integration | 3.0 | 7.0 | 8.0 | PR-time image build + startup validation |
+| Image Testing | 2.0 | 6.0 | 9.0 | Multi-arch build, Trivy scan, runtime test |
+| Coverage Tracking | 1.0 | 8.0 | 5.0 | Codecov with enforcement, PR reporting |
+| CI/CD Automation | 5.5 | 9.0 | 8.0 | Concurrency, caching, parallelization |
+| Agent Rules | 0.0 | 8.0 | 3.0 | Comprehensive .claude/rules/ for all test types |
+| **Overall** | **5.6** | **8.5** | **7.0** | **8.0+** |
+
+**Key Gaps vs. Gold Standards:**
+- **vs. odh-dashboard**: Missing unit test coverage, no coverage enforcement, no agent rules, Robocop gates disabled
+- **vs. notebooks**: Missing image build pipeline, no container scanning, no multi-architecture support
+- **vs. Kubernetes best practices**: No operator testing patterns (relevant for test automation that interacts with operators)
 
 ## File Paths Reference
 
-### CI/CD
-- `.github/workflows/code_quality.yaml` — Lint pipeline (ShellCheck, Robocop, Ruff, Pyright, pytest)
-- `.github/workflows/dry_run.yml` — Robot Framework dry-run validation
-- `.github/workflows/comment.yml` — PR comment with dry-run results
+### CI/CD Configuration
+- `.github/workflows/code_quality.yaml` — Lint (shellcheck, Robocop, ruff, pyright) + selftests
+- `.github/workflows/dry_run.yml` — Robot Framework dry-run syntax validation
+- `.github/workflows/comment.yml` — Post dry-run results as PR comment
 
-### Testing
-- `ods_ci/tests/Tests/` — 110 Robot Framework test files
-- `ods_ci/tests/Resources/` — 81 keyword/resource files, 30 Python helpers
-- `ods_ci/selftests/` — Python unit tests (1 test file)
-- `ods_ci/run_robot_test.sh` — Test execution script
+### Test Files
+- `ods_ci/tests/Tests/` — 62 test suite files (247 test cases)
+- `ods_ci/tests/Resources/` — 53 resource files, keyword libraries
+- `ods_ci/selftests/` — 1 pytest file
 
 ### Code Quality
-- `pyproject.toml` — Ruff, Pyright, pytest configuration
-- `.pre-commit-config.yaml` — Ruff pre-commit hooks
-- `.robocop` — Robot Framework linter configuration
-- `.editorconfig` — Formatting standards
+- `.pre-commit-config.yaml` — ruff hooks only
+- `.robocop` — Robot Framework linter config (gates commented out)
+- `pyproject.toml` — ruff, pyright, pytest configuration
 
 ### Container Images
-- `ods_ci/build/Dockerfile` — Main test execution image
-- `ods_ci/build/Dockerfile_interop` — Interop testing image
-- `ods_ci/build/Dockerfile_smtpserver` — SMTP test server image
+- `ods_ci/build/Dockerfile` — Main test runner
+- `ods_ci/build/Dockerfile_interop` — Interop testing
+- `ods_ci/build/Dockerfile_smtpserver` — SMTP server
 
 ### Security
-- `.gitleaks.toml` — Secret detection configuration
+- `.gitleaks.toml` — Secret detection config
 - `.snyk` — Snyk vulnerability policy
-- `.sonarcloud.properties` — SonarCloud configuration
+- `.sonarcloud.properties` — SonarCloud config
 
-### Other
-- `pyproject.toml` — Project configuration, dependencies, tool settings
-- `poetry.lock` — Dependency lock file
-- `ods_ci/libs/Helpers.py` — Python helper library
-- `ods_ci/utils/` — Utility scripts and tools
+### Key Python Libraries
+- `ods_ci/libs/DataSciencePipelinesAPI.py` — Pipeline API helpers
+- `ods_ci/libs/DataSciencePipelinesKfp.py` — KFP helpers
+- `ods_ci/libs/Helpers.py` — General helpers
+- `ods_ci/utils/scripts/util.py` — Utility functions
+- `ods_ci/utils/scripts/ocm/ocm.py` — OCM CLI wrapper
+- `ods_ci/utils/scripts/rosa/rosaOps.py` — ROSA operations

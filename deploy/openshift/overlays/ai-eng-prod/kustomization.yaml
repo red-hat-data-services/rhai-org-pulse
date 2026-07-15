@@ -11,6 +11,7 @@ configMapGenerator:
   literals:
   - API_PUBLIC_URL=https://api-team-tracker.apps.int.spoke.prod.us-west-2.aws.paas.redhat.com
   - AUTH_EMAIL_DOMAIN=cluster.local
+  - GOOGLE_OAUTH_CALLBACK_URL=https://team-tracker.apps.int.spoke.prod.us-west-2.aws.paas.redhat.com/api/modules/customer-insights/auth/google/callback
   name: team-tracker-config
 
 patches:
@@ -19,6 +20,6 @@ patches:
 
 images:
 - name: quay.io/org-pulse/team-tracker-backend
-  newTag: 8d2546be03b3ebe17963f81f4ce162fe1f319aef
+  newTag: 30f0cc90ba8a1909f3f1a1dfc455cf0a5c846aa2
 - name: quay.io/org-pulse/team-tracker-frontend
-  newTag: baae187e5d459fab82774bf870c72aff812dd25e
+  newTag: 9242c0a75ae28132584eab339d00d8fa2a386cc7

@@ -28,13 +28,13 @@ const BULK_CAP = 5000;
  */
 module.exports = function registerAssessmentRoutes(router, context) {
   const { storage, requireAdmin, requireScope } = context;
-  const { readFromStorage, writeToStorageAtomic } = storage;
+  const { readFromStorage, writeToStorage } = storage;
 
   // ─── 1. Static routes FIRST ───
 
   // GET /assessments/status (Admin) — assessment data status for settings page
-  router.get('/assessments/status', requireAdmin, requireScope('ai-impact:read'), function(req, res) {
-    const data = readAssessments(readFromStorage);
+  router.get('/assessments/status', requireAdmin, requireScope('ai-impact:read'), async function(req, res) {
+    const data = await readAssessments(readFromStorage);
     res.json({
       lastSyncedAt: data.lastSyncedAt,
       totalAssessed: data.totalAssessed,
@@ -43,7 +43,7 @@ module.exports = function registerAssessmentRoutes(router, context) {
   });
 
   // POST /assessments/bulk (Admin) — bulk upsert assessments
-  router.post('/assessments/bulk', requireAdmin, requireScope('ai-impact:write'), jsonLimit, function(req, res) {
+  router.post('/assessments/bulk', requireAdmin, requireScope('ai-impact:write'), jsonLimit, async function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Assessment ingest disabled in demo mode' });
     }
@@ -56,7 +56,7 @@ module.exports = function registerAssessmentRoutes(router, context) {
       return res.status(400).json({ error: `Bulk payload exceeds maximum of ${BULK_CAP} entries` });
     }
 
-    const data = readAssessments(readFromStorage);
+    const data = await readAssessments(readFromStorage);
     const counts = { created: 0, updated: 0, unchanged: 0 };
     const errors = [];
 
@@ -79,7 +79,7 @@ module.exports = function registerAssessmentRoutes(router, context) {
     data.lastSyncedAt = new Date().toISOString();
     data.totalAssessed = Object.keys(data.assessments).length;
 
-    writeAssessmentsAtomic(writeToStorageAtomic, data);
+    await writeAssessmentsAtomic(writeToStorage, data);
 
     res.json({
       created: counts.created,
@@ -90,26 +90,26 @@ module.exports = function registerAssessmentRoutes(router, context) {
   });
 
   // DELETE /assessments (Admin) — clear all assessment data
-  router.delete('/assessments', requireAdmin, requireScope('ai-impact:write'), function(req, res) {
+  router.delete('/assessments', requireAdmin, requireScope('ai-impact:write'), async function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Assessment ingest disabled in demo mode' });
     }
 
-    writeAssessmentsAtomic(writeToStorageAtomic, { lastSyncedAt: null, totalAssessed: 0, assessments: {} });
+    await writeAssessmentsAtomic(writeToStorage, { lastSyncedAt: null, totalAssessed: 0, assessments: {} });
     res.json({ status: 'cleared' });
   });
 
   // GET /assessments — list all latest assessments (slim projection)
-  router.get('/assessments', requireScope('ai-impact:read'), function(req, res) {
-    const data = readAssessments(readFromStorage);
+  router.get('/assessments', requireScope('ai-impact:read'), async function(req, res) {
+    const data = await readAssessments(readFromStorage);
     res.json(getLatestProjection(data));
   });
 
   // ─── 2. Parameterized routes AFTER ───
 
   // GET /assessments/:key — single RFE assessment + history
-  router.get('/assessments/:key', requireScope('ai-impact:read'), function(req, res) {
-    const data = readAssessments(readFromStorage);
+  router.get('/assessments/:key', requireScope('ai-impact:read'), async function(req, res) {
+    const data = await readAssessments(readFromStorage);
     const entry = data.assessments[req.params.key];
     if (!entry) {
       return res.status(404).json({ error: 'Not found' });
@@ -121,7 +121,7 @@ module.exports = function registerAssessmentRoutes(router, context) {
   });
 
   // PUT /assessments/:key (Admin) — upsert single assessment
-  router.put('/assessments/:key', requireAdmin, requireScope('ai-impact:write'), jsonLimit, function(req, res) {
+  router.put('/assessments/:key', requireAdmin, requireScope('ai-impact:write'), jsonLimit, async function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Assessment ingest disabled in demo mode' });
     }
@@ -131,13 +131,13 @@ module.exports = function registerAssessmentRoutes(router, context) {
       return res.status(400).json({ errors: result.errors });
     }
 
-    const data = readAssessments(readFromStorage);
+    const data = await readAssessments(readFromStorage);
     const status = upsertAssessment(data, req.params.key, result.data);
 
     data.lastSyncedAt = new Date().toISOString();
     data.totalAssessed = Object.keys(data.assessments).length;
 
-    writeAssessmentsAtomic(writeToStorageAtomic, data);
+    await writeAssessmentsAtomic(writeToStorage, data);
     res.json({ status });
   });
 };

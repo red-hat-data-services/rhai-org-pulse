@@ -1,8 +1,10 @@
-var { CUSTOM_FIELDS, serializeField } = require('../hygiene/jira-fetch')
+var { CUSTOM_FIELDS, serializeField, numericField } = require('../hygiene/jira-fetch')
+var { parseDescriptionSignals } = require('./health/description-scanner')
 
 var QUERY_FIELDS = [
   'summary', 'status', 'issuetype', 'assignee', 'fixVersions',
   'components', 'labels', 'priority', 'created', 'updated',
+  'description',
   CUSTOM_FIELDS.team,
   CUSTOM_FIELDS.targetVersion,
   CUSTOM_FIELDS.riceScore,
@@ -11,7 +13,8 @@ var QUERY_FIELDS = [
   CUSTOM_FIELDS.releaseType,
   CUSTOM_FIELDS.docsRequired,
   CUSTOM_FIELDS.targetEnd,
-  CUSTOM_FIELDS.productManager
+  CUSTOM_FIELDS.productManager,
+  CUSTOM_FIELDS.effort
 ].join(',')
 
 var JQL = 'project = RHAISTRAT AND issuetype IN (Feature, Initiative) AND status NOT IN (Closed, Done, Resolved, Cancelled)'
@@ -57,13 +60,15 @@ function normalizeIssue(issue) {
     fixVersions: fixVersions,
     targetVersions: targetVersions,
     priority: priority,
-    riceScore: fields[CUSTOM_FIELDS.riceScore] || null,
+    riceScore: numericField(fields[CUSTOM_FIELDS.riceScore]),
     statusSummary: serializeField(fields[CUSTOM_FIELDS.statusSummary]),
     colorStatus: serializeField(fields[CUSTOM_FIELDS.colorStatus]),
     releaseType: serializeField(fields[CUSTOM_FIELDS.releaseType]),
     docsRequired: serializeField(fields[CUSTOM_FIELDS.docsRequired]),
     targetEnd: serializeField(fields[CUSTOM_FIELDS.targetEnd]),
-    pmOwner: pmOwner
+    pmOwner: pmOwner,
+    effort: numericField(fields[CUSTOM_FIELDS.effort]),
+    descriptionSignals: parseDescriptionSignals(fields.description)
   }
 }
 

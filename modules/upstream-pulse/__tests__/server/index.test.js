@@ -14,7 +14,7 @@ describe('upstream-pulse server module', () => {
       get: vi.fn((...args) => registered.push({ method: 'get', path: args[0] })),
       post: vi.fn(),
     }
-    const context = { registerDiagnostics: vi.fn(), registerScopes: vi.fn(), requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), storage: { readFromStorage: vi.fn() } }
+    const context = { registerDiagnostics: vi.fn(), registerScopes: vi.fn(), requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), storage: { readFromStorage: vi.fn().mockResolvedValue(null) } }
 
     registerRoutes(router, context)
 
@@ -38,7 +38,7 @@ describe('upstream-pulse server module', () => {
       post: vi.fn((...args) => postCalls.push({ path: args[0] })),
     }
     const requireAdmin = vi.fn()
-    registerRoutes(router, { registerDiagnostics: vi.fn(), registerScopes: vi.fn(), requireAdmin, requireScope: () => (req, res, next) => next(), storage: { readFromStorage: vi.fn() } })
+    registerRoutes(router, { registerDiagnostics: vi.fn(), registerScopes: vi.fn(), requireAdmin, requireScope: () => (req, res, next) => next(), storage: { readFromStorage: vi.fn().mockResolvedValue(null) } })
 
     expect(postCalls).toHaveLength(2)
     expect(postCalls.map(c => c.path)).toContain('/projects')
@@ -50,14 +50,14 @@ describe('upstream-pulse server module', () => {
   it('gates repo-info behind requireAdmin', () => {
     const router = { get: vi.fn(), post: vi.fn() }
     const requireAdmin = vi.fn()
-    registerRoutes(router, { registerDiagnostics: vi.fn(), registerScopes: vi.fn(), requireAdmin, requireScope: () => (req, res, next) => next(), storage: { readFromStorage: vi.fn() } })
+    registerRoutes(router, { registerDiagnostics: vi.fn(), registerScopes: vi.fn(), requireAdmin, requireScope: () => (req, res, next) => next(), storage: { readFromStorage: vi.fn().mockResolvedValue(null) } })
 
     expect(router.get).toHaveBeenCalledWith('/repo-info', requireAdmin, expect.any(Function), expect.any(Function))
   })
 
   it('registers diagnostics hook when available', () => {
     const router = { get: vi.fn(), post: vi.fn() }
-    const context = { registerDiagnostics: vi.fn(), registerScopes: vi.fn(), requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), storage: { readFromStorage: vi.fn() } }
+    const context = { registerDiagnostics: vi.fn(), registerScopes: vi.fn(), requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), storage: { readFromStorage: vi.fn().mockResolvedValue(null) } }
 
     registerRoutes(router, context)
     expect(context.registerDiagnostics).toHaveBeenCalledWith(expect.any(Function))
@@ -65,7 +65,7 @@ describe('upstream-pulse server module', () => {
 
   it('does not fail when registerDiagnostics is absent', () => {
     const router = { get: vi.fn(), post: vi.fn() }
-    const context = { registerScopes: vi.fn(), requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), storage: { readFromStorage: vi.fn() } }
+    const context = { registerScopes: vi.fn(), requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), storage: { readFromStorage: vi.fn().mockResolvedValue(null) } }
 
     expect(() => registerRoutes(router, context)).not.toThrow()
   })

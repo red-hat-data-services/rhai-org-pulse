@@ -7,64 +7,69 @@ scorecard:
     status: "No tests of any kind exist in the repository"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E testing; scripts apply manifests blindly"
+    status: "No integration or E2E tests; no validation of deployed resources"
   - dimension: "Build Integration"
     score: 0.0
-    status: "No build process; repo contains only static YAML manifests and shell scripts"
+    status: "No CI/CD pipeline; no PR-time or periodic build validation"
   - dimension: "Image Testing"
     score: 0.0
-    status: "No container images built; references external images only"
+    status: "No container images built or tested; Kustomize manifests only"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tools, no metrics, no tracking of any kind"
+    status: "No coverage tooling; no test code to measure"
   - dimension: "CI/CD Automation"
-    score: 1.0
-    status: "Makefile with login/deploy targets but no CI pipeline"
+    score: 0.5
+    status: "Makefile provides login/deploy/undeploy targets but no CI workflows"
   - dimension: "Agent Rules"
     score: 0.0
     status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
   - title: "No CI/CD pipeline at all"
-    impact: "No automated validation — manifests can break silently on any commit"
+    impact: "Changes are never validated automatically; broken manifests can be merged without detection"
     severity: "HIGH"
     effort: "4-6 hours"
   - title: "Zero test coverage"
-    impact: "No verification that manifests are valid YAML, valid K8s resources, or deployable"
+    impact: "No unit, integration, or E2E tests exist; no way to verify Kustomize overlays or shell scripts work"
     severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "Hardcoded cluster URLs and credentials in committed files"
-    impact: "Credential leakage risk; .env.local.example contains sample secrets pattern but .env is committed"
+    effort: "8-12 hours"
+  - title: "No Kustomize manifest validation"
+    impact: "YAML syntax errors and invalid Kubernetes resources are not caught before apply"
     severity: "HIGH"
-    effort: "1-2 hours"
-  - title: "No manifest validation"
-    impact: "Invalid kustomize overlays or malformed resources not caught before deploy"
-    severity: "MEDIUM"
     effort: "2-4 hours"
-quick_wins:
-  - title: "Add a GitHub Actions workflow for YAML/kustomize lint"
-    effort: "1-2 hours"
-    impact: "Catch malformed manifests and kustomize build failures on every push"
-  - title: "Add .env to .gitignore and remove from tracking"
-    effort: "30 minutes"
-    impact: "Prevent accidental credential commits"
-  - title: "Add kubeval/kubeconform validation"
-    effort: "1-2 hours"
-    impact: "Validate K8s resource schemas against target API version"
-  - title: "Add shellcheck CI step for shell scripts"
+  - title: "Hardcoded cluster URLs in scripts"
+    impact: "notebook script hardcodes a specific cluster URL, breaking portability"
+    severity: "MEDIUM"
     effort: "1 hour"
-    impact: "Catch common shell scripting bugs in deploy/undeploy scripts"
+  - title: "Secret material in repository"
+    impact: ".env file is tracked in git; .gitleaks.toml allowlists secret-containing files instead of removing them"
+    severity: "HIGH"
+    effort: "2-3 hours"
+quick_wins:
+  - title: "Add kustomize build --dry-run validation to a GitHub Actions workflow"
+    effort: "1-2 hours"
+    impact: "Catches YAML syntax errors and invalid resource references before merge"
+  - title: "Add kubeval or kubeconform linting"
+    effort: "1-2 hours"
+    impact: "Validates Kubernetes manifests against the API schema"
+  - title: "Remove hardcoded cluster URL from notebooks/create-notebook.sh"
+    effort: "30 minutes"
+    impact: "Makes the script portable to any cluster"
+  - title: "Add a pre-commit hook for YAML linting"
+    effort: "1 hour"
+    impact: "Catches malformed YAML before commit"
 recommendations:
   priority_0:
-    - "Add a basic CI pipeline (GitHub Actions) that validates YAML syntax, runs kustomize build, and lints shell scripts"
-    - "Remove .env from version control and add to .gitignore to prevent credential leakage"
+    - "Add a minimal GitHub Actions workflow that runs kustomize build and kubeconform on PRs"
+    - "Audit and remove tracked secrets; rotate any exposed credentials"
+    - "Remove hardcoded URLs from shell scripts"
   priority_1:
-    - "Add kubeconform or kubeval to validate manifests against Kubernetes API schemas"
-    - "Add a dry-run deployment test using a Kind cluster in CI"
-    - "Pin all image references to digests or immutable tags"
+    - "Add shellcheck linting for all .sh files"
+    - "Add a smoke test that validates kustomize overlays render correctly"
+    - "Implement pre-commit hooks for YAML and shell linting"
   priority_2:
-    - "Add pre-commit hooks for YAML lint and gitleaks"
-    - "Create agent rules (.claude/) for manifest quality standards"
-    - "Document deployment verification steps and expected outcomes"
+    - "Add a CLAUDE.md with contribution guidelines"
+    - "Archive the repository if it is no longer maintained (last commit May 2022)"
+    - "Consider adding Renovate/Dependabot for manifest reference freshness"
 ---
 
 # Quality Analysis: 2022-summit-cluster-setup
@@ -72,228 +77,204 @@ recommendations:
 ## Executive Summary
 
 - **Overall Score: 1.2/10**
-- **Repository Type**: Infrastructure / Cluster Setup Scripts (Kubernetes manifests + shell scripts)
-- **Primary Language**: Shell scripts + YAML manifests
-- **Key Strengths**: Gitleaks configuration present; clean kustomize overlay structure; Makefile automation for login/deploy
-- **Critical Gaps**: No CI/CD pipeline, zero tests, no manifest validation, committed .env file, no security scanning in automation
-- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
+- **Repository Type**: Kubernetes cluster setup / demo scaffolding (shell scripts + Kustomize manifests)
+- **Primary Language**: Shell (Bash) + YAML (Kubernetes manifests)
+- **Framework**: Kustomize + KfDef (Open Data Hub)
+- **Last Activity**: May 3, 2022 (over 4 years ago, likely abandoned)
+- **Total Files**: ~20 non-git files
+- **Total Commits**: 4 (shallow clone shows 1)
+- **Key Strengths**: Gitleaks configuration present; Makefile provides basic automation
+- **Critical Gaps**: No CI/CD, no tests, no linting, no coverage, hardcoded secrets/URLs
+- **Agent Rules Status**: Missing
 
-This repository is a small, single-purpose deployment toolkit created for Red Hat Summit 2022. It contains 26 files (5 shell scripts, 15 YAML manifests) with a single commit. It deploys Open Data Hub (ODH) onto an OpenShift cluster using kustomize overlays. Given its nature as event-specific infrastructure tooling, the absence of quality practices is understandable but still presents risks for anyone reusing or adapting this setup.
+This repository is a single-purpose demo setup tool created for the 2022 Red Hat Summit. It contains Kustomize overlays for deploying Open Data Hub (ODH) components (dashboard, model-mesh, notebook controller) along with example serving predictors and MinIO storage. The codebase is extremely small and has had no maintenance in over 4 years.
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0/10 | No tests of any kind exist |
-| Integration/E2E | 0/10 | No integration or E2E testing |
-| **Build Integration** | **0/10** | **No build process; static manifests only** |
-| Image Testing | 0/10 | No container images built; references external images |
-| Coverage Tracking | 0/10 | No coverage tools or metrics |
-| CI/CD Automation | 1/10 | Makefile targets but no CI pipeline |
-| Agent Rules | 0/10 | No agent rules or AI guidance |
+| Unit Tests | 0/10 | No tests exist |
+| Integration/E2E | 0/10 | No integration or E2E tests |
+| **Build Integration** | **0/10** | **No CI/CD pipeline of any kind** |
+| Image Testing | 0/10 | No container images built or tested |
+| Coverage Tracking | 0/10 | No coverage tooling |
+| CI/CD Automation | 0.5/10 | Makefile only; no GitHub Actions, no periodic jobs |
+| Agent Rules | 0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory |
+
+**Weighted Overall: 1.2/10**
 
 ## Critical Gaps
 
 ### 1. No CI/CD Pipeline
-- **Impact**: No automated validation — manifests can break silently on any commit. Kustomize overlays could reference non-existent files, YAML could be malformed, and nobody would know until deployment fails on a live cluster.
+- **Impact**: Changes are never validated automatically. Broken manifests, invalid YAML, or misconfigured Kustomize overlays can be merged without any automated checks.
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: No `.github/workflows/` directory exists. No `.gitlab-ci.yml` or `Jenkinsfile`. The only automation is a Makefile with `login`, `deploy`, and `undeploy` targets that shell out to bash scripts.
+- **Details**: No `.github/workflows/` directory exists. No `.gitlab-ci.yml`, no `Jenkinsfile`. The only automation is a `Makefile` with `login`, `deploy`, and `undeploy` targets that directly call `oc apply -k`.
 
 ### 2. Zero Test Coverage
-- **Impact**: No verification whatsoever that the manifests are valid YAML, valid Kubernetes resources, or successfully deployable. Shell scripts have no error handling beyond basic `oc apply -k`.
+- **Impact**: No automated verification that any part of the setup works correctly. Manual testing is the only option.
 - **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Details**: No test files of any kind (`*_test.*`, `*spec*`, `test/`, `tests/`). The repository has a test-to-code ratio of 0:1.
+- **Effort**: 8-12 hours
+- **Details**: No test files of any kind (`*_test.*`, `*.spec.*`, `test_*`). No `test/`, `tests/`, or `e2e/` directories. No testing framework dependencies.
 
-### 3. Credentials Risk — Committed .env File
-- **Impact**: The `.env` file is committed to version control. While it currently contains only commented-out defaults, the pattern encourages storing credentials in tracked files. The `.env.local.example` shows token and password patterns.
+### 3. No Kustomize/Manifest Validation
+- **Impact**: YAML syntax errors, invalid apiVersions, missing fields, and broken resource references are only discovered at `oc apply` time.
 - **Severity**: HIGH
-- **Effort**: 1-2 hours
-- **Details**: `.env` is tracked by git (not in `.gitignore`). The gitleaks config allowlists `storage/minio/sample-minio.yaml` and `serving/example/secret.yaml`, which means those files contain secrets that are intentionally committed.
-
-### 4. No Manifest Validation
-- **Impact**: Invalid kustomize overlays or malformed Kubernetes resources are not caught before deployment.
-- **Severity**: MEDIUM
 - **Effort**: 2-4 hours
-- **Details**: Five kustomization.yaml files exist but are never validated in automation. A simple `kustomize build` check would catch missing resource references.
+- **Details**: The `kfdef/deploy.sh` runs `oc apply -k` directly without any pre-validation. No `kustomize build` dry-run, no `kubeval`/`kubeconform` checks.
+
+### 4. Secret Material in Repository
+- **Impact**: The `.env` file is tracked in git (though currently contains only commented-out variables). The `.env.local.example` shows credentials in plaintext. The `.gitleaks.toml` allowlists files containing secrets (`storage/minio/sample-minio.yaml`, `serving/example/secret.yaml`) rather than removing the secrets.
+- **Severity**: HIGH
+- **Effort**: 2-3 hours
+
+### 5. Hardcoded Cluster URLs
+- **Impact**: `notebooks/create-notebook.sh` hardcodes `apps.summit-demo.d7se.p1.openshiftapps.com`, making the script non-portable.
+- **Severity**: MEDIUM
+- **Effort**: 1 hour
 
 ## Quick Wins
 
-### 1. Add GitHub Actions YAML/Kustomize Lint (1-2 hours)
+### 1. Add Kustomize Validation Workflow (1-2 hours)
 ```yaml
 # .github/workflows/validate.yml
 name: Validate Manifests
-on: [push, pull_request]
+on: [pull_request]
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install kustomize
-        run: |
-          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
-          sudo mv kustomize /usr/local/bin/
       - name: Validate kustomize overlays
         run: |
-          for dir in $(find . -name kustomization.yaml -exec dirname {} \;); do
+          for dir in kfdef/odh notebooks/odh-notebooks serving/example storage/minio; do
             echo "Validating $dir..."
-            kustomize build "$dir" > /dev/null
-          done
-      - name: YAML lint
-        uses: ibiqlik/action-yamllint@v3
-        with:
-          file_or_dir: .
-          config_data: |
-            extends: relaxed
-            rules:
-              line-length: {max: 200}
-```
-
-### 2. Add .env to .gitignore (30 minutes)
-Remove `.env` from tracking and add it to `.gitignore`. Keep `.env.local.example` as the template.
-
-### 3. Add kubeval/kubeconform Validation (1-2 hours)
-```yaml
-      - name: Validate K8s schemas
-        run: |
-          wget https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
-          tar xf kubeconform-linux-amd64.tar.gz
-          for dir in $(find . -name kustomization.yaml -exec dirname {} \;); do
-            kustomize build "$dir" | ./kubeconform -strict -summary
+            kustomize build "$dir" | kubeconform -strict
           done
 ```
 
-### 4. Add shellcheck for Shell Scripts (1 hour)
+### 2. Add kubeval/kubeconform Linting (1-2 hours)
+Validates rendered manifests against Kubernetes API schemas to catch invalid fields, wrong apiVersions, and missing required fields.
+
+### 3. Remove Hardcoded URL from create-notebook.sh (30 minutes)
+Replace the hardcoded echo with a dynamic URL construction using `oc` commands.
+
+### 4. Add pre-commit Hooks (1 hour)
 ```yaml
-      - name: ShellCheck
-        uses: ludeeus/action-shellcheck@master
-        with:
-          scandir: '.'
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.10.0
+    hooks:
+      - id: shellcheck
 ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
-
-**Score: 1/10**
-
-The repository has no CI/CD pipeline. The only automation is a `Makefile` with three targets:
-
-| Target | Description |
-|--------|-------------|
-| `login` | Authenticates to OpenShift via `oc login` using token or user/password |
-| `deploy` | Runs `kfdef/deploy.sh` — applies kustomize overlay to cluster |
-| `undeploy` | Runs `kfdef/undeploy.sh` — deletes KfDef and project |
-
-The Makefile loads environment variables from `.env` and `.env.local` files. There is no CI trigger, no workflow definition, and no automated validation.
+- **Workflows**: None. No `.github/workflows/` directory.
+- **Build Automation**: Makefile with 3 targets: `login`, `deploy`, `undeploy`.
+- **PR Checks**: None. No branch protection, no required status checks.
+- **Periodic Jobs**: None.
+- **Concurrency Control**: N/A.
+- **Caching**: N/A.
 
 ### Test Coverage
-
-**Score: 0/10**
-
-Zero test files exist. No testing framework is present. No test dependencies are declared. The repository contains only deployment scripts that run `oc apply -k` commands.
+- **Unit Tests**: 0 files, 0 test functions
+- **Integration Tests**: None
+- **E2E Tests**: None
+- **Test Frameworks**: None configured
+- **Test-to-Code Ratio**: 0:1
+- **Coverage Tools**: None
 
 ### Code Quality
-
-**Score: 1/10 (partial credit for gitleaks config)**
-
-- **Linting**: None configured. No YAML linter, no shell linter, no manifest validator.
-- **Pre-commit hooks**: None (`.pre-commit-config.yaml` does not exist).
-- **Static analysis**: None.
-- **Secret detection**: `.gitleaks.toml` exists and is properly configured to allowlist known sample secret files (`sample-minio.yaml`, `secret.yaml`). This is the only quality tool present.
+- **Linting**: No linting configuration (no `.yamllint.yml`, no `shellcheck` config)
+- **Pre-commit Hooks**: None (`.pre-commit-config.yaml` does not exist)
+- **Static Analysis**: None
+- **Formatters**: None
 
 ### Container Images
-
-**Score: 0/10**
-
-No container images are built by this repository. It references external images in Kubernetes manifests:
-- MinIO images for sample storage
-- ODH notebook images
-- KServe serving runtime images
-
-No Dockerfile, Containerfile, or image build process exists.
+- **Dockerfiles**: None. This repository does not build container images.
+- **Image Testing**: N/A
+- **Multi-arch Support**: N/A
+- **Vulnerability Scanning**: N/A
+- **SBOM**: N/A
 
 ### Security
-
-**Score: 1/10**
-
-- **Gitleaks**: Configuration present (`.gitleaks.toml`) — this is a positive signal
-- **Container scanning**: N/A (no images built)
+- **Gitleaks**: `.gitleaks.toml` present with an allowlist for two files containing sample secrets. This is better than nothing but the allowlist approach suppresses findings rather than fixing them.
 - **SAST/CodeQL**: Not configured
-- **Dependency scanning**: N/A (no application dependencies)
-- **Credential management**: Weak — `.env` committed, sample secrets in allowlisted YAML files
-- **Hardcoded URLs**: `notebooks/create-notebook.sh` contains a hardcoded cluster URL
+- **Dependency Scanning**: N/A (no package dependencies)
+- **Secret Detection**: Partial (gitleaks config exists but allowlists secrets)
+- **Concerns**: `.env` file tracked in git; example env file shows credential patterns; sample secrets embedded in YAML manifests
 
 ### Agent Rules (Agentic Flow Quality)
-
-**Score: 0/10**
-
 - **Status**: Missing
-- **Coverage**: No agent rules exist for any dimension
+- **CLAUDE.md**: Not present
+- **AGENTS.md**: Not present
+- **.claude/ directory**: Not present
+- **Coverage**: No test type rules exist
 - **Quality**: N/A
-- **Gaps**: No `CLAUDE.md`, `AGENTS.md`, `.claude/` directory, or any AI-assisted development guidance
-- **Recommendation**: Given the repository's small size and archival nature, agent rules would only be valuable if the repo were actively maintained or used as a template for future summit setups
+- **Gaps**: Everything is missing. No contribution guidelines, no test patterns, no automation rules.
+- **Recommendation**: Given the repository's abandoned state, agent rules are low priority. If revived, generate rules with `/test-rules-generator` covering Kustomize validation and shell script testing.
+
+### Build Integration
+- **PR Build Validation**: None
+- **Kustomize Overlay Validation**: Not automated
+- **Manifest Generation Testing**: None
+- **Deployment Testing**: Manual only (`make deploy`)
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-
-1. **Add a basic CI pipeline** — Even a minimal GitHub Actions workflow that runs `kustomize build` on all overlays would catch the most obvious breakages.
-2. **Remove .env from version control** — Add to `.gitignore`, remove from git tracking, ensure no credentials leak.
+1. **Decide whether to archive or revive**: Last commit was May 2022. If this repo is no longer needed, archive it to prevent confusion. If it's still relevant, proceed with P0 items below.
+2. **Add a minimal CI workflow**: Even a simple `kustomize build` + `kubeconform` check would catch manifest errors.
+3. **Audit tracked secrets**: Remove secret values from tracked files; use external secret management or sealed secrets.
+4. **Remove hardcoded cluster URLs**: Make scripts portable.
 
 ### Priority 1 (High Value)
-
-1. **Add kubeconform validation** — Validate all generated manifests against Kubernetes API schemas.
-2. **Add a dry-run deployment test** — Use a Kind cluster in CI to verify the full deployment flow.
-3. **Pin image references** — Replace mutable tags with digests or immutable version tags in all manifest files.
+1. **Add shellcheck for shell scripts**: All 4 shell scripts should pass `shellcheck`.
+2. **Add YAML linting**: `yamllint` for all YAML files.
+3. **Add pre-commit hooks**: Enforce linting before commits.
+4. **Add a smoke test**: Script that runs `kustomize build` on all overlays and validates output.
 
 ### Priority 2 (Nice-to-Have)
-
-1. **Add pre-commit hooks** — YAML lint, gitleaks, and shellcheck as pre-commit hooks.
-2. **Create agent rules** — If the repo template is reused, add `.claude/rules/` with manifest authoring guidelines.
-3. **Document verification steps** — Add expected deployment outcomes and manual verification checklist to README.
+1. **Add CLAUDE.md**: Contribution guidelines and project context.
+2. **Add Renovate/Dependabot**: Monitor for freshness of referenced ODH manifests.
+3. **Add a dry-run deployment test**: Use a Kind cluster to validate resources can be created.
 
 ## Comparison to Gold Standards
 
 | Dimension | This Repo | odh-dashboard | notebooks | kserve |
 |-----------|-----------|---------------|-----------|--------|
-| Unit Tests | 0/10 | 9/10 | 7/10 | 9/10 |
-| Integration/E2E | 0/10 | 9/10 | 8/10 | 9/10 |
-| Build Integration | 0/10 | 8/10 | 8/10 | 7/10 |
-| Image Testing | 0/10 | 7/10 | 9/10 | 7/10 |
-| Coverage Tracking | 0/10 | 8/10 | 6/10 | 9/10 |
-| CI/CD Automation | 1/10 | 9/10 | 8/10 | 9/10 |
-| Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
-| **Overall** | **1.2/10** | **8.5/10** | **7.5/10** | **8.0/10** |
-
-**Note**: This comparison is intentionally unfair. The gold standard repositories are large, actively-maintained application projects. This repository is a small, archival, event-specific cluster setup toolkit. The comparison is included for completeness but should be interpreted with this context.
+| Unit Tests | None | Extensive (Jest, React Testing Library) | N/A (manifests) | Go testing + coverage |
+| Integration/E2E | None | Cypress E2E suite | Image validation pipeline | Multi-version E2E |
+| Build Integration | None | PR-time Docker build, Module Federation | Konflux integration | PR builds + manifests |
+| Image Testing | N/A | Multi-stage build validation | 5-layer image testing | Runtime validation |
+| Coverage | None | Codecov with enforcement | N/A | Codecov thresholds |
+| CI/CD | Makefile only | 20+ GitHub Actions workflows | Automated image builds | Comprehensive GHA |
+| Agent Rules | None | .claude/ with rules and skills | None | None |
+| Security | Gitleaks (allowlist) | CodeQL, Snyk, Gitleaks | Trivy scanning | CodeQL + Snyk |
 
 ## File Paths Reference
 
 | File | Purpose |
 |------|---------|
-| `Makefile` | Login, deploy, undeploy automation |
-| `.env` | Default environment variables (committed — risk) |
-| `.env.local.example` | Template for local credential overrides |
-| `.gitleaks.toml` | Secret detection allowlist configuration |
-| `.gitignore` | Git ignore patterns |
-| `kfdef/deploy.sh` | Deploys ODH via kustomize |
-| `kfdef/undeploy.sh` | Removes ODH deployment |
-| `kfdef/odh/kustomization.yaml` | Main ODH kustomize overlay |
-| `kfdef/odh/kfdef.yaml` | KfDef custom resource for ODH |
-| `storage/create-sample-storage.sh` | Creates MinIO sample storage |
-| `storage/minio/kustomization.yaml` | MinIO kustomize overlay |
-| `serving/create-example-predictors.sh` | Creates model serving examples |
-| `serving/example/kustomization.yaml` | Serving example kustomize overlay |
-| `notebooks/create-notebook.sh` | Creates example notebook |
-| `notebooks/odh-notebooks/kustomization.yaml` | Notebook kustomize overlay |
+| `Makefile` | Login, deploy, undeploy targets |
+| `.gitleaks.toml` | Secret detection allowlist |
+| `.env` | Default environment variables (tracked) |
+| `.env.local.example` | Example local overrides |
+| `kfdef/deploy.sh` | Main deployment script (`oc apply -k`) |
+| `kfdef/undeploy.sh` | Teardown script |
+| `kfdef/odh/kustomization.yaml` | ODH Kustomize overlay |
+| `kfdef/odh/kfdef.yaml` | KfDef resource for ODH components |
+| `notebooks/create-notebook.sh` | Notebook creation (hardcoded URL) |
+| `serving/create-example-predictors.sh` | Model serving setup |
+| `storage/create-sample-storage.sh` | MinIO storage setup |
 
-## Context & Caveats
+## Summary
 
-This repository was created for **Red Hat Summit 2022** as a one-time cluster setup utility. It has:
-- **1 commit** (single initial setup)
-- **26 non-git files** total
-- **No application code** — only infrastructure manifests and deployment scripts
-
-The low scores reflect the absence of quality practices, but this is partially explained by the repository's nature as event-specific, disposable infrastructure tooling rather than a maintained software project. If this pattern is reused for future events, investing in the Priority 0 and Quick Win items would provide significant value.
+This is a minimal, event-specific demo repository that was created for the 2022 Red Hat Summit and has not been maintained since. It contains Kubernetes/Kustomize manifests and shell scripts for deploying an Open Data Hub environment. It has no CI/CD, no tests, no linting, and minimal security tooling. The most actionable recommendation is to **archive the repository** if it is no longer in use, or add basic manifest validation if it will continue to serve as a reference.

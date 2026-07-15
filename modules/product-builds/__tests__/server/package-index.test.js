@@ -9,7 +9,9 @@ const {
   getBaseUrl,
   getVariants,
   getProductVersions,
-  getDefaultProductVersion
+  getDefaultProductVersion,
+  getUpstreamPypiUrl,
+  isUpstreamPypiEnabled
 } = require('../../server/package-index')
 
 describe('package-index', () => {
@@ -25,6 +27,8 @@ describe('package-index', () => {
     delete process.env.PACKAGE_INDEX_DEFAULT_PRODUCT_VERSION
     delete process.env.PACKAGE_INDEX_QUERY_TIMEOUT
     delete process.env.PACKAGE_INDEX_CACHE_TTL
+    delete process.env.UPSTREAM_PYPI_URL
+    delete process.env.UPSTREAM_PYPI_ENABLED
   })
 
   describe('canonicalizeName', () => {
@@ -75,6 +79,26 @@ describe('package-index', () => {
       expect(files[0].filename).toBe('pkg-1.0.tar.gz')
     })
 
+    it('captures upload-time from PEP 691 JSON', () => {
+      const data = {
+        files: [
+          { filename: 'pkg-1.0.tar.gz', url: 'https://example.com/pkg-1.0.tar.gz', 'upload-time': '2026-06-25T00:42:58.129454Z' }
+        ]
+      }
+      const files = parseSimpleJson(data)
+      expect(files[0].uploadTime).toBe('2026-06-25T00:42:58.129454Z')
+    })
+
+    it('returns null uploadTime when upload-time is missing', () => {
+      const data = {
+        files: [
+          { filename: 'pkg-1.0.tar.gz', url: 'https://example.com/pkg-1.0.tar.gz' }
+        ]
+      }
+      const files = parseSimpleJson(data)
+      expect(files[0].uploadTime).toBeNull()
+    })
+
     it('returns empty for missing files array', () => {
       expect(parseSimpleJson({})).toEqual([])
       expect(parseSimpleJson(null)).toEqual([])
@@ -82,7 +106,7 @@ describe('package-index', () => {
   })
 
   describe('fetchIndex', () => {
-    it('returns found with files on 200', async () => {
+    it('returns found with files and format=html on HTML 200', async () => {
       const html = '<a href="url">torch-2.5.1.tar.gz</a>'
       vi.spyOn(globalThis, 'fetch').mockResolvedValue({
         ok: true,
@@ -95,6 +119,7 @@ describe('package-index', () => {
       expect(result.indexExists).toBe(true)
       expect(result.found).toBe(true)
       expect(result.files).toHaveLength(1)
+      expect(result.format).toBe('html')
       expect(result.error).toBeNull()
     })
 
@@ -176,7 +201,7 @@ describe('package-index', () => {
       expect(fetchSpy).toHaveBeenCalledTimes(1)
     })
 
-    it('parses PEP 691 JSON response', async () => {
+    it('parses PEP 691 JSON response with format=json', async () => {
       const jsonData = { files: [{ filename: 'pkg-1.0.tar.gz', url: 'https://example.com/pkg.tar.gz' }] }
       vi.spyOn(globalThis, 'fetch').mockResolvedValue({
         ok: true,
@@ -188,6 +213,44 @@ describe('package-index', () => {
       const result = await fetchIndex('https://index.example.com/simple/', 'pkg')
       expect(result.files).toHaveLength(1)
       expect(result.files[0].filename).toBe('pkg-1.0.tar.gz')
+      expect(result.format).toBe('json')
+    })
+
+    it('falls back to HTML on 406 Not Acceptable', async () => {
+      const html = '<a href="url">pkg-1.0.tar.gz</a>'
+      vi.spyOn(globalThis, 'fetch')
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 406,
+          headers: new Headers()
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          headers: new Headers({ 'content-type': 'text/html' }),
+          text: vi.fn().mockResolvedValue(html)
+        })
+
+      const result = await fetchIndex('https://index.example.com/simple/', 'pkg')
+      expect(result.indexExists).toBe(true)
+      expect(result.found).toBe(true)
+      expect(result.format).toBe('html')
+      expect(result.files).toHaveLength(1)
+    })
+
+    it('returns error when 406 fallback also fails', async () => {
+      vi.spyOn(globalThis, 'fetch')
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 406,
+          headers: new Headers()
+        })
+        .mockRejectedValueOnce(new Error('network error'))
+        .mockRejectedValueOnce(new Error('still broken'))
+
+      const result = await fetchIndex('https://index.example.com/simple/', 'pkg')
+      expect(result.found).toBe(false)
+      expect(result.error).toBe('still broken')
     })
   })
 
@@ -230,6 +293,41 @@ describe('package-index', () => {
     it('getDefaultProductVersion reads env var', () => {
       process.env.PACKAGE_INDEX_DEFAULT_PRODUCT_VERSION = '3.4'
       expect(getDefaultProductVersion()).toBe('3.4')
+    })
+  })
+
+  describe('upstream PyPI config', () => {
+    it('getUpstreamPypiUrl returns default', () => {
+      expect(getUpstreamPypiUrl()).toBe('https://pypi.org/simple/')
+    })
+
+    it('getUpstreamPypiUrl reads env var', () => {
+      process.env.UPSTREAM_PYPI_URL = 'https://test.pypi.org/simple'
+      expect(getUpstreamPypiUrl()).toBe('https://test.pypi.org/simple/')
+    })
+
+    it('getUpstreamPypiUrl normalizes trailing slashes', () => {
+      process.env.UPSTREAM_PYPI_URL = 'https://pypi.org/simple///'
+      expect(getUpstreamPypiUrl()).toBe('https://pypi.org/simple/')
+    })
+
+    it('isUpstreamPypiEnabled returns true by default', () => {
+      expect(isUpstreamPypiEnabled()).toBe(true)
+    })
+
+    it('isUpstreamPypiEnabled returns false when set to false', () => {
+      process.env.UPSTREAM_PYPI_ENABLED = 'false'
+      expect(isUpstreamPypiEnabled()).toBe(false)
+    })
+
+    it('isUpstreamPypiEnabled returns false when set to 0', () => {
+      process.env.UPSTREAM_PYPI_ENABLED = '0'
+      expect(isUpstreamPypiEnabled()).toBe(false)
+    })
+
+    it('isUpstreamPypiEnabled returns true for any other value', () => {
+      process.env.UPSTREAM_PYPI_ENABLED = 'yes'
+      expect(isUpstreamPypiEnabled()).toBe(true)
     })
   })
 })

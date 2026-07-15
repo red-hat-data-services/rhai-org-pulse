@@ -1,432 +1,407 @@
 ---
 repository: "red-hat-data-services/model-registry-operator"
-overall_score: 7.2
+overall_score: 7.6
 scorecard:
   - dimension: "Unit Tests"
     score: 8.5
-    status: "Excellent test-to-code ratio (1.09:1) with Ginkgo/Gomega envtest framework covering controllers, webhooks, migration, and config"
+    status: "Excellent test-to-code ratio (1.16:1 test LOC vs source LOC), Ginkgo/Gomega with envtest, 5 test suites covering controllers, webhooks, config, migration"
   - dimension: "Integration/E2E"
-    score: 7.0
-    status: "PR workflow deploys to Kind cluster with full operator lifecycle test; no dedicated E2E test suite"
+    score: 7.5
+    status: "Kind-based deployment test in PR workflow validates image build + operator deploy + CR creation; chaos testing with operator-chaos framework"
   - dimension: "Build Integration"
-    score: 7.5
-    status: "PR builds Docker image, deploys to Kind, validates kustomize overlays; Konflux multi-arch build on-demand via label/comment"
+    score: 7.0
+    status: "PR-time image build + Kind deployment + kustomize validation; separate Konflux pipeline via Tekton; no PR-time Konflux simulation"
   - dimension: "Image Testing"
-    score: 6.0
-    status: "PR builds and deploys image to Kind but no runtime health checks, vulnerability scanning, or SBOM generation in CI"
+    score: 6.5
+    status: "Docker image built and loaded into Kind on PR; no Trivy/Snyk scanning, no SBOM generation, no multi-arch PR validation"
   - dimension: "Coverage Tracking"
-    score: 3.0
-    status: "Cover profile generated locally (cover.out) but no codecov/coveralls integration or PR enforcement"
+    score: 4.0
+    status: "coverprofile generated locally but no Codecov/Coveralls integration, no PR coverage gates or trend reporting"
   - dimension: "CI/CD Automation"
-    score: 7.5
-    status: "4 GitHub Actions workflows with caching, concurrency control in Konflux; no workflow concurrency in GHA"
+    score: 8.0
+    status: "Well-structured workflows with caching, path-ignore filters, concurrency control; dependabot for 3 ecosystems; kustomize build validation"
   - dimension: "Agent Rules"
     score: 8.0
-    status: "Comprehensive AGENTS.md and CLAUDE.md with architecture docs, test patterns, and development workflows"
+    status: "Comprehensive AGENTS.md with build commands, architecture docs, testing guidance, commit conventions; no .claude/rules/ for test patterns"
 critical_gaps:
   - title: "No coverage tracking or enforcement"
-    impact: "Coverage regressions go undetected; no visibility into which code paths lack tests"
+    impact: "Coverage can silently regress with no PR-time visibility; no baseline established"
+    severity: "HIGH"
+    effort: "4-6 hours"
+  - title: "No container security scanning"
+    impact: "Vulnerable dependencies and base image CVEs go undetected until production scanning"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No container vulnerability scanning in CI"
-    impact: "Vulnerable dependencies and base images not caught before merge or release"
-    severity: "HIGH"
-    effort: "2-3 hours"
-  - title: "No CodeQL or SAST in CI workflow"
-    impact: "Security vulnerabilities in Go code not automatically detected; semgrep rules exist but aren't enforced in CI"
-    severity: "HIGH"
-    effort: "2-3 hours"
-  - title: "No E2E test suite beyond basic CR deployment"
-    impact: "Complex operator behaviors (migration, webhook conversion, multi-DB backends) only tested in envtest, not real cluster"
+  - title: "No PR-time Konflux build simulation"
+    impact: "Konflux-specific build issues (FIPS mode, pinned base images) only caught post-merge"
     severity: "MEDIUM"
-    effort: "16-24 hours"
+    effort: "8-12 hours"
+  - title: "No SBOM generation or image signing"
+    impact: "Supply chain transparency gap; missing attestation for compliance requirements"
+    severity: "MEDIUM"
+    effort: "4-6 hours"
 quick_wins:
-  - title: "Add Codecov integration to build workflow"
-    effort: "2-3 hours"
-    impact: "Immediate visibility into coverage trends and PR-level coverage diffs"
+  - title: "Add Codecov integration with PR comments"
+    effort: "2-4 hours"
+    impact: "Immediate visibility into coverage trends and regressions on every PR"
   - title: "Add Trivy container scanning to PR workflow"
     effort: "1-2 hours"
-    impact: "Catch vulnerable base images and Go dependencies before merge"
-  - title: "Add Semgrep CI step to build workflow"
-    effort: "1-2 hours"
-    impact: "Enforce the existing 64 semgrep rules in CI rather than relying on pre-commit"
-  - title: "Add concurrency control to GitHub Actions workflows"
-    effort: "30 minutes"
-    impact: "Prevent redundant workflow runs on rapid PR updates"
+    impact: "Catch CVEs in base images and dependencies before merge"
+  - title: "Add govulncheck to PR workflow (already in Makefile)"
+    effort: "1 hour"
+    impact: "govulncheck runs in make test but results aren't surfaced in CI — make it an explicit step"
+  - title: "Create .claude/rules/ for test patterns"
+    effort: "2-3 hours"
+    impact: "Codify Ginkgo/envtest patterns so AI agents generate idiomatic tests"
 recommendations:
   priority_0:
-    - "Add codecov/coveralls integration with coverage threshold enforcement (minimum 70%)"
-    - "Add Trivy or Grype container scanning to build-image-pr workflow"
-    - "Enforce semgrep rules in CI workflow (currently only available as pre-commit)"
+    - "Integrate Codecov with coverage thresholds and PR gating"
+    - "Add Trivy scanning for container images in PR and push workflows"
   priority_1:
-    - "Add CodeQL or gosec SAST workflow for Go security analysis"
-    - "Create dedicated E2E test suite testing multi-DB backends, webhook conversion, and migration paths"
-    - "Add image SBOM generation and signing in release pipeline"
+    - "Add PR-time Konflux build simulation (FIPS mode, pinned base images)"
+    - "Create .claude/rules/ with test creation patterns for unit, controller, webhook, and chaos tests"
+    - "Add SBOM generation and cosign image signing to push workflow"
   priority_2:
-    - "Add multi-version Kubernetes testing (Kind with different K8s versions)"
-    - "Add performance/load testing for operator reconciliation"
-    - "Create .claude/rules/ directory with test-type-specific rules"
+    - "Add multi-architecture image build validation on PR"
+    - "Add CodeQL or Semgrep to CI (config exists but not wired into workflows)"
+    - "Add upgrade/migration testing for API version transitions"
 ---
 
 # Quality Analysis: model-registry-operator
 
 ## Executive Summary
 
-- **Overall Score: 7.2/10**
-- **Repository Type**: Kubebuilder-based Kubernetes Operator (Go)
-- **Framework**: controller-runtime v0.23, Ginkgo/Gomega, envtest
-- **Key Strengths**: Excellent test-to-code ratio (1.09:1), comprehensive AGENTS.md documentation, PR-time Kind cluster deployment testing, well-structured Konflux pipeline with multi-arch builds, extensive semgrep security rules (64 rules)
-- **Critical Gaps**: No coverage tracking/enforcement, no container vulnerability scanning in CI, semgrep rules not enforced in CI, no dedicated E2E test suite
-- **Agent Rules Status**: Present and comprehensive (AGENTS.md + CLAUDE.md with architecture, commands, testing, and PR hygiene)
+- **Overall Score: 7.6/10**
+- **Repository Type**: Kubernetes Operator (Kubebuilder-based, Go)
+- **Primary Language**: Go 1.26
+- **Framework**: controller-runtime / Kubebuilder with Ginkgo/Gomega testing
+
+### Key Strengths
+- **Outstanding test-to-code ratio**: 7,530 test lines vs 6,481 source lines (1.16:1) — test code exceeds production code
+- **Chaos engineering**: Dedicated `chaos/` directory with operator-chaos framework, 9 experiments, and a knowledge model validated in CI
+- **Comprehensive PR validation**: Image build + Kind deployment + CR creation + operator health check runs on every PR
+- **Strong agent guidance**: AGENTS.md covers architecture, commands, testing, and conventions in detail
+- **Modern tooling**: govulncheck, golangci-lint v2, Gitleaks, Semgrep config, Dependabot for 3 ecosystems
+
+### Critical Gaps
+- **No coverage tracking**: `cover.out` generated but never uploaded; no Codecov, no thresholds, no PR visibility
+- **No container scanning**: No Trivy, Snyk, or Grype in any workflow despite building images on every PR
+- **Semgrep config exists but isn't wired into CI**: 1,873-line `semgrep.yaml` sits unused in workflows
+
+### Agent Rules Status: **Strong (AGENTS.md) / Incomplete (.claude/rules/)**
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 8.5/10 | Excellent coverage with Ginkgo/Gomega envtest; 7,024 test lines vs 6,476 source lines |
-| Integration/E2E | 7.0/10 | PR deploys to Kind cluster; envtest covers controllers; no dedicated E2E suite |
-| **Build Integration** | **7.5/10** | **PR builds image + Kind deploy + kustomize validation; Konflux multi-arch on-demand** |
-| Image Testing | 6.0/10 | Image built and deployed on PR; no vulnerability scanning, SBOM, or health probes |
-| Coverage Tracking | 3.0/10 | Local cover.out only; no CI integration or enforcement |
-| CI/CD Automation | 7.5/10 | 4 GHA workflows + 2 Tekton pipelines; caching; missing concurrency control |
-| Agent Rules | 8.0/10 | Comprehensive AGENTS.md with architecture, testing, and dev workflows |
+| Unit Tests | 8.5/10 | Excellent ratio, 5 suites, envtest, Ginkgo/Gomega |
+| Integration/E2E | 7.5/10 | Kind deployment test + chaos testing in CI |
+| Build Integration | 7.0/10 | PR image build + kustomize validation; no Konflux sim |
+| Image Testing | 6.5/10 | Build + deploy on PR; no scanning, no SBOM |
+| Coverage Tracking | 4.0/10 | coverprofile generated but not tracked or enforced |
+| CI/CD Automation | 8.0/10 | Well-structured, cached, path-filtered, Dependabot |
+| Agent Rules | 8.0/10 | Rich AGENTS.md; no .claude/rules/ for test patterns |
 
 ## Critical Gaps
 
 ### 1. No Coverage Tracking or Enforcement
-- **Impact**: Coverage regressions go undetected across PRs. No visibility into which code paths lack tests. The `make test` target generates `cover.out` but it's never uploaded or tracked.
+- **Impact**: Coverage can silently regress with no PR-time visibility
+- **Severity**: HIGH
+- **Effort**: 4-6 hours
+- **Details**: `make test` generates `cover.out` but it's never uploaded to Codecov or any service. No `.codecov.yml` exists. No PR comments showing coverage delta. No minimum threshold enforced.
+- **Fix**: Add Codecov GitHub Action after `make test`, create `.codecov.yml` with project/patch thresholds
+
+### 2. No Container Security Scanning
+- **Impact**: Vulnerable base images (UBI9) and Go dependencies go undetected until Konflux/production scanning
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Current State**: `go test ./... -coverprofile cover.out` runs in CI but the profile is discarded
-- **Fix**: Add Codecov GitHub Action step to `build.yml` workflow after test step
+- **Details**: Both `Dockerfile` and `Dockerfile.konflux` use `registry.access.redhat.com/ubi9` images. No Trivy, Snyk, or Grype step in any workflow. Image is built on every PR but never scanned.
+- **Fix**: Add `aquasecurity/trivy-action` after `docker-build` in `build-image-pr.yml`
 
-### 2. No Container Vulnerability Scanning in CI
-- **Impact**: Vulnerable Go dependencies and base image packages not caught before merge. Both `Dockerfile` (UBI9 go-toolset) and `Dockerfile.konflux` use Red Hat base images but CVE scanning relies entirely on Konflux pipeline, not available on all PRs.
-- **Severity**: HIGH
-- **Effort**: 2-3 hours
-- **Fix**: Add Trivy scan step to `build-image-pr.yml` after image build
-
-### 3. Semgrep Rules Not Enforced in CI
-- **Impact**: 64 high-quality semgrep rules exist (`semgrep.yaml`) covering Go, Python, Kubernetes RBAC, Dockerfile, and shell patterns — but they only run if developers have pre-commit hooks installed locally. CI never enforces them.
-- **Severity**: HIGH
-- **Effort**: 1-2 hours
-- **Fix**: Add semgrep CI step to `build.yml` workflow
-
-### 4. No Dedicated E2E Test Suite
-- **Impact**: Complex operator behaviors (storage migration between v1alpha1/v1beta1, OAuth-to-kube-rbac-proxy migration, multi-DB backend configuration, Istio integration) are only tested in envtest, not against a real cluster with full networking.
+### 3. Semgrep Config Not Wired Into CI
+- **Impact**: 1,873-line security rule set covering Go, Python, TypeScript, YAML, and generic secret detection sits idle
 - **Severity**: MEDIUM
-- **Effort**: 16-24 hours
+- **Effort**: 1-2 hours
+- **Details**: `semgrep.yaml` exists at repo root with comprehensive rules but no workflow runs it
+- **Fix**: Add Semgrep step to `build.yml` or create dedicated security workflow
+
+### 4. No PR-time Konflux Build Simulation
+- **Impact**: FIPS-mode compilation (`CGO_ENABLED=1 -tags strictfipsruntime`), pinned base image digests, and Konflux-specific labels only tested post-merge
+- **Severity**: MEDIUM
+- **Effort**: 8-12 hours
+- **Details**: `Dockerfile.konflux` uses different build flags and pinned SHAs vs `Dockerfile`. Tekton pipeline runs on PR via label/comment trigger but doesn't simulate locally.
 
 ## Quick Wins
 
-### 1. Add Codecov Integration (2-3 hours)
+### 1. Add Codecov Integration (2-4 hours)
 ```yaml
-# Add to .github/workflows/build.yml after "Controller tests" step
+# Add to build.yml after 'make test'
 - name: Upload coverage
-  uses: codecov/codecov-action@v4
+  uses: codecov/codecov-action@v5
   with:
     files: cover.out
-    fail_ci_if_error: false
-    token: ${{ secrets.CODECOV_TOKEN }}
+    fail_ci_if_error: true
+```
+Create `.codecov.yml`:
+```yaml
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 2%
+    patch:
+      default:
+        target: 80%
 ```
 
 ### 2. Add Trivy Container Scanning (1-2 hours)
 ```yaml
-# Add to .github/workflows/build-image-pr.yml after "Build Image" step
-- name: Trivy vulnerability scan
+# Add to build-image-pr.yml after image build
+- name: Run Trivy vulnerability scanner
   uses: aquasecurity/trivy-action@master
   with:
-    image-ref: "model-registry-operator:${{ steps.tags.outputs.tag }}"
+    image-ref: 'model-registry-operator:${{ steps.tags.outputs.tag }}'
     format: 'sarif'
+    output: 'trivy-results.sarif'
     severity: 'CRITICAL,HIGH'
-    exit-code: '1'
+- name: Upload Trivy scan results
+  uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: 'trivy-results.sarif'
 ```
 
-### 3. Add Semgrep to CI (1-2 hours)
+### 3. Wire Semgrep Into CI (1 hour)
 ```yaml
-# Add to .github/workflows/build.yml
+# Add to build.yml
 - name: Semgrep scan
-  run: |
-    pip install semgrep
-    semgrep --config semgrep.yaml --error .
+  uses: returntocorp/semgrep-action@v1
+  with:
+    config: semgrep.yaml
 ```
 
-### 4. Add Workflow Concurrency Control (30 minutes)
+### 4. Surface govulncheck Results (1 hour)
+govulncheck already runs as part of `make test` but its output is buried. Add it as a named step:
 ```yaml
-# Add to build.yml and build-image-pr.yml
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
-  cancel-in-progress: true
+- name: Run govulncheck
+  run: make govulncheck
 ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows Inventory (4 GitHub Actions + 2 Tekton):**
+**Workflows (5 total)**:
 
-| Workflow | Trigger | What It Does |
-|----------|---------|-------------|
-| `build.yml` | PR + push to main | Build, lint, govulncheck, unit tests, kustomize validate |
-| `build-image-pr.yml` | PR | Docker build → Kind cluster → deploy operator → create sample CR → wait for ready |
-| `build-and-push-image.yml` | Push to main + tags | Build and push to quay.io/opendatahub |
-| `sync-branch-stable.yml` | Push to main | Auto-sync main→stable branch via PR |
-| `Tekton PR pipeline` | Label/comment triggered | Multi-arch Konflux build (x86_64, ppc64le, s390x, arm64) with hermetic build |
-| `Tekton push pipeline` | Push to stable | Production Konflux build |
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `build.yml` | PR + push(main) | Build, lint, test, kustomize validate |
+| `build-image-pr.yml` | PR | Docker build + Kind deploy + CR test |
+| `build-and-push-image.yml` | push(main) + tags | Build and push to Quay |
+| `chaos-validate.yml` | PR (chaos/controller/api paths) | Validate chaos experiments + run chaos tests |
+| `sync-branch-stable.yml` | push(main) | Sync main → stable branch |
 
-**Strengths:**
-- Build workflow uses Go dependency caching (`actions/cache@v5`)
-- PR image workflow includes full operator lifecycle test (build → Kind → deploy → create CR → verify)
-- Kustomize build validation catches config errors at PR time
-- Tekton pipeline supports 4 architectures with hermetic builds
-- `govulncheck` integrated into test target (vulnerability scanning for Go stdlib)
-- Clean git status check prevents uncommitted generated files
+**Strengths**:
+- `build.yml` uses Go dependency caching (`actions/cache@v6`) with hash-based keys
+- Path-ignore filters avoid unnecessary runs for docs/LICENSE changes
+- `build-image-pr.yml` does full operator lifecycle: build → Kind load → deploy → create CR → wait for Available
+- Chaos validation runs on path-filtered PRs touching controller/API/config code
+- Kustomize build validation (`kustomize build config/overlays/odh/`) catches config errors pre-merge
+- Uncommitted file detection catches codegen drift
 
-**Gaps:**
-- No concurrency control on GitHub Actions workflows (redundant runs on rapid updates)
-- No test result reporting (JUnit XML, GitHub annotations)
-- PR image workflow only tests one sample CR (mysql) — doesn't test postgres, mariadb, OAuth, etc.
-- Konflux build is opt-in (label/comment triggered), not automatic on every PR
+**Gaps**:
+- No concurrency control on PR workflows (missing `concurrency:` key in `build.yml` and `build-image-pr.yml`)
+- No workflow for security scanning (Trivy, CodeQL, Semgrep)
+- No scheduled/periodic workflows for nightly regression or dependency audit
 
 ### Test Coverage
 
-**Test Architecture:**
-- **Framework**: Ginkgo v2 + Gomega with controller-runtime envtest
-- **Test-to-Code Ratio**: 1.09:1 (7,024 test lines / 6,476 source lines) — excellent
-- **Test Files**: 13 test files across 5 suites
+**Test Architecture**:
+- **Framework**: Ginkgo v2 + Gomega with envtest (in-process API server)
+- **5 Test Suites**:
+  1. `api/v1alpha1/` — v1alpha1 webhook validation (2 files, 638 lines)
+  2. `api/v1beta1/` — v1beta1 webhook validation (2 files, 758 lines)
+  3. `internal/controller/` — Core controller reconciliation (4 files, 4,569 lines)
+  4. `internal/controller/config/` — Configuration defaults (2 files, 815 lines)
+  5. `internal/migration/` — Storage version migration (2 files, 446 lines)
+- **14 test files, 7,530 lines of test code**
+- **Test-to-code ratio**: 1.16:1 (outstanding — test code exceeds production code)
 
-**Test Suites:**
+**Coverage**:
+- `coverprofile cover.out` generated by `make test`
+- **No Codecov/Coveralls integration** — coverage not tracked, trended, or enforced
+- No minimum coverage threshold
+- No PR coverage comments
 
-| Suite | Files | Lines | What It Tests |
-|-------|-------|-------|--------------|
-| `internal/controller` | 4 (incl. suite) | 4,306 | ModelRegistry + ModelCatalog reconciliation, capabilities detection |
-| `api/v1beta1` | 2 | 758 | v1beta1 webhook validation and defaulting |
-| `api/v1alpha1` | 2 | 638 | v1alpha1 webhook validation and defaulting |
-| `internal/migration` | 2 | 446 | Storage version migration strategies |
-| `internal/controller/config` | 2 | 798 | Default configuration and template parsing |
-| `internal/utils` | 1 | 78 | File I/O utilities |
-
-**Strengths:**
-- Controller tests are comprehensive (1,590 lines for ModelRegistry, 2,319 for ModelCatalog)
-- Tests cover both API versions with webhook validation
-- Migration strategy tests ensure safe upgrades
-- envtest provides real Kubernetes API server without cluster
-- Test suite bootstraps with OpenShift Route CRD for realistic testing
-
-**Gaps:**
-- No coverage enforcement or threshold
-- No test for Istio integration paths
-- No negative testing for malformed CRs beyond webhook validation
-- `internal/controller/util.go` (221 lines) and `cmd/main.go` (329 lines) appear untested
-- No fuzz testing for webhook handlers
+**Chaos Testing (Distinctive)**:
+- 9 chaos experiments: pod-kill, network-partition, config-drift, RBAC revoke, webhook disruption, finalizer block, catalog-specific scenarios
+- Knowledge model defines operator topology, steady-state checks, managed resources
+- `operator-chaos validate` runs in CI to catch knowledge model regressions
+- `make test-chaos` runs chaos-focused Ginkgo tests with envtest
+- Breaking change detection via `operator-chaos diff` against base branch
 
 ### Code Quality
 
-**Linting:**
-- golangci-lint v2.1.6 with `standard` preset (comprehensive rule set)
-- `errcheck` disabled (potential gap — unchecked errors could hide bugs)
-- Generated code excluded via `generated: lax`
-- Runs in CI via `make lint` in `build.yml`
+**Linting**:
+- golangci-lint v2.1.6 with `default: standard` preset
+- `errcheck` disabled (potential concern for error-swallowing)
+- Generated code, comments, third-party, and examples excluded
+- Runs on both PR and push via `make lint` in `build.yml`
 
-**Pre-commit Hooks:**
-- `.pre-commit-config.yaml` with:
+**Pre-commit Hooks**:
+- `.pre-commit-config.yaml` configured with:
   - `trailing-whitespace`, `end-of-file-fixer`, `check-yaml`, `check-merge-conflict`
-  - `go fmt`, `go vet`, `golangci-lint` (as local hooks)
-- Pre-commit is optional (documented in CONTRIBUTING.md but not enforced)
+  - Local hooks: `go fmt`, `go vet`, `golangci-lint`
+- Well-structured — format and lint run before commit
 
-**Static Analysis:**
-- `govulncheck` v1.1.4 integrated into `make test` target — scans Go stdlib vulnerabilities
-- `semgrep.yaml` with 64 comprehensive rules covering:
-  - Go security (exec injection, TLS, SQL injection, weak crypto)
-  - Kubernetes RBAC (wildcard permissions, privileged containers)
-  - Python security (eval, SQL injection, unsafe deserialization)
-  - Dockerfile best practices (latest tag, secrets in ENV)
-  - GitHub Actions security (script injection, PR target checkout)
-- **BUT**: semgrep only runs via pre-commit, not in CI
+**Static Analysis**:
+- **Gitleaks**: `.gitleaks.toml` with comprehensive allowlists for test fixtures, mock data, CI resources
+- **Semgrep**: 1,873-line unified config covering Go, Python, TypeScript, YAML, generic secrets — **but not wired into CI**
+- **govulncheck**: v1.1.4 runs as prerequisite to `make test` and `make run`
+- **No CodeQL** workflow
 
-**Secret Detection:**
-- `.gitleaks.toml` with sensible allowlists for test files, fixtures, samples
-- `.gitleaksignore` for false positive management
-- **BUT**: Gitleaks not integrated into CI workflow
+**Dependabot**: 3 ecosystems (gomod, docker, github-actions) with weekly schedule
 
 ### Container Images
 
-**Dockerfiles:**
+**Dockerfiles (2)**:
+1. `Dockerfile` — Standard multi-stage build, `CGO_ENABLED=0`, UBI9 minimal base, unpinned `:latest` tag
+2. `Dockerfile.konflux` — FIPS-compliant build (`CGO_ENABLED=1 GOEXPERIMENT=strictfipsruntime`), pinned base image SHAs, Red Hat labels
 
-| File | Base Image | Purpose |
-|------|-----------|---------|
-| `Dockerfile` | UBI9 go-toolset:1.25.8 → UBI9 ubi-minimal | Standard build, CGO disabled |
-| `Dockerfile.konflux` | UBI9 go-toolset (pinned SHA) → UBI9 ubi-minimal (pinned SHA) | FIPS-compliant build with CGO enabled + strictfipsruntime |
+**Strengths**:
+- Multi-stage builds (builder → minimal runtime)
+- Non-root user (65532:65532)
+- UBI9 base images (Red Hat supported)
+- BUILDPLATFORM/TARGETARCH support in standard Dockerfile
+- `.dockerignore` present
 
-**Strengths:**
-- Multi-stage builds reduce final image size
-- Runs as non-root (USER 65532:65532)
-- Konflux Dockerfile pins base images by SHA for reproducibility
-- FIPS compliance via `CGO_ENABLED=1 GOEXPERIMENT=strictfipsruntime`
-- Multi-arch support: x86_64, ppc64le, s390x, arm64
-- `.dockerignore` properly excludes unnecessary files
-
-**Gaps:**
-- No Trivy/Grype scanning in CI pipelines
+**Gaps**:
+- No Trivy/Snyk/Grype scanning in any workflow
 - No SBOM generation
-- No image signing/attestation in GitHub Actions (Konflux handles this separately)
-- No container health check testing in CI beyond "does it deploy successfully"
-- Standard `Dockerfile` uses floating tag (`:1.25.8`) not SHA-pinned
+- No image signing (cosign)
+- No multi-architecture build validation on PR (only `docker-build`, not `docker-buildx`)
+- Standard Dockerfile uses unpinned `:latest` tag (Konflux version properly pins SHAs)
 
 ### Security
 
-**Strengths:**
-- Comprehensive semgrep ruleset (64 rules) covering multiple languages and patterns
-- Gitleaks configuration with proper allowlists
-- govulncheck for Go vulnerability detection
-- Dependabot configured for Go modules, Docker, and GitHub Actions
-- FIPS-compliant Konflux build
-- Non-root container execution
-- `.gitleaksignore` for managing false positives
-
-**Gaps:**
-- No CodeQL or SAST workflow in GitHub Actions
-- Semgrep rules not enforced in CI
-- No Trivy/Snyk container scanning
-- No SBOM generation or image attestation in GHA
-- `errcheck` linter disabled — unchecked errors could mask security issues
+| Practice | Status | Details |
+|----------|--------|---------|
+| Gitleaks | Present | `.gitleaks.toml` with comprehensive allowlists |
+| Semgrep | Config only | 1,873-line rule set not wired into CI |
+| govulncheck | Integrated | Runs as make prerequisite |
+| Dependabot | Active | 3 ecosystems, weekly |
+| CodeQL | Missing | No workflow |
+| Container scanning | Missing | No Trivy/Snyk/Grype |
+| Secret detection | Partial | Gitleaks config + Semgrep rules, not in CI |
+| SBOM | Missing | No generation |
+| Image signing | Missing | No cosign |
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status**: Present and comprehensive
+**Status**: Strong AGENTS.md / No .claude/rules/
 
-**Files:**
-- `AGENTS.md` (root) — Full architecture documentation, build/test commands, development workflows
-- `CLAUDE.md` (root) — Identical content to AGENTS.md (symlink or copy)
-- No `.claude/` directory or `.claude/rules/` test automation rules
+**AGENTS.md (also symlinked as CLAUDE.md)** — 7,845 bytes covering:
+- Build and test commands with specific make targets
+- Ginkgo-specific test suite execution (`ginkgo run -v internal/controller`)
+- Architecture documentation (controllers, API versions, webhooks, templates, capabilities)
+- Dev cluster testing workflow (build → push → deploy → patch)
+- Kustomize layout and overlay structure
+- Environment variables and configuration
+- Commit/PR hygiene conventions (Conventional Commits)
 
-**Coverage Assessment:**
-
-| Aspect | Covered? | Quality |
-|--------|----------|---------|
-| Build commands | Yes | Excellent — multiple build modes documented |
-| Test commands | Yes | Good — per-suite Ginkgo commands listed |
-| Architecture | Yes | Excellent — controllers, API versions, webhooks, templates, cache, migration all documented |
-| Dev cluster testing | Yes | Excellent — step-by-step with direnv, image registry, patching |
-| Commit conventions | Yes | Good — Conventional Commits specified |
-| PR template | Yes | Basic checklist with test requirements |
-
-**Gaps:**
-- No `.claude/rules/` directory with test-type-specific rules
-- No rules for test patterns (how to write controller tests, webhook tests, migration tests)
-- No rules for template testing patterns
-- CLAUDE.md is a duplicate of AGENTS.md rather than complementary
-
-**Recommendation**: Generate test automation rules with `/test-rules-generator` to create `.claude/rules/unit-tests.md`, `.claude/rules/webhook-tests.md`, etc.
+**Gaps**:
+- No `.claude/` directory
+- No `.claude/rules/` with test creation patterns
+- No codified patterns for writing Ginkgo tests with envtest
+- No guidance on chaos experiment creation
+- No webhook test patterns documented as rules
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add Codecov integration with coverage enforcement**
-   - Upload `cover.out` from `build.yml`
-   - Set minimum threshold (suggest 70% for initial adoption)
-   - Add PR status check for coverage delta
-   - Effort: 2-4 hours
+1. **Integrate Codecov with coverage thresholds and PR gating**
+   - Upload `cover.out` after `make test` in `build.yml`
+   - Set project target at `auto` with 2% threshold, patch target at 80%
+   - Enable PR comments showing coverage delta
 
-2. **Add container vulnerability scanning to PR workflow**
-   - Integrate Trivy or Grype into `build-image-pr.yml`
-   - Fail on CRITICAL/HIGH severabilities
-   - Effort: 2-3 hours
-
-3. **Enforce semgrep rules in CI**
-   - Add semgrep step to `build.yml` using existing `semgrep.yaml`
-   - The 64 rules are already written — just need CI enforcement
-   - Effort: 1-2 hours
+2. **Add Trivy container scanning to PR and push workflows**
+   - Scan built image in `build-image-pr.yml` after `make docker-build`
+   - Upload SARIF results for GitHub Security tab integration
+   - Set severity threshold at CRITICAL,HIGH
 
 ### Priority 1 (High Value)
 
-4. **Add CodeQL workflow for Go security analysis**
-   - Create `.github/workflows/codeql.yml` with Go analysis
-   - Effort: 2-3 hours
+3. **Wire Semgrep into CI**
+   - Add Semgrep step to `build.yml` using existing `semgrep.yaml` config
+   - The rule set already exists — just needs a workflow step
 
-5. **Create dedicated E2E test suite**
-   - Test multiple DB backends (MySQL, PostgreSQL, MariaDB)
-   - Test webhook conversion between v1alpha1 and v1beta1
-   - Test storage migration paths
-   - Test with Istio enabled/disabled
-   - Effort: 16-24 hours
+4. **Add concurrency control to PR workflows**
+   ```yaml
+   concurrency:
+     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+     cancel-in-progress: true
+   ```
 
-6. **Add SBOM generation and image signing to release pipeline**
-   - Add Syft for SBOM generation
-   - Add Cosign for image signing
-   - Effort: 4-6 hours
+5. **Create `.claude/rules/` for test patterns**
+   - `unit-tests.md` — Ginkgo/Gomega patterns with envtest
+   - `webhook-tests.md` — Webhook suite setup and validation patterns
+   - `chaos-tests.md` — operator-chaos experiment creation guidelines
+   - `controller-tests.md` — Controller reconciliation test patterns
+   - Use `/test-rules-generator` to bootstrap these
+
+6. **Add SBOM generation and image signing to push workflow**
+   - Generate SBOM with Syft during `build-and-push-image.yml`
+   - Sign images with cosign
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Add multi-version Kubernetes testing**
-   - Test against K8s 1.33, 1.34, 1.35 in Kind
-   - Effort: 4-6 hours
+7. **Add multi-architecture build validation on PR**
+   - Run `docker buildx build --platform linux/amd64,linux/arm64` to validate cross-platform compatibility
 
-8. **Add concurrency control and test reporting**
-   - Add `concurrency` groups to all workflows
-   - Add JUnit XML reporting for GitHub annotations
-   - Effort: 2-3 hours
+8. **Add scheduled security scan workflow**
+   - Nightly Trivy + Semgrep + govulncheck on main branch
+   - Alert on new CVEs in dependencies or base images
 
-9. **Create `.claude/rules/` test automation rules**
-   - Generate rules for controller tests, webhook tests, migration tests
-   - Use `/test-rules-generator` skill
-   - Effort: 2-3 hours
+9. **Add upgrade/migration testing**
+   - Test v1alpha1 → v1beta1 conversion webhook with envtest
+   - Validate storage migration strategies with realistic CRD data
 
-10. **Re-enable `errcheck` linter**
-    - Currently disabled in `.golangci.yml`
-    - Fix unchecked errors and enable
-    - Effort: 4-8 hours
+10. **Add CodeQL analysis workflow**
+    - Standard Go CodeQL configuration for additional SAST coverage beyond Semgrep
 
 ## Comparison to Gold Standards
 
-| Dimension | model-registry-operator | odh-dashboard | notebooks | kserve |
-|-----------|------------------------|---------------|-----------|--------|
-| Unit Tests | 8.5 (envtest + Ginkgo) | 9.0 (Jest + RTL) | 7.0 (pytest) | 9.0 (envtest) |
-| Integration/E2E | 7.0 (Kind deploy on PR) | 9.0 (Cypress + contract) | 8.0 (image validation) | 9.0 (multi-version) |
-| Build Integration | 7.5 (Kind + kustomize) | 8.0 (MF + BFF) | 7.0 (image layers) | 7.0 (Makefile) |
-| Image Testing | 6.0 (build + deploy) | 7.0 (startup) | 9.0 (5-layer) | 6.0 (basic) |
-| Coverage Tracking | 3.0 (local only) | 8.0 (codecov + gates) | 5.0 (basic) | 9.0 (enforcement) |
-| CI/CD Automation | 7.5 (GHA + Tekton) | 9.0 (comprehensive) | 8.0 (matrix) | 8.0 (Prow) |
-| Agent Rules | 8.0 (AGENTS.md) | 9.0 (rules + skills) | 5.0 (basic) | 6.0 (CONTRIBUTING) |
-| **Overall** | **7.2** | **8.6** | **7.0** | **7.7** |
+| Dimension | model-registry-operator | odh-dashboard (gold) | notebooks (gold) | Gap |
+|-----------|------------------------|---------------------|-------------------|-----|
+| Unit Tests | 8.5 — Ginkgo/envtest, 1.16:1 ratio | 9.0 — Jest, multi-layer | 7.0 — Python-focused | Near gold |
+| Integration/E2E | 7.5 — Kind deploy + chaos | 9.0 — Cypress E2E + contract | 8.0 — Multi-layer image | Needs contracts |
+| Build Integration | 7.0 — Image + kustomize | 8.0 — Full build matrix | 7.0 — Image pipeline | Close |
+| Image Testing | 6.5 — Build + deploy only | 8.0 — Multi-layer validation | 9.0 — 5-layer validation | Needs scanning |
+| Coverage | 4.0 — Generated, not tracked | 9.0 — Codecov + enforcement | 6.0 — Basic | Critical gap |
+| CI/CD | 8.0 — Well-structured | 9.0 — Comprehensive matrix | 8.0 — Image-focused | Minor gaps |
+| Agent Rules | 8.0 — Rich AGENTS.md | 9.0 — Full .claude/rules/ | 5.0 — Basic | Needs .claude/rules/ |
+| **Chaos Testing** | **9.0** — **9 experiments + CI** | 0.0 — None | 0.0 — None | **Above gold** |
+
+**Notable**: This repository **exceeds gold standards** in chaos engineering with a dedicated chaos testing framework, 9 experiments, knowledge model validation, and breaking change detection — a practice not yet adopted by any gold standard repository.
 
 ## File Paths Reference
 
-### CI/CD
-- `.github/workflows/build.yml` — Main PR/push workflow (build, lint, test, kustomize validate)
-- `.github/workflows/build-image-pr.yml` — PR image build + Kind deployment test
-- `.github/workflows/build-and-push-image.yml` — Release image build and push
-- `.github/workflows/sync-branch-stable.yml` — Auto-sync main→stable
-- `.tekton/odh-model-registry-operator-pull-request.yaml` — Konflux PR pipeline
-- `.tekton/odh-model-registry-operator-push.yaml` — Konflux release pipeline
-
-### Testing
-- `internal/controller/modelregistry_controller_test.go` — Core controller tests (1,590 lines)
-- `internal/controller/modelcatalog_controller_test.go` — Catalog controller tests (2,319 lines)
-- `internal/controller/capabilities_test.go` — Cluster capability detection tests
-- `internal/controller/config/defaults_test.go` — Configuration defaults tests
-- `api/v1beta1/modelregistry_webhook_test.go` — v1beta1 webhook tests
-- `api/v1alpha1/modelregistry_webhook_test.go` — v1alpha1 webhook tests
-- `internal/migration/migration_test.go` — Storage migration tests
-
-### Code Quality
-- `.golangci.yml` — golangci-lint v2 config (standard preset, errcheck disabled)
-- `.pre-commit-config.yaml` — Pre-commit hooks (go fmt, vet, lint)
-- `semgrep.yaml` — 64 security rules (Go, K8s, Python, Docker, shell)
-- `.gitleaks.toml` — Secret detection config
-- `.gitleaksignore` — False positive management
-
-### Container Images
-- `Dockerfile` — Standard multi-stage build (UBI9)
-- `Dockerfile.konflux` — FIPS-compliant build with pinned SHAs
-
-### Agent Rules
-- `AGENTS.md` — Comprehensive agent documentation
-- `CLAUDE.md` — Copy of AGENTS.md
-- `CONTRIBUTING.md` — Developer contribution guide
-
-### Configuration
-- `config/overlays/odh/` — Production kustomize overlay
-- `config/samples/` — Example ModelRegistry CRs (mysql, postgres, mariadb, oauth, secure-db)
-- `.github/dependabot.yml` — Dependency update automation
+| File | Purpose |
+|------|---------|
+| `.github/workflows/build.yml` | PR/push: build, lint, test, kustomize validate |
+| `.github/workflows/build-image-pr.yml` | PR: image build + Kind deploy + E2E |
+| `.github/workflows/build-and-push-image.yml` | Push: image build + Quay push |
+| `.github/workflows/chaos-validate.yml` | PR: chaos experiment validation |
+| `.github/workflows/sync-branch-stable.yml` | Push: main → stable sync |
+| `.golangci.yml` | golangci-lint v2 config |
+| `.pre-commit-config.yaml` | Pre-commit hooks (fmt, vet, lint) |
+| `.gitleaks.toml` | Secret detection allowlists |
+| `semgrep.yaml` | 1,873-line security rules (NOT in CI) |
+| `Dockerfile` | Standard multi-stage build |
+| `Dockerfile.konflux` | FIPS-compliant Konflux build |
+| `.tekton/` | Konflux pipeline (synced from konflux-central) |
+| `Makefile` | Build, test, lint, deploy targets |
+| `AGENTS.md` / `CLAUDE.md` | AI agent guidance |
+| `chaos/knowledge/` | Chaos testing knowledge model |
+| `chaos/experiments/` | 9 chaos experiment definitions |

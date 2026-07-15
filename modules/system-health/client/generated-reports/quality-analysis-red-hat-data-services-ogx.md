@@ -4,74 +4,77 @@ overall_score: 6.5
 scorecard:
   - dimension: "Unit Tests"
     score: 7.0
-    status: "Solid unit test suite with pytest, multi-Python-version CI matrix, coverage generation but no enforcement"
+    status: "Good breadth across server, providers, models, and distribution; multi-Python (3.10-3.13); no coverage enforcement"
   - dimension: "Integration/E2E"
-    score: 7.5
-    status: "Comprehensive integration tests with Ollama, multi-client-type matrix, auth tests with minikube"
+    score: 8.0
+    status: "Excellent matrix testing (8 test types x 2 clients x 3 Python versions); GPU tests manual-dispatch only"
   - dimension: "Build Integration"
     score: 7.0
-    status: "PR-time provider build validation across templates and image types (venv + container), UBI9 testing"
+    status: "All provider templates built on PR; UBI9 container validation; entrypoint checks"
   - dimension: "Image Testing"
     score: 5.0
-    status: "Container builds validated via providers-build workflow but no runtime functional tests or scanning"
+    status: "Container builds tested but no vulnerability scanning, no multi-arch CI, no SBOM"
   - dimension: "Coverage Tracking"
     score: 3.0
-    status: "pytest-cov generates HTML reports but no codecov/coveralls integration, no thresholds, no PR gating"
+    status: "Coverage generated as artifacts but no codecov/coveralls integration or thresholds"
   - dimension: "CI/CD Automation"
     score: 8.0
-    status: "14 workflows with concurrency control, path filtering, multi-version matrix, pre-commit CI, SHA-pinned actions"
+    status: "14 workflows, concurrency control, path-based triggers, SHA-pinned actions"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules for test automation guidance"
+    status: "No .claude directory, no CLAUDE.md, no agent rules for test automation guidance"
 critical_gaps:
-  - title: "No coverage enforcement or PR gating"
-    impact: "Coverage can silently regress on any PR without anyone noticing; no baseline or threshold tracked"
+  - title: "No coverage tracking or enforcement"
+    impact: "Coverage regressions go undetected; no PR-level coverage reporting; impossible to set quality gates"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No container security scanning (Trivy, Snyk, CodeQL)"
-    impact: "Vulnerabilities in container images and dependencies not detected until production"
+  - title: "No container security scanning"
+    impact: "Vulnerabilities in base images and dependencies shipped to production undetected"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No SBOM generation or image signing"
-    impact: "No software supply chain attestation, fails compliance requirements for Red Hat downstream"
+  - title: "No SAST/CodeQL integration"
+    impact: "Code-level security vulnerabilities not caught in CI; relies entirely on manual review"
     severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "No agent rules for AI-assisted test creation"
-    impact: "AI-generated tests lack consistency, miss project-specific patterns and conventions"
-    severity: "MEDIUM"
-    effort: "3-5 hours"
-  - title: "GPU-based test workflow disabled for PRs"
-    impact: "GPU-dependent provider tests only run on manual dispatch, regressions caught late"
-    severity: "MEDIUM"
-    effort: "8-16 hours"
-quick_wins:
-  - title: "Add codecov integration to unit-tests workflow"
     effort: "2-3 hours"
-    impact: "Immediate visibility into coverage trends and PR-level coverage diffs"
+  - title: "mypy exclude list contains 100+ files"
+    impact: "Type safety bypassed for majority of provider code; bugs hiding in untyped code paths"
+    severity: "MEDIUM"
+    effort: "40-80 hours"
+  - title: "GPU test workflow disabled for PRs"
+    impact: "Model inference regressions only caught via manual dispatch, not on every PR"
+    severity: "MEDIUM"
+    effort: "8-12 hours"
+quick_wins:
+  - title: "Add Codecov integration to unit-tests workflow"
+    effort: "2-3 hours"
+    impact: "PR-level coverage reporting, trend tracking, and regression detection"
   - title: "Add Trivy container scanning to providers-build workflow"
     effort: "1-2 hours"
-    impact: "Early detection of CVEs in built container images"
-  - title: "Create basic agent rules for unit test patterns"
-    effort: "2-3 hours"
-    impact: "Standardize AI-generated test quality across the repository"
-  - title: "Add CodeQL or Bandit SAST scanning workflow"
+    impact: "Automatic vulnerability detection for all built container images"
+  - title: "Enable CodeQL workflow for Python"
     effort: "1-2 hours"
-    impact: "Detect Python security anti-patterns (injection, hardcoded secrets, unsafe deserialization)"
+    impact: "Automated SAST for code-level security vulnerabilities"
+  - title: "Create basic .claude/rules/ for test patterns"
+    effort: "2-3 hours"
+    impact: "Consistent AI-generated tests following project conventions"
+  - title: "Add coverage threshold to unit-tests.sh"
+    effort: "1 hour"
+    impact: "Prevent coverage from dropping below current baseline"
 recommendations:
   priority_0:
-    - "Integrate codecov with coverage thresholds and PR checks to prevent silent coverage regression"
-    - "Add Trivy or Snyk container scanning to CI for all built images"
-    - "Add SAST scanning (CodeQL, Bandit, or Semgrep) for Python security analysis"
+    - "Add Codecov/Coveralls integration with PR-level reporting and minimum coverage thresholds"
+    - "Add Trivy or Snyk container scanning to the providers-build workflow"
+    - "Enable CodeQL analysis for Python code"
   priority_1:
-    - "Add SBOM generation (Syft) and container image signing (cosign) for supply chain security"
-    - "Create comprehensive agent rules (.claude/rules/) for unit, integration, and verification test patterns"
-    - "Re-enable GPU-based test workflow for PRs with appropriate gating"
-    - "Add coverage threshold enforcement (e.g., 70% minimum, no regression on PRs)"
+    - "Reduce mypy exclude list by adding type annotations incrementally to provider code"
+    - "Re-enable GPU test workflow on PRs (or at minimum on main branch pushes)"
+    - "Add UI test coverage (only 1 test file for entire Next.js frontend)"
+    - "Create comprehensive agent rules for test automation (.claude/rules/)"
   priority_2:
-    - "Add container runtime functional tests (health endpoint, API response) for built images"
-    - "Add performance regression testing for inference endpoints"
-    - "Add OpenSSF Scorecard workflow for supply chain security posture"
-    - "Add mutation testing (mutmut) to validate test suite effectiveness"
+    - "Add SBOM generation for container images"
+    - "Add multi-architecture build validation in CI"
+    - "Add gitleaks for secret detection beyond pre-commit"
+    - "Update SECURITY.md to reflect Red Hat's vulnerability reporting process"
 ---
 
 # Quality Analysis: red-hat-data-services/ogx
@@ -79,70 +82,80 @@ recommendations:
 ## Executive Summary
 
 - **Overall Score: 6.5/10**
-- **Repository Type**: Python library/framework (fork of Meta's llama-stack)
-- **Primary Language**: Python (72,740 lines source, 15,958 lines test code)
-- **Framework**: FastAPI-based AI inference stack with provider plugin architecture
-- **Key Strengths**: Strong CI/CD automation with 14 workflows, comprehensive integration test matrix, multi-Python-version testing, well-configured pre-commit hooks with mypy/ruff
-- **Critical Gaps**: No coverage enforcement or reporting integration, zero container security scanning, no SAST, no agent rules
-- **Agent Rules Status**: Missing — no `.claude/` directory, no `CLAUDE.md`
+- **Repository Type**: Python ML/AI framework (Red Hat fork of Meta's Llama Stack)
+- **Primary Language**: Python (~75K LOC), with TypeScript UI (~small Next.js app)
+- **Framework**: FastAPI server, Pydantic models, pytest for testing
+- **Key Strengths**: Excellent integration test matrix (48 CI combinations), comprehensive pre-commit hooks (ruff, mypy, license, SHA-pinning), multi-Python version testing, strong provider build validation including UBI9 containers
+- **Critical Gaps**: No coverage tracking/enforcement, no security scanning (Trivy/CodeQL/SAST), no agent rules, massive mypy exclude list (~100+ files), GPU tests disabled on PRs
+- **Agent Rules Status**: Missing - no `.claude` directory or agent configuration
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 7.0/10 | Solid pytest suite (48 files), multi-Python matrix (3.10-3.13), coverage generation |
-| Integration/E2E | 7.5/10 | Comprehensive integration tests (46 files), Ollama-based, library+HTTP client modes |
-| **Build Integration** | **7.0/10** | **PR-time provider builds across all templates + venv/container, UBI9 base testing** |
-| Image Testing | 5.0/10 | Container builds validated but no runtime functional tests or vulnerability scanning |
-| Coverage Tracking | 3.0/10 | pytest-cov generates HTML but no codecov, no thresholds, no PR gating |
-| CI/CD Automation | 8.0/10 | 14 workflows, concurrency control, path filtering, SHA-pinned actions |
-| Agent Rules | 0.0/10 | No agent rules, no CLAUDE.md, no test automation guidance |
+| Unit Tests | 7/10 | Good breadth across server, providers, models; multi-Python 3.10-3.13 |
+| Integration/E2E | 8/10 | Excellent 48-combination matrix; GPU tests manual-only |
+| **Build Integration** | **7/10** | **All templates built on PR; UBI9 validation; entrypoint checks** |
+| Image Testing | 5/10 | Container builds tested; no vuln scanning, no multi-arch, no SBOM |
+| Coverage Tracking | 3/10 | Coverage generated as artifacts; no reporting service or thresholds |
+| CI/CD Automation | 8/10 | 14 workflows; concurrency control; path-based triggers; SHA-pinned |
+| Agent Rules | 0/10 | No .claude directory, no CLAUDE.md, no test automation guidance |
 
 ## Critical Gaps
 
-### 1. No Coverage Enforcement or PR Gating
-- **Impact**: Coverage can silently regress on any PR. The unit-tests workflow generates `--cov` HTML reports and uploads them as artifacts, but there is no codecov/coveralls integration, no coverage threshold, and no PR check that blocks merge on regression.
+### 1. No Coverage Tracking or Enforcement
+- **Impact**: Coverage regressions go completely undetected; no PR-level reporting; impossible to set quality gates
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Current state**: `.coveragerc` exists with appropriate omit patterns. `pytest-cov` is in dev dependencies. But coverage data goes nowhere — it's uploaded as a build artifact and likely never reviewed.
+- **Details**: The `unit-tests.yml` workflow generates `--cov=llama_stack` and HTML coverage reports, but these are only uploaded as GitHub Actions artifacts. There is no Codecov/Coveralls integration, no coverage thresholds in `pyproject.toml` or CI, and no PR comments showing coverage delta. The `.coveragerc` omits all providers and templates code, further limiting visibility.
 
 ### 2. No Container Security Scanning
-- **Impact**: Container images built in CI (via `providers-build.yml`) are never scanned for vulnerabilities. The project builds images for all provider templates across both `venv` and `container` image types, but there is no Trivy, Snyk, or Grype scanning.
+- **Impact**: Vulnerabilities in base images and Python dependencies shipped to production undetected
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
+- **Details**: The `providers-build.yml` workflow builds container images for all templates (including UBI9) but performs no vulnerability scanning. No Trivy, Snyk, or Grype integration exists anywhere in CI. No `.trivyignore` file. No SBOM generation.
 
-### 3. No SAST or Dependency Scanning
-- **Impact**: No CodeQL, Bandit, Semgrep, or equivalent SAST tool. While pre-commit hooks include `detect-private-key`, there is no systematic Python security analysis. Dependabot is configured for GitHub Actions and uv, but with `open-pull-requests-limit: 0` for Python deps (security-only updates).
+### 3. No SAST/CodeQL Integration
+- **Impact**: Code-level security vulnerabilities (injection, path traversal, etc.) not caught in CI
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
+- **Effort**: 2-3 hours
+- **Details**: Despite being a server framework that handles HTTP requests, authentication, and executes code from multiple providers, there is no CodeQL, Semgrep, or Bandit scanning. The only security-related check is `detect-private-key` in pre-commit.
 
-### 4. No SBOM or Supply Chain Attestation
-- **Impact**: No SBOM generation (Syft, CycloneDX), no image signing (cosign), no provenance attestation. Critical for Red Hat downstream consumption.
-- **Severity**: HIGH
-- **Effort**: 4-8 hours
+### 4. Massive mypy Exclude List (~100+ files)
+- **Impact**: Type safety bypassed for the majority of provider code; type errors hiding in untyped code paths
+- **Severity**: MEDIUM
+- **Effort**: 40-80 hours (incremental)
+- **Details**: The `pyproject.toml` contains approximately 100+ file/directory entries in mypy's exclude list, covering nearly all remote providers, many inline providers, and utility modules. This effectively disables type checking for a large portion of the codebase.
 
 ### 5. GPU Test Workflow Disabled for PRs
-- **Impact**: The `gha_workflow_llama_stack_tests.yml` workflow is commented out for `pull_request_target`. GPU-dependent tests only run via manual `workflow_dispatch` on self-hosted runners with EFS-mounted model checkpoints. This means GPU-specific regressions are only caught manually.
+- **Impact**: Model inference regressions only caught via manual dispatch
 - **Severity**: MEDIUM
-- **Effort**: 8-16 hours (requires infrastructure)
+- **Effort**: 8-12 hours
+- **Details**: The `gha_workflow_llama_stack_tests.yml` workflow has PR triggers commented out (`#pull_request_target`), meaning GPU-based model tests only run on manual dispatch. The `tests.yml` (auto-tests) is similarly dispatch-only.
+
+### 6. Minimal UI Test Coverage
+- **Impact**: Frontend regressions in the Next.js UI go undetected
+- **Severity**: MEDIUM
+- **Effort**: 8-16 hours
+- **Details**: Only 1 test file exists (`llama_stack/ui/lib/format-message-content.test.ts`) for the entire UI. Jest is configured but no CI workflow runs UI tests. No E2E framework (Cypress/Playwright) for the frontend.
 
 ## Quick Wins
 
 ### 1. Add Codecov Integration (2-3 hours)
+Add Codecov upload to `unit-tests.yml`:
 ```yaml
-# Add to .github/workflows/unit-tests.yml after test step
 - name: Upload coverage to Codecov
   uses: codecov/codecov-action@v4
   with:
+    files: ./coverage.xml
+    fail_ci_if_error: true
     token: ${{ secrets.CODECOV_TOKEN }}
-    fail_ci_if_error: false
 ```
 
-### 2. Add Trivy Container Scanning (1-2 hours)
+### 2. Add Trivy Scanning (1-2 hours)
+Add to `providers-build.yml` after container builds:
 ```yaml
-# Add to providers-build.yml after container build step
 - name: Run Trivy vulnerability scanner
-  if: matrix.image-type == 'container'
   uses: aquasecurity/trivy-action@master
   with:
     image-ref: 'test:latest'
@@ -151,238 +164,257 @@ recommendations:
     severity: 'CRITICAL,HIGH'
 ```
 
-### 3. Add Bandit SAST Scanning (1-2 hours)
+### 3. Enable CodeQL (1-2 hours)
+Create `.github/workflows/codeql.yml`:
 ```yaml
-# New workflow: .github/workflows/security.yml
-name: Security Scanning
+name: CodeQL
 on: [push, pull_request]
 jobs:
-  bandit:
+  analyze:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: pip install bandit
-      - run: bandit -r llama_stack/ -f json -o bandit-report.json || true
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: python
+      - uses: github/codeql-action/analyze@v3
 ```
 
-### 4. Create Basic Agent Rules (2-3 hours)
-Create `.claude/rules/unit-tests.md` with pytest patterns, fixture conventions, and mock strategies specific to this codebase.
+### 4. Add Coverage Threshold (1 hour)
+Add to `scripts/unit-tests.sh`:
+```bash
+uv run ... pytest ... --cov-fail-under=60
+```
+
+### 5. Create Agent Rules (2-3 hours)
+Generate with `/test-rules-generator` to create `.claude/rules/` with unit test patterns matching the project's pytest/asyncio style.
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflow Inventory** (14 workflows):
+**Workflows Inventory (14 total):**
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | `unit-tests.yml` | PR + push (main) | Unit tests across Python 3.10-3.13 |
-| `integration-tests.yml` | PR + push (main) | Integration tests with Ollama (8 test types × 2 client types × 3 Python versions) |
-| `integration-auth-tests.yml` | PR + push (main) | OAuth2/Kubernetes auth integration tests with minikube |
-| `providers-build.yml` | PR + push (main) | Provider template builds (all templates × venv/container) |
-| `test-external-providers.yml` | PR + push (main) | External provider plugin testing |
-| `pre-commit.yml` | PR + push (main) | Ruff linting, mypy, formatting, codegen validation |
-| `semantic-pr.yml` | PR target | Semantic PR title enforcement |
-| `install-script-ci.yml` | PR + push + daily cron | Installer script validation (ShellCheck + smoke test) |
-| `tests.yml` | workflow_dispatch only | Manual test-as-library with external providers |
-| `gha_workflow_llama_stack_tests.yml` | workflow_dispatch only | GPU-based tests on self-hosted runners (PR trigger disabled) |
-| `changelog.yml` | release events | Auto-generate changelog |
-| `update-readthedocs.yml` | PR + push (main) + tags | Documentation build and ReadTheDocs deployment |
-| `stale_bot.yml` | daily cron | Stale issue/PR cleanup |
-| `dependabot.yml` | weekly (Saturday) | GitHub Actions and uv dependency updates |
+| `integration-tests.yml` | PR + push (main) | 48-combination integration matrix |
+| `integration-auth-tests.yml` | PR + push (main) | Kubernetes auth testing with minikube |
+| `pre-commit.yml` | PR + push (main) | Comprehensive pre-commit checks |
+| `providers-build.yml` | PR + push (build paths) | Build all templates (venv + container) |
+| `test-external-providers.yml` | PR + push (main) | External provider integration |
+| `semantic-pr.yml` | PR (opened/edited) | PR title validation |
+| `install-script-ci.yml` | PR + push + daily cron | Installer shellcheck + smoke test |
+| `changelog.yml` | push (main) | Changelog automation |
+| `stale_bot.yml` | schedule | Stale issue management |
+| `update-readthedocs.yml` | push (main) | Docs deployment |
+| `tests.yml` | workflow_dispatch only | Cloud provider SDK tests (DISABLED for PR) |
+| `gha_workflow_llama_stack_tests.yml` | workflow_dispatch only | GPU tests (DISABLED for PR) |
+| `dependabot.yml` | weekly schedule | GitHub Actions + uv dependency updates |
 
-**Strengths**:
-- Concurrency control with `cancel-in-progress: true` on most workflows
-- Path-based filtering to avoid unnecessary CI runs
-- SHA-pinned GitHub Actions (checked by custom pre-commit hook `check-workflows-use-hashes.sh`)
-- Reusable composite actions (`setup-runner`, `setup-ollama`)
-- Multi-version Python matrix testing (3.10, 3.11, 3.12, 3.13)
-- Artifact upload for test results with retention policies
-- Dynamic matrix generation for provider builds
+**Strengths:**
+- Concurrency control on all workflows (`cancel-in-progress: true`)
+- Path-based triggers avoid running unnecessary workflows
+- SHA-pinned GitHub Actions (verified by pre-commit hook)
+- Multi-Python version testing (3.10-3.13)
+- Dependabot configured for both Actions and Python deps
 
-**Weaknesses**:
-- No coverage reporting or threshold enforcement
-- GPU test workflow disabled for PRs
-- `tests.yml` is dispatch-only and uses `pip install` instead of `uv` (inconsistent with other workflows)
-- No security scanning workflows (Trivy, CodeQL, Bandit)
+**Weaknesses:**
+- 2 test workflows are dispatch-only (GPU tests, cloud provider tests)
+- No workflow for UI testing
+- No security scanning workflow
+- No coverage reporting workflow
 
 ### Test Coverage
 
-**Unit Tests** (48 Python files in `tests/unit/`):
-- Framework: pytest with pytest-asyncio, pytest-cov, pytest-timeout
-- Areas covered: server (auth, SSE, resolver, quota, access control), registry, RAG, distribution, models, CLI, providers, files, utils
-- Multi-Python-version matrix (3.10-3.13)
-- Coverage generated via `--cov=llama_stack` but not reported externally
-- Test-to-code ratio: 0.22 (15,958 test lines / 72,740 source lines) — moderate
+**Test Files: 68 Python + 1 TypeScript**
+- Source: ~75,000 lines across 628 Python files
+- Tests: ~16,000 lines across 69 test files
+- **Test-to-code ratio: ~21%** (adequate but not strong)
 
-**Integration Tests** (46 Python files in `tests/integration/`):
-- 8 test categories: agents, inference, datasets, inspect, scoring, post_training, providers, tool_runtime
-- Matrix across library and HTTP client types
-- Ollama as local inference provider (pre-built Docker container with models)
-- Auth-specific integration tests with minikube/Kubernetes
-- Rich conftest.py with proper test fixtures and teardown
+**Unit Tests (27 files):**
+- server: auth, SSE, resolver, quota, access control, env vars
+- registry: registry operations, ACL
+- providers: configs, NVIDIA, inference, agents, vector_io, utils
+- models: prompt adapter, system prompts, tokenizer
+- distribution: build path, context, distribution, routing tables
+- CLI: stack config
+- RAG: vector store, query
+- files: file operations
+- utils: sqlstore
 
-**Verification Tests** (10 Python files in `tests/verifications/`):
-- OpenAI API compatibility verification
-- Multi-provider testing with JSON report generation
-- Custom report generator for cross-provider comparison
+**Integration Tests (23 files):**
+- Comprehensive coverage: agents, inference (text/vision/embeddings/batch/OpenAI), datasets, eval, files, inspect, post_training, safety, scoring, telemetry, tool_runtime, vector_io, providers
+- Matrix tested: 8 test types x 2 client types (library/http) x 3 Python versions
+- Uses Ollama as CI backend with real model inference
 
-**Build Tests** (via `providers-build.yml`):
-- All provider templates validated (dynamic matrix)
-- Both venv and container image types tested
-- UBI9 base image testing for Red Hat compatibility
-- Entrypoint validation for container images
-- Custom distribution build testing
-- Single-provider build testing
+**Verification Tests (2 files):**
+- OpenAI API compatibility verification across providers
+- Test case fixtures for chat completion and responses
+- Report generation capability
+
+**UI Tests (1 file):**
+- Only `format-message-content.test.ts`
+- Jest configured with jsdom environment
+- No E2E testing framework
 
 ### Code Quality
 
-**Pre-commit Hooks** (Excellent — 12+ hooks):
-- `ruff` (linting + formatting) with comprehensive rule selection (UP, B, C, E, F, N, W, DTZ, I, RUF, PLC, PLE)
-- `mypy` with pydantic plugin (though extensive exclude list)
-- `blacken-docs` for code in documentation
-- `uv-lock` and `uv-export` for dependency consistency
-- `insert-license` for license headers
-- Standard pre-commit hooks (merge conflict, trailing whitespace, large files, YAML, JSON, TOML, private keys, etc.)
-- Custom hooks: `distro-codegen`, `openapi-codegen`, `check-workflows-use-hashes`
-- pre-commit.ci integration for automated fixes
+**Ruff (Linter/Formatter):**
+- Well-configured with 18+ rule categories enabled
+- Includes pyupgrade, bugbear, comprehensions, pycodestyle, Pyflakes, naming, datetime rules, import sorting, Unicode checks
+- Integrated as pre-commit hook with auto-fix
+- Line length: 120
 
-**Static Analysis**:
-- mypy configured with strict settings (`warn_return_any`, `pydantic-mypy` plugin)
-- Extensive exclusion list suggests gradual adoption (many files excluded)
-- Ruff with good rule coverage but some important ignores (C901 complexity)
+**mypy (Type Checker):**
+- Configured with pydantic plugin
+- `warn_return_any = true`
+- BUT: ~100+ files/directories excluded, covering nearly all providers
+- Effectively limited to core llama_stack code only
 
-**Weaknesses**:
-- Large mypy exclusion list (~80+ patterns) suggests type safety is incomplete
-- No Bandit or security-focused linting
-- No custom pylint rules
+**Pre-commit Hooks (Comprehensive):**
+- merge conflict check, trailing whitespace, large files, YAML/JSON/TOML validation
+- License header insertion for .py/.sh files
+- Ruff (lint + format)
+- blacken-docs (format code in docs)
+- uv-lock + uv-export (dependency lockfile management)
+- mypy (type checking)
+- Distribution template codegen verification
+- OpenAPI spec codegen verification
+- SHA-pinned GitHub Actions verification
+- no-commit-to-branch protection
+
+**UI Quality:**
+- ESLint (next/core-web-vitals + TypeScript)
+- Prettier for formatting
+- TypeScript strict mode
 
 ### Container Images
 
-**Build Process**:
-- Two Containerfiles: `tests/Containerfile` (Ollama test image) and `llama_stack/distribution/ui/Containerfile` (UI)
-- Dynamic container builds via `llama stack build --image-type container` across all templates
-- UBI9 base image support tested (Red Hat compatibility)
-- `USE_COPY_NOT_MOUNT` workaround for docker buildx compatibility
+**Build Process:**
+- `providers-build.yml` dynamically generates template matrix from `llama_stack/templates/`
+- Tests both venv and container image types
+- Custom container distribution build test
+- UBI9 base image build test (Red Hat specific)
+- Entrypoint validation after build
+- OS verification for UBI9 images
 
-**Runtime Testing**:
-- Entrypoint validation in `providers-build.yml` (checks correct command)
-- UBI9 OS release verification
-- No health endpoint testing after container start
-- No functional API testing against built containers
+**Missing:**
+- No vulnerability scanning (Trivy, Snyk, Grype)
+- No SBOM generation
+- No multi-architecture build testing in CI
+- No image signing/attestation
+- No runtime validation beyond entrypoint check
 
-**Security Scanning**:
-- ❌ No Trivy/Snyk/Grype scanning
-- ❌ No SBOM generation
-- ❌ No image signing
-- ❌ No vulnerability thresholds
+### Security
 
-### Security Practices
+**Present:**
+- `detect-private-key` in pre-commit hooks
+- SHA-pinned GitHub Actions (with verification script)
+- Dependabot for dependency updates
+- `SECURITY.md` (points to Meta's bug bounty - needs Red Hat update)
+- Kubernetes auth testing workflow
 
-| Practice | Status |
-|----------|--------|
-| Dependabot | ✅ GitHub Actions (weekly) + uv (security-only) |
-| SHA-pinned actions | ✅ All actions use SHA pins, enforced by pre-commit hook |
-| Secret detection | ⚠️ `detect-private-key` in pre-commit only |
-| SAST | ❌ No CodeQL, Bandit, or Semgrep |
-| Container scanning | ❌ No Trivy or Snyk |
-| SBOM | ❌ No generation |
-| Image signing | ❌ No cosign attestation |
-| CODEOWNERS | ✅ Defined with core maintainers |
-| Branch protection | ✅ PR required for main branch |
-| Permissions | ✅ Explicit permissions in workflows |
+**Missing:**
+- No CodeQL/SAST scanning
+- No Trivy/container vulnerability scanning
+- No gitleaks/TruffleHog for secret detection in CI
+- No Semgrep or Bandit for Python-specific security
+- No dependency vulnerability scanning (only Dependabot version updates, not security alerts)
+- No SBOM generation
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: No test type rules exist
+- **Coverage**: None - no `.claude` directory exists
 - **Quality**: N/A
-- **Gaps**: Everything — no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
-- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
-  - Unit test patterns (pytest fixtures, async testing, mock strategies)
-  - Integration test patterns (Ollama setup, client-type matrix, conftest conventions)
-  - Verification test patterns (OpenAI API compat, multi-provider testing)
-  - Provider test patterns (build validation, entrypoint checking)
+- **Gaps**: No CLAUDE.md, no AGENTS.md, no `.claude/rules/`, no `.claude/skills/`
+- **Recommendation**: Generate rules with `/test-rules-generator` covering:
+  - Unit test patterns (pytest, async, fixtures)
+  - Integration test patterns (stack-config, provider fixtures)
+  - Provider test patterns (model registry, inference)
+  - UI test patterns (Jest, React Testing Library)
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Integrate codecov with coverage thresholds** — Coverage data is already generated via `--cov=llama_stack` but goes nowhere. Add codecov upload action, configure `.codecov.yml` with a minimum threshold (start at current baseline), and enable PR checks.
-
-2. **Add container security scanning** — The `providers-build.yml` workflow builds container images for all templates. Add Trivy scanning as a post-build step for `container` image-type matrix entries.
-
-3. **Add SAST scanning** — Add a CodeQL or Bandit workflow. The codebase handles user input via FastAPI routes, API keys, and external provider connections — all high-risk areas.
+1. **Add Codecov/Coveralls integration** - Upload coverage from unit-tests.yml, set minimum thresholds (start at current baseline), require PR coverage delta reporting
+2. **Add container vulnerability scanning** - Integrate Trivy into providers-build.yml for all built images; block on CRITICAL/HIGH vulnerabilities
+3. **Enable CodeQL for Python** - Add CodeQL workflow for automated SAST; catches injection, path traversal, and other security issues
 
 ### Priority 1 (High Value)
 
-4. **Add SBOM and supply chain attestation** — Essential for Red Hat downstream. Use Syft for SBOM generation and cosign for image signing on release builds.
-
-5. **Create comprehensive agent rules** — Given the codebase's complexity (619 source files, multiple test categories, specific patterns), agent rules would significantly improve AI-assisted development quality.
-
-6. **Re-enable GPU test workflow for PRs** — The `gha_workflow_llama_stack_tests.yml` has PR triggers commented out. Consider enabling with appropriate concurrency limits or selective triggering.
-
-7. **Add coverage threshold enforcement** — Once codecov is integrated, set a minimum coverage threshold and block PRs that reduce coverage.
+4. **Incrementally reduce mypy exclude list** - Start with utility modules and work toward providers; add type annotations as code is touched
+5. **Re-enable GPU tests on PRs** - Even if limited to a subset of tests, catch model inference regressions before merge
+6. **Add UI testing** - Add Jest workflow to CI; consider Playwright for E2E testing of the Next.js UI
+7. **Create agent rules** - Generate `.claude/rules/` for consistent AI-assisted test creation
+8. **Update SECURITY.md** - Point to Red Hat's vulnerability reporting process instead of Meta's
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add container runtime functional tests** — After building container images, start them and validate the health endpoint, basic API responses, and provider initialization.
-
-9. **Add performance regression testing** — For inference endpoints, establish latency baselines and detect regressions.
-
-10. **Add OpenSSF Scorecard** — Track supply chain security posture holistically.
-
-11. **Reduce mypy exclusion list** — The ~80+ excluded patterns suggest significant type safety gaps. Gradually type-check more modules.
+9. **Add SBOM generation** - Generate SBOMs for all container images for supply chain security
+10. **Add multi-architecture CI** - Validate ARM64 builds in CI (currently only amd64)
+11. **Add gitleaks to CI** - Complement pre-commit `detect-private-key` with full secret scanning
+12. **Add integration test coverage** - Generate coverage reports from integration tests, not just unit tests
+13. **Enable tests.yml on PRs** - Re-enable cloud provider SDK tests for PR validation
 
 ## Comparison to Gold Standards
 
 | Dimension | ogx | odh-dashboard | notebooks | kserve |
 |-----------|-----|---------------|-----------|--------|
-| Unit Tests | 7.0 | 9.0 | 7.0 | 9.0 |
-| Integration/E2E | 7.5 | 9.0 | 8.0 | 9.0 |
-| Build Integration | 7.0 | 8.0 | 9.0 | 7.0 |
-| Image Testing | 5.0 | 7.0 | 9.0 | 7.0 |
-| Coverage Tracking | 3.0 | 9.0 | 6.0 | 9.0 |
-| CI/CD Automation | 8.0 | 9.0 | 8.0 | 9.0 |
-| Agent Rules | 0.0 | 8.0 | 3.0 | 2.0 |
-| **Overall** | **6.5** | **8.7** | **7.3** | **7.9** |
+| Unit Tests | 7/10 | 9/10 | 7/10 | 9/10 |
+| Integration/E2E | 8/10 | 9/10 | 8/10 | 9/10 |
+| Build Integration | 7/10 | 8/10 | 9/10 | 8/10 |
+| Image Testing | 5/10 | 7/10 | 9/10 | 7/10 |
+| Coverage Tracking | 3/10 | 9/10 | 6/10 | 9/10 |
+| CI/CD Automation | 8/10 | 9/10 | 8/10 | 9/10 |
+| Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
+| **Overall** | **6.5** | **8.5** | **7.5** | **8.0** |
 
-**Key gaps vs. gold standards**:
-- **vs. odh-dashboard**: Missing coverage enforcement, no contract tests, no agent rules
-- **vs. notebooks**: Missing image vulnerability scanning, no runtime validation, no multi-arch testing
-- **vs. kserve**: Missing coverage thresholds, no SAST, no supply chain attestation
+**Key Differentiators:**
+- ogx has stronger integration test coverage than most repos (48 CI combinations)
+- odh-dashboard leads in coverage tracking and agent rules
+- notebooks leads in image testing (5-layer validation)
+- kserve leads in coverage enforcement and CRD testing
+- ogx's main weakness is the observability gap (no coverage service, no security scanning)
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/unit-tests.yml` — Unit test workflow (multi-Python matrix)
-- `.github/workflows/integration-tests.yml` — Integration test workflow (Ollama-based)
-- `.github/workflows/integration-auth-tests.yml` — Auth integration tests (minikube)
-- `.github/workflows/providers-build.yml` — Provider build validation (all templates)
-- `.github/workflows/test-external-providers.yml` — External provider testing
-- `.github/workflows/pre-commit.yml` — Pre-commit hook CI
-- `.github/workflows/semantic-pr.yml` — Semantic PR title enforcement
-- `.github/workflows/install-script-ci.yml` — Installer script validation
-- `.github/actions/setup-runner/action.yml` — Reusable runner setup action
-- `.github/actions/setup-ollama/action.yml` — Reusable Ollama setup action
+- `.github/workflows/unit-tests.yml` - Unit test workflow
+- `.github/workflows/integration-tests.yml` - Integration test matrix
+- `.github/workflows/integration-auth-tests.yml` - Auth testing with minikube
+- `.github/workflows/pre-commit.yml` - Pre-commit checks
+- `.github/workflows/providers-build.yml` - Provider template build validation
+- `.github/workflows/test-external-providers.yml` - External provider tests
+- `.github/workflows/semantic-pr.yml` - PR title validation
+- `.github/workflows/install-script-ci.yml` - Installer CI
+- `.github/workflows/gha_workflow_llama_stack_tests.yml` - GPU tests (manual)
+- `.github/workflows/tests.yml` - Cloud provider tests (manual)
+- `.github/dependabot.yml` - Dependency update config
 
 ### Testing
-- `tests/unit/` — 48 unit test files
-- `tests/integration/` — 46 integration test files
-- `tests/verifications/` — 10 verification test files
-- `tests/client-sdk/` — 2 client SDK test files
-- `tests/Containerfile` — Ollama test image definition
-- `scripts/unit-tests.sh` — Unit test runner script
+- `tests/unit/` - 27 unit test files
+- `tests/integration/` - 23 integration test files
+- `tests/verifications/` - OpenAI API compatibility tests
+- `tests/client-sdk/` - Client SDK tests
+- `tests/Containerfile` - Ollama CI image
+- `scripts/unit-tests.sh` - Unit test runner script
+- `llama_stack/ui/lib/format-message-content.test.ts` - UI test
 
 ### Code Quality
-- `.pre-commit-config.yaml` — 12+ pre-commit hooks (ruff, mypy, codegen)
-- `pyproject.toml` — Ruff, mypy, and project configuration
-- `.coveragerc` — Coverage omit patterns
+- `.pre-commit-config.yaml` - 13 hooks across 7 repos + 3 local hooks
+- `pyproject.toml` - Ruff config (18+ rules), mypy config, pytest config
+- `.coveragerc` - Coverage exclusions
+- `llama_stack/ui/jest.config.ts` - Jest configuration
+- `llama_stack/ui/eslint.config.mjs` - ESLint for UI
 
 ### Container Images
-- `tests/Containerfile` — Test infrastructure container
-- `llama_stack/distribution/ui/Containerfile` — UI container
+- `tests/Containerfile` - CI Ollama image with models
+- `llama_stack/distribution/ui/Containerfile` - UI container
+- `llama_stack/distribution/build_container.sh` - Container build script
 
-### Dependencies
-- `.github/dependabot.yml` — GitHub Actions + uv dependency updates
-- `.github/CODEOWNERS` — Code ownership definitions
+### Security
+- `SECURITY.md` - Vulnerability reporting (currently Meta, needs Red Hat update)
+- `scripts/check-workflows-use-hashes.sh` - SHA-pinned actions verification

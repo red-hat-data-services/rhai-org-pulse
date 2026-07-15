@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:18 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:43 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/batch-gateway</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="158.336136"
+                                stroke-dashoffset="135.71668799999998"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.2</div>
+                        <div class="score-value">7.6</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">439 test functions across 48 files with table-driven subtests. Strong 1.87:1 test-to-source line ratio.</div>
+                            <div class="scorecard-status">Excellent coverage with 52 unit test files, 1.6:1 test-to-source LOC ratio, table-driven tests with subtests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Comprehensive E2E suite (10 test suites, 4000+ lines) with Kind cluster and matrix CI. Integration tests behind build tags.</div>
+                            <div class="scorecard-status">Comprehensive E2E suite (15 files, 5.3k LOC) with Kind cluster, 7-matrix integration tests, regression test suite</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">No PR-time CI build or lint — only Tekton/Konflux builds on PR and push. GitHub CI runs only on main/schedule.</div>
+                            <div class="scorecard-status">No PR-time Docker build validation; Konflux Dockerfiles exist but no CI simulation; image builds only on main/tag push</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Multi-arch Docker Bake with layer caching, Konflux Dockerfiles for RHOAI. No runtime validation or vulnerability scanning.</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
+                            <div class="scorecard-status">Multi-arch builds (amd64/arm64) with docker-bake, Konflux variants for RHOAI, but no runtime image validation or startup tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Makefile targets for local coverage generation. No CI coverage enforcement, no Codecov/Coveralls integration.</div>
+                            <div class="scorecard-status">Makefile has coverage targets but no CI integration, no Codecov/Coveralls, no coverage thresholds or PR reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">16 workflows covering release, pre-commit, DCO, dependabot. Integration tests not triggered on PR. No PR-time unit test CI.</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Well-organized workflows with concurrency control, matrix builds, auto-labeling, Dependabot, Prow integration, failure auto-issue</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">CLAUDE.md present with coding conventions and test patterns. No .claude/rules/ directory or test-specific agent rules.</div>
+                            <div class="scorecard-status">CLAUDE.md exists with good code conventions but no .claude/rules/ directory, no test-specific agent rules</div>
                         </div>
                     </div>
                 </div>
@@ -411,16 +411,32 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No PR-time unit test or lint CI</div>
-                            <p>Unit test regressions and lint violations can merge undetected. Pre-commit workflow runs linting on PR but unit tests only run on main/schedule.</p>
+                            <div class="item-description">No coverage tracking in CI</div>
+                            <p>Cannot detect coverage regressions; no visibility into which code paths are untested</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No coverage tracking or enforcement</div>
-                            <p>Coverage can silently decline. No visibility into per-PR coverage delta or minimum thresholds.</p>
+                            <div class="item-description">No PR-time Docker build validation</div>
+                            <p>Dockerfile issues discovered only after merge when CI release or Konflux runs</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No container image runtime validation</div>
+                            <p>Image startup failures, missing binaries, or wrong entrypoints not caught until deployment</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">Integration tests not run on PRs</div>
+                            <p>E2E regressions discovered only on main pushes or nightly runs, not before merge</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
@@ -428,18 +444,10 @@
                         </li>
                         <li class="item-card high">
                             <div class="item-description">No container vulnerability scanning</div>
-                            <p>CVEs in base images and dependencies not caught before merge or release.</p>
+                            <p>Known CVEs in base images or dependencies ship without detection</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Integration/E2E tests not triggered on PR</div>
-                            <p>E2E regressions discovered only on main branch daily cron or manual dispatch.</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,32 +464,32 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add PR-time unit test workflow</div>
-                            <p>Catch unit test regressions before merge. Simple workflow running make test on pull_request.</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Codecov integration</div>
-                            <p>Track coverage trends, enforce thresholds, surface coverage deltas on every PR.</p>
+                            <div class="item-description">Add Codecov integration to pre-commit workflow</div>
+                            <p>Immediate coverage visibility on every PR with threshold enforcement</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to CI</div>
-                            <p>Detect known vulnerabilities in base images before release.</p>
+                            <div class="item-description">Add Trivy container scanning to CI release workflow</div>
+                            <p>Automated CVE detection before images are pushed to registry</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create .claude/rules/ test automation guidance</div>
-                            <p>Improve AI-generated test quality with project-specific patterns and conventions.</p>
+                            <div class="item-description">Add Docker build smoke test to PR workflow</div>
+                            <p>Catch Dockerfile syntax errors and build failures before merge</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create .claude/rules/ with test creation guidance</div>
+                            <p>Consistent AI-generated tests following project patterns (table-driven, subtests, pgxmock)</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -501,15 +509,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add a PR-triggered workflow that runs unit tests (make test) and reports results</li><li>Integrate Codecov or Coveralls with coverage threshold enforcement (e.g., 60% minimum, no decrease)</li><li>Add Trivy or Snyk container scanning to CI-release workflow</li></ul>
+                            <ul><li>Add Codecov/Coveralls integration with coverage thresholds and PR reporting</li><li>Add Trivy or Snyk container scanning to CI release pipeline</li><li>Run integration tests on PRs (currently only on push to main/release/nightly)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Trigger integration tests on PR (at least a basic matrix) to catch regressions pre-merge</li><li>Create .claude/rules/ with unit-tests.md, integration-tests.md, e2e-tests.md for agent-assisted test creation</li><li>Add CodeQL or gosec scanning as a PR-triggered workflow (not just pre-commit)</li></ul>
+                            <ul><li>Add PR-time Docker build validation for all three images (apiserver, processor, gc)</li><li>Add container image startup/health-check validation after build</li><li>Create .claude/rules/ directory with test automation rules for unit, integration, E2E, and regression tests</li><li>Add CodeQL/SAST workflow for deeper static analysis</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SBOM generation for container images</li><li>Add performance/benchmark regression tracking in CI</li><li>Add image startup validation tests (container health checks post-build)</li></ul>
+                            <ul><li>Add SBOM generation to container build pipeline</li><li>Add image signing/attestation (cosign/sigstore)</li><li>Add performance regression testing in CI using existing benchmark infrastructure</li><li>Add Gitleaks for secret detection in pre-commit</li></ul>
                         </div>
                     </div>
                 </div>

@@ -16,6 +16,7 @@ function makeRelease(id, opts = {}) {
     productPagesShortname: opts.shortname || 'rhoai',
     milestones: {
       ga: opts.ga || null,
+      featureFreeze: opts.featureFreeze || null,
       codeFreeze: opts.codeFreeze || null,
       planningFreeze: opts.planningFreeze || null
     }
@@ -45,6 +46,7 @@ describe('ScheduleView', () => {
       releases: [
         makeRelease('rhoai-3.5', {
           ga: '2026-09-15',
+          featureFreeze: '2026-08-01',
           codeFreeze: '2026-08-20',
           planningFreeze: '2026-07-10'
         })
@@ -72,7 +74,7 @@ describe('ScheduleView', () => {
     const cells = wrapper.findAll('td')
     const cellTexts = cells.map(c => c.text())
     const dashCells = cellTexts.filter(t => t === '—')
-    expect(dashCells.length).toBe(2)
+    expect(dashCells.length).toBe(3)
   })
 
   it('sorts releases by GA date', async () => {

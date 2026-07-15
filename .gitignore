@@ -9,6 +9,9 @@ playwright-report/
 test-results/
 .playwright/
 
+# Coverage
+coverage/
+
 # Environment variables
 .env
 .env.local
@@ -48,3 +51,8 @@ scripts/fetch-releases.sh
 
 # Journal plugin
 journal/
+
+# Core platform symlinks (managed by setup script)
+modules/team-tracker
+shared
+src

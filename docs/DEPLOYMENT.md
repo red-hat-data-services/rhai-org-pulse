@@ -36,7 +36,7 @@ kind: Kustomization
 namespace: your-namespace
 
 resources:
-  - https://github.com/red-hat-data-services/rhai-org-pulse//deploy/openshift/base?ref=v1.0.0
+  - https://github.com/red-hat-data-services/org-pulse-core//deploy/openshift/base?ref=v2.0.8
 
 patches:
   - path: route-patch.yaml

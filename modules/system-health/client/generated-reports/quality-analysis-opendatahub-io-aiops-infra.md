@@ -1,375 +1,395 @@
 ---
 repository: "opendatahub-io/aiops-infra"
-overall_score: 2.7
+overall_score: 2.3
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No unit tests exist — zero test files across 54 scripts (7,654 LOC)"
+    status: "No unit tests exist for any of the 74 scripts (0 test files found)"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests — all scripts are untested"
+    status: "No integration or E2E test suites; no test infrastructure (pytest, bats, shunit2)"
   - dimension: "Build Integration"
     score: 1.0
-    status: "No container builds, no PR-time validation beyond skillsaw lint"
+    status: "No Dockerfile/container builds in this repo; no PR-time build validation"
   - dimension: "Image Testing"
     score: 0.0
-    status: "No Dockerfiles, no container images built or tested"
+    status: "No container images built from this repo; no image testing"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tool configured — no codecov, coveralls, or coverage reports"
+    status: "No coverage tools configured (no codecov, coveralls, or coverage reports)"
   - dimension: "CI/CD Automation"
-    score: 3.0
-    status: "Only skillsaw lint on PRs — no test jobs, no security scanning, no dependency checks"
+    score: 4.0
+    status: "CI limited to skillsaw linting only; no test execution, no security scanning"
   - dimension: "Agent Rules"
-    score: 6.0
-    status: "17 Claude Code skills with SKILL.md files, but no test rules, CLAUDE.md, or .claude/rules/"
+    score: 7.0
+    status: "Excellent Claude Code skills with detailed SKILL.md files; no .claude/rules/ for test patterns"
 critical_gaps:
   - title: "Zero test coverage across entire codebase"
-    impact: "54 scripts (33 shell, 21 Python) with 7,654 LOC have no tests — regressions are undetectable"
+    impact: "74 scripts (53 bash, 21 Python) totaling ~10,900 lines have no automated tests; regressions undetectable"
     severity: "HIGH"
     effort: "40-60 hours"
-  - title: "No Python linting or static analysis"
-    impact: "21 Python scripts have no ruff, flake8, mypy, or pylint configured — type errors and style issues go undetected"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No ShellCheck linting for 33 shell scripts"
-    impact: "Shell scripting bugs (quoting, word splitting, undefined vars) are not caught in CI"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No security scanning (SAST, dependency, secret detection)"
-    impact: "Scripts handle GITHUB_TOKEN, GITLAB_TOKEN, JIRA_API_TOKEN — no automated secret leak detection"
+  - title: "No testing framework configured"
+    impact: "No pytest, bats, shunit2, or any testing infrastructure exists to run tests against"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No CLAUDE.md or agent testing rules"
-    impact: "17 skills exist but no test automation guidance — AI agents cannot write or verify tests"
+  - title: "CI pipeline runs only linting, no test execution"
+    impact: "PRs merge without any script validation; broken logic ships to production"
+    severity: "HIGH"
+    effort: "8-12 hours"
+  - title: "No security scanning (SAST, dependency scanning, secret detection)"
+    impact: "Scripts handle credentials (Jira tokens, GitHub tokens, GitLab tokens) with no automated secret detection"
+    severity: "HIGH"
+    effort: "4-6 hours"
+  - title: "No input validation testing for YAML schema validation"
+    impact: "The validate_yaml_schema.py script is a critical gate but has no tests verifying schema enforcement"
     severity: "MEDIUM"
-    effort: "4-6 hours"
+    effort: "4-8 hours"
 quick_wins:
-  - title: "Add ShellCheck to CI workflow"
+  - title: "Add pytest for Python scripts with basic unit tests"
+    effort: "4-6 hours"
+    impact: "Cover 21 Python scripts with foundational tests for argument parsing, validation logic, and error handling"
+  - title: "Add bats-core for shell script testing"
+    effort: "3-4 hours"
+    impact: "Enable testing of 53 shell scripts with bash assertion framework"
+  - title: "Add Gitleaks scanning to CI workflow"
     effort: "1-2 hours"
-    impact: "Catch shell scripting bugs across all 33 scripts with zero false-positive cost"
-  - title: "Add ruff linting for Python scripts"
+    impact: "Detect accidentally committed secrets (repo handles Jira, GitHub, GitLab credentials extensively)"
+  - title: "Add ShellCheck linting to CI"
     effort: "1-2 hours"
-    impact: "Immediate detection of Python bugs, unused imports, and style issues across 21 scripts"
-  - title: "Add pytest skeleton with tests for validate_yaml_schema.py"
+    impact: "Catch common bash bugs, quoting issues, and unsafe constructs across 53 shell scripts"
+  - title: "Add a CI workflow to run pytest on PRs"
     effort: "2-3 hours"
-    impact: "Establish testing pattern for the most critical script — schema validation is the pipeline entry point"
-  - title: "Add gitleaks secret scanning to CI"
-    effort: "1-2 hours"
-    impact: "Prevent accidental credential leaks in a repo that handles multiple API tokens"
+    impact: "Gate PRs on test execution; currently only skillsaw lint runs"
 recommendations:
   priority_0:
-    - "Add unit tests for all Python scripts — start with validate_yaml_schema.py, parse scripts, and Jira/GitHub API wrappers"
-    - "Add ShellCheck and ruff linting to CI — immediate low-effort quality improvement"
-    - "Add secret detection scanning (gitleaks) — this repo handles GITHUB_TOKEN, GITLAB_TOKEN, JIRA_API_TOKEN"
+    - "Establish pytest infrastructure and write unit tests for all 21 Python scripts, starting with validate_yaml_schema.py, update_jira_issue.py, and edit_yaml.py"
+    - "Add bats-core and write tests for critical shell scripts (init_pipeline.sh, pipeline_state.sh, check_prerequisites.sh)"
+    - "Add a CI workflow that runs pytest and bats on every PR"
   priority_1:
-    - "Add integration tests for the pipeline orchestration flow (mock API responses, verify state machine transitions)"
-    - "Create CLAUDE.md with project conventions and testing requirements"
-    - "Add .claude/rules/ with test creation guidelines for Python and shell scripts"
-    - "Add mypy type checking for Python scripts (most already have type hints in docstrings)"
+    - "Add Gitleaks or TruffleHog secret detection to CI — repo handles multiple credential types"
+    - "Add ShellCheck linting for all shell scripts in CI (currently only skillsaw lint runs)"
+    - "Add codecov or coverage reporting for Python scripts"
+    - "Create .claude/rules/ directory with test creation patterns for Python and Bash scripts"
   priority_2:
-    - "Add pre-commit hooks (.pre-commit-config.yaml) for shellcheck, ruff, gitleaks"
-    - "Add CodeQL or Semgrep SAST scanning"
-    - "Add BATS testing framework for shell script unit tests"
-    - "Add dependency scanning for Python inline dependencies (uv audit)"
+    - "Add integration tests that validate full pipeline state transitions with mock Jira/GitHub/GitLab responses"
+    - "Add pre-commit hooks for ShellCheck, ruff, and secret detection"
+    - "Create playbook/runbook testing for the orchestrator skill flow"
 ---
 
 # Quality Analysis: aiops-infra
 
 ## Executive Summary
 
-- **Overall Score: 2.7/10**
-- **Repository Type**: Infrastructure automation toolkit (Python + Shell scripts)
-- **Primary Languages**: Bash (33 scripts), Python (21 scripts) — 7,654 LOC total
+- **Overall Score: 2.3/10**
+- **Repository Type**: Infrastructure automation toolkit (Claude Code skills + shell/Python scripts)
+- **Primary Languages**: Bash (53 scripts), Python (21 scripts), ~10,900 total lines
 - **Purpose**: Automates ODH/RHOAI component onboarding onto the Konflux CI/CD platform via Claude Code skills
 
 ### Key Strengths
-- **Excellent skill architecture**: 17 well-documented Claude Code skills with a sophisticated master orchestrator
-- **Strong shell scripting discipline**: All 33 shell scripts use `set -euo pipefail` (100% strict mode)
-- **Modern Python practices**: 16 of 21 Python scripts use `uv run --script` with inline dependency declarations
-- **Schema validation**: JSON Schema (Draft 2020-12) for input validation with comprehensive conditional logic
-- **Idempotent design**: Pipeline orchestrator is fully idempotent with state tracking via JSON and Jira labels
+- **Exceptional skill documentation**: Three well-structured Claude Code skills with comprehensive SKILL.md files covering full orchestration, validation, and Jira integration
+- **JSON Schema validation**: Strong `component_onboarding_details.schema.json` with conditional validation rules
+- **Idempotent pipeline design**: The orchestrator uses `pipeline_state.json` for resumable, re-entrant execution
+- **skillsaw linting**: Uses skillsaw v0.10.1 for SKILL.md quality enforcement in CI
 
 ### Critical Gaps
-- **Zero test coverage**: Not a single test file exists in the entire repository
-- **No Python or shell linting**: No ruff, mypy, shellcheck, or any static analysis in CI
-- **No security scanning**: Scripts handle sensitive tokens with no secret detection or SAST
-- **CI is lint-only**: Only skillsaw (skill metadata lint) runs on PRs — no code quality checks
+- **Zero automated tests**: No test files exist anywhere in the repository — no pytest, bats, shunit2, or any testing framework
+- **CI runs only linting**: The only CI workflow runs `skillsaw` lint; no script validation, no security scanning
+- **No security scanning**: Scripts handle sensitive credentials (Jira API tokens, GitHub tokens, GitLab tokens) with no secret detection
+- **No coverage tracking**: No codecov, coveralls, or any coverage measurement
 
 ### Agent Rules Status: **Partial**
-- 17 Claude Code skills present with SKILL.md files
-- No CLAUDE.md, AGENTS.md, or `.claude/rules/` directory
-- No test automation guidance for AI agents
+- `.claude/skills/` directory exists with 3 well-documented skills
+- No `.claude/rules/` directory for test creation patterns
+- No `CLAUDE.md` or `AGENTS.md` root documentation
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0/10 | No test files exist anywhere in the repository |
-| Integration/E2E | 0/10 | No integration or end-to-end test infrastructure |
-| **Build Integration** | **1/10** | **Only skillsaw metadata lint on PRs — no code validation** |
-| Image Testing | 0/10 | No container images are built (pure script repo) |
+| Unit Tests | 0/10 | No unit tests exist for any of the 74 scripts |
+| Integration/E2E | 0/10 | No integration or E2E test suites |
+| **Build Integration** | **1/10** | **No container builds in this repo; no PR-time build validation** |
+| Image Testing | 0/10 | No container images built from this repo |
 | Coverage Tracking | 0/10 | No coverage tools configured |
-| CI/CD Automation | 3/10 | Minimal — skillsaw lint only, no test/security/quality jobs |
-| Agent Rules | 6/10 | Rich skill library but no test rules or project-level agent config |
+| CI/CD Automation | 4/10 | CI limited to skillsaw linting only |
+| Agent Rules | 7/10 | Excellent skills documentation; no test rules |
 
 ## Critical Gaps
 
-### 1. Zero Test Coverage
-- **Impact**: 54 scripts totaling 7,654 lines of code have no automated tests. Regressions in pipeline orchestration, Jira API interactions, GitHub/GitLab PR creation, YAML schema validation, and state machine transitions are completely undetectable.
+### 1. Zero Test Coverage Across Entire Codebase
+- **Impact**: 74 scripts totaling ~10,900 lines have no automated tests. Regressions are completely undetectable. Any change to `edit_yaml.py` (580 lines), `run_github_workflow.py` (551 lines), or `update_jira_issue.py` (433 lines) could break the entire onboarding pipeline.
 - **Severity**: HIGH
-- **Effort**: 40-60 hours (incremental)
-- **Why it matters**: This repo automates production onboarding workflows that touch Jira, GitHub, GitLab, Quay, and OpenShift. A bug in any script could silently break the component onboarding pipeline for ODH/RHOAI.
+- **Effort**: 40-60 hours for foundational coverage
 
-### 2. No Python Linting or Static Analysis
-- **Impact**: 21 Python scripts with no ruff, flake8, mypy, or pylint. Type errors, unused imports, undefined variables, and style inconsistencies go undetected.
+### 2. No Testing Framework Configured
+- **Impact**: No `pytest.ini`, `conftest.py`, `pyproject.toml` with test config, `bats/` directory, or any test runner configuration exists. There is no infrastructure to write or run tests even if someone wanted to.
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Files affected**: All `scripts/*.py`
+- **Effort**: 4-6 hours to set up pytest + bats-core
 
-### 3. No Shell Linting
-- **Impact**: 33 shell scripts with no ShellCheck integration. While all scripts use `set -euo pipefail` (a positive sign), common shell bugs like unquoted variables, word splitting, and POSIX compatibility issues are not caught.
+### 3. CI Pipeline Runs Only Linting
+- **Impact**: The only CI check is `skillsaw` lint, which validates SKILL.md formatting. No script validation, no Python syntax checks, no shell script linting. PRs merge without any code quality gate beyond skill documentation.
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Files affected**: All `scripts/*.sh`
+- **Effort**: 8-12 hours for comprehensive CI
 
 ### 4. No Security Scanning
-- **Impact**: Scripts directly reference and use `GITHUB_TOKEN`, `GITLAB_TOKEN`, `JIRA_API_TOKEN`, and `EXT_OC_TOKEN`/`INT_OC_TOKEN`. No gitleaks, trufflehog, CodeQL, or Semgrep scanning exists.
+- **Impact**: Scripts extensively handle Jira API tokens (`JIRA_API_TOKEN`), GitHub tokens (`GITHUB_TOKEN`), GitLab tokens (`GITLAB_TOKEN`), and OpenShift tokens (`EXT_OC_TOKEN`, `INT_OC_TOKEN`). No Gitleaks, TruffleHog, or CodeQL scanning is configured. No `.gitleaks.toml` or SAST configuration exists.
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
 
-### 5. No CLAUDE.md or Test Automation Rules
-- **Impact**: The repo has 17 Claude Code skills but no project-level `CLAUDE.md` or `.claude/rules/` directory. AI agents using this repo have no guidance on testing conventions, coding standards, or quality requirements.
+### 5. No Input Validation Testing
+- **Impact**: `validate_yaml_schema.py` is the critical gate for the entire onboarding pipeline, but has zero tests verifying it correctly rejects malformed YAML, missing required fields, or invalid enum values.
 - **Severity**: MEDIUM
-- **Effort**: 4-6 hours
+- **Effort**: 4-8 hours
 
 ## Quick Wins
 
-### 1. Add ShellCheck to CI (1-2 hours)
+### 1. Add pytest for Python Scripts (4-6 hours)
 ```yaml
-# .github/workflows/lint.yml — add step:
-- name: ShellCheck
-  uses: ludeeus/action-shellcheck@2.0.0
-  with:
-    scandir: './scripts'
-    severity: warning
+# pyproject.toml addition
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+```
+Start with `validate_yaml_schema.py` — test valid YAML passes, missing required fields fail, invalid enum values fail, conditional schema rules work correctly.
+
+### 2. Add bats-core for Shell Scripts (3-4 hours)
+```bash
+# Install bats
+git clone https://github.com/bats-core/bats-core.git
+./bats-core/install.sh /usr/local
+```
+Start with `check_prerequisites.sh`, `pipeline_state.sh`, and `parse_jira_url.sh` — these are pure-logic scripts with clear input/output contracts.
+
+### 3. Add Gitleaks to CI (1-2 hours)
+```yaml
+# .github/workflows/security.yml
+name: Security
+on: [push, pull_request]
+jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-### 2. Add ruff Linting for Python (1-2 hours)
+### 4. Add ShellCheck to CI (1-2 hours)
 ```yaml
-# .github/workflows/lint.yml — add step:
-- name: Ruff lint
-  uses: astral-sh/ruff-action@v3
-  with:
-    src: './scripts'
+# Add to .github/workflows/lint.yml
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Run ShellCheck
+      uses: ludeeus/action-shellcheck@master
+      with:
+        scandir: './scripts'
+        severity: warning
 ```
 
-### 3. Add gitleaks Secret Scanning (1-2 hours)
+### 5. Add pytest CI Workflow (2-3 hours)
 ```yaml
-# .github/workflows/lint.yml — add step:
-- name: Gitleaks
-  uses: gitleaks/gitleaks-action@v2
-  env:
-    GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+# .github/workflows/test.yml
+name: Tests
+on: [push, pull_request]
+jobs:
+  python-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - run: pip install pytest pyyaml jsonschema
+    - run: pytest tests/ -v
 ```
-
-### 4. Add pytest for validate_yaml_schema.py (2-3 hours)
-Create `tests/test_validate_yaml_schema.py` with:
-- Valid YAML passes validation
-- Missing required fields fail with clear errors
-- Invalid field values (bad patterns, wrong types) caught
-- Conditional validation (ODH vs RHOAI) works correctly
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows found**: 2 (minimal)
+**Workflows Found**: 2
+1. `lint.yml` — Runs skillsaw linter on push/PR to main
+2. `lint-review.yml` — Posts skillsaw review comments on PRs (triggered by lint workflow completion)
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `lint.yml` | push/PR to main | Runs skillsaw lint (skill metadata validation) |
-| `lint-review.yml` | workflow_run on lint | Posts skillsaw review comments on PRs |
-
-**What's missing**:
-- No test execution jobs
-- No Python linting (ruff, mypy)
+**What's Missing**:
+- No test execution workflow
+- No security scanning workflow
+- No Python linting (ruff, flake8, mypy)
 - No shell linting (ShellCheck)
-- No security scanning
-- No dependency auditing
-- No caching strategy needed (no builds)
-- No concurrency control configured
+- No dependency vulnerability scanning
+- No concurrency control (concurrent PR runs not managed)
+- No caching strategy
 
-**Makefile targets**: `skillsaw`, `skillsaw-fix`, `lint` — all point to skillsaw only.
+**Positive**: Pinned action SHAs (`actions/checkout@de0fac2...`) prevent supply chain attacks via action version changes.
 
 ### Test Coverage
 
-**Status**: No tests exist.
+**Test Files Found**: 0
+**Test Frameworks Configured**: None
+**Test-to-Code Ratio**: 0:10,900
+**Coverage Tracking**: None
 
-- `*_test.py`: 0 files
-- `*_test.sh`: 0 files
-- `test_*.py`: 0 files
-- `tests/` directory: does not exist
-- `pytest.ini`, `setup.cfg [tool:pytest]`, `pyproject.toml [tool.pytest]`: none
-- No testing framework referenced anywhere
+The repository has **zero test infrastructure**. No `tests/` directory, no `test_*.py` files, no `*_test.sh` files, no `conftest.py`, no `pytest.ini`, no bats test files. This is the most critical gap.
 
-**Test-to-code ratio**: 0:7654 (0%)
+**High-value test targets** (by complexity and blast radius):
+1. `edit_yaml.py` (580 lines) — Complex YAML manipulation; errors corrupt onboarding configs
+2. `run_github_workflow.py` (551 lines) — GitHub Actions dispatch; failures break the ODH onboarder workflow
+3. `update_jira_issue.py` (433 lines) — Jira API mutations; errors corrupt ticket state
+4. `run_step_krd.sh` (374 lines) — Konflux release data onboarding; failures block the pipeline
+5. `sync_state_from_jira.py` (360 lines) — State reconstruction from Jira labels; errors desync pipeline
 
 ### Code Quality
 
-**Positive findings**:
-- All 33 shell scripts use `set -euo pipefail` (100% strict mode adoption)
-- 16 of 21 Python scripts use `uv run --script` with PEP 723 inline metadata
-- JSON Schema validation with Draft 2020-12 for input data
-- Well-structured argument parsing in both Python and shell scripts
-- Consistent error handling patterns (stderr messages, meaningful exit codes)
+**Linting**:
+- skillsaw v0.10.1 for SKILL.md quality (context budget warnings at 7K/10K tokens)
+- ShellCheck directives found in 2 scripts (`setup_gitlab_playpen.sh`, `setup_github_playpen.sh`) but not enforced in CI
+- No Python linting (ruff, flake8, pylint, mypy)
+- No pre-commit hooks (`.pre-commit-config.yaml` absent)
 
-**Missing tools**:
-- No `.pre-commit-config.yaml`
-- No `ruff.toml`, `.flake8`, `mypy.ini`, or `pyproject.toml`
-- No `.golangci.yaml` (not applicable — no Go code)
-- No `.eslintrc` (not applicable — no JS/TS code)
-- No ShellCheck configuration
-
-**Linting in CI**: Only `skillsaw` — validates skill metadata structure (SKILL.md format, context budgets, content positions). Does not lint code.
+**Code Style**:
+- Python scripts use `uv run --script` with inline dependency declarations — good practice
+- Shell scripts use `bash -e` patterns but inconsistently
+- No type hints enforcement for Python scripts
 
 ### Container Images
 
-**N/A** — This repository does not build container images. It is a pure script/skill collection. The `check_dockerfile_digests.py` script validates Dockerfiles in *other* repositories but does not build anything locally.
+This repository **does not build container images**. It is a script/skill toolkit that automates component onboarding. Container image testing is not applicable to this repo's purpose, though the scripts _validate_ Dockerfiles in other repos (e.g., `check_dockerfile_digests.py`).
 
 ### Security
 
-**Current state**: No security tooling.
+**Current State**: No security scanning of any kind.
 
-- No gitleaks/trufflehog for secret detection
-- No CodeQL/Semgrep SAST analysis
-- No dependency scanning (Python deps are inline, but no audit)
-- No `.trivyignore` or Trivy configuration
-
-**Risk**: Scripts handle sensitive credentials:
-- `GITHUB_TOKEN`, `GITHUB_USER`
-- `GITLAB_TOKEN`, `GITLAB_USER`
-- `JIRA_API_TOKEN`, `JIRA_USER_EMAIL`
-- `EXT_OC_TOKEN`, `INT_OC_TOKEN` (OpenShift tokens)
-
-Scripts read these from environment variables (good practice), but no automated scanning prevents accidental hardcoding or leakage.
+**Risk Areas**:
+- Scripts accept and use 5+ credential environment variables (JIRA_API_TOKEN, GITHUB_TOKEN, GITLAB_TOKEN, EXT_OC_TOKEN, INT_OC_TOKEN)
+- `GIT_SSL_NO_VERIFY=true` is used for GitLab connections (documented as intentional for internal CA)
+- No Gitleaks, TruffleHog, or secret detection configured
+- No CodeQL or SAST scanning
+- No dependency scanning (Python dependencies managed via inline `uv` specs, not audited)
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status**: Partial — Rich skills, no test rules
+**Status**: Partial — excellent skills, no test rules
 
-**What exists**:
-- `.claude/skills/` directory with 17 skills, each having a SKILL.md
-- `.skillsaw.yaml` configuring skill metadata validation
-- `docs/skills/index.md` with comprehensive pipeline documentation
-- `ADLC/` directory with Agentic SDLC documentation (3 versions)
-- `.claude/skills/install.sh` for skill distribution
+**What Exists**:
+- `.claude/skills/` directory with 3 well-documented skills:
+  - `onboard-konflux-components-for-odh-and-rhoai` — Master orchestrator (648-line SKILL.md)
+  - `validate-component-onboarding-jira` — Pre-flight validation
+  - `create-component-onboarding-jira` — Interactive Jira creation
+- `docs/skills/` with 18 detailed skill documentation pages
+- `.skillsaw.yaml` for SKILL.md quality enforcement
+- `schemas/component_onboarding_details.schema.json` for YAML validation
 
-**What's missing**:
-- No `CLAUDE.md` in repo root (project-level agent instructions)
-- No `AGENTS.md` or `GEMINI.md`
-- No `.claude/rules/` directory
-- No test automation guidance for agents
-- No coding standards documentation for agents
+**What's Missing**:
+- No `.claude/rules/` directory for test creation patterns
+- No `CLAUDE.md` or `AGENTS.md` root documentation
+- No agent rules for how to write tests for shell scripts or Python scripts
+- No coding standards documentation for contributors
 
-**Skill quality**: The 17 skills are well-documented with:
-- Clear prerequisites and error tables
-- Idempotent execution patterns
-- State machine tracking via pipeline_state.json
-- Bash code blocks with step-by-step instructions
-
-**Gap**: Skills define *what to do* but not *how to test*. An agent contributing to this repo has no guidance on writing tests for new scripts or validating changes.
+**Recommendation**: Generate missing test rules with `/test-rules-generator` to guide AI-assisted test creation.
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add unit tests for Python scripts** — Start with:
-   - `validate_yaml_schema.py` (critical entry point for all onboarding)
-   - `build_progress_summary.py` (renders Jira comments)
-   - `sync_state_from_jira.py` (state reconstruction logic)
-   - `check_pr_mr_status.sh` via BATS (pipeline state machine)
+1. **Establish pytest infrastructure and write unit tests for Python scripts**
+   - Create `tests/` directory with `conftest.py`
+   - Start with `validate_yaml_schema.py` (critical gate), `edit_yaml.py` (highest complexity), `update_jira_issue.py` (highest blast radius)
+   - Use `unittest.mock` to mock Jira/GitHub/GitLab API calls
+   - Target: 80%+ coverage for Python scripts
 
-2. **Add ShellCheck + ruff to CI** — Immediate, zero-effort quality gate:
-   ```yaml
-   jobs:
-     lint:
-       steps:
-         - uses: actions/checkout@v4
-         - uses: ludeeus/action-shellcheck@2.0.0
-           with: { scandir: './scripts', severity: warning }
-         - uses: astral-sh/ruff-action@v3
-           with: { src: './scripts' }
-         - uses: stbenjam/skillsaw@v0
-           with: { strict: 'true' }
-   ```
+2. **Add bats-core and write tests for critical shell scripts**
+   - Test `init_pipeline.sh`, `pipeline_state.sh`, `check_prerequisites.sh`, `parse_jira_url.sh`
+   - These scripts have clear input/output contracts that are straightforward to test
+   - Use bats assertions for exit codes, stdout content, and file creation
 
-3. **Add secret detection** — gitleaks action to prevent credential leaks.
+3. **Add CI workflow for test execution**
+   - Create `.github/workflows/test.yml` that runs pytest + bats on every PR
+   - Make tests required for merge
 
 ### Priority 1 (High Value)
 
-4. **Add integration tests for orchestrator flow** — Mock API responses for GitHub, GitLab, Jira, and OpenShift; verify that `pipeline_state.json` transitions correctly through the full step graph.
+4. **Add secret detection scanning**
+   - Gitleaks or TruffleHog in CI
+   - Critical given the volume of credential handling
 
-5. **Create CLAUDE.md** — Include:
-   - Project overview and architecture
-   - Testing requirements for new scripts
-   - Shell scripting conventions (strict mode, argument parsing pattern)
-   - Python scripting conventions (uv inline deps, docstring format)
-   - PR/commit message conventions
+5. **Add ShellCheck to CI**
+   - Enforce shell script quality across 53 scripts
+   - Currently only 2 scripts have inline ShellCheck directives
 
-6. **Add `.claude/rules/` with test rules** — Create rules for:
-   - `unit-tests.md` — pytest for Python, BATS for shell
-   - `integration-tests.md` — API mocking patterns
-   - `script-conventions.md` — set -euo pipefail, uv run --script
+6. **Add codecov/coverage reporting**
+   - Track Python test coverage and enforce thresholds
+   - Configure coverage reporting on PRs
 
-7. **Add mypy type checking** — Most Python scripts are well-documented; adding type annotations and mypy would catch type errors.
+7. **Create `.claude/rules/` with test creation patterns**
+   - Document how to write tests for `uv run --script` Python scripts
+   - Document how to test shell scripts with bats-core
+   - Include mock patterns for Jira, GitHub, and GitLab APIs
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add pre-commit hooks** — `.pre-commit-config.yaml` with shellcheck, ruff, gitleaks, trailing-whitespace.
+8. **Add integration tests for pipeline state machine**
+   - Test full state transitions (pending → pr_raised → merged → done)
+   - Use mock Jira/GitHub/GitLab API responses
+   - Validate the orchestrator's dependency resolution logic
 
-9. **Add CodeQL or Semgrep** — SAST scanning for Python and shell code.
+9. **Add pre-commit hooks**
+   - ShellCheck, ruff (Python), gitleaks
+   - Enforce quality before commits reach CI
 
-10. **Add BATS framework** — [Bash Automated Testing System](https://github.com/bats-core/bats-core) for shell script unit testing.
-
-11. **Add `uv audit`** — Check inline Python dependencies for known vulnerabilities.
+10. **Add Python type checking**
+    - Add type hints to Python scripts
+    - Run mypy or pyright in CI
 
 ## Comparison to Gold Standards
 
 | Dimension | aiops-infra | odh-dashboard | notebooks | kserve |
-|-----------|:-----------:|:-------------:|:---------:|:------:|
+|-----------|-------------|---------------|-----------|--------|
 | Unit Tests | 0/10 | 9/10 | 7/10 | 9/10 |
 | Integration/E2E | 0/10 | 9/10 | 8/10 | 9/10 |
-| Build Integration | 1/10 | 8/10 | 7/10 | 8/10 |
-| Image Testing | N/A | 7/10 | 10/10 | 7/10 |
-| Coverage Tracking | 0/10 | 8/10 | 5/10 | 9/10 |
-| CI/CD Automation | 3/10 | 9/10 | 8/10 | 9/10 |
-| Agent Rules | 6/10 | 8/10 | 3/10 | 2/10 |
-| **Overall** | **2.7** | **8.5** | **7.5** | **8.0** |
+| Build Integration | 1/10 | 7/10 | 8/10 | 7/10 |
+| Image Testing | N/A | 7/10 | 9/10 | 7/10 |
+| Coverage Tracking | 0/10 | 8/10 | 6/10 | 9/10 |
+| CI/CD Automation | 4/10 | 9/10 | 8/10 | 9/10 |
+| Agent Rules | 7/10 | 8/10 | 3/10 | 2/10 |
+| **Overall** | **2.3/10** | **8.1/10** | **7.0/10** | **7.5/10** |
 
-**Note**: Image Testing is scored N/A for aiops-infra (no images built) and excluded from the weighted average.
+**Notable**: aiops-infra scores well on Agent Rules (7/10) due to its excellent Claude Code skill documentation — the best-structured SKILL.md files in the ODH ecosystem. However, this strength cannot compensate for the complete absence of automated testing.
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/lint.yml` — Skillsaw lint on PR/push
-- `.github/workflows/lint-review.yml` — Skillsaw review comments
-- `Makefile` — `skillsaw`, `skillsaw-fix`, `lint` targets
-- `.skillsaw.yaml` — Skillsaw configuration
+- `.github/workflows/lint.yml` — skillsaw lint (push + PR)
+- `.github/workflows/lint-review.yml` — skillsaw PR review comments
+- `Makefile` — skillsaw and skillsaw-fix targets
+- `.skillsaw.yaml` — skillsaw configuration
 
-### Scripts (Source Code)
-- `scripts/*.sh` — 33 shell scripts (pipeline automation)
-- `scripts/*.py` — 21 Python scripts (API interactions, YAML processing)
-
-### Schemas
-- `schemas/component_onboarding_details.schema.json` — JSON Schema for onboarding input
+### Scripts (No Tests)
+- `scripts/*.sh` — 53 shell scripts (~8,200 lines)
+- `scripts/*.py` — 21 Python scripts (~2,700 lines)
 
 ### Agent Skills
-- `.claude/skills/*/SKILL.md` — 17 Claude Code skill definitions
-- `.claude/skills/install.sh` — Skill installation script
-- `.claude/skills/install-dependencies.sh` — Dependency installer
-- `docs/skills/index.md` — Skill pipeline documentation
+- `.claude/skills/onboard-konflux-components-for-odh-and-rhoai/SKILL.md`
+- `.claude/skills/validate-component-onboarding-jira/SKILL.md`
+- `.claude/skills/create-component-onboarding-jira/SKILL.md`
+- `.claude/skills/install.sh` — Skill dependency installer
+- `.claude/skills/install-dependencies.sh` — Dependency installation
 
 ### Documentation
-- `README.md` — Minimal (1 line)
-- `ADLC/` — Agentic SDLC documentation (3 versions)
+- `docs/skills/index.md` — Skill pipeline overview
+- `docs/skills/*.md` — 18 individual skill docs
+- `ADLC/` — Agentic SDLC flow diagrams
+- `schemas/component_onboarding_details.schema.json` — YAML validation schema
+
+### Quality Config (Missing)
+- No `pytest.ini` / `pyproject.toml` (testing)
+- No `.pre-commit-config.yaml` (hooks)
+- No `.codecov.yml` (coverage)
+- No `.gitleaks.toml` (secrets)
+- No `.golangci.yaml` / `ruff.toml` (linting)
+- No `CLAUDE.md` / `AGENTS.md` (agent documentation)
+- No `.claude/rules/` (test creation patterns)

@@ -1,172 +1,171 @@
 ---
 repository: "red-hat-data-services/composable-pipelines"
-overall_score: 0.3
+overall_score: 0.4
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No source code or test files exist"
+    status: "No source code or test files present"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E test infrastructure"
+    status: "No integration or E2E tests exist"
   - dimension: "Build Integration"
     score: 0.0
-    status: "No build configuration, Dockerfile, or Makefile"
+    status: "No build configuration, Dockerfiles, or Makefiles"
   - dimension: "Image Testing"
     score: 0.0
     status: "No container image definitions or testing"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling or reporting configured"
+    status: "No coverage tools or configuration"
   - dimension: "CI/CD Automation"
     score: 0.0
-    status: "No CI/CD workflows or pipelines defined"
+    status: "No CI/CD workflows configured"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
+    status: "No CLAUDE.md, .claude/ directory, or agent rules"
 critical_gaps:
-  - title: "Repository is empty — no source code"
-    impact: "No product functionality exists to test or ship"
+  - title: "Repository is a skeleton — no source code"
+    impact: "No product functionality exists to test, build, or ship"
     severity: "HIGH"
-    effort: "Varies — depends on project scope"
-  - title: "No CI/CD pipelines"
-    impact: "No automated quality gates; any future code merges without validation"
+    effort: "Depends on project scope"
+  - title: "No CI/CD pipeline"
+    impact: "When code is added, there will be no automated quality gates"
     severity: "HIGH"
-    effort: "4-8 hours for initial GitHub Actions setup"
-  - title: "No test infrastructure"
-    impact: "No unit, integration, or E2E tests can run"
+    effort: "4-8 hours to bootstrap"
+  - title: "No test framework or infrastructure"
+    impact: "No foundation for unit, integration, or E2E testing"
     severity: "HIGH"
-    effort: "2-4 hours for framework scaffolding"
-  - title: "No container build definitions"
-    impact: "Cannot build or ship container images"
+    effort: "2-4 hours to bootstrap"
+  - title: "No container build configuration"
+    impact: "No Dockerfile, Containerfile, or image build pipeline"
     severity: "HIGH"
-    effort: "2-4 hours for Dockerfile + multi-stage build"
+    effort: "2-4 hours to bootstrap"
   - title: "No security scanning"
-    impact: "Vulnerabilities will go undetected when code is added"
+    impact: "No vulnerability detection, SAST, or dependency scanning"
+    severity: "HIGH"
+    effort: "2-4 hours to bootstrap"
+  - title: "No code quality tooling"
+    impact: "No linting, static analysis, or pre-commit hooks"
     severity: "MEDIUM"
-    effort: "1-2 hours for Trivy + CodeQL workflows"
+    effort: "1-2 hours to bootstrap"
 quick_wins:
-  - title: "Add a GitHub Actions CI workflow skeleton"
+  - title: "Add a .github/workflows/ci.yml with basic linting and test jobs"
+    effort: "2-4 hours"
+    impact: "Establishes CI/CD foundation from day one"
+  - title: "Add a Makefile with standard targets (build, test, lint)"
     effort: "1-2 hours"
-    impact: "Establishes quality gates from day one — prevents technical debt accumulation"
-  - title: "Add a Dockerfile with multi-stage build"
-    effort: "1-2 hours"
-    impact: "Enables container builds and image testing from the start"
+    impact: "Standardizes developer workflow and CI integration"
   - title: "Add pre-commit hooks configuration"
     effort: "1 hour"
-    impact: "Enforces code quality locally before commits reach CI"
-  - title: "Create CLAUDE.md with testing standards"
+    impact: "Catches issues before code reaches the repository"
+  - title: "Create CLAUDE.md with project conventions"
     effort: "1-2 hours"
-    impact: "Guides AI-assisted development to follow quality practices from the start"
+    impact: "Guides AI agents to produce consistent, high-quality contributions"
 recommendations:
   priority_0:
-    - "Define project structure and add initial source code with accompanying unit tests"
-    - "Create CI/CD pipeline (GitHub Actions) with linting, testing, and build steps before first real PR"
+    - "Define project scope, language, and framework before adding quality infrastructure"
+    - "Bootstrap CI/CD pipeline (.github/workflows/) with PR checks from the first real commit"
+    - "Add Dockerfile/Containerfile and image build pipeline as soon as source code lands"
   priority_1:
-    - "Add Dockerfile with multi-stage build and Trivy scanning"
-    - "Configure coverage tracking (codecov) with minimum thresholds from day one"
-    - "Add pre-commit hooks for linting and formatting"
+    - "Set up test framework matching the chosen language (pytest, Go testing, Jest, etc.)"
+    - "Configure coverage tracking (codecov/coveralls) with minimum thresholds from the start"
+    - "Add security scanning (Trivy, CodeQL, Gitleaks) to the CI pipeline"
   priority_2:
-    - "Create CLAUDE.md and .claude/rules/ for AI-assisted test generation guidance"
-    - "Plan E2E test infrastructure (Kind cluster, test scenarios) for later phases"
-    - "Add SBOM generation and image signing to build pipeline"
+    - "Create comprehensive agent rules (.claude/rules/) for test creation guidance"
+    - "Add pre-commit hooks for linting, formatting, and secret detection"
+    - "Document testing strategy and contribution guidelines in CONTRIBUTING.md"
 ---
 
 # Quality Analysis: composable-pipelines
 
 **Repository**: [red-hat-data-services/composable-pipelines](https://github.com/red-hat-data-services/composable-pipelines)
-**Analysis Date**: 2026-06-03
+**Analysis Date**: 2026-07-06
 **Branch Analyzed**: main
 **Commit**: 44f0fe2 (Initial commit)
 
 ## Executive Summary
 
-- **Overall Score: 0.3/10**
-- **Repository Status**: Empty placeholder — contains only a README.md with two lines ("# composable-pipelines / Composable Pipelines") and a single initial commit
-- **Key Strengths**: Repository exists on GitHub with a clear name
-- **Critical Gaps**: No source code, no tests, no CI/CD, no build configuration, no security scanning — the repository is a blank slate
-- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
+- **Overall Score: 0.4 / 10**
+- **Key Strengths**: Repository exists on GitHub with a main branch, indicating project initialization has begun.
+- **Critical Gaps**: This is a skeleton repository containing only a placeholder README.md. No source code, tests, CI/CD, container definitions, security scanning, or quality tooling exists.
+- **Agent Rules Status**: Missing — no CLAUDE.md, .claude/ directory, or agent rules of any kind.
 
-This repository is in a pre-development state. The score reflects the absence of all quality dimensions rather than poor implementation. This is actually an **opportunity**: quality practices can be established from the ground up before any code lands, which is far easier than retrofitting them later.
+The repository is at the earliest possible stage — a single initial commit with a two-line README. Every quality dimension scores 0 because there is nothing to evaluate. This presents a **greenfield opportunity** to establish best practices from the very first real commit, avoiding the technical debt that accumulates when quality infrastructure is retrofitted.
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 0/10 | No source code or test files |
-| Integration/E2E | 0/10 | No integration or E2E test infrastructure |
-| **Build Integration** | **0/10** | **No build configuration, Dockerfile, or Makefile** |
-| Image Testing | 0/10 | No container image definitions or testing |
-| Coverage Tracking | 0/10 | No coverage tooling or reporting |
-| CI/CD Automation | 0/10 | No CI/CD workflows or pipelines |
-| Agent Rules | 0/10 | No AI-assisted development guidance |
+| Dimension | Score | Weight | Status |
+|-----------|-------|--------|--------|
+| Unit Tests | 0 / 10 | 20% | No source code or test files |
+| Integration/E2E | 0 / 10 | 25% | No integration or E2E infrastructure |
+| Build Integration | 0 / 10 | — | No build configuration |
+| Image Testing | 0 / 10 | 20% | No container definitions |
+| Coverage Tracking | 0 / 10 | 15% | No coverage tools |
+| CI/CD Automation | 0 / 10 | 20% | No workflows configured |
+| Agent Rules | 0 / 10 | — | No agent rules |
+| **Overall** | **0.4 / 10** | | **Skeleton repository** |
+
+> The overall score of 0.4 reflects the fact that the repository exists and is initialized on GitHub, but contains no substantive content.
 
 ## Critical Gaps
 
-### 1. Repository is empty — no source code
-- **Impact**: No product functionality exists to test or ship
+### 1. Repository is a skeleton — no source code
+- **Impact**: No product functionality exists to test, build, or ship
 - **Severity**: HIGH
-- **Effort**: Varies — depends on project scope
-- **Details**: The repository contains only a placeholder README.md. There is no source code in any language, no project configuration files (go.mod, package.json, pyproject.toml, etc.), and no directory structure.
+- **Effort**: Depends on project scope
+- **Details**: The repository contains a single file (`README.md`) with two lines of text. There are no source files, configuration files, or any artifacts beyond the initial commit.
 
-### 2. No CI/CD pipelines
-- **Impact**: Any code merged to main will bypass all quality gates
+### 2. No CI/CD pipeline
+- **Impact**: When code is added, there will be no automated quality gates to prevent regressions
 - **Severity**: HIGH
-- **Effort**: 4-8 hours for comprehensive GitHub Actions setup
-- **Details**: No `.github/workflows/` directory exists. No Makefile, Jenkinsfile, or `.gitlab-ci.yml` either. When code starts landing, there will be zero automated validation.
+- **Effort**: 4-8 hours to bootstrap
+- **Details**: No `.github/workflows/` directory, no `.gitlab-ci.yml`, no `Jenkinsfile`, no CI configuration of any kind.
 
-### 3. No test infrastructure
-- **Impact**: Cannot validate any functionality automatically
+### 3. No test framework or infrastructure
+- **Impact**: No foundation for unit, integration, or E2E testing when code arrives
 - **Severity**: HIGH
-- **Effort**: 2-4 hours for framework scaffolding
-- **Details**: No test files, test directories, or test configuration exist. No testing framework dependencies are declared.
+- **Effort**: 2-4 hours to bootstrap
+- **Details**: No test files (`*_test.go`, `*.spec.ts`, `test_*.py`), no test directories, no test configuration files.
 
-### 4. No container build definitions
-- **Impact**: Cannot build or ship container images; no image testing possible
+### 4. No container build configuration
+- **Impact**: No Dockerfile, Containerfile, or image build pipeline for deployment
 - **Severity**: HIGH
-- **Effort**: 2-4 hours for Dockerfile + multi-stage build
-- **Details**: No Dockerfile, Containerfile, or docker-compose.yml exists.
+- **Effort**: 2-4 hours to bootstrap
+- **Details**: No container-related files found anywhere in the repository.
 
 ### 5. No security scanning
-- **Impact**: Vulnerabilities will go undetected when dependencies are added
+- **Impact**: No vulnerability detection, SAST, dependency scanning, or secret detection
+- **Severity**: HIGH
+- **Effort**: 2-4 hours to bootstrap
+- **Details**: No Trivy, CodeQL, Snyk, Gitleaks, or any security tooling configured.
+
+### 6. No code quality tooling
+- **Impact**: No linting, static analysis, formatting enforcement, or pre-commit hooks
 - **Severity**: MEDIUM
-- **Effort**: 1-2 hours for Trivy + CodeQL workflow setup
-- **Details**: No security tooling configuration (Trivy, Snyk, CodeQL, gitleaks, etc.).
+- **Effort**: 1-2 hours to bootstrap
+- **Details**: No `.golangci.yaml`, `.eslintrc`, `ruff.toml`, `.pre-commit-config.yaml`, or any quality tool configuration.
 
 ## Quick Wins
 
-### 1. Add a GitHub Actions CI workflow skeleton
-- **Effort**: 1-2 hours
-- **Impact**: Establishes quality gates from day one
+### 1. Add a CI/CD workflow from the first real commit
+- **Effort**: 2-4 hours
+- **Impact**: Establishes automated quality gates before bad patterns can take root
 - **Implementation**: Create `.github/workflows/ci.yml` with lint, test, and build jobs triggered on PRs
-```yaml
-name: CI
-on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
-jobs:
-  lint-and-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      # Add language-specific steps when code is added
-```
 
-### 2. Add a Dockerfile with multi-stage build
+### 2. Add a Makefile with standard targets
 - **Effort**: 1-2 hours
-- **Impact**: Enables container builds and establishes image testing patterns early
-- **Implementation**: Create a multi-stage Dockerfile appropriate to the project's language
+- **Impact**: Standardizes developer workflow (`make build`, `make test`, `make lint`)
+- **Implementation**: Create a `Makefile` with targets for build, test, lint, and container image build
 
-### 3. Add pre-commit hooks configuration
+### 3. Add pre-commit hooks
 - **Effort**: 1 hour
-- **Impact**: Enforces code quality locally before commits reach CI
-- **Implementation**: Create `.pre-commit-config.yaml` with language-appropriate linters
+- **Impact**: Catches formatting, linting, and secret detection issues before commits
+- **Implementation**: Create `.pre-commit-config.yaml` with language-appropriate hooks
 
-### 4. Create CLAUDE.md with testing standards
+### 4. Create CLAUDE.md with project conventions
 - **Effort**: 1-2 hours
-- **Impact**: Ensures AI-assisted development follows quality practices from the start
-- **Implementation**: Define testing patterns, coverage expectations, and PR requirements
+- **Impact**: Guides AI agents to produce consistent, high-quality code and tests from day one
+- **Implementation**: Document language, framework, testing conventions, and contribution guidelines
 
 ## Detailed Findings
 
@@ -174,143 +173,134 @@ jobs:
 
 **Status**: Non-existent
 
-No CI/CD configuration of any kind was found:
+No CI/CD configuration was found:
 - No `.github/workflows/` directory
-- No `Makefile`
-- No `Jenkinsfile`
 - No `.gitlab-ci.yml`
-- No `Taskfile.yml` or equivalent
+- No `Jenkinsfile`
+- No `Makefile`
 
-**Recommendation**: Create CI workflows before the first code PR lands. Include at minimum: linting, unit tests, and build validation.
+**Recommendation**: Establish CI/CD as part of the project bootstrap. A minimal pipeline should include:
+- Linting on PRs
+- Unit tests on PRs
+- Build validation on PRs
+- Periodic security scanning
 
 ### Test Coverage
 
 **Status**: Non-existent
 
-No test infrastructure was found:
-- No test files (`*_test.go`, `*.spec.ts`, `*_test.py`, etc.)
+No test files or test infrastructure found:
+- No test files of any language
 - No test directories (`test/`, `tests/`, `e2e/`, `integration/`)
-- No test configuration files (`pytest.ini`, `jest.config.js`, etc.)
+- No test configuration files (`pytest.ini`, `go.mod`, `jest.config.*`)
 - No coverage configuration (`.codecov.yml`, `.coveragerc`)
 
-**Recommendation**: Choose a testing framework and set up the test infrastructure alongside the first source code. Enforce coverage thresholds from the beginning (much harder to add retroactively).
+**Recommendation**: Choose a testing framework appropriate to the project's primary language and set up coverage tracking from the start with minimum thresholds.
 
 ### Code Quality
 
 **Status**: Non-existent
 
-No code quality tooling was found:
-- No linter configuration (`.golangci.yaml`, `.eslintrc`, `ruff.toml`)
-- No pre-commit hooks (`.pre-commit-config.yaml`)
-- No static analysis configuration
-- No formatting configuration
+No code quality tools configured:
+- No linting configuration
+- No static analysis tools
+- No pre-commit hooks
+- No code formatting enforcement
 
-**Recommendation**: Set up linting and formatting before the first code PR. This establishes patterns early and prevents style debt.
+**Recommendation**: Configure language-appropriate linting and formatting tools before the first real PR.
 
 ### Container Images
 
 **Status**: Non-existent
 
-No container-related files were found:
+No container-related files found:
 - No `Dockerfile` or `Containerfile`
 - No `docker-compose.yml`
 - No `.dockerignore`
-- No image build scripts
+- No image build workflows
 
-**Recommendation**: When adding application code, include a multi-stage Dockerfile and `.dockerignore` from the start.
+**Recommendation**: Define container build strategy as part of the project architecture. Include multi-stage builds, security scanning, and runtime validation from the start.
 
 ### Security
 
 **Status**: Non-existent
 
-No security scanning or configuration found:
-- No CodeQL/SAST workflows
-- No Trivy/Snyk configuration
+No security scanning configured:
+- No Trivy, Snyk, or vulnerability scanning
+- No CodeQL or SAST analysis
+- No Gitleaks or secret detection
 - No dependency scanning
-- No secret detection (`.gitleaks.toml`)
-- No vulnerability scanning
+- No SBOM generation
 
-**Recommendation**: Add Trivy scanning and CodeQL analysis to CI workflows. These are low-effort, high-impact additions.
+**Recommendation**: Add Trivy scanning and CodeQL analysis to the CI pipeline from the first commit.
 
 ### Agent Rules (Agentic Flow Quality)
 
 **Status**: Missing
 
-- No `CLAUDE.md` or `AGENTS.md` in repository root
+- No `CLAUDE.md` or `AGENTS.md` at repository root
 - No `.claude/` directory
-- No `.claude/rules/` test creation rules
-- No `.claude/skills/` custom skills
+- No `.claude/rules/` for test creation guidance
+- No `.claude/skills/` for custom skills
 - No testing documentation in `docs/`
 
-**Recommendation**: Create `.claude/rules/` with test patterns when the project's language and framework are chosen. Use `/test-rules-generator` to generate comprehensive rules. This is especially valuable for a greenfield project — it sets the quality bar for all future AI-assisted development.
+**Recommendation**: When source code is added, create comprehensive agent rules using `/test-rules-generator` to guide AI-generated tests to match project patterns.
 
 ## Recommendations
 
-### Priority 0 (Critical — Before First Code PR)
+### Priority 0 (Critical — Before First Real Commit)
 
-1. **Define project structure and add initial source code with unit tests**
-   - Choose language/framework and set up project scaffolding
-   - Include test framework in initial dependencies
-   - Write tests alongside first code — don't defer
+1. **Define project scope and technology stack** — Document the primary language, framework, and architecture in the README and CLAUDE.md
+2. **Bootstrap CI/CD pipeline** — Create `.github/workflows/ci.yml` with lint, test, and build jobs triggered on PRs
+3. **Add container build configuration** — Create Dockerfile/Containerfile as soon as source code lands
+4. **Set up test framework** — Configure testing infrastructure matching the chosen language/framework
 
-2. **Create CI/CD pipeline with quality gates**
-   - GitHub Actions workflow with lint, test, build
-   - Require passing CI for merge to main
-   - Enable branch protection rules
+### Priority 1 (High Value — Within First Sprint)
 
-### Priority 1 (High Value — First Sprint)
+1. **Configure coverage tracking** — Add codecov/coveralls with minimum thresholds (e.g., 80%)
+2. **Add security scanning** — Integrate Trivy for container scanning and CodeQL for SAST
+3. **Set up linting and formatting** — Configure language-appropriate linting tools with CI enforcement
+4. **Create CONTRIBUTING.md** — Document testing requirements, PR conventions, and code style
 
-3. **Add Dockerfile with multi-stage build**
-   - Include Trivy scanning step
-   - Add `.dockerignore` for build efficiency
-   - Test image startup in CI
+### Priority 2 (Nice-to-Have — Within First Month)
 
-4. **Configure coverage tracking from day one**
-   - Integrate codecov with minimum threshold (e.g., 80%)
-   - Require coverage reports on PRs
-   - Block merges that decrease coverage
-
-5. **Add pre-commit hooks**
-   - Linting, formatting, secret detection
-   - Enforce locally to catch issues before CI
-
-### Priority 2 (Nice-to-Have — First Month)
-
-6. **Create CLAUDE.md and .claude/rules/**
-   - Define testing standards for AI-assisted development
-   - Include patterns for each test type (unit, integration, E2E)
-   - Use `/test-rules-generator` for comprehensive rules
-
-7. **Plan E2E test infrastructure**
-   - Define test scenarios and acceptance criteria
-   - Set up Kind/Minikube for local E2E testing
-   - Create E2E workflow for periodic execution
-
-8. **Add SBOM generation and image signing**
-   - Generate SBOM during image builds
-   - Sign images with cosign
-   - Publish attestations
+1. **Create agent rules** — Add `.claude/rules/` with test creation guidance for each test type
+2. **Add pre-commit hooks** — Configure hooks for linting, formatting, and secret detection
+3. **Set up image testing** — Add container runtime validation and multi-architecture support
+4. **Add performance testing** — Establish baseline performance tests if the project has performance-sensitive components
 
 ## Comparison to Gold Standards
 
-| Practice | composable-pipelines | odh-dashboard | notebooks | kserve |
-|----------|---------------------|---------------|-----------|--------|
-| Unit Tests | None | Comprehensive Jest/Cypress | Python tests | Go tests + coverage |
-| Integration/E2E | None | Multi-layer E2E | Image validation | Multi-version E2E |
-| Build Integration | None | PR-time builds | Multi-arch builds | PR builds |
-| Image Testing | None | Build + startup | 5-layer validation | Runtime testing |
-| Coverage Tracking | None | Codecov enforced | Coverage reports | Threshold enforcement |
-| CI/CD | None | 20+ workflows | Comprehensive CI | Extensive automation |
-| Security Scanning | None | CodeQL + Trivy | Vulnerability scans | SAST + dependency |
-| Agent Rules | None | CLAUDE.md + rules | N/A | N/A |
+| Dimension | composable-pipelines | odh-dashboard | notebooks | kserve |
+|-----------|---------------------|---------------|-----------|--------|
+| Unit Tests | 0/10 | 9/10 | 7/10 | 9/10 |
+| Integration/E2E | 0/10 | 9/10 | 8/10 | 9/10 |
+| Build Integration | 0/10 | 8/10 | 7/10 | 7/10 |
+| Image Testing | 0/10 | 7/10 | 9/10 | 7/10 |
+| Coverage Tracking | 0/10 | 8/10 | 6/10 | 9/10 |
+| CI/CD Automation | 0/10 | 9/10 | 8/10 | 9/10 |
+| Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
+| **Overall** | **0.4/10** | **8.5/10** | **7.5/10** | **8.0/10** |
+
+> This repository is at the opposite end of the spectrum from gold standards. The advantage is that quality practices can be established correctly from the start, avoiding the retrofit tax.
 
 ## File Paths Reference
 
-The following files were analyzed (all that exist in the repository):
-- `README.md` — Placeholder README (2 lines)
-
-No other configuration, source, or test files exist.
+| File | Status |
+|------|--------|
+| `README.md` | Present (placeholder — 2 lines) |
+| `.github/workflows/` | Missing |
+| `Makefile` | Missing |
+| `Dockerfile` / `Containerfile` | Missing |
+| `.pre-commit-config.yaml` | Missing |
+| `.golangci.yaml` / `.eslintrc` / `ruff.toml` | Missing |
+| `.codecov.yml` | Missing |
+| `CLAUDE.md` / `.claude/` | Missing |
+| `CONTRIBUTING.md` | Missing |
+| `go.mod` / `package.json` / `pyproject.toml` | Missing |
 
 ## Summary
 
-The composable-pipelines repository is a greenfield project with a single initial commit. While the current score is 0.3/10, this represents an opportunity rather than a problem — quality practices can be baked in from day one. The most important action is to establish CI/CD pipelines and testing infrastructure *before* the first code PR lands, as it's dramatically easier to maintain quality standards than to retrofit them into an existing codebase.
+**composable-pipelines** is a newly initialized skeleton repository with no source code, tests, CI/CD, or quality infrastructure. The overall quality score of **0.4/10** reflects this pre-development state.
+
+The primary recommendation is to **establish quality practices from the very first commit**. This is the most cost-effective approach — retrofitting quality infrastructure onto an existing codebase is 5-10x more expensive than building it in from the start. Use the gold standards (odh-dashboard, kserve, notebooks) as templates for CI/CD workflows, test infrastructure, and security scanning.

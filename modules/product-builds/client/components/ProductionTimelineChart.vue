@@ -102,7 +102,7 @@ const chartOptions = computed(() => ({
 </script>
 
 <template>
-  <div v-if="drops.length === 0" class="h-48 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
+  <div v-if="drops.length === 0 || chartItems.length === 0" class="h-48 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
     <p class="text-sm text-gray-500 dark:text-gray-400">No production metrics available</p>
   </div>
   <template v-else>

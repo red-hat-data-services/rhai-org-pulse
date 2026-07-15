@@ -1,426 +1,433 @@
 ---
 repository: "traefik/traefik"
-overall_score: 7.9
+overall_score: 7.3
 scorecard:
   - dimension: "Unit Tests"
-    score: 8.5
-    status: "Strong test coverage — 217 test files for 351 source files (62% ratio) in pkg/, plus 33 WebUI test files with Vitest"
+    score: 8.0
+    status: "Excellent test-to-code ratio (0.61) with Go testing + testify, Vitest for WebUI"
   - dimension: "Integration/E2E"
     score: 9.0
-    status: "Exceptional — 345 integration test methods across 39 files, testcontainers-based, 12-way parallelized in CI, plus Gateway API & Knative conformance suites"
+    status: "Comprehensive testcontainers-based integration suite with 12-way parallelism and conformance tests"
   - dimension: "Build Integration"
-    score: 6.5
-    status: "Multi-OS/arch PR builds (5 OS × 2+ arch), but no container image validation or runtime testing at PR time"
+    score: 7.0
+    status: "PR-time cross-platform builds (17 combos), multi-arch Docker, but no container startup validation"
   - dimension: "Image Testing"
     score: 5.0
-    status: "Minimal Dockerfile with no multi-stage build, no startup validation, no vulnerability scanning, no SBOM"
+    status: "Multi-arch images but no vulnerability scanning, SBOM, or runtime validation"
   - dimension: "Coverage Tracking"
     score: 4.0
-    status: "Coverprofile generated locally via Makefile but not collected or enforced in CI; no Codecov/Coveralls integration"
+    status: "Coverage profile generated locally but not uploaded, no thresholds or PR reporting"
   - dimension: "CI/CD Automation"
     score: 9.0
-    status: "13 well-organized workflows, path-filtered triggers, caching, concurrency control, reusable workflow templates"
+    status: "15 well-organized workflows with SHA-pinned actions, caching, and path-based filtering"
   - dimension: "Agent Rules"
-    score: 8.0
-    status: "Excellent AGENTS.md with comprehensive contributor guide; CLAUDE.md pointer present; no .claude/rules/ directory for granular test rules"
+    score: 7.0
+    status: "Comprehensive AGENTS.md and custom review skill, but no test-type-specific creation rules"
 critical_gaps:
-  - title: "No coverage enforcement in CI"
-    impact: "Coverage regressions can merge without detection; no visibility into coverage trends"
-    severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No container vulnerability scanning"
-    impact: "CVEs in base images or dependencies not detected before release"
+  - title: "No coverage tracking or enforcement in CI"
+    impact: "Test coverage can silently regress on any PR without detection"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No image runtime validation"
-    impact: "Container startup failures not caught until deployment"
-    severity: "MEDIUM"
-    effort: "4-6 hours"
-  - title: "No SBOM generation or image signing"
-    impact: "Missing supply chain provenance for published images"
-    severity: "MEDIUM"
-    effort: "4-8 hours"
-  - title: "CodeQL runs only on push/schedule, not on PRs"
-    impact: "Security issues discovered after merge, not during review"
-    severity: "MEDIUM"
+  - title: "No container image vulnerability scanning"
+    impact: "Vulnerable base images or dependencies shipped to millions of users undetected"
+    severity: "HIGH"
+    effort: "2-3 hours"
+  - title: "No automated dependency update management"
+    impact: "Known CVEs in dependencies can persist indefinitely without alerts"
+    severity: "HIGH"
     effort: "1-2 hours"
+  - title: "gosec disabled in golangci-lint"
+    impact: "Security-sensitive Go code patterns not caught during linting"
+    severity: "MEDIUM"
+    effort: "2-4 hours"
 quick_wins:
   - title: "Add Codecov integration to unit test workflow"
-    effort: "2-4 hours"
-    impact: "PR-level coverage reporting and regression detection across all packages"
-  - title: "Add Trivy scanning to PR workflow"
+    effort: "2-3 hours"
+    impact: "Visibility into coverage trends and PR-level coverage diffs"
+  - title: "Add Trivy container scanning workflow"
     effort: "1-2 hours"
-    impact: "Early detection of container image and dependency vulnerabilities"
-  - title: "Enable CodeQL on pull_request trigger"
+    impact: "Automated detection of vulnerabilities in Docker images"
+  - title: "Enable Dependabot for Go modules and GitHub Actions"
     effort: "30 minutes"
-    impact: "Security findings surface during PR review instead of after merge"
-  - title: "Add Dependabot or Renovate for dependency updates"
-    effort: "1-2 hours"
-    impact: "Automated dependency security patches and version updates"
+    impact: "Automated PRs for dependency security updates"
+  - title: "Add secret detection with Gitleaks"
+    effort: "1 hour"
+    impact: "Prevent accidental secret commits in PRs"
 recommendations:
   priority_0:
-    - "Integrate Codecov/Coveralls into CI with PR coverage gating and minimum threshold enforcement"
-    - "Add Trivy or Grype container scanning to PR and release workflows"
-    - "Enable CodeQL on pull_request events for shift-left security analysis"
+    - "Add Codecov/Coveralls integration with coverage upload in CI and minimum threshold enforcement"
+    - "Add container image scanning (Trivy or Snyk) to PR and release workflows"
+    - "Enable Dependabot or Renovate for automated dependency security updates"
   priority_1:
-    - "Add container image startup validation in CI (health check, version endpoint)"
-    - "Generate SBOM (Syft/Trivy) and sign images (cosign) in release pipeline"
-    - "Create .claude/rules/ directory with granular test-type rules (unit, integration, conformance)"
-    - "Add Dependabot or Renovate for automated dependency management"
+    - "Re-enable gosec linter with targeted exclusions instead of blanket disable"
+    - "Add SBOM generation (Syft) and image signing (cosign) to release workflow"
+    - "Add container startup validation tests (health check, endpoint probe) in CI"
+    - "Create .claude/rules/ with test-type-specific agent rules for unit, integration, and conformance tests"
   priority_2:
-    - "Add pre-commit hooks configuration (.pre-commit-config.yaml) for local quality gates"
+    - "Add pre-commit hooks (.pre-commit-config.yaml) for local linting/formatting"
     - "Add performance regression testing for proxy throughput"
-    - "Add fuzz testing for parser and routing components"
+    - "Add fuzz testing for HTTP parsing and configuration unmarshalling"
 ---
 
 # Quality Analysis: traefik/traefik
 
 ## Executive Summary
 
-- **Overall Score: 7.9/10**
-- **Repository Type**: Go reverse proxy / load balancer with React WebUI dashboard
-- **Primary Languages**: Go (backend), TypeScript/React (WebUI)
-- **Key Strengths**: Exceptional integration test suite with 345 test methods across 39 provider-specific files; smart CI parallelization (12-way split); mature multi-OS/multi-arch build matrix; comprehensive AGENTS.md for AI contributor guidance; strong golangci-lint v2 config with nearly all linters enabled
-- **Critical Gaps**: No coverage enforcement in CI; no container vulnerability scanning; no SBOM/signing; CodeQL not on PRs
-- **Agent Rules Status**: Present and strong — AGENTS.md is one of the best in the ecosystem, but lacks granular `.claude/rules/` test-type files
+- **Overall Score: 7.3/10**
+- **Repository Type**: Cloud-native HTTP reverse proxy and load balancer (Go + React WebUI)
+- **Primary Language**: Go (495 source files, 263 test files) with TypeScript WebUI (33 test files)
+- **Key Strengths**: Outstanding integration test infrastructure with testcontainers and 12-way parallelism, comprehensive golangci-lint configuration starting from `default: all`, well-organized CI/CD with SHA-pinned actions, and an exemplary AGENTS.md for AI contributor guidance.
+- **Critical Gaps**: No coverage tracking/enforcement in CI, no container image vulnerability scanning, no automated dependency update management, and gosec disabled.
+- **Agent Rules Status**: Strong — comprehensive AGENTS.md and custom `.claude/skills/review/` skill, but missing test-type-specific creation rules in `.claude/rules/`.
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 8.5/10 | 217 Go test files for 351 source files (62% ratio), 33 WebUI test files with Vitest |
-| Integration/E2E | 9.0/10 | 345 integration test methods, testcontainers, 12-way CI parallelization, Gateway API + Knative conformance |
-| Build Integration | 6.5/10 | Multi-OS/arch binary builds on PRs, but no container image validation |
-| Image Testing | 5.0/10 | Minimal Dockerfile, no scanning, no startup validation, no SBOM |
-| Coverage Tracking | 4.0/10 | Coverprofile generated locally but not collected/enforced in CI |
-| CI/CD Automation | 9.0/10 | 13 workflows, path-filtering, caching, concurrency control, reusable templates |
-| Agent Rules | 8.0/10 | Excellent AGENTS.md, CLAUDE.md pointer, but no .claude/rules/ for test patterns |
+| Unit Tests | 8/10 | Excellent 0.61 test-to-code ratio, testify, Vitest for WebUI |
+| Integration/E2E | 9/10 | Testcontainers, 12-shard parallelism, Gateway API + Knative conformance |
+| **Build Integration** | **7/10** | **Cross-platform builds (17 combos) but no container startup validation** |
+| Image Testing | 5/10 | Multi-arch support but no scanning, SBOM, or signing |
+| Coverage Tracking | 4/10 | Profile generated locally but not tracked in CI |
+| CI/CD Automation | 9/10 | 15 workflows, SHA-pinning, caching, path filtering |
+| Agent Rules | 7/10 | Comprehensive AGENTS.md + review skill, no test creation rules |
 
 ## Critical Gaps
 
-### 1. No Coverage Enforcement in CI
-- **Impact**: Coverage regressions merge silently; no visibility into trends across releases
-- **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Detail**: The `Makefile` generates `cover.out` via `-coverprofile`, but the CI unit test workflow (`test-unit.yaml`) does not collect coverage. No Codecov, Coveralls, or any coverage gate exists. The parallelized test matrix (dynamic package grouping) would need aggregation of per-shard coverage files.
-
-### 2. No Container Vulnerability Scanning
-- **Impact**: CVEs in the Alpine 3.23 base image or Go dependencies are not detected before release
+### 1. No Coverage Tracking or Enforcement in CI
+- **Impact**: Test coverage can silently regress on any PR. Contributors may delete tests or add untested code without visibility.
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Detail**: No Trivy, Snyk, Grype, or any scanning tool is configured. The `Dockerfile` uses `alpine:3.23` as the base — while lightweight, it still needs scanning. The `safe-chain` integration only protects npm/yarn supply chain in the WebUI build, not container images.
+- **Evidence**: `make test-unit` generates `cover.out` locally but the CI workflow (`test-unit.yaml`) runs `go test -parallel 8` without `-coverprofile`. No codecov.yml, no coverage upload step, no coverage threshold.
 
-### 3. No Image Runtime Validation
-- **Impact**: A broken binary or missing dependency in the container would only be discovered at deployment
-- **Severity**: MEDIUM
-- **Effort**: 4-6 hours
-- **Detail**: The Dockerfile copies a pre-built binary but there's no CI step that runs `docker run traefik --version` or hits a health endpoint post-build.
+### 2. No Container Image Vulnerability Scanning
+- **Impact**: Traefik's Docker image is pulled millions of times. Vulnerable Alpine base packages or Go dependencies could be shipped to production without detection.
+- **Severity**: HIGH
+- **Effort**: 2-3 hours
+- **Evidence**: No Trivy, Snyk, or Grype configuration found. No `.trivyignore`, no scanning steps in any workflow. The Dockerfile uses `alpine:3.24` as base image.
 
-### 4. No SBOM or Image Signing
-- **Impact**: Missing supply chain provenance for a project with millions of Docker pulls
-- **Severity**: MEDIUM
-- **Effort**: 4-8 hours
-- **Detail**: The release workflow builds and pushes multi-arch images but does not generate SBOMs (Syft/Trivy) or sign with cosign/Sigstore. For a critical infrastructure component, this is a notable omission.
+### 3. No Automated Dependency Update Management
+- **Impact**: Known CVEs in Go modules or GitHub Actions can persist indefinitely. The project has 298KB of go.sum with hundreds of transitive dependencies.
+- **Severity**: HIGH
+- **Effort**: 1-2 hours
+- **Evidence**: No `.github/dependabot.yml`, no `renovate.json`. Go module and Actions dependency updates require manual tracking.
 
-### 5. CodeQL Not on Pull Requests
-- **Impact**: Security issues are discovered on push to master/release branches instead of during PR review
+### 4. gosec Disabled in golangci-lint
+- **Impact**: Security-sensitive patterns (hardcoded credentials, weak crypto, unsafe exec) in Go code not caught during linting.
 - **Severity**: MEDIUM
-- **Effort**: 30 minutes
-- **Detail**: `codeql.yml` triggers on `push` to `master`/`v*` and weekly schedule, but not on `pull_request`. Adding `pull_request` trigger would shift security analysis left.
+- **Effort**: 2-4 hours
+- **Evidence**: `.golangci.yml` line 28: `gosec # Too strict` listed under disabled linters. While CodeQL partially compensates, gosec catches Go-specific patterns CodeQL may miss.
 
 ## Quick Wins
 
-### 1. Add Codecov Integration (2-4 hours)
-- Modify `test-unit.yaml` to upload coverage per shard
-- Add `codecov.yml` config with minimum coverage thresholds
-- Enable PR comments showing coverage delta
+### 1. Add Codecov Integration (2-3 hours)
+Upload coverage from unit tests and track trends per PR.
+
 ```yaml
-# Add to test-unit.yaml after test step:
-- name: Upload coverage
-  uses: codecov/codecov-action@v4
+# Add to test-unit.yaml after "Run unit tests" step:
+- name: Run unit tests with coverage
+  run: go test -parallel 8 -coverprofile=coverage.out -covermode=atomic ./cmd/... ./pkg/...
+
+- name: Upload coverage to Codecov
+  uses: codecov/codecov-action@v5
   with:
-    files: ./cover.out
-    flags: unit-${{ matrix.package.group }}
+    files: coverage.out
+    fail_ci_if_error: false
 ```
 
-### 2. Add Trivy Scanning (1-2 hours)
-- Add Trivy scan step to `build.yaml` or a new workflow
-- Set severity threshold to fail on CRITICAL/HIGH
-```yaml
-- name: Run Trivy vulnerability scanner
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: 'traefik/traefik:latest'
-    format: 'sarif'
-    output: 'trivy-results.sarif'
-    severity: 'CRITICAL,HIGH'
-```
+### 2. Add Trivy Container Scanning (1-2 hours)
 
-### 3. Enable CodeQL on PRs (30 minutes)
 ```yaml
+# New workflow: .github/workflows/scan.yaml
+name: Security Scan
 on:
-  push:
-    branches: [master, v*]
-  pull_request:       # ADD THIS
-    branches: [master, v*]
-  schedule:
-    - cron: '11 22 * * 1'
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+jobs:
+  trivy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
 ```
 
-### 4. Add Dependabot (1-2 hours)
+### 3. Enable Dependabot (30 minutes)
+
 ```yaml
 # .github/dependabot.yml
 version: 2
 updates:
-  - package-ecosystem: gomod
+  - package-ecosystem: "gomod"
     directory: "/"
     schedule:
-      interval: weekly
-  - package-ecosystem: npm
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "npm"
     directory: "/webui"
     schedule:
-      interval: weekly
-  - package-ecosystem: github-actions
-    directory: "/"
-    schedule:
-      interval: weekly
+      interval: "weekly"
+```
+
+### 4. Add Secret Detection (1 hour)
+
+```yaml
+# Add to validate.yaml:
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflow Inventory (13 workflows)**:
+**Strengths:**
+- **15 well-organized workflows** covering build, test, validate, release, docs, and security
+- **Path-based filtering** on all PR workflows (docs and markdown changes skip test/build)
+- **SHA-pinned GitHub Actions** throughout — every `uses:` has a commit SHA comment (e.g., `@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1`)
+- **Reusable workflow** (`template-webui.yaml`) eliminates WebUI build duplication
+- **Intelligent caching**: Go module cache + build cache with hash-based keys
+- **Supply chain safety**: `@aikidosec/safe-chain` for npm dependency integrity
+- **Automatic org-fork PR closure** with helpful message directing to personal forks
+
+**Workflow Inventory:**
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `build.yaml` | PR | Multi-OS/arch binary builds (5 OS × 2+ arch) |
-| `test-unit.yaml` | PR | Parallelized Go unit tests + WebUI Vitest tests |
-| `test-integration.yaml` | PR | 12-way parallelized integration test suite |
-| `test-gateway-api-conformance.yaml` | PR (path-filtered) | K8s Gateway API conformance tests |
-| `test-knative-conformance.yaml` | PR (path-filtered) | Knative conformance tests |
-| `validate.yaml` | PR | golangci-lint v2 + misspell + shellcheck + generated code drift check |
-| `check_doc.yaml` | PR (docs paths) | Documentation lint and build verification |
-| `codeql.yml` | push + schedule | CodeQL SAST for Go and JavaScript |
-| `release.yaml` | tag push | Full release build + multi-arch Docker images |
-| `experimental.yaml` | push to master/v* | Experimental image builds |
-| `documentation.yaml` | push to master/v* | Documentation site publish |
-| `sync-docker-images.yaml` | daily schedule | Sync Docker Hub → GHCR |
-| `template-webui.yaml` | workflow_call | Reusable WebUI build template |
+| `test-unit.yaml` | PR, push master/v* | Go unit tests (parallel 8) + WebUI unit tests (Vitest) |
+| `test-integration.yaml` | PR, push master/v* | 12-shard parallel integration tests with testcontainers |
+| `test-gateway-api-conformance.yaml` | PR (path-filtered) | K8s Gateway API conformance suite |
+| `test-knative-conformance.yaml` | PR (path-filtered) | Knative conformance suite |
+| `validate.yaml` | PR | golangci-lint v2, misspell, shellcheck, generated code check |
+| `build.yaml` | PR | Cross-platform binary builds (17 OS/arch combinations) |
+| `codeql.yml` | push master/v*, weekly | CodeQL SAST for Go and JavaScript |
+| `check_doc.yaml` | PR (docs paths) | Documentation linting and build verification |
+| `documentation.yaml` | push master/v* | Publish documentation site |
+| `release.yaml` | tag push | Full release with GoReleaser |
+| `experimental.yaml` | push master/v* | Experimental Docker images on branch |
+| `sync-docker-images.yaml` | daily cron | Sync Docker Hub to GHCR |
+| `close-org-fork-pr.yaml` | PR opened | Close PRs from org forks |
+| `template-webui.yaml` | called | Reusable WebUI build |
 
-**Strengths**:
-- Smart path-filtering prevents unnecessary CI runs (docs changes skip tests)
-- Reusable workflow template for WebUI builds avoids duplication
-- Dynamic test matrix generation (`genmatrix.go`) for optimal package grouping
-- 12-way parallelization of integration tests with `go-test-split-action`
-- Concurrency controls on 5 workflows prevent resource waste
-- Go build cache sharing between build and test jobs
-- Supply chain protection via `safe-chain` for npm dependencies
-- Pin all GitHub Actions by SHA for security
-
-**Weaknesses**:
-- No coverage collection/upload in any CI workflow
-- No container scanning in any workflow
-- CodeQL not triggered on PRs
-- No Dependabot/Renovate for dependency management
+**Gaps:**
+- No concurrency control (`concurrency:` groups) to cancel superseded runs
+- No Dependabot/Renovate for dependency updates
 
 ### Test Coverage
 
-**Go Unit Tests (8.5/10)**:
-- 217 test files for 351 source files in `pkg/` (62% test-to-code ratio — excellent)
-- Additional test files in `cmd/` and `internal/`
-- Framework: Go standard `testing` + `testify/assert` + `testify/require`
-- Tests run in CI with `-parallel 8` for speed
-- Dynamic package grouping prevents single-package bottlenecks
-- Coverage profile generated locally (`cover.out`) but not used in CI
+**Unit Tests (8/10):**
+- 224 Go test files for 366 non-generated source files = **0.61 test-to-code ratio** (excellent)
+- 33 WebUI test files with Vitest
+- Framework: `testify/assert` + `testify/require` (Go), Vitest (WebUI)
+- Coverage generation available via `make test-unit` with `-coverprofile`
+- WebUI has `test:coverage` command with `vitest run --coverage`
+- CI runs with `-parallel 8` for Go tests
 
-**WebUI Tests (7.0/10)**:
-- 33 test files for 179 source files (18% ratio — moderate)
-- Framework: Vitest with React Testing Library
-- Runs in CI as part of `test-unit.yaml`
-- `test:coverage` script exists in `package.json` but not used in CI
-- ESLint + Prettier configured with lint-staged
+**Integration Tests (9/10):**
+- 39 integration test files covering all major providers:
+  - Docker, Docker Compose, Consul, Consul Catalog, etcd, Redis, Redis Sentinel
+  - HTTP, HTTPS, gRPC, TCP, proxy protocol
+  - Health checks, rate limiting, headers, access logs, error pages
+  - ACME/Let's Encrypt, file provider, REST API
+- **testcontainers-go** for real container-based testing (not mocks)
+- **testify/suite** for test organization with shared setup/teardown
+- **K3s** container for Kubernetes integration tests
+- **32 Docker Compose fixture files** for service configurations
+- **12-way parallel sharding** with `hashicorp-forge/go-test-split-action`:
+  - Downloads prior timing data for intelligent test distribution
+  - JUnit XML results merged across shards
+  - Test timing artifact persisted for 30 days
 
-**Integration Tests (9.0/10)**:
-- 345 test methods across 39 test files — extremely comprehensive
-- Built on `testify/suite` for structured test organization
-- Uses `testcontainers-go` for real infrastructure (Docker, k3s, Consul, etcd, Redis)
-- Provider-specific test suites: Docker, Consul, etcd, K8s, file, ACME/Let's Encrypt
-- Gateway API conformance tests run against k3s with real CRDs
-- Knative conformance tests validate Knative integration
-- 12-way parallel sharding in CI with `hashicorp-forge/go-test-split-action`
-- Integration test fixtures in `integration/fixtures/` with organized structure
-- Custom `integration/try` package for retry-based assertions
+**Conformance Tests:**
+- Gateway API conformance tests (path-filtered, runs when K8s gateway code changes)
+- Knative conformance tests (path-filtered)
+- Both build the Traefik image and run against real K3s clusters
 
 ### Code Quality
 
-**Linting (9.5/10)**:
-- golangci-lint v2.10.1 with `default: all` (nearly every available linter enabled)
-- 356-line configuration in `.golangci.yml` with carefully curated exclusions
-- Formatters: `gci` (import ordering) + `gofumpt` (strict formatting)
-- Generated code properly excluded from linting (`pkg/provider/kubernetes/crd/generated/`)
-- Targeted lint suppressions with explanations for known issues
-- `depguard` rules prevent specific problematic packages
-- `forbidigo` prevents bare `print(ln)` calls
-- `funlen` set to 120 statements (reasonable for the codebase)
-- `goconst` and `gocyclo` thresholds configured
-- Validation workflow ensures `go generate` output is committed
+**Linting (9/10):**
+- **golangci-lint v2** with `default: all` — starts with every linter enabled, then selectively disables ~30
+- Extremely thorough configuration (360 lines of `.golangci.yml`)
+- Detailed `importas` rules for Kubernetes package aliasing
+- `depguard` to ban specific packages (e.g., `github.com/pkg/errors`)
+- `forbidigo` to catch print/spew usage
+- `gomoddirectives` for go.mod hygiene
+- CI validates generated code hasn't drifted (`make generate` + `git diff --exit-code`)
+- Misspell and shellcheck in validation pipeline
 
-**Misspell + ShellCheck (8.0/10)**:
-- Misspell v0.7.0 configured for documentation and code
-- ShellCheck validates all shell scripts
-- `validate-vendor.sh` ensures vendor consistency
+**Formatting:**
+- `gofumpt` + `gci` configured as golangci-lint formatters
+- `make fmt` available locally
 
-**Pre-commit Hooks**: Not configured (no `.pre-commit-config.yaml`)
+**Missing:**
+- No pre-commit hooks (`.pre-commit-config.yaml` not present)
+- No `.editorconfig`
+- `gosec` disabled (security-focused linter)
 
 ### Container Images
 
-**Dockerfile (5.0/10)**:
-```dockerfile
-FROM alpine:3.23
-RUN apk add --no-cache --no-progress ca-certificates tzdata
-ARG TARGETPLATFORM
-COPY ./dist/$TARGETPLATFORM/traefik /
-EXPOSE 80
-VOLUME ["/tmp"]
-ENTRYPOINT ["/traefik"]
-```
+**Build Process:**
+- Simple, efficient Dockerfile: Alpine 3.24 base + `ca-certificates` + `tzdata` + pre-built binary
+- Multi-architecture support: `linux/amd64,linux/arm64` in standard builds
+- Release builds support 7 architectures (amd64, arm64, arm, ppc64le, s390x, riscv64, 386)
+- `docker buildx` for multi-arch image creation
 
-- Minimal image — good for attack surface reduction
-- Uses `TARGETPLATFORM` ARG for multi-arch support
-- Alpine base is small but still needs scanning
-- **Not a multi-stage build** — binary built externally, copied in
-- No `HEALTHCHECK` instruction
-- No `USER` directive (runs as root by default)
-- No SBOM or cosign signing in release workflow
-
-**Multi-Architecture Support (8.0/10)**:
-- PR builds: 5 OS × 2+ architectures (darwin, freebsd, linux, openbsd, windows)
-- Release builds: 17 platform combinations including arm, ppc64le, s390x, riscv64
-- Docker buildx for multi-arch images in release
+**Missing:**
+- No container image scanning in any workflow
+- No SBOM generation (e.g., Syft)
+- No image signing (e.g., cosign/sigstore)
+- No runtime startup validation tests
+- No health check verification after image build
+- No `.trivyignore` or vulnerability threshold configuration
 
 ### Security
 
-**CodeQL (6.5/10)**:
-- Configured for both Go and JavaScript languages
-- Runs on push to master/v* and weekly schedule
-- **Not triggered on PRs** — security issues found post-merge
-- Uses pinned action versions (SHA-based)
+**Present:**
+- **CodeQL** scanning for Go and JavaScript (push to master + weekly schedule)
+- **SHA-pinned Actions** throughout all workflows (exemplary supply chain practice)
+- **safe-chain** (Aikido) for npm supply chain integrity
+- **SECURITY.md** with responsible disclosure process and supported version matrix
+- **Permissions** restricted to `contents: read` on all workflows (principle of least privilege)
 
-**Supply Chain (6.0/10)**:
-- `safe-chain` (Aikido) protects npm/yarn dependency installation
-- All GitHub Actions pinned by SHA — prevents supply chain attacks via action hijacking
-- `SAFE_CHAIN_MINIMUM_PACKAGE_AGE_HOURS: 48` — 2-day quarantine for new packages
-- **No Dependabot or Renovate** for automated dependency updates
-- **No container scanning** (Trivy, Snyk, Grype)
-- **No secret detection** (Gitleaks, TruffleHog)
-- **No SBOM generation** or image signing
+**Missing:**
+- No container image scanning (Trivy, Snyk, Grype)
+- No dependency update automation (Dependabot, Renovate)
+- No secret detection (Gitleaks, TruffleHog)
+- No SBOM generation
+- No image signing/attestation
+- `gosec` linter disabled
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status**: Present and strong — one of the better implementations in the open-source ecosystem
+**Present (7/10):**
+- **AGENTS.md** (113 lines): Comprehensive contributor guide for AI agents
+  - Core vocabulary definitions (EntryPoint, Router, Middleware, Service, Provider)
+  - Static vs Dynamic configuration boundary (critical correctness invariant)
+  - Directory layout with links
+  - Build/test/lint commands with `make` targets
+  - Code style: comments answer "why not what", assertion messages minimal
+  - Testing conventions: testify usage, require vs assert, integration test patterns
+  - AI assistance disclosure requirements (`Assisted-by:` trailer)
+  - Explicit anti-patterns: no hand-editing generated files, no drive-by refactors
+- **CLAUDE.md**: Thin pointer to AGENTS.md (`@AGENTS.md`)
+- **`.claude/skills/review/SKILL.md`**: Custom code review skill with Traefik-specific guidance
+  - Security, correctness, breaking changes, performance, maintainability priorities
+  - Explicit exclusions (generated code, mocks, nolint directives, fixtures)
+  - Static/dynamic config boundary as a correctness check
 
-**CLAUDE.md**: Thin pointer (`@AGENTS.md`) — follows best practice of maintaining a single source of truth
-
-**AGENTS.md** (Comprehensive — 8.0/10):
-- Core vocabulary definitions (EntryPoint, Router, Middleware, Service, Provider)
-- Request flow architecture diagram
-- Directory structure guide (`cmd/`, `pkg/`, `webui/`, `integration/`, `docs/`)
-- Complete build/test/lint command reference via `make` targets
-- Code style guidance (comments answer "why", assertion messages minimal)
-- Common patterns (logging with zerolog, context propagation)
-- Testing conventions (`testify/assert` vs `require`, integration test structure)
-- AI assistance disclosure policy (`Assisted-by:` trailer)
-- Things to avoid (don't hand-edit generated files, don't skip validation)
-- Training-data notice for v2→v3 migration pitfalls
-
-**Gaps**:
-- No `.claude/` directory or `.claude/rules/` for granular test-type rules
-- No specific test creation templates or checklists
-- No contract test, fuzz test, or performance test guidelines
-- Testing conventions section could benefit from concrete examples
+**Gaps:**
+- No `.claude/rules/` directory for test creation patterns
+- No test-type-specific agent rules (e.g., how to write unit tests vs integration tests vs conformance tests)
+- No examples or templates in agent rules
+- Review skill covers what to look for, but no creation guidance
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Integrate Codecov/Coveralls into CI** — The foundation exists (`-coverprofile=cover.out`) but coverage data is thrown away. Aggregate per-shard coverage and upload to Codecov with minimum threshold enforcement. This is the single highest-ROI improvement.
+1. **Add coverage tracking to CI** — Upload coverage to Codecov/Coveralls from unit test workflow, set minimum threshold (e.g., 60%), enforce no-regression on PRs. The `cover.out` profile is already generated locally; just needs CI wiring.
 
-2. **Add container vulnerability scanning** — For a project serving as the ingress layer for millions of deployments, scanning the published Docker image for CVEs is essential. Add Trivy to both PR and release workflows.
+2. **Add container image vulnerability scanning** — Add Trivy filesystem scan to PR workflow and image scan to release workflow. Given Traefik's massive install base, this is a security imperative.
 
-3. **Enable CodeQL on pull requests** — A 30-second configuration change that shifts security analysis left into the PR review cycle.
+3. **Enable Dependabot** — Three ecosystems to cover: `gomod`, `github-actions`, and `npm` (webui). 30-minute setup that catches CVEs automatically.
 
 ### Priority 1 (High Value)
 
-4. **Add container runtime validation** — After building the Docker image in CI, run `docker run traefik version` and a basic health check to catch broken binaries or missing dependencies.
+4. **Re-enable gosec with targeted exclusions** — Instead of blanket disable (`gosec # Too strict`), enable with specific rule exclusions. At minimum enable: G101 (hardcoded credentials), G102 (bind to all interfaces), G201 (SQL injection), G304 (file path injection), G401/G501 (weak crypto).
 
-5. **Generate SBOM and sign images** — Add Syft/Trivy SBOM generation and cosign signing to the release workflow. For a critical infrastructure component, supply chain provenance is increasingly expected.
+5. **Add SBOM and image signing to releases** — Use Syft for SBOM generation and cosign for keyless signing. Important for enterprise adopters and supply chain compliance.
 
-6. **Create `.claude/rules/` test pattern rules** — The AGENTS.md is excellent for general contribution guidance, but granular rules for each test type (unit test patterns, integration test fixtures, conformance test setup) would improve AI-generated test quality. Use `/test-rules-generator` to bootstrap these.
+6. **Add container startup validation** — After building the image, run it with `--api.insecure=true` and verify the healthcheck endpoint responds. Catches runtime issues missed by build-only validation.
 
-7. **Add Dependabot or Renovate** — Automated dependency management for Go modules, npm packages, and GitHub Actions versions.
+7. **Create `.claude/rules/` with test-type-specific rules** — Add `unit-tests.md`, `integration-tests.md`, and `conformance-tests.md` covering patterns from the existing test suite (testify usage, testcontainers patterns, fixture conventions). Use `/test-rules-generator` to bootstrap.
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add pre-commit hooks** — Configure `.pre-commit-config.yaml` with golangci-lint, gofumpt, misspell for local quality gates before push.
+8. **Add pre-commit hooks** — Configure `.pre-commit-config.yaml` with gofumpt, golangci-lint, and misspell for local validation before push.
 
-9. **Add fuzz testing** — Go's built-in fuzzing (`func FuzzXxx`) would be valuable for the HTTP parser, routing, and middleware chain.
+9. **Add fuzz testing** — HTTP parsing, configuration unmarshalling, and TLS handling are prime fuzzing targets. Go's native `testing.F` makes this low-friction.
 
-10. **Add performance regression testing** — Proxy throughput benchmarks tracked over time would catch performance regressions in the hot path.
+10. **Add performance regression testing** — Traefik is performance-critical infrastructure. Benchmark proxy throughput and latency in CI to catch regressions. Tools like `k6` or `wrk` can establish baselines.
+
+11. **Add concurrency control to workflows** — Use `concurrency: { group: ${{ github.workflow }}-${{ github.ref }}, cancel-in-progress: true }` to cancel superseded PR runs and save CI resources.
 
 ## Comparison to Gold Standards
 
-| Dimension | traefik/traefik | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
-|-----------|----------------|---------------------|------------------|--------------|
-| Unit Tests | 8.5 — 62% ratio, testify | 9.0 — Jest + RTL, high coverage | 7.0 — Python pytest | 8.5 — Go testing + envtest |
-| Integration/E2E | 9.0 — testcontainers, 12-way parallel | 9.0 — Cypress E2E + contract tests | 7.0 — Image integration | 9.0 — E2E with Kind |
-| Build Integration | 6.5 — Multi-OS binary, no image validation | 8.0 — Multi-mode builds | 8.5 — 5-layer image validation | 7.0 — Operator bundle |
-| Image Testing | 5.0 — No scanning/validation | 7.0 — Basic validation | 9.0 — Gold standard | 7.0 — Trivy scanning |
-| Coverage Tracking | 4.0 — Local only, not in CI | 9.0 — Codecov with enforcement | 6.0 — Basic tracking | 8.5 — Codecov gating |
-| CI/CD Automation | 9.0 — 13 workflows, path-filtered | 9.0 — Comprehensive | 8.0 — Well-organized | 8.5 — Multi-version |
-| Agent Rules | 8.0 — Excellent AGENTS.md | 8.5 — Rules + skills | 5.0 — Basic | 6.0 — Contributing guide |
-| **Overall** | **7.9** | **8.5** | **7.2** | **7.8** |
+| Dimension | traefik/traefik | odh-dashboard | notebooks | kserve |
+|-----------|:-:|:-:|:-:|:-:|
+| Unit Tests | 8 | 9 | 7 | 8 |
+| Integration/E2E | 9 | 9 | 8 | 9 |
+| Build Integration | 7 | 8 | 7 | 7 |
+| Image Testing | 5 | 7 | 9 | 6 |
+| Coverage Tracking | 4 | 8 | 5 | 9 |
+| CI/CD Automation | 9 | 9 | 8 | 8 |
+| Agent Rules | 7 | 9 | 3 | 3 |
+| **Overall** | **7.3** | **8.5** | **7.0** | **7.5** |
+
+**Notable strengths vs gold standards:**
+- Traefik's integration test parallelization (12 shards with timing-based splitting) is best-in-class
+- AGENTS.md quality is exceptional — among the most thorough AI contributor guides in open-source
+- SHA-pinning discipline is exemplary; every GitHub Action pinned to full commit hash
+- golangci-lint `default: all` approach ensures no linter is accidentally omitted
+
+**Notable gaps vs gold standards:**
+- Coverage tracking is the largest gap — odh-dashboard and kserve both enforce thresholds
+- Image testing significantly trails notebooks' 5-layer validation approach
+- No container scanning at all, where others have Trivy or Snyk integrated
 
 ## File Paths Reference
 
 ### CI/CD Configuration
-- `.github/workflows/build.yaml` — Multi-OS/arch binary builds
-- `.github/workflows/test-unit.yaml` — Parallelized unit tests (Go + WebUI)
-- `.github/workflows/test-integration.yaml` — 12-way parallel integration tests
-- `.github/workflows/test-gateway-api-conformance.yaml` — Gateway API conformance
+- `.github/workflows/test-unit.yaml` — Unit tests (Go + WebUI)
+- `.github/workflows/test-integration.yaml` — Integration tests (12-shard parallel)
+- `.github/workflows/test-gateway-api-conformance.yaml` — K8s Gateway API conformance
 - `.github/workflows/test-knative-conformance.yaml` — Knative conformance
-- `.github/workflows/validate.yaml` — Linting + validation
-- `.github/workflows/codeql.yml` — CodeQL SAST (Go + JS)
-- `.github/workflows/release.yaml` — Release builds + Docker images
+- `.github/workflows/validate.yaml` — Linting, misspell, shellcheck, generated code validation
+- `.github/workflows/build.yaml` — Cross-platform binary builds
+- `.github/workflows/codeql.yml` — CodeQL SAST scanning
+- `.github/workflows/release.yaml` — Tagged release pipeline
+- `.github/workflows/experimental.yaml` — Experimental branch images
 - `.github/workflows/template-webui.yaml` — Reusable WebUI build
 
 ### Testing
-- `pkg/**/*_test.go` — 217 unit test files
-- `integration/` — 39 integration test files (345 test methods)
-- `integration/fixtures/` — Test fixtures and configuration
-- `integration/try/` — Retry-based test assertion helpers
-- `webui/test/setup.ts` — WebUI test setup
-- `webui/src/**/*.test.ts[x]` — 33 WebUI test files
+- `pkg/**/*_test.go` — 224 unit test files
+- `integration/*_test.go` — 39 integration test files
+- `integration/fixtures/` — Test fixture configurations
+- `integration/resources/compose/` — 32 Docker Compose files
+- `webui/test/` — WebUI test setup (Vitest)
+- `webui/**/*.test.*` — 33 WebUI test files
 
 ### Code Quality
-- `.golangci.yml` — 356-line golangci-lint v2 configuration (nearly all linters enabled)
-- `Makefile` — Build/test/lint targets
-- `script/validate-*.sh` — Validation scripts (vendor, misspell, shellcheck)
-- `webui/.eslintrc.js` — WebUI ESLint config
-- `webui/.prettierrc.json` — WebUI Prettier config
+- `.golangci.yml` — 360-line comprehensive linter configuration
+- `Makefile` — Build, test, lint, validate targets
+- `script/validate-vendor.sh` — Vendor validation
+- `script/validate-misspell.sh` — Misspell checking
+- `script/validate-shell-script.sh` — Shell script validation
 
-### Container Images
-- `Dockerfile` — Minimal Alpine-based production image
-- `.dockerignore` — Docker build exclusions
+### Container
+- `Dockerfile` — Alpine-based production image
+- `.dockerignore` — Build context exclusions
+- `.goreleaser.yml.tmpl` — Release build configuration
 
 ### Agent Rules
+- `AGENTS.md` — Comprehensive AI contributor guide (113 lines)
 - `CLAUDE.md` — Pointer to AGENTS.md
-- `AGENTS.md` — Comprehensive AI contributor guide
-
-### Key Source Directories
-- `cmd/traefik/` — Main entry point
-- `pkg/provider/` — Provider implementations (Docker, K8s, Consul, etc.)
-- `pkg/server/` — Routing core, middleware chain
-- `pkg/middlewares/` — HTTP/TCP middleware implementations
-- `pkg/config/static/`, `pkg/config/dynamic/` — Configuration domains
-- `webui/` — React dashboard
+- `.claude/skills/review/SKILL.md` — Custom code review skill
+- `CONTRIBUTING.md` — Human contributor guide
+- `SECURITY.md` — Vulnerability reporting process

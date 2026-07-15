@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quality Analysis: opendatahub-io/llama-stack</title>
+    <title>Quality Analysis: opendatahub-io/ogx</title>
     <style>
         * {
             margin: 0;
@@ -332,8 +332,8 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:31 AM</p>
-            <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/llama-stack</h2>
+            <p class="timestamp">Generated on July 06, 2026 at 04:05 PM</p>
+            <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/ogx</h2>
         </header>
 
         <div class="content">
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#28a745"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="101.78751600000001"
+                                stroke-dashoffset="90.47779199999995"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">8.2</div>
+                        <div class="score-value">8.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">170 unit test files with 36k+ lines, pytest+coverage, network blocking via pytest-socket</div>
+                            <div class="scorecard-status">230 test files with pytest, coverage generation, pytest-socket network isolation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">54 integration test files with record/replay system, multi-provider matrix, auth tests, conformance suites</div>
+                            <div class="scorecard-status">96 integration test files, recording/replay system with 3,406 recordings, OpenResponses conformance, backward compatibility checks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">PR-time venv builds for all distros, container builds on push/schedule, UBI9 and ARM64 validation</div>
+                            <div class="scorecard-status">PR-time provider builds (venv mode), distribution matrix builds, container build on push/schedule but not container on PR</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Multi-distro container builds with entrypoint validation, UBI9 + ARM64, but no runtime functional testing</div>
+                            <div class="scorecard-status">Containerfile with multi-arch support, installer smoke test, but limited runtime validation and no image scanning on PR</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
-                            <div class="scorecard-status">Coverage collection via coverage.py, HTML reports generated, but no codecov/coveralls integration or threshold enforcement</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Coverage generation via coverage.py with HTML reports, SVG badge, but no codecov/coveralls integration or enforcement thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
-                            <div class="scorecard-status">42 workflows, SHA-pinned actions, concurrency control, merge groups, Mergify, dependabot, CI status aggregation</div>
+                            <div class="scorecard-status">42+ workflows, concurrency control, SHA-pinned actions, merge group support, CI status aggregator, dynamic matrix generation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">CLAUDE.md and AGENTS.md present with comprehensive guidelines, but no .claude/rules/ directory for test-specific rules</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">CLAUDE.md and AGENTS.md with comprehensive coding standards, testing patterns, and provider architecture guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +411,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No coverage threshold enforcement or PR coverage reporting</div>
-                            <p>Coverage can silently regress without detection; no visibility into per-PR coverage changes</p>
+                            <div class="item-description">No coverage enforcement or threshold gates</div>
+                            <p>Coverage can silently regress without any PR checks failing</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container vulnerability scanning (Trivy/Snyk/Grype)</div>
-                            <p>Container images may ship with known CVEs in base images or transitive dependencies</p>
+                            <div class="item-description">No codecov/coveralls PR reporting</div>
+                            <p>Developers cannot see coverage impact of their changes in PR</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No container runtime functional testing</div>
-                            <p>Image startup or runtime failures not caught until deployment; entrypoint check is structural only</p>
+                            <div class="item-description">Container image not scanned on PR</div>
+                            <p>Trivy scans run on filesystem only; built images not validated for CVEs on PR</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">6-8 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No SBOM generation for container images</div>
-                            <p>Cannot audit supply chain for built images; blocks compliance requirements</p>
+                            <div class="item-description">UI E2E tests minimal</div>
+                            <p>Only 1 Playwright E2E spec; UI regressions may slip through</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">8-16 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +456,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Codecov integration to unit test workflow</div>
-                            <p>Automatic per-PR coverage deltas, historical tracking, threshold enforcement</p>
+                            <div class="item-description">Add codecov integration with PR reporting</div>
+                            <p>Immediate visibility into coverage changes per PR, regression prevention</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scan step to providers-build workflow</div>
-                            <p>Catch CVEs in container images before merge</p>
+                            <div class="item-description">Add coverage threshold to unit-tests.sh</div>
+                            <p>Prevent coverage from dropping below current baseline</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add coverage fail_under threshold to .coveragerc</div>
-                            <p>Prevent coverage regressions with a minimum enforcement gate</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create .claude/rules/ test automation rules</div>
-                            <p>Improve AI-generated test quality with framework-specific patterns</p>
+                            <div class="item-description">Add container image Trivy scan to providers-build workflow</div>
+                            <p>Catch image-level vulnerabilities before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add .claude/rules/ directory with test-type-specific rules</div>
+                            <p>Better AI-generated test consistency aligned with recording/replay system</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +501,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add Codecov/Coveralls integration with PR reporting and minimum coverage threshold</li><li>Add Trivy or Grype container vulnerability scanning to CI pipeline</li></ul>
+                            <ul><li>Add codecov/coveralls integration with PR comments and minimum threshold enforcement</li><li>Add coverage fail threshold (--fail-under) to unit-tests.sh to prevent regressions</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add container runtime functional testing (start image, health check, basic API call)</li><li>Add SBOM generation (syft/trivy) for all built container images</li><li>Create .claude/rules/ directory with test automation rules for unit and integration test patterns</li></ul>
+                            <ul><li>Expand UI E2E test suite with Playwright beyond the single spec</li><li>Add container image vulnerability scanning (Trivy) to PR workflow for built images</li><li>Create .claude/rules/ with test-type-specific rules for unit, integration, and recording/replay patterns</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add performance/load testing with existing locust benchmark dependency</li><li>Add secret detection scanning (Gitleaks/TruffleHog) as dedicated workflow</li><li>Consider adding mutation testing to validate test effectiveness</li></ul>
+                            <ul><li>Add performance regression testing for API response latency</li><li>Add SBOM generation to container builds</li><li>Add load/stress testing workflow using the existing benchmarking/locust infrastructure</li></ul>
                         </div>
                     </div>
                 </div>

@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on May 28, 2026 at 09:51 PM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:44 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/caikit-tgis-serving</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#fd7e14"
+                                stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="311.01741"
+                                stroke-dashoffset="373.220892"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">4.5</div>
+                        <div class="score-value">3.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No unit tests exist; only 2 Python source files with zero test coverage tooling</div>
+                            <div class="scorecard-status">No unit tests exist; only 97 lines of Python source code with zero test coverage</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Docker Compose and KServe smoke tests on PRs; covers HTTP and gRPC inference but limited scenarios</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Docker Compose smoke test and KServe Kind cluster E2E exist but are minimal</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">PR builds Docker image and runs smoke tests; Konflux builds triggered by label/comment, not automatic</div>
+                            <div class="scorecard-status">PR builds Docker image and runs smoke tests; Konflux triggered by label/comment only</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Image built and smoke-tested on PR; no vulnerability scanning, no SBOM, no multi-arch PR validation</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Image built and smoke-tested on PR; no vulnerability scanning or SBOM generation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tooling, no codecov/coveralls, no coverage thresholds or reporting</div>
+                            <div class="scorecard-status">No coverage tooling, no codecov integration, no coverage thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">PR workflow builds and tests; Dependabot configured; but KServe test workflow disabled on PRs, no concurrency control</div>
+                            <div class="scorecard-status">5 workflows with PR/schedule triggers; good Dependabot setup; no caching or concurrency control</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules or AI-assisted testing guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +411,51 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No unit tests at all</div>
-                            <p>Zero test coverage for application logic; regressions undetectable without full E2E run</p>
+                            <div class="item-description">Zero unit test coverage</div>
+                            <p>No regression detection for caikit runtime configuration or utility code</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">16-24 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No security scanning (Trivy, Snyk, CodeQL)</div>
+                            <p>Container vulnerabilities and code security issues go undetected</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
                             <div class="item-description">No coverage tracking or enforcement</div>
-                            <p>No visibility into what code is tested; impossible to set quality gates</p>
+                            <p>Cannot measure test quality or enforce coverage thresholds on PRs</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No security scanning in CI</div>
-                            <p>Container vulnerabilities and dependency issues not caught before merge</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">KServe integration test disabled on PRs</div>
-                            <p>KServe deployment regressions only caught weekly or on manual dispatch</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
                             <div class="item-description">No linting or static analysis</div>
-                            <p>Code quality issues not caught automatically; inconsistent code style</p>
+                            <p>Code quality issues, type errors, and style inconsistencies not caught automatically</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">KServe E2E workflow disabled on PRs</div>
+                            <p>KServe integration regressions not caught until weekly scheduled run</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No pre-commit hooks</div>
+                            <p>No local quality gates before commits reach CI</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -465,15 +473,15 @@
                         
                         <li class="item-card ">
                             <div class="item-description">Add Trivy container scanning to PR workflow</div>
-                            <p>Immediate visibility into container image vulnerabilities</p>
+                            <p>Catch CVEs in base images and dependencies before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add ruff/flake8 linting for Python code</div>
-                            <p>Automated code quality checks on every PR</p>
+                            <div class="item-description">Add Python linting with ruff</div>
+                            <p>Catch type errors, unused imports, and style issues in the 2 Python files</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
@@ -481,7 +489,7 @@
                         </li>
                         <li class="item-card ">
                             <div class="item-description">Re-enable KServe smoke test on PRs</div>
-                            <p>Catch KServe deployment regressions before merge</p>
+                            <p>Catch KServe integration regressions on every PR instead of weekly</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
@@ -489,10 +497,18 @@
                         </li>
                         <li class="item-card ">
                             <div class="item-description">Add concurrency control to PR workflow</div>
-                            <p>Avoid wasted CI resources on superseded PRs</p>
+                            <p>Cancel stale CI runs, save compute resources</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create basic CLAUDE.md with project context</div>
+                            <p>Enable AI-assisted development with project-specific guidance</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +525,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add unit tests for caikit runtime configuration and health probe logic</li><li>Add container vulnerability scanning (Trivy) to PR and push workflows</li><li>Implement coverage tracking with codecov or coveralls</li></ul>
+                            <ul><li>Add container vulnerability scanning (Trivy) to the build-and-test PR workflow</li><li>Re-enable the KServe smoke test workflow on pull_request events</li><li>Add Python linting (ruff or flake8) and type checking (mypy) to CI</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Re-enable KServe smoke test as PR-triggered workflow</li><li>Add ruff linting and pre-commit hooks</li><li>Add SBOM generation to container image builds</li><li>Create agent rules (.claude/rules/) for test automation guidance</li></ul>
+                            <ul><li>Add unit tests for smoke-test.py and utils/convert.py</li><li>Integrate codecov or coveralls for coverage tracking</li><li>Add SBOM generation to container builds</li><li>Create CLAUDE.md and .claude/rules/ for agent-assisted development</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add multi-model smoke tests (beyond flan-t5-small)</li><li>Add performance/latency regression tests for inference endpoints</li><li>Add gRPC endpoint testing in KServe smoke test (currently TODO)</li><li>Implement Dockerfile best-practice linting (hadolint)</li></ul>
+                            <ul><li>Add pre-commit hooks for local quality gates</li><li>Add multi-architecture image testing (arm64 validation)</li><li>Add gRPC endpoint testing to KServe smoke test</li><li>Add image signing with cosign/sigstore</li></ul>
                         </div>
                     </div>
                 </div>

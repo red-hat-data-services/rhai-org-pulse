@@ -1,405 +1,413 @@
 ---
 repository: "red-hat-data-services/eval-hub"
-overall_score: 8.4
+overall_score: 8.2
 scorecard:
   - dimension: "Unit Tests"
-    score: 8.5
-    status: "71 test files with 24.8k lines; 1.54:1 test-to-source ratio using Go stdlib testing"
-  - dimension: "Integration/E2E"
     score: 9.0
-    status: "Comprehensive BDD-style FVT with godog, 10 feature files (4k lines), MCP E2E suites, Kubernetes tests"
+    status: "Exceptional test-to-code ratio (1.78:1 LOC), 107 test files for 117 source files, Go stdlib testing + godog BDD"
+  - dimension: "Integration/E2E"
+    score: 8.5
+    status: "Comprehensive BDD FVT suite with 14 feature files, godog tags for environment isolation, server-started FVT, MCP FVT, Kubernetes FVT"
   - dimension: "Build Integration"
     score: 7.5
-    status: "PR-time Docker build + dry-run; Konflux pipeline on PR via Tekton; no Konflux simulation in GHA"
+    status: "PR-time Docker build with dry-run validation, Konflux Tekton pipeline for multi-arch builds (x86_64, ppc64le, s390x, arm64), hermetic builds"
   - dimension: "Image Testing"
     score: 7.0
-    status: "Multi-stage UBI9 builds, multi-arch support (amd64/arm64), dry-run validation, no Trivy/vulnerability scanning"
+    status: "Multi-stage builds, UBI9 base images, non-root user, dry-run validation, multi-arch support; no Trivy/Snyk scanning, no SBOM"
   - dimension: "Coverage Tracking"
     score: 8.0
-    status: "Codecov integration with fail_ci_if_error, 50-75% range thresholds, coverage treemap generation"
+    status: "Codecov integration with fail_ci_if_error, coverage range thresholds (50-75%), multi-profile coverage (unit + FVT + init)"
   - dimension: "CI/CD Automation"
     score: 9.0
-    status: "11 workflows covering CI, security scan, commit lint, release, cross-platform build tests, PyPI publishing"
+    status: "15 workflows covering CI, MCP CI, Python wheels, security scan, config validation, commit lint, reviewer approvals, branch sync, publishing"
   - dimension: "Agent Rules"
     score: 8.5
-    status: "CLAUDE.md, AGENTS.md, .claude/rules with path-scoped rules, custom skill; strong agentic guidance"
+    status: "CLAUDE.md + AGENTS.md with comprehensive build/test/architecture docs, .claude/rules/ with path-scoped rules for service and MCP components"
 critical_gaps:
-  - title: "No container vulnerability scanning (Trivy/Snyk/Grype)"
-    impact: "CVEs in base images or Go dependencies undetected until downstream consumption"
+  - title: "No container vulnerability scanning (Trivy/Snyk)"
+    impact: "CVEs in base images or dependencies go undetected until downstream scanning catches them"
     severity: "HIGH"
     effort: "2-4 hours"
   - title: "No SBOM generation"
-    impact: "Supply chain transparency missing; required for SLSA/Sigstore compliance"
+    impact: "Supply chain transparency gap; no software bill of materials for compliance auditing"
     severity: "MEDIUM"
     effort: "2-3 hours"
-  - title: "Gosec configured with -no-fail flag"
-    impact: "Security findings don't block PRs; vulnerabilities can be merged"
+  - title: "Codecov coverage thresholds too permissive (50-75%)"
+    impact: "Coverage can drop to 50% without failing CI; no minimum enforcement or patch/diff thresholds"
     severity: "MEDIUM"
     effort: "1-2 hours"
-  - title: "No golangci-lint configuration"
-    impact: "Limited to basic go vet; misses complexity, style, and advanced static analysis checks"
+  - title: "Gosec runs with -no-fail flag"
+    impact: "Security findings don't block PRs; issues are uploaded to GitHub Security tab but CI passes regardless"
     severity: "MEDIUM"
-    effort: "2-3 hours"
+    effort: "1-2 hours"
 quick_wins:
   - title: "Add Trivy container scanning to CI workflow"
-    effort: "1-2 hours"
-    impact: "Catch CVEs in base images and dependencies on every PR"
-  - title: "Remove -no-fail from Gosec and add severity threshold"
-    effort: "30 minutes"
-    impact: "Security scan failures block merging of vulnerable code"
-  - title: "Add golangci-lint with recommended linters"
     effort: "2-3 hours"
-    impact: "Catch complexity, style, and correctness issues beyond go vet"
-  - title: "Add Syft/Trivy SBOM generation to image build"
-    effort: "1-2 hours"
-    impact: "Supply chain transparency and compliance readiness"
+    impact: "Early detection of CVEs in UBI9 base images and Go dependencies"
+  - title: "Enforce Gosec failures on ERROR severity"
+    effort: "1 hour"
+    impact: "Prevents merging PRs with high-severity security issues"
+  - title: "Add codecov patch and project thresholds"
+    effort: "1 hour"
+    impact: "Prevents coverage regressions on new code"
+  - title: "Add SBOM generation to container build"
+    effort: "2 hours"
+    impact: "Supply chain compliance and transparency"
 recommendations:
   priority_0:
-    - "Add Trivy/Grype container vulnerability scanning to PR workflow with severity thresholds"
-    - "Remove -no-fail from Gosec or set maximum severity threshold to block critical findings"
+    - "Add Trivy or Grype container image scanning to PR and push workflows"
+    - "Configure Gosec to fail CI on ERROR-severity findings (remove -no-fail)"
   priority_1:
-    - "Add golangci-lint with a comprehensive linter set (errcheck, gosimple, gocritic, etc.)"
-    - "Generate SBOM artifacts during image builds (Syft or Trivy SBOM mode)"
-    - "Add image signing/attestation for supply chain security"
+    - "Add codecov.yml patch/project thresholds (e.g., target: 70%, patch: 80%)"
+    - "Add SBOM generation (syft or trivy sbom) to container build pipeline"
+    - "Add golangci-lint with extended linter set beyond go vet"
   priority_2:
-    - "Add CodeQL workflow for deeper semantic analysis"
-    - "Consider adding contract tests for the REST API (OpenAPI-based)"
+    - "Add contract tests for the eval-hub SDK client boundary"
     - "Add performance/load testing for API endpoints"
+    - "Add image startup validation beyond --help dry-run (health endpoint check)"
 ---
 
 # Quality Analysis: eval-hub
 
 ## Executive Summary
 
-- **Overall Score: 8.4/10**
-- **Repository Type**: Go service (REST API + MCP server + runtime containers) with Python wheel packaging
-- **Primary Language**: Go (16k LoC), with Python server wrapper and BDD tests
-- **Key Strengths**: Excellent test coverage with multi-layer testing (unit + FVT + E2E + cross-platform), strong CI/CD automation, comprehensive agent rules, Codecov integration, security scanning with Gosec + Semgrep + Gitleaks, Docker dry-run validation on PRs
-- **Critical Gaps**: No container vulnerability scanning, no SBOM generation, Gosec in non-blocking mode, no golangci-lint
-- **Agent Rules Status**: Present and comprehensive (CLAUDE.md, AGENTS.md, .claude/rules/, .claude/skills/)
+- **Overall Score: 8.2/10**
+- **Repository Type**: Go REST API service with MCP server, Python wheel distributions, Kubernetes operator integration
+- **Languages**: Go (primary), Python (packaging/SDK), YAML (OpenAPI, configs)
+- **Framework**: Go stdlib `net/http`, godog BDD testing, Tekton/Konflux CI
+
+### Key Strengths
+- **Outstanding test-to-code ratio**: 107 test files / 117 source files (0.91 ratio); 32,854 test LOC / 18,462 source LOC (1.78:1)
+- **Comprehensive BDD testing**: 14 Gherkin feature files across core API, MCP, MLflow, and Kubernetes scenarios
+- **Multi-layer CI**: 15 GitHub Actions workflows covering unit tests, FVT, security scan, config validation, commit linting, wheel builds, and reviewer approvals
+- **Strong agent rules**: CLAUDE.md, AGENTS.md, and path-scoped `.claude/rules/` with detailed architecture and testing guidance
+- **Mature build pipeline**: Konflux Tekton with 4-architecture builds, hermetic mode, and FIPS-compatible Go builds
+
+### Critical Gaps
+- No container vulnerability scanning (Trivy/Snyk)
+- Gosec security scanner runs in non-blocking mode (`-no-fail`)
+- Codecov thresholds are permissive (50-75% range, no patch/project enforcement)
+- No SBOM generation for supply chain compliance
+
+### Agent Rules Status: **Strong** (CLAUDE.md + AGENTS.md + `.claude/rules/` with path-scoped rules)
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 8.5/10 | 71 test files, 24.8k test lines, Go stdlib testing with t.Parallel guidance |
-| Integration/E2E | 9.0/10 | Comprehensive BDD FVT (godog, 10 features, ~4k lines), MCP E2E suites, Kubernetes tests |
-| Build Integration | 7.5/10 | PR Docker build + dry-run, Konflux Tekton PR pipeline, hermetic builds |
-| Image Testing | 7.0/10 | Multi-stage UBI9, multi-arch (amd64/arm64/ppc64le/s390x via Konflux), dry-run on PR; no vuln scanning |
-| Coverage Tracking | 8.0/10 | Codecov with fail_ci_if_error, 50-75% range, treemap visualization, multi-profile coverage |
-| CI/CD Automation | 9.0/10 | 11 workflows, well-organized, pinned actions with SHAs, concurrent build matrix |
-| Agent Rules | 8.5/10 | CLAUDE.md + AGENTS.md + 2 path-scoped rules + 1 custom skill |
+| Unit Tests | 9.0/10 | Exceptional coverage with 1.78:1 test-to-code LOC ratio |
+| Integration/E2E | 8.5/10 | Comprehensive BDD FVT with godog, 14 feature files, multi-env tags |
+| Build Integration | 7.5/10 | PR Docker build + dry-run, Konflux 4-arch builds, hermetic mode |
+| Image Testing | 7.0/10 | Multi-stage UBI9, non-root, dry-run; no scanning or SBOM |
+| Coverage Tracking | 8.0/10 | Codecov with multi-profile uploads; thresholds need tightening |
+| CI/CD Automation | 9.0/10 | 15 workflows, comprehensive automation, pinned actions |
+| Agent Rules | 8.5/10 | CLAUDE.md + AGENTS.md + path-scoped rules with architecture docs |
 
 ## Critical Gaps
 
 ### 1. No Container Vulnerability Scanning
-- **Impact**: CVEs in UBI9 base images or Go module dependencies go undetected until downstream consumption by RHOAI
+- **Impact**: CVEs in UBI9 base images, Go dependencies, or runtime components go undetected until downstream Konflux scanning
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: Neither Trivy, Snyk, Grype, nor any vulnerability scanner is integrated into the CI pipeline. The Containerfile uses `registry.access.redhat.com/ubi9/ubi-minimal:latest` (community) and `Dockerfile.konflux` pins by SHA, but neither gets scanned in CI.
+- **Recommendation**: Add Trivy or Grype scanning to the `docker-build-check` job in `ci.yml`
 
-### 2. No SBOM Generation
-- **Impact**: Supply chain transparency is missing; SLSA/Sigstore compliance not achievable
+### 2. Gosec Runs Non-Blocking
+- **Impact**: Security findings are reported to GitHub Security tab but never fail CI; developers may ignore them
+- **Severity**: MEDIUM
+- **Effort**: 1-2 hours
+- **Detail**: `ci.yml` line 90 uses `-no-fail` flag: `args: '-no-fail -fmt sarif -out gosec-results.sarif ./...'`
+
+### 3. Permissive Coverage Thresholds
+- **Impact**: Coverage can drop to 50% without warning; no enforcement of coverage on new code (patch coverage)
+- **Severity**: MEDIUM
+- **Effort**: 1-2 hours
+- **Detail**: `codecov.yml` only sets `range: 50..75` (color coding) with no `target` or `patch` thresholds
+
+### 4. No SBOM Generation
+- **Impact**: Supply chain transparency gap; missing software bill of materials for compliance requirements
 - **Severity**: MEDIUM
 - **Effort**: 2-3 hours
-- **Details**: No Syft, Trivy SBOM, or cosign integration. For a product shipped via RHOAI, SBOM generation is increasingly a requirement.
-
-### 3. Gosec Runs in Non-Blocking Mode
-- **Impact**: Security vulnerabilities found by Gosec are uploaded to GitHub Security tab but do NOT block PRs
-- **Severity**: MEDIUM
-- **Effort**: 30 minutes to 1 hour
-- **Details**: The `security-scan` job uses `args: '-no-fail -fmt sarif -out gosec-results.sarif ./...'`. The `-no-fail` flag means the job always succeeds regardless of findings. Results go to GitHub Security tab (good for visibility) but don't gate merges.
-
-### 4. No golangci-lint
-- **Impact**: Limited static analysis; only `go vet` runs, missing errcheck, gosimple, gocritic, ineffassign, stylecheck, etc.
-- **Severity**: MEDIUM
-- **Effort**: 2-3 hours
-- **Details**: The lint target in the Makefile is just `go vet ./...`. There is no `.golangci.yml` configuration. The project would benefit from golangci-lint with a comprehensive linter set.
 
 ## Quick Wins
 
-### 1. Add Trivy Container Scanning (1-2 hours)
-Add to the `ci.yml` workflow:
+### 1. Add Trivy Scanning to CI (2-3 hours)
 ```yaml
 - name: Run Trivy vulnerability scanner
-  uses: aquasecurity/trivy-action@0.28.0
+  uses: aquasecurity/trivy-action@master
   with:
     image-ref: evalhub:pr-check
     format: 'sarif'
     output: 'trivy-results.sarif'
     severity: 'CRITICAL,HIGH'
     exit-code: '1'
-```
-
-### 2. Remove -no-fail from Gosec (30 minutes)
-Change the Gosec args from:
-```
-args: '-no-fail -fmt sarif -out gosec-results.sarif ./...'
-```
-To:
-```
-args: '-severity high -fmt sarif -out gosec-results.sarif ./...'
-```
-
-### 3. Add golangci-lint (2-3 hours)
-Create `.golangci.yml` with recommended linters and add to CI:
-```yaml
-- name: golangci-lint
-  uses: golangci/golangci-lint-action@v6
+- name: Upload Trivy scan results
+  uses: github/codeql-action/upload-sarif@v3
   with:
-    version: latest
+    sarif_file: 'trivy-results.sarif'
 ```
 
-### 4. Add SBOM Generation (1-2 hours)
-Add Syft to the image build step:
+### 2. Enforce Gosec Failures (1 hour)
+Change Gosec args from `-no-fail` to fail on ERROR:
+```yaml
+args: '-fmt sarif -out gosec-results.sarif -severity high ./...'
+```
+
+### 3. Tighten Codecov Thresholds (1 hour)
+```yaml
+coverage:
+  range: 50..75
+  status:
+    project:
+      default:
+        target: 70%
+        threshold: 2%
+    patch:
+      default:
+        target: 80%
+```
+
+### 4. Add SBOM Generation (2 hours)
+Add to docker-build-push job:
 ```yaml
 - name: Generate SBOM
   uses: anchore/sbom-action@v0
   with:
-    image: evalhub:pr-check
+    image: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}@${{ steps.build.outputs.digest }}
     format: spdx-json
+    output-file: sbom.spdx.json
 ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Strengths:**
-- **11 well-organized workflows** covering CI, Python server CI, MCP CI, commit linting, reviewer approvals, publishing, releases, branch sync, and configmap sync
-- **All GitHub Actions pinned by SHA** (not by tag), which is a security best practice
-- **Path-scoped triggering**: `ci-python-server.yml` and `ci-mcp.yml` only run when relevant paths change
-- **Comprehensive build matrix**: Python wheel building covers 5 platform/arch combinations (linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64)
-- **Wheel validation**: Real-runner validation on ubuntu, macOS, and Windows before PyPI publish
-- **TestPyPI cleanup**: Automated cleanup of old dev releases (keeps last 20)
-- **Required reviewer approvals**: Custom workflow verifies all requested reviewers have approved
-- **Commit linting**: Commitizen enforced via CI and pre-commit hooks
-- **Concurrency**: Tekton PR pipeline has `cancel-in-progress: "true"`
+**Workflow Inventory** (15 workflows):
 
-**Areas for Improvement:**
-- No concurrency control on the main `ci.yml` workflow (multiple PR pushes can run simultaneously)
-- No test caching beyond Go module caching
-- No parallelization of unit and FVT test execution
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `ci.yml` | push/PR to main/develop | Quality checks, tests, coverage, security scan, Docker build |
+| `ci-mcp.yml` | push/PR (path-filtered) | MCP server quality checks + multi-platform build |
+| `ci-python-server.yml` | PR (path-filtered) | Python server wheel build + sanity test |
+| `ci-python-mcp.yml` | PR/dispatch (path-filtered) | Python MCP wheel build + sanity test |
+| `commitlint.yml` | PR to main | Conventional commit validation |
+| `validate-configs.yml` | PR/push/dispatch | Provider/collection YAML validation |
+| `required-reviewer-approvals.yml` | PR events | Enforce reviewer approval policy |
+| `publish-python-server.yml` | Release | PyPI server wheel publishing |
+| `publish-python-mcp.yml` | Release | PyPI MCP wheel publishing |
+| `release-mcp.yml` | Release | MCP binary release |
+| `sync-branch-stable.yaml` | Push to main | Sync to stable branch |
+| `sync-branch-incubation.yaml` | Push to main | Sync to incubation branch |
+| `check-trustyai-service-operator-configmap-sync.yml` | Scheduled | Cross-repo config sync check |
+
+**Strengths**:
+- All GitHub Actions pinned to full SHA (not tags) for supply chain security
+- `persist-credentials: false` on all checkout steps
+- Path-filtered workflows reduce unnecessary CI runs
+- Go module caching via `setup-go` action
+- Concurrency control via Tekton `cancel-in-progress`
+- `fail_ci_if_error: true` on Codecov upload (except Dependabot PRs)
+- Multi-platform builds (amd64, arm64, ppc64le, s390x) in Konflux
+
+**Gaps**:
+- No concurrency control on GitHub Actions workflows (could run duplicate jobs)
+- No test parallelization configuration
 
 ### Test Coverage
 
-**Unit Tests (8.5/10):**
-- 71 Go test files with 24,785 lines of test code
-- Test-to-source ratio: 1.54:1 (excellent - more test code than source code)
-- Uses Go standard library `testing` package
-- Good test organization: tests co-located with source files
-- Coverage for: handlers, storage/SQL, proxy, auth, config, API types, MCP server, validation, logging
-- Python server has 3 test files (unit + integration + binary path tests) with pytest
-- Pre-commit hooks run both Go and Python unit tests
+**Unit Tests** (Score: 9.0/10):
+- 107 Go test files covering 117 source files (0.91 file ratio)
+- 32,854 test LOC vs 18,462 source LOC (1.78:1 ratio — exceptional)
+- Go stdlib `testing` package
+- Race detection enabled (`-race` flag)
+- Coverage profiling with atomic mode
+- Tests span all packages: `internal/`, `cmd/`, `pkg/`
+- MCP server tests use `mcp.NewInMemoryTransports()` for in-process testing
 
-**Integration/FVT Tests (9.0/10):**
-- BDD-style testing with **godog** (Go Cucumber framework)
-- 10 feature files with ~4,000 lines of Gherkin scenarios
-- Feature coverage: evaluations, providers, collections, health, metrics, GPU resources, Kubernetes resources, MLflow experiments
-- Well-organized tagging system: `@cluster`, `@local_runtime`, `@mlflow`, `@negative`, `@gha-wheel-sanity`
-- FVT runs against actual HTTP server (start-service → test → stop-service)
-- Coverage collection during FVT via `-coverprofile` and `GOCOVERDIR`
+**Integration/FVT Tests** (Score: 8.5/10):
+- 14 BDD feature files using godog (Cucumber for Go)
+- Feature coverage: health, evaluations, evaluation_jobs, evaluation_local_jobs, collections, providers, metrics, GPU resources, MLflow experiments, MCP tools/server/resources/prompts, Kubernetes resources
+- Environment-aware tags: `@cluster`, `@local_runtime`, `@mlflow`, `@negative`, `@gha-wheel-sanity`
+- FVT runs against both embedded server and started server (`test-fvt` vs `test-fvt-server`)
 - JUnit XML report generation for CI integration
-- HTML FVT report generation with cucumber-html-reporter
+- Coverage collection from FVT runs via coverage-instrumented binaries
 
-**E2E Tests:**
-- MCP E2E test suite with 4 shell-script parts: stdio transport, HTTP transport, error scenarios, e2e workflow
-- VS Code/Cursor MCP integration tests (8 test suites covering server discovery, resources, tools, prompts, autocompletion, error scenarios, e2e workflow, client-specific)
-- Cross-platform build tests (9 make targets): build-all, binary-info, binary-naming, version, no-runtime-deps, container-build, container-http, checksums, formula-syntax
-- Homebrew formula integration tests (install, test, uninstall)
-- Kubernetes-specific feature tests in separate `tests/kubernetes/` directory
-
-**Test Data:**
-- Rich test data directory with JSON fixtures for providers, collections, evaluations, GPU configs
-- YAML test data for GPU provider configurations
-- Jsonnet test data for template testing
+**Wheel Sanity Tests**:
+- Python server wheel: build, install, startup test
+- Python MCP wheel: build, install, version check
+- MCP binary: cross-platform builds, static linking verification, container tests, checksums
 
 ### Code Quality
 
-**Linting:**
-- Go: `go vet` only (no golangci-lint)
-- Python: Ruff configured in pyproject.toml (E, W, F, I, B, C4, UP rules)
-- API docs: Redocly CLI for OpenAPI linting and validation
-- Markdown: `.markdownlint.json` configured
+**Linting**:
+- `go vet` as primary linter (basic but reliable)
+- `go fmt` for formatting enforcement
+- Format check in CI (diff-based, fails on unformatted code)
+- **Gap**: No `golangci-lint` with extended linter set (errcheck, gocritic, staticcheck, etc.)
 
-**Pre-commit Hooks (Strong):**
-- Ruff linting and formatting for Python
-- Standard hooks: trailing-whitespace, end-of-file-fixer, check-yaml, check-json, check-toml, check-merge-conflict, check-added-large-files (1MB limit), debug-statements
-- No-commit-to-main protection (pre-push)
-- Commitizen for conventional commit messages
-- mypy type checking for python-server
-- pytest unit tests for Python
-- Go unit + FVT tests
+**Pre-commit Hooks**:
+- Comprehensive `.pre-commit-config.yaml`:
+  - Standard hooks: trailing-whitespace, end-of-file-fixer, check-yaml, check-json, check-toml, check-merge-conflict, check-added-large-files (1MB limit), debug-statements
+  - Commitizen for conventional commit enforcement
+  - Local `go-test` hook running unit + FVT on Go file changes
+  - `no-commit-to-branch` preventing direct pushes to main
 
-**Static Analysis:**
-- **Gosec**: Security scanning (but non-blocking with `-no-fail`)
-- **Semgrep**: Comprehensive unified ruleset (v3.0.0) covering Go, Python, TypeScript, YAML, and generic secrets detection
-- **Gitleaks**: Secret detection with well-configured allowlists for test fixtures
+**Static Analysis**:
+- Gosec security scanner with SARIF output to GitHub Security tab
+- Comprehensive Semgrep configuration (`semgrep.yaml`) with 40+ rules covering:
+  - Generic secrets detection (hardcoded passwords, AWS keys, GitHub tokens, Slack webhooks)
+  - Kubernetes RBAC security (wildcard resources/verbs, dangerous verbs, cluster-admin bindings)
+  - Kubernetes container security (privileged containers, hostPath, secret in ConfigMap)
+  - GitHub Actions security (script injection, pull_request_target checkout)
+  - Go security (exec injection, TLS skip verify, SQL injection, hardcoded credentials)
+  - Python security (eval/exec, pickle, yaml.load, subprocess injection)
+  - TypeScript security (XSS, eval, localStorage)
+  - Dockerfile security (latest tag, secrets in ENV)
+  - Shell script security (eval, unquoted variables)
 
-**Formatting:**
-- `go fmt` enforced in CI with `git diff --exit-code` check
-- Ruff formatting for Python via pre-commit
-- Conventional commits enforced via Commitizen
+**Gitleaks Configuration**:
+- Comprehensive `.gitleaks.toml` with well-structured allowlists
+- Excludes test files, fixtures, mocks, CI resources, and known test credentials
 
 ### Container Images
 
-**Build Process (Good):**
-- Multi-stage builds using UBI9 base images (`go-toolset:1.26` builder, `ubi-minimal` runtime)
-- Separate `Containerfile` (community) and `Dockerfile.konflux` (RHOAI/FIPS with `GOEXPERIMENT=strictfipsruntime`)
-- Konflux Dockerfile pins base images by SHA digest (good for reproducibility)
-- Non-root user (UID 1000) in runtime image
+**Build Process**:
+- Multi-stage builds in both `Containerfile` (dev) and `Dockerfile.konflux` (production)
+- UBI9 base images: `ubi9/go-toolset:1.26` (builder), `ubi9/ubi-minimal` (runtime)
+- Pinned digest for Konflux Dockerfile (SHA-based, not tag-based)
+- Non-root user (UID 1000, numeric for Kubernetes `runAsNonRoot` verification)
+- CGO_ENABLED=0 for static linking (Containerfile) / CGO_ENABLED=1 with FIPS (Dockerfile.konflux)
+- Multi-platform support: amd64 + arm64 (Containerfile) / x86_64 + ppc64le + s390x + arm64 (Konflux)
 - OCI labels for image metadata
-- Multi-architecture support: amd64/arm64 in GHA, plus ppc64le/s390x via Konflux
-- `.dockerignore` configured to exclude unnecessary files
 
-**Runtime Validation:**
-- Docker dry-run on PRs: `docker run --rm evalhub:pr-check /app/eval-hub --local --help`
-- Docker dry-run on push: pulls by digest and runs help command
-- Container HTTP test: starts container, sends MCP initialize request, verifies response
-- Cross-platform binary validation: file type, architecture, static linking, naming convention
+**Runtime Validation**:
+- Dry-run validation: `docker run --rm evalhub:pr-check /app/eval-hub --local --help`
+- **Gap**: No health endpoint validation, no integration test against running container
 
-**Gaps:**
-- No vulnerability scanning (Trivy, Snyk, Grype)
+**Security**:
+- No Trivy/Snyk/Grype scanning
 - No SBOM generation
-- No image signing or attestation
-- No Testcontainers or similar for structured container testing
+- No image signing/attestation
+- FIPS-compatible builds in Konflux (`GOEXPERIMENT=strictfipsruntime`)
 
-### Security
+### Security Practices
 
-**Strengths:**
-- **Gosec**: SAST scanner for Go with SARIF output to GitHub Security tab
-- **Semgrep**: Comprehensive rule set covering secrets, injection, crypto, path traversal, SSRF, and more across multiple languages
-- **Gitleaks**: Secret detection with thoughtful allowlist configuration for test fixtures
-- **SHA-pinned actions**: All GitHub Actions are pinned by SHA, preventing supply chain attacks via tag manipulation
-- **FIPS compliance**: Konflux build uses `GOEXPERIMENT=strictfipsruntime` with CGO_ENABLED=1
-- **Hermetic builds**: Konflux pipeline configured with `hermetic: true`
-- **Non-root container**: Runtime image runs as UID 1000
+**Strengths**:
+- Gosec SAST with SARIF integration (findings visible in GitHub Security tab)
+- Comprehensive Semgrep rules (40+ rules across 9 sections) — **industry-leading breadth**
+- Gitleaks configuration for secret detection
+- GitHub Actions supply chain hardening (SHA-pinned actions, persist-credentials: false)
+- Conventional commits enforcement
+- Required reviewer approvals workflow
+- FIPS-compatible builds for production
 
-**Gaps:**
-- Gosec in non-blocking mode (`-no-fail`)
-- No dependency scanning (Dependabot/Renovate configuration not visible in repo root)
+**Gaps**:
+- Gosec `-no-fail` means security issues don't block merges
 - No CodeQL workflow
-- No container vulnerability scanning
+- No Trivy/Snyk container scanning
+- No dependency scanning (Dependabot/Renovate security alerts configured via `.github/renovate.json` for updates, but no scanning workflow)
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status**: Present and comprehensive
+**Status**: **Strong** — comprehensive documentation and path-scoped rules
 
-**Coverage:**
-- `CLAUDE.md` (root): CVE fixing instructions, Go version guidelines, npm dependency guidance
-- `AGENTS.md` (root): Full project documentation including build commands, testing, architecture, MCP server, configuration, coding conventions
-- `.claude/rules/evalhub-service.md`: Path-scoped rule for the API service with ExecutionContext pattern, config system, routing, metrics, testing strategy
-- `.claude/rules/evalhub-mcp-service.md`: Path-scoped rule for the MCP service with build/test commands and unit test patterns
-- `.claude/skills/fix-fvt-test/SKILL.md`: Custom skill for FVT test fixing
+**Coverage**:
+- `CLAUDE.md`: CVE fixing guidance with Go toolset version constraints, npm dependency handling
+- `AGENTS.md`: Full repository guide with build commands, testing strategy, architecture overview, project structure, server lifecycle, MCP server details, configuration discovery, request identity, and implementation notes
+- `.claude/rules/evalhub-service.md`: Path-scoped to `cmd/eval_hub/**`, `internal/eval_hub/**`, `config/` — covers build, test, architecture patterns (ExecutionContext, Two-Tier Config, Routing, Metrics), testing strategy with unit/FVT guidance
+- `.claude/rules/evalhub-mcp-service.md`: Path-scoped to `cmd/evalhub_mcp/**`, `internal/evalhub_mcp/**` — covers MCP-specific build, test, and architecture
 
-**Quality:**
-- Rules are path-scoped using frontmatter (`paths:` field), so they activate only for relevant files
-- Comprehensive architecture documentation in AGENTS.md
-- Testing strategy clearly documented with tag system and parallel test guidance
-- Convention enforcement: `make fmt lint` before commits, conventional commits
-- Go version policy explicitly documented (never downgrade go.mod)
+**Quality Assessment**:
+- Rules are comprehensive and actionable with specific commands and examples
+- Architecture documentation is excellent (ExecutionContext pattern, routing, metrics, config discovery)
+- Testing guidance includes specific test commands and conventions (`t.Parallel()` guidance)
+- Git commit conventions documented with conventional commits and AI attribution
+- Go version management policy clearly stated
 
-**Gaps:**
-- No rules for container testing patterns
-- No rules for security testing (how to handle Gosec/Semgrep findings)
-- No rules for coverage requirements or thresholds
+**Gaps**:
+- No rules for Python wheel components (`python-server/`, `python-mcp/`)
+- No rules for FVT/BDD test creation patterns
+- No rules for container/Dockerfile changes
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-
-1. **Add container vulnerability scanning** - Integrate Trivy or Grype into the PR workflow to scan the built Docker image. Configure severity thresholds (CRITICAL/HIGH) to block merges. This is the most impactful missing piece for a product shipping via RHOAI.
-
-2. **Make Gosec findings block PRs** - Remove the `-no-fail` flag or configure a severity threshold. Currently, security vulnerabilities can be merged without any CI gate.
+1. **Add container vulnerability scanning** — Integrate Trivy or Grype into `ci.yml` after Docker build step to catch CVEs before merge
+2. **Make Gosec blocking** — Remove `-no-fail` flag or set severity threshold to fail on HIGH/CRITICAL findings
 
 ### Priority 1 (High Value)
-
-3. **Add golangci-lint** - Replace bare `go vet` with golangci-lint configured with recommended linters (errcheck, gosimple, gocritic, ineffassign, stylecheck, revive, etc.). This catches a much broader class of issues.
-
-4. **Generate SBOM artifacts** - Add Syft or Trivy SBOM generation to the image build pipeline. For RHOAI products, this is increasingly required for compliance.
-
-5. **Add image signing** - Integrate cosign for image signing and attestation to support supply chain verification.
-
-### Priority 2 (Nice-to-Have)
-
-6. **Add CodeQL workflow** - For deeper semantic analysis beyond what Gosec provides, particularly for Go and Python code.
-
-7. **Add concurrency control to ci.yml** - Prevent redundant CI runs on rapid PR pushes:
+3. **Tighten Codecov thresholds** — Add project target (70%+) and patch coverage requirement (80%+) to prevent regression
+4. **Add SBOM generation** — Use `syft` or `trivy sbom` in container build pipeline for supply chain compliance
+5. **Add golangci-lint** — Replace `go vet` with golangci-lint for richer static analysis (errcheck, gocritic, staticcheck, gosimple, ineffassign)
+6. **Add workflow concurrency control** — Prevent duplicate CI runs:
    ```yaml
    concurrency:
      group: ${{ github.workflow }}-${{ github.ref }}
      cancel-in-progress: true
    ```
 
-8. **Add contract tests for REST API** - Use the OpenAPI spec (`docs/src/openapi.yaml`) to generate contract tests that validate the API implementation matches the spec.
-
-9. **Add performance testing** - Consider adding k6 or similar load testing for the API endpoints, especially the evaluation job creation path.
+### Priority 2 (Nice-to-Have)
+7. **Add agent rules for Python wheel components** — Create `.claude/rules/python-server.md` and `python-mcp.md` with wheel build/test guidance
+8. **Add agent rules for FVT test creation** — Document godog step definition patterns, tag conventions, and test data management
+9. **Add container health endpoint validation** — Extend dry-run to call `/api/v1/health` endpoint in PR builds
+10. **Add contract tests** — Test the `eval-hub-sdk` client interface boundary
+11. **Add load/performance testing** — Benchmark API endpoints under concurrent load
+12. **Add CodeQL analysis** — Complement Gosec with CodeQL for deeper semantic analysis
 
 ## Comparison to Gold Standards
 
-| Dimension | eval-hub | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
-|-----------|----------|---------------------|-------------------|---------------|
-| Unit Tests | 8.5 - Strong Go stdlib tests, good test-to-code ratio | 9 - Multi-framework, snapshot tests | 7 - Image-focused testing | 9 - envtest, extensive mocks |
-| Integration/E2E | 9.0 - godog BDD, MCP E2E, K8s tests | 9 - Cypress E2E, contract tests | 8 - Multi-layer image validation | 9 - Multi-version KServe testing |
-| Build Integration | 7.5 - PR Docker build+dry-run, Konflux pipeline | 8 - Module Federation validation | 7 - Image build validation | 7 - Operator integration |
-| Image Testing | 7.0 - Dry-run, multi-arch, no vuln scan | 7 - Basic image validation | 10 - 5-layer validation, Trivy | 8 - Multi-version images |
-| Coverage Tracking | 8.0 - Codecov, fail_ci_if_error, treemap | 9 - Coverage enforcement + trends | 6 - Basic coverage | 9 - Threshold enforcement |
-| CI/CD Automation | 9.0 - 11 workflows, SHA-pinned, matrix builds | 9 - Comprehensive pipeline | 8 - Image-centric CI | 9 - Well-organized workflows |
-| Agent Rules | 8.5 - CLAUDE.md, AGENTS.md, path-scoped rules | 9 - Comprehensive multi-layer rules | 3 - Minimal | 2 - None |
-| **Security** | **6.5** - Gosec (non-blocking), Semgrep, Gitleaks | **8** - CodeQL, scanning | **8** - Trivy, SBOM | **8** - CodeQL, scanning |
+| Dimension | eval-hub | odh-dashboard | notebooks | kserve |
+|-----------|----------|---------------|-----------|--------|
+| Test Ratio | **1.78:1** (exceptional) | ~0.8:1 | ~0.3:1 | ~0.6:1 |
+| BDD/FVT | **14 features** | Cypress E2E | Shell scripts | Go E2E |
+| Coverage Tracking | Codecov (permissive) | Codecov (enforced) | None | Codecov (enforced) |
+| Container Scanning | **None** | Trivy | Trivy | Trivy |
+| Security SAST | Gosec + Semgrep | CodeQL | None | CodeQL |
+| Agent Rules | **Excellent** | Good | None | None |
+| Multi-arch | **4 architectures** | 1 | 3 | 2 |
+| Pre-commit | **Comprehensive** | Basic | None | Basic |
+| PR Docker Build | **Yes + dry-run** | Yes | N/A | Yes |
+| Commit Lint | **Conventional** | None | None | None |
+
+**eval-hub Stands Out In**: Test coverage ratio, agent documentation quality, multi-architecture builds, comprehensive pre-commit hooks, conventional commit enforcement, BDD test breadth, and Semgrep security rule coverage.
+
+**eval-hub Needs Improvement In**: Container vulnerability scanning, coverage threshold enforcement, and Gosec failure blocking.
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/ci.yml` - Main CI (tests, lint, coverage, docs, Docker build, security scan)
-- `.github/workflows/ci-python-server.yml` - Python server CI (path-scoped)
-- `.github/workflows/ci-mcp.yml` - MCP server CI (path-scoped)
-- `.github/workflows/commitlint.yml` - Conventional commit enforcement
-- `.github/workflows/required-reviewer-approvals.yml` - Reviewer approval verification
-- `.github/workflows/publish-python-server.yml` - PyPI wheel build/publish pipeline
-- `.github/workflows/release-mcp.yml` - MCP GitHub Release on tag push
-- `.github/workflows/check-trustyai-service-operator-configmap-sync.yml` - ConfigMap sync check
-- `.github/workflows/sync-branch-incubation.yaml` - Branch sync
-- `.github/workflows/sync-branch-stable.yaml` - Branch sync
-- `.tekton/odh-eval-hub-pull-request.yaml` - Konflux PR pipeline
+- `.github/workflows/ci.yml` — Main CI pipeline
+- `.github/workflows/ci-mcp.yml` — MCP CI (path-filtered)
+- `.github/workflows/ci-python-server.yml` — Python server wheel CI
+- `.github/workflows/ci-python-mcp.yml` — Python MCP wheel CI
+- `.github/workflows/commitlint.yml` — Conventional commit enforcement
+- `.github/workflows/validate-configs.yml` — Config validation
+- `.github/workflows/required-reviewer-approvals.yml` — Reviewer policy
+- `.tekton/odh-eval-hub-pull-request.yaml` — Konflux Tekton pipeline
 
 ### Testing
-- `tests/features/*.feature` - 10 BDD feature files (godog)
-- `tests/features/*_test.go` - FVT step definitions and suite
-- `tests/kubernetes/` - Kubernetes-specific FVT tests
-- `tests/mlflow/` - MLflow integration tests
-- `tests/mcp/scripts/` - MCP E2E test scripts (4 parts)
-- `tests/mcp/vscode/test-scripts/` - VS Code/Cursor MCP integration tests (8 suites)
-- `python-server/tests/` - Python server tests (3 files)
-- `internal/**/*_test.go` - Unit tests co-located with source
+- `tests/features/*.feature` — BDD feature files (8 core features)
+- `tests/features/*_test.go` — FVT step definitions
+- `tests/mlflow/features/` — MLflow integration tests
+- `tests/mcp/features/` — MCP integration tests
+- `tests/kubernetes/features/` — Kubernetes FVT
+- `pkg/**/*_test.go` — Package unit tests
+- `internal/**/*_test.go` — Internal unit tests
+- `cmd/**/*_test.go` — Command entry point tests
 
 ### Code Quality
-- `.pre-commit-config.yaml` - Pre-commit hooks (Ruff, mypy, commitizen, Go tests)
-- `semgrep.yaml` - Unified Semgrep security rules (v3.0.0)
-- `.gitleaks.toml` - Secret detection configuration
-- `python-server/pyproject.toml` - Ruff linting config for Python
-- `.markdownlint.json` - Markdown linting
-- `.cz.toml` - Commitizen config
+- `.pre-commit-config.yaml` — Pre-commit hooks
+- `.cz.toml` — Commitizen configuration
+- `semgrep.yaml` — Semgrep security rules (40+ rules)
+- `.gitleaks.toml` — Gitleaks secret detection config
+- `codecov.yml` — Coverage configuration
 
 ### Container Images
-- `Containerfile` - Community multi-stage build (UBI9, multi-arch)
-- `Dockerfile.konflux` - RHOAI/FIPS build (SHA-pinned bases, strictfipsruntime)
-- `.dockerignore` - Build context exclusions
-
-### Coverage
-- `codecov.yml` - Codecov configuration (50-75% range thresholds)
-
-### Security
-- `semgrep.yaml` - Comprehensive security rules
-- `.gitleaks.toml` - Secret detection config
-- `.gitleaksignore` - Secret detection allowlist
+- `Containerfile` — Development/community container build
+- `Dockerfile.konflux` — Production FIPS-compliant container build
+- `.dockerignore` — Docker build context exclusions
 
 ### Agent Rules
-- `CLAUDE.md` - Root-level agent instructions (CVE fixing)
-- `AGENTS.md` - Comprehensive project documentation for AI agents
-- `.claude/rules/evalhub-service.md` - API service rules (path-scoped)
-- `.claude/rules/evalhub-mcp-service.md` - MCP service rules (path-scoped)
-- `.claude/skills/fix-fvt-test/SKILL.md` - Custom FVT test fixing skill
-
-### API Documentation
-- `docs/src/openapi.yaml` - OpenAPI 3.1.0 source specification
-- `redocly.yaml` - Redocly CLI configuration
+- `CLAUDE.md` — CVE fixing guidance
+- `AGENTS.md` — Full repository guide for AI agents
+- `.claude/rules/evalhub-service.md` — API service rules (path-scoped)
+- `.claude/rules/evalhub-mcp-service.md` — MCP service rules (path-scoped)

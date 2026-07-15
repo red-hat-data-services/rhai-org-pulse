@@ -4,81 +4,91 @@ overall_score: 0.8
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No test files exist; single Jupyter notebook has no test coverage"
+    status: "No test files exist anywhere in the repository"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests; no test infrastructure present"
+    status: "No integration or E2E testing infrastructure"
   - dimension: "Build Integration"
     score: 0.0
-    status: "No CI/CD pipelines, no build validation, no PR checks"
+    status: "No build system, Dockerfile, or CI pipeline"
   - dimension: "Image Testing"
     score: 0.0
-    status: "No container images, Dockerfiles, or image testing"
+    status: "No container images built or tested"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage configuration or tracking of any kind"
+    status: "No coverage tooling configured"
   - dimension: "CI/CD Automation"
-    score: 0.0
-    status: "No GitHub Actions, no CI/CD pipelines, no automation"
+    score: 2.0
+    status: "No CI/CD workflows; repo uses only GitHub PRs for gating"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules"
+    status: "No agent rules, CLAUDE.md, or .claude/ directory"
 critical_gaps:
-  - title: "No CI/CD pipeline of any kind"
-    impact: "No automated validation on PRs or commits; changes merge without any checks"
+  - title: "No CI/CD pipeline at all"
+    impact: "Changes merge without any automated validation — broken notebooks, syntax errors, and credential leaks pass silently"
     severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "No test coverage whatsoever"
-    impact: "Notebook examples are not validated; broken code can be published as documentation"
+    effort: "2-4 hours"
+  - title: "No notebook validation or testing"
+    impact: "Jupyter notebooks may contain execution errors, stale outputs, or non-functional code examples users will copy"
     severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "No linting or code quality enforcement"
-    impact: "No style consistency, no static analysis, no error detection"
+    effort: "4-6 hours"
+  - title: "No linting or static analysis"
+    impact: "Python code quality in notebooks is not checked — syntax errors, style issues, and anti-patterns go undetected"
     severity: "MEDIUM"
-    effort: "2-4 hours"
-  - title: "No security scanning"
-    impact: "Dependency vulnerabilities in notebook examples go undetected"
-    severity: "MEDIUM"
-    effort: "2-3 hours"
-quick_wins:
-  - title: "Add a GitHub Actions workflow for notebook validation"
-    effort: "2-4 hours"
-    impact: "Ensures notebooks execute successfully and examples are not broken"
-  - title: "Add a pre-commit hook with nbstripoutput and basic linting"
     effort: "1-2 hours"
-    impact: "Prevents committing notebook output/secrets and enforces basic code style"
-  - title: "Add a CLAUDE.md with contribution guidelines"
-    effort: "1 hour"
-    impact: "Provides guidance for AI-assisted contributions and maintainability"
-  - title: "Add dependabot or renovate for dependency updates"
+  - title: "No security scanning"
+    impact: "No detection of leaked credentials, vulnerable dependencies (boto3 pinning), or secrets in notebook outputs"
+    severity: "HIGH"
+    effort: "1-2 hours"
+quick_wins:
+  - title: "Add a GitHub Actions workflow for notebook linting"
+    effort: "1-2 hours"
+    impact: "Validates notebook JSON structure, catches syntax errors in Python cells, enforces output stripping"
+  - title: "Add secret detection with Gitleaks"
     effort: "30 minutes"
-    impact: "Automated alerts for vulnerable dependencies in notebook requirements"
+    impact: "Prevents accidental credential exposure in notebook cells and outputs — critical for S3 credential examples"
+  - title: "Add a CODEOWNERS file"
+    effort: "15 minutes"
+    impact: "Ensures PRs are reviewed by the right people before merge"
+  - title: "Add nbstripout pre-commit hook"
+    effort: "30 minutes"
+    impact: "Prevents committing notebook outputs that may contain secrets or large binary data"
 recommendations:
   priority_0:
-    - "Create a basic CI pipeline that validates notebook execution (e.g., nbval or papermill)"
-    - "Add notebook linting (nbqa with flake8/ruff) to catch syntax and style issues"
+    - "Add a minimal CI workflow that validates notebook JSON and runs nbqa/ruff on Python cells"
+    - "Add Gitleaks or TruffleHog secret scanning — the repo contains S3 credential examples that could easily lead to real key leaks"
   priority_1:
-    - "Add pre-commit hooks for notebook hygiene (strip output, check for hardcoded credentials)"
-    - "Implement secret detection (gitleaks) to prevent accidental credential exposure in examples"
-    - "Create CLAUDE.md and basic agent rules for notebook contribution standards"
+    - "Add nbstripout or pre-commit hooks to strip notebook outputs before commit"
+    - "Add notebook execution tests (papermill) to verify examples actually run end-to-end"
+    - "Pin boto3 version in notebooks to prevent breaking changes for users"
   priority_2:
-    - "Add link validation for any documentation references"
-    - "Consider adding Binder/JupyterHub badges for easy reproducibility"
-    - "Add a CONTRIBUTING.md with notebook authoring guidelines"
+    - "Create CLAUDE.md or agent rules for consistent notebook quality standards"
+    - "Add a contributing guide with notebook authoring standards"
+    - "Consider adding a Table of Contents and better README with usage instructions"
 ---
 
 # Quality Analysis: odh-doc-examples
 
 ## Executive Summary
 
-- **Overall Score: 0.8/10**
-- **Repository Type**: Documentation examples (Jupyter notebooks)
-- **Primary Language**: Python (Jupyter notebooks)
-- **Key Strengths**: Apache 2.0 licensed, clear README purpose statement
-- **Critical Gaps**: No CI/CD, no tests, no linting, no security scanning, no agent rules — the repository has essentially zero quality infrastructure
-- **Agent Rules Status**: Missing
+- **Overall Score: 0.8 / 10**
+- **Repository Type**: Documentation examples (Jupyter notebooks for ODH/RHOAI users)
+- **Primary Language**: Python (via Jupyter notebooks)
+- **Key Strengths**: Apache-2.0 licensed, hosted under the opendatahub-io org for discoverability
+- **Critical Gaps**: No CI/CD, no testing, no linting, no security scanning — the repository has essentially zero quality infrastructure
+- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
 
-This is an extremely minimal repository containing a single Jupyter notebook (`storage/s3client_examples.ipynb`) that demonstrates S3 client operations using boto3. The repository was created with a single merge commit on 2024-08-21 and has had no subsequent activity. There is no quality infrastructure of any kind.
+## Repository Overview
+
+`odh-doc-examples` is a minimal repository containing example code referenced in OpenDataHub documentation. It currently contains:
+
+- **1 Jupyter notebook** (`storage/s3client_examples.ipynb`) — demonstrates boto3 S3 operations
+- **README.md** — a single-sentence description
+- **LICENSE** — Apache 2.0
+- **1 commit** (shallow clone, but only 1 merge commit visible)
+- **Last updated**: August 2024 (nearly 2 years ago)
+
+The repository appears largely inactive and was created as a companion to RHOAI documentation (RHOAIENG-664).
 
 ## Quality Scorecard
 
@@ -86,206 +96,188 @@ This is an extremely minimal repository containing a single Jupyter notebook (`s
 |-----------|-------|--------|
 | Unit Tests | 0/10 | No test files exist |
 | Integration/E2E | 0/10 | No integration or E2E testing |
-| **Build Integration** | **0/10** | **No CI/CD, no build validation** |
-| Image Testing | 0/10 | No container images or testing |
-| Coverage Tracking | 0/10 | No coverage configuration |
-| CI/CD Automation | 0/10 | No GitHub Actions or CI pipelines |
-| Agent Rules | 0/10 | No CLAUDE.md, no .claude/ directory |
+| **Build Integration** | **0/10** | **No build system or CI pipeline** |
+| Image Testing | 0/10 | No container images |
+| Coverage Tracking | 0/10 | No coverage tooling |
+| CI/CD Automation | 2/10 | GitHub PRs only, no workflows |
+| Agent Rules | 0/10 | No agent rules or AI guidance |
 
 ## Critical Gaps
 
-### 1. No CI/CD Pipeline
-- **Impact**: Changes merge without any automated validation; broken notebook examples can be published as official documentation
-- **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Details**: The repository has zero GitHub Actions workflows, no Makefile, no Jenkinsfile, and no GitLab CI configuration. PRs (if any are submitted) would merge with no automated checks.
+### 1. No CI/CD Pipeline (Severity: HIGH)
+- **Impact**: Changes merge without any automated validation. Broken notebook JSON, Python syntax errors, stale imports, and credential leaks pass silently.
+- **Effort**: 2-4 hours to add basic notebook validation workflow
+- **Details**: No `.github/workflows/` directory, no `.gitlab-ci.yml`, no `Jenkinsfile`, no `Makefile`. The only gate is human PR review, and with a single contributor, even that is minimal.
 
-### 2. No Test Coverage
-- **Impact**: The S3 client examples could contain syntax errors, deprecated API usage, or broken code patterns that users will copy into their own projects
-- **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Details**: No `*_test.py` files, no `test/` or `tests/` directories, no pytest configuration. The notebook itself contains example code that is never validated against a real or mocked S3 endpoint.
+### 2. No Notebook Validation or Testing (Severity: HIGH)
+- **Impact**: The S3 examples notebook may contain non-functional code that users will copy-paste. Broken examples erode trust in ODH documentation.
+- **Effort**: 4-6 hours to add papermill-based notebook execution tests
+- **Details**: No `pytest`, no `nbval`, no `papermill` execution tests. The notebook uses placeholder values (`<bucket_name>`, `<file_name>`) which is fine for documentation, but there's no validation that the boto3 API calls are syntactically correct or that the imports work.
 
-### 3. No Linting or Code Quality
-- **Impact**: No enforcement of Python style conventions, no detection of common errors, no prevention of credential leakage in notebook cells
-- **Severity**: MEDIUM
-- **Effort**: 2-4 hours
-- **Details**: No `.flake8`, `ruff.toml`, `mypy.ini`, `.pre-commit-config.yaml`, or any other quality configuration. The notebook code uses inconsistent formatting and has no type hints.
+### 3. No Security Scanning (Severity: HIGH)
+- **Impact**: The repository specifically deals with S3 credentials (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`). A contributor could accidentally commit real credentials in notebook output cells.
+- **Effort**: 1-2 hours for Gitleaks + nbstripout
+- **Details**: No Gitleaks, no TruffleHog, no pre-commit hooks, no `.gitignore` for sensitive files. Given the credential-adjacent content, this is a particularly acute risk.
 
-### 4. No Security Scanning
-- **Impact**: Dependencies like boto3 could have known vulnerabilities; example code patterns could teach insecure practices
-- **Severity**: MEDIUM
-- **Effort**: 2-3 hours
-- **Details**: No Trivy, Snyk, CodeQL, gitleaks, or any security scanning. The notebook reads credentials from environment variables (good practice), but there's no automated check to prevent hardcoded secrets.
+### 4. No Linting or Static Analysis (Severity: MEDIUM)
+- **Impact**: Python code in notebooks is not checked for quality, style, or correctness.
+- **Effort**: 1-2 hours for nbqa + ruff
+- **Details**: No `ruff.toml`, `.flake8`, `mypy.ini`, `pyproject.toml`, or any linting configuration. Tools like `nbqa` can run standard Python linters on Jupyter notebook cells.
 
 ## Quick Wins
 
-### 1. Add Notebook Validation CI (2-4 hours)
-Create `.github/workflows/validate-notebooks.yml`:
-```yaml
-name: Validate Notebooks
-on:
-  pull_request:
-    paths: ['**/*.ipynb']
-  push:
-    branches: [main]
+### 1. Add Gitleaks Secret Scanning (30 minutes)
+Prevents accidental credential leaks — critical for a repo with S3 credential examples.
 
+```yaml
+# .github/workflows/security.yml
+name: Secret Scanning
+on: [push, pull_request]
 jobs:
-  validate:
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+```
+
+### 2. Add nbstripout Pre-commit Hook (30 minutes)
+Strips notebook outputs before commit to prevent secrets and bloat.
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.7.1
+    hooks:
+      - id: nbstripout
+```
+
+### 3. Add Notebook Linting Workflow (1-2 hours)
+Validates notebook structure and Python code quality.
+
+```yaml
+# .github/workflows/lint.yml
+name: Notebook Lint
+on: [push, pull_request]
+jobs:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install dependencies
-        run: |
-          pip install nbqa flake8 ruff
-      - name: Lint notebooks
-        run: nbqa ruff storage/
-      - name: Check for outputs/secrets
-        run: |
-          pip install nbstripoutput
-          nbstripoutput --verify storage/*.ipynb
+      - run: pip install nbqa ruff
+      - run: nbqa ruff storage/
+      - run: python -c "import json; [json.load(open(f)) for f in __import__('glob').glob('**/*.ipynb', recursive=True)]"
 ```
 
-### 2. Add Pre-commit Hooks (1-2 hours)
-Create `.pre-commit-config.yaml`:
-```yaml
-repos:
-  - repo: https://github.com/kynan/nbstripoutput
-    rev: 0.7.1
-    hooks:
-      - id: nbstripoutput
-  - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.8.5
-    hooks:
-      - id: nbqa-ruff
+### 4. Add CODEOWNERS File (15 minutes)
 ```
-
-### 3. Add CLAUDE.md (1 hour)
-A basic agent rules file would provide guidance for AI-assisted contributions:
-```markdown
-# ODH Doc Examples
-
-## What This Repo Is
-Documentation examples for OpenDataHub. Jupyter notebooks demonstrating common operations.
-
-## Contribution Rules
-- All notebooks must use environment variables for credentials (never hardcode)
-- Notebooks should be committed without output cells
-- Each notebook should have a markdown header cell explaining its purpose
-```
-
-### 4. Add Dependabot (30 minutes)
-Create `.github/dependabot.yml`:
-```yaml
-version: 2
-updates:
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
+# CODEOWNERS
+* @opendatahub-io/documentation-team
 ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
-- **Workflows**: None
-- **PR Checks**: None
-- **Periodic Jobs**: None
-- **Build Automation**: None
-- **Assessment**: The repository has zero CI/CD infrastructure. There are no GitHub Actions, no Makefile targets, no CI configuration of any kind. This means any PR can be merged without validation.
+- **Workflows**: None. No `.github/workflows/`, `.gitlab-ci.yml`, or `Jenkinsfile`.
+- **PR Gating**: Only GitHub's built-in PR mechanism. No required status checks.
+- **Concurrency Control**: N/A
+- **Caching**: N/A
+- **Assessment**: The repository has zero CI/CD automation. For a documentation-examples repo, at minimum notebook validation and secret scanning should run on PRs.
 
 ### Test Coverage
-- **Unit Tests**: 0 files
-- **Integration Tests**: 0 files
-- **E2E Tests**: 0 files
+- **Unit Tests**: None. No test files of any kind (`*_test.py`, `test_*.py`, `*.spec.ts`, etc.)
+- **Integration Tests**: None.
+- **E2E Tests**: None.
+- **Coverage Tracking**: None. No `.codecov.yml`, `.coveragerc`, or similar.
 - **Test-to-Code Ratio**: 0:1
-- **Coverage Generation**: None
-- **Assessment**: No testing exists. The single Jupyter notebook contains example code for S3 operations (create/list/upload/download/copy/delete buckets and objects) but none of these operations are validated.
+- **Assessment**: While extensive test coverage may be overkill for a documentation examples repo, basic notebook execution tests (via papermill or nbval) would verify examples actually work.
 
 ### Code Quality
-- **Linting**: None configured
-- **Pre-commit Hooks**: None
-- **Static Analysis**: None
-- **Code Formatters**: None
-- **Assessment**: The notebook code has minor style inconsistencies (e.g., inconsistent spacing in comments, no type hints) but since there's no enforcement, these go unchecked.
+- **Linting**: None configured. No `ruff.toml`, `.flake8`, `mypy.ini`, `.eslintrc`, or `.golangci.yaml`.
+- **Pre-commit Hooks**: None. No `.pre-commit-config.yaml`.
+- **Static Analysis**: None. No SAST, CodeQL, or similar.
+- **Formatters**: None.
+- **Assessment**: The Python code in the notebook has minor style issues (inconsistent spacing, unused imports in some cells) but is generally readable. Adding `nbqa` with `ruff` would enforce consistency.
 
 ### Container Images
-- **Dockerfiles**: None
-- **Image Builds**: None
-- **Runtime Testing**: N/A
-- **Security Scanning**: None
-- **Assessment**: Not applicable — this repository doesn't build container images. However, the notebook could benefit from a reproducibility container (e.g., a Dockerfile or Binder configuration).
+- **Dockerfiles**: None.
+- **Image Builds**: N/A — this is a documentation-examples repo, not a buildable project.
+- **Assessment**: Not applicable for this repository type.
 
 ### Security
-- **SAST/CodeQL**: None
-- **Dependency Scanning**: None
-- **Secret Detection**: None
-- **Credential Handling**: The notebook reads credentials from environment variables (`os.environ.get()`), which is correct practice, but there's no automated enforcement to prevent hardcoded secrets.
+- **Secret Scanning**: None. No Gitleaks, TruffleHog, or GitHub secret scanning configuration.
+- **Dependency Scanning**: None.
+- **SBOM**: None.
+- **Risk**: HIGH — the notebook contains S3 credential handling code. Even though the examples use environment variables (good practice), notebook output cells could capture real credentials during development, and there is no automation to catch this.
+- **Assessment**: Secret scanning should be the #1 priority for this repository given its content.
 
 ### Agent Rules (Agentic Flow Quality)
 - **Status**: Missing
 - **CLAUDE.md**: Not present
 - **AGENTS.md**: Not present
 - **.claude/ directory**: Not present
-- **.claude/rules/**: Not present
-- **Coverage**: No test types have rules
-- **Quality**: N/A
-- **Gaps**: Everything — no agent rules, no contribution guidelines for AI tools, no test automation guidance
-- **Recommendation**: Create a basic CLAUDE.md with notebook contribution standards and credential handling rules
+- **Test creation rules**: None
+- **Assessment**: No agent rules exist. For a documentation-examples repo, agent rules could guide:
+  - Notebook formatting standards
+  - Placeholder conventions (`<bucket_name>` format)
+  - Required markdown cell documentation per code cell
+  - Security review checklist for credential-adjacent examples
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Create a basic CI pipeline** — Add a GitHub Actions workflow that validates notebook syntax and linting on every PR. Use `nbqa` with `ruff` for Python linting inside notebooks.
-2. **Add notebook execution validation** — Use `papermill` or `nbval` to verify notebooks can execute (with mocked credentials) without errors.
+1. **Add Gitleaks secret scanning** — The repo deals with S3 credentials; leaking real keys in notebook outputs is a realistic risk
+2. **Add nbstripout pre-commit hook** — Prevents committing notebook outputs that may contain credentials or large binary data
+3. **Add a minimal CI workflow** — At least validate notebook JSON structure and run `nbqa ruff` on Python cells
 
 ### Priority 1 (High Value)
-1. **Add pre-commit hooks** — Install `nbstripoutput` to prevent committing notebook output and `nbqa-ruff` for consistent code style.
-2. **Implement secret detection** — Add `gitleaks` to prevent accidental credential exposure in notebook cells.
-3. **Create CLAUDE.md** — Define basic agent rules for notebook contribution standards (credential handling, cell structure, documentation requirements).
-4. **Add a requirements.txt** — Pin the boto3 dependency version to make examples reproducible and enable dependency scanning.
+1. **Add notebook execution tests with papermill** — Verify that import statements and API call syntax are valid (use mocked credentials)
+2. **Pin dependency versions** — The notebook installs boto3 without version pinning; users may get broken examples when APIs change
+3. **Improve README** — Add usage instructions, prerequisites (ODH/RHOAI environment, S3-compatible storage), and links to relevant documentation
+4. **Add CODEOWNERS** — Ensure the documentation team reviews all changes
 
 ### Priority 2 (Nice-to-Have)
-1. **Add Binder badge** — Allow users to launch notebooks directly from the README for easy reproducibility.
-2. **Add CONTRIBUTING.md** — Document notebook authoring guidelines, cell structure conventions, and review criteria.
-3. **Consider link validation** — If notebooks reference external documentation, validate those links don't break.
-4. **Add more example notebooks** — The repo only has one notebook; expanding coverage would increase its value as a documentation resource.
+1. **Create CLAUDE.md** with notebook authoring standards and quality checklist
+2. **Add more example notebooks** — The repo only has one; if it's meant to be a documentation companion, it should cover more ODH features
+3. **Add a contributing guide** — Document notebook quality standards for future contributors
+4. **Consider archival** — If this repo is not actively maintained (last updated August 2024), consider archiving it or merging its content into the main documentation repository
 
 ## Comparison to Gold Standards
 
-| Practice | odh-doc-examples | odh-dashboard (Gold) | notebooks (Gold) |
-|----------|------------------|---------------------|-----------------|
-| CI/CD Pipeline | None | Comprehensive multi-workflow | Multi-layer validation |
-| Unit Tests | None | Extensive Jest/Cypress suite | Per-notebook validation |
-| Integration/E2E | None | Cypress E2E, contract tests | Image deployment tests |
-| Coverage Tracking | None | Codecov with thresholds | Coverage per notebook |
-| Linting | None | ESLint + Prettier + strict TS | Linting via CI |
-| Security Scanning | None | Trivy + dependency scanning | Image scanning |
-| Pre-commit Hooks | None | Comprehensive hooks | nbstripoutput |
-| Agent Rules | None | Full .claude/rules/ | Partial |
-| Container Testing | N/A | Multi-stage builds tested | 5-layer validation |
+| Dimension | odh-doc-examples | odh-dashboard | notebooks | kserve |
+|-----------|-----------------|---------------|-----------|--------|
+| Unit Tests | 0/10 | 9/10 | 7/10 | 8/10 |
+| Integration/E2E | 0/10 | 9/10 | 8/10 | 9/10 |
+| Build Integration | 0/10 | 8/10 | 7/10 | 7/10 |
+| Image Testing | 0/10 | 7/10 | 9/10 | 8/10 |
+| Coverage Tracking | 0/10 | 8/10 | 6/10 | 8/10 |
+| CI/CD Automation | 2/10 | 9/10 | 8/10 | 9/10 |
+| Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
+| **Overall** | **0.8/10** | **8.5/10** | **7.2/10** | **7.6/10** |
+
+Note: Comparison is somewhat unfair as odh-doc-examples is a documentation companion repo, not a production application. However, even documentation repos should have basic quality gates — especially when they contain credential-handling examples.
 
 ## File Paths Reference
 
 | File | Purpose |
 |------|---------|
-| `README.md` | 2-line project description |
+| `README.md` | Single-sentence repository description |
 | `LICENSE` | Apache 2.0 license |
-| `storage/s3client_examples.ipynb` | Jupyter notebook with boto3 S3 examples |
-
-## Repository Metadata
-
-- **Created**: 2024-08-21
-- **Last Activity**: 2024-08-21 (single merge commit)
-- **Contributors**: 1 (syaseen-rh)
-- **Total Commits**: 1 (shallow clone, but full history shows only 1 merge)
-- **Branches**: main only
-- **Tags/Releases**: None
-- **Stars/Forks**: Minimal (documentation examples repo)
+| `storage/s3client_examples.ipynb` | Jupyter notebook with boto3 S3 client examples |
 
 ## Summary
 
-`odh-doc-examples` is a documentation examples repository in its earliest stage. It contains a single Jupyter notebook demonstrating S3 client operations with boto3. The repository has **zero quality infrastructure** — no CI/CD, no tests, no linting, no security scanning, and no agent rules. While this is somewhat expected for a small documentation-only repo, the lack of any validation means broken or insecure examples could be published as official ODH documentation. The highest-impact improvement would be adding a basic CI pipeline that validates notebook syntax and prevents credential leakage.
+`odh-doc-examples` is a minimal documentation-examples repository with **zero quality infrastructure**. It has no CI/CD, no tests, no linting, no security scanning, and no agent rules. Given that the repository contains credential-handling examples (S3 via boto3), the most critical gap is the complete absence of secret scanning. The repository appears largely inactive (1 commit, last updated August 2024) and may be a candidate for archival or merging into the main ODH documentation repository.
+
+**Immediate actions** (under 2 hours total):
+1. Add Gitleaks secret scanning workflow
+2. Add nbstripout pre-commit hook
+3. Add basic notebook linting workflow with nbqa + ruff

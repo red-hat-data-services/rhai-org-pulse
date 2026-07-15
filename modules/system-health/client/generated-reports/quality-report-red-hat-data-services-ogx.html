@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 10, 2026 at 09:44 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 05:00 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/ogx</h2>
         </header>
 
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Solid unit test suite with pytest, multi-Python-version CI matrix, coverage generation but no enforcement</div>
+                            <div class="scorecard-status">Good breadth across server, providers, models, and distribution; multi-Python (3.10-3.13); no coverage enforcement</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Comprehensive integration tests with Ollama, multi-client-type matrix, auth tests with minikube</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Excellent matrix testing (8 test types x 2 clients x 3 Python versions); GPU tests manual-dispatch only</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">PR-time provider build validation across templates and image types (venv + container), UBI9 testing</div>
+                            <div class="scorecard-status">All provider templates built on PR; UBI9 container validation; entrypoint checks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Container builds validated via providers-build workflow but no runtime functional tests or scanning</div>
+                            <div class="scorecard-status">Container builds tested but no vulnerability scanning, no multi-arch CI, no SBOM</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">pytest-cov generates HTML reports but no codecov/coveralls integration, no thresholds, no PR gating</div>
+                            <div class="scorecard-status">Coverage generated as artifacts but no codecov/coveralls integration or thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">14 workflows with concurrency control, path filtering, multi-version matrix, pre-commit CI, SHA-pinned actions</div>
+                            <div class="scorecard-status">14 workflows, concurrency control, path-based triggers, SHA-pinned actions</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules for test automation guidance</div>
+                            <div class="scorecard-status">No .claude directory, no CLAUDE.md, no agent rules for test automation guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No coverage enforcement or PR gating</div>
-                            <p>Coverage can silently regress on any PR without anyone noticing; no baseline or threshold tracked</p>
+                            <div class="item-description">No coverage tracking or enforcement</div>
+                            <p>Coverage regressions go undetected; no PR-level coverage reporting; impossible to set quality gates</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container security scanning (Trivy, Snyk, CodeQL)</div>
-                            <p>Vulnerabilities in container images and dependencies not detected until production</p>
+                            <div class="item-description">No container security scanning</div>
+                            <p>Vulnerabilities in base images and dependencies shipped to production undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No SBOM generation or image signing</div>
-                            <p>No software supply chain attestation, fails compliance requirements for Red Hat downstream</p>
+                            <div class="item-description">No SAST/CodeQL integration</div>
+                            <p>Code-level security vulnerabilities not caught in CI; relies entirely on manual review</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No agent rules for AI-assisted test creation</div>
-                            <p>AI-generated tests lack consistency, miss project-specific patterns and conventions</p>
+                            <div class="item-description">mypy exclude list contains 100+ files</div>
+                            <p>Type safety bypassed for majority of provider code; bugs hiding in untyped code paths</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">3-5 hours</span>
+                                <span class="meta-tag effort-tag">40-80 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">GPU-based test workflow disabled for PRs</div>
-                            <p>GPU-dependent provider tests only run on manual dispatch, regressions caught late</p>
+                            <div class="item-description">GPU test workflow disabled for PRs</div>
+                            <p>Model inference regressions only caught via manual dispatch, not on every PR</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-16 hours</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,8 +464,8 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add codecov integration to unit-tests workflow</div>
-                            <p>Immediate visibility into coverage trends and PR-level coverage diffs</p>
+                            <div class="item-description">Add Codecov integration to unit-tests workflow</div>
+                            <p>PR-level coverage reporting, trend tracking, and regression detection</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -473,26 +473,34 @@
                         </li>
                         <li class="item-card ">
                             <div class="item-description">Add Trivy container scanning to providers-build workflow</div>
-                            <p>Early detection of CVEs in built container images</p>
+                            <p>Automatic vulnerability detection for all built container images</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create basic agent rules for unit test patterns</div>
-                            <p>Standardize AI-generated test quality across the repository</p>
+                            <div class="item-description">Enable CodeQL workflow for Python</div>
+                            <p>Automated SAST for code-level security vulnerabilities</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create basic .claude/rules/ for test patterns</div>
+                            <p>Consistent AI-generated tests following project conventions</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL or Bandit SAST scanning workflow</div>
-                            <p>Detect Python security anti-patterns (injection, hardcoded secrets, unsafe deserialization)</p>
+                            <div class="item-description">Add coverage threshold to unit-tests.sh</div>
+                            <p>Prevent coverage from dropping below current baseline</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Integrate codecov with coverage thresholds and PR checks to prevent silent coverage regression</li><li>Add Trivy or Snyk container scanning to CI for all built images</li><li>Add SAST scanning (CodeQL, Bandit, or Semgrep) for Python security analysis</li></ul>
+                            <ul><li>Add Codecov/Coveralls integration with PR-level reporting and minimum coverage thresholds</li><li>Add Trivy or Snyk container scanning to the providers-build workflow</li><li>Enable CodeQL analysis for Python code</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add SBOM generation (Syft) and container image signing (cosign) for supply chain security</li><li>Create comprehensive agent rules (.claude/rules/) for unit, integration, and verification test patterns</li><li>Re-enable GPU-based test workflow for PRs with appropriate gating</li><li>Add coverage threshold enforcement (e.g., 70% minimum, no regression on PRs)</li></ul>
+                            <ul><li>Reduce mypy exclude list by adding type annotations incrementally to provider code</li><li>Re-enable GPU test workflow on PRs (or at minimum on main branch pushes)</li><li>Add UI test coverage (only 1 test file for entire Next.js frontend)</li><li>Create comprehensive agent rules for test automation (.claude/rules/)</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add container runtime functional tests (health endpoint, API response) for built images</li><li>Add performance regression testing for inference endpoints</li><li>Add OpenSSF Scorecard workflow for supply chain security posture</li><li>Add mutation testing (mutmut) to validate test suite effectiveness</li></ul>
+                            <ul><li>Add SBOM generation for container images</li><li>Add multi-architecture build validation in CI</li><li>Add gitleaks for secret detection beyond pre-commit</li><li>Update SECURITY.md to reflect Red Hat&#x27;s vulnerability reporting process</li></ul>
                         </div>
                     </div>
                 </div>

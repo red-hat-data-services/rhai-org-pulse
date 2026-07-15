@@ -1,6 +1,8 @@
 # AI Engineering People & Teams
 
-Internal dashboard for tracking AI Platform engineering team productivity across Jira and GitHub.
+AI Engineering modules and deployment for [Org Pulse](https://github.com/red-hat-data-services/org-pulse-core), an internal engineering dashboard connecting Jira, GitHub, and GitLab data with team rosters to surface delivery insights.
+
+This repo contains AI Eng-specific modules, platform customizations, and deployment overlays. The core platform (`@org-pulse/core`) is installed as an npm dependency.
 
 ## Quick Start (Demo Mode)
 
@@ -8,6 +10,7 @@ Run the app with sample data — no credentials needed:
 
 ```bash
 npm install
+npm run setup          # Symlinks core platform files into the workspace
 
 echo "DEMO_MODE=true" > .env
 echo "VITE_DEMO_MODE=true" >> .env
@@ -31,6 +34,7 @@ For real Jira and GitHub data:
 
 ```bash
 npm install
+npm run setup          # Symlinks core platform files into the workspace
 ```
 
 ### 2. Configure environment
@@ -103,11 +107,12 @@ npm test                      # Run all tests
 npm run test:watch            # Tests in watch mode
 npm run lint                  # ESLint
 npm run build                 # Production build
+npm run setup                   # Symlink core platform into workspace
 npm run validate:modules      # Validate module manifests
 npm run validate:openapi      # Validate OpenAPI annotations
+npm run validate:dockerfile-deps  # Verify Dockerfile deps match package.json
 
 # Container-based tests (requires Docker/Podman)
-make smoke-test-core            # Run smoke tests against core images
 make smoke-test                 # Run smoke tests against AI Eng images
 make test-module MODULE=<name>  # Run integration tests for a module
 ```
@@ -123,9 +128,7 @@ make test-module MODULE=<name>  # Run integration tests for a module
 
 ## Deployment
 
-The app is deployed to OpenShift via ArgoCD. See [deploy/OPENSHIFT.md](deploy/OPENSHIFT.md) for the full deployment guide, including building images on ARM Macs, creating secrets, and troubleshooting.
-
-For local testing with Kind (Kubernetes in Docker), see [deploy/KIND.md](deploy/KIND.md).
+Deployed to OpenShift via ArgoCD. AI Eng images extend core images from `@org-pulse/core`. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the full deployment guide.
 
 ## Contributing
 

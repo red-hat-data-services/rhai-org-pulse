@@ -1,0 +1,59 @@
+name: Core Upgrade
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v7
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Check for new core version
+        id: check
+        run: |
+          LATEST=$(npm view @org-pulse/core version)
+          CURRENT=$(node -p "require('./package.json').dependencies['@org-pulse/core'].replace(/^\^/, '')")
+          echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+          if [ "$LATEST" != "$CURRENT" ]; then
+            echo "needs_upgrade=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "needs_upgrade=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upgrade core dependency
+        if: steps.check.outputs.needs_upgrade == 'true'
+        run: npm install @org-pulse/core@${{ steps.check.outputs.latest }}
+
+      - name: Update kustomize remote ref
+        if: steps.check.outputs.needs_upgrade == 'true'
+        run: |
+          sed -i "s|org-pulse-core//deploy/openshift/base?ref=v[0-9.]*|org-pulse-core//deploy/openshift/base?ref=v${{ steps.check.outputs.latest }}|" deploy/openshift/overlays/ai-eng/kustomization.yaml
+
+      - uses: peter-evans/create-pull-request@v8
+        if: steps.check.outputs.needs_upgrade == 'true'
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          commit-message: 'chore(deps): upgrade @org-pulse/core to v${{ steps.check.outputs.latest }}'
+          title: 'chore(deps): upgrade @org-pulse/core to v${{ steps.check.outputs.latest }}'
+          body: |
+            Automated upgrade from `v${{ steps.check.outputs.current }}` to `v${{ steps.check.outputs.latest }}`.
+          branch: chore/core-upgrade-v${{ steps.check.outputs.latest }}

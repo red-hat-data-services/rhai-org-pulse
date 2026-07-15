@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on May 28, 2026 at 10:02 PM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 05:38 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/vllm</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="486.31813199999993"
+                                stroke-dashoffset="407.15006399999993"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">1.4</div>
+                        <div class="score-value">2.8</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No source code or test files — downstream packaging repo only</div>
+                            <div class="scorecard-status">No source code in repo — downstream build wrapper only</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or end-to-end tests for the built container image</div>
+                            <div class="scorecard-status">No integration or E2E tests; no image startup validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Konflux Tekton pipeline exists with multi-arch builds, but skip-checks=true</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Konflux Tekton pipeline with multi-arch builds; skip-checks enabled</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">Image builds but no runtime validation, startup checks, or smoke tests</div>
+                            <div class="scorecard-status">Image builds on PR but no runtime validation or smoke tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tracking — no source code to cover</div>
+                            <div class="scorecard-status">N/A — no source code to cover</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Centralized Tekton pipeline auto-synced from konflux-central, multi-arch</div>
+                            <div class="scorecard-status">Tekton PipelineRun auto-synced from konflux-central; Clair scan configured</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules</div>
+                            <div class="scorecard-status">No CLAUDE.md, .claude/ directory, or agent rules</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No container image runtime validation</div>
-                            <p>Built images may fail at runtime (bad entrypoint, missing deps, config errors) with no detection before deployment</p>
+                            <div class="item-description">No image runtime validation or smoke tests</div>
+                            <p>Built images may fail at startup or serve incorrect responses — caught only in downstream testing or production</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">skip-checks=true in Tekton pipeline</div>
-                            <p>Konflux validation checks are skipped on PR builds, potentially allowing non-compliant images</p>
+                            <div class="item-description">skip-checks: true in Tekton pipeline</div>
+                            <p>Bypasses Konflux built-in quality gates; vulnerabilities or build issues may pass undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No smoke tests for vLLM inference endpoint</div>
-                            <p>Cannot verify the container can actually serve inference requests before shipping</p>
+                            <div class="item-description">No vulnerability threshold enforcement</div>
+                            <p>Clair scan runs but no evidence of blocking on critical/high CVEs — images with known vulnerabilities may ship</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-16 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No security scanning enforcement or results gating</div>
-                            <p>Clair scan task exists but results may not gate the pipeline; vulnerabilities could ship</p>
+                            <div class="item-description">No Dockerfile linting or best-practice validation</div>
+                            <p>Dockerfile changes (e.g., base image version bumps) have no automated validation before merge</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card low">
+                            <div class="item-description">README is unmodified upstream copy</div>
+                            <p>No downstream-specific documentation; contributors don&#x27;t understand this repo&#x27;s purpose vs upstream vllm-project/vllm</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-low">LOW</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,32 +464,40 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Remove skip-checks=true from Tekton pipeline</div>
-                            <p>Re-enables Konflux built-in validation checks for image compliance</p>
+                            <div class="item-description">Remove skip-checks: true from Tekton pipeline</div>
+                            <p>Re-enables Konflux built-in quality gates for vulnerability and compliance checks</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">30 minutes (in konflux-central)</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add container startup validation step</div>
-                            <p>Catches broken images before they reach production — verify entrypoint succeeds</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add CLAUDE.md with packaging repo conventions</div>
-                            <p>Guides AI agents and contributors on the repo&#x27;s purpose and Dockerfile conventions</p>
+                            <div class="item-description">Add hadolint Dockerfile linting to PR pipeline</div>
+                            <p>Catches Dockerfile best-practice violations before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Pin the RHAIIS_VERSION ARG to a digest</div>
-                            <p>Ensures reproducible builds by referencing the base image by digest, not just tag</p>
+                            <div class="item-description">Add image startup smoke test</div>
+                            <p>Validates built container actually starts and responds on health endpoint</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add CODEOWNERS file</div>
+                            <p>Ensures PRs get reviewed by appropriate maintainers</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">30 minutes</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Write downstream-specific README</div>
+                            <p>Clarifies repo purpose, build process, and relationship to upstream vllm-project/vllm</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
@@ -501,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add container image startup/smoke test to Tekton pipeline to validate the built image can start and respond</li><li>Remove skip-checks=true to re-enable Konflux compliance validation</li><li>Add gating on Clair scan results — fail the pipeline if critical/high CVEs are found</li></ul>
+                            <ul><li>Remove skip-checks: true from Tekton PipelineRun to re-enable Konflux quality gates (change in konflux-central)</li><li>Add container image startup smoke test that validates vllm_tgis_adapter process starts and health endpoint responds</li><li>Enforce vulnerability thresholds on Clair scan results — block merge on critical/high CVEs</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add a basic inference health-check test (hit /health or /v1/models endpoint in built image)</li><li>Add image size tracking to detect unexpected bloat</li><li>Create CLAUDE.md with repo purpose, Dockerfile conventions, and contribution guidelines</li></ul>
+                            <ul><li>Add hadolint or dockerfile-lint to PR pipeline for Dockerfile best-practice validation</li><li>Add image size regression check to prevent unexpected image bloat from base image changes</li><li>Create downstream-specific README documenting repo purpose, build flow, and contribution process</li><li>Add SBOM generation and attestation for supply chain security</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SBOM generation and attestation for supply chain security</li><li>Add image signing with cosign</li><li>Track base image currency — alert when upstream RHAIIS image has a newer version</li></ul>
+                            <ul><li>Add CLAUDE.md with build contribution guidance for AI agents</li><li>Add CODEOWNERS for automated review routing</li><li>Consider adding a periodic job to test latest base image compatibility</li><li>Add Dependabot or Renovate for base image version tracking</li></ul>
                         </div>
                     </div>
                 </div>

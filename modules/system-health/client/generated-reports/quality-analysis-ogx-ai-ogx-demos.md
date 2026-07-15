@@ -1,466 +1,476 @@
 ---
 repository: "ogx-ai/ogx-demos"
-overall_score: 3.1
+overall_score: 3.6
 scorecard:
   - dimension: "Unit Tests"
     score: 1.0
-    status: "No unit tests — only eval/integration scripts exist, no pytest or unittest usage"
+    status: "No unit test framework configured; no pytest, unittest, or test runner"
   - dimension: "Integration/E2E"
     score: 4.0
-    status: "Manual eval test harness with 1,100+ queries but no CI automation"
+    status: "Shell-based demo runner and MCP eval tests exist but require live server"
   - dimension: "Build Integration"
     score: 1.0
-    status: "No PR-time build validation, no image builds in CI"
+    status: "No PR-time build validation; single Dockerfile has no CI build step"
   - dimension: "Image Testing"
-    score: 1.5
-    status: "Single Dockerfile for MCP server, no runtime validation or scanning"
+    score: 1.0
+    status: "Single Dockerfile for math-mcp with no build testing, scanning, or runtime validation"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage generation, no codecov/coveralls, no thresholds"
+    status: "No coverage tool configured; no codecov, coveralls, or .coveragerc"
   - dimension: "CI/CD Automation"
     score: 3.0
-    status: "Single pre-commit workflow; no test, build, or release automation"
+    status: "Single pre-commit workflow on PRs; no test, build, or deploy workflows"
   - dimension: "Agent Rules"
-    score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no test automation rules"
+    score: 5.0
+    status: "CLAUDE.md present with good project context but no .claude/rules/ for test patterns"
 critical_gaps:
-  - title: "No unit tests whatsoever"
-    impact: "Regressions in demo code, utility functions, and shared modules go undetected"
+  - title: "No unit test framework or test suite"
+    impact: "Code changes cannot be validated automatically; regressions go undetected"
     severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "Eval tests not automated in CI"
-    impact: "1,100+ eval queries exist but never run on PRs — tool call regressions can ship"
+    effort: "4-8 hours"
+  - title: "No automated test execution in CI"
+    impact: "PRs merge without any test validation beyond linting"
     severity: "HIGH"
-    effort: "4-6 hours"
+    effort: "2-4 hours"
   - title: "No coverage tracking"
-    impact: "No visibility into which code paths are exercised, impossible to set quality gates"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No container image scanning or runtime validation"
-    impact: "Vulnerabilities in the MCP Dockerfile base image (python:3.11-slim) undetected"
+    impact: "No visibility into what code is tested; no enforcement of quality thresholds"
     severity: "HIGH"
     effort: "2-3 hours"
-  - title: "No SAST, dependency scanning, or secret detection"
-    impact: "Code and dependency vulnerabilities not caught before merge"
+  - title: "No container image build or scan in CI"
+    impact: "Dockerfile issues and vulnerabilities discovered only in production"
     severity: "MEDIUM"
     effort: "2-4 hours"
-  - title: "Pre-commit hooks are minimal (3 basic checks)"
-    impact: "No linting, type checking, or formatting enforcement"
+  - title: "No security scanning (SAST, dependency, secrets)"
+    impact: "Vulnerabilities in dependencies and code go undetected"
     severity: "MEDIUM"
-    effort: "1-2 hours"
+    effort: "2-3 hours"
 quick_wins:
-  - title: "Add ruff linting to pre-commit and CI"
-    effort: "1-2 hours"
-    impact: "Catch style issues, unused imports, and basic bugs automatically"
-  - title: "Add Trivy scanning for the MCP Dockerfile"
-    effort: "1-2 hours"
-    impact: "Detect known vulnerabilities in the python:3.11-slim base image"
-  - title: "Add pytest with a smoke test suite for demo imports"
-    effort: "2-3 hours"
-    impact: "Ensure all 47 demo scripts at least import without errors"
-  - title: "Wire up the eval test harness in CI (even a subset)"
+  - title: "Add pytest with basic demo validation tests"
     effort: "3-4 hours"
-    impact: "Automated validation of tool call accuracy on every PR"
+    impact: "Establish a test runner and validate demo structure, imports, and syntax programmatically"
+  - title: "Add a CI workflow that runs tests on PRs"
+    effort: "1-2 hours"
+    impact: "Prevent broken demos from being merged; catch import errors and syntax issues"
+  - title: "Add Trivy or Snyk scanning to CI"
+    effort: "1-2 hours"
+    impact: "Catch known vulnerabilities in Python dependencies automatically"
+  - title: "Add codecov integration"
+    effort: "1-2 hours"
+    impact: "Track coverage trends and enforce minimum thresholds on PRs"
+  - title: "Create .claude/rules/ for test patterns"
+    effort: "2-3 hours"
+    impact: "Guide AI agents to generate consistent, high-quality tests"
 recommendations:
   priority_0:
-    - "Add unit tests for shared utilities (utils.py, client_tools/) and eval test infrastructure"
-    - "Automate the eval test harness in CI — run against a local mock or lightweight server"
-    - "Add coverage tracking with pytest-cov and integrate codecov"
+    - "Add pytest framework with test discovery and a CI workflow to run tests on PRs"
+    - "Create unit tests for shared utilities (demos/shared/utils.py, scripts/validate_demos.py)"
+    - "Add coverage tracking with codecov and enforce a minimum threshold (e.g. 50%)"
   priority_1:
-    - "Add ruff linting and mypy type checking to pre-commit hooks and CI"
-    - "Add Trivy container scanning for the MCP Dockerfile"
-    - "Add CodeQL or Semgrep SAST scanning"
-    - "Create agent rules (.claude/rules/) for test creation patterns"
+    - "Add security scanning (Trivy for dependencies, CodeQL or Bandit for SAST)"
+    - "Add a CI step to validate all demo files can be imported without errors"
+    - "Build and scan the math-mcp Dockerfile in CI"
+    - "Create .claude/rules/ with test creation guidelines for unit and integration tests"
   priority_2:
-    - "Add Gitleaks or TruffleHog for secret detection in CI"
-    - "Add multi-architecture builds for the MCP server image"
-    - "Add a smoke test that exercises each demo module's import path"
-    - "Add Dependabot or Renovate for dependency updates"
+    - "Add integration test workflow that spins up OGX and runs test_all_demos.sh"
+    - "Add type checking with mypy or pyright"
+    - "Add Kubernetes manifest validation (kubeconform/kubeval) in CI"
+    - "Create end-to-end test for Kubernetes deployment with Kind"
 ---
 
 # Quality Analysis: ogx-ai/ogx-demos
 
 ## Executive Summary
 
-- **Overall Score: 3.1/10**
-- **Repository Type**: Python demo/example collection for the OGX AI platform
-- **Primary Language**: Python (59 `.py` files, ~8,500 LOC)
-- **Framework**: OGX client SDK + Llama Stack, FastAPI, Streamlit
-- **License**: Apache 2.0
-
-**Key Strengths**:
-- Well-structured progressive demo collection (7 phases, 47+ demo scripts)
-- Eval test infrastructure with 1,100+ curated tool-call queries across 6 query sets
-- Kubernetes deployment manifests with Kustomize overlays (vLLM, MCP)
-- Pre-commit hooks enforced in CI
-
-**Critical Gaps**:
-- Zero unit tests — no pytest, unittest, or any test framework usage
-- Eval tests exist but are never run in CI
-- No coverage tracking, no linting, no type checking
-- No container scanning, SAST, or secret detection
-- No agent rules or AI-assisted test creation guidance
-
-**Agent Rules Status**: Missing — no `.claude/` directory, no `CLAUDE.md`, no test automation rules
+- **Overall Score: 3.6/10**
+- **Repository Type**: Python demo collection / SDK showcase for OGX AI platform
+- **Primary Language**: Python 3.12+
+- **Package Manager**: uv
+- **Key Strengths**: Good code quality tooling (Ruff + pre-commit), well-structured CLAUDE.md, thoughtful demo validation script, comprehensive demo organization
+- **Critical Gaps**: No unit test framework, no test execution in CI, no coverage tracking, no security scanning, no container image validation
+- **Agent Rules Status**: Partial (CLAUDE.md present, no .claude/rules/)
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 1.0/10 | No unit tests — only manual eval scripts |
-| Integration/E2E | 4.0/10 | Manual eval harness with 1,100+ queries but no CI automation |
-| Build Integration | 1.0/10 | No PR-time build validation, no image builds in CI |
-| Image Testing | 1.5/10 | Single Dockerfile, no runtime validation or scanning |
-| Coverage Tracking | 0.0/10 | No coverage generation, no thresholds |
-| CI/CD Automation | 3.0/10 | Only a pre-commit workflow; no test/build/release automation |
-| Agent Rules | 0.0/10 | No agent rules or test automation guidance |
-
-**Weighted Overall: 3.1/10**
+| Unit Tests | 1/10 | No test framework; no pytest/unittest configured |
+| Integration/E2E | 4/10 | Shell-based demo runner exists but not in CI |
+| **Build Integration** | **1/10** | **No PR-time build validation for Dockerfile** |
+| Image Testing | 1/10 | Single Dockerfile with no build/scan/runtime testing |
+| Coverage Tracking | 0/10 | No coverage tool configured |
+| CI/CD Automation | 3/10 | Pre-commit only; no test/build/deploy workflows |
+| Agent Rules | 5/10 | CLAUDE.md exists with project context; no test rules |
 
 ## Critical Gaps
 
-### 1. No Unit Tests (Severity: HIGH)
-- **Impact**: Regressions in demo code, shared utilities (`demos/shared/utils.py`, `demos/client_tools/`), and eval infrastructure (`tests/eval_tests/utils.py`) go completely undetected
-- **Current State**: Zero `*_test.py` files, no pytest configuration, no `[tool.pytest]` section in `pyproject.toml`
-- **Effort**: 8-12 hours to create initial test suite
-- **Gold Standard Gap**: odh-dashboard has 2,000+ unit tests; this repo has 0
+### 1. No Unit Test Framework or Test Suite
+- **Impact**: Code changes to shared utilities, demo infrastructure, and validation scripts cannot be validated automatically. Regressions in `demos/shared/utils.py` or `scripts/validate_demos.py` go undetected.
+- **Severity**: HIGH
+- **Effort**: 4-8 hours
+- **Details**: The `pyproject.toml` has no `[tool.pytest]` section, no `pytest` in dependencies, and no `conftest.py`. The `tests/` directory contains only standalone scripts and eval notebooks — no actual unit tests.
 
-### 2. Eval Tests Not Automated in CI (Severity: HIGH)
-- **Impact**: 1,100+ carefully curated queries across 6 datasets (Ansible, GitHub, OpenShift, custom, client tools) exist in `tests/eval_tests/` but are only runnable manually. Tool call regressions can ship silently.
-- **Current State**: `tests/eval_tests/tests.py` requires a running OGX server (`REMOTE_BASE_URL`) and MCP servers. No CI workflow runs these tests.
-- **Effort**: 4-6 hours (could run a subset against mocked responses or a lightweight server in CI)
-
-### 3. No Coverage Tracking (Severity: HIGH)
-- **Impact**: No visibility into which code paths are exercised. Cannot set quality gates.
-- **Current State**: No `.coveragerc`, no codecov integration, no `pytest-cov` in dependencies
+### 2. No Automated Test Execution in CI
+- **Impact**: PRs merge with only linting validation. The existing `test_all_demos.sh` script and `tests/eval_tests/tests.py` never run in CI.
+- **Severity**: HIGH
 - **Effort**: 2-4 hours
+- **Details**: The single GitHub Actions workflow (`.github/workflows/pre-commit.yaml`) only runs pre-commit hooks (trailing whitespace, Ruff linting, demo structure validation). No workflow runs any tests.
 
-### 4. No Container Image Security Scanning (Severity: HIGH)
-- **Impact**: The MCP server Dockerfile uses `python:3.11-slim` — vulnerabilities in the base image or pip dependencies are undetected
-- **Current State**: Single `deployment/kubernetes/mcp-servers/math-mcp/Dockerfile` with no Trivy, Snyk, or any scanning
-- **Effort**: 2-3 hours to add Trivy scanning workflow
+### 3. No Coverage Tracking
+- **Impact**: Zero visibility into what percentage of code is exercised by tests. No enforcement mechanism to prevent coverage regression.
+- **Severity**: HIGH
+- **Effort**: 2-3 hours
+- **Details**: No `.coveragerc`, no `codecov.yml`, no coverage-related dependencies. Even if tests existed, there's no infrastructure to measure or report coverage.
 
-### 5. No SAST or Dependency Scanning (Severity: MEDIUM)
-- **Impact**: No CodeQL, Semgrep, Bandit, or any static analysis. Dependency vulnerabilities not tracked.
+### 4. No Container Image Build or Scan in CI
+- **Impact**: The `deployment/kubernetes/mcp-servers/math-mcp/Dockerfile` is never built or validated in CI. Image issues are discovered only during manual deployment.
+- **Severity**: MEDIUM
 - **Effort**: 2-4 hours
+- **Details**: The Dockerfile uses `python:3.11-slim` base but the project requires Python 3.12+ — this version mismatch would be caught by a CI build step.
 
-### 6. Pre-commit Hooks Are Minimal (Severity: MEDIUM)
-- **Impact**: Only 3 basic checks (trailing-whitespace, end-of-file-fixer, check-added-large-files). No linting (ruff), no type checking (mypy), no formatting enforcement (black/ruff format).
-- **Effort**: 1-2 hours to add ruff + mypy
+### 5. No Security Scanning
+- **Impact**: No SAST, dependency scanning, or secret detection. Vulnerabilities in the 15+ Python dependencies (including `openai`, `fastapi`, `streamlit`, `yfinance`) go undetected.
+- **Severity**: MEDIUM
+- **Effort**: 2-3 hours
+- **Details**: No Trivy, Snyk, CodeQL, Bandit, or Gitleaks configuration found. The `.env.example` documents API keys but there's no automated secret detection to prevent accidental commits.
 
 ## Quick Wins
 
-### 1. Add Ruff Linting to Pre-commit and CI (1-2 hours)
-- **Impact**: Catch unused imports, style issues, and basic bugs automatically
+### 1. Add pytest with Basic Demo Validation Tests (3-4 hours)
+- **Impact**: Establish a test runner that validates demo structure, imports, and basic functionality
 - **Implementation**:
-```yaml
-# .pre-commit-config.yaml - add this repo
-- repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.8.0
-  hooks:
-    - id: ruff
-      args: [--fix]
-    - id: ruff-format
+```bash
+# Add to pyproject.toml
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-cov>=5.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
 ```
 
-### 2. Add Trivy Container Scanning (1-2 hours)
-- **Impact**: Detect known CVEs in the python:3.11-slim base image
+```python
+# tests/test_demo_structure.py
+import importlib
+import pytest
+from pathlib import Path
+
+DEMO_DIR = Path("demos")
+
+def get_demo_modules():
+    """Discover all demo Python modules."""
+    modules = []
+    for phase_dir in sorted(DEMO_DIR.iterdir()):
+        if not phase_dir.is_dir() or phase_dir.name.startswith("_"):
+            continue
+        for py_file in sorted(phase_dir.glob("[0-9]*.py")):
+            module = str(py_file).replace("/", ".").replace(".py", "")
+            modules.append(module)
+    return modules
+
+@pytest.mark.parametrize("module", get_demo_modules())
+def test_demo_imports(module):
+    """Verify each demo can be imported without errors."""
+    importlib.import_module(module)
+```
+
+### 2. Add CI Workflow for Tests (1-2 hours)
+- **Impact**: Run tests on every PR, catching breakage before merge
 - **Implementation**:
 ```yaml
-# .github/workflows/trivy.yaml
-name: Trivy Scan
-on: [pull_request]
+# .github/workflows/tests.yaml
+name: Tests
+on:
+  pull_request:
+    branches: [main]
 jobs:
-  scan:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/ --tb=short -q
+```
+
+### 3. Add Trivy Dependency Scanning (1-2 hours)
+- **Impact**: Catch known CVEs in Python dependencies
+- **Implementation**:
+```yaml
+# .github/workflows/security.yaml
+name: Security
+on:
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'
+jobs:
+  trivy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          severity: 'HIGH,CRITICAL'
+          scan-type: fs
+          scan-ref: .
+          severity: CRITICAL,HIGH
 ```
 
-### 3. Add Pytest Smoke Tests for Demo Imports (2-3 hours)
-- **Impact**: Ensure all 47 demo scripts at least import without errors
+### 4. Add Codecov Integration (1-2 hours)
+- **Impact**: Track test coverage trends and enforce minimum thresholds
 - **Implementation**:
-```python
-# tests/test_demo_imports.py
-import importlib
-import pytest
-
-DEMO_MODULES = [
-    "demos.01_foundations.01_client_setup",
-    "demos.01_foundations.02_chat_completion",
-    # ... all demo modules
-]
-
-@pytest.mark.parametrize("module", DEMO_MODULES)
-def test_demo_imports(module):
-    importlib.import_module(module)
+```yaml
+# codecov.yml
+coverage:
+  status:
+    project:
+      default:
+        target: 50%
+    patch:
+      default:
+        target: 80%
 ```
 
-### 4. Wire Up Eval Tests in CI (3-4 hours)
-- **Impact**: Automated validation of tool call accuracy on every PR
-- Run a subset of the 1,100+ queries against a mock or lightweight server
+### 5. Create .claude/rules/ for Test Patterns (2-3 hours)
+- **Impact**: Guide AI agents to generate consistent, high-quality tests aligned with project conventions
+- **Implementation**: Use `/test-rules-generator` to analyze existing patterns and generate rules
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows Inventory**:
+**Workflow Inventory:**
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `pre-commit.yaml` | PR to `main` | Run pre-commit hooks |
+| `pre-commit.yaml` | PR to main | Run pre-commit hooks (Ruff, trailing whitespace, YAML/JSON validation, demo structure) |
 
-**Analysis**:
-- Only **1 workflow** exists — `pre-commit.yaml`
-- Runs on PRs to `main` only
-- Uses `actions/checkout@v4`, `actions/setup-python@v3` (outdated — v5 is current), `pre-commit/action@v3.0.1`
-- No concurrency control (multiple PRs could run simultaneously)
-- No caching (no pip cache, no pre-commit cache)
-- No test execution in CI at all
-- No build or release workflows
-- No image build or push workflows
-- No dependency update automation (Dependabot/Renovate)
+**Assessment:**
+- Only 1 workflow — pre-commit linting
+- No test execution workflow
+- No build workflow
+- No deploy workflow
+- No concurrency control (not needed with single workflow)
+- No caching configured
+- No periodic jobs (e.g., security scanning)
 
-**Missing Workflows**:
-- Test execution (pytest)
-- Linting (ruff)
-- Type checking (mypy)
-- Container build & push
-- Container scanning (Trivy)
-- SAST (CodeQL/Semgrep)
-- Release automation
-- Dependency updates
+**Makefile Targets:**
+The Makefile contains only container build/run targets (`build_llamastack`, `build_mcp`, `build_ui`, `run_ui`, `run_mcp`, `setup_local`). No test targets, no lint targets, no CI-relevant targets.
 
 ### Test Coverage
 
-**Unit Tests**: **None**
-- Zero `*_test.py` files following pytest conventions
-- No pytest configuration in `pyproject.toml`
-- No testing framework in dependencies
+**Test-to-Code Ratio:** 11 test files / 51 source files = **0.22** (low; target is 0.5-1.0)
 
-**Eval/Integration Tests**: `tests/eval_tests/`
-- `tests.py` (414 lines) — main test harness for MCP tool call evaluation
-- `utils.py` (280 lines) — metrics collection, logging, plotting
-- 6 query datasets totaling **1,139 queries**:
-  - `client_tool_queries.json`: 630 queries
-  - `client_tool_queries_bad_functions.json`: 480 queries
-  - `ocp_queries.json`: 5 queries
-  - `github_queries.json`: 13 queries
-  - `ansible_queries.json`: 8 queries
-  - `custom_queries.json`: 3 queries
-- 4 tool definition variants for testing different function naming patterns
-- Results visualization with matplotlib (saved as JPEG plots)
-- Analysis notebooks: `tests_analysis.ipynb`, `tool_test_analysis.ipynb`
+**Existing Test Infrastructure:**
+1. **`tests/test_all_demos.sh`** — Comprehensive shell script that runs all demos against a live OGX server. Good design with timeout handling, skip conditions, colored output, and summary reporting. However, requires a running server and is never executed in CI.
 
-**Test Scripts**: `tests/scripts/`
-- 4 manual test scripts for agent functionality
-- `0_simple_agent.py`, `1_simple_agent_with_RAG.py`, `4_OCP_version_info_email.py`, `agent_with_mcp_ocp_slack.py`
+2. **`tests/eval_tests/tests.py`** — MCP tool-calling evaluation harness that tests agent tool selection accuracy across multiple MCP servers (Ansible, GitHub, OpenShift, custom). Requires live server and MCP endpoints. Includes metrics collection and plot generation.
 
-**Test-to-Code Ratio**: ~0.23 (11 test files / 47 demo files) — but these are evaluation scripts, not true unit tests
+3. **`tests/eval_tests/` notebooks** — Jupyter notebooks for analyzing test results. Not automated.
 
-**Coverage Tracking**: None — no `.coveragerc`, no codecov, no coverage generation
+4. **`scripts/validate_demos.py`** — AST-based structural validator (checks docstrings, `main()` function, `fire.Fire()` usage, file naming). Runs in pre-commit but NOT as a test suite.
+
+**Missing:**
+- No pytest framework
+- No unit tests for `demos/shared/utils.py` (model resolution, document helpers)
+- No unit tests for `scripts/validate_demos.py` itself
+- No mock-based tests that work without a live server
+- No property-based testing
+- No snapshot testing for demo outputs
 
 ### Code Quality
 
-**Linting**: None configured
-- No `ruff.toml`, `.flake8`, or any Python linter configuration
-- No type checking (no `mypy.ini`, no `[tool.mypy]` in pyproject.toml)
+**Linting (Strong):**
+- **Ruff** configured in `pyproject.toml` with 7 rule categories (E, W, F, I, UP, B, SIM)
+- Line length: 120 characters
+- Target version: Python 3.12
+- Isort configured with first-party packages
+- Excludes eval directories appropriately
 
-**Pre-commit Hooks** (`.pre-commit-config.yaml`):
-- `trailing-whitespace` — removes trailing whitespace
-- `end-of-file-fixer` — ensures files end with newline
-- `check-added-large-files` — prevents large files
-- **Missing**: ruff, mypy, black/ruff-format, bandit, detect-secrets
+**Pre-commit Hooks (Good):**
+- Standard hooks: trailing-whitespace, end-of-file-fixer, check-added-large-files (500kb), check-yaml, check-json, check-merge-conflict, debug-statements
+- Ruff linting with auto-fix
+- Ruff formatting
+- Custom demo structure validation hook
 
-**Static Analysis**: None
-- No CodeQL, Semgrep, or Bandit
-- No dependency scanning
-- No secret detection (no Gitleaks, no TruffleHog)
+**Missing:**
+- No type checking (mypy, pyright, pytype)
+- No Bandit or other Python SAST tool
+- No secret detection (Gitleaks, TruffleHog)
+- No complexity analysis
 
 ### Container Images
 
-**Dockerfiles**: 1 (minimal)
-- `deployment/kubernetes/mcp-servers/math-mcp/Dockerfile`
-  - Base: `python:3.11-slim` (not pinned to digest)
+**Inventory:**
+- 1 Dockerfile: `deployment/kubernetes/mcp-servers/math-mcp/Dockerfile`
+  - Base image: `python:3.11-slim` (note: project requires Python 3.12+, version mismatch)
   - Single-stage build
   - No multi-architecture support
   - No health check
   - No non-root user
-  - Exposes port 8080
-  - Runs as root (security concern)
+  - No SBOM generation
 
-**Makefile Build Targets**:
-- `build_llamastack` — builds Llama Stack container with podman
-- `build_mcp` — builds MCP server container
-- `build_ui` — builds Streamlit UI container
-- All use `podman` with `linux/amd64` only — no multi-arch
+**Makefile References (not Dockerfiles):**
+- `build_llamastack` — uses `llama stack build` (external tool)
+- `build_mcp` — podman build (references `build_mcp` directory, not the k8s Dockerfile)
+- `build_ui` — Streamlit container build
 
-**Runtime Testing**: None
-- No container startup validation
-- No health check testing
-- No Testcontainers or equivalent
-- No integration testing of deployed containers
-
-**Security Scanning**: None
-- No Trivy, Snyk, or Grype
-- No SBOM generation
-- No image signing/attestation
+**Missing:**
+- No CI build step for any container
+- No vulnerability scanning (Trivy, Snyk)
+- No image signing or attestation
+- No runtime validation tests
+- No `.dockerignore` for the math-mcp service
 
 ### Security
 
-| Practice | Status |
-|----------|--------|
-| Container Scanning | Not present |
-| SAST/CodeQL | Not present |
-| Dependency Scanning | Not present |
-| Secret Detection | Not present |
-| `.gitignore` for secrets | Partial — excludes `.env` and `*private-secret.yaml` |
-| Base image pinning | Not present (uses tag, not digest) |
-| Non-root container | Not present |
+**Current State:**
+- `.env.example` documents API keys properly
+- `.gitignore` excludes `.env` and private secrets
+- Pre-commit checks for large files (may catch accidental binary commits)
 
-**Positive**: The `.gitignore` excludes `.env` files and private secrets. The `.env.example` provides a template without actual values.
+**Missing:**
+- No SAST tool (CodeQL, Bandit, Semgrep)
+- No dependency scanning (pip-audit, Safety, Trivy)
+- No secret detection (Gitleaks, TruffleHog, detect-secrets)
+- No security-focused CI workflow
+- No `SECURITY.md` or vulnerability disclosure policy
+- Dockerfile runs as root
+- No pinned dependencies in Dockerfile requirements.txt
 
 ### Agent Rules (Agentic Flow Quality)
 
-- **Status**: Missing
-- **CLAUDE.md**: Not present
-- **AGENTS.md**: Not present
-- **`.claude/` directory**: Not present
-- **`.claude/rules/`**: Not present
-- **Test automation rules**: Not present
-- **Coverage**: No test types have agent rules
-- **Quality**: N/A
-- **Gaps**: Everything is missing — no guidance for AI agents creating tests, reviewing code, or following patterns
-- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
-  - Unit test patterns for OGX client utilities
-  - Eval test patterns for tool call validation
-  - Integration test patterns for demo scripts
-  - Code style and documentation standards
+**Status**: Partial
+
+**What Exists:**
+- `CLAUDE.md` at repo root — **Good quality**. Covers project overview, development setup, running demos, key libraries, architecture, two client patterns, API routes, test infrastructure, CI, environment variables, and deployment. This gives AI agents solid context for working in the repo.
+
+**What's Missing:**
+- No `.claude/` directory
+- No `.claude/rules/` with test creation rules
+- No `.claude/skills/` with custom skills
+- No `AGENTS.md`
+- No test pattern documentation for AI agents
+- No coding style rules for AI-generated code
+
+**Recommendation**: Run `/test-rules-generator` to create `.claude/rules/` with:
+- `unit-tests.md` — pytest patterns for testing shared utilities
+- `integration-tests.md` — patterns for testing demos against mock servers
+- `demo-structure.md` — conventions for new demo files
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add unit tests for shared utilities and eval infrastructure**
-   - Create `tests/test_utils.py` for `demos/shared/utils.py`
-   - Create `tests/test_eval_utils.py` for `tests/eval_tests/utils.py`
-   - Create `tests/test_client_tools.py` for `demos/client_tools/`
-   - Add `pytest` and `pytest-cov` to `pyproject.toml` dependencies
-   - Effort: 8-12 hours
+1. **Add pytest framework with test discovery**
+   - Install pytest + pytest-cov as dev dependencies
+   - Create `tests/test_demo_structure.py` to validate all demos can import
+   - Create `tests/test_validate_demos.py` to unit-test the validation script
+   - Create `tests/test_shared_utils.py` to test model resolution and document helpers
 
-2. **Automate eval tests in CI**
-   - Create `.github/workflows/tests.yaml` that runs the eval harness
-   - Use a mock OGX server or run a subset of queries
-   - At minimum, validate query file format and tool definitions
-   - Effort: 4-6 hours
+2. **Add CI workflow for running tests on PRs**
+   - New `.github/workflows/tests.yaml` workflow
+   - Use `astral-sh/setup-uv` for fast dependency installation
+   - Run pytest with coverage reporting
+   - Fail PR if tests fail
 
-3. **Add coverage tracking**
-   - Add `pytest-cov` to dependencies
-   - Configure `.coveragerc` or `[tool.coverage]` in pyproject.toml
-   - Integrate codecov and add PR coverage reporting
-   - Set minimum coverage threshold (start at 30%, increase over time)
-   - Effort: 2-4 hours
+3. **Add coverage tracking with codecov**
+   - Configure `pytest-cov` to generate coverage reports
+   - Add `codecov.yml` with project and patch targets
+   - Upload coverage in CI workflow
+   - Add coverage badge to README
 
 ### Priority 1 (High Value)
 
-4. **Add ruff linting and mypy type checking**
-   - Add ruff to pre-commit hooks and CI
-   - Add mypy with gradual typing (`--disallow-untyped-defs` per-module)
-   - Add `[tool.ruff]` and `[tool.mypy]` sections to `pyproject.toml`
-   - Effort: 2-3 hours
+4. **Add security scanning**
+   - Add Trivy for Python dependency scanning
+   - Add Bandit for Python SAST
+   - Add Gitleaks for secret detection
+   - Create `.github/workflows/security.yaml`
 
-5. **Add Trivy container scanning**
-   - Scan the MCP Dockerfile in CI
-   - Set severity thresholds (fail on HIGH/CRITICAL)
-   - Pin base image to digest for reproducibility
+5. **Add demo import validation in CI**
+   - Validate all demo files can be imported without a live server
+   - Catch missing dependencies and import errors early
+
+6. **Build and scan math-mcp Dockerfile in CI**
+   - Add a workflow step to build the Dockerfile
+   - Fix Python version mismatch (3.11 in Dockerfile vs 3.12 project requirement)
+   - Add Trivy container scanning
    - Add non-root user to Dockerfile
-   - Effort: 2-3 hours
 
-6. **Add CodeQL or Semgrep SAST**
-   - Enable CodeQL for Python
-   - Add `.github/workflows/codeql.yaml`
-   - Effort: 1-2 hours
-
-7. **Create agent rules (`.claude/rules/`)**
-   - `unit-tests.md` — patterns for testing OGX utilities
-   - `eval-tests.md` — patterns for creating eval query datasets
-   - `code-style.md` — Python style conventions
-   - Effort: 3-4 hours
+7. **Create .claude/rules/ for test automation**
+   - Generate rules for pytest conventions
+   - Document mock patterns for testing without live OGX server
+   - Include demo structure validation rules
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add secret detection**
-   - Add Gitleaks or TruffleHog to CI
-   - Effort: 1-2 hours
+8. **Add type checking with mypy or pyright**
+   - Configure in `pyproject.toml`
+   - Add to pre-commit hooks
+   - Gradually type-annotate shared utilities
 
-9. **Add Dependabot/Renovate**
-   - Auto-update Python dependencies
-   - Auto-update GitHub Actions versions
-   - Effort: 30 minutes
+9. **Add Kubernetes manifest validation**
+   - Use kubeconform or kubeval in CI
+   - Validate all YAML in `deployment/kubernetes/`
+   - Check kustomize overlays build correctly
 
-10. **Add multi-architecture container builds**
-    - Build for both `linux/amd64` and `linux/arm64`
-    - Effort: 2-3 hours
+10. **Create integration test workflow with Kind**
+    - Spin up Kind cluster in CI
+    - Deploy OGX + vLLM
+    - Run `test_all_demos.sh`
+    - Tear down on completion
 
-11. **Add demo smoke test workflow**
-    - Import each demo module to verify no broken imports
-    - Effort: 2-3 hours
-
-12. **Add SBOM generation**
-    - Use Syft or Trivy to generate SBOMs for container images
-    - Effort: 1-2 hours
+11. **Add pre-commit hook for secret detection**
+    - Add `gitleaks` or `detect-secrets` to `.pre-commit-config.yaml`
+    - Prevent accidental API key commits
 
 ## Comparison to Gold Standards
 
 | Dimension | ogx-demos | odh-dashboard | notebooks | kserve |
 |-----------|-----------|---------------|-----------|--------|
-| Unit Tests | 0 tests | 2,000+ tests | 200+ tests | 500+ tests |
-| Integration/E2E | Manual eval harness | Automated Cypress E2E | Automated notebooks | Automated E2E |
-| Coverage Tracking | None | Codecov enforced | Coverage reports | Codecov enforced |
-| CI Workflows | 1 (pre-commit only) | 15+ workflows | 10+ workflows | 20+ workflows |
-| Container Scanning | None | Trivy + SBOM | Trivy + multi-arch | Trivy + signing |
-| SAST | None | CodeQL | Bandit | CodeQL |
-| Pre-commit Hooks | 3 basic checks | 10+ hooks (lint, type) | 8+ hooks | Comprehensive |
-| Agent Rules | None | Comprehensive | Basic | None |
-| Secret Detection | .gitignore only | Gitleaks in CI | Gitleaks | Gitleaks |
-| Dependency Updates | None | Dependabot | Renovate | Dependabot |
+| Unit Tests | 1/10 | 9/10 | 6/10 | 9/10 |
+| Integration/E2E | 4/10 | 9/10 | 8/10 | 9/10 |
+| Build Integration | 1/10 | 8/10 | 7/10 | 8/10 |
+| Image Testing | 1/10 | 7/10 | 10/10 | 7/10 |
+| Coverage Tracking | 0/10 | 9/10 | 5/10 | 9/10 |
+| CI/CD Automation | 3/10 | 9/10 | 8/10 | 9/10 |
+| Agent Rules | 5/10 | 8/10 | 3/10 | 2/10 |
+| **Overall** | **3.6/10** | **8.5/10** | **7.0/10** | **8.0/10** |
+
+**Key Gaps vs Gold Standards:**
+- **odh-dashboard**: Has multi-layer testing (unit, integration, E2E with Cypress), contract tests, comprehensive CI/CD with 10+ workflows, codecov integration with enforcement, and comprehensive `.claude/rules/`
+- **notebooks**: Has 5-layer image validation, multi-architecture builds, Trivy scanning, and automated image testing
+- **kserve**: Has envtest for controller testing, multi-version E2E, codecov enforcement at 70%+, and 20+ CI workflows
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/pre-commit.yaml` — sole CI workflow
+- `.github/workflows/pre-commit.yaml` — Only CI workflow (pre-commit hooks)
 
 ### Testing
-- `tests/eval_tests/tests.py` — main eval test harness
-- `tests/eval_tests/utils.py` — metrics and plotting utilities
-- `tests/eval_tests/queries/*.json` — 6 query datasets (1,139 total queries)
-- `tests/eval_tests/tools/*.py` — 4 tool definition variants
-- `tests/eval_tests/results/` — saved results and plots
-- `tests/scripts/` — 4 manual agent test scripts
+- `tests/test_all_demos.sh` — Shell-based demo runner (requires live server)
+- `tests/eval_tests/tests.py` — MCP tool-calling evaluation harness
+- `tests/eval_tests/utils.py` — Test utilities and metrics collection
+- `tests/eval_tests/queries/` — JSON query files for eval tests
+- `tests/scripts/` — Standalone integration scripts
 
 ### Code Quality
-- `.pre-commit-config.yaml` — 3 basic pre-commit hooks
-- `pyproject.toml` — project config (no lint/test/coverage config)
+- `pyproject.toml` — Ruff configuration (linting + formatting)
+- `.pre-commit-config.yaml` — Pre-commit hooks (Ruff, standard hooks, demo validation)
+- `scripts/validate_demos.py` — AST-based demo structure validator
 
 ### Container Images
-- `deployment/kubernetes/mcp-servers/math-mcp/Dockerfile` — MCP server image
+- `deployment/kubernetes/mcp-servers/math-mcp/Dockerfile` — Math MCP server container
+
+### Agent Rules
+- `CLAUDE.md` — Project context for AI agents (good quality)
 
 ### Deployment
-- `deployment/kubernetes/vllm-serve/` — vLLM server deployment (Kustomize)
-- `deployment/kubernetes/llama-stack/` — Llama Stack CR
-- `deployment/kubernetes/mcp-servers/` — MCP server deployment
-- `Makefile` — container build targets (podman)
+- `deployment/kubernetes/` — Kind cluster deployment manifests
+- `deployment/kubernetes/vllm-serve/` — vLLM model server (Kustomize with arch overlays)
+- `deployment/kubernetes/ogx/` — OGX server custom resource
+- `deployment/kubernetes/mcp-servers/math-mcp/` — MCP server deployment
 
-### Configuration
-- `.env.example` — environment variable template
-- `.gitignore` — excludes .env and private secrets
-- `.gitmodules` — git submodule reference
-
-### Documentation
-- `README.md` — main documentation
-- `DEMOS_STRUCTURE.md` — comprehensive demo structure plan
-- `demos/*/` — 7 demo phases with 47+ Python scripts
+### Key Source Files
+- `demos/shared/utils.py` — Shared utilities (model resolution, document helpers)
+- `demos/client_tools/` — Custom tool implementations
+- `demos/01_foundations/` through `demos/06_openai_compatibility/` — Demo scripts

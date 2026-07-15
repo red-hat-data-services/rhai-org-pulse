@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:11 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:39 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/workbenches</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="180.95558400000002"
+                                stroke-dashoffset="175.30072199999995"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">6.8</div>
+                        <div class="score-value">6.9</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Good coverage across all 3 components: Go tests with envtest, Jest + Cypress for frontend</div>
+                            <div class="scorecard-status">Good Go + Jest unit test coverage across all three components</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Controller E2E with Kind cluster on PRs; Cypress mocked E2E for frontend; no backend E2E</div>
+                            <div class="scorecard-status">Controller E2E with Kind; Cypress mocked E2E for frontend; full-stack E2E scaffolded but not yet implemented</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Multi-arch image builds on PR but no runtime validation or Konflux simulation</div>
+                            <div class="scorecard-status">Multi-arch image builds on PR but no Konflux simulation; Tekton only covers controller</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Multi-arch builds with distroless base images but no runtime validation or vulnerability scanning</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
+                            <div class="scorecard-status">Multi-stage distroless builds with multi-arch support; no runtime validation or startup testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Coverage files generated locally (cover.out, jest-coverage) but no CI enforcement or reporting</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Coverage files generated locally (cover.out, nyc) but no codecov integration or PR enforcement</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Well-structured per-component workflows with path filtering, caching, and semantic PR enforcement</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Well-structured per-component workflows with path filtering, concurrency control, and artifact uploads</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, no .claude directory, no agent rules for test automation</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No coverage tracking or enforcement in CI</div>
-                            <p>Coverage can silently regress without anyone noticing; no PR-level feedback on test quality</p>
+                            <div class="item-description">No coverage tracking or enforcement on PRs</div>
+                            <p>Coverage can silently degrade — no visibility into coverage trends or regressions</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container security scanning</div>
-                            <p>Vulnerability and CVE issues not caught until downstream (Konflux/ART) or production</p>
+                            <div class="item-description">No security scanning (Trivy, CodeQL, SAST)</div>
+                            <p>Vulnerability and code quality issues not detected before merge</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container image runtime validation</div>
-                            <p>Images build successfully but may fail at startup; issues found only at deployment time</p>
+                            <div class="item-description">Full-stack E2E tests not implemented</div>
+                            <p>testing/Makefile local-e2e target is a no-op TODO — no end-to-end validation across controller+backend+frontend</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">16-24 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">Tekton/Konflux only covers controller image</div>
+                            <p>Backend and frontend images have no Konflux pipeline — production build drift for 2 of 3 components</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No backend E2E or integration tests</div>
-                            <p>Backend API correctness only validated at unit level with mocked clients; real K8s interactions untested</p>
+                            <div class="item-description">No container runtime validation</div>
+                            <p>Images built on PR are not tested for startup, health checks, or functional correctness</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-16 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No agent rules for AI-assisted development</div>
-                            <p>AI-generated PRs lack consistency; test patterns not codified for automated contributors</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,35 +464,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to image-build workflow</div>
-                            <p>Early detection of CVEs in container images across all 3 components</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Codecov integration for Go and frontend coverage</div>
-                            <p>PR-level coverage reporting, trend tracking, and regression prevention</p>
+                            <div class="item-description">Add Codecov integration to Go and frontend test workflows</div>
+                            <p>Immediate PR-level coverage visibility and trend tracking</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add container startup validation after image build</div>
-                            <p>Catch image startup failures before merge</p>
+                            <div class="item-description">Add Trivy container scanning to ws-build-image.yml</div>
+                            <p>Catch CVEs in base images and dependencies before merge</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add CodeQL / gosec SAST workflow</div>
+                            <p>Static analysis for security vulnerabilities in Go and TypeScript code</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create basic CLAUDE.md with test patterns and conventions</div>
-                            <p>Improve AI-generated code quality and test consistency</p>
+                            <div class="item-description">Create basic CLAUDE.md and agent test rules</div>
+                            <p>Improve AI-generated test quality and consistency for contributors</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add Tekton pipelines for backend and frontend components</div>
+                            <p>Consistent Konflux build coverage across all three components</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add Codecov integration with coverage thresholds for Go (controller, backend) and frontend (Jest + Cypress merge)</li><li>Add Trivy container scanning to the ws-build-image reusable workflow</li><li>Add container startup/health-check validation after image build in CI</li></ul>
+                            <ul><li>Add Codecov/Coveralls integration with minimum coverage thresholds on PRs</li><li>Add container vulnerability scanning (Trivy) to the reusable ws-build-image.yml workflow</li><li>Add SAST scanning (CodeQL for Go + TypeScript) as a PR workflow</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add backend E2E tests with envtest or Kind cluster testing API handler behavior against real CRDs</li><li>Add SAST scanning (CodeQL or Semgrep) for Go and TypeScript code</li><li>Create comprehensive agent rules (.claude/rules/) for unit, E2E, and integration test patterns</li><li>Add secret detection (Gitleaks) to PR workflow</li></ul>
+                            <ul><li>Implement full-stack E2E tests in testing/ directory (currently a TODO placeholder)</li><li>Add container runtime validation — startup probe, health check, basic HTTP smoke test</li><li>Create Tekton/Konflux pipelines for backend and frontend components (currently only controller)</li><li>Add dependency scanning (Dependabot or Renovate) for Go modules and npm packages</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add accessibility testing beyond cypress-axe (WCAG compliance checks)</li><li>Add performance regression testing for frontend bundle size tracking</li><li>Add cross-component integration testing (frontend -&gt; backend -&gt; controller)</li><li>Add SBOM generation for container images</li></ul>
+                            <ul><li>Create CLAUDE.md and .claude/rules/ with test automation guidance for AI agents</li><li>Add pre-commit hooks for Go formatting/vetting (currently only frontend has Husky hooks)</li><li>Add secret detection (Gitleaks) workflow</li><li>Add accessibility testing enforcement in Cypress (axe-core commands exist but no CI enforcement)</li></ul>
                         </div>
                     </div>
                 </div>

@@ -6,6 +6,11 @@
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Track component workload distribution across releases.
         </p>
+        <p v-if="formattedFetchedAt" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5" :title="'Live data — fetched from Jira each time you load or refresh. Last fetched: ' + fetchedAt">
+          Data from {{ formattedFetchedAt }}
+          <span class="text-gray-300 dark:text-gray-600 mx-0.5">&middot;</span>
+          <span class="text-[10px]">auto-refreshes every 5 min</span>
+        </p>
       </div>
       <div class="flex items-center gap-2">
         <button
@@ -28,6 +33,22 @@
           @click="handleCollapseAll"
           class="px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
         >Collapse All</button>
+        <button
+          v-if="hasFetched"
+          @click="loadData()"
+          :disabled="loadingData"
+          class="px-2.5 py-1.5 text-xs font-medium rounded-md transition-colors"
+          :class="loadingData
+            ? 'text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cursor-not-allowed'
+            : 'text-white bg-primary-600 hover:bg-primary-700 border border-primary-600 hover:border-primary-700'"
+          title="Re-fetch data from Jira"
+        >
+          <span v-if="loadingData" class="inline-flex items-center gap-1">
+            <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" /><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+            Refreshing…
+          </span>
+          <span v-else>Refresh</span>
+        </button>
       </div>
     </div>
 
@@ -203,6 +224,18 @@
           {{ filterBlocked === true ? 'Blocked' : filterBlocked === false ? 'Not Blocked' : 'Blocked' }}
         </button>
 
+        <!-- Docs Required -->
+        <div class="inline-flex items-center rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 overflow-hidden">
+          <button
+            v-for="dv in ['Yes', 'No', 'Not set']"
+            :key="dv"
+            type="button"
+            @click="toggleFilter('filterDocs', dv)"
+            class="px-2.5 py-1 text-[11px] font-medium transition-colors"
+            :class="filterDocs.includes(dv) ? 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'"
+          >{{ dv === 'Not set' ? 'Docs ?' : 'Docs ' + dv }}</button>
+        </div>
+
         <!-- Delivery Owner -->
         <div class="relative" ref="delOwnerDropdownRef">
           <button
@@ -248,8 +281,8 @@
     </div>
 
     <!-- Summary cards -->
-    <div v-if="groups.length > 0 && !loadingData" class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-      <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5">
+    <div v-if="groups.length > 0 && !loadingData" class="grid grid-cols-2 sm:grid-cols-6 gap-3">
+      <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5 cursor-pointer transition-all" :class="filterType.includes('requested') ? 'ring-2 ring-blue-300 dark:ring-blue-700' : 'hover:shadow-md'" @click="toggleFilter('filterType', 'requested')" title="Filter by Requested">
         <div class="absolute top-0 left-0 w-1 h-full bg-blue-500 rounded-l-xl" />
         <div class="flex items-center gap-2 mb-1.5">
           <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-blue-100 dark:bg-blue-900/40">
@@ -259,7 +292,7 @@
         </div>
         <div class="text-2xl font-bold text-blue-600 dark:text-blue-400 ml-7">{{ totalRequested }}</div>
       </div>
-      <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5">
+      <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5 cursor-pointer transition-all" :class="filterType.includes('committed') ? 'ring-2 ring-emerald-300 dark:ring-emerald-700' : 'hover:shadow-md'" @click="toggleFilter('filterType', 'committed')" title="Filter by Committed">
         <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500 rounded-l-xl" />
         <div class="flex items-center gap-2 mb-1.5">
           <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-emerald-100 dark:bg-emerald-900/40">
@@ -269,7 +302,7 @@
         </div>
         <div class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 ml-7">{{ totalCommitted }}</div>
       </div>
-      <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5">
+      <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5 cursor-pointer transition-all" :class="filterBlocked === true ? 'ring-2 ring-red-300 dark:ring-red-700' : 'hover:shadow-md'" @click="filterBlocked = filterBlocked === true ? null : true" title="Filter by Blocked">
         <div class="absolute top-0 left-0 w-1 h-full bg-red-500 rounded-l-xl" />
         <div class="flex items-center gap-2 mb-1.5">
           <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-red-100 dark:bg-red-900/40">
@@ -277,17 +310,27 @@
           </span>
           <span class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Blocked</span>
         </div>
-        <div class="text-2xl font-bold ml-7" :class="totalBlocked > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'">{{ totalBlocked }}</div>
+        <div class="text-2xl font-bold ml-7" :class="totalBlocked > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'">{{ totalBlocked }}<span v-if="blockedPercent !== null" class="text-sm font-normal text-gray-400 dark:text-gray-500 ml-1">({{ blockedPercent }}%)</span></div>
       </div>
       <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5">
         <div class="absolute top-0 left-0 w-1 h-full bg-amber-500 rounded-l-xl" />
         <div class="flex items-center gap-2 mb-1.5">
           <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-amber-100 dark:bg-amber-900/40">
-            <svg class="w-3 h-3 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+            <svg class="w-3 h-3 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
           </span>
-          <span class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Avg / Monthly Release</span>
+          <span class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">At Risk</span>
         </div>
-        <div class="text-2xl font-bold text-amber-600 dark:text-amber-400 ml-7">{{ velocity ? velocity.avgPerRelease : '—' }}<span v-if="velocity && velocity.hasPartialYear" class="text-sm font-normal text-gray-400 dark:text-gray-500 ml-0.5" title="Includes components with less than a year of data">*</span></div>
+        <div class="text-2xl font-bold ml-7" :class="totalAtRisk > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-gray-100'">{{ totalAtRisk }}</div>
+      </div>
+      <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5">
+        <div class="absolute top-0 left-0 w-1 h-full bg-violet-500 rounded-l-xl" />
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-violet-100 dark:bg-violet-900/40">
+            <svg class="w-3 h-3 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+          </span>
+          <span class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Avg Features Delivered</span>
+        </div>
+        <div class="text-2xl font-bold text-violet-600 dark:text-violet-400 ml-7">{{ velocity ? velocity.avgPerRelease : '—' }}<span v-if="velocity && velocity.hasPartialYear" class="text-sm font-normal text-gray-400 dark:text-gray-500 ml-0.5" title="Includes components with less than a year of data">*</span></div>
       </div>
       <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5">
         <div class="absolute top-0 left-0 w-1 h-full bg-gray-400 rounded-l-xl" />
@@ -354,6 +397,7 @@ import PillarConfigPanel from '../components/PillarConfigPanel.vue'
 
 const API_BASE = '/modules/releases/pm-hub'
 var STORAGE_KEY = 'pm-hub-filters'
+var AUTO_REFRESH_MS = 5 * 60 * 1000
 
 var selectedPillars = ref([])
 var selectedComponents = ref([])
@@ -386,6 +430,8 @@ var loadingData = ref(false)
 var dataError = ref(null)
 var hasFetched = ref(false)
 var tableRef = ref(null)
+var fetchedAt = ref(null)
+var autoRefreshTimer = ref(null)
 
 var filterProduct = ref([])
 var filterType = ref([])
@@ -394,6 +440,7 @@ var filterStatus = ref([])
 var filterBlocked = ref(null)
 var filterDelOwner = ref([])
 var filterPmOwner = ref([])
+var filterDocs = ref([])
 
 var productDropdownOpen = ref(false)
 var productDropdownRef = ref(null)
@@ -425,6 +472,7 @@ function saveFilters() {
       blocked: filterBlocked.value,
       delOwner: filterDelOwner.value,
       pmOwner: filterPmOwner.value,
+      docs: filterDocs.value,
       sort: savedSort.value
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
@@ -446,6 +494,7 @@ function restoreFilters() {
     if (state.blocked !== undefined) filterBlocked.value = state.blocked
     if (state.delOwner && Array.isArray(state.delOwner)) filterDelOwner.value = state.delOwner
     if (state.pmOwner && Array.isArray(state.pmOwner)) filterPmOwner.value = state.pmOwner
+    if (state.docs && Array.isArray(state.docs)) filterDocs.value = state.docs
     if (state.sort && typeof state.sort === 'object') savedSort.value = state.sort
     return true
   } catch { return false }
@@ -469,7 +518,8 @@ var filterRefs = {
   filterReleaseType: filterReleaseType,
   filterStatus: filterStatus,
   filterDelOwner: filterDelOwner,
-  filterPmOwner: filterPmOwner
+  filterPmOwner: filterPmOwner,
+  filterDocs: filterDocs
 }
 
 function toggleFilter(filterName, value) {
@@ -489,7 +539,7 @@ function toggleInArray(arrRef, value) {
 var activeFilterCount = computed(function() {
   var count = selectedPillars.value.length + selectedComponents.value.length + selectedVersions.value.length
   count += filterProduct.value.length + filterType.value.length + filterReleaseType.value.length
-  count += filterStatus.value.length + filterDelOwner.value.length + filterPmOwner.value.length
+  count += filterStatus.value.length + filterDelOwner.value.length + filterPmOwner.value.length + filterDocs.value.length
   if (filterBlocked.value !== null) count++
   return count
 })
@@ -508,6 +558,7 @@ function clearAllFilters() {
   filterBlocked.value = null
   filterDelOwner.value = []
   filterPmOwner.value = []
+  filterDocs.value = []
   savedSort.value = { column: null, direction: 'asc' }
   try { localStorage.removeItem(STORAGE_KEY) } catch (e) { void e }
 }
@@ -589,7 +640,7 @@ var filteredPmOwners = computed(function() {
 })
 
 var hasClientFilters = computed(function() {
-  return filterProduct.value.length > 0 || filterType.value.length > 0 || filterReleaseType.value.length > 0 || filterStatus.value.length > 0 || filterBlocked.value !== null || filterDelOwner.value.length > 0 || filterPmOwner.value.length > 0
+  return filterProduct.value.length > 0 || filterType.value.length > 0 || filterReleaseType.value.length > 0 || filterStatus.value.length > 0 || filterBlocked.value !== null || filterDelOwner.value.length > 0 || filterPmOwner.value.length > 0 || filterDocs.value.length > 0
 })
 
 var clientFilteredGroups = computed(function() {
@@ -647,6 +698,16 @@ var clientFilteredGroups = computed(function() {
         if (filterBlocked.value === false && f.isBlocked) return false
         if (filterDelOwner.value.length > 0 && filterDelOwner.value.indexOf(f.assignee || '') === -1) return false
         if (filterPmOwner.value.length > 0 && filterPmOwner.value.indexOf(f.pmOwner || '') === -1) return false
+        if (filterDocs.value.length > 0) {
+          var docVal = f.docsRequired || ''
+          var docsMatch = false
+          for (var di = 0; di < filterDocs.value.length; di++) {
+            if (filterDocs.value[di] === 'Yes' && docVal === 'Yes') docsMatch = true
+            if (filterDocs.value[di] === 'No' && docVal === 'No') docsMatch = true
+            if (filterDocs.value[di] === 'Not set' && !docVal) docsMatch = true
+          }
+          if (!docsMatch) return false
+        }
         return true
       })
 
@@ -663,7 +724,8 @@ var clientFilteredGroups = computed(function() {
         committedFeatures: newCom,
         requestedCount: newReq.length,
         committedCount: newCom.length,
-        blockedCount: filtered.filter(function(ff) { return ff.isBlocked }).length
+        blockedCount: filtered.filter(function(ff) { return ff.isBlocked }).length,
+        atRiskCount: filtered.filter(function(ff) { return ff.riskLevel === 'high' || ff.riskLevel === 'medium' }).length
       })
     }).filter(function(comp) {
       return (comp.requestedFeatures.length + comp.committedFeatures.length) > 0
@@ -817,7 +879,66 @@ var totalBlocked = computed(function() {
   return count
 })
 
+var totalFeatures = computed(function() {
+  var source = clientFilteredGroups.value
+  var seen = {}
+  var count = 0
+  for (var gi = 0; gi < source.length; gi++) {
+    var comps = source[gi].components || []
+    for (var ci = 0; ci < comps.length; ci++) {
+      var lists = [comps[ci].requestedFeatures || [], comps[ci].committedFeatures || []]
+      for (var li = 0; li < lists.length; li++) {
+        for (var fi = 0; fi < lists[li].length; fi++) {
+          var key = lists[li][fi].key
+          if (!seen[key]) {
+            seen[key] = true
+            count++
+          }
+        }
+      }
+    }
+  }
+  return count
+})
+
+var blockedPercent = computed(function() {
+  var total = totalFeatures.value
+  if (total === 0) return null
+  return Math.round((totalBlocked.value / total) * 100)
+})
+
+var totalAtRisk = computed(function() {
+  var source = clientFilteredGroups.value
+  var seen = {}
+  var count = 0
+  for (var gi = 0; gi < source.length; gi++) {
+    var comps = source[gi].components || []
+    for (var ci = 0; ci < comps.length; ci++) {
+      var lists = [comps[ci].requestedFeatures || [], comps[ci].committedFeatures || []]
+      for (var li = 0; li < lists.length; li++) {
+        for (var fi = 0; fi < lists[li].length; fi++) {
+          var f = lists[li][fi]
+          if (!seen[f.key] && (f.riskLevel === 'high' || f.riskLevel === 'medium')) {
+            seen[f.key] = true
+            count++
+          }
+        }
+      }
+    }
+  }
+  return count
+})
+
 var velocity = ref(null)
+
+var formattedFetchedAt = computed(function() {
+  if (!fetchedAt.value) return null
+  try {
+    var d = new Date(fetchedAt.value)
+    if (isNaN(d.getTime())) return null
+    return d.toLocaleString()
+  } catch { return null }
+})
 
 function togglePillar(name) {
   var idx = selectedPillars.value.indexOf(name)
@@ -916,6 +1037,22 @@ function getEffectiveComponents() {
   return []
 }
 
+function stopAutoRefresh() {
+  if (autoRefreshTimer.value) {
+    clearInterval(autoRefreshTimer.value)
+    autoRefreshTimer.value = null
+  }
+}
+
+function startAutoRefresh() {
+  stopAutoRefresh()
+  autoRefreshTimer.value = setInterval(function() {
+    if (!hasFetched.value || loadingData.value) return
+    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
+    loadData()
+  }, AUTO_REFRESH_MS)
+}
+
 async function loadData() {
   var effectiveComponents = getEffectiveComponents()
   if (effectiveComponents.length === 0 && selectedVersions.value.length === 0) return
@@ -938,12 +1075,15 @@ async function loadData() {
     var data = await response.json()
     groups.value = data.groups || []
     velocity.value = data.velocity || null
+    fetchedAt.value = data.fetchedAt || null
   } catch (err) {
     dataError.value = err.message
     groups.value = []
     velocity.value = null
+    fetchedAt.value = null
   } finally {
     loadingData.value = false
+    if (hasFetched.value && !autoRefreshTimer.value) startAutoRefresh()
   }
 }
 
@@ -966,7 +1106,7 @@ watch([selectedComponents, selectedVersions, selectedPillars], function() {
 
 // Save filters to localStorage on any filter change
 watch(
-  [selectedPillars, selectedComponents, selectedVersions, filterProduct, filterType, filterReleaseType, filterStatus, filterBlocked, filterDelOwner, filterPmOwner],
+  [selectedPillars, selectedComponents, selectedVersions, filterProduct, filterType, filterReleaseType, filterStatus, filterBlocked, filterDelOwner, filterPmOwner, filterDocs],
   saveFilters,
   { deep: true }
 )
@@ -980,5 +1120,6 @@ onMounted(function() {
 
 onBeforeUnmount(function() {
   document.removeEventListener('mousedown', handleClickOutside)
+  stopAutoRefresh()
 })
 </script>

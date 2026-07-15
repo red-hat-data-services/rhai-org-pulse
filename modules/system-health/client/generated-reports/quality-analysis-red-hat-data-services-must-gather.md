@@ -1,183 +1,182 @@
 ---
 repository: "red-hat-data-services/must-gather"
-overall_score: 2.7
+overall_score: 1.0
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No test files exist anywhere in the repository"
+    status: "No tests of any kind exist in the repository"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests; scripts are untested"
+    status: "No integration or E2E tests; no cluster-based validation"
   - dimension: "Build Integration"
     score: 5.0
-    status: "Konflux PR pipeline builds multi-arch images; no runtime validation"
+    status: "Konflux multi-arch PR builds exist but are label/comment-triggered only"
   - dimension: "Image Testing"
     score: 2.0
-    status: "Multi-arch image build via Konflux but zero runtime or functional testing"
+    status: "Image is built but no runtime validation, no vulnerability scanning"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling of any kind"
+    status: "No coverage tracking, no coverage tools, no metrics"
   - dimension: "CI/CD Automation"
-    score: 4.0
-    status: "Bash linting on PR via Super-Linter; Konflux build on label/comment; no test automation"
+    score: 3.0
+    status: "Super-linter for bash on PRs; Konflux build is manual-trigger only"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, .claude/ directory, or agent rules"
+    status: "No CLAUDE.md, no .claude directory, no agent rules"
 critical_gaps:
-  - title: "Zero test coverage — no unit, integration, or E2E tests"
-    impact: "Shell script regressions (wrong namespace, missing resource, broken xKS detection) are only discovered in production must-gather runs"
+  - title: "Zero test coverage across the entire repository"
+    impact: "Shell script regressions in collection logic go undetected until a customer runs must-gather on a broken cluster"
     severity: "HIGH"
     effort: "16-24 hours"
-  - title: "No image runtime validation"
-    impact: "Container builds may succeed but fail at runtime (missing binaries, wrong entrypoint, permission errors) — discovered only during support escalations"
+  - title: "No runtime validation of built container image"
+    impact: "Image could ship with missing binaries (kubectl, helm), broken entrypoint, or incompatible base image — only discovered by customers"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "No shellcheck enforcement beyond Super-Linter defaults"
-    impact: "Scripts use shellcheck disable directives liberally; no strict mode (set -euo pipefail) in any script"
-    severity: "MEDIUM"
-    effort: "4-6 hours"
-  - title: "No security scanning (Trivy, Snyk, CodeQL, secret detection)"
-    impact: "Vulnerabilities in base images and downloaded binaries (kubectl, helm) not detected before release"
+  - title: "No security scanning in CI pipeline"
+    impact: "Vulnerabilities in base image or installed binaries (kubectl, helm) are not detected before release"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No agent rules for AI-assisted development"
-    impact: "AI-generated contributions lack guidance on testing patterns, script structure, and collection conventions"
-    severity: "LOW"
-    effort: "2-3 hours"
-quick_wins:
-  - title: "Add BATS (Bash Automated Testing System) unit tests for common.sh utility functions"
-    effort: "4-6 hours"
-    impact: "Cover critical path functions (detect_k8s_distro, get_operator_ns, rhoai_version, run_mustgather) that are exercised in every must-gather run"
-  - title: "Add Trivy container scanning to Konflux pipeline or GitHub workflow"
-    effort: "1-2 hours"
-    impact: "Catch CVEs in base images and downloaded binaries before release"
-  - title: "Enable set -euo pipefail across all scripts"
+  - title: "No strict mode (set -euo pipefail) in shell scripts"
+    impact: "Silent failures in collection scripts can produce incomplete must-gather bundles without any error indication"
+    severity: "MEDIUM"
     effort: "2-4 hours"
-    impact: "Fail fast on errors instead of silently continuing with partial data collection"
-  - title: "Add Dockerfile smoke test (container starts and gather.sh --help runs)"
-    effort: "2-3 hours"
-    impact: "Catch image build issues (missing binaries, wrong permissions) before merge"
+  - title: "Konflux PR build is not auto-triggered"
+    impact: "Build failures are only caught when someone manually adds a label or comment; easy to skip and merge broken builds"
+    severity: "MEDIUM"
+    effort: "1-2 hours"
+quick_wins:
+  - title: "Add shellcheck CI step with strict validation"
+    effort: "1-2 hours"
+    impact: "Catch common bash pitfalls (unquoted variables, missing error handling) before merge"
+  - title: "Add Trivy container scanning to PR workflow"
+    effort: "1-2 hours"
+    impact: "Detect CVEs in base image and installed binaries (kubectl, helm) on every PR"
+  - title: "Add container startup smoke test"
+    effort: "2-4 hours"
+    impact: "Verify image builds correctly, entrypoint works, and required binaries (oc, kubectl, helm) are present"
+  - title: "Enable set -euo pipefail across all collection scripts"
+    effort: "4-6 hours"
+    impact: "Fail fast on errors instead of silently producing incomplete must-gather bundles"
+  - title: "Auto-trigger Konflux PR builds on every pull request"
+    effort: "1 hour"
+    impact: "Ensure every PR is validated against production build pipeline"
 recommendations:
   priority_0:
-    - "Introduce BATS test framework with unit tests for all utility functions in common.sh and xks_util.sh"
-    - "Add container image smoke test: build image, run it, verify entrypoint and key binaries exist"
-    - "Add Trivy or Grype vulnerability scanning to CI pipeline"
+    - "Add BATS (Bash Automated Testing System) unit tests for common.sh utility functions and each gather_*.sh script"
+    - "Add container image smoke test — verify entrypoint, required binaries (oc, kubectl, helm), and basic gather --help functionality"
+    - "Add Trivy vulnerability scanning to the GitHub Actions PR workflow"
   priority_1:
-    - "Add integration tests using mock kubectl/oc commands to validate gather script behavior"
-    - "Enable strict shell mode (set -euo pipefail) in all scripts with proper error handling"
-    - "Upgrade Super-Linter from v5 to v7 and enable additional validators (VALIDATE_DOCKERFILE, VALIDATE_YAML)"
+    - "Add integration tests using Kind/Minikube to validate must-gather against a cluster with mock RHOAI CRDs"
+    - "Enable strict mode (set -euo pipefail) in all shell scripts with proper error handling"
+    - "Auto-trigger Konflux PR builds on every pull request instead of label/comment only"
   priority_2:
-    - "Create .claude/rules/ with shell script development and testing guidelines"
-    - "Add ShellSpec or shUnit2 as alternative/complementary shell testing frameworks"
-    - "Implement end-to-end test with Kind cluster validating actual resource collection"
+    - "Create agent rules (.claude/rules/) for shell script development and testing patterns"
+    - "Add SBOM generation and image signing to the Konflux pipeline"
+    - "Add performance benchmarking for collection time on large clusters"
 ---
 
-# Quality Analysis: must-gather (red-hat-data-services)
+# Quality Analysis: must-gather
 
 ## Executive Summary
 
-- **Overall Score: 2.7/10**
-- **Repository Type**: Shell-script-based OpenShift must-gather tool for Red Hat OpenShift AI (RHOAI)
-- **Primary Language**: Bash (~1,060 lines across 24 shell scripts)
-- **Key Strengths**: Good linting foundation with Super-Linter, multi-arch Konflux builds, well-structured modular scripts
-- **Critical Gaps**: Zero test coverage of any kind, no image runtime validation, no security scanning, no strict error handling
-- **Agent Rules Status**: Missing — no CLAUDE.md, .claude/ directory, or agent rules
+- **Overall Score: 1.0/10**
+- **Repository Type**: Diagnostic data collection tool (shell scripts)
+- **Primary Language**: Bash (27 shell scripts, ~1,007 lines)
+- **Framework**: OpenShift must-gather pattern
+- **Agent Rules Status**: Missing — no CLAUDE.md, no `.claude/` directory
 
-This repository is a must-gather diagnostic collection tool that runs inside OpenShift/Kubernetes clusters to collect logs, resources, and configuration for RHOAI support cases. Despite its critical role in production debugging, it has **no automated tests whatsoever** — a significant quality gap for a tool that must work reliably across multiple Kubernetes distributions (OCP, AKS, EKS, CKS).
+The `red-hat-data-services/must-gather` repository is a diagnostic tool used by customers and support engineers to collect RHOAI cluster state. Despite being a **critical support tool** that ships as a container image to customers, it has **zero tests**, **no security scanning**, and **minimal CI automation**. The only quality gate is a bash linter on PRs. Regressions in collection scripts are only discovered when customers run must-gather on production clusters and get incomplete results.
+
+### Key Strengths
+- shellcheck directives present in most scripts (manual inline annotations)
+- Super-linter validates bash syntax on PRs
+- Konflux pipeline supports multi-architecture builds (x86_64, ppc64le, s390x, arm64)
+- Parallel execution of collection scripts for performance
+- Renovate configured for automated dependency updates
+- Good README documentation with usage examples
+
+### Critical Gaps
+- **Zero tests** — no unit, integration, or E2E tests of any kind
+- **No container image validation** — image could ship with broken entrypoint or missing binaries
+- **No security scanning** — no Trivy, Snyk, or CVE detection
+- **No strict bash mode** — silent failures produce incomplete must-gather bundles
+- **Manual-only Konflux trigger** — PR builds require label/comment to trigger
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0/10 | No test files exist anywhere in the repository |
-| Integration/E2E | 0/10 | No integration or E2E tests; scripts are untested |
-| Build Integration | 5/10 | Konflux PR pipeline builds multi-arch images; no runtime validation |
-| Image Testing | 2/10 | Multi-arch build via Konflux but zero runtime/functional testing |
-| Coverage Tracking | 0/10 | No coverage tooling of any kind |
-| CI/CD Automation | 4/10 | Bash linting on PR via Super-Linter; Konflux build on label/comment |
-| Agent Rules | 0/10 | No CLAUDE.md, .claude/ directory, or agent rules |
+| Unit Tests | 0/10 | No tests of any kind exist |
+| Integration/E2E | 0/10 | No integration or E2E tests; no cluster-based validation |
+| **Build Integration** | **5/10** | **Konflux multi-arch PR builds exist but are label/comment-triggered** |
+| Image Testing | 2/10 | Image is built but no runtime validation or vuln scanning |
+| Coverage Tracking | 0/10 | No coverage tracking, tools, or metrics |
+| CI/CD Automation | 3/10 | Super-linter for bash; Konflux build is manual-trigger only |
+| Agent Rules | 0/10 | No CLAUDE.md, no .claude directory, no agent rules |
 
 ## Critical Gaps
 
-### 1. Zero Test Coverage — No Unit, Integration, or E2E Tests
-- **Impact**: Shell script regressions (wrong namespace, missing resource, broken xKS distribution detection) are only discovered during live must-gather runs on customer clusters
+### 1. Zero Test Coverage
+- **Impact**: Shell script regressions in collection logic go undetected until a customer runs must-gather on a broken cluster and gets incomplete or missing data
 - **Severity**: HIGH
-- **Effort**: 16-24 hours for initial BATS framework + core function tests
-- **Details**: The repository contains 24 shell scripts totaling ~1,060 lines with complex logic for Kubernetes distribution detection, namespace discovery, parallel resource collection, and Helm release extraction — all completely untested
+- **Effort**: 16-24 hours
+- **Details**: The repository contains 27 shell scripts with ~1,007 lines of bash code. None of them have any automated tests. Functions like `rhoai_version()`, `get_operator_ns()`, `uniq_list()`, `detect_k8s_distro()`, `auto_discover_resources()`, and `kubectl_inspect()` are all untested. Changes to these functions are validated only by manual execution on a live cluster.
 
-### 2. No Image Runtime Validation
-- **Impact**: Container builds succeed but could fail at runtime — missing binaries (`kubectl`, `helm`), wrong entrypoint, permission errors — discovered only during customer support escalations
+### 2. No Runtime Validation of Container Image
+- **Impact**: Image could ship with missing binaries (kubectl, helm), broken entrypoint, or incompatible base image — only discovered by customers running `oc adm must-gather`
 - **Severity**: HIGH
 - **Effort**: 4-8 hours
-- **Details**: The Containerfile downloads `kubectl` and `helm` at build time via `curl`. Neither binary is verified (no checksum validation) and no test confirms they actually work inside the built image
+- **Details**: The Containerfile installs kubectl and helm via `curl` from external URLs. If these URLs change, versions are incompatible, or the download fails silently, the image ships broken. No smoke test validates that the built image contains working binaries.
 
 ### 3. No Security Scanning
-- **Impact**: Vulnerabilities in base images (`origin-must-gather:4.21.0`, `ose-must-gather-rhel9`) and downloaded binaries (`kubectl`, `helm`) are not detected before release
+- **Impact**: Vulnerabilities in the base image (`quay.io/openshift/origin-must-gather:4.21.0`) or installed binaries (kubectl, helm) are never detected
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: No Trivy, Snyk, CodeQL, Grype, or any other scanning tool is configured. The Containerfile uses `curl` to download binaries without checksum verification
+- **Details**: No Trivy, Snyk, CodeQL, or any other security scanning tool is configured. The image pulls binaries from the internet (`dl.k8s.io`, `get.helm.sh`) without checksum verification in the upstream Containerfile.
 
-### 4. No Strict Shell Error Handling
-- **Impact**: Scripts can silently fail and produce incomplete data collections without alerting the user
+### 4. No Strict Mode in Shell Scripts
+- **Impact**: Silent failures in collection scripts produce incomplete must-gather bundles without error indication to the user
 - **Severity**: MEDIUM
-- **Effort**: 4-6 hours
-- **Details**: No script uses `set -euo pipefail`. Error handling is inconsistent — some commands use `|| echo "Error..."` while others have no error handling. shellcheck disable directives are used liberally (`SC2154, SC1091, SC2086, SC2155, SC2034, SC2001, SC2068, SC2153`)
+- **Effort**: 2-4 hours
+- **Details**: None of the 27 shell scripts use `set -euo pipefail`. While individual commands use `|| echo "Error..."` for error handling, this is inconsistent and many commands have no error handling at all. An unset variable or failed command could silently skip resource collection.
 
-### 5. No Agent Rules for AI-Assisted Development
-- **Impact**: AI-generated contributions lack guidance on testing patterns, script structure, namespace conventions, and collection patterns
-- **Severity**: LOW
-- **Effort**: 2-3 hours
+### 5. Konflux PR Build Not Auto-Triggered
+- **Impact**: Build failures are only caught when someone manually adds a label (`kfbuild-must-gather`) or comments `/build-konflux`; easy to skip and merge broken builds
+- **Severity**: MEDIUM
+- **Effort**: 1-2 hours
+- **Details**: The Tekton PipelineRun in `.tekton/odh-must-gather-pull-request.yaml` is configured with `on-comment` and `on-label` triggers only, not `on-event: [pull_request]` for auto-trigger. Contributors can merge PRs without ever running the production build pipeline.
 
 ## Quick Wins
 
-### 1. Add BATS Unit Tests for Utility Functions (4-6 hours)
-- **Impact**: Cover critical functions that run on every must-gather invocation
-- **Target Functions**: `detect_k8s_distro`, `get_operator_ns`, `rhoai_version`, `run_mustgather`, `uniq_list`, `get_log_collection_args`, `auto_discover_resources`, `kubectl_inspect`
-- **Implementation**:
-```bash
-# Install BATS
-# test/detect_k8s_distro.bats
-#!/usr/bin/env bats
+### 1. Add Dedicated Shellcheck CI Step (1-2 hours)
+The super-linter runs shellcheck but with broad configuration. A dedicated shellcheck step with strict settings provides better signal.
 
-setup() {
-  source collection-scripts/llm-d/xks_util.sh
-}
-
-@test "detect_k8s_distro returns ocp when infrastructures.config.openshift.io exists" {
-  # Mock oc/kubectl to simulate OCP
-  function oc() {
-    if [[ "$*" == *"infrastructures.config.openshift.io"* ]]; then return 0; fi
-    return 1
-  }
-  export -f oc
-  run detect_k8s_distro
-  [ "$output" = "ocp" ]
-}
-
-@test "detect_k8s_distro returns eks for AWS provider with EKS version" {
-  # Mock kubectl for EKS detection
-  function kubectl() {
-    case "$*" in
-      *"infrastructures.config.openshift.io"*) return 1 ;;
-      *"kernelVersion"*) echo "5.10.0-aws" ;;
-      *"providerID"*) echo "aws://us-east-1/i-123" ;;
-      *"version -o json"*) echo '{"serverVersion":{"gitVersion":"v1.28.0-eks-1234"}}' ;;
-    esac
-  }
-  export -f kubectl
-  run detect_k8s_distro
-  [ "$output" = "eks" ]
-}
+```yaml
+# .github/workflows/shellcheck.yml
+name: ShellCheck
+on:
+  pull_request:
+    branches: [main, master, 'rhoai-*']
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          scandir: './collection-scripts'
+          severity: warning
+          check_together: 'yes'
 ```
 
 ### 2. Add Trivy Container Scanning (1-2 hours)
-- **Impact**: Catch CVEs in base images and downloaded binaries
-- **Implementation**: Add to `.github/workflows/`:
 ```yaml
+# Add to .github/workflows/security.yml
 name: Security Scan
 on:
   pull_request:
-    branches: [main, 'rhoai-*']
+    branches: [main, master, 'rhoai-*']
 jobs:
   trivy:
     runs-on: ubuntu-latest
@@ -185,188 +184,266 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build image
         run: docker build -f Containerfile -t must-gather:test .
-      - name: Trivy scan
+      - name: Run Trivy
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'must-gather:test'
-          severity: 'CRITICAL,HIGH'
+          format: 'table'
           exit-code: '1'
+          severity: 'CRITICAL,HIGH'
 ```
 
-### 3. Enable Strict Shell Mode (2-4 hours)
-- **Impact**: Fail fast on errors instead of silently continuing with partial data
-- **Implementation**: Add to each script header:
+### 3. Add Container Startup Smoke Test (2-4 hours)
+```yaml
+# Add to .github/workflows/smoke-test.yml
+name: Image Smoke Test
+on:
+  pull_request:
+    branches: [main, master, 'rhoai-*']
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -f Containerfile -t must-gather:test .
+      - name: Verify binaries exist
+        run: |
+          docker run --rm --entrypoint /bin/bash must-gather:test -c "
+            set -e
+            echo 'Checking required binaries...'
+            which oc && oc version --client 2>/dev/null || echo 'oc not in PATH'
+            which kubectl && kubectl version --client 2>/dev/null
+            which helm && helm version 2>/dev/null
+            echo 'Checking gather script...'
+            test -x /usr/bin/gather
+            test -x /usr/bin/gather_original
+            ls /usr/bin/gather_*.sh /usr/bin/common.sh
+            echo 'All checks passed!'
+          "
+```
+
+### 4. Enable Strict Mode (4-6 hours)
+Add `set -euo pipefail` to all scripts, replacing ad-hoc error handling with proper traps:
+
 ```bash
 #!/bin/bash
 set -euo pipefail
-```
-- Note: Requires audit of all `|| echo "Error..."` patterns and ensuring proper error trapping
 
-### 4. Add Image Smoke Test (2-3 hours)
-- **Impact**: Validate built image has correct entrypoint and required binaries
-- **Implementation**:
+# Add at top of gather.sh and common.sh
+trap 'echo "ERROR: Command failed at line $LINENO: $BASH_COMMAND" >&2' ERR
+```
+
+### 5. Auto-Trigger Konflux on PRs (1 hour)
+Update `.tekton/odh-must-gather-pull-request.yaml` to remove the label/comment requirement:
 ```yaml
-# Add to GitHub Actions or Konflux pipeline
-- name: Smoke test image
-  run: |
-    docker build -f Containerfile -t must-gather:test .
-    docker run --rm must-gather:test which gather.sh kubectl helm oc
-    docker run --rm must-gather:test kubectl version --client
-    docker run --rm must-gather:test helm version --short
+# Change from:
+pipelinesascode.tekton.dev/on-comment: "^/build-konflux"
+pipelinesascode.tekton.dev/on-label: "[kfbuild-all, kfbuild-must-gather]"
+# To auto-trigger:
+pipelinesascode.tekton.dev/on-event: "[pull_request]"
 ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflow Inventory:**
+**Workflow Inventory**:
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `linter.yml` | PR to main/master/rhoai-* | Bash linting via Super-Linter v5 |
-| `.tekton/odh-must-gather-pull-request.yaml` | PR (label/comment triggered) | Konflux multi-arch image build |
+| `.github/workflows/linter.yml` | PR to main/master/rhoai-* | Super-linter bash validation |
+| `.tekton/odh-must-gather-pull-request.yaml` | Label/comment on PR | Konflux multi-arch image build |
 
-**Strengths:**
-- Super-Linter validates bash scripts (`VALIDATE_BASH`, `VALIDATE_BASH_EXEC`) scoped to `collection-scripts/`
-- Konflux pipeline builds multi-arch images (x86_64, ppc64le, s390x, arm64)
-- Konflux pipeline uses hermetic builds for reproducibility
-- Pipeline cancel-in-progress for PR builds
-- Renovate configured for dependency updates via konflux-central
-
-**Weaknesses:**
-- Super-Linter v5 is outdated (v7 is current) — missing newer linting capabilities
-- No test step in any pipeline — build succeeds without any validation
-- Konflux pipeline is comment/label-triggered (`/build-konflux`, `kfbuild-all`), not automatic on every PR
-- No Dockerfile/Containerfile linting (hadolint)
-- No YAML validation for Tekton/Kubernetes manifests
-- No concurrency control on the GitHub Actions workflow
-- No caching strategy
+**Analysis**:
+- Only **1 GitHub Actions workflow** exists — a bash linter using `github/super-linter@v5.0.0`
+- Super-linter validates `BASH` and `BASH_EXEC` for files matching `.*collection-scripts/.*`
+- Konflux/Tekton pipeline builds multi-arch images (x86_64, ppc64le, s390x, arm64) but only on manual trigger
+- **No test execution** in any workflow
+- **No caching** configured (not needed given minimal CI)
+- **No concurrency control** in GitHub Actions (Konflux has `cancel-in-progress: true`)
+- Renovate configured for automated dependency updates via `.github/renovate.json`
 
 ### Test Coverage
 
-**Unit Tests**: None. Zero test files exist in the repository.
+**There are zero tests in this repository.**
 
-**Integration Tests**: None. No mock-based or real-cluster testing.
+- No `*_test.sh`, `*.bats`, `*_test.go`, `*_test.py`, or any test files
+- No `test/` or `tests/` directories
+- No testing framework (BATS, shunit2, etc.)
+- No test targets in `Makefile`
+- Test-to-code ratio: **0:1007** (0%)
 
-**E2E Tests**: None. No Kind/Minikube test infrastructure.
-
-**Coverage Tracking**: None. No codecov, coveralls, or any coverage tooling.
-
-**Test-to-Code Ratio**: 0:1,060 (0% — all production code, no test code)
-
-**Key Risk**: The core logic in `xks_util.sh` (179 lines) handles Kubernetes distribution detection across OCP, CKS, AKS, and EKS — a complex multi-path decision tree that is entirely untested. A regression here means wrong or failed data collection for an entire platform.
+**Functions that critically need tests**:
+| Function | File | Risk |
+|----------|------|------|
+| `detect_k8s_distro()` | `xks_util.sh` | Multi-platform detection logic with 6 branches |
+| `kubectl_inspect()` | `xks_util.sh` | Complex resource collection with parallel log gathering |
+| `rhoai_version()` | `common.sh` | Version detection with 3 fallback strategies |
+| `get_operator_ns()` | `common.sh` | Operator namespace discovery with error handling |
+| `get_log_collection_args()` | `common.sh` | Time-based log filtering argument parsing |
+| `run_mustgather()` | `common.sh` | Core collection orchestration |
+| `auto_discover_resources()` | `xks_util.sh` | Dynamic resource discovery and collection |
+| `collect_helm_releases()` | `common.sh` | Helm release data extraction |
 
 ### Code Quality
 
-**Linting:**
-- Super-Linter v5 with `VALIDATE_BASH` and `VALIDATE_BASH_EXEC` enabled
-- Scoped to `collection-scripts/` directory only
-- Multiple `shellcheck disable` directives across scripts (SC2154, SC1091, SC2086, SC2155, SC2034, SC2001, SC2068, SC2153) — suppressing warnings about unquoted variables, unused variables, and missing sources
+**Linting**:
+- Super-linter runs on PRs with `VALIDATE_BASH=true` and `VALIDATE_BASH_EXEC=true`
+- Most scripts include `shellcheck disable` directives for known exceptions (SC2154, SC1091, SC2086, etc.)
+- Some shellcheck disables are overly broad (SC2086 — word splitting) and mask real bugs
 
-**Pre-commit Hooks**: None configured
+**Static Analysis**:
+- No dedicated shellcheck step beyond super-linter
+- No SAST tools (CodeQL, Semgrep, gosec)
+- No secret detection (Gitleaks, TruffleHog)
 
-**Static Analysis**: None beyond Super-Linter's bash validation
+**Pre-commit Hooks**: None
 
-**Error Handling Patterns**:
-- No `set -euo pipefail` in any script
-- Inconsistent error handling: some commands use `|| echo "Error..."`, others have none
-- Background jobs tracked with PID arrays but failed jobs are only reported, not causing script failure
-- `xks_util.sh:kubectl_inspect` silently succeeds even when namespace doesn't exist (returns 1 but caller ignores)
+**Code Patterns**:
+- Consistent script structure with `source common.sh` pattern
+- Parallel execution using background processes with PID tracking
+- Error handling is inconsistent — some commands use `|| echo "Error"`, many have none
+- **No `set -euo pipefail`** in any script — silent failures are possible
+- Variable quoting is inconsistent (shellcheck SC2086 disabled in many files)
 
 ### Container Images
 
-**Build Process:**
-- Two Containerfiles: `Containerfile` (upstream/development) and `Dockerfile.konflux` (downstream/production)
-- `Containerfile` uses `quay.io/openshift/origin-must-gather:4.21.0` base, downloads kubectl and helm via curl
-- `Dockerfile.konflux` uses `registry.redhat.io/openshift4/ose-must-gather-rhel9:v4.20` base, copies kubectl from builder stage
-- Multi-stage build in Konflux variant (builder stage for kubectl)
-- Git LFS tracked `bin/helm` binary in Konflux variant
-- Multi-arch support: x86_64, ppc64le, s390x, arm64
+**Build Process**:
+- Two Dockerfiles: `Containerfile` (upstream/dev) and `Dockerfile.konflux` (downstream/production)
+- Base image: `quay.io/openshift/origin-must-gather:4.21.0` (upstream) / `registry.redhat.io/openshift4/ose-must-gather-rhel9:v4.20` (downstream)
+- Multi-stage build in `Dockerfile.konflux` only (copies kubectl from builder)
+- External binary downloads: kubectl from `dl.k8s.io`, helm from `get.helm.sh` (upstream only)
+- Helm binary tracked via Git LFS in `bin/helm` for downstream
 
-**Vulnerabilities:**
-- `Containerfile` downloads kubectl and helm via `curl` without checksum verification
-- No image scanning in any pipeline
+**Runtime Testing**: None
+- No entrypoint validation
+- No binary presence checks
+- No startup testing
+
+**Security Scanning**: None
+- No Trivy, Snyk, or Grype
 - No SBOM generation
-- No image signing/attestation (beyond what Konflux provides natively)
+- No image signing/attestation
+- No checksum verification for downloaded binaries in upstream Containerfile
 
-**Runtime Validation**: None — no test confirms the built image works correctly
+**Multi-Architecture Support**: Yes
+- Konflux builds for x86_64, ppc64le, s390x, arm64
+- Upstream Containerfile only downloads amd64 kubectl/helm — **broken for non-amd64 architectures**
 
 ### Security
 
-- No Trivy/Snyk/Grype vulnerability scanning
-- No CodeQL/SAST analysis
-- No secret detection (Gitleaks, TruffleHog)
-- No dependency scanning
-- `curl` downloads without checksum verification in `Containerfile`
-- Cluster-admin RBAC required (necessary for must-gather but worth documenting threat model)
+| Practice | Status |
+|----------|--------|
+| Container scanning | Not configured |
+| SAST/CodeQL | Not configured |
+| Dependency scanning | Renovate only (no vulnerability alerts) |
+| Secret detection | Not configured |
+| SBOM generation | Not configured |
+| Image signing | Not configured |
+| Binary checksum verification | Missing in upstream Containerfile |
+
+**Security Concern**: The upstream `Containerfile` downloads kubectl and helm binaries via `curl` without verifying checksums. A supply chain attack on `dl.k8s.io` or `get.helm.sh` could inject malicious binaries into the must-gather image.
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: No `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
+- **Coverage**: No test type rules exist
 - **Quality**: N/A
-- **Gaps**: No guidance for AI agents on:
-  - Shell script patterns and conventions used in this repo
-  - How to add new component gather scripts
-  - Namespace conventions and resource collection patterns
-  - Testing expectations (currently none, but should have BATS)
-  - xKS vs OCP behavioral differences
-- **Recommendation**: Generate rules with `/test-rules-generator` covering bash testing patterns, gather script templates, and contribution guidelines
+- **Gaps**: Everything — no CLAUDE.md, no `.claude/` directory, no `.claude/rules/`, no agent skills
+- **Recommendation**: Generate rules with `/test-rules-generator` for:
+  - Shell script testing patterns (BATS)
+  - Collection script development guidelines
+  - Containerfile best practices
+  - CI workflow templates
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Introduce BATS test framework** with unit tests for all utility functions in `common.sh` and `xks_util.sh`. Focus on `detect_k8s_distro`, `get_operator_ns`, `rhoai_version`, `get_log_collection_args`, `auto_discover_resources`, and `kubectl_inspect`.
+1. **Add BATS unit tests for utility functions** (16-24 hours)
+   - Install [BATS](https://github.com/bats-core/bats-core) testing framework
+   - Test `detect_k8s_distro()` with mocked kubectl output for each platform
+   - Test `rhoai_version()` with mocked oc output for each fallback path
+   - Test `get_operator_ns()` for single, multiple, and missing subscriptions
+   - Test `get_log_collection_args()` for various MUST_GATHER_SINCE combinations
+   - Test `uniq_list()` for deduplication
 
-2. **Add container image smoke test** — build image, verify entrypoint exists, confirm `kubectl`, `helm`, `oc`, and `gather.sh` are present and executable, run `kubectl version --client`.
+2. **Add container image smoke test** (4-8 hours)
+   - Verify image builds successfully
+   - Verify entrypoint (`/usr/bin/gather`) exists and is executable
+   - Verify required binaries (oc/kubectl, helm) are present and functional
+   - Verify collection scripts are properly installed in `/usr/bin/`
 
-3. **Add Trivy or Grype vulnerability scanning** to either the GitHub Actions workflow or Konflux pipeline to catch CVEs in base images and downloaded binaries.
+3. **Add Trivy vulnerability scanning** (2-4 hours)
+   - Scan built container image on every PR
+   - Block merge on CRITICAL/HIGH vulnerabilities
+   - Generate SBOM for supply chain visibility
 
 ### Priority 1 (High Value)
 
-4. **Add integration tests with mocked kubectl/oc** — use BATS with mocked CLI tools to validate gather script behavior (correct namespaces inspected, correct resources collected, proper error handling on missing namespaces).
+4. **Add integration tests with mock CRDs** (12-16 hours)
+   - Use Kind cluster with RHOAI CRD definitions installed
+   - Create mock resources (InferenceService, DSC, DSCI, etc.)
+   - Run must-gather against the cluster
+   - Validate output directory structure and content
 
-5. **Enable strict shell mode** (`set -euo pipefail`) across all scripts with proper error trapping (`trap`). Audit all `|| echo` patterns and replace with structured error handling.
+5. **Enable strict bash mode** (4-6 hours)
+   - Add `set -euo pipefail` to all scripts
+   - Add error trap handlers for debugging
+   - Fix all issues surfaced by strict mode (unbound variables, pipefail)
 
-6. **Upgrade Super-Linter** from v5 to v7 and enable additional validators (`VALIDATE_DOCKERFILE_HADOLINT`, `VALIDATE_YAML`, `VALIDATE_SHELL_SHFMT`).
+6. **Auto-trigger Konflux PR builds** (1-2 hours)
+   - Change Tekton pipeline trigger from label/comment to auto on PR
+   - Ensure every PR validates against the production build pipeline
 
-7. **Add checksum verification** for kubectl and helm downloads in `Containerfile`.
+7. **Add binary checksum verification** (2-3 hours)
+   - Verify SHA256 checksums for kubectl and helm downloads in Containerfile
+   - Pin specific versions with checksums
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Create `.claude/rules/`** with shell script development and testing guidelines, gather script templates, and xKS-specific conventions.
+8. **Create agent rules** (4-6 hours)
+   - Add `.claude/rules/` with bash scripting standards
+   - Include BATS test patterns and examples
+   - Document collection script structure and conventions
 
-9. **Add ShellSpec as a complementary shell testing framework** for more complex behavior-driven tests.
+9. **Add SBOM generation and image signing** (4-6 hours)
+   - Generate SBOM during Konflux build
+   - Sign images with cosign
 
-10. **Implement E2E test with Kind cluster** — deploy a minimal RHOAI-like setup, run must-gather, verify expected output structure and files.
+10. **Fix multi-architecture support in upstream Containerfile** (2-3 hours)
+    - Use architecture-aware kubectl/helm downloads
+    - Test on each target architecture
 
-11. **Add SBOM generation** to the image build pipeline.
-
-12. **Add pre-commit hooks** for shellcheck and shfmt.
+11. **Add performance benchmarking** (8-12 hours)
+    - Measure collection time on different cluster sizes
+    - Track performance regressions across releases
 
 ## Comparison to Gold Standards
 
-| Dimension | must-gather | odh-dashboard | notebooks | Gold Standard |
-|-----------|-------------|---------------|-----------|---------------|
-| Unit Tests | None (0/10) | Jest + Go tests (8/10) | Python tests (7/10) | Comprehensive per-function tests |
-| Integration/E2E | None (0/10) | Cypress E2E (9/10) | Image validation (8/10) | Multi-version cluster testing |
-| Build Integration | Konflux multi-arch (5/10) | PR builds + deploys (8/10) | 5-layer validation (9/10) | PR-time full build validation |
-| Image Testing | Build only (2/10) | Runtime checks (7/10) | Startup + functional (9/10) | Build + startup + functional + security |
-| Coverage Tracking | None (0/10) | Codecov (8/10) | Coverage reports (7/10) | Enforced thresholds |
-| CI/CD | Linter + Konflux (4/10) | Multi-workflow (9/10) | Comprehensive (8/10) | Automated test + build + scan |
-| Agent Rules | None (0/10) | Comprehensive (8/10) | Basic (5/10) | Full test automation guidance |
+| Dimension | must-gather | odh-dashboard | notebooks | kserve |
+|-----------|------------|---------------|-----------|--------|
+| Unit Tests | None | Jest + React Testing Library | Python unit tests | Go test + envtest |
+| Integration/E2E | None | Cypress E2E | Robot Framework | KServe E2E suite |
+| Build Integration | Konflux (manual) | PR-time builds | Multi-image validation | Multi-version builds |
+| Image Testing | Build only | Startup + functional | 5-layer validation | Image pull + serve |
+| Coverage Tracking | None | Codecov + thresholds | Coverage reports | Codecov enforcement |
+| CI/CD Automation | Linter only | Full PR/periodic suite | Multi-workflow | Comprehensive CI |
+| Security Scanning | None | Snyk/Trivy | Trivy scanning | CodeQL + Trivy |
+| Agent Rules | None | Comprehensive | Partial | None |
+| **Overall** | **1.0/10** | **8.5/10** | **7.5/10** | **8.0/10** |
 
 ## File Paths Reference
 
 | File | Purpose |
 |------|---------|
-| `.github/workflows/linter.yml` | Super-Linter v5 bash validation on PRs |
-| `.tekton/odh-must-gather-pull-request.yaml` | Konflux multi-arch PR build pipeline |
-| `Containerfile` | Upstream/development container image |
-| `Dockerfile.konflux` | Downstream/production container image |
+| `.github/workflows/linter.yml` | Super-linter bash validation |
+| `.tekton/odh-must-gather-pull-request.yaml` | Konflux multi-arch build pipeline |
+| `Containerfile` | Upstream/dev container build |
+| `Dockerfile.konflux` | Downstream/production container build |
 | `Makefile` | Build and push targets |
-| `collection-scripts/gather.sh` | Main entrypoint (237 lines) |
-| `collection-scripts/common.sh` | Shared utilities (140 lines) |
-| `collection-scripts/llm-d/xks_util.sh` | xKS distribution detection + kubectl-based inspection (179 lines) |
-| `collection-scripts/llm-d/gather_llmd.sh` | LLM-D/RHAII resource collection (97 lines) |
-| `.github/renovate.json` | Automated dependency updates via konflux-central |
+| `collection-scripts/common.sh` | Shared utility functions |
+| `collection-scripts/gather.sh` | Main entrypoint script |
+| `collection-scripts/llm-d/xks_util.sh` | Non-OpenShift platform utilities |
+| `collection-scripts/gather_*.sh` | Component-specific collection scripts |
+| `.github/renovate.json` | Automated dependency updates |

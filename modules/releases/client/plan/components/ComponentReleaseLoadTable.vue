@@ -30,13 +30,14 @@ var expandedComponents = reactive({})
 
 // ═══ SORT STATE ═══
 
-var SORT_COLUMNS = ['key', 'summary', 'priority', 'type', 'releaseType', 'status', 'colorStatus', 'fixVersion', 'targetVersion', 'blocked', 'assignee', 'pmOwner']
+var SORT_COLUMNS = ['key', 'summary', 'priority', 'releaseType', 'status', 'colorStatus', 'fixVersion', 'targetVersion', 'blocked', 'riskLevel', 'assignee', 'pmOwner', 'docs']
 
 var PRIORITY_ORDER = { 'Blocker': 0, 'Critical': 1, 'Major': 2, 'Normal': 3 }
 var COLOR_STATUS_ORDER = { 'red': 0, 'yellow': 1, 'green': 2 }
+var RISK_ORDER = { 'high': 0, 'medium': 1, 'low': 2 }
 
 var sortState = reactive({
-  column: props.initialSort.column,
+  column: SORT_COLUMNS.indexOf(props.initialSort.column) !== -1 ? props.initialSort.column : null,
   direction: props.initialSort.direction || 'asc'
 })
 
@@ -63,9 +64,6 @@ function getSortValue(feature, column) {
     var po = PRIORITY_ORDER[feature.priority]
     return po !== undefined ? po : 99
   }
-  if (column === 'type') {
-    return (feature.isCommitted ? 2 : 0) + (feature.isRequested ? 1 : 0)
-  }
   if (column === 'releaseType') return (feature.releaseType || '').toLowerCase()
   if (column === 'status') return (feature.status || '').toLowerCase()
   if (column === 'colorStatus') {
@@ -79,8 +77,13 @@ function getSortValue(feature, column) {
     return feature.targetVersions && feature.targetVersions.length > 0 ? feature.targetVersions[0] : ''
   }
   if (column === 'blocked') return feature.isBlocked ? 1 : 0
+  if (column === 'riskLevel') {
+    var ro = RISK_ORDER[(feature.riskLevel || '').toLowerCase()]
+    return ro !== undefined ? ro : 99
+  }
   if (column === 'assignee') return (feature.assignee || '').toLowerCase()
   if (column === 'pmOwner') return (feature.pmOwner || '').toLowerCase()
+  if (column === 'docs') return feature.docsRequired === 'Yes' ? 0 : 1
   return ''
 }
 
@@ -150,6 +153,11 @@ function extractProduct(versionName) {
   return versionName.split('-')[0] || versionName
 }
 
+function normalizeVersion(v) {
+  if (!v || typeof v !== 'string') return v
+  return v.replace(/^rhoai-/i, '')
+}
+
 var componentGroups = computed(function() {
   var compMap = {}
 
@@ -206,11 +214,14 @@ var componentGroups = computed(function() {
             releaseType: feat.releaseType,
             priority: feat.priority,
             isBlocked: feat.isBlocked,
+            blockedBy: feat.blockedBy || [],
+            riskLevel: feat.riskLevel || 'low',
             components: feat.components,
             fixVersions: feat.fixVersions || [],
             targetVersions: feat.targetVersions || [],
             assignee: feat.assignee,
             pmOwner: feat.pmOwner,
+            docsRequired: feat.docsRequired || null,
             products: [],
             versions: [],
             isRequested: false,
@@ -242,10 +253,12 @@ var componentGroups = computed(function() {
     var reqCount = 0
     var comCount = 0
     var blkCount = 0
+    var riskCount = 0
     for (var fli = 0; fli < featureList.length; fli++) {
       if (featureList[fli].isRequested) reqCount++
       if (featureList[fli].isCommitted) comCount++
       if (featureList[fli].isBlocked) blkCount++
+      if (featureList[fli].riskLevel === 'high' || featureList[fli].riskLevel === 'medium') riskCount++
     }
 
     result.push({
@@ -253,7 +266,8 @@ var componentGroups = computed(function() {
       features: featureList,
       requestedCount: reqCount,
       committedCount: comCount,
-      blockedCount: blkCount
+      blockedCount: blkCount,
+      atRiskCount: riskCount
     })
   }
 
@@ -296,7 +310,7 @@ defineExpose({ expandAll, collapseAll })
             :class="COMP_STYLE.border"
             @click="toggleComponent(comp.component)"
           >
-            <td colspan="12" class="px-4 py-3">
+            <td colspan="13" class="px-4 py-3">
               <div class="flex items-center gap-3">
                 <svg
                   class="w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 flex-shrink-0"
@@ -319,6 +333,12 @@ defineExpose({ expandAll, collapseAll })
                     ? 'bg-red-100 dark:bg-red-800/40 text-red-700 dark:text-red-300'
                     : 'bg-gray-100 dark:bg-gray-700/60 text-gray-400 dark:text-gray-500'"
                 >{{ comp.blockedCount }} blocked</span>
+                <span
+                  class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold"
+                  :class="comp.atRiskCount > 0
+                    ? 'bg-amber-100 dark:bg-amber-800/40 text-amber-700 dark:text-amber-300'
+                    : 'bg-gray-100 dark:bg-gray-700/60 text-gray-400 dark:text-gray-500'"
+                >{{ comp.atRiskCount }} at risk</span>
                 <span
                   v-if="getComponentVelocity(comp.component)"
                   class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300"
@@ -362,9 +382,6 @@ defineExpose({ expandAll, collapseAll })
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('priority')">
               <span class="inline-flex items-center gap-1 justify-center">Priority<SortArrow :direction="sortIcon('priority')" /></span>
             </th>
-            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('type')">
-              <span class="inline-flex items-center gap-1 justify-center">Type<SortArrow :direction="sortIcon('type')" /></span>
-            </th>
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-28 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('releaseType')">
               <span class="inline-flex items-center gap-1 justify-center">Release Type<SortArrow :direction="sortIcon('releaseType')" /></span>
             </th>
@@ -383,11 +400,17 @@ defineExpose({ expandAll, collapseAll })
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('blocked')">
               <span class="inline-flex items-center gap-1 justify-center">Blocked<SortArrow :direction="sortIcon('blocked')" /></span>
             </th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-20 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('riskLevel')">
+              <span class="inline-flex items-center gap-1 justify-center">At Risk<SortArrow :direction="sortIcon('riskLevel')" /></span>
+            </th>
             <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('assignee')">
               <span class="inline-flex items-center gap-1">Delivery Owner<SortArrow :direction="sortIcon('assignee')" /></span>
             </th>
             <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('pmOwner')">
               <span class="inline-flex items-center gap-1">PM Owner<SortArrow :direction="sortIcon('pmOwner')" /></span>
+            </th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('docs')">
+              <span class="inline-flex items-center gap-1 justify-center">Docs<SortArrow :direction="sortIcon('docs')" /></span>
             </th>
           </tr>
 
@@ -423,18 +446,6 @@ defineExpose({ expandAll, collapseAll })
                 <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
               </td>
               <td class="px-3 py-2.5 text-center">
-                <div class="flex items-center justify-center gap-1">
-                  <span
-                    v-if="feature.isRequested"
-                    class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 dark:bg-blue-800/40 text-blue-700 dark:text-blue-300"
-                  >REQ</span>
-                  <span
-                    v-if="feature.isCommitted"
-                    class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-800/40 text-emerald-700 dark:text-emerald-300"
-                  >COM</span>
-                </div>
-              </td>
-              <td class="px-3 py-2.5 text-center">
                 <span
                   v-if="feature.releaseType"
                   class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300"
@@ -463,7 +474,7 @@ defineExpose({ expandAll, collapseAll })
                     v-for="fv in feature.fixVersions"
                     :key="fv"
                     class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
-                  >{{ fv }}</span>
+                  >{{ normalizeVersion(fv) }}</span>
                 </div>
                 <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
               </td>
@@ -473,7 +484,7 @@ defineExpose({ expandAll, collapseAll })
                     v-for="tv in feature.targetVersions"
                     :key="tv"
                     class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
-                  >{{ tv }}</span>
+                  >{{ normalizeVersion(tv) }}</span>
                 </div>
                 <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
               </td>
@@ -481,7 +492,7 @@ defineExpose({ expandAll, collapseAll })
                 <span
                   v-if="feature.isBlocked"
                   class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/30 ring-1 ring-red-200 dark:ring-red-800"
-                  title="Blocked"
+                  :title="feature.blockedBy && feature.blockedBy.length ? 'Blocked by: ' + feature.blockedBy.map(function(b) { return b.key + ' (' + b.status + ')' }).join(', ') : 'Blocked'"
                 >
                   <svg class="w-3.5 h-3.5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
@@ -491,18 +502,39 @@ defineExpose({ expandAll, collapseAll })
                   <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </td>
+              <td class="px-3 py-2.5 text-center">
+                <span
+                  class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold"
+                  :class="{
+                    'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300': feature.riskLevel === 'high',
+                    'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300': feature.riskLevel === 'medium',
+                    'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300': feature.riskLevel === 'low'
+                  }"
+                  :title="feature.riskLevel === 'high' ? 'Not committed — has target version but no fix version' : feature.riskLevel === 'medium' ? 'Committed but blocked or status is red/yellow' : 'On track'"
+                >{{ feature.riskLevel === 'high' ? 'High' : feature.riskLevel === 'medium' ? 'Medium' : 'Low' }}</span>
+              </td>
               <td class="px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
                 {{ feature.assignee || '--' }}
               </td>
               <td class="px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
                 {{ feature.pmOwner || '--' }}
               </td>
+              <td class="px-3 py-2.5 text-center">
+                <span
+                  v-if="feature.docsRequired === 'Yes'"
+                  class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
+                >Yes</span>
+                <span
+                  v-else
+                  class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 dark:bg-gray-700/60 text-gray-400 dark:text-gray-500"
+                >{{ feature.docsRequired || '—' }}</span>
+              </td>
             </tr>
           </template>
 
           <!-- Empty state -->
           <tr v-if="isComponentExpanded(comp.component) && comp.features.length === 0">
-            <td colspan="12" class="px-8 py-6 text-sm text-gray-400 dark:text-gray-500 italic text-center">
+            <td colspan="13" class="px-8 py-6 text-sm text-gray-400 dark:text-gray-500 italic text-center">
               No features found for {{ comp.component }}
             </td>
           </tr>
@@ -510,7 +542,7 @@ defineExpose({ expandAll, collapseAll })
 
         <!-- No results -->
         <tr v-if="componentGroups.length === 0">
-          <td colspan="12" class="px-8 py-10 text-sm text-gray-400 dark:text-gray-500 italic text-center">
+          <td colspan="13" class="px-8 py-10 text-sm text-gray-400 dark:text-gray-500 italic text-center">
             No features match the current filters.
           </td>
         </tr>

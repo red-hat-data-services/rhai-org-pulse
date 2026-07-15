@@ -1,308 +1,352 @@
 ---
 repository: "opendatahub-io/odh-automation-serving"
-overall_score: 0.8
+overall_score: 1.6
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No tests of any kind — repo contains zero testable source code"
+    status: "No source code or tests exist — pure workflow automation repo"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E testing; workflows are never validated before merge"
+    status: "No integration or E2E tests; workflows are untested"
   - dimension: "Build Integration"
     score: 0.0
-    status: "No PR-time validation; no workflow linting or dry-run simulation"
+    status: "No build artifacts; repo contains only GitHub Actions workflows"
   - dimension: "Image Testing"
     score: 0.0
-    status: "N/A — repo does not build images (only queries Quay.io SHAs)"
+    status: "No container images built — repo queries Quay.io SHAs only"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "Nothing to measure — no source code or tests exist"
+    status: "No code to cover; no workflow validation coverage"
   - dimension: "CI/CD Automation"
-    score: 3.0
-    status: "7 workflow_dispatch workflows exist but lack validation, linting, and security hardening"
+    score: 5.0
+    status: "7 dispatch-only workflows for upstream sync; no PR-triggered CI"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent guidance of any kind"
+    status: "No CLAUDE.md, no .claude/ directory, no documentation"
 critical_gaps:
-  - title: "Script injection vulnerabilities in all workflows"
-    impact: "Unsanitized github.event.inputs.* used directly in run: steps — exploitable by anyone with dispatch permissions"
-    severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No workflow testing or validation on PRs"
-    impact: "Broken workflows are only discovered when someone manually dispatches them"
+  - title: "All workflows are manual-dispatch only — no automated CI"
+    impact: "Workflow changes are merged without any validation; broken workflows discovered only at dispatch time"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "Unpinned third-party action (TobKed/github-forks-sync-action@master)"
-    impact: "Supply chain risk — upstream action changes could break workflows or introduce malicious code"
+  - title: "No workflow testing or validation"
+    impact: "Syntax errors, logic bugs, and incorrect repository names ship without detection"
     severity: "HIGH"
-    effort: "1 hour"
-  - title: "Inconsistent secret management (PAT_TOKEN vs ACTIONS_PAT)"
-    impact: "Confusion about which token has which permissions; harder to audit and rotate"
-    severity: "MEDIUM"
-    effort: "2-3 hours"
-  - title: "Force-push workflow with no guardrails"
-    impact: "force_push_to_trigger_openshift-ci_builds.yml can rewrite history on any branch of any target repo"
+    effort: "4-6 hours"
+  - title: "Security: command injection via unquoted workflow_dispatch inputs"
+    impact: "User-supplied input (commit SHAs, branch names) is interpolated directly into shell commands without quoting"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No documentation beyond a one-line README"
-    impact: "Team members cannot understand workflow purpose, prerequisites, or safe usage without reading YAML"
+  - title: "Hardcoded org typo in push_release.yml (opendatahub.io vs opendatahub-io)"
+    impact: "Release sync workflow targets wrong GitHub organization; silent failure"
+    severity: "HIGH"
+    effort: "0.5 hours"
+  - title: "No secret rotation or audit trail"
+    impact: "PAT_TOKEN and ACTIONS_PAT used across all workflows with write permissions; no rotation policy"
     severity: "MEDIUM"
-    effort: "4-6 hours"
+    effort: "2-4 hours"
+  - title: "Force-push workflow exists without guardrails"
+    impact: "Amends and force-pushes to downstream branches; no approval gate or audit log"
+    severity: "MEDIUM"
+    effort: "2-4 hours"
+  - title: "No documentation — README is a single title line"
+    impact: "No usage instructions, no architecture overview, no runbook for operators"
+    severity: "MEDIUM"
+    effort: "4-8 hours"
 quick_wins:
-  - title: "Pin third-party action to a commit SHA"
-    effort: "30 minutes"
-    impact: "Eliminates supply chain risk from TobKed/github-forks-sync-action@master"
-  - title: "Add actionlint to a PR workflow"
+  - title: "Add actionlint and yamllint CI on PRs"
     effort: "1-2 hours"
-    impact: "Catch workflow syntax errors before merge; prevents broken dispatches"
-  - title: "Sanitize workflow_dispatch inputs via environment variables"
+    impact: "Catches workflow syntax errors and YAML issues before merge"
+  - title: "Quote all ${{ inputs.* }} expressions in shell commands"
+    effort: "1-2 hours"
+    impact: "Eliminates command injection risk from user-supplied dispatch inputs"
+  - title: "Fix 'opendatahub.io' → 'opendatahub-io' typo in push_release.yml"
+    effort: "15 minutes"
+    impact: "Fixes broken release sync targeting wrong GitHub organization"
+  - title: "Add CODEOWNERS file"
+    effort: "30 minutes"
+    impact: "Ensures workflow changes get reviewed by automation team"
+  - title: "Add a meaningful README with workflow descriptions"
     effort: "2-3 hours"
-    impact: "Eliminates script injection vulnerabilities across all 7 workflows"
-  - title: "Unify secret names (PAT_TOKEN → ACTIONS_PAT or vice versa)"
-    effort: "1 hour"
-    impact: "Simplifies secret management and audit"
+    impact: "Makes the repo self-documenting for new team members"
 recommendations:
   priority_0:
-    - "Fix script injection: move all github.event.inputs.* references out of run: blocks into env: mappings"
-    - "Pin TobKed/github-forks-sync-action to a specific commit SHA instead of @master"
-    - "Add branch protection guardrails to the force-push workflow (restrict target branches)"
+    - "Add PR-triggered CI with actionlint to validate workflow syntax before merge"
+    - "Fix command injection vulnerabilities — quote all dispatch inputs in run: blocks"
+    - "Fix 'opendatahub.io' org name typo in push_release.yml"
   priority_1:
-    - "Add a PR workflow with actionlint to validate workflow YAML on every change"
-    - "Consolidate duplicate repo-mapping logic into a reusable composite action or shared script"
-    - "Write comprehensive README documenting each workflow's purpose, inputs, and prerequisites"
+    - "Add workflow integration tests using act or workflow dry-run validation"
+    - "Create comprehensive README documenting each workflow's purpose and usage"
+    - "Add CODEOWNERS and branch protection to require reviews for workflow changes"
   priority_2:
-    - "Add workflow_dispatch input validation (check branch exists, commit SHA format valid)"
-    - "Create CLAUDE.md with workflow contribution guidelines and testing expectations"
-    - "Add CODEOWNERS to require review for workflow changes"
+    - "Consolidate duplicate sync logic into reusable composite actions"
+    - "Add Slack/email notifications for workflow failures"
+    - "Create agent rules for safe workflow authoring patterns"
 ---
 
 # Quality Analysis: odh-automation-serving
 
 ## Executive Summary
 
-- **Overall Score: 0.8/10**
-- **Repository Type**: Pure automation/tooling — contains zero application source code
-- **Contents**: 7 GitHub Actions `workflow_dispatch` workflows, a LICENSE, and a one-line README
-- **Purpose**: Automates upstream/midstream/downstream repo syncing, cherry-picking, release branch management, and image SHA retrieval for the ODH Model Serving ecosystem
-- **Key Strengths**: Automates tedious cross-repo sync operations that would otherwise be manual
-- **Critical Gaps**: Script injection vulnerabilities, no workflow validation, unpinned actions, no documentation
-- **Agent Rules Status**: Missing — no CLAUDE.md, no .claude/ directory
+- **Overall Score: 1.6/10**
+- **Repository Type**: Pure automation — GitHub Actions workflow collection for upstream/midstream/downstream repository synchronization
+- **Key Strengths**: Covers a useful set of sync operations (upstream pull, cherry-pick, release branch sync, image SHA lookup, CI rebuild trigger)
+- **Critical Gaps**: Zero CI on workflow changes, command injection vulnerabilities in dispatch inputs, no tests, no documentation, org name typo in one workflow
+- **Agent Rules Status**: Missing — no CLAUDE.md, no `.claude/` directory
 
-This repository is an outlier compared to typical ODH repos because it has no buildable source code, no tests, and no container images. Its quality footprint is entirely defined by the safety, reliability, and maintainability of its GitHub Actions workflows — and those have significant gaps.
+## Repository Overview
+
+`odh-automation-serving` is a **zero-code automation repository**. It contains **no source code, no tests, no Dockerfiles, and no libraries**. Its entire value is in **7 GitHub Actions workflows** (691 lines total) that automate repository synchronization across the OpenDataHub serving ecosystem:
+
+| Workflow | Purpose | Trigger |
+|----------|---------|---------|
+| `pull_upstream.yml` | Sync upstream → midstream or midstream → downstream | Manual dispatch |
+| `push_release.yml` | Create release branch sync PRs | Manual dispatch |
+| `push_cherrypick.yml` | Cherry-pick commits to downstream release branches | Manual dispatch |
+| `pull_upstream_with_cherrypick.yml` | Pull upstream + apply cherry-picks as PR | Manual dispatch |
+| `create-upstream-pr-with-given-commit.yml` | Create upstream PRs with cherry-picked commits | Manual dispatch |
+| `update_sha.yml` | Fetch image SHAs from Quay.io | Manual dispatch |
+| `force_push_to_trigger_openshift-ci_builds.yml` | Amend + force-push to retrigger OpenShift CI | Manual dispatch |
+
+**Repos managed**: kserve, modelmesh, vllm, caikit, caikit-nlp, openvino_model_server, odh-model-controller, model-registry, and others across `opendatahub-io` and `red-hat-data-services` organizations.
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0/10 | No tests — no source code to test |
-| Integration/E2E | 0/10 | No workflow validation or dry-run testing |
-| **Build Integration** | **0/10** | **No PR-time linting or workflow validation** |
-| Image Testing | 0/10 | N/A — does not build images |
-| Coverage Tracking | 0/10 | Nothing to measure |
-| CI/CD Automation | 3/10 | 7 workflows exist but lack hardening |
-| Agent Rules | 0/10 | No agent guidance of any kind |
+| Unit Tests | 0/10 | No source code or tests exist |
+| Integration/E2E | 0/10 | Workflows are completely untested |
+| **Build Integration** | **0/10** | **No build artifacts produced** |
+| Image Testing | 0/10 | No images built; only SHA queries |
+| Coverage Tracking | 0/10 | Nothing to cover |
+| CI/CD Automation | 5/10 | 7 useful workflows but no CI on PRs |
+| Agent Rules | 0/10 | No AI-assisted development guidance |
 
 ## Critical Gaps
 
-### 1. Script Injection Vulnerabilities in All Workflows
-- **Impact**: All 7 workflows use `${{ github.event.inputs.* }}` directly inside `run:` shell blocks. While these are `workflow_dispatch` (manual trigger only), anyone with repository dispatch permissions could inject arbitrary shell commands through input fields.
-- **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Affected files**: All 7 workflows
-- **Example** (from `pull_upstream_with_cherrypick.yml`):
-  ```yaml
-  # VULNERABLE — input is interpolated directly into shell
-  run: |
-    git cherry-pick ${{ github.event.inputs.patch_commits }}
-  
-  # SAFE — input goes through environment variable
-  env:
-    COMMITS: ${{ github.event.inputs.patch_commits }}
-  run: |
-    git cherry-pick "$COMMITS"
-  ```
-
-### 2. Unpinned Third-Party Action
-- **Impact**: `TobKed/github-forks-sync-action@master` is used in 2 workflows (`pull_upstream.yml`, `push_release.yml`). The `@master` tag means any upstream change — including malicious ones — is automatically consumed.
-- **Severity**: HIGH
-- **Effort**: 1 hour
-- **Fix**: Pin to a specific commit SHA:
-  ```yaml
-  uses: TobKed/github-forks-sync-action@<commit-sha>  # v0.x.x
-  ```
-
-### 3. Force-Push Workflow With No Guardrails
-- **Impact**: `force_push_to_trigger_openshift-ci_builds.yml` amends the latest commit and force-pushes to ANY branch of ANY target repository. There are no checks on which branches are safe to force-push.
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Fix**: Add branch validation, restrict to release branches only, require confirmation step.
-
-### 4. No Workflow Testing or Validation
-- **Impact**: There is no PR workflow at all — changes to workflow YAML are merged without any validation. Broken workflows are discovered only when someone tries to dispatch them.
+### 1. No CI/CD on Workflow Changes
+- **Impact**: Workflow modifications merged without any validation — syntax errors, broken YAML, or logic bugs ship directly to the dispatch-triggered workflows
 - **Severity**: HIGH
 - **Effort**: 4-8 hours
+- **Details**: All 7 workflows are `workflow_dispatch` only. There is no PR-triggered workflow that validates the workflows themselves. A broken workflow is only discovered when someone manually dispatches it and it fails.
 
-### 5. Inconsistent Secret Management
-- **Impact**: Some workflows use `secrets.PAT_TOKEN`, others use `secrets.ACTIONS_PAT`. It's unclear if these are the same token or different tokens with different permission scopes.
-- **Severity**: MEDIUM
-- **Effort**: 2-3 hours
-- **Affected**:
-  - `PAT_TOKEN`: pull_upstream.yml, pull_upstream_with_cherrypick.yml, force_push.yml, create-upstream-pr.yml
-  - `ACTIONS_PAT`: push_release.yml, push_cherrypick.yml
+### 2. Command Injection Vulnerabilities
+- **Impact**: User-supplied `workflow_dispatch` inputs are interpolated directly into `run:` shell blocks without quoting
+- **Severity**: HIGH
+- **Effort**: 2-4 hours
+- **Details**: Multiple workflows use patterns like:
+  ```yaml
+  run: |
+    git cherry-pick ${{ github.event.inputs.cherry_pick_commits }}
+  ```
+  A malicious or malformed input containing shell metacharacters (`;`, `|`, `$(...)`) could execute arbitrary commands. All `${{ inputs.* }}` values in `run:` blocks should be passed via environment variables or quoted.
+- **Affected workflows**: `push_cherrypick.yml`, `pull_upstream_with_cherrypick.yml`, `create-upstream-pr-with-given-commit.yml`, `force_push_to_trigger_openshift-ci_builds.yml`
 
-### 6. Organization Name Typo/Inconsistency
-- **Impact**: `push_cherrypick.yml` uses `opendatahub.io` (with dot) instead of `opendatahub-io` (with dash) as the target org. This may cause the workflow to fail or target the wrong repository.
+### 3. Organization Name Typo in push_release.yml
+- **Impact**: `push_release.yml` uses `opendatahub.io` (with a dot) instead of `opendatahub-io` (with a dash) for the GitHub org name
+- **Severity**: HIGH
+- **Effort**: 15 minutes
+- **Details**: Line in `push_release.yml`:
+  ```yaml
+  options:
+    - 'opendatahub.io'    # BUG: should be 'opendatahub-io'
+  ```
+  This causes the workflow to target a non-existent GitHub organization, resulting in silent failure when dispatched with this option.
+
+### 4. No Workflow Testing
+- **Impact**: No way to verify workflows work correctly without actually dispatching them against real repositories
+- **Severity**: HIGH
+- **Effort**: 4-6 hours
+- **Details**: There are no dry-run tests, no `act`-based local testing, and no mock-dispatch validation. Workflow logic (repo name resolution, cherry-pick handling, force-push logic) is tested only in production.
+
+### 5. Unguarded Force-Push Workflow
+- **Impact**: `force_push_to_trigger_openshift-ci_builds.yml` amends the latest commit and force-pushes to downstream branches with no approval gate
 - **Severity**: MEDIUM
-- **Effort**: 30 minutes
+- **Effort**: 2-4 hours
+- **Details**: This workflow uses `--force-with-lease` (slightly safer than `--force`) but still rewrites history on downstream branches. No confirmation step, no audit log, and any workflow dispatcher can trigger it.
+
+### 6. Zero Documentation
+- **Impact**: README contains only `# odh-automation-serving` — no usage instructions, no workflow descriptions, no prerequisites
+- **Severity**: MEDIUM
+- **Effort**: 4-8 hours
 
 ## Quick Wins
 
-### 1. Pin Third-Party Action to Commit SHA (30 minutes)
-Replace `@master` with a pinned SHA in `pull_upstream.yml` and `push_release.yml`:
+### 1. Add actionlint CI (1-2 hours)
+Create a PR-triggered workflow that validates all workflow files:
 ```yaml
-# Before
-uses: TobKed/github-forks-sync-action@master
-# After
-uses: TobKed/github-forks-sync-action@<sha>  # pin to known-good version
-```
-
-### 2. Add actionlint PR Workflow (1-2 hours)
-Create `.github/workflows/lint.yml`:
-```yaml
-name: Lint Workflows
+name: Validate Workflows
 on: [pull_request]
 jobs:
-  actionlint:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: reviewdog/action-actionlint@v1
+      - uses: rhysd/actionlint-action@v1
 ```
+**Impact**: Catches syntax errors, deprecated action versions, and common workflow mistakes before merge.
 
-### 3. Sanitize Inputs via Environment Variables (2-3 hours)
-Move all `${{ github.event.inputs.* }}` from `run:` blocks to `env:` mappings across all 7 workflows.
+### 2. Fix Command Injection (1-2 hours)
+Replace direct input interpolation with environment variables:
+```yaml
+# BEFORE (vulnerable)
+run: git cherry-pick ${{ github.event.inputs.cherry_pick_commits }}
 
-### 4. Unify Secret Names (1 hour)
-Pick one secret name (recommend `ACTIONS_PAT`) and update all workflows consistently.
+# AFTER (safe)
+env:
+  COMMITS: ${{ github.event.inputs.cherry_pick_commits }}
+run: git cherry-pick $COMMITS
+```
+**Impact**: Eliminates shell injection risk from all 7 workflows.
+
+### 3. Fix Organization Typo (15 minutes)
+In `push_release.yml`, change:
+```yaml
+# BEFORE
+- 'opendatahub.io'
+# AFTER
+- 'opendatahub-io'
+```
+**Impact**: Fixes broken release sync workflow.
+
+### 4. Add CODEOWNERS (30 minutes)
+```
+# .github/CODEOWNERS
+* @opendatahub-io/model-serving-automation
+.github/workflows/ @opendatahub-io/model-serving-automation
+```
+**Impact**: Ensures all workflow changes are reviewed.
+
+### 5. Add Meaningful README (2-3 hours)
+Document each workflow's purpose, required secrets, prerequisites, and usage examples.
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflow Inventory** (7 total — all `workflow_dispatch` only):
+**Current state**: The repository has **no CI pipeline** for its own code. All 7 workflows are `workflow_dispatch` only — they operate on *other* repositories, not on this one. There are:
+- **0 PR-triggered workflows** — changes to workflows go unvalidated
+- **0 scheduled workflows** — no periodic health checks
+- **7 manual dispatch workflows** — all require human intervention to trigger
 
-| Workflow | Purpose | Triggers |
-|----------|---------|----------|
-| `pull_upstream.yml` | Sync upstream → midstream or midstream → downstream | Manual dispatch |
-| `pull_upstream_with_cherrypick.yml` | Pull + cherry-pick specific commits | Manual dispatch |
-| `push_release.yml` | Sync main → release branch via PR | Manual dispatch |
-| `push_cherrypick.yml` | Cherry-pick from upstream and push to downstream | Manual dispatch |
-| `force_push_to_trigger_openshift-ci_builds.yml` | Amend + force-push to trigger CI rebuilds | Manual dispatch |
-| `create-upstream-pr-with-given-commit.yml` | Create upstream PR with cherry-picked commits | Manual dispatch |
-| `update_sha.yml` | Retrieve image SHAs from Quay.io | Manual dispatch |
-
-**Notable Issues**:
-- No PR-triggered workflows at all — changes to workflow files are unvalidated
-- No caching strategies (not needed for these workflows)
-- No concurrency controls (multiple dispatches could race)
-- Duplicate repo-mapping logic copy-pasted across 4+ workflows
-- `actions/checkout` version inconsistency: most use `@v4`, `update_sha.yml` uses `@v3`
+**Workflow quality issues**:
+1. **No concurrency control** — multiple dispatches of the same workflow could race
+2. **No timeout limits** — workflows could hang indefinitely
+3. **Inconsistent error handling** — some workflows exit on cherry-pick failure, others try `--continue` then `--skip` then `--abort`
+4. **Duplicate logic** — repo name resolution logic is copy-pasted across 4 workflows with slight variations
+5. **Pinned action versions vary** — mix of `@v3`, `@v4`, and `@master` (unpinned) for `TobKed/github-forks-sync-action`
 
 ### Test Coverage
 
-**There are zero tests in this repository.** No test files, no test frameworks, no test infrastructure of any kind.
+**Current state**: Zero. There are no test files of any kind:
+- 0 unit tests
+- 0 integration tests
+- 0 E2E tests
+- 0 workflow validation tests
 
-While this is an automation repo without application code, the workflows themselves are complex enough to warrant testing:
-- Repo name mapping logic (e.g., `model_server` → `openvino_model_server`) is duplicated and error-prone
-- Cherry-pick logic handles both merge and regular commits
-- Branch creation and PR creation have multiple failure modes
+For a workflow-only repository, relevant testing would include:
+- YAML syntax validation (yamllint)
+- Workflow syntax validation (actionlint)
+- Shell script linting (shellcheck on `run:` blocks)
+- Logic testing with [act](https://github.com/nektos/act) or similar
 
 ### Code Quality
 
-- **Linting**: None — no `.golangci.yaml`, `.eslintrc`, or equivalent
-- **Pre-commit hooks**: None — no `.pre-commit-config.yaml`
-- **Static analysis**: None — no CodeQL, no workflow linting
-- **Code duplication**: Significant — repository mapping logic is copy-pasted across 4+ workflows
+**Current state**: No quality tooling configured:
+- No linting (actionlint, yamllint, shellcheck)
+- No pre-commit hooks
+- No `.editorconfig`
+- No formatting standards
+
+**Shell script quality issues found in workflows**:
+1. `set +e` used in `update_sha.yml` suppresses all errors — makes debugging difficult
+2. Inconsistent quoting of variables across workflows
+3. Mixed use of `${{ secrets.PAT_TOKEN }}` and `${{ secrets.ACTIONS_PAT }}` (two different secret names for likely the same purpose)
 
 ### Container Images
 
-Not applicable — this repository does not build container images. The `update_sha.yml` workflow queries Quay.io for image SHAs but does not build or test images.
+**Not applicable** — this repository doesn't build images. The `update_sha.yml` workflow fetches image SHAs from Quay.io for other repositories' images.
 
 ### Security
 
-| Check | Status |
-|-------|--------|
-| Script injection protection | FAIL — all workflows vulnerable |
-| Action version pinning | FAIL — `@master` used |
-| Secret management | PARTIAL — inconsistent naming |
-| CODEOWNERS | MISSING |
-| Branch protection | UNKNOWN (not visible in repo) |
-| Dependency scanning | N/A |
-| Secret detection | MISSING |
+**Critical concerns**:
+
+1. **Command injection** (HIGH): All `workflow_dispatch` inputs are interpolated directly into `run:` blocks. GitHub's own [security hardening guide](https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions) explicitly warns against this pattern.
+
+2. **Excessive permissions** (MEDIUM): Several workflows request `contents: write`, `packages: write`, and `pull-requests: write` at the job level. Some only need a subset.
+
+3. **Unpinned third-party action** (MEDIUM): `TobKed/github-forks-sync-action@master` is used without SHA pinning — a supply chain risk if the upstream action is compromised.
+
+4. **No secret scanning** (LOW): No `.gitleaks.toml` or secret detection tooling.
+
+5. **Force-push without guardrails** (MEDIUM): The force-push workflow can rewrite history on downstream branches with no confirmation.
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
 - **Coverage**: None — no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
 - **Quality**: N/A
-- **Gaps**: Everything — no contribution guidelines, no workflow authoring standards, no testing expectations
-- **Recommendation**: Create `CLAUDE.md` with workflow contribution guidelines; optionally generate rules with `/test-rules-generator`
+- **Gaps**: For a workflow automation repo, agent rules should guide:
+  - Safe patterns for shell commands in workflows
+  - Input validation best practices
+  - Secret management patterns
+  - Workflow testing requirements
+- **Recommendation**: Generate rules with `/test-rules-generator` focused on workflow authoring patterns
 
 ## Recommendations
 
-### Priority 0 (Critical — Security & Reliability)
+### Priority 0 (Critical)
 
-1. **Fix script injection in all workflows** — Move all `github.event.inputs.*` references from `run:` blocks to `env:` mappings. This is a security vulnerability even with restricted dispatch permissions.
+1. **Add PR-triggered actionlint validation** — catch workflow syntax and logic errors before merge
+2. **Fix command injection in all workflows** — pass dispatch inputs via `env:` rather than direct `${{ }}` interpolation in `run:` blocks
+3. **Fix `opendatahub.io` → `opendatahub-io` typo** in `push_release.yml`
+4. **Pin `TobKed/github-forks-sync-action` to a SHA** instead of `@master`
 
-2. **Pin TobKed/github-forks-sync-action to a commit SHA** — Using `@master` is a supply chain risk. Pin to a known-good SHA and add a comment with the version number.
+### Priority 1 (High Value)
 
-3. **Add guardrails to force-push workflow** — Restrict target branches (e.g., only `release-*` branches), add a confirmation step, and log which branch was force-pushed.
+5. **Add comprehensive README** documenting each workflow, required secrets, prerequisites, and usage
+6. **Add CODEOWNERS** and branch protection rules requiring reviews for workflow changes
+7. **Add shellcheck linting** for all `run:` blocks in workflows
+8. **Consolidate duplicate repo-name resolution logic** into a reusable composite action
+9. **Add concurrency groups** to prevent parallel dispatch races:
+   ```yaml
+   concurrency:
+     group: ${{ github.workflow }}-${{ github.event.inputs.upstream_repo }}
+     cancel-in-progress: false
+   ```
 
-### Priority 1 (High Value — Quality & Maintainability)
+### Priority 2 (Nice-to-Have)
 
-4. **Add PR validation workflow** — At minimum, run `actionlint` on all workflow YAML files when PRs modify `.github/workflows/`.
-
-5. **Consolidate duplicate repo-mapping logic** — Extract the upstream/midstream/downstream repo name mapping into a reusable composite action or shared shell script. Current copy-paste across 4 workflows is error-prone (see the `opendatahub.io` vs `opendatahub-io` typo).
-
-6. **Write comprehensive README** — Document each workflow's purpose, required inputs, prerequisites (secrets, permissions), and common usage scenarios.
-
-7. **Unify secret management** — Standardize on one PAT secret name, document its required permissions, and add rotation guidance.
-
-### Priority 2 (Nice-to-Have — Polish)
-
-8. **Add input validation** — Check that branch names exist, commit SHAs are valid format, and repos are accessible before proceeding.
-
-9. **Create CLAUDE.md** — Provide contribution guidelines for workflow authoring (input sanitization, action pinning, testing expectations).
-
-10. **Add CODEOWNERS** — Require review for changes to workflow files.
-
-11. **Standardize actions/checkout version** — Update `update_sha.yml` from `@v3` to `@v4` for consistency.
+10. **Add Slack/Teams notifications** for workflow success/failure
+11. **Create agent rules** for safe workflow authoring (`.claude/rules/workflow-authoring.md`)
+12. **Add workflow dispatch audit logging** — post summary to a tracking issue or channel
+13. **Evaluate replacing manual dispatch with scheduled jobs** where appropriate
+14. **Add `timeout-minutes`** to all jobs to prevent runaway workflows
 
 ## Comparison to Gold Standards
 
-| Practice | odh-automation-serving | odh-dashboard | notebooks | kserve |
-|----------|----------------------|---------------|-----------|--------|
-| PR validation | None | Comprehensive | Multi-layer | Extensive |
-| Workflow linting | None | actionlint | Yes | Yes |
-| Action pinning | @master used | SHA-pinned | SHA-pinned | SHA-pinned |
-| Input sanitization | Not done | Yes | Yes | Yes |
-| Secret management | Inconsistent | Organized | Organized | Organized |
-| Documentation | 1-line README | Comprehensive | Detailed | Extensive |
-| Test coverage | 0% | 80%+ | Multi-layer | 85%+ |
-| Agent rules | None | Comprehensive | Partial | None |
-| CODEOWNERS | None | Yes | Yes | Yes |
-| Concurrency control | None | Yes | Yes | Yes |
+| Practice | odh-automation-serving | odh-dashboard (Gold) | notebooks (Gold) |
+|----------|----------------------|---------------------|------------------|
+| PR-triggered CI | None | Comprehensive | Comprehensive |
+| Workflow linting | None | actionlint | yamllint |
+| Test coverage | 0% | >80% | Multi-layer |
+| Security scanning | None | CodeQL, Trivy | Trivy |
+| Documentation | 1-line README | Detailed | Detailed |
+| Pre-commit hooks | None | Configured | Configured |
+| Agent rules | None | Comprehensive | Present |
+| Action pinning | Partial (@master used) | SHA-pinned | SHA-pinned |
+| CODEOWNERS | None | Present | Present |
+| Branch protection | Unknown | Enforced | Enforced |
 
 ## File Paths Reference
 
 | File | Purpose |
 |------|---------|
 | `.github/workflows/pull_upstream.yml` | Upstream → midstream/downstream sync |
-| `.github/workflows/pull_upstream_with_cherrypick.yml` | Pull + cherry-pick to midstream |
-| `.github/workflows/push_release.yml` | Main → release branch sync PR |
-| `.github/workflows/push_cherrypick.yml` | Cherry-pick from upstream to downstream |
-| `.github/workflows/force_push_to_trigger_openshift-ci_builds.yml` | Amend + force-push for CI rebuild |
-| `.github/workflows/create-upstream-pr-with-given-commit.yml` | Create PR upstream with cherry-picks |
-| `.github/workflows/update_sha.yml` | Retrieve image SHAs from Quay.io |
-| `README.md` | One-line placeholder |
-| `LICENSE` | Apache 2.0 |
+| `.github/workflows/push_release.yml` | Release branch sync PRs (**contains org typo**) |
+| `.github/workflows/push_cherrypick.yml` | Cherry-pick to downstream |
+| `.github/workflows/pull_upstream_with_cherrypick.yml` | Upstream pull + cherry-pick as PR |
+| `.github/workflows/create-upstream-pr-with-given-commit.yml` | Create upstream PRs |
+| `.github/workflows/update_sha.yml` | Fetch Quay.io image SHAs |
+| `.github/workflows/force_push_to_trigger_openshift-ci_builds.yml` | Force-push to retrigger CI |
+| `README.md` | Single title line only |
+| `LICENSE` | License file |

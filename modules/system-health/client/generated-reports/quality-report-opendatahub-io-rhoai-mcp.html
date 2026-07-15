@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:00 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:31 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/rhoai-mcp</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="197.92016999999996"
+                                stroke-dashoffset="147.026412"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">6.5</div>
+                        <div class="score-value">7.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Good coverage across auth, training, model_registry, and composites; gaps in connections, storage, projects, pipelines domains</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">874 test functions across 68 test files with pytest + asyncio support</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">Innovative MCP eval framework with DeepEval + mock cluster; no traditional E2E or live-cluster CI tests</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Integration tests present, LLM-based evals with DeepEval, but no live cluster E2E in CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Container builds on PR via Docker Buildx with multi-arch; no Konflux simulation or runtime validation on PR</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
+                            <div class="scorecard-status">Tekton/Konflux pipelines for PR and push, but no PR-time unit test execution in Konflux</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
-                            <div class="scorecard-status">Multi-stage Containerfile with UBI9 base and healthcheck; no Trivy/Snyk scanning, no SBOM, no startup validation in CI</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Multi-arch container build with attestation, but no runtime validation or startup testing in CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Coverage generated via pytest-cov and uploaded as artifact; no codecov integration, no threshold enforcement, no PR gating</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
+                            <div class="scorecard-status">Coverage generated with pytest-cov but no codecov integration, no enforcement thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Well-structured CI with lint, typecheck, multi-version test matrix, concurrency control, and uv caching</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Well-organized GitHub Actions with concurrency control, caching, matrix testing, and eval pipeline</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Good CLAUDE.md with TDD principles and architecture docs; no .claude/rules/ directory for test automation patterns</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Strong CLAUDE.md with scaffold-plugin command, but no .claude/rules/ for test patterns</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No coverage threshold enforcement or codecov integration</div>
-                            <p>Coverage can silently regress with no PR-level feedback; team has no visibility into coverage trends</p>
+                            <div class="item-description">No coverage enforcement or threshold gating</div>
+                            <p>Coverage can silently decrease without detection; no PR blocking on coverage regression</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No container runtime validation in CI</div>
+                            <p>Image startup failures or broken entrypoints not caught until deployment</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container security scanning (Trivy, Snyk, or CodeQL)</div>
-                            <p>Vulnerabilities in base images and dependencies go undetected until production</p>
+                            <div class="item-description">No security scanning (Trivy/CodeQL) in GitHub Actions</div>
+                            <p>Vulnerabilities in dependencies or source code not detected before merge</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No codecov/coveralls integration</div>
+                            <p>PR authors cannot see coverage impact of their changes; no historical coverage tracking</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">Missing unit tests for 4 domain modules (connections, storage, projects, pipelines)</div>
-                            <p>~1,200 lines of CRUD logic without test coverage; regressions in core functionality possible</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">16-24 hours</span>
-                            </div>
-                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">No secret detection or SAST in CI pipeline</div>
-                            <p>Hardcoded credentials or insecure patterns could be merged without detection</p>
+                            <div class="item-description">No pre-commit hooks</div>
+                            <p>Developers may push code that fails lint/format checks, wasting CI cycles</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Eval workflow is manual-only (workflow_dispatch + PR comment trigger)</div>
-                            <p>MCP quality regressions not caught automatically on every PR</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,32 +464,40 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add codecov integration with coverage threshold</div>
-                            <p>Immediate visibility into coverage trends; prevent regressions with PR comments and checks</p>
+                            <div class="item-description">Add codecov integration to CI workflow</div>
+                            <p>PR-level coverage reporting, historical tracking, and regression detection</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to CI workflow</div>
-                            <p>Catch CVEs in UBI9 base image and Python dependencies on every PR</p>
+                            <div class="item-description">Add Trivy container scanning to container-build workflow</div>
+                            <p>Catch known vulnerabilities in base images and dependencies before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add gitleaks secret detection to CI</div>
-                            <p>Prevent accidental credential leaks in commits</p>
+                            <div class="item-description">Add pre-commit hooks for ruff and mypy</div>
+                            <p>Catch lint/format/type issues locally before pushing</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create .claude/rules/ with unit test patterns</div>
-                            <p>AI-generated tests follow project conventions (pytest-asyncio, mock_k8s patterns)</p>
+                            <div class="item-description">Add container startup test in CI</div>
+                            <p>Verify image starts and health endpoint responds before publishing</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Generate .claude/rules/ for test patterns</div>
+                            <p>Improve AI-assisted test generation quality and consistency</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -509,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add codecov.yml with coverage thresholds (e.g., 70% minimum, no regression on PR)</li><li>Add Trivy container scanning as a required CI check on PRs</li><li>Write unit tests for connections, storage, projects, and pipelines domains</li></ul>
+                            <ul><li>Add codecov integration with coverage threshold enforcement (e.g., 70% minimum, no regression allowed)</li><li>Add container vulnerability scanning (Trivy or Snyk) to the container-build workflow</li><li>Add CodeQL or Semgrep SAST scanning as a PR check</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add CodeQL or Semgrep SAST scanning to CI pipeline</li><li>Add gitleaks pre-commit hook and CI check for secret detection</li><li>Enable eval workflow on PR push (at least for core tool changes) instead of manual-only</li><li>Create .claude/rules/ directory with test patterns for unit, integration, and eval tests</li></ul>
+                            <ul><li>Add container runtime validation step (build, start, health check) in CI</li><li>Create .claude/rules/ directory with test creation guidance for unit, integration, and eval tests</li><li>Add pre-commit-config.yaml with ruff, mypy, and secrets detection hooks</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SBOM generation (syft/cyclonedx) to container build workflow</li><li>Add image signing/attestation with cosign for release images</li><li>Add pre-commit hooks (.pre-commit-config.yaml) for local developer enforcement</li><li>Add load/performance testing for MCP server concurrent connections</li></ul>
+                            <ul><li>Add SBOM generation to container build pipeline</li><li>Add dependency review action for PR dependency changes</li><li>Add performance/load testing for MCP server endpoints</li></ul>
                         </div>
                     </div>
                 </div>

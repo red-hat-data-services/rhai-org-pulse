@@ -6,14 +6,6 @@ import { defineAsyncComponent } from 'vue'
 
 export const reports = [
   {
-    id: 'commitment-tracking',
-    label: 'Commitment Tracking',
-    description: 'Track committed vs. delivered features per release phase. Monitor >90% delivery OKR.',
-    icon: 'Target',
-    tags: ['Planning', 'OKR'],
-    component: defineAsyncComponent(() => import('./CommitmentTrackingReport.vue'))
-  },
-  {
     id: 'program-hygiene',
     label: 'Program Hygiene Report',
     description: 'Cross-version hygiene summary with violation breakdowns by rule, team, and version. Designed for program-level reporting.',
@@ -36,5 +28,13 @@ export const reports = [
     label: 'Release Performance',
     description: 'Cross-releases, and competitive comparisons performance dashboard',
     externalUrl: 'https://aidash.app.intlab.redhat.com/'
+  },
+  {
+    id: 'release-readiness',
+    label: 'RHOAI Release Readiness',
+    description: 'RHOAI Release Readiness and risk highlights.',
+    icon: 'Shield',
+    tags: ['Executive', 'Readiness', 'RAG'],
+    component: defineAsyncComponent(() => import('./ReleaseReadinessDirector.vue'))
   }
 ]

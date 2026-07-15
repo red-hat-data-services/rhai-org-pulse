@@ -18,7 +18,7 @@ export function usePackageSearch() {
     }
   }
 
-  async function search({ packageName, packageVersion, productVersion, variant, repoTypes }) {
+  async function search({ packageName, packageVersion, productVersion, variant, repoTypes, expandUpstream }) {
     loading.value = true
     error.value = null
     results.value = null
@@ -41,6 +41,9 @@ export function usePackageSearch() {
       }
     } else if (repoTypes === 'test' || repoTypes === 'production') {
       params.append('repo_type', repoTypes)
+    }
+    if (expandUpstream) {
+      params.set('expand_upstream', 'true')
     }
 
     try {

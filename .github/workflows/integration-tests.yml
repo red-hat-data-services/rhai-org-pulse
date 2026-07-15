@@ -42,9 +42,6 @@ jobs:
             system-health:
               - 'modules/system-health/**'
               - 'tests/integration/system-health.spec.js'
-            people-teams:
-              - 'modules/team-tracker/**'
-              - 'tests/integration/people-teams.spec.js'
             upstream-pulse:
               - 'modules/upstream-pulse/**'
               - 'tests/integration/upstream-pulse.spec.js'
@@ -77,16 +74,8 @@ jobs:
               - 'tests/integration/tv-fv-delta.spec.js'
             about-tabs:
               - 'platform/about-tabs/**'
-              - 'src/components/AboutView.vue'
-              - 'src/platform-loader.js'
-              - 'src/utils/icon-map.js'
               - 'tests/integration/about-tabs.spec.js'
             sotu-dashboard:
-              - 'src/components/LandingPage.vue'
-              - 'src/components/SotuWidget.vue'
-              - 'src/components/WidgetPicker.vue'
-              - 'src/composables/useSotuLayout.js'
-              - 'src/module-loader.js'
               - 'modules/*/client/widgets/**'
               - 'modules/*/module.json'
               - 'tests/integration/sotu-dashboard.spec.js'
@@ -103,6 +92,9 @@ jobs:
               - 'modules/releases/client/components/MonthlyFlowChart.vue'
               - 'modules/releases/client/components/ClickableCount.vue'
               - 'tests/integration/feature-pressure.spec.js'
+            pm-pipeline:
+              - 'modules/pm-pipeline/**'
+              - 'tests/integration/pm-pipeline.spec.js'
 
       # For merge_group events, dorny/paths-filter doesn't support this event type.
       # Use git diff directly, mirroring the filter definitions above.
@@ -120,7 +112,7 @@ jobs:
           echo "Changed files:"
           echo "$CHANGED"
 
-          ALL_MODULES='["about-tabs", "ai-impact", "catalyst-showcase", "system-health", "people-teams", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "sotu-dashboard"]'
+          ALL_MODULES='["about-tabs", "ai-impact", "catalyst-showcase", "system-health", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "pm-pipeline", "sotu-dashboard"]'
 
           # If shared test infrastructure changed, test all modules
           if echo "$CHANGED" | grep -qE '^tests/integration/(constants|helpers)\.js$'; then
@@ -140,15 +132,13 @@ jobs:
           }
 
           check_module "about-tabs" \
-            "^(platform/about-tabs/|src/components/AboutView\.vue|src/platform-loader\.js|src/utils/icon-map\.js|tests/integration/about-tabs\.spec\.js)"
+            "^(platform/about-tabs/|tests/integration/about-tabs\.spec\.js)"
           check_module "ai-impact" \
             "^(modules/ai-impact/|tests/integration/ai-impact\.spec\.js)"
           check_module "catalyst-showcase" \
             "^(modules/catalyst-showcase/|tests/integration/catalyst-showcase\.spec\.js)"
           check_module "system-health" \
             "^(modules/system-health/|tests/integration/system-health\.spec\.js)"
-          check_module "people-teams" \
-            "^(modules/team-tracker/|tests/integration/people-teams\.spec\.js)"
           check_module "upstream-pulse" \
             "^(modules/upstream-pulse/|tests/integration/upstream-pulse\.spec\.js)"
           check_module "package-analysis" \
@@ -159,8 +149,10 @@ jobs:
             "^(modules/releases/server/(tv-fv-delta/|index\.js)|modules/releases/client/views/TvFvDeltaView\.vue|modules/releases/client/composables/use.*(TvFv|ReleasePicker|ComponentBreakdown)\.js|modules/releases/client/components/(FeatureTable|ClickableCount)\.vue|tests/integration/tv-fv-delta\.spec\.js)"
           check_module "feature-pressure" \
             "^(modules/releases/server/(feature-pressure/|index\.js)|modules/releases/client/views/FeaturePressureView\.vue|modules/releases/client/composables/use(FeaturePressureData|ComponentPressure)\.js|modules/releases/client/components/(PressureHeatmap|MonthlyFlowChart|ClickableCount)\.vue|tests/integration/feature-pressure\.spec\.js)"
+          check_module "pm-pipeline" \
+            "^(modules/pm-pipeline/|tests/integration/pm-pipeline\.spec\.js)"
           check_module "sotu-dashboard" \
-            "^(src/components/(LandingPage|SotuWidget|WidgetPicker)\.vue|src/composables/useSotuLayout\.js|src/module-loader\.js|modules/.*/client/widgets/|modules/.*/module\.json|tests/integration/sotu-dashboard\.spec\.js)"
+            "^(modules/.*/client/widgets/|modules/.*/module\.json|tests/integration/sotu-dashboard\.spec\.js)"
 
           echo "modules=$MODULES" >> "$GITHUB_OUTPUT"
           echo "Testing modules: $MODULES"
@@ -171,7 +163,7 @@ jobs:
           if [ "${{ github.event_name }}" = "merge_group" ]; then
             MODULES='${{ steps.git-filter.outputs.modules }}'
           elif [ "${{ steps.filter.outputs.shared-test-files }}" == "true" ]; then
-            MODULES='["about-tabs", "ai-impact", "system-health", "people-teams", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "sotu-dashboard"]'
+            MODULES='["about-tabs", "ai-impact", "catalyst-showcase", "system-health", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "pm-pipeline", "sotu-dashboard"]'
           else
             # Use the modules that have direct changes
             MODULES='${{ steps.filter.outputs.changes }}'

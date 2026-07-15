@@ -1,159 +1,142 @@
 ---
 repository: "opendatahub-io/opendatahub.io"
-overall_score: 1.8
+overall_score: 2.4
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No test files exist anywhere in the repository"
+    status: "No test files exist; no testing framework installed"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E test infrastructure"
+    status: "No integration or E2E tests; no Cypress/Playwright/Jest configured"
   - dimension: "Build Integration"
-    score: 2.0
-    status: "PR workflow runs gatsby build only — no type checking, no linting"
+    score: 3.0
+    status: "PR workflow runs gatsby build but no type-check, lint, or image validation"
   - dimension: "Image Testing"
     score: 0.0
-    status: "No Dockerfile, no container image pipeline"
+    status: "No Dockerfile, no container builds, no image testing"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tool configured, no codecov/coveralls integration"
+    status: "No coverage tools configured; no codecov, coveralls, or thresholds"
   - dimension: "CI/CD Automation"
-    score: 4.0
-    status: "Three basic workflows: PR build check, two deploy pipelines (duplicated)"
+    score: 5.0
+    status: "Three workflows present (PR build, deploy, Pages) with caching but minimal validation"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
   - title: "Zero test coverage — no tests of any kind"
-    impact: "Any code change can silently break the site with no automated detection"
+    impact: "Regressions, broken pages, and rendering issues are completely undetectable before merge"
     severity: "HIGH"
     effort: "16-24 hours"
   - title: "No linting or static analysis in CI"
-    impact: "Code quality regressions, inconsistent patterns, and potential bugs go undetected"
+    impact: "Code quality issues, unused imports, and type errors slip into main unchecked"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "Duplicate deploy workflows (deploy-site.yml and gatsby.yml)"
-    impact: "Confusing CI config, potential race conditions on deploy, wasted compute"
-    severity: "MEDIUM"
+  - title: "No security scanning"
+    impact: "Vulnerable dependencies (npm) are never detected; no Dependabot, Snyk, or Trivy"
+    severity: "HIGH"
     effort: "1-2 hours"
-  - title: "No security scanning (SAST, dependency, secret detection)"
-    impact: "Vulnerable dependencies and leaked secrets are not caught"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No type checking in CI"
-    impact: "TypeScript errors can be merged without detection despite tsconfig having strict mode"
-    severity: "HIGH"
+  - title: "PR workflow only runs build — no typecheck"
+    impact: "TypeScript type errors can merge despite strict: true in tsconfig"
+    severity: "MEDIUM"
     effort: "30 minutes"
-  - title: "No Dependabot or Renovate for dependency updates"
-    impact: "Dependencies become stale and accumulate vulnerabilities over time"
+  - title: "Duplicate deployment workflows"
+    impact: "deploy-site.yml and gatsby.yml both deploy on push to main, risking race conditions"
     severity: "MEDIUM"
     effort: "1 hour"
 quick_wins:
-  - title: "Add TypeScript type checking to PR workflow"
+  - title: "Add npm run typecheck to PR workflow"
     effort: "30 minutes"
-    impact: "Catches type errors before merge — the typecheck script already exists in package.json"
-  - title: "Add ESLint with React/TypeScript config"
+    impact: "Catch type errors before merge — tsconfig already has strict: true"
+  - title: "Add ESLint with React/TypeScript plugins"
+    effort: "2 hours"
+    impact: "Catch code quality issues, unused variables, accessibility problems"
+  - title: "Enable GitHub Dependabot for npm"
+    effort: "30 minutes"
+    impact: "Automated dependency vulnerability alerts and PRs"
+  - title: "Add Lighthouse CI to PR workflow"
     effort: "2-3 hours"
-    impact: "Catches bugs, enforces consistency across 34 TSX and 8 TS source files"
-  - title: "Add Dependabot configuration"
-    effort: "30 minutes"
-    impact: "Automated dependency update PRs keep npm packages current and secure"
+    impact: "Catch performance regressions, accessibility issues, and SEO problems for every PR"
   - title: "Consolidate duplicate deploy workflows"
-    effort: "1-2 hours"
-    impact: "Eliminates confusion and potential double-deploys"
-  - title: "Add basic Cypress or Playwright smoke tests"
-    effort: "4-6 hours"
-    impact: "Validates that key pages render correctly on every PR"
+    effort: "1 hour"
+    impact: "Eliminate race conditions between deploy-site.yml and gatsby.yml"
 recommendations:
   priority_0:
-    - "Add TypeScript type checking (npm run typecheck) to the PR workflow immediately"
-    - "Install and configure ESLint with typescript-eslint and eslint-plugin-react, add to CI"
-    - "Add at least smoke-level E2E tests (Cypress or Playwright) to verify page rendering"
+    - "Add ESLint + TypeScript type checking to PR workflow to establish minimum quality gate"
+    - "Enable Dependabot or Renovate for automated dependency vulnerability scanning"
+    - "Add at least smoke-level unit tests for key components (Navbar, Layout, ContentCard)"
   priority_1:
-    - "Add dependency scanning via Dependabot or Renovate"
-    - "Add GitHub CodeQL or Snyk for security scanning"
-    - "Consolidate the two overlapping deploy workflows into one"
-    - "Add component-level unit tests with Jest and React Testing Library"
+    - "Add Cypress or Playwright E2E tests for critical pages (homepage, docs, blog)"
+    - "Add Lighthouse CI for performance/accessibility regression detection"
+    - "Create agent rules (.claude/rules/) for test creation and code quality standards"
   priority_2:
-    - "Add accessibility testing (axe-core) for key pages"
-    - "Add Lighthouse CI for performance regression detection"
-    - "Create CLAUDE.md and .claude/rules/ for agent-assisted development"
-    - "Add pre-commit hooks with Husky for local quality gates"
+    - "Add visual regression testing (Percy, Chromatic) for UI consistency"
+    - "Add link checking automation to catch broken internal/external links"
+    - "Containerize the build for reproducibility and add image scanning"
 ---
 
 # Quality Analysis: opendatahub.io
 
 ## Executive Summary
 
-- **Overall Score: 1.8/10**
-- **Repository Type**: Static website (Gatsby 5 + React + TypeScript + PatternFly)
-- **Primary Language**: TypeScript/TSX (42 source files)
-- **Key Strengths**: TypeScript strict mode enabled, Prettier configured, basic PR build check exists
-- **Critical Gaps**: Zero tests of any kind, no linting in CI, no security scanning, duplicate deploy workflows
-- **Agent Rules Status**: Missing — no CLAUDE.md, no .claude/ directory
+- **Overall Score: 2.4/10**
+- **Repository Type**: Static website (Gatsby 5 + React 18 + TypeScript + PatternFly)
+- **Primary Language**: TypeScript/TSX (~4,000 lines across 39 source files)
+- **Key Strengths**: TypeScript strict mode enabled, Prettier configured, Gatsby build caching in CI
+- **Critical Gaps**: Zero tests of any kind, no linting, no security scanning, no coverage tracking
+- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
 
-This is a marketing/documentation website for the Open Data Hub project. While the codebase is relatively small (42 TypeScript/TSX files, ~249 total files including content), it has **no quality infrastructure** beyond a Prettier config and a TypeScript strict-mode tsconfig. The PR workflow only runs `npm run build` — it does not type-check, lint, or test. There are zero test files in the entire repository.
+This is the public-facing website for the Open Data Hub project. As a Gatsby static site with ~4,000 lines of TypeScript, it has minimal quality infrastructure. The only PR-time validation is a Gatsby build check. There are no tests, no linter, no type checking in CI, and no security scanning. The site has two competing deployment workflows that could cause race conditions.
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 0/10 | No test files exist anywhere in the repository |
-| Integration/E2E | 0/10 | No integration or E2E test infrastructure |
-| **Build Integration** | **2/10** | **PR workflow runs gatsby build only — no type checking, no linting** |
-| Image Testing | 0/10 | No Dockerfile, no container image pipeline (N/A for static site) |
-| Coverage Tracking | 0/10 | No coverage tool configured |
-| CI/CD Automation | 4/10 | Three basic workflows, two are duplicated deploy configs |
-| Agent Rules | 0/10 | No CLAUDE.md, no .claude/ directory, no agent rules |
+| Dimension | Score | Weight | Status |
+|-----------|-------|--------|--------|
+| Unit Tests | 0/10 | 20% | No test files exist; no testing framework installed |
+| Integration/E2E | 0/10 | 25% | No integration or E2E tests configured |
+| Build Integration | 3/10 | — | PR workflow runs gatsby build only — no typecheck, no lint |
+| Image Testing | 0/10 | 20% | No Dockerfile, no container builds |
+| Coverage Tracking | 0/10 | 15% | No coverage tools or thresholds |
+| CI/CD Automation | 5/10 | 20% | Three workflows with caching but minimal validation gates |
+| Agent Rules | 0/10 | — | No agent rules or test automation guidance |
+| **Overall** | **2.4/10** | | **Critical quality infrastructure gaps** |
 
 ## Critical Gaps
 
 ### 1. Zero Test Coverage — No Tests of Any Kind
-- **Impact**: Any code change (component refactors, Gatsby config changes, styling updates) can silently break the site with no automated detection
 - **Severity**: HIGH
-- **Effort**: 16-24 hours for initial test suite
-- **Details**: `find` for `*.test.*`, `*.spec.*`, `*_test.*` returned 0 results. No `test/`, `tests/`, `__tests__/`, `e2e/`, or `integration/` directories exist. No testing framework (Jest, Vitest, Cypress, Playwright) is installed.
+- **Impact**: Regressions, broken pages, rendering issues, and broken links are completely undetectable before merge. Every PR is a gamble.
+- **Current State**: No `*.test.*`, `*.spec.*`, or `*_test.*` files exist. No testing framework (Jest, Vitest, Cypress, Playwright) is installed.
+- **Effort to Fix**: 16-24 hours (framework setup + initial component tests + E2E smoke tests)
 
 ### 2. No Linting or Static Analysis in CI
-- **Impact**: Code quality issues, unused imports, accessibility problems, and React anti-patterns are not caught
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: No ESLint config exists. No `.eslintrc*` file. The `package.json` has no lint script. Prettier is configured but not enforced in CI (no `prettier --check` step).
+- **Impact**: Code quality issues, unused imports, accessibility violations, and inconsistent patterns slip into main unchecked.
+- **Current State**: No ESLint configuration. Only Prettier is configured (for import ordering). No pre-commit hooks.
+- **Effort to Fix**: 2-4 hours (ESLint setup + CI integration + initial rule configuration)
 
-### 3. No Type Checking in CI
-- **Impact**: TypeScript compilation errors can be merged to main despite `strict: true` in tsconfig
+### 3. No Security Scanning
 - **Severity**: HIGH
-- **Effort**: 30 minutes
-- **Details**: A `typecheck` script (`tsc --noEmit`) exists in `package.json` but is NOT called in the PR workflow. The PR workflow only runs `npm ci && npm run build`. Gatsby's build may not catch all type errors.
+- **Impact**: The project has 30+ npm dependencies including Gatsby plugins, React, and third-party libraries. Vulnerable dependencies are never detected.
+- **Current State**: No Dependabot, no Snyk, no npm audit in CI, no CodeQL.
+- **Effort to Fix**: 1-2 hours (Dependabot config + npm audit in PR workflow)
 
-### 4. Duplicate Deploy Workflows
-- **Impact**: Confusing configuration, potential race conditions, wasted GitHub Actions minutes
+### 4. PR Workflow Missing TypeScript Type Checking
 - **Severity**: MEDIUM
-- **Effort**: 1-2 hours
-- **Details**: Two workflows deploy to GitHub Pages:
-  - `deploy-site.yml`: Triggered on push to main + daily cron, deploys via `JamesIves/github-pages-deploy-action@v4`
-  - `gatsby.yml`: Triggered on push to main, deploys via `actions/deploy-pages@v4`
-  - Both build and deploy on every push to main — this is redundant and confusing
+- **Impact**: Despite having `strict: true` in `tsconfig.json` and a `typecheck` npm script, the PR workflow only runs `npm run build`. TypeScript errors may not always be caught by the Gatsby build.
+- **Effort to Fix**: 30 minutes (add `npm run typecheck` step)
 
-### 5. No Security Scanning
-- **Impact**: Vulnerable npm dependencies and potential secrets in code are not detected
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: No CodeQL, Trivy, Snyk, Dependabot, Renovate, or Gitleaks integration. No `.gitleaks.toml`, `.trivyignore`, or security-related workflow files.
-
-### 6. No Dependency Management Automation
-- **Impact**: npm dependencies become stale and accumulate known vulnerabilities
+### 5. Duplicate Deployment Workflows
 - **Severity**: MEDIUM
-- **Effort**: 1 hour
-- **Details**: No `dependabot.yml` or Renovate config. Dependencies like `gatsby@^5.8.1` and `react@^18.2.0` may have known issues.
+- **Impact**: `deploy-site.yml` deploys via `github-pages-deploy-action` to `gh-pages` branch on push to main AND on a daily cron. `gatsby.yml` deploys via GitHub Pages action on push to main. Both trigger on the same event, potentially causing race conditions.
+- **Effort to Fix**: 1 hour (consolidate into single workflow)
 
 ## Quick Wins
 
 ### 1. Add TypeScript Type Checking to PR Workflow (30 minutes)
-The `typecheck` script already exists. Just add it to `.github/workflows/pull-request.yml`:
+The `typecheck` npm script already exists. Add one line to `.github/workflows/pull-request.yml`:
+
 ```yaml
-name: Test Build
-on: pull_request
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -164,14 +147,14 @@ jobs:
       - run: npm run build
 ```
 
-### 2. Add ESLint with TypeScript/React Config (2-3 hours)
-Install and configure ESLint:
+### 2. Add ESLint with React/TypeScript Plugins (2 hours)
 ```bash
-npm install --save-dev eslint @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint-plugin-react eslint-plugin-react-hooks
+npm install --save-dev eslint @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint-plugin-react eslint-plugin-jsx-a11y
 ```
-Add `"lint": "eslint src --ext .ts,.tsx"` to scripts and add it to the CI workflow.
 
-### 3. Add Dependabot Configuration (30 minutes)
+Add lint step to PR workflow for immediate code quality feedback.
+
+### 3. Enable GitHub Dependabot (30 minutes)
 Create `.github/dependabot.yml`:
 ```yaml
 version: 2
@@ -180,148 +163,200 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 10
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
 ```
 
-### 4. Consolidate Deploy Workflows (1-2 hours)
-Remove one of the two deploy workflows. The `gatsby.yml` workflow is more modern (uses `actions/deploy-pages@v4` and `actions/upload-pages-artifact@v3`), so consider removing `deploy-site.yml` and adding the daily cron trigger to `gatsby.yml`.
+### 4. Add Lighthouse CI to PR Workflow (2-3 hours)
+Gatsby sites benefit enormously from Lighthouse CI — catches performance regressions, accessibility issues, and SEO problems automatically.
 
-### 5. Add Prettier Check to CI (30 minutes)
-Add `"prettier:check": "prettier --check src/"` to scripts and add to PR workflow.
+### 5. Consolidate Duplicate Deploy Workflows (1 hour)
+Remove `deploy-site.yml` and keep `gatsby.yml` (which uses the modern GitHub Pages deploy action with proper permissions). Update the daily cron to trigger `gatsby.yml` instead.
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows Found**: 3
+**Workflows Found (3):**
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `pull-request.yml` | PR | Runs `npm ci && npm run build` only |
-| `deploy-site.yml` | Push to main, daily cron | Build + deploy via JamesIves action |
-| `gatsby.yml` | Push to main, manual | Build + deploy via GitHub Pages actions |
+| Workflow | Trigger | Purpose | Issues |
+|----------|---------|---------|--------|
+| `pull-request.yml` | PR | Build validation | Only runs `npm ci` + `npm run build`. No typecheck, no lint, no tests |
+| `gatsby.yml` | Push to main, manual | Deploy to GitHub Pages | Modern setup with caching, Node 20, proper permissions |
+| `deploy-site.yml` | Push to main, daily cron | Deploy to gh-pages branch | Legacy approach, conflicts with gatsby.yml |
 
-**Issues**:
-- PR workflow is minimal — only verifies the build compiles
-- No type checking, linting, testing, or formatting validation on PRs
-- Two deploy workflows are redundant (both trigger on push to main)
-- `deploy-site.yml` uses outdated `actions/checkout@v3` while `gatsby.yml` uses `v4`
-- `gatsby.yml` has proper concurrency control and caching; `deploy-site.yml` does not
-- No workflow for dependency updates, security scanning, or performance checks
+**Strengths:**
+- `gatsby.yml` has proper caching (Gatsby public/ and .cache/)
+- Node.js version pinned to 20
+- Concurrency control on Pages deployment (`cancel-in-progress: false` — correct for deployments)
 
-**Positives**:
-- `gatsby.yml` uses `actions/cache@v4` for Gatsby build cache
-- `gatsby.yml` has `concurrency.cancel-in-progress: false` for safe deploys
-- Daily cron in `deploy-site.yml` picks up external doc changes from `gatsby-source-git`
+**Weaknesses:**
+- PR workflow uses outdated `actions/checkout@v3` (should be v4)
+- No caching in PR workflow (slower builds)
+- No type checking in any workflow
+- No linting in any workflow
+- Two competing deployment workflows
 
 ### Test Coverage
 
-**Status**: No tests exist.
+**Status: No tests exist.**
 
-- 0 test files found (searched for `*.test.*`, `*.spec.*`, `*_test.*`)
-- 0 test directories found (searched for `test/`, `tests/`, `__tests__/`, `e2e/`, `integration/`)
+- 0 test files across the entire repository
 - No testing framework in `devDependencies` (no Jest, Vitest, Cypress, Playwright, Testing Library)
-- No test script in `package.json`
-- Test-to-code ratio: 0:42 (0 test files to 42 source files)
+- No test npm scripts
+- Test-to-code ratio: 0:1
+- Coverage: N/A
+
+**What Should Be Tested:**
+- **Component rendering**: Navbar, Layout, Footer, ContentCard, SectionLayout
+- **Page generation**: Gatsby page creation from markdown/MDX content
+- **Routing**: Blog post URLs, docs navigation, 404 handling
+- **Content**: Blog posts render correctly, docs pages load, images display
+- **External data**: gatsby-source-git pulls documentation correctly
 
 ### Code Quality
 
-**Prettier**: Configured (`.prettierrc` with import ordering), but not enforced in CI. `.prettierignore` excludes content directories.
+**Formatter:**
+- Prettier configured with import ordering (`importOrder`, `importOrderSeparation`, `importOrderSortSpecifiers`)
+- `.prettierignore` exists
+- No Prettier check in CI — formatting is advisory only
 
-**TypeScript**: `tsconfig.json` has `strict: true`, `noImplicitReturns`, `noImplicitThis` — good strictness settings. But `noImplicitAny: false` weakens the strict config. The `typecheck` script exists but is not used in CI.
+**TypeScript:**
+- `strict: true` enabled in `tsconfig.json`
+- `noImplicitReturns: true`, `noImplicitThis: true`
+- `noImplicitAny: false` — weakens strict mode
+- `typecheck` script exists but is not run in CI
 
-**ESLint**: Not configured. No `.eslintrc*` file exists.
+**Linting:**
+- No ESLint configuration
+- No accessibility linting (jsx-a11y)
+- No React-specific rules
 
-**Pre-commit hooks**: Not configured. No Husky, lint-staged, or `.pre-commit-config.yaml`.
+**Pre-commit Hooks:**
+- None configured
+- No `.pre-commit-config.yaml`
+- No husky or lint-staged
 
 ### Container Images
 
-**N/A** — This is a static Gatsby site deployed to GitHub Pages. No Dockerfile or container image pipeline exists. This is appropriate for the project type.
+**Status: Not applicable.** This is a static site deployed via GitHub Pages. There is no Dockerfile, Containerfile, or container build process. The site is built as static HTML/CSS/JS and served directly.
 
 ### Security
 
-**Status**: No security tooling.
+**Status: No security practices configured.**
 
-- No CodeQL workflow
-- No Trivy/Snyk scanning
-- No Gitleaks/TruffleHog for secret detection
-- No Dependabot or Renovate
+- No Dependabot configuration
 - No npm audit in CI
-- Google Analytics tracking ID (`G-9KEMPL6SJ3`) is hardcoded in `gatsby-config.ts` — this is public-facing and acceptable, but other secrets could leak without scanning
+- No CodeQL or SAST
+- No secret detection (gitleaks, trufflehog)
+- No dependency review action on PRs
+- Actions use unpinned versions (v3, v4 — should use SHA pinning for supply chain security)
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status**: Missing
+**Status: Missing**
 
-- No `CLAUDE.md` or `AGENTS.md` in root
+- No `CLAUDE.md` or `AGENTS.md` in repository root
 - No `.claude/` directory
-- No `.claude/rules/` for test creation rules
+- No `.claude/rules/` for test creation guidance
 - No `.claude/skills/` for custom skills
-- `CONTRIBUTING.md` exists but is minimal (only setup instructions, no quality standards)
+- No testing documentation in `docs/`
+- `CONTRIBUTING.md` exists but covers only basic dev setup — no quality standards
 
-**Gap**: AI agents working on this repository have no guidance for:
-- Testing patterns and frameworks to use
-- Code style beyond Prettier config
-- Component patterns (PatternFly usage)
-- Content structure requirements
-- PR requirements and review standards
+**Recommendation**: Generate test creation rules with `/test-rules-generator` to establish:
+- Component test patterns (React Testing Library + Jest/Vitest)
+- Gatsby page test patterns
+- Accessibility test standards
+- E2E test patterns for critical user journeys
 
 ## Recommendations
 
 ### Priority 0 (Critical — Do First)
 
-1. **Add TypeScript type checking to PR workflow** — 30 minutes. The script exists; just call it.
-2. **Install and configure ESLint** — 2-3 hours. Add `@typescript-eslint`, React plugins, and enforce in CI.
-3. **Consolidate duplicate deploy workflows** — 1-2 hours. Keep `gatsby.yml`, retire `deploy-site.yml`.
+1. **Add ESLint + TypeScript type checking to PR workflow**
+   - Install ESLint with React, TypeScript, and jsx-a11y plugins
+   - Add `npm run typecheck` and `npm run lint` to PR workflow
+   - Provides immediate code quality gate with zero test writing required
+   - Effort: 2-4 hours
 
-### Priority 1 (High Value)
+2. **Enable Dependabot for npm and GitHub Actions**
+   - Create `.github/dependabot.yml` for weekly vulnerability scanning
+   - Add `dependency-review-action` to PR workflow
+   - Effort: 30 minutes
 
-4. **Add basic E2E smoke tests** — 4-6 hours. Use Playwright to verify key pages (home, blog, docs, community) render without errors.
-5. **Add Dependabot** — 30 minutes. Automate npm and GitHub Actions dependency updates.
-6. **Add `npm audit` to CI** — 30 minutes. Catch known vulnerabilities in dependencies.
-7. **Add component unit tests** — 8-12 hours. Use Jest + React Testing Library for shared components (Navbar, Footer, ContentCard, Layout).
+3. **Add initial component tests**
+   - Install Vitest + React Testing Library (or Jest)
+   - Write smoke tests for Layout, Navbar, Footer, ContentCard
+   - Add test script and CI step
+   - Effort: 8-12 hours
+
+### Priority 1 (High Value — Do Next)
+
+4. **Add Cypress or Playwright E2E tests for critical pages**
+   - Homepage renders, navigation works, blog listing loads, docs render
+   - Run on PR with Gatsby serve
+   - Effort: 8-12 hours
+
+5. **Add Lighthouse CI for performance and accessibility**
+   - Catch regressions in Core Web Vitals, accessibility scores, SEO
+   - Set thresholds to prevent degradation
+   - Effort: 2-3 hours
+
+6. **Create agent rules (.claude/rules/)**
+   - Define test patterns for React components
+   - Define Gatsby-specific testing conventions
+   - Establish code quality standards
+   - Effort: 2-3 hours
+
+7. **Consolidate deployment workflows**
+   - Remove legacy `deploy-site.yml`
+   - Add daily cron trigger to `gatsby.yml`
+   - Effort: 1 hour
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add Lighthouse CI** — 2-3 hours. Track performance, accessibility, SEO scores per PR.
-9. **Add accessibility testing (axe-core)** — 2-3 hours. Integrate with E2E tests.
-10. **Create CLAUDE.md and agent rules** — 2-3 hours. Guide AI agents on testing patterns, Gatsby conventions, PatternFly usage.
-11. **Add pre-commit hooks** — 1-2 hours. Use Husky + lint-staged for local enforcement.
-12. **Add Prettier check to CI** — 30 minutes. Enforce formatting consistency.
+8. **Add visual regression testing** (Percy, Chromatic, or Playwright screenshots)
+   - Catch unintended visual changes to the public website
+   - Effort: 4-6 hours
+
+9. **Add broken link detection**
+   - Check internal links and external URLs (gatsby-plugin-check-links or similar)
+   - Effort: 2-3 hours
+
+10. **Pin GitHub Actions to SHA for supply chain security**
+    - Replace `@v3`, `@v4` with full commit SHAs
+    - Effort: 1 hour
 
 ## Comparison to Gold Standards
 
-| Dimension | opendatahub.io | odh-dashboard | notebooks | Best Practice |
-|-----------|---------------|---------------|-----------|---------------|
-| Unit Tests | None | Jest + RTL, high coverage | N/A | Framework-specific tests |
-| Integration/E2E | None | Cypress, multi-layer | Testcontainers | Automated in CI |
-| Build Integration | Build-only PR | Full lint+test+build | Multi-stage | Lint, type-check, test, build |
-| Coverage Tracking | None | Codecov with thresholds | N/A | Codecov/Coveralls + gates |
-| CI/CD | 3 basic workflows | Comprehensive, well-organized | Multi-arch builds | Concurrency, caching, matrix |
-| Security | None | CodeQL, Snyk | Trivy | SAST + dependency + secret scan |
-| Agent Rules | None | Comprehensive .claude/ | N/A | CLAUDE.md + .claude/rules/ |
-| Pre-commit | None | Husky + lint-staged | N/A | Pre-commit hooks |
-| Dependency Mgmt | None | Dependabot | Dependabot | Automated updates |
+| Practice | opendatahub.io | odh-dashboard (Gold) | notebooks (Gold) |
+|----------|---------------|---------------------|-----------------|
+| Unit Tests | None | Jest + RTL, comprehensive | Python unittest |
+| E2E Tests | None | Cypress, multi-scenario | Selenium, multi-notebook |
+| Linting | Prettier only | ESLint + Stylelint + strict | Flake8 + Black |
+| Type Checking | tsconfig strict (not in CI) | TypeScript strict (in CI) | N/A (Python) |
+| Coverage | None | Codecov with thresholds | Coverage reports |
+| Security Scanning | None | Snyk + CodeQL | Trivy + Snyk |
+| Pre-commit Hooks | None | Husky + lint-staged | Pre-commit framework |
+| Agent Rules | None | Comprehensive .claude/rules/ | None |
+| PR Validation | Build only | Build + lint + typecheck + test | Build + test + scan |
+| Image Testing | N/A | N/A (deployed separately) | 5-layer validation |
+| CI Caching | Partial (deploy only) | Full (node_modules, build cache) | Full |
 
 ## File Paths Reference
 
-| File | Purpose |
-|------|---------|
-| `package.json` | Dependencies, scripts (build, typecheck, prettier) |
-| `tsconfig.json` | TypeScript config with strict mode |
-| `.prettierrc` | Prettier config with import ordering |
-| `.prettierignore` | Prettier exclusions |
-| `gatsby-config.ts` | Gatsby plugins, site config, external doc sourcing |
-| `gatsby-node.ts` | Gatsby build-time page generation |
-| `.github/workflows/pull-request.yml` | PR build validation (minimal) |
-| `.github/workflows/gatsby.yml` | Deploy to GitHub Pages (modern) |
-| `.github/workflows/deploy-site.yml` | Deploy to GitHub Pages (legacy, overlapping) |
-| `CONTRIBUTING.md` | Minimal contribution guide |
-| `src/` | All source code (42 TS/TSX files, 2 SCSS, 8 CSS) |
-| `src/components/` | React components (shared + page-specific) |
-| `src/pages/` | Gatsby page components |
-| `src/templates/` | Gatsby page templates |
-| `src/content/` | Blog posts, docs, images |
+| File | Purpose | Notes |
+|------|---------|-------|
+| `package.json` | Project config | No test scripts, no ESLint |
+| `tsconfig.json` | TypeScript config | strict: true, noImplicitAny: false |
+| `.prettierrc` | Formatter config | Import ordering only |
+| `.github/workflows/pull-request.yml` | PR validation | Build-only, no tests/lint/typecheck |
+| `.github/workflows/gatsby.yml` | Pages deployment | Modern setup with caching |
+| `.github/workflows/deploy-site.yml` | Legacy deployment | Conflicts with gatsby.yml |
+| `CONTRIBUTING.md` | Dev guide | Basic setup only, no quality standards |
+| `gatsby-config.ts` | Gatsby plugins | Source filesystem, git sources, image processing |
+| `gatsby-node.ts` | Page generation | Creates blog, docs, and content pages |
+| `src/components/` | React components | 20+ components, zero tests |

@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:27 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:49 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/eval-hub</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#28a745"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="90.47779199999995"
+                                stroke-dashoffset="101.78751600000001"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">8.4</div>
+                        <div class="score-value">8.2</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">71 test files with 24.8k lines; 1.54:1 test-to-source ratio using Go stdlib testing</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Exceptional test-to-code ratio (1.78:1 LOC), 107 test files for 117 source files, Go stdlib testing + godog BDD</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Comprehensive BDD-style FVT with godog, 10 feature files (4k lines), MCP E2E suites, Kubernetes tests</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Comprehensive BDD FVT suite with 14 feature files, godog tags for environment isolation, server-started FVT, MCP FVT, Kubernetes FVT</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">PR-time Docker build + dry-run; Konflux pipeline on PR via Tekton; no Konflux simulation in GHA</div>
+                            <div class="scorecard-status">PR-time Docker build with dry-run validation, Konflux Tekton pipeline for multi-arch builds (x86_64, ppc64le, s390x, arm64), hermetic builds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Multi-stage UBI9 builds, multi-arch support (amd64/arm64), dry-run validation, no Trivy/vulnerability scanning</div>
+                            <div class="scorecard-status">Multi-stage builds, UBI9 base images, non-root user, dry-run validation, multi-arch support; no Trivy/Snyk scanning, no SBOM</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Codecov integration with fail_ci_if_error, 50-75% range thresholds, coverage treemap generation</div>
+                            <div class="scorecard-status">Codecov integration with fail_ci_if_error, coverage range thresholds (50-75%), multi-profile coverage (unit + FVT + init)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">11 workflows covering CI, security scan, commit lint, release, cross-platform build tests, PyPI publishing</div>
+                            <div class="scorecard-status">15 workflows covering CI, MCP CI, Python wheels, security scan, config validation, commit lint, reviewer approvals, branch sync, publishing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">CLAUDE.md, AGENTS.md, .claude/rules with path-scoped rules, custom skill; strong agentic guidance</div>
+                            <div class="scorecard-status">CLAUDE.md + AGENTS.md with comprehensive build/test/architecture docs, .claude/rules/ with path-scoped rules for service and MCP components</div>
                         </div>
                     </div>
                 </div>
@@ -411,8 +411,8 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No container vulnerability scanning (Trivy/Snyk/Grype)</div>
-                            <p>CVEs in base images or Go dependencies undetected until downstream consumption</p>
+                            <div class="item-description">No container vulnerability scanning (Trivy/Snyk)</div>
+                            <p>CVEs in base images or dependencies go undetected until downstream scanning catches them</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
@@ -420,26 +420,26 @@
                         </li>
                         <li class="item-card medium">
                             <div class="item-description">No SBOM generation</div>
-                            <p>Supply chain transparency missing; required for SLSA/Sigstore compliance</p>
+                            <p>Supply chain transparency gap; no software bill of materials for compliance auditing</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Gosec configured with -no-fail flag</div>
-                            <p>Security findings don&#x27;t block PRs; vulnerabilities can be merged</p>
+                            <div class="item-description">Codecov coverage thresholds too permissive (50-75%)</div>
+                            <p>Coverage can drop to 50% without failing CI; no minimum enforcement or patch/diff thresholds</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No golangci-lint configuration</div>
-                            <p>Limited to basic go vet; misses complexity, style, and advanced static analysis checks</p>
+                            <div class="item-description">Gosec runs with -no-fail flag</div>
+                            <p>Security findings don&#x27;t block PRs; issues are uploaded to GitHub Security tab but CI passes regardless</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -457,34 +457,34 @@
                         
                         <li class="item-card ">
                             <div class="item-description">Add Trivy container scanning to CI workflow</div>
-                            <p>Catch CVEs in base images and dependencies on every PR</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Remove -no-fail from Gosec and add severity threshold</div>
-                            <p>Security scan failures block merging of vulnerable code</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add golangci-lint with recommended linters</div>
-                            <p>Catch complexity, style, and correctness issues beyond go vet</p>
+                            <p>Early detection of CVEs in UBI9 base images and Go dependencies</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Syft/Trivy SBOM generation to image build</div>
-                            <p>Supply chain transparency and compliance readiness</p>
+                            <div class="item-description">Enforce Gosec failures on ERROR severity</div>
+                            <p>Prevents merging PRs with high-severity security issues</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add codecov patch and project thresholds</div>
+                            <p>Prevents coverage regressions on new code</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add SBOM generation to container build</div>
+                            <p>Supply chain compliance and transparency</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +501,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add Trivy/Grype container vulnerability scanning to PR workflow with severity thresholds</li><li>Remove -no-fail from Gosec or set maximum severity threshold to block critical findings</li></ul>
+                            <ul><li>Add Trivy or Grype container image scanning to PR and push workflows</li><li>Configure Gosec to fail CI on ERROR-severity findings (remove -no-fail)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add golangci-lint with a comprehensive linter set (errcheck, gosimple, gocritic, etc.)</li><li>Generate SBOM artifacts during image builds (Syft or Trivy SBOM mode)</li><li>Add image signing/attestation for supply chain security</li></ul>
+                            <ul><li>Add codecov.yml patch/project thresholds (e.g., target: 70%, patch: 80%)</li><li>Add SBOM generation (syft or trivy sbom) to container build pipeline</li><li>Add golangci-lint with extended linter set beyond go vet</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add CodeQL workflow for deeper semantic analysis</li><li>Consider adding contract tests for the REST API (OpenAPI-based)</li><li>Add performance/load testing for API endpoints</li></ul>
+                            <ul><li>Add contract tests for the eval-hub SDK client boundary</li><li>Add performance/load testing for API endpoints</li><li>Add image startup validation beyond --help dry-run (health endpoint check)</li></ul>
                         </div>
                     </div>
                 </div>

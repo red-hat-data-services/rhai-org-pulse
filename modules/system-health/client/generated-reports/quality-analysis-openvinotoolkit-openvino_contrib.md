@@ -1,431 +1,416 @@
 ---
 repository: "openvinotoolkit/openvino_contrib"
-overall_score: 4.8
+overall_score: 4.6
 scorecard:
   - dimension: "Unit Tests"
     score: 5.0
-    status: "NVIDIA plugin has 71 C++ unit tests; other modules have minimal/no unit tests. OpenVINO Code (54 TS source files) has zero test files."
+    status: "Moderate unit tests across modules (C++/Go/Python/Java) but inconsistent coverage per module"
   - dimension: "Integration/E2E"
-    score: 5.5
-    status: "Llama CPP plugin has functional + E2E tests in CI. CUDA tests run on self-hosted runners. Java API integration tests exercise CPU/HETERO devices. No E2E for OpenVINO Code."
+    score: 4.0
+    status: "Some E2E tests for plugins (llama_cpp, ollama) but no systematic integration testing framework"
   - dimension: "Build Integration"
     score: 3.0
-    status: "No PR-time image build validation. Dockerfile exists only for NVIDIA dev environment, not tested in CI. No Konflux or container registry push."
+    status: "No PR-time container build validation; CUDA/NVIDIA builds rely on self-hosted runners"
   - dimension: "Image Testing"
-    score: 1.5
-    status: "Single Dockerfile for NVIDIA dev environment only. No runtime validation, no multi-arch support, no startup testing, no image scanning."
+    score: 2.0
+    status: "Dockerfiles present but no image runtime validation, startup testing, or scanning"
   - dimension: "Coverage Tracking"
-    score: 0.5
-    status: "No coverage tooling whatsoever — no codecov, no coveralls, no lcov, no coverage thresholds, no PR coverage reporting."
+    score: 1.0
+    status: "No coverage tooling — no codecov, lcov, gcov integration, no thresholds or PR reporting"
   - dimension: "CI/CD Automation"
-    score: 6.5
-    status: "13 workflows covering Linux/Windows/macOS builds, CUDA testing, code style checks, labeler, and issue management. Good concurrency control and ccache. But lacks security scanning and coverage."
+    score: 6.0
+    status: "Multi-platform CI (Linux/Windows/macOS) with ccache and concurrency control, but gaps in module coverage"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory. No AI-assisted development guidance of any kind."
+    status: "No CLAUDE.md, .claude/ directory, or AI agent rules exist"
 critical_gaps:
-  - title: "Zero test coverage tracking or enforcement"
-    impact: "No visibility into how much code is tested; regressions can slip in undetected across all modules"
+  - title: "No code coverage tracking or enforcement"
+    impact: "Cannot measure test adequacy; regressions in coverage go undetected"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "OpenVINO Code extension has 0 test files for 54 source files"
-    impact: "VS Code extension (the most user-facing module) has no automated testing — only lint checks"
+  - title: "No container image security scanning"
+    impact: "Vulnerabilities in base images and dependencies go undetected until production"
     severity: "HIGH"
-    effort: "16-24 hours"
-  - title: "No security scanning (SAST, container, dependency)"
-    impact: "Vulnerabilities in dependencies or code go undetected; no Trivy, CodeQL, Dependabot, or Snyk"
-    severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No container image testing or validation"
-    impact: "NVIDIA Dockerfile is never built or validated in CI; broken images would not be caught"
-    severity: "MEDIUM"
-    effort: "6-10 hours"
-  - title: "No pre-commit hooks or unified linting"
-    impact: "Code quality checks are fragmented — clang-format for NVIDIA, ESLint for OpenVINO Code, ruff for token_merging server; no project-wide enforcement"
-    severity: "MEDIUM"
     effort: "2-4 hours"
+  - title: "No pre-commit hooks or unified linting"
+    impact: "Code style inconsistencies across polyglot modules; issues caught late in CI"
+    severity: "MEDIUM"
+    effort: "4-6 hours"
+  - title: "No dependency management (Dependabot/Renovate)"
+    impact: "Vulnerable or outdated dependencies accumulate silently"
+    severity: "HIGH"
+    effort: "1-2 hours"
+  - title: "Several modules lack any automated tests in CI"
+    impact: "Modules like genai_optimizations, openvino_training_kit, openvino_bevfusion, android_demos have no CI test workflows"
+    severity: "HIGH"
+    effort: "8-16 hours"
 quick_wins:
-  - title: "Add Dependabot for automated dependency updates"
-    effort: "30 minutes"
-    impact: "Automated PRs for outdated or vulnerable dependencies across all modules"
-  - title: "Add CodeQL SAST scanning workflow"
+  - title: "Add Dependabot configuration for GitHub Actions and Go/Python deps"
     effort: "1-2 hours"
-    impact: "Catch security vulnerabilities in C++, Java, Python, and TypeScript code"
-  - title: "Add basic coverage reporting with codecov for Java API tests"
+    impact: "Automated dependency update PRs catch vulnerabilities early"
+  - title: "Add Trivy container scanning to Dockerfile-containing modules"
     effort: "2-3 hours"
-    impact: "Establish coverage baseline for the most well-tested module; extend to others later"
-  - title: "Enable Trivy container scanning for NVIDIA Dockerfile"
-    effort: "1-2 hours"
-    impact: "Detect vulnerabilities in the NVIDIA CUDA base image and installed packages"
-  - title: "Add pre-commit configuration for cross-module consistency"
-    effort: "2-3 hours"
-    impact: "Unified formatting, trailing whitespace, YAML validation across all modules"
+    impact: "Detect critical CVEs in nvidia_plugin and ollama_openvino images before merge"
+  - title: "Add codecov/lcov for C++ modules and pytest-cov for Python modules"
+    effort: "4-6 hours"
+    impact: "Visibility into test coverage with PR reporting"
+  - title: "Add .pre-commit-config.yaml with clang-format, black/ruff, and gofmt"
+    effort: "3-4 hours"
+    impact: "Catch formatting and style issues before they reach CI"
 recommendations:
   priority_0:
-    - "Implement coverage tracking (codecov/lcov) starting with Java API and NVIDIA plugin unit tests"
-    - "Add CodeQL and Dependabot security scanning to catch vulnerabilities in C++/Java/Python/TS code"
-    - "Write basic test suite for OpenVINO Code VS Code extension — currently 54 source files with 0 tests"
+    - "Add code coverage tracking (lcov for C++, pytest-cov for Python, go cover for Go) with codecov integration and PR-level reporting"
+    - "Add Trivy or Snyk scanning for container images in nvidia_plugin and ollama_openvino"
+    - "Enable Dependabot for all dependency ecosystems (GitHub Actions, pip, Go modules)"
   priority_1:
-    - "Build and validate NVIDIA Dockerfile in CI to catch image build regressions"
-    - "Add Trivy container scanning for the NVIDIA plugin Dockerfile"
-    - "Create unified pre-commit-config.yaml with hooks for all languages used in the monorepo"
-    - "Add integration tests for custom_operations module beyond the single run_tests.py"
+    - "Create CI workflows for untested modules (genai_optimizations, openvino_training_kit, openvino_bevfusion, 3d, android_demos)"
+    - "Add container image runtime validation tests for Dockerfiles"
+    - "Implement unified pre-commit hooks across the monorepo"
+    - "Add SAST tooling (CodeQL or Semgrep) for C++, Go, Python, and Java code"
   priority_2:
-    - "Create .claude/rules/ with test patterns for each module to guide AI-assisted development"
-    - "Add performance regression benchmarks for NVIDIA plugin and llama_cpp plugin"
-    - "Consider multi-architecture builds for the NVIDIA Dockerfile (ARM64 support)"
-    - "Add SBOM generation for released artifacts"
+    - "Create comprehensive CLAUDE.md and .claude/rules/ for AI-assisted test generation"
+    - "Add performance regression testing for inference plugins"
+    - "Implement contract tests between plugin interfaces and OpenVINO core"
+    - "Add multi-architecture container build validation (ARM64)"
 ---
 
 # Quality Analysis: openvino_contrib
 
 ## Executive Summary
 
-- **Overall Score: 4.8/10**
-- **Repository Type**: Monorepo — collection of "extra" OpenVINO modules (plugins, APIs, extensions)
-- **Primary Languages**: C++ (263 files), TypeScript/JavaScript (67 files), Python (47 files), Java (33 files)
-- **Key Modules**: nvidia_plugin, java_api, openvino_code (VS Code extension), custom_operations, llama_cpp_plugin, token_merging
-
-**Key Strengths:**
-- Multi-platform CI/CD (Linux, Windows, macOS) with good build caching (ccache)
-- NVIDIA plugin has substantial unit test suite (71 C++ test files)
-- Llama CPP plugin has well-structured functional + E2E test separation
-- Concurrency control on workflows prevents redundant builds
-- CODEOWNERS file ensures module-specific review
-
-**Critical Gaps:**
-- **Zero coverage tracking** — no codecov, lcov, or any coverage tool
-- **No security scanning** — no CodeQL, Dependabot, Trivy, or secret detection
-- **OpenVINO Code has 0 tests** despite being the most user-facing module (54 TS source files)
-- **No container image testing** — the only Dockerfile is never built in CI
-- **No agent rules** — no AI-assisted development guidance
-
-**Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
+- **Overall Score: 4.6/10**
+- **Repository Type**: Monorepo of OpenVINO extension modules (plugins, APIs, tools)
+- **Primary Languages**: C++ (271 files), Go (174 files), Python (131 files), TypeScript/JS (29 files), Java (25 files)
+- **Key Strengths**: Multi-platform CI (Linux/Windows/macOS), good concurrency control, ccache optimization, path-scoped workflows for plugins
+- **Critical Gaps**: Zero coverage tracking, no container security scanning, no pre-commit hooks, no dependency management, multiple modules have no CI at all
+- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 5.0/10 | NVIDIA has 71 test files; Java has 8; others have 0-2. OpenVINO Code has none. |
-| Integration/E2E | 5.5/10 | Llama CPP has func+E2E. CUDA tests on self-hosted. Java tests on 3 platforms. |
-| **Build Integration** | **3.0/10** | **No PR-time image build. No Konflux. Dockerfile untested in CI.** |
-| Image Testing | 1.5/10 | One dev Dockerfile, never built in CI. No runtime validation. |
-| Coverage Tracking | 0.5/10 | No coverage tooling at all. No thresholds, no reporting. |
-| CI/CD Automation | 6.5/10 | 13 workflows, multi-platform, caching, concurrency. Missing security + coverage. |
-| Agent Rules | 0.0/10 | No AI development guidance whatsoever. |
+| Unit Tests | 5/10 | Moderate tests across modules but inconsistent per module |
+| Integration/E2E | 4/10 | Some E2E for plugins but no systematic framework |
+| **Build Integration** | **3/10** | **No PR-time container build validation** |
+| Image Testing | 2/10 | Dockerfiles present but no runtime validation or scanning |
+| Coverage Tracking | 1/10 | Zero coverage tooling of any kind |
+| CI/CD Automation | 6/10 | Multi-platform CI with caching but module coverage gaps |
+| Agent Rules | 0/10 | No AI agent rules exist |
 
 ## Critical Gaps
 
-### 1. Zero Test Coverage Tracking or Enforcement
-- **Impact**: No visibility into how much code is tested; regressions can be merged undetected
+### 1. No Code Coverage Tracking or Enforcement
+- **Impact**: Cannot measure test adequacy; regressions in coverage go completely undetected. No codecov, lcov, gcov, pytest-cov, or go cover integration exists anywhere in the repository.
 - **Severity**: HIGH
 - **Effort**: 4-8 hours
-- **Details**: None of the 7 modules generate coverage data. No codecov.yml, no .coveragerc, no lcov configuration. Java API tests with Gradle could easily add JaCoCo; C++ tests could use gcov/lcov; Python tests could use pytest-cov.
+- **Details**: None of the 13 workflow files reference coverage in any form. The repository has 116+ test files but no way to measure what percentage of the codebase they exercise.
 
-### 2. OpenVINO Code Extension Has Zero Tests
-- **Impact**: The VS Code extension — the most user-facing module — ships with no automated test verification
+### 2. No Container Image Security Scanning
+- **Impact**: The repository has 3 Dockerfiles (ollama_openvino Dockerfile, ollama_openvino Dockerfile_genai_ubuntu24, nvidia_plugin Dockerfile) but none are scanned for vulnerabilities. Base images like `nvidia/cuda:11.8.0-*` and `rocm/dev-centos-7` are known to carry CVEs.
 - **Severity**: HIGH
-- **Effort**: 16-24 hours
-- **Details**: 54 TypeScript source files, 0 test files. The CI workflow only runs ESLint + Prettier checks. The `package.json` defines a `test` script (`node ./out/test/runTest.js`) but there are no test files to run. This module includes a side panel UI, state management, and server communication that are completely untested.
-
-### 3. No Security Scanning
-- **Impact**: Vulnerabilities in dependencies or source code go undetected
-- **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: No CodeQL for SAST analysis. No Dependabot for dependency updates. No Trivy or Snyk for container scanning. No Gitleaks or TruffleHog for secret detection. The SECURITY.md only points to Intel's security reporting page but adds no proactive scanning.
-
-### 4. No Container Image Testing or Validation
-- **Impact**: NVIDIA Dockerfile could break without anyone noticing; no image quality assurance
-- **Severity**: MEDIUM
-- **Effort**: 6-10 hours
-- **Details**: The single Dockerfile (`modules/nvidia_plugin/Dockerfile`) is for a CUDA development environment. It is never built in CI, never scanned, never validated. No multi-arch support, no SBOM generation, no image signing.
-
-### 5. No Pre-commit Hooks or Unified Code Quality
-- **Impact**: Code style enforcement is fragmented and inconsistent across modules
-- **Severity**: MEDIUM
 - **Effort**: 2-4 hours
-- **Details**: Each module has its own approach — clang-format for NVIDIA plugin, ESLint+Prettier for OpenVINO Code, google-java-format for Java API, ruff+black for token_merging server. No `.pre-commit-config.yaml` unifies these.
+
+### 3. Multiple Modules Have No CI Workflows
+- **Impact**: The following modules have no dedicated CI testing:
+  - `genai_optimizations` — Python module with setup.py but no workflow
+  - `openvino_training_kit` — Python module with 18 test files but no CI workflow
+  - `openvino_bevfusion` — no workflow
+  - `android_demos` — no workflow
+  - `3d` — no workflow (has test.py and test-e2eOV.py but they don't run in CI)
+  - `openvino-langchain` — TypeScript module with 4 test files but no CI workflow
+- **Severity**: HIGH
+- **Effort**: 8-16 hours
+
+### 4. No Dependency Management
+- **Impact**: No Dependabot or Renovate configuration exists. Dependencies across Go modules, Python packages, npm packages, and GitHub Actions are not automatically updated.
+- **Severity**: HIGH
+- **Effort**: 1-2 hours
+
+### 5. No Pre-commit Hooks
+- **Impact**: No `.pre-commit-config.yaml` found. Code style is only enforced for the Java module via the `code_style.yml` workflow. C++, Python, Go, and TypeScript have no style enforcement.
+- **Severity**: MEDIUM
+- **Effort**: 4-6 hours
 
 ## Quick Wins
 
-### 1. Add Dependabot Configuration (~30 minutes)
-Add `.github/dependabot.yml` to automatically detect outdated and vulnerable dependencies:
+### 1. Add Dependabot Configuration (1-2 hours)
+- **Impact**: Automated dependency update PRs for all ecosystems
+- **Implementation**:
 ```yaml
+# .github/dependabot.yml
 version: 2
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
-  - package-ecosystem: "npm"
-    directory: "/modules/openvino_code"
-    schedule:
-      interval: "weekly"
   - package-ecosystem: "pip"
     directory: "/modules/token_merging"
     schedule:
       interval: "weekly"
-  - package-ecosystem: "gradle"
-    directory: "/modules/java_api"
+  - package-ecosystem: "gomod"
+    directory: "/modules/ollama_openvino"
     schedule:
       interval: "weekly"
 ```
 
-### 2. Add CodeQL SAST Scanning (1-2 hours)
-Create `.github/workflows/codeql.yml` to analyze C++, Java, Python, and JavaScript/TypeScript:
+### 2. Add Trivy Container Scanning (2-3 hours)
+- **Impact**: Detect critical CVEs in container images
+- **Implementation**:
 ```yaml
-name: "CodeQL"
-on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
-  schedule:
-    - cron: '0 6 * * 1'
-jobs:
-  analyze:
-    strategy:
-      matrix:
-        language: [cpp, java, python, javascript]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: ${{ matrix.language }}
-      - uses: github/codeql-action/autobuild@v3
-      - uses: github/codeql-action/analyze@v3
-```
-
-### 3. Add Coverage Reporting for Java API (2-3 hours)
-Add JaCoCo to the Gradle build to generate and report coverage:
-```groovy
-plugins {
-    id 'jacoco'
-}
-jacocoTestReport {
-    reports {
-        xml.required = true
-    }
-}
-```
-Then upload to codecov in the CI workflows.
-
-### 4. Add Trivy Scanning for NVIDIA Dockerfile (1-2 hours)
-```yaml
-- name: Build NVIDIA image
-  run: docker build -t nvidia-plugin modules/nvidia_plugin
-- name: Run Trivy scanner
+# Add to existing workflows or create .github/workflows/container-scan.yml
+- name: Run Trivy vulnerability scanner
   uses: aquasecurity/trivy-action@master
   with:
-    image-ref: nvidia-plugin
-    severity: CRITICAL,HIGH
-    exit-code: 1
+    image-ref: 'nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04'
+    format: 'sarif'
+    output: 'trivy-results.sarif'
+    severity: 'CRITICAL,HIGH'
 ```
 
-### 5. Add Pre-commit Configuration (2-3 hours)
-Create `.pre-commit-config.yaml` with hooks for all languages used in the monorepo.
+### 3. Add Coverage Tracking (4-6 hours)
+- **Impact**: Visibility into test adequacy
+- For Python modules: add `pytest-cov` and upload to codecov
+- For C++ modules: add `lcov` post-build step
+- For Go modules: use `go test -coverprofile`
+
+### 4. Add Pre-commit Hooks (3-4 hours)
+- **Impact**: Catch formatting issues before CI
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v17.0.6
+    hooks:
+      - id: clang-format
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.0
+    hooks:
+      - id: ruff
+      - id: ruff-format
+```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflow Inventory** (13 workflows):
+**Workflow Inventory (13 workflows)**:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `linux.yml` | PR, push, dispatch | Full build + Java/custom-ops tests on Ubuntu 20.04 + NVIDIA plugin build |
-| `windows.yml` | PR, push, dispatch, merge_group | Full build + Java/custom-ops tests on Windows 2019 |
-| `mac.yml` | PR, push, dispatch | Full build + Java tests on macOS 13 |
-| `test_cuda.yml` | PR (nvidia_plugin/*), push | CUDA unit+functional+regression tests on self-hosted GPU runner |
-| `sanitizer_cuda.yml` | push (master), dispatch | CUDA compute sanitizer tests (memory safety) |
-| `history_cuda.yml` | PR (nvidia_plugin/*), push | Checks NVIDIA PRs are rebased and autosquashed |
-| `llama_cpp_plugin_build_and_test.yml` | PR (llama_cpp_plugin/*) | Build + functional + E2E tests |
-| `openvino_code.yml` | PR (openvino_code/*) | ESLint + ruff/black linting (NO tests) |
-| `token_merging.yml` | PR (token_merging/*), push | pytest-based tests |
-| `code_style.yml` | PR (java_api/*), push | google-java-format style check |
-| `labeler.yml` | pull_request_target | Auto-label PRs by path |
-| `assign_issue.yml` | issue_comment | Assign issues via `.take` command |
+| `linux.yml` | PR, push to master | Full build & test (Ubuntu 22.04) + NVIDIA plugin build |
+| `windows.yml` | PR, push, merge_group | Full build & test (Windows/VS 2019) |
+| `mac.yml` | PR, push to master | Full build & test (macOS) |
+| `test_cuda.yml` | Push/PR to nvidia_plugin paths | CUDA plugin build on self-hosted runner |
+| `sanitizer_cuda.yml` | Push to master (nvidia_plugin paths) | CUDA compute sanitizer (self-hosted) |
+| `history_cuda.yml` | Push/PR to nvidia_plugin paths | History/changelog checks |
+| `llama_cpp_plugin_build_and_test.yml` | PR to llama_cpp paths | Build + functional + E2E tests |
+| `ollama_openvino_build_and_test.yml` | PR to ollama paths | Build + model inference test |
+| `token_merging.yml` | Push/PR to token_merging paths | Python pytest |
+| `code_style.yml` | Push/PR to java_api paths | Java style check (google-java-format) |
+| `copyright.yml` | PR, push to master | License header check (skywalking-eyes) |
+| `labeler.yml` | pull_request_target | Auto-labeling PRs |
+| `assign_issue.yml` | issue_comment | Issue assignment automation |
 
-**Strengths:**
-- Multi-platform coverage (Linux, Windows, macOS)
-- Concurrency control (`cancel-in-progress: true`) on most workflows
-- ccache configured with proper cache keys and save-on-master-only strategy
-- 16-core runners used for heavy C++ builds (ubuntu-20.04-16-cores, windows-2019-16-core)
-- Proper `permissions: read-all` on all workflows (least privilege)
-- Pinned action versions with SHA hashes for supply chain security
-- Overall status jobs aggregate results
+**Strengths**:
+- Multi-platform coverage (Linux, Windows, macOS) for core modules
+- Concurrency control with `cancel-in-progress: true` on main workflows
+- ccache integration for build acceleration (2GB cache)
+- Path-scoped triggers for plugin-specific workflows (efficient CI resource usage)
+- Pinned action versions with SHA hashes (supply-chain security)
+- `permissions: read-all` default with granular overrides
+- Separate test data repository (`openvinotoolkit/testdata`) with LFS
 
-**Weaknesses:**
-- No security scanning workflows (no CodeQL, no Trivy, no Dependabot)
-- No coverage generation or reporting in any workflow
-- Self-hosted CUDA runner (`lohika-ci`) has hardcoded paths and no containerization
-- Jenkins is still present (legacy) with unclear relationship to GitHub Actions
-- `openvino_code.yml` only lints — no tests despite having a test script defined
-- No scheduled/periodic test runs (only push/PR-triggered)
+**Weaknesses**:
+- No coverage reporting in any workflow
+- No security scanning (Trivy, CodeQL, Snyk)
+- Self-hosted runners for CUDA (`lohika-ci`) with hardcoded paths — fragile
+- Multiple modules completely untested in CI
+- No caching for Python pip installs on Linux workflow
+- Legacy Jenkinsfile still present (appears unused)
+- `ollama_openvino_build_and_test.yml` has a typo in path trigger (missing `.yml` extension)
 
 ### Test Coverage
 
-**Per-Module Analysis:**
+**Test File Distribution**:
+| Language | Test Files | Source Files | Ratio |
+|----------|-----------|--------------|-------|
+| Go | 54 | 174 | 0.31 |
+| Python | 32 | 131 | 0.24 |
+| C++ | 22 | 271 | 0.08 |
+| Java | 8 | 25 | 0.32 |
 
-| Module | Source Files | Test Files | Test-to-Code Ratio | Framework | CI Coverage |
-|--------|-------------|------------|--------------------|-----------|----|
-| nvidia_plugin | 453 C++/CUDA | 71 C++ | 0.16 | Google Test | Unit + functional + sanitizer |
-| java_api | 21 Java | 8 Java | 0.38 | JUnit (Gradle) | Linux + Windows + macOS |
-| openvino_code | 54 TS | 0 | 0.00 | (none) | Lint only |
-| custom_operations | 7 C++ | 2 (Python) | 0.29 | pytest | Linux + Windows |
-| llama_cpp_plugin | 3 C++ src | 8 C++ test | 2.67 | Google Test | Functional + E2E |
-| token_merging | 7 Python | 1 Python | 0.14 | pytest | pytest in CI |
-| android_demos | (demo code) | 0 | 0.00 | none | none |
+**Module-by-Module Test Status**:
 
-**Observations:**
-- **NVIDIA plugin** has the most tests but lowest ratio (0.16) given 453 source files; unit tests cover transformations, memory management, and operation registry
-- **Llama CPP plugin** has excellent test structure — separate common/functional/e2e directories with CMake targets
-- **OpenVINO Code** is the biggest gap — 54 TypeScript source files with 0 tests; `@vscode/test-electron` is a dev dependency but unused
-- **Token merging** has minimal testing (1 test file for 7 source files)
-- No module generates coverage reports
+| Module | Tests | CI Workflow | Framework |
+|--------|-------|------------|-----------|
+| `nvidia_plugin` | 25+ C++ unit/functional | `test_cuda.yml` (self-hosted) | GTest |
+| `ollama_openvino` | 54 Go test files | `ollama_openvino_build_and_test.yml` | Go testing |
+| `llama_cpp_plugin` | 11 C++ functional/E2E | `llama_cpp_plugin_build_and_test.yml` | GTest |
+| `java_api` | 8 Java test files | `linux.yml`, `windows.yml`, `mac.yml` | Gradle/JUnit |
+| `custom_operations` | Python pytest | `linux.yml`, `windows.yml` | pytest |
+| `token_merging` | Python pytest | `token_merging.yml` | pytest |
+| `openvino_training_kit` | 18 Python test files | **NONE** | pytest (unused) |
+| `openvino-langchain` | 4 TS test files | **NONE** | Jest/Vitest (unused) |
+| `genai_optimizations` | **None found** | **NONE** | N/A |
+| `openvino_bevfusion` | **None found** | **NONE** | N/A |
+| `android_demos` | **None found** | **NONE** | N/A |
+| `3d` | 2 Python test files | **NONE** | manual scripts |
+
+**Critical Observation**: The `openvino_training_kit` module has 18 test files across PyTorch, TensorFlow, and scikit-learn frameworks but NONE of them run in CI. Similarly, `openvino-langchain` has 4 TypeScript test files with no CI workflow.
 
 ### Code Quality
 
-**Linting Tools in Use:**
-- **C++ (nvidia_plugin)**: clang-format (v9-12) checked in CI via `check.sh` script; `.clang-format` config present
-- **C++ (llama_cpp_plugin)**: `.clang-format` config present but not enforced in CI
-- **TypeScript (openvino_code)**: ESLint (airbnb-typescript config) + Prettier; enforced in CI with `--max-warnings 0`
-- **Java (java_api)**: google-java-format enforced in CI via GitHub Action
-- **Python (openvino_code server)**: ruff + black checked in CI
-- **Python (token_merging)**: No linting in CI
+**Linting/Formatting**:
+- Java: `google-java-format` via `code_style.yml` workflow
+- C++: No clang-format or clang-tidy configuration found
+- Python: No ruff, flake8, mypy, pylint, or black configuration found
+- Go: No explicit golangci-lint configuration (Go's built-in formatting may be used in ollama_openvino)
+- TypeScript: `.eslintrc.json` exists only in `ollama_openvino/macapp/`
+- **No unified pre-commit hooks**
 
-**Missing Quality Tools:**
-- No pre-commit hooks (`.pre-commit-config.yaml` absent)
-- No static analysis beyond linting (no CodeQL, gosec, Semgrep)
-- No secret detection (no Gitleaks or TruffleHog)
-- No dependency vulnerability scanning
-- No type checking enforcement (Python mypy, TypeScript strict mode unclear)
+**Static Analysis**:
+- No CodeQL, Semgrep, or gosec integration
+- No secret detection (gitleaks, trufflehog)
+- License header checking via Apache SkyWalking Eyes (good)
+
+**Contributing Guidelines**:
+- `CONTRIBUTING.md` exists but is minimal — 4 sentences on PR requirements
+- No testing guidelines beyond "make sure you can build the module and pass all functional tests"
+- No code review checklist
 
 ### Container Images
 
-**Current State:**
-- Single `Dockerfile` in `modules/nvidia_plugin/` — a development environment image based on `nvidia/cuda:11.8.0-runtime-ubuntu20.04`
-- Installs full CUDA toolkit, build tools, development libraries
-- Not built or validated in any CI workflow
-- No `.dockerignore` file
-- No multi-stage build optimization
-- No multi-architecture support
+**Dockerfiles Found**:
+1. `modules/ollama_openvino/Dockerfile` — Complex multi-stage build targeting CPU/CUDA 11/CUDA 12/ROCm/JetPack; multi-arch (amd64/arm64)
+2. `modules/ollama_openvino/Dockerfile_genai_ubuntu24` — GenAI-focused variant
+3. `modules/nvidia_plugin/Dockerfile` — CUDA 11.8 development environment
+
+**Strengths**:
+- Multi-stage builds in ollama_openvino Dockerfile (good practice)
+- Multi-architecture support (amd64/arm64) with JetPack variants
+- Build cache usage with `--mount=type=cache`
+
+**Weaknesses**:
+- No container image scanning (Trivy, Snyk, Grype)
 - No SBOM generation
 - No image signing or attestation
-
-**Assessment:** Container image practices are essentially absent. The Dockerfile serves as documentation for the development environment rather than a production artifact.
+- No startup/runtime validation tests
+- No `.dockerignore` for ollama_openvino or nvidia_plugin (only 3d/pointPillars has one)
+- nvidia_plugin Dockerfile installs from URLs without checksum verification
 
 ### Security
 
-**Current Practices:**
-- `SECURITY.md` points to Intel Security Center for vulnerability reporting
-- `permissions: read-all` on all workflows (good — least privilege)
-- Action versions pinned with SHA hashes (good — prevents supply chain attacks)
-- CODEOWNERS file ensures module-specific review
+**Present**:
+- `SECURITY.md` files in root, ollama_openvino, and nvidia_plugin
+- License header enforcement via CI
+- Pinned GitHub Action versions with SHA hashes (supply-chain hardening)
+- `permissions: read-all` default across workflows
 
-**Missing Practices:**
-- No SAST (CodeQL, Semgrep, or similar)
-- No dependency scanning (Dependabot absent)
-- No container scanning (Trivy, Snyk)
-- No secret detection in CI
-- No signed commits enforcement
-- No branch protection analysis visible
+**Missing**:
+- No SAST (CodeQL, Semgrep, gosec)
+- No dependency scanning (Dependabot, Renovate, Snyk)
+- No secret detection (gitleaks, trufflehog)
+- No container scanning (Trivy, Grype)
+- No SBOM generation
+- No signed releases or image attestation
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: No test type rules exist
+- **Coverage**: None — no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
 - **Quality**: N/A
-- **Gaps**: No CLAUDE.md, no AGENTS.md, no `.claude/` directory, no `.claude/rules/` directory
-- **Recommendation**: Generate comprehensive rules using `/test-rules-generator` covering:
-  - C++ Google Test patterns for NVIDIA and llama_cpp plugins
-  - JUnit/Gradle test patterns for Java API
-  - pytest patterns for Python modules
-  - VS Code extension testing patterns for OpenVINO Code
-  - Integration test patterns for multi-module builds
+- **Gaps**: Complete absence of AI agent rules for test generation, code review, or development workflows
+- **Recommendation**: Generate comprehensive rules with `/test-rules-generator` covering C++ (GTest), Python (pytest), Go (testing), Java (JUnit/Gradle), and TypeScript (Jest) patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Implement coverage tracking** — Start with Java API (JaCoCo + Gradle is straightforward), then add lcov for C++ modules and pytest-cov for Python modules. Configure codecov to report on PRs.
+1. **Add code coverage tracking** — Integrate lcov for C++ modules, pytest-cov for Python, `go test -coverprofile` for Go, and JaCoCo for Java. Set up codecov.io with PR-level coverage reporting and enforce minimum thresholds (start at 30%, ramp up).
 
-2. **Add security scanning** — Deploy CodeQL for SAST across C++, Java, Python, and TypeScript. Add Dependabot for automated dependency updates. This is a significant gap for a security-sensitive project (it processes neural network models).
+2. **Add container image vulnerability scanning** — Add Trivy scanning as a workflow step for all Dockerfile-containing modules. Block merge on CRITICAL severity findings.
 
-3. **Write tests for OpenVINO Code** — The VS Code extension has 54 source files with zero tests. At minimum, add unit tests for the server-side Python code and the TypeScript state management. The `@vscode/test-electron` dependency is already present but unused.
+3. **Enable Dependabot** — Create `.github/dependabot.yml` covering github-actions, pip, gomod, and npm ecosystems with weekly update schedules.
+
+4. **Create CI workflows for untested modules** — Prioritize `openvino_training_kit` (18 existing test files!) and `openvino-langchain` (4 existing test files) since tests already exist but just aren't running.
 
 ### Priority 1 (High Value)
 
-4. **Build and validate the NVIDIA Dockerfile in CI** — Add a workflow that builds the Dockerfile and runs Trivy scanning. Even without GPU hardware, validating the image builds correctly catches dependency drift.
+5. **Add SAST with CodeQL** — Enable CodeQL for C++, Python, Go, and Java analysis on PR and push events. This catches security vulnerabilities and code quality issues across all primary languages.
 
-5. **Create unified pre-commit configuration** — Aggregate clang-format, ESLint, google-java-format, ruff, and black into a single `.pre-commit-config.yaml` for consistent enforcement across all modules.
+6. **Implement unified pre-commit hooks** — Create `.pre-commit-config.yaml` with clang-format for C++, ruff for Python, gofmt for Go, and google-java-format for Java. Enforce via CI as a fast-fail first step.
 
-6. **Expand custom_operations testing** — Currently only 2 test files (1 pytest runner + 1 requirements file). Add dedicated unit tests for each custom operation.
+7. **Add container image runtime validation** — For ollama_openvino, add a CI step that builds the image and verifies it starts successfully (basic health check). For nvidia_plugin, verify the development image builds correctly.
 
-7. **Add scheduled CI runs** — Currently all tests are only triggered by PRs/pushes. Add weekly/nightly runs to catch flaky tests and dependency drift.
+8. **Fix ollama_openvino workflow trigger** — The path filter in `ollama_openvino_build_and_test.yml` references `.github/workflows/ollama_openvino_build_and_test` (missing `.yml` extension), so workflow changes won't trigger the pipeline.
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Create agent rules** — Add `.claude/rules/` with test patterns for each module's language and framework. This accelerates AI-assisted contributions.
+9. **Create comprehensive CLAUDE.md and agent rules** — Define test creation patterns for each language/framework used in the repo. Include module-specific testing guidelines.
 
-9. **Add performance benchmarks** — NVIDIA plugin and llama_cpp plugin should have tracked performance regression tests, not just correctness tests.
+10. **Add performance regression testing** — For inference plugins (nvidia_plugin, llama_cpp_plugin), add benchmark tracking to detect performance regressions.
 
-10. **Modernize self-hosted runner usage** — The `lohika-ci` CUDA runner uses hardcoded paths (`~/runner/`). Consider containerized runners or at least parameterized paths.
+11. **Implement contract tests** — Verify plugin interfaces match OpenVINO core API expectations across version updates.
 
-11. **Add SBOM generation** — For compliance and supply chain security, generate SBOMs for build artifacts.
+12. **Clean up legacy Jenkinsfile** — The root `Jenkinsfile` references a shared library pipeline but appears to be superseded by GitHub Actions. Remove if unused.
 
-12. **Remove or modernize Jenkinsfile** — The legacy Jenkinsfile appears unused alongside GitHub Actions. Clean up or document its purpose.
+13. **Add `.dockerignore` files** — Missing from ollama_openvino and nvidia_plugin, leading to unnecessarily large build contexts.
 
 ## Comparison to Gold Standards
 
-| Dimension | openvino_contrib | odh-dashboard | notebooks | kserve |
-|-----------|-----------------|---------------|-----------|--------|
-| Unit Tests | 5.0 — Fragmented across modules | 9.0 — Comprehensive Jest suite | 6.0 — Moderate | 8.0 — Strong Go tests |
-| Integration/E2E | 5.5 — Some modules have E2E | 9.0 — Cypress + contract tests | 8.0 — Multi-layer | 9.0 — envtest + E2E |
-| Build Integration | 3.0 — No image validation | 8.0 — Multi-mode builds | 7.0 — Image builds in CI | 7.0 — Operator builds |
-| Image Testing | 1.5 — Dockerfile untested | 7.0 — Startup validation | 9.0 — 5-layer validation | 6.0 — Basic |
-| Coverage Tracking | 0.5 — None | 9.0 — Codecov enforced | 5.0 — Partial | 8.0 — Enforced thresholds |
-| CI/CD Automation | 6.5 — Multi-platform, caching | 9.0 — Comprehensive | 8.0 — Well-automated | 9.0 — Multi-version |
-| Agent Rules | 0.0 — None | 8.0 — Comprehensive rules | 2.0 — Minimal | 3.0 — Some |
+| Practice | openvino_contrib | odh-dashboard | notebooks | kserve |
+|----------|-----------------|---------------|-----------|--------|
+| Multi-platform CI | Linux/Win/Mac | Linux | Linux | Linux |
+| Coverage tracking | None | Codecov | Partial | Codecov |
+| Coverage enforcement | None | PR gates | Partial | Thresholds |
+| Container scanning | None | Trivy | Trivy | Trivy |
+| Pre-commit hooks | None | Comprehensive | Basic | Yes |
+| SAST/CodeQL | None | CodeQL | N/A | CodeQL |
+| Dependency management | None | Dependabot | Dependabot | Dependabot |
+| E2E testing | Partial (2 plugins) | Cypress + API | Image validation | KServe predictor |
+| Agent rules | None | Comprehensive | None | Partial |
+| Secret detection | None | Gitleaks | None | None |
+| Build caching | ccache (good) | npm cache | pip cache | Go cache |
+| Concurrency control | Yes | Yes | Yes | Yes |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/linux.yml` — Main Linux build + Java/custom-ops tests
-- `.github/workflows/windows.yml` — Windows build + tests
-- `.github/workflows/mac.yml` — macOS build + tests
-- `.github/workflows/test_cuda.yml` — CUDA unit + functional tests
-- `.github/workflows/sanitizer_cuda.yml` — CUDA sanitizer tests
-- `.github/workflows/llama_cpp_plugin_build_and_test.yml` — Llama CPP build + tests
-- `.github/workflows/openvino_code.yml` — VS Code extension linting
-- `.github/workflows/token_merging.yml` — Token merging pytest
+- `.github/workflows/linux.yml` — Main Linux build & test
+- `.github/workflows/windows.yml` — Main Windows build & test
+- `.github/workflows/mac.yml` — Main macOS build & test
+- `.github/workflows/test_cuda.yml` — NVIDIA CUDA tests
+- `.github/workflows/llama_cpp_plugin_build_and_test.yml` — llama.cpp plugin CI
+- `.github/workflows/ollama_openvino_build_and_test.yml` — Ollama OpenVINO CI
+- `.github/workflows/token_merging.yml` — Token merging Python tests
 - `.github/workflows/code_style.yml` — Java code style
-- `Jenkinsfile` — Legacy Jenkins pipeline
+- `.github/workflows/copyright.yml` — License header enforcement
+- `Jenkinsfile` — Legacy CI (possibly unused)
 
 ### Testing
-- `modules/nvidia_plugin/tests/unit/` — 71 C++ unit test files
-- `modules/java_api/src/test/java/org/intel/openvino/` — 8 Java test files
-- `modules/llama_cpp_plugin/tests/{common,functional,e2e}/` — Well-structured C++ test directories
-- `modules/custom_operations/tests/run_tests.py` — Single pytest runner
-- `modules/token_merging/tests/test_precommit.py` — Single pytest file
-
-### Code Quality
-- `modules/nvidia_plugin/.clang-format` — C++ formatting config
-- `modules/llama_cpp_plugin/.clang-format` — C++ formatting config
-- `modules/openvino_code/.eslintrc.js` — TypeScript ESLint config
-- `modules/nvidia_plugin/utils/check.sh` — clang-format CI check script
+- `modules/nvidia_plugin/tests/unit/` — CUDA unit tests (GTest)
+- `modules/nvidia_plugin/tests/functional/` — CUDA functional tests
+- `modules/llama_cpp_plugin/tests/` — llama.cpp functional + E2E tests
+- `modules/ollama_openvino/` — Extensive Go tests throughout
+- `modules/java_api/src/test/` — Java API tests
+- `modules/custom_operations/tests/` — Custom ops Python tests
+- `modules/token_merging/tests/` — Token merging Python tests
+- `modules/openvino_training_kit/tests/` — Training kit tests (NOT IN CI)
+- `modules/openvino-langchain/src/tests/` — LangChain tests (NOT IN CI)
 
 ### Container Images
+- `modules/ollama_openvino/Dockerfile` — Multi-stage, multi-arch ollama build
+- `modules/ollama_openvino/Dockerfile_genai_ubuntu24` — GenAI variant
 - `modules/nvidia_plugin/Dockerfile` — CUDA development environment
 
-### Security
-- `SECURITY.md` — Vulnerability reporting info
-- `.github/CODEOWNERS` — Module-specific code review ownership
-
-### Build Configuration
-- `modules/nvidia_plugin/CMakeLists.txt` — CUDA plugin build
-- `modules/llama_cpp_plugin/CMakeLists.txt` — Llama CPP plugin build
-- `modules/custom_operations/CMakeLists.txt` — Custom operations build
-- `modules/openvino_code/package.json` — VS Code extension build
-- `modules/token_merging/setup.py` — Token merging Python package
+### Configuration
+- `.licenserc.yaml` — License header configuration
+- `.github/labeler.yml` — PR auto-labeling rules
+- `CONTRIBUTING.md` — Contribution guidelines (minimal)
+- `SECURITY.md` — Security policy

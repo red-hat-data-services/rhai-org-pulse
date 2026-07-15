@@ -34,6 +34,7 @@
             <a :href="issue.url" target="_blank" rel="noopener" class="text-primary-600 dark:text-primary-400 hover:underline font-medium">{{ issue.key }}</a>
           </td>
           <td class="px-3 py-2 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ issue.issueType }}</td>
+          <td class="px-3 py-2 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ (issue.components || []).join(', ') || '—' }}</td>
           <td class="px-3 py-2 text-gray-700 dark:text-gray-300 max-w-md truncate" :title="issue.summary">{{ issue.summary }}</td>
           <td class="px-3 py-2 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ issue.assignee }}</td>
           <td class="px-3 py-2 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ issue.reporter }}</td>
@@ -53,6 +54,14 @@
           <td class="px-3 py-2 text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ formatDate(issue.created) }}</td>
           <td class="px-3 py-2 text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ formatDate(issue.updated) }}</td>
           <td class="px-3 py-2 text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ issue.dueDate ? formatDate(issue.dueDate) : 'None' }}</td>
+          <td class="px-3 py-2 whitespace-nowrap">
+            <span
+              v-for="lbl in (issue.feedbackLabels || [])"
+              :key="lbl"
+              class="inline-block px-2 py-0.5 text-xs font-medium rounded-full mr-1"
+              :class="lbl === 'AIBU_Feedback' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'"
+            >{{ lbl }}</span>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -69,6 +78,7 @@ var props = defineProps({
 var columns = [
   { key: 'key', label: 'Key', filterable: false },
   { key: 'issueType', label: 'Type', filterable: true },
+  { key: 'component', label: 'Component', filterable: true },
   { key: 'summary', label: 'Summary', filterable: false },
   { key: 'assignee', label: 'Assignee', filterable: true },
   { key: 'reporter', label: 'Reporter', filterable: true },
@@ -77,16 +87,19 @@ var columns = [
   { key: 'resolution', label: 'Resolution', filterable: true },
   { key: 'created', label: 'Created', filterable: false },
   { key: 'updated', label: 'Updated', filterable: false },
-  { key: 'dueDate', label: 'Due date', filterable: false }
+  { key: 'dueDate', label: 'Due date', filterable: false },
+  { key: 'source', label: 'Source', filterable: true }
 ]
 
 var columnFilters = ref({
   issueType: '',
+  component: '',
   assignee: '',
   reporter: '',
   priority: '',
   status: '',
-  resolution: ''
+  resolution: '',
+  source: ''
 })
 
 var sortKey = ref('created')
@@ -94,16 +107,34 @@ var sortDir = ref('desc')
 
 var filterOptions = computed(function() {
   var opts = {}
-  var filterableKeys = ['issueType', 'assignee', 'reporter', 'priority', 'status', 'resolution']
+  var filterableKeys = ['issueType', 'component', 'assignee', 'reporter', 'priority', 'status', 'resolution', 'source']
   for (var ki = 0; ki < filterableKeys.length; ki++) {
     var key = filterableKeys[ki]
     var seen = {}
     var values = []
     for (var i = 0; i < props.issues.length; i++) {
-      var val = props.issues[i][key] || ''
-      if (val && !seen[val]) {
-        seen[val] = true
-        values.push(val)
+      if (key === 'component') {
+        var comps = props.issues[i].components || []
+        for (var ci = 0; ci < comps.length; ci++) {
+          if (comps[ci] && !seen[comps[ci]]) {
+            seen[comps[ci]] = true
+            values.push(comps[ci])
+          }
+        }
+      } else if (key === 'source') {
+        var fbLabels = props.issues[i].feedbackLabels || []
+        for (var si = 0; si < fbLabels.length; si++) {
+          if (fbLabels[si] && !seen[fbLabels[si]]) {
+            seen[fbLabels[si]] = true
+            values.push(fbLabels[si])
+          }
+        }
+      } else {
+        var val = props.issues[i][key] || ''
+        if (val && !seen[val]) {
+          seen[val] = true
+          values.push(val)
+        }
       }
     }
     values.sort()
@@ -118,7 +149,14 @@ var filteredIssues = computed(function() {
     for (var i = 0; i < keys.length; i++) {
       var key = keys[i]
       var filterVal = columnFilters.value[key]
-      if (filterVal && issue[key] !== filterVal) return false
+      if (!filterVal) continue
+      if (key === 'component') {
+        if (!(issue.components || []).includes(filterVal)) return false
+      } else if (key === 'source') {
+        if (!(issue.feedbackLabels || []).includes(filterVal)) return false
+      } else {
+        if (issue[key] !== filterVal) return false
+      }
     }
     return true
   })
@@ -130,8 +168,8 @@ var sortedIssues = computed(function() {
   var dir = sortDir.value === 'asc' ? 1 : -1
 
   arr.sort(function(a, b) {
-    var aVal = a[key] || ''
-    var bVal = b[key] || ''
+    var aVal = key === 'component' ? (a.components || []).join(', ') : key === 'source' ? (a.feedbackLabels || []).join(', ') : (a[key] || '')
+    var bVal = key === 'component' ? (b.components || []).join(', ') : key === 'source' ? (b.feedbackLabels || []).join(', ') : (b[key] || '')
     if (aVal < bVal) return -1 * dir
     if (aVal > bVal) return 1 * dir
     return 0

@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on May 29, 2026 at 08:45 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:21 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/odh-observability</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#fd7e14"
+                                stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="254.46878999999996"
+                                stroke-dashoffset="367.56602999999996"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">5.5</div>
+                        <div class="score-value">3.5</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Excellent test-to-code ratio (~97%), comprehensive coverage of controller logic, conditions, webhook, API types, and template data</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Excellent 0.96:1 test-to-code ratio with 125 test functions across 8 files</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No integration or E2E tests; no envtest, Kind, or cluster-based testing; all tests use fake clients only</div>
+                            <div class="scorecard-status">E2E Makefile target exists but no tests directory or tests; no envtest integration tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Tekton/Konflux pipelines for PR and push builds but no PR-time unit test execution, no build validation in CI</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">Tekton image builds only; no PR-time test execution or Konflux simulation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Multi-stage Dockerfile with FIPS support but no runtime validation, no image startup testing, no vulnerability scanning</div>
+                            <div class="scorecard-status">Multi-stage UBI9 builds with FIPS; no vulnerability scanning, SBOM, or runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Makefile has coverprofile target but no codecov/coveralls integration, no thresholds, no PR reporting</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">Makefile generates cover.out but no codecov integration, thresholds, or PR reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.5/10</div>
-                            <div class="scorecard-status">Tekton pipelines for image builds only; no GitHub Actions workflows; no automated test runs, linting, or quality gates on PRs</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">Tekton pipelines build images but no tests, linting, or quality gates run in CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, .claude/ directory, or any agent rules present</div>
+                            <div class="scorecard-status">No agent rules; CLAUDE.md is explicitly .gitignored; no .claude/ directory</div>
                         </div>
                     </div>
                 </div>
@@ -411,51 +411,51 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No GitHub Actions CI workflows</div>
-                            <p>PRs merge without any automated test execution, lint checks, or quality gates</p>
+                            <div class="item-description">No tests run in CI/CD pipeline</div>
+                            <p>Unit tests exist but never execute in PR or push pipelines; regressions can merge undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No integration or E2E tests</div>
-                            <p>Controller behavior against real API servers is never validated; only fake client tests exist</p>
+                            <div class="item-description">No E2E or integration test suite</div>
+                            <p>Operator behavior against a real cluster is entirely untested; deployment failures caught only in staging</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">16-24 hours</span>
+                                <span class="meta-tag effort-tag">40-80 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No linting configuration</div>
-                            <p>No golangci-lint, no static analysis, code quality is entirely manual review</p>
+                            <div class="item-description">No coverage tracking or enforcement</div>
+                            <p>Coverage regressions invisible; new code can merge with zero test coverage</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container vulnerability scanning</div>
-                            <p>Security vulnerabilities in base images and dependencies are not detected</p>
+                            <div class="item-description">No vulnerability scanning (Trivy/Snyk)</div>
+                            <p>Container image vulnerabilities and dependency CVEs are not detected before release</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No coverage enforcement</div>
-                            <p>Test coverage can silently regress with no automated guardrails</p>
+                            <div class="item-description">No linting in CI (golangci-lint)</div>
+                            <p>Code quality issues, potential bugs, and style violations are not caught automatically</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No README documentation</div>
-                            <p>New contributors have no onboarding documentation, architecture overview, or usage instructions</p>
+                        <li class="item-card low">
+                            <div class="item-description">No agent rules for test automation</div>
+                            <p>AI-assisted development produces inconsistent test patterns; CLAUDE.md is .gitignored</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag severity-low">LOW</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -472,43 +472,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add GitHub Actions workflow with go test and go vet</div>
-                            <p>Immediate automated test execution on every PR, catching regressions before merge</p>
+                            <div class="item-description">Add a Tekton task to run &#x27;make test&#x27; before image build</div>
+                            <p>Catch regressions on every PR; blocks merge if tests fail</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add golangci-lint configuration and CI step</div>
-                            <p>Automated static analysis catching common Go bugs, style issues, and potential security problems</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to PR pipeline</div>
-                            <p>Early detection of CVEs in container images and Go dependencies</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
                             <div class="item-description">Add codecov integration with coverage thresholds</div>
-                            <p>Visibility into test coverage trends with automated enforcement on PRs</p>
+                            <p>Visibility into coverage trends; enforce minimum coverage on PRs</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add pre-commit hooks for fmt and vet</div>
-                            <p>Catch formatting and vet issues before commit, reducing PR review noise</p>
+                            <div class="item-description">Add golangci-lint configuration and CI task</div>
+                            <p>Catch bugs, style issues, and inefficiencies automatically</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add Trivy container scanning to push pipeline</div>
+                            <p>Detect known CVEs in base images and dependencies before release</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create basic .claude/rules/ for test patterns</div>
+                            <p>Consistent AI-generated tests following the project&#x27;s existing Go testing patterns</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -525,15 +525,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Create GitHub Actions CI workflow running unit tests, go vet, and go fmt on every PR</li><li>Add golangci-lint with a comprehensive linter set (errcheck, gosec, govet, staticcheck, etc.)</li><li>Add Trivy or Snyk container scanning to the Tekton pipeline and/or GitHub Actions</li></ul>
+                            <ul><li>Add test execution (make test) to Tekton PR pipeline as a required gate</li><li>Integrate codecov with coverage threshold enforcement (recommend 70% minimum)</li><li>Add golangci-lint configuration and run it in PR pipeline</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add envtest-based integration tests for the MonitoringReconciler against a real API server</li><li>Add codecov integration with minimum coverage thresholds (e.g., 70%)</li><li>Create comprehensive agent rules (.claude/rules/) for test automation guidance</li><li>Add E2E tests using Kind or envtest with real CRD installations</li></ul>
+                            <ul><li>Build envtest-based integration tests for the reconciler (real API server, fake etcd)</li><li>Create E2E test suite using Kind cluster for operator deployment validation</li><li>Add Trivy container image scanning to both PR and push pipelines</li><li>Add SBOM generation to container build</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add Helm chart validation tests (helm lint, helm template, kubeval)</li><li>Add image startup validation in CI (build image, run with --help, verify exit code)</li><li>Add pre-commit-config.yaml with go fmt, go vet, and gofumpt hooks</li><li>Add README.md with architecture overview, development guide, and testing instructions</li></ul>
+                            <ul><li>Create .claude/rules/ with unit test, integration test, and operator test patterns</li><li>Add pre-commit hooks for fmt, vet, and lint</li><li>Add Helm chart linting to PR pipeline</li><li>Consider multi-architecture container builds for ARM64 support</li></ul>
                         </div>
                     </div>
                 </div>

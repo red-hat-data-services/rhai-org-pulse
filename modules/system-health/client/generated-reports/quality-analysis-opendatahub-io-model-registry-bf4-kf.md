@@ -1,405 +1,450 @@
 ---
 repository: "opendatahub-io/model-registry-bf4-kf"
-overall_score: 5.9
+overall_score: 5.8
 scorecard:
   - dimension: "Unit Tests"
-    score: 6.5
-    status: "Solid Go unit tests with testcontainers, but low test-to-code ratio (4 test files for 89 source files)"
+    score: 6.0
+    status: "Go tests with Testcontainers integration; Python pytest with coverage. Low test-to-code ratio (4 test files / 21 source files)"
   - dimension: "Integration/E2E"
     score: 7.0
-    status: "Robot Framework E2E tests and Kind-based deployment testing on PRs"
+    status: "Robot Framework E2E against docker-compose (REST + Python modes); Kind cluster deployment testing on PRs"
   - dimension: "Build Integration"
-    score: 5.5
-    status: "PR builds Docker image and deploys to Kind cluster, but no Konflux simulation or multi-arch"
-  - dimension: "Image Testing"
     score: 5.0
-    status: "PR workflow builds and deploys image to Kind, but no runtime health checks or startup validation"
+    status: "PR image build + Kind deploy is good; no Konflux simulation, no Dockerfile.odh validation on PRs"
+  - dimension: "Image Testing"
+    score: 4.0
+    status: "Basic image build and Kind deploy; no vulnerability scanning, no multi-arch, no SBOM"
   - dimension: "Coverage Tracking"
-    score: 6.5
-    status: "Codecov integration with fail_ci_if_error for both Go and Python, but no threshold enforcement"
+    score: 7.0
+    status: "Codecov integration for Go and Python with fail_ci_if_error; no coverage thresholds enforced"
   - dimension: "CI/CD Automation"
-    score: 6.0
-    status: "Good PR workflow coverage but no concurrency control, no caching, and no golangci-lint config file"
+    score: 5.0
+    status: "6 workflows with good breadth; no concurrency control, no caching, outdated Go 1.19, single Go version"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules present"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory; zero AI-assisted test guidance"
 critical_gaps:
-  - title: "No security scanning (Trivy, CodeQL, Snyk, SAST)"
-    impact: "Vulnerabilities in dependencies and container images are not detected before merge"
+  - title: "No security scanning (Trivy, Snyk, CodeQL, or SAST)"
+    impact: "Container image and dependency vulnerabilities go undetected until downstream consumers scan"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "Very low Go unit test coverage (4 test files for 89 source files)"
-    impact: "Large portions of server, API utils, mapper, and mlmdtypes packages are untested"
-    severity: "HIGH"
-    effort: "20-40 hours"
-  - title: "No coverage threshold enforcement"
-    impact: "Coverage can decrease on PRs without failing CI"
-    severity: "MEDIUM"
-    effort: "1-2 hours"
-  - title: "No secret detection (Gitleaks, TruffleHog)"
-    impact: "Secrets could be accidentally committed without detection"
-    severity: "HIGH"
-    effort: "1-2 hours"
-  - title: "No agent rules or AI-assisted development guidance"
-    impact: "AI agents cannot consistently produce quality tests or follow project patterns"
-    severity: "MEDIUM"
-    effort: "4-8 hours"
-  - title: "No multi-architecture image builds"
-    impact: "Only amd64 images are built; ARM/Apple Silicon users cannot run locally"
-    severity: "MEDIUM"
     effort: "4-6 hours"
+  - title: "Outdated Go version (1.19) — EOL since Aug 2023"
+    impact: "Missing security patches, compiler improvements, and ecosystem compatibility; CI builds on unsupported toolchain"
+    severity: "HIGH"
+    effort: "4-8 hours"
+  - title: "No concurrency control or caching in CI workflows"
+    impact: "Duplicate runs waste resources; go mod download repeats on every PR push, increasing CI time by 30-60s per run"
+    severity: "MEDIUM"
+    effort: "2-3 hours"
+  - title: "Dockerfile.odh is never built or tested on PRs"
+    impact: "ODH-specific image breakage discovered only post-merge or during release"
+    severity: "MEDIUM"
+    effort: "2-4 hours"
+  - title: "No golangci-lint configuration file"
+    impact: "Default linters miss critical checks (errcheck, govet static analysis, unused code); inconsistent quality enforcement"
+    severity: "MEDIUM"
+    effort: "2-3 hours"
+  - title: "Low Go test-to-code ratio (4 test files for 21 source files)"
+    impact: "cmd/, pkg/api, internal/apiutils, internal/mlmdtypes, and internal/server have zero test coverage"
+    severity: "HIGH"
+    effort: "16-24 hours"
 quick_wins:
-  - title: "Add Trivy container scanning to PR workflow"
-    effort: "1-2 hours"
-    impact: "Immediate vulnerability detection in container images before merge"
-  - title: "Add CodeQL/SAST workflow"
-    effort: "1-2 hours"
-    impact: "Static analysis catches security bugs in Go and Python code"
-  - title: "Add Gitleaks secret detection"
-    effort: "1 hour"
-    impact: "Prevents accidental secret commits"
-  - title: "Add concurrency control to PR workflows"
+  - title: "Add concurrency control to all PR workflows"
     effort: "30 minutes"
-    impact: "Prevents redundant CI runs on rapid pushes, saves compute"
-  - title: "Add codecov.yml with coverage thresholds"
-    effort: "1 hour"
-    impact: "Prevents coverage regression on PRs"
-  - title: "Create a .golangci.yml config file"
-    effort: "1 hour"
-    impact: "Configurable linting with more enabled checks beyond defaults"
+    impact: "Prevents duplicate CI runs; cancels stale runs on new pushes"
+  - title: "Add Go module caching to build.yml"
+    effort: "30 minutes"
+    impact: "Reduces CI build time by 30-60 seconds per run"
+  - title: "Add Trivy container scan to build-image-pr.yml"
+    effort: "1-2 hours"
+    impact: "Catches HIGH/CRITICAL CVEs before merge"
+  - title: "Create .golangci.yaml with expanded linter set"
+    effort: "1-2 hours"
+    impact: "Catches unused code, error handling gaps, and style issues automatically"
+  - title: "Build Dockerfile.odh in the PR image workflow"
+    effort: "1-2 hours"
+    impact: "Ensures ODH variant doesn't break silently"
 recommendations:
   priority_0:
-    - "Add container security scanning (Trivy) to PR and push workflows"
-    - "Add SAST/CodeQL analysis for Go and Python code"
-    - "Add secret detection (Gitleaks) as a pre-commit hook and CI check"
+    - "Add container vulnerability scanning (Trivy/Snyk) to PR and merge workflows"
+    - "Upgrade Go from 1.19 (EOL) to 1.22+ and test against multiple Go versions"
+    - "Add unit tests for untested packages: cmd/, pkg/api, internal/apiutils, internal/mlmdtypes, internal/server"
   priority_1:
-    - "Increase Go unit test coverage — server, apiutils, mlmdtypes, constants packages have zero test files"
-    - "Add coverage thresholds in codecov.yml (e.g., 60% minimum, no regression on patch)"
-    - "Add concurrency control to all PR workflows to avoid redundant runs"
-    - "Create a .golangci.yml with expanded linter set (errcheck, govet, staticcheck, etc.)"
-    - "Add agent rules (.claude/rules/) for unit, integration, and E2E test creation"
+    - "Add concurrency control and Go module caching to all CI workflows"
+    - "Create .golangci.yaml with errcheck, govet, staticcheck, gosec, unused, bodyclose linters"
+    - "Add CodeQL or gosec SAST workflow for Go security analysis"
+    - "Build and test Dockerfile.odh in the PR image testing workflow"
   priority_2:
-    - "Add multi-architecture image builds (amd64 + arm64)"
-    - "Add SBOM generation for container images"
-    - "Add image signing/attestation"
-    - "Add API contract tests for the OpenAPI spec"
-    - "Add performance/load testing for the REST API proxy"
+    - "Add agent rules (.claude/rules/) for test creation patterns"
+    - "Add multi-architecture image builds (amd64/arm64)"
+    - "Add SBOM generation and image signing/attestation"
+    - "Add API contract testing between Go server and Python client"
+    - "Enable dependabot.yml for automated dependency updates"
 ---
 
 # Quality Analysis: model-registry-bf4-kf
 
 ## Executive Summary
 
-- **Overall Score: 5.9/10**
-- **Repository Type**: Go REST API proxy / metadata registry service with Python client
-- **Primary Language**: Go 1.19, Python 3.9/3.10
-- **Framework**: go-chi HTTP router, gRPC to ML Metadata backend, OpenAPI code generation
-- **Key Strengths**: Testcontainers-based integration tests, Robot Framework E2E suite, Codecov integration, Kind-based PR deployment testing, pre-commit hooks
-- **Critical Gaps**: No security scanning at all, very low unit test coverage ratio, no coverage thresholds, no agent rules
-- **Agent Rules Status**: Missing — no CLAUDE.md, .claude/ directory, or AGENTS.md
+- **Overall Score: 5.8/10**
+- **Repository Type**: Go REST proxy service for ML Metadata (MLMD) with Python client library
+- **Primary Languages**: Go (backend), Python (client SDK)
+- **Framework**: Chi HTTP router, gRPC client to MLMD, OpenAPI code generation
+
+### Key Strengths
+- Strong integration testing: Testcontainers for Go, Robot Framework for E2E, Kind cluster deployment on PRs
+- Codecov integration for both Go and Python with `fail_ci_if_error: true`
+- Pre-commit hooks with ruff, yamlfmt, detect-private-key, and standard checks
+- Good Python code quality setup: ruff with 13 rule categories, mypy type checking, flake8-bandit
+
+### Critical Gaps
+- **No security scanning at all** — no Trivy, Snyk, CodeQL, gosec, or gitleaks
+- **Go 1.19 is EOL** (since August 2023) — missing 3 years of security patches
+- **Low test coverage** — cmd/, pkg/api, internal/apiutils, internal/mlmdtypes, internal/server have zero test files
+- **No AI agent rules** — no CLAUDE.md, AGENTS.md, or .claude/ directory
+
+### Agent Rules Status: **Missing**
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 6.5/10 | Solid Go unit tests with testcontainers, but only 4 test files for 89 source files |
-| Integration/E2E | 7.0/10 | Robot Framework E2E suite with REST+Python modes; Kind deployment on PRs |
-| Build Integration | 5.5/10 | PR builds Docker image and deploys to Kind, but no Konflux simulation or multi-arch |
-| Image Testing | 5.0/10 | Image built and loaded into Kind on PRs, but no health/startup validation |
-| Coverage Tracking | 6.5/10 | Codecov integration for Go and Python with fail_ci_if_error, but no thresholds |
-| CI/CD Automation | 6.0/10 | 6 workflows covering build/test/deploy, but no concurrency control or caching |
-| Agent Rules | 0.0/10 | No CLAUDE.md, no .claude/ directory, no agent rules |
+| Unit Tests | 6/10 | Go Testcontainers-based tests; Python pytest. Low test-to-code ratio |
+| Integration/E2E | 7/10 | Robot Framework E2E + Kind deployment testing on PRs |
+| **Build Integration** | **5/10** | **PR image build + Kind is good; no Konflux or ODH variant testing** |
+| Image Testing | 4/10 | Basic build only; no scanning, multi-arch, or SBOM |
+| Coverage Tracking | 7/10 | Codecov for Go + Python; no enforcement thresholds |
+| CI/CD Automation | 5/10 | 6 workflows; no concurrency, no caching, outdated toolchain |
+| Agent Rules | 0/10 | No agent rules or AI-assisted test guidance |
 
 ## Critical Gaps
 
 ### 1. No Security Scanning
-- **Impact**: Vulnerabilities in Go/Python dependencies and container images are not detected before merge or release
+- **Impact**: Container images and dependencies are never scanned for vulnerabilities; CVEs go undetected until downstream consumers (Konflux, RHACS) catch them
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: No Trivy, Snyk, CodeQL, gosec, Semgrep, Gitleaks, or any SAST/DAST tool is configured. The `Dockerfile` uses `ubi8/go-toolset:1.19` and `ubi8/ubi-minimal:8.8` — pinned base images that may have known CVEs. No vulnerability scanning runs in any workflow.
-
-### 2. Very Low Go Unit Test Coverage Ratio
-- **Impact**: Large portions of the codebase are untested — server handlers, API utilities, MLMD type setup, constants
-- **Severity**: HIGH
-- **Effort**: 20-40 hours
-- **Details**: Only 4 Go test files (4,686 lines) exist for 89 Go source files (~47,222 lines including generated code). Test files exist only for:
-  - `pkg/core/core_test.go` (3,381 lines) — comprehensive but only one package
-  - `internal/converter/openapi_converter_test.go` (165 lines)
-  - `internal/converter/mlmd_converter_util_test.go` (852 lines)
-  - `internal/mapper/mapper_test.go` (288 lines)
-- **Missing test coverage** for: `internal/server/`, `internal/apiutils/`, `internal/mlmdtypes/`, `internal/constants/`, `cmd/`
-
-### 3. No Coverage Threshold Enforcement
-- **Impact**: Coverage can decrease on PRs without CI failing
-- **Severity**: MEDIUM
-- **Effort**: 1-2 hours
-- **Details**: Codecov is integrated with `fail_ci_if_error: true`, which only fails on upload errors — not on coverage regression. No `.codecov.yml` file exists to define patch or project coverage thresholds.
-
-### 4. No Secret Detection
-- **Impact**: Secrets (API keys, tokens) could be accidentally committed
-- **Severity**: HIGH
-- **Effort**: 1-2 hours
-- **Details**: No Gitleaks, TruffleHog, or detect-secrets configuration. The pre-commit config includes `detect-private-key` but this only catches private key file patterns, not arbitrary secrets/tokens.
-
-### 5. No Agent Rules
-- **Impact**: AI-assisted development will produce inconsistent test patterns, may not follow project conventions
-- **Severity**: MEDIUM
-- **Effort**: 4-8 hours
-- **Details**: No `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`. AI agents have no guidance on:
-  - How to write tests with testcontainers
-  - Robot Framework conventions
-  - OpenAPI code generation workflow
-  - MLMD proto handling patterns
-
-### 6. No Multi-Architecture Image Builds
-- **Impact**: Only `linux/amd64` images are built (`GOARCH=amd64` hardcoded in Dockerfiles)
-- **Severity**: MEDIUM
 - **Effort**: 4-6 hours
-- **Details**: Both `Dockerfile` and `Dockerfile.odh` hardcode `GOARCH=amd64`. No multi-platform build support (buildx). ARM-based development environments cannot build or test locally.
+- **Details**: No Trivy, Snyk, CodeQL, gosec, Semgrep, or gitleaks configuration exists. The only security measure is `detect-private-key` in pre-commit hooks and flake8-bandit for Python code.
+
+### 2. Outdated Go Version (1.19 — EOL since August 2023)
+- **Impact**: Missing 3 years of security patches, compiler improvements, and standard library enhancements. Go 1.19 lacks generics maturity, improved error handling, and slog logging.
+- **Severity**: HIGH
+- **Effort**: 4-8 hours (update go.mod, Dockerfiles, CI, fix any breaking changes)
+- **Details**: `go.mod` specifies Go 1.19, both Dockerfiles use `ubi8/go-toolset:1.19`, and `build.yml` uses `go-version: '1.19'`.
+
+### 3. Low Go Test Coverage — Untested Packages
+- **Impact**: Core packages have zero test files, meaning bugs in API routing, CLI commands, and utility functions go undetected
+- **Severity**: HIGH
+- **Effort**: 16-24 hours
+- **Untested packages**:
+  - `cmd/` (root.go, proxy.go, config.go) — CLI entry points
+  - `pkg/api/` (api.go) — public API interface
+  - `internal/apiutils/` (api_utils.go) — API utility functions
+  - `internal/mlmdtypes/` (mlmdtypes.go) — MLMD type definitions
+  - `internal/server/openapi/` — generated server code (partial)
+  - `internal/converter/openapi_mlmd_converter_util.go` — MLMD converter utilities
+
+### 4. No Concurrency Control or CI Caching
+- **Impact**: Multiple pushes to the same PR trigger redundant builds; `go mod download` runs every time
+- **Severity**: MEDIUM
+- **Effort**: 2-3 hours
+- **Details**: None of the 6 workflows use `concurrency:` with `cancel-in-progress: true`. No `actions/cache` for Go modules or Python pip.
+
+### 5. Dockerfile.odh Never Tested on PRs
+- **Impact**: The ODH-specific Dockerfile (`Dockerfile.odh`) uses a different build path (`make clean/odh build/odh`) that skips code generation. Breakage in this path is only discovered post-merge.
+- **Severity**: MEDIUM
+- **Effort**: 2-4 hours
+
+### 6. No golangci-lint Configuration File
+- **Impact**: Running `golangci-lint run` with defaults misses important linters like errcheck, staticcheck, gosec, unused, and bodyclose
+- **Severity**: MEDIUM
+- **Effort**: 2-3 hours
 
 ## Quick Wins
 
-### 1. Add Trivy Container Scanning (1-2 hours)
-Add to `.github/workflows/build-image-pr.yml`:
-```yaml
-- name: Run Trivy vulnerability scanner
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: 'quay.io/opendatahub/model-registry:${{ steps.tags.outputs.tag }}'
-    format: 'table'
-    exit-code: '1'
-    severity: 'CRITICAL,HIGH'
-```
+### 1. Add Concurrency Control (30 minutes)
+Add to every workflow that runs on PRs:
 
-### 2. Add CodeQL Analysis (1-2 hours)
-Create `.github/workflows/codeql.yml`:
-```yaml
-name: CodeQL
-on: [push, pull_request]
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        language: [go, python]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: ${{ matrix.language }}
-      - uses: github/codeql-action/autobuild@v3
-      - uses: github/codeql-action/analyze@v3
-```
-
-### 3. Add Concurrency Control (30 minutes)
-Add to each PR-triggered workflow:
 ```yaml
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 ```
 
-### 4. Add Coverage Thresholds (1 hour)
-Create `.codecov.yml`:
+### 2. Add Go Module Caching (30 minutes)
+Add to `build.yml` after the Go setup step:
+
 ```yaml
-coverage:
-  status:
-    project:
-      default:
-        target: 50%
-    patch:
-      default:
-        target: 70%
+- uses: actions/cache@v4
+  with:
+    path: ~/go/pkg/mod
+    key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+    restore-keys: ${{ runner.os }}-go-
 ```
 
-### 5. Add Secret Detection (1 hour)
-Add to `.pre-commit-config.yaml`:
+### 3. Add Trivy Container Scanning (1-2 hours)
+Add to `build-image-pr.yml` after image build:
+
 ```yaml
-- repo: https://github.com/gitleaks/gitleaks
-  rev: v8.18.1
-  hooks:
-    - id: gitleaks
+- name: Run Trivy vulnerability scanner
+  uses: aquasecurity/trivy-action@master
+  with:
+    image-ref: "quay.io/opendatahub/model-registry:${{ steps.tags.outputs.tag }}"
+    format: 'sarif'
+    output: 'trivy-results.sarif'
+    severity: 'CRITICAL,HIGH'
+    exit-code: '1'
+```
+
+### 4. Create .golangci.yaml (1-2 hours)
+```yaml
+run:
+  timeout: 5m
+linters:
+  enable:
+    - errcheck
+    - gosec
+    - govet
+    - staticcheck
+    - unused
+    - bodyclose
+    - gocritic
+    - gofmt
+    - goimports
+```
+
+### 5. Build Dockerfile.odh in PR Workflow (1-2 hours)
+Add a parallel job to `build-image-pr.yml`:
+
+```yaml
+build-odh-image:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - name: Build ODH Image
+      run: docker build . -f Dockerfile.odh -t model-registry-odh:test
 ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows Inventory** (6 workflows):
+**Workflows (6 total)**:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `build.yml` | push(main), PR | Go build, lint, unit tests, codecov upload |
-| `build-image-pr.yml` | PR | Docker image build + Kind cluster deployment |
-| `run-robot-tests.yaml` | push(*), PR | Robot Framework E2E tests via docker-compose |
-| `python-tests.yml` | push(main), PR | Python lint, mypy, tests, docs-build via Nox |
-| `build-and-push-image.yml` | push(main), tags | Build & push production image to Quay |
-| `python-release.yml` | tags(py-v*) | Publish Python client to PyPI |
+| `build.yml` | push (main), PR | Go build, lint, test, coverage upload |
+| `build-image-pr.yml` | PR | Build image, deploy to Kind cluster, test operator |
+| `build-and-push-image.yml` | push (main, tags) | Build and push image to Quay.io |
+| `python-tests.yml` | push (main), PR | Python lint, tests, mypy, docs-build (matrix) |
+| `run-robot-tests.yaml` | push (all), PR | Robot Framework E2E tests |
+| `python-release.yml` | tag (py-v*), manual | Publish Python package to PyPI |
 
 **Strengths**:
-- PR workflows cover build, test, image build, and deployment validation
+- Good workflow separation (build, test, deploy, release)
+- Image build and Kind cluster deployment testing on PRs is excellent
+- Python matrix strategy covers lint, tests, mypy, docs across Python 3.9 and 3.10
 - Robot Framework tests run in both REST and Python modes
-- Python workflows use a proper matrix (lint, tests, mypy, docs-build)
-- Image PR workflow deploys to Kind and validates operator interaction
 
-**Gaps**:
-- No concurrency control on any workflow — rapid pushes waste CI resources
-- No Go dependency caching (`actions/cache` or `setup-go` cache)
-- No workflow status badges referenced
-- No scheduled/periodic test runs (nightly E2E, etc.)
+**Weaknesses**:
+- No concurrency control on any workflow
+- No dependency caching (Go modules, Python pip)
+- Single Go version (1.19, EOL)
+- `paths-ignore` patterns are inconsistent across workflows
+- No workflow dependency between build and image-pr (image-pr could pass while build fails)
+- Robot Framework tests trigger on `push` to all branches, which is overly broad
 
 ### Test Coverage
 
-**Go Tests** (4 files, 4,686 lines):
-- `pkg/core/core_test.go` — Uses `testify/suite` and testcontainers to spin up real ML Metadata server. Tests CRUD operations for RegisteredModel, ModelVersion, ModelArtifact, ServingEnvironment, InferenceService, ServeModel. This is **the most comprehensive test file** — 3,381 lines.
-- `internal/converter/` — Tests for OpenAPI-to-MLMD conversion (1,017 lines total)
-- `internal/mapper/mapper_test.go` — Tests entity mapping (288 lines)
+**Go Tests (4,686 lines across 4 files)**:
 
-**Python Tests** (5 test files):
-- `clients/python/tests/test_core.py` — Core client tests
-- `clients/python/tests/test_client.py` — Client API tests
-- `clients/python/tests/store/test_wrapper.py` — Store wrapper tests
-- `clients/python/tests/types/test_context_mapping.py` — Context mapping
-- `clients/python/tests/types/test_artifact_mapping.py` — Artifact mapping
-- Uses `testcontainers` and `pytest-cov`
+| Test File | Lines | Package | Type |
+|-----------|-------|---------|------|
+| `pkg/core/core_test.go` | 3,381 | core | Integration (Testcontainers) |
+| `internal/converter/mlmd_converter_util_test.go` | 852 | converter | Unit |
+| `internal/mapper/mapper_test.go` | 288 | mapper | Unit |
+| `internal/converter/openapi_converter_test.go` | 165 | converter | Unit |
 
-**Robot Framework Tests** (2 test suites):
-- `test/robot/UserStory.robot` — User story acceptance tests (store name, description, documentation)
-- `test/robot/MRandLogicalModel.robot` — Logical mapping between MR and MLMD entities
-- Custom Python libraries: `ModelRegistry.py` (REST/Python dual-mode) and `MLMetadata.py`
-- Runs against `docker-compose-local.yaml` (locally built image)
+- Uses `testify/suite` for test organization
+- `Testcontainers-go` for spinning up real MLMD gRPC server
+- Core test suite (3,381 lines) is comprehensive for the main business logic
+- Test-to-code ratio: 4,686 test lines / 7,657 source lines = **0.61:1** (including generated code)
+- Excluding generated/server code: ~2,500 hand-written source lines, making the ratio ~**1.87:1** for covered packages
 
-**Test-to-Code Ratio**: ~4.5% (4 Go test files / 89 Go source files). This is significantly below the recommended 30-50%.
+**Python Tests (7 files, ~700+ lines)**:
+- pytest with coverage via `pytest-cov`
+- Tests cover core, client, store wrapper, and type mappings
+- `conftest.py` provides shared fixtures
+- Coverage configuration in `pyproject.toml` with branch coverage
+
+**Robot Framework E2E (2 files, 131 lines)**:
+- `MRandLogicalModel.robot`: Tests logical mapping between MR entities and MLMD entities
+- `UserStory.robot`: User story acceptance tests (store model name, description, documentation)
+- Runs against docker-compose with local image build
+- Tests both REST API and Python client modes
 
 ### Code Quality
 
-**Linting**:
-- `golangci-lint` v1.54.2 is installed via Makefile but **no `.golangci.yml` config file** exists — using default linters only
-- Lint runs on `main.go`, `cmd/...`, `internal/...`, `./pkg/...` separately
-- Python: `ruff` configured in pre-commit hooks for linting and formatting
+**Go**:
+- `golangci-lint v1.54.2` (Oct 2023, outdated)
+- No `.golangci.yaml` config — default linters only
+- Lint runs on specific paths: `main.go`, `cmd/...`, `internal/...`, `./pkg/...`
+- `go vet` runs as part of build
 
-**Pre-commit Hooks** (`.pre-commit-config.yaml`):
-- Good set of hooks: check-large-files, check-ast, check-json, check-merge-conflict, detect-private-key, end-of-file-fixer, trailing-whitespace
-- Ruff linting + formatting for Python
-- yamlfmt for YAML files
-- **Missing**: Go linting, secret detection, commit message validation
+**Python**:
+- **ruff** with 13 rule categories: pyflakes, pydocstyle, bugbear, bandit, comprehensions, errmsg, isort, pytest, quotes, return, simplify, pyupgrade, mccabe
+- **mypy** for type checking
+- **ruff-format** for formatting
+- Complexity threshold: mccabe max_complexity = 8
+- Test-specific rule relaxation for docstrings
 
-**Static Analysis**:
-- `go vet` runs as part of the build process
-- Python `mypy` runs in CI via Nox session
-- **Missing**: CodeQL, gosec, Semgrep, or any SAST tool
+**Pre-commit Hooks**:
+- check-added-large-files, check-ast, check-case-conflict, check-docstring-first
+- check-executables-have-shebangs, check-json, check-merge-conflict
+- check-symlinks, debug-statements, detect-private-key
+- end-of-file-fixer, trailing-whitespace
+- ruff (lint + fix), ruff-format
+- yamlfmt
 
 ### Container Images
 
 **Dockerfiles**:
-- `Dockerfile` — Full build: downloads protoc, npm, java, runs `make clean model-registry`. Multi-stage with UBI8 base.
-- `Dockerfile.odh` — Simplified ODH build: `make clean/odh build/odh`, no codegen tools needed. Multi-stage with UBI8 base.
-- Both use `registry.access.redhat.com/ubi8/ubi-minimal:8.8` as runtime base
-- Non-root user (`65532:65532`) in production image
 
-**PR Image Testing**:
-- `build-image-pr.yml` builds the image, loads it into a Kind cluster, deploys the model-registry-operator, and waits for the ModelRegistry CR to become Available
-- This validates the image can start and respond to the operator
-- **Missing**: No explicit health check validation, no HTTP readiness probing, no functional smoke test after deployment
+| File | Base (build) | Base (runtime) | Purpose |
+|------|-------------|----------------|---------|
+| `Dockerfile` | `ubi8/go-toolset:1.19` | `ubi8/ubi-minimal:8.8` | Full build with codegen (protoc, npm, openapi-generator) |
+| `Dockerfile.odh` | `ubi8/go-toolset:1.19` | `ubi8/ubi-minimal:8.8` | Simplified build without codegen |
 
-**Security Scanning**:
-- **None** — No Trivy, Snyk, or any vulnerability scanning
-- **No SBOM generation**
-- **No image signing or attestation**
+**Strengths**:
+- Multi-stage builds (builder + minimal runtime)
+- UBI base images (Red Hat validated)
+- Non-root user (65532:65532)
+- Layer caching with `go mod download` first
 
-### Security Practices
+**Weaknesses**:
+- Single architecture (amd64 only)
+- No HEALTHCHECK instruction
+- No SBOM generation
+- No image signing/attestation
+- `ubi8/ubi-minimal:8.8` is pinned to a specific minor version — may miss security patches
+- Node.js installation via yum in Dockerfile is not minimal (installs full Node + npm + Java)
 
-| Practice | Status |
-|----------|--------|
-| Container scanning (Trivy/Snyk) | Not configured |
-| SAST (CodeQL/gosec) | Not configured |
-| Dependency scanning | Not configured |
-| Secret detection (Gitleaks) | Not configured (only detect-private-key in pre-commit) |
-| SBOM generation | Not configured |
-| Image signing | Not configured |
-| Non-root container | Configured (USER 65532:65532) |
-| Pinned base images | Partially (ubi8-minimal:8.8 pinned, go-toolset:1.19 pinned) |
+### Security
+
+**Current State**: Minimal
+
+| Check | Status |
+|-------|--------|
+| Container vulnerability scanning (Trivy/Snyk) | Not present |
+| SAST/CodeQL | Not present |
+| Dependency scanning | Not present (dependabot.yml referenced but not found) |
+| Secret detection (Gitleaks) | Not present |
+| Pre-commit secret detection | `detect-private-key` only |
+| Python security linting | flake8-bandit (S rules) via ruff |
+| Go security linting | Not present (no gosec) |
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: None — no test type rules exist
+- **Coverage**: No test type rules exist
 - **Quality**: N/A
-- **Gaps**: All test types need rules:
-  - Unit test patterns with testcontainers
-  - Robot Framework test conventions
-  - Python test patterns (pytest + testcontainers)
-  - OpenAPI code generation workflow
-  - Converter/mapper test patterns
-- **Recommendation**: Generate rules with `/test-rules-generator` to cover Go unit tests (testcontainers pattern), Robot Framework E2E tests, and Python client tests
+- **Gaps**: Complete absence of agent rules
+  - No CLAUDE.md or AGENTS.md in root
+  - No `.claude/` directory
+  - No `.claude/rules/` for test creation guidance
+  - No `.claude/skills/` for custom skills
+- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` to cover:
+  - Go integration test patterns (Testcontainers, testify/suite)
+  - Python pytest patterns with fixtures
+  - Robot Framework E2E test patterns
+  - OpenAPI-generated code testing guidelines
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add container security scanning** — Integrate Trivy into PR and push workflows to scan images for vulnerabilities
-2. **Add SAST/CodeQL analysis** — Enable CodeQL for Go and Python to catch security bugs statically
-3. **Add secret detection** — Configure Gitleaks as both a pre-commit hook and CI workflow step
+1. **Add container vulnerability scanning** — Integrate Trivy or Snyk into both PR and merge workflows. Set `exit-code: 1` for HIGH/CRITICAL to gate merges. (4-6 hours)
+
+2. **Upgrade Go from 1.19 to 1.22+** — Update `go.mod`, both Dockerfiles (`ubi8/go-toolset:1.22`), and `build.yml`. Test against Go 1.22 and 1.23 in a matrix. (4-8 hours)
+
+3. **Add tests for untested packages** — Prioritize `cmd/` (CLI smoke tests), `pkg/api/` (interface contract tests), and `internal/apiutils/` (utility function unit tests). (16-24 hours)
 
 ### Priority 1 (High Value)
 
-4. **Increase Go unit test coverage** — Add tests for `internal/server/`, `internal/apiutils/`, `internal/mlmdtypes/`, `internal/constants/`, and `cmd/` packages
-5. **Add coverage thresholds** — Create `.codecov.yml` with project (50%) and patch (70%) targets
-6. **Add concurrency control** — Prevent redundant CI runs on rapid pushes to save compute
-7. **Create `.golangci.yml`** — Configure extended linter set (errcheck, gocritic, goconst, gocognit, etc.)
-8. **Create agent rules** — Add `.claude/rules/` with test creation guidance for Go, Python, and Robot Framework
+4. **Add concurrency control and caching** — Add `concurrency:` block to all PR workflows. Add Go module and Python pip caching. (2-3 hours)
+
+5. **Create `.golangci.yaml`** — Enable errcheck, gosec, staticcheck, unused, bodyclose, gocritic, gofmt, goimports. Pin golangci-lint version in Makefile. (2-3 hours)
+
+6. **Add CodeQL or gosec SAST** — Create a `.github/workflows/codeql.yml` for Go security analysis. Alternatively, add gosec to the golangci-lint configuration. (2-4 hours)
+
+7. **Test Dockerfile.odh on PRs** — Add a job in `build-image-pr.yml` that builds `Dockerfile.odh` to catch ODH-specific build breakage. (1-2 hours)
 
 ### Priority 2 (Nice-to-Have)
 
-9. **Multi-architecture builds** — Support both amd64 and arm64 for development and production
-10. **SBOM generation** — Generate Software Bill of Materials for compliance
-11. **Image signing/attestation** — Add cosign for supply chain security
-12. **API contract tests** — Validate the OpenAPI spec against actual server responses
-13. **Performance testing** — Load test the REST proxy under concurrent usage
-14. **Dependency update automation** — Add Dependabot or Renovate for Go and Python dependencies
+8. **Create agent rules for test creation** — Use `/test-rules-generator` to generate `.claude/rules/` covering Go (Testcontainers, testify), Python (pytest, fixtures), and Robot Framework patterns. (2-3 hours)
+
+9. **Add multi-architecture image builds** — Use `docker buildx` with platforms `linux/amd64,linux/arm64` for broader deployment compatibility. (4-6 hours)
+
+10. **Add SBOM generation** — Use Syft or Trivy to generate SBOM during image build. Attach as build artifact. (2-3 hours)
+
+11. **Add API contract tests** — Validate that the Python client SDK correctly consumes the OpenAPI spec and the Go server correctly implements it. (8-12 hours)
+
+12. **Enable dependabot.yml** — Create `.github/dependabot.yml` for Go modules, Python pip, and GitHub Actions. Currently referenced in `paths-ignore` but does not exist. (1 hour)
+
+13. **Add coverage thresholds** — Configure Codecov to require minimum coverage percentage and fail PRs that reduce coverage. Create `.codecov.yml` with target thresholds. (1-2 hours)
 
 ## Comparison to Gold Standards
 
-| Dimension | model-registry-bf4-kf | odh-dashboard (gold) | notebooks (gold) | kserve (gold) |
-|-----------|----------------------|---------------------|-------------------|---------------|
-| Unit Tests | 6.5 — Low ratio | 9.0 — Comprehensive | 7.0 — Focused | 9.0 — High coverage |
-| Integration/E2E | 7.0 — Robot + Kind | 9.0 — Multi-layer | 8.0 — 5-layer | 9.0 — Multi-version |
-| Build Integration | 5.5 — Kind deploy | 8.0 — Konflux sim | 7.0 — CI builds | 8.0 — Full matrix |
-| Image Testing | 5.0 — Kind load only | 8.0 — Runtime checks | 9.0 — 5-layer validation | 7.0 — Functional |
-| Coverage Tracking | 6.5 — Codecov, no thresholds | 9.0 — Enforced | 6.0 — Basic | 9.0 — Strict thresholds |
-| CI/CD Automation | 6.0 — Good but basic | 9.0 — Optimized | 8.0 — Multi-arch | 9.0 — Matrix CI |
-| Security Scanning | 0.0 — None | 8.0 — Trivy + SAST | 7.0 — Trivy | 8.0 — CodeQL + Trivy |
-| Agent Rules | 0.0 — None | 8.0 — Comprehensive | 3.0 — Basic | 2.0 — Minimal |
+| Dimension | model-registry-bf4-kf | odh-dashboard | notebooks | kserve |
+|-----------|----------------------|---------------|-----------|--------|
+| Unit Tests | 6/10 | 9/10 | 7/10 | 9/10 |
+| Integration/E2E | 7/10 | 9/10 | 8/10 | 9/10 |
+| Build Integration | 5/10 | 8/10 | 9/10 | 7/10 |
+| Image Testing | 4/10 | 7/10 | 9/10 | 7/10 |
+| Coverage Tracking | 7/10 | 9/10 | 6/10 | 9/10 |
+| CI/CD Automation | 5/10 | 9/10 | 8/10 | 8/10 |
+| Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
+| **Overall** | **5.8/10** | **8.7/10** | **7.5/10** | **7.9/10** |
+
+### Key Gaps vs. Gold Standards
+
+- **vs. odh-dashboard**: Missing contract testing, comprehensive agent rules, multi-layer test strategy, coverage enforcement thresholds
+- **vs. notebooks**: Missing image testing strategy (5-layer validation), multi-architecture support, vulnerability scanning
+- **vs. kserve**: Missing coverage enforcement, multi-version Go testing, webhook/CRD validation tests
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/build.yml` — Go build, lint, test, codecov
-- `.github/workflows/build-image-pr.yml` — PR image build + Kind deployment
+- `.github/workflows/build.yml` — Go build, lint, test, coverage
+- `.github/workflows/build-image-pr.yml` — PR image build + Kind deploy
+- `.github/workflows/build-and-push-image.yml` — Push image to Quay
+- `.github/workflows/python-tests.yml` — Python lint, test, mypy
 - `.github/workflows/run-robot-tests.yaml` — Robot Framework E2E
-- `.github/workflows/python-tests.yml` — Python client CI
-- `.github/workflows/build-and-push-image.yml` — Production image push
 - `.github/workflows/python-release.yml` — PyPI release
 
 ### Testing
 - `pkg/core/core_test.go` — Core business logic tests (3,381 lines)
-- `internal/converter/*_test.go` — Converter unit tests
-- `internal/mapper/mapper_test.go` — Mapper unit tests
+- `internal/converter/mlmd_converter_util_test.go` — MLMD converter tests
+- `internal/mapper/mapper_test.go` — Mapper tests
+- `internal/converter/openapi_converter_test.go` — OpenAPI converter tests
 - `internal/testutils/test_container_utils.go` — Testcontainers setup
-- `test/robot/` — Robot Framework E2E suite
-- `clients/python/tests/` — Python client tests
+- `clients/python/tests/` — Python client test suite
+- `test/robot/` — Robot Framework E2E tests
+- `test/python/test_mlmetadata.py` — MLMD Python tests
 
-### Build
-- `Dockerfile` — Full build with codegen
+### Code Quality
+- `.pre-commit-config.yaml` — Pre-commit hooks (ruff, yamlfmt, standard)
+- `Makefile` — Build targets (test, lint, build, image)
+- `clients/python/pyproject.toml` — Python ruff, mypy, coverage config
+- `clients/python/noxfile.py` — Nox session definitions
+
+### Container Images
+- `Dockerfile` — Full build with code generation
 - `Dockerfile.odh` — Simplified ODH build
-- `docker-compose.yaml` — Local development stack
-- `docker-compose-local.yaml` — Local build + test stack
-- `Makefile` — Build, test, lint targets
+- `docker-compose.yaml` — Production-like compose
+- `docker-compose-local.yaml` — Local development compose
 - `scripts/build_deploy.sh` — Image build and push script
 
-### Configuration
-- `.pre-commit-config.yaml` — Pre-commit hooks (ruff, yamlfmt, checks)
-- `api/openapi/model-registry.yaml` — OpenAPI v3 spec
-- `go.mod` — Go dependencies
-- `clients/python/pyproject.toml` — Python client config
-- `manifests/kustomize/` — Kubernetes deployment manifests
+### API
+- `api/openapi/model-registry.yaml` — OpenAPI specification
+- `pkg/openapi/` — Generated OpenAPI client
+- `internal/server/openapi/` — Generated OpenAPI server

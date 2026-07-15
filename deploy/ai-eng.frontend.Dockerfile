@@ -8,6 +8,9 @@ ARG CORE_TAG=latest
 # Stage 1: Build with all AI Eng modules
 FROM quay.io/org-pulse/org-pulse-core-frontend-builder:${CORE_TAG} AS build
 
+# Install AI Eng-specific frontend dependencies (core deps already present)
+RUN npm install --no-save mermaid @dagrejs/dagre @vue-flow/core @vue-flow/background @vue-flow/controls @vue-flow/minimap
+
 # Add platform customizations
 COPY platform/ ./platform/
 

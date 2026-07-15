@@ -9,9 +9,9 @@ const {
 function makeStorage(initialFiles = {}) {
   const files = { ...initialFiles }
   return {
-    readFromStorage(key) { return files[key] || null },
-    writeToStorage(key, data) { files[key] = data },
-    listStorageFiles(dir) {
+    async readFromStorage(key) { return files[key] || null },
+    async writeToStorage(key, data) { files[key] = data },
+    async listStorageFiles(dir) {
       const prefix = dir + '/'
       return Object.keys(files)
         .filter(k => k.startsWith(prefix))

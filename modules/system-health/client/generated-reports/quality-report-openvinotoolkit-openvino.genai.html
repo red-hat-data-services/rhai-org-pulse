@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on May 28, 2026 at 09:28 PM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 03:34 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">openvinotoolkit/openvino.genai</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="158.336136"
+                                stroke-dashoffset="135.71668799999998"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.2</div>
+                        <div class="score-value">7.6</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Strong C++ unit tests with GTest; comprehensive Python pytest suite with markers; ~87 test files against ~404 source files</div>
+                            <div class="scorecard-status">92 test files across Python/C++/JS with pytest, Google Test, and Jest; strong model coverage but no code coverage tracking</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Extensive sample-level E2E tests across LLM, Whisper, VLM, Image Gen, RAG, Video Gen; Smart CI selectively runs relevant suites</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Extensive model pipeline tests covering LLM, VLM, ASR, TTS, image/video generation across multiple transformer versions</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Multi-platform PR builds (Linux, macOS, Windows, Manylinux); CMake + wheel builds; sample compilation validated; no Konflux simulation</div>
+                            <div class="scorecard-status">Multi-platform PR builds (Linux/Mac/Windows) with Smart CI and sccache; no container image build or Konflux simulation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">No Dockerfiles in repo; no container image builds or runtime validation; relies on external pre-built Docker images</div>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">No Dockerfile, no container image builds, no image runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No codecov/coveralls integration; no coverage thresholds; no PR coverage reporting; no coverage generation in CI</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No codecov, coveralls, or any coverage measurement; no coverage thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">11 workflows with Smart CI, concurrency control, sccache/ccache, multi-Python matrix, Dependabot, proper OSSF permissions</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Excellent CI with Smart CI component-based filtering, concurrency control, sccache, cross-platform PR testing, automated rerunner</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, .claude/ directory, or AI agent guidance; no test creation rules for automated agents</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules for test creation</div>
                         </div>
                     </div>
                 </div>
@@ -412,34 +412,34 @@
                         
                         <li class="item-card high">
                             <div class="item-description">No code coverage tracking or enforcement</div>
-                            <p>Cannot measure test completeness; regressions in coverage go undetected; no visibility into untested code paths</p>
+                            <p>Cannot measure test effectiveness or prevent coverage regression; untested code paths unknown</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">No container image testing</div>
-                            <p>No Dockerfiles in repo means no reproducible build environment; runtime validation depends entirely on pre-built external images</p>
+                        <li class="item-card medium">
+                            <div class="item-description">No container image testing pipeline</div>
+                            <p>Downstream consumers building container images get no upstream validation; runtime issues discovered late</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">8-16 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No AI agent rules or test automation guidance</div>
-                            <p>AI-assisted development cannot leverage project-specific testing patterns; inconsistent AI-generated tests</p>
+                        <li class="item-card high">
+                            <div class="item-description">No CodeQL or SAST integration on PRs</div>
+                            <p>C++ security vulnerabilities and code quality issues not caught by static analysis</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No SAST/CodeQL integration</div>
-                            <p>Missing automated security analysis for C++ code vulnerabilities; Coverity only runs daily/manual, not on every PR</p>
+                        <li class="item-card low">
+                            <div class="item-description">No agent rules for AI-assisted test creation</div>
+                            <p>AI-generated tests lack project-specific patterns, leading to inconsistent test quality</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag severity-low">LOW</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +456,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add codecov integration with coverage generation</div>
-                            <p>Immediate visibility into test coverage; PR-level coverage delta reporting; coverage threshold enforcement</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add CodeQL workflow for C++ and Python</div>
-                            <p>Free automated SAST on every PR; catches security issues earlier than daily Coverity scans</p>
+                            <div class="item-description">Add CodeQL analysis workflow for C++ and Python</div>
+                            <p>Automated security vulnerability detection on every PR for C++ (primary language) and Python</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create CLAUDE.md with test creation rules</div>
-                            <p>Guide AI agents to produce consistent, high-quality tests following project conventions</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Dockerfile for development/CI reproducibility</div>
-                            <p>Reproducible builds outside of OpenVINO&#x27;s private Azure container registry</p>
+                            <div class="item-description">Add gcov/llvm-cov coverage collection and Codecov upload</div>
+                            <p>Visibility into test coverage with PR-level coverage reporting</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add Gitleaks secret detection to pre-commit</div>
+                            <p>Prevent accidental secret leaks in commits</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create CLAUDE.md with test creation guidelines</div>
+                            <p>Enable AI agents to generate project-consistent tests</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +501,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Implement code coverage tracking with codecov/coveralls and enforce minimum thresholds on PRs</li><li>Add CodeQL or similar SAST tool running on every PR for C++ and Python code</li></ul>
+                            <ul><li>Integrate code coverage measurement (gcov for C++, coverage.py for Python) and upload to Codecov with PR comments</li><li>Add CodeQL workflow for C++ and Python SAST analysis on every PR</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Create comprehensive CLAUDE.md and .claude/rules/ for AI-assisted test generation</li><li>Add public Dockerfiles for local development and CI reproducibility</li><li>Add C++ code coverage via gcov/llvm-cov integrated with the CMake build</li></ul>
+                            <ul><li>Add Gitleaks or TruffleHog secret scanning to pre-commit hooks</li><li>Create agent rules (.claude/rules/) for test creation patterns across C++, Python, and JS</li><li>Add SBOM generation for release artifacts</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add performance regression testing for inference latency benchmarks</li><li>Add contract tests between Python/C++/JS API boundaries</li><li>Consider adding fuzz testing for parser and tokenizer components</li></ul>
+                            <ul><li>Add container image build and validation workflow for downstream consumers</li><li>Add performance regression benchmarking in CI</li><li>Implement fuzz testing for parser and tokenizer components</li></ul>
                         </div>
                     </div>
                 </div>

@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:00 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:31 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/rhoai-observability-mcp</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="175.30072199999995"
+                                stroke-dashoffset="147.026412"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">6.9</div>
+                        <div class="score-value">7.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">112 tests across 19 files, near 1:1 test-to-code ratio, multi-Python matrix (3.11-3.13)</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Exceptional 1:1 test-to-code ratio with 112 tests across 19 files covering all modules</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Kind-based E2E validates deployment and Prometheus scraping; smoke tests require manual cluster access</div>
+                            <div class="scorecard-status">Kind-based E2E with Prometheus verification; path-filtered, no integration test suite</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">PR-time Docker build and Kustomize validation; no Konflux simulation</div>
+                            <div class="scorecard-status">PR-time container build (build-only, no push); no Konflux simulation or image startup test</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Multi-stage UBI9 build with attestation but no vulnerability scanning, SBOM, or multi-arch</div>
+                            <div class="scorecard-status">Multi-stage Containerfile with UBI9 base; no runtime validation, no vulnerability scanning</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Codecov integration present but fail_ci_if_error is false and no threshold enforcement</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Codecov integration with multi-version matrix; no enforcement threshold in CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">3 well-organized workflows with concurrency control, path filters, and matrix testing</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Well-structured 3-workflow CI with concurrency control, Buildx caching, provenance attestation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, .claude/ directory, or AI agent test guidance; only human-oriented TESTING.md</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No CLAUDE.md, .claude/ directory, or agent rules present</div>
                         </div>
                     </div>
                 </div>
@@ -412,34 +412,42 @@
                         
                         <li class="item-card high">
                             <div class="item-description">No container vulnerability scanning</div>
-                            <p>CVEs in base image or dependencies go undetected until deployment</p>
+                            <p>CVEs in base images or dependencies go undetected until downstream scanning</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No coverage threshold enforcement</div>
-                            <p>Coverage can regress silently; Codecov errors are ignored</p>
+                            <div class="item-description">No coverage enforcement threshold in CI</div>
+                            <p>Coverage can regress silently — fail_ci_if_error is false on codecov upload</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No SAST or dependency scanning</div>
-                            <p>Security vulnerabilities in code and dependencies not detected pre-merge</p>
+                            <div class="item-description">No security scanning (SAST/secret detection)</div>
+                            <p>Vulnerabilities and leaked secrets not caught in PR workflow</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">E2E tests don&#x27;t validate MCP tool functionality</div>
-                            <p>Deployment works but individual tools could be broken without detection</p>
+                            <div class="item-description">Documented smoke_test.py does not exist</div>
+                            <p>TESTING.md references a smoke test file that was never committed — misleading documentation</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">0.5 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No agent rules for AI-assisted development</div>
+                            <p>AI agents have no guidance on test patterns, architecture, or quality standards</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +464,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to container-build workflow</div>
-                            <p>Catches CVEs in base images and Python dependencies before merge</p>
+                            <div class="item-description">Add Trivy container scanning to CI</div>
+                            <p>Catch CVEs in UBI9 base image and Python dependencies before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Enforce coverage threshold via pytest --cov-fail-under=80</div>
-                            <p>Prevents coverage regression; matches TESTING.md recommendation</p>
+                            <div class="item-description">Enforce coverage threshold in pytest (--cov-fail-under=80)</div>
+                            <p>Prevent coverage regressions on every PR</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">30 minutes</span>
+                                <span class="meta-tag effort-tag">0.5 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add pre-commit hooks for ruff and mypy</div>
-                            <p>Catches linting/type issues before push, faster feedback loop</p>
+                            <div class="item-description">Add CodeQL or Semgrep SAST workflow</div>
+                            <p>Automated detection of injection vulnerabilities and insecure patterns</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create basic CLAUDE.md with test patterns</div>
-                            <p>AI agents generate consistent, high-quality tests matching project conventions</p>
+                            <div class="item-description">Create the missing smoke_test.py or remove docs reference</div>
+                            <p>Eliminate documentation/code drift</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">0.5 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add pre-commit hooks for ruff check + format</div>
+                            <p>Catch lint/format issues before commit, reducing CI feedback loop</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add Trivy or Snyk container scanning to the container-build workflow</li><li>Enforce coverage thresholds in CI (--cov-fail-under=80) and set fail_ci_if_error: true in Codecov</li><li>Add CodeQL or Semgrep SAST scanning workflow</li></ul>
+                            <ul><li>Add Trivy or Grype container scanning to PR and push workflows</li><li>Enforce pytest --cov-fail-under=80 in CI (already documented in TESTING.md)</li><li>Add CodeQL or Semgrep security scanning workflow</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add functional E2E tests that exercise MCP tools against mock backends in Kind</li><li>Create .claude/rules/ with unit and E2E test patterns for AI agent consistency</li><li>Add multi-architecture builds (amd64 + arm64)</li><li>Add dependency scanning (Dependabot or Renovate) for Python packages</li></ul>
+                            <ul><li>Add image startup/health-check validation in Kind E2E (currently only checks HTTP reachability)</li><li>Create integration test suite for live-backend scenarios (marked with @pytest.mark.integration)</li><li>Add dependency scanning (Dependabot or Renovate)</li><li>Generate SBOM for container images</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SBOM generation to container builds</li><li>Add pre-commit hooks configuration</li><li>Add integration tests for backend error handling with realistic scenarios</li><li>Add health check endpoint (HTTP GET) instead of TCP socket probes</li></ul>
+                            <ul><li>Create CLAUDE.md and .claude/rules/ for AI-assisted development patterns</li><li>Add multi-architecture builds (arm64 alongside amd64)</li><li>Implement the documented smoke_test.py for live cluster validation</li><li>Add Gitleaks secret detection to CI</li></ul>
                         </div>
                     </div>
                 </div>

@@ -66,6 +66,11 @@
         "key": "SMARTSHEET_API_TOKEN",
         "description": "SmartSheet API token for release discovery",
         "required": false
+      },
+      {
+        "key": "DRAFT_PLANS_GITLAB_TOKEN",
+        "description": "GitLab PAT for draft plans data fetching (overrides GITLAB_TOKEN)",
+        "required": false
       }
     ]
   },

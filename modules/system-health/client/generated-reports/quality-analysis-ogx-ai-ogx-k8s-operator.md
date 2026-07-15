@@ -1,169 +1,155 @@
 ---
 repository: "ogx-ai/ogx-k8s-operator"
-overall_score: 7.6
+overall_score: 7.4
 scorecard:
   - dimension: "Unit Tests"
-    score: 8.5
-    status: "Strong unit test coverage with envtest, 28 test files covering controllers, API, deploy, and cluster packages"
-  - dimension: "Integration/E2E"
     score: 8.0
-    status: "Comprehensive E2E suite on Kind cluster with validation, creation, deletion, rollout, and TLS test suites"
+    status: "183 test functions, 0.81 test-to-code ratio, envtest integration, CEL + webhook tests"
+  - dimension: "Integration/E2E"
+    score: 9.0
+    status: "Full E2E on PR with Kind cluster, operator deploy, validation/creation/deletion/TLS suites"
   - dimension: "Build Integration"
     score: 7.0
-    status: "E2E builds and deploys operator image on PR; no Konflux simulation but good PR-time validation"
+    status: "Multi-arch image built and deployed in E2E, FIPS compliance, dual K8s/OpenShift overlays"
   - dimension: "Image Testing"
-    score: 6.5
-    status: "Multi-arch builds (amd64/arm64) with FIPS support; no container vulnerability scanning or runtime validation"
+    score: 5.0
+    status: "Image deployed in E2E but no security scanning, SBOM, or vulnerability thresholds"
   - dimension: "Coverage Tracking"
-    score: 6.0
-    status: "limgo coverage tracking on PRs with per-package thresholds; no codecov/coveralls integration or enforcement gates"
+    score: 5.0
+    status: "limgo integrated but all thresholds set to 0 — no enforcement or PR coverage diff"
   - dimension: "CI/CD Automation"
-    score: 8.5
-    status: "Well-organized workflows with concurrency control, Mergify auto-merge, Dependabot, and SHA-pinned actions"
+    score: 9.0
+    status: "7 workflows, PR gates, Mergify auto-merge, SHA-pinned actions, release pipeline with E2E gates"
   - dimension: "Agent Rules"
-    score: 0.0
-    status: "No CLAUDE.md, .claude/ directory, or agent rules present"
+    score: 7.0
+    status: "Comprehensive CLAUDE.md with architecture docs but no .claude/rules/ for test patterns"
 critical_gaps:
-  - title: "No container vulnerability scanning"
-    impact: "CVEs in base images or dependencies not detected before deployment"
+  - title: "No container security scanning (Trivy/Snyk/Grype)"
+    impact: "Vulnerabilities in UBI9 base image and Go dependencies undetected until production"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No SAST/CodeQL integration"
-    impact: "Static security vulnerabilities not caught in CI pipeline"
+  - title: "Coverage thresholds set to 0 — no enforcement"
+    impact: "Coverage can silently regress on any PR without detection"
     severity: "HIGH"
     effort: "2-3 hours"
+  - title: "No SAST/CodeQL integration"
+    impact: "Security vulnerabilities in Go code not caught during development"
+    severity: "MEDIUM"
+    effort: "2-3 hours"
   - title: "No SBOM generation or image signing"
-    impact: "Cannot verify supply chain integrity or track embedded dependencies"
+    impact: "Cannot verify supply chain integrity or audit dependencies in released images"
     severity: "MEDIUM"
     effort: "4-6 hours"
-  - title: "Coverage thresholds set to 0%"
-    impact: "Coverage tracking exists but does not enforce any minimum, allowing regressions"
-    severity: "MEDIUM"
-    effort: "1-2 hours"
-  - title: "No agent rules for AI-assisted development"
-    impact: "AI-generated code and tests lack project-specific quality guidance"
-    severity: "LOW"
-    effort: "3-4 hours"
 quick_wins:
   - title: "Add Trivy scanning to PR workflow"
     effort: "1-2 hours"
-    impact: "Early detection of container and dependency vulnerabilities on every PR"
-  - title: "Set meaningful coverage thresholds in .limgo.json"
-    effort: "30 minutes"
-    impact: "Prevent test coverage regressions; current global threshold is 0%"
-  - title: "Add CodeQL workflow for Go security analysis"
+    impact: "Immediate vulnerability visibility for container images and filesystem"
+  - title: "Set real limgo coverage thresholds based on current coverage"
     effort: "1-2 hours"
-    impact: "Automated detection of security vulnerabilities and code quality issues"
-  - title: "Create basic CLAUDE.md with test patterns"
-    effort: "2-3 hours"
-    impact: "Guide AI agents to produce consistent, project-aligned code and tests"
+    impact: "Prevent silent coverage regression on every PR"
+  - title: "Add Go module caching to CI workflows"
+    effort: "30 minutes"
+    impact: "Faster CI runs by caching downloaded Go dependencies"
+  - title: "Add CodeQL workflow for Go"
+    effort: "1-2 hours"
+    impact: "Automated SAST analysis on every PR"
 recommendations:
   priority_0:
-    - "Add container image vulnerability scanning (Trivy) to the PR and build workflows"
-    - "Set meaningful coverage thresholds in .limgo.json (current global thresholds are all 0%)"
-    - "Add CodeQL or gosec SAST scanning workflow"
+    - "Add container security scanning (Trivy) to PR and post-merge workflows"
+    - "Set real coverage thresholds in .limgo.json based on current per-package coverage"
   priority_1:
-    - "Add SBOM generation (Syft) and image signing (Cosign) to the build pipeline"
-    - "Create comprehensive agent rules (.claude/rules/) for unit, integration, and E2E test patterns"
-    - "Add secret detection (Gitleaks) to the pre-commit hooks"
-    - "Add concurrency control to code-coverage workflow"
+    - "Add CodeQL/SAST workflow for Go security analysis"
+    - "Add SBOM generation (Syft) and image signing (cosign) to release pipeline"
+    - "Create .claude/rules/ with test creation patterns for unit, integration, and E2E tests"
   priority_2:
-    - "Add performance/load testing for operator reconciliation loops"
-    - "Consider adding contract tests for API boundaries"
-    - "Add Prometheus metrics testing for the operator"
+    - "Add Go dependency caching to all CI workflows"
+    - "Add multi-distribution E2E coverage (currently only tests 'starter')"
+    - "Add concurrency control to code-coverage workflow"
+    - "Add Gitleaks secret scanning to CI pipeline"
 ---
 
 # Quality Analysis: ogx-k8s-operator
 
 ## Executive Summary
 
-- **Overall Score: 7.6/10**
-- **Repository Type**: Kubernetes Operator (Go, kubebuilder-based)
-- **Primary Language**: Go
-- **Key Strengths**: Excellent test-to-code ratio (1.13:1), comprehensive E2E suite with Kind cluster, strong pre-commit hooks, multi-arch builds with FIPS support, Mergify auto-merge with required checks
-- **Critical Gaps**: No container vulnerability scanning, no SAST integration, coverage thresholds set to 0%, no agent rules
-- **Agent Rules Status**: Missing
+- **Overall Score: 7.4/10**
+- **Repository Type**: Kubernetes operator (Go, kubebuilder/operator-sdk v4)
+- **CRD**: OGXServer (group `ogx.io`, version `v1beta1`)
+- **Key Strengths**: Excellent test-to-code ratio (0.81), automated E2E tests on every PR with Kind cluster, comprehensive pre-commit hooks with custom enforcement scripts, multi-arch builds with FIPS compliance, strong CLAUDE.md documentation
+- **Critical Gaps**: No container security scanning, coverage thresholds not enforced (set to 0), no SAST/CodeQL, no SBOM generation
+- **Agent Rules Status**: Present (comprehensive CLAUDE.md), but no `.claude/rules/` directory for test patterns
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 8.5/10 | Strong coverage with envtest, 28 test files, 8,176 test lines |
-| Integration/E2E | 8.0/10 | Comprehensive E2E on Kind: validation, creation, deletion, rollout, TLS |
-| **Build Integration** | **7.0/10** | **E2E builds + deploys image on PR; no Konflux simulation** |
-| Image Testing | 6.5/10 | Multi-arch (amd64/arm64) with FIPS; no vulnerability scanning |
-| Coverage Tracking | 6.0/10 | limgo on PRs but thresholds set to 0% |
-| CI/CD Automation | 8.5/10 | Well-organized with Mergify, Dependabot, concurrency control |
-| Agent Rules | 0.0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory |
-
-**Weighted Overall: 7.6/10**
+| Unit Tests | 8/10 | 183 test functions, 0.81 test-to-code ratio, envtest + CEL + webhook tests |
+| Integration/E2E | 9/10 | Full E2E suite on PR: Kind cluster, operator deploy, validation/creation/deletion/TLS |
+| Build Integration | 7/10 | Multi-arch image built + deployed in E2E, FIPS compliance, K8s + OpenShift overlays |
+| Image Testing | 5/10 | Image deployed in E2E but no security scanning, SBOM, or vulnerability thresholds |
+| Coverage Tracking | 5/10 | limgo integrated but thresholds at 0 — no enforcement or PR coverage diff |
+| CI/CD Automation | 9/10 | 7 workflows, PR gates, Mergify auto-merge, SHA-pinned actions, E2E-gated releases |
+| Agent Rules | 7/10 | Comprehensive CLAUDE.md with architecture docs; no .claude/rules/ test patterns |
 
 ## Critical Gaps
 
-### 1. No Container Vulnerability Scanning
-- **Impact**: CVEs in UBI9 base images, Go dependencies, or OpenSSL libraries are not detected until deployment
+### 1. No Container Security Scanning
+- **Impact**: Vulnerabilities in UBI9 base image and Go dependencies go undetected until production deployment
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Current State**: No Trivy, Snyk, or any scanner in CI workflows. The `secrets` grep hits are just registry credentials, not security scanning.
-- **Fix**: Add Trivy scanning step to the `code-coverage.yml` or a new dedicated workflow
+- **Details**: No Trivy, Snyk, Grype, or any container/filesystem scanning in any workflow. The Dockerfile uses `registry.access.redhat.com/ubi9/ubi-minimal:latest` and installs `openssl` via microdnf — these should be scanned for CVEs on every PR and release.
 
-### 2. No SAST/CodeQL Integration
-- **Impact**: Static security vulnerabilities (injection, path traversal, unsafe operations) not caught automatically
+### 2. Coverage Thresholds Not Enforced
+- **Impact**: Test coverage can silently regress on any PR without detection
 - **Severity**: HIGH
 - **Effort**: 2-3 hours
-- **Current State**: golangci-lint has some security linters enabled (govet, errcheck, errorlint) but no dedicated SAST tool
-- **Fix**: Add `.github/workflows/codeql.yml` for Go analysis
+- **Details**: `.limgo.json` has all thresholds set to 0 (statements: 0, lines: 0, branches: 0). While limgo is integrated and coverage is generated, the tool effectively acts as a reporter only — it will never fail a PR for low coverage. Current coverage should be measured and thresholds set to prevent regression.
 
-### 3. No SBOM Generation or Image Signing
-- **Impact**: Cannot verify supply chain integrity; no software bill of materials for compliance
+### 3. No SAST / CodeQL Integration
+- **Impact**: Security vulnerabilities in Go code (injection, unsafe operations, cryptographic issues) not caught during development
+- **Severity**: MEDIUM
+- **Effort**: 2-3 hours
+- **Details**: No CodeQL, gosec, or Semgrep workflow exists. For a Kubernetes operator managing deployments and handling TLS/CA certificates, static security analysis is important.
+
+### 4. No SBOM Generation or Image Signing
+- **Impact**: Cannot verify supply chain integrity or audit dependencies in released images
 - **Severity**: MEDIUM
 - **Effort**: 4-6 hours
-- **Current State**: Build pipeline produces and pushes multi-arch images but with no attestation
-- **Fix**: Add Syft for SBOM and Cosign for image signing in the build workflow
-
-### 4. Coverage Thresholds at 0%
-- **Impact**: Test coverage can regress freely; limgo runs but enforces nothing
-- **Severity**: MEDIUM
-- **Effort**: 30 minutes to 1 hour
-- **Current State**: `.limgo.json` has `"statements": 0, "lines": 0, "branches": 0`
-- **Fix**: Set thresholds based on current actual coverage (e.g., 60-70%)
-
-### 5. No Agent Rules
-- **Impact**: AI code generation tools produce tests and code without project-specific patterns
-- **Severity**: LOW
-- **Effort**: 3-4 hours
-- **Fix**: Create `.claude/rules/` with unit-tests.md, e2e-tests.md, controller-tests.md
+- **Details**: Release pipeline builds and pushes multi-arch images to quay.io but generates no SBOM (Syft) and does not sign images (cosign/sigstore). This is increasingly a compliance requirement.
 
 ## Quick Wins
 
 ### 1. Add Trivy Scanning to PR Workflow (1-2 hours)
+Immediate vulnerability visibility for container images and filesystem.
+
 ```yaml
+# Add to code-coverage.yml or create .github/workflows/security-scan.yml
 - name: Run Trivy vulnerability scanner
-  uses: aquasecurity/trivy-action@master
+  uses: aquasecurity/trivy-action@0.28.0
   with:
     scan-type: 'fs'
     scan-ref: '.'
-    format: 'sarif'
-    output: 'trivy-results.sarif'
     severity: 'CRITICAL,HIGH'
+    exit-code: '1'
 ```
 
-### 2. Set Coverage Thresholds (30 minutes)
-Update `.limgo.json`:
-```json
-{
-  "coverage": {
-    "global": {
-      "statements": 60,
-      "lines": 60,
-      "branches": 0
-    }
-  }
-}
-```
+### 2. Set Real limgo Coverage Thresholds (1-2 hours)
+Run `make test` locally, examine `cover.out`, set per-package thresholds in `.limgo.json` to ~5% below current coverage to prevent regression without blocking existing PRs.
 
-### 3. Add CodeQL Workflow (1-2 hours)
+### 3. Add Go Module Caching to CI (30 minutes)
+All three PR workflows (pre-commit, code-coverage, run-e2e-test) download Go modules from scratch. Add caching:
+
 ```yaml
+- name: Set up Go
+  uses: actions/setup-go@... 
+  with:
+    go-version-file: go.mod
+    cache: true  # <-- Add this
+```
+
+### 4. Add CodeQL Workflow (1-2 hours)
+```yaml
+# .github/workflows/codeql.yml
 name: CodeQL Analysis
 on:
   pull_request:
@@ -182,212 +168,254 @@ jobs:
       - uses: github/codeql-action/analyze@v3
 ```
 
-### 4. Create Basic CLAUDE.md (2-3 hours)
-Document test patterns, envtest setup, E2E conventions, and coding standards for AI agent guidance.
-
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows (7 total)**:
+**Workflow Inventory (7 workflows):**
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `pre-commit.yml` | PR + push to main | Linting, manifest generation, installer update, API docs, SHA-pinned action check |
-| `code-coverage.yml` | PR to main | Unit/integration tests with limgo coverage |
-| `run-e2e-test.yml` | PR to main + workflow_call | Full E2E on Kind cluster with operator deploy |
-| `build-image.yml` | PR merged to main | Multi-arch image build and push to Quay.io |
+| `pre-commit.yml` | PR + push to main | Pre-commit hooks (lint, manifests, API docs, error checks, SHA pinning) |
+| `code-coverage.yml` | PR | Unit/integration tests + limgo coverage report |
+| `run-e2e-test.yml` | PR + workflow_call | Full E2E: Kind cluster, operator build/deploy, test suites |
+| `build-image.yml` | Post-merge | Multi-arch image build + push to quay.io |
+| `build-vllm-cpu-image.yml` | Manual dispatch | Placeholder (no-op) |
 | `release-image.yml` | Manual dispatch | Versioned release image build |
-| `generate-release.yml` | Manual dispatch | Full release pipeline (E2E, build, tag, GitHub release) |
-| `build-vllm-cpu-image.yml` | Manual dispatch | Placeholder workflow |
+| `generate-release.yml` | Manual dispatch | Full release: E2E gate, version bumps, tag, GH release, multi-arch image |
 
-**Strengths**:
+**Strengths:**
+- All GitHub Actions SHA-pinned — enforced by custom `hack/check-workflows-uses-hashes.sh` pre-commit hook
+- E2E tests automated on every PR (not manual/dispatch-only)
 - Concurrency control on pre-commit workflow (`cancel-in-progress: true`)
-- SHA-pinned GitHub Actions (enforced by pre-commit hook `check-workflows-uses-hashes`)
-- Mergify auto-merge requires 2 approvals, passing pre-commit, E2E, DCO, and tests checks
-- Dependabot configured for github-actions (daily), gomod (daily, k8s grouped), and docker (weekly)
-- Release workflow runs E2E tests before proceeding with release
-- Idempotent release process (checks for existing tags)
+- Release pipeline gates on both E2E and unit test results
+- Comprehensive artifact upload (operator logs, events, resource dumps) for E2E debugging
+- `workflow_call` support makes E2E reusable from release pipeline
+- Mergify auto-merge with CI check requirements (pre-commit, e2e, tests)
+- Dependabot configured for GitHub Actions (daily), Go modules (daily), Docker (weekly)
 
-**Gaps**:
-- `code-coverage.yml` lacks concurrency control (could run duplicate builds)
-- No caching for Go modules across workflows (each workflow downloads independently)
-- No Konflux build simulation on PRs
+**Gaps:**
+- No Go module caching in any workflow — downloads from scratch each run
+- No concurrency control on `code-coverage.yml` — concurrent runs waste resources
+- `build-vllm-cpu-image.yml` is a no-op placeholder
 
 ### Test Coverage
 
-**Test-to-Code Ratio**: 9,644 test lines / 8,549 source lines = **1.13:1** (excellent)
+**Test Infrastructure:**
+- **Framework**: Go standard `testing` + `testify` (require/assert)
+- **Controller tests**: `envtest` with kubebuilder assets (K8s 1.31.0)
+- **E2E tests**: Kind cluster with cert-manager, Ollama deployment
+- **CEL validation tests**: Dedicated test suite for CRD validation rules
+- **Webhook tests**: Dedicated webhook validation tests
 
-**Unit Test Files (21 files, 8,176 lines)**:
-- `controllers/` - 6 test files: controller reconciliation, resource helpers, network resources, legacy adoption, CA whitespace, testing support
-- `api/v1beta1/` - 4 test files: CEL validation (1,355 lines), webhook validation (645 lines), types tests, suite setup
-- `pkg/deploy/` - 5 test files: deploy, kustomizer (1,127 lines), plugins (field_mutator, name_prefix, namespace, networkpolicy_transformer)
-- `pkg/compare/` - 1 test file: comparison tests
-- `pkg/cluster/` - 1 test file: cluster tests
+**Test Metrics:**
+- **32 test files**, **46 source files** — 0.70 test-file ratio
+- **12,675 lines of test code**, **15,559 lines of source** — **0.81 test-to-code ratio**
+- **183 total test functions**
+- Top tested packages: `pkg/config` (54 tests), `api/v1beta1` (18 CEL tests), `controllers` (16 controller tests)
 
-**Testing Framework**: Go standard `testing` package + `testify` (require/assert) + `envtest` (kubebuilder)
+**E2E Test Coverage:**
+- Validation suite: CRD validation, operator deployment, operator pods, prerequisites (Ollama)
+- Creation suite: Server creation, PVC configuration, deployment healing, health status, CR updates, distribution status, service account overrides, image mapping overrides
+- Deletion suite: Resource cleanup verification
+- TLS suite: Certificate generation, CA bundle ConfigMap, deployment with CA bundle, cert mounts, env vars
+- Rollout suite (referenced but not examined in detail)
 
-**E2E Test Files (7 test files, ~1,468 lines)**:
-- `validation_test.go` - CRD validation, operator deployment, prerequisites
-- `creation_test.go` - Server creation, PVC, direct deployment updates, health status, CR updates, service account overrides, image mapping
-- `deletion_test.go` - Server deletion lifecycle
-- `rollout_test.go` - Rolling updates with storage, Recreate strategy, PVC multi-attach deadlock testing
-- `tls_test.go` - TLS/CA bundle configuration, certificate mounts, environment variables
-- `setup_test.go` - Test environment setup
-- `test_utils.go` / `test_options.go` - Shared utilities
+**Coverage Tracking:**
+- limgo v1.0.0 integrated in `code-coverage.yml`
+- Coverage output written to `cover.out`
+- Coverage markdown report uploaded as artifact and added to GitHub step summary
+- `.limgo.json` excludes test files and generated code
 
-**E2E Infrastructure**:
-- Kind cluster with local registry
-- cert-manager dependency installed
-- Ollama inference server deployed via `hack/deploy-quickstart.sh`
-- Comprehensive logging and artifact upload on failure
-- 30-minute test timeout
+**Critical Issue**: All coverage thresholds in `.limgo.json` are set to 0 — limgo will never fail a build.
 
 ### Code Quality
 
-**golangci-lint Configuration** (`.golangci.yml`):
-- **Version**: golangci-lint v2 config format
-- **Strategy**: Starts with `default: all` linters, then selectively disables ~20 that are too strict
-- **Notable Enabled Linters**: errcheck (type assertions), errorlint, exhaustive, funlen (100 lines), gocritic, gocyclo (complexity 30), govet (with shadow), lll (180 chars), mnd (magic numbers), nolintlint, perfsprint, revive
-- **Test Exemptions**: errcheck, dupl, gosec, funlen, staticcheck, prealloc relaxed in test files
-- **Line Length**: 180 characters (reasonable for Go)
-- **Quality**: Very well-configured, thoughtful linter selection with explanatory comments
+**Linting (Excellent):**
+- golangci-lint v2 with `default: all` — starts with every linter enabled and selectively disables
+- 15 linters explicitly disabled with documented reasons
+- Custom settings for: gocyclo (30), lll (180), gci (import ordering), funlen (100 lines/statements), errcheck (type assertions), govet (shadow enabled), errorlint (errorf + asserts)
+- Test files have relaxed rules (no errcheck, dupl, gosec, funlen)
+- 10-minute lint timeout
 
-**Pre-commit Hooks** (`.pre-commit-config.yaml`):
-- Standard hooks: merge-conflict, trailing-whitespace, large-files (1000KB), end-of-file, no-commit-to-branch, YAML check, private-key detection, mixed-line-ending, JSON check, shebang, symlinks, TOML
-- Custom hooks: `make lint` (golangci-lint), `make generate manifests`, `make build-installer`, `make api-docs`, Go error message checker, GitHub Actions SHA hash checker
-- **Quality**: Excellent - comprehensive hooks that catch code quality, manifest drift, and supply chain issues
+**Pre-commit Hooks (Excellent):**
+- Standard hooks: merge-conflict, trailing-whitespace, large files (1MB limit), end-of-file fixer, no-commit-to-branch, YAML/JSON/TOML checks, private key detection, executable shebangs, symlink checks, mixed line endings (LF enforced)
+- Custom hooks:
+  - `make lint` — full golangci-lint run
+  - `make generate manifests` — CRD/RBAC/webhook regeneration
+  - `make build-installer` — release manifest regeneration
+  - `make api-docs` — API documentation regeneration
+  - `hack/check_go_errors.py` — enforces "failed to" error message prefix
+  - `hack/check-workflows-uses-hashes.sh` — enforces SHA-pinned GitHub Actions
+
+**Code Conventions:**
+- Error messages must start with "failed to" (enforced by pre-commit)
+- Import ordering: standard > default > blank > dot (gci via golangci-lint)
+- Table-driven tests with descriptive names
+- `require.Eventually` for async K8s operations
 
 ### Container Images
 
-**Dockerfile Analysis**:
-- **Multi-stage build**: Builder (UBI9 go-toolset) + Runtime (UBI9 ubi-minimal)
-- **FIPS compliance**: `GOEXPERIMENT=strictfipsruntime`, native builds use CGO_ENABLED=1 with OpenSSL, cross-builds use CGO_ENABLED=0 with pure Go FIPS
-- **Native cross-compilation**: Uses `--platform=$BUILDPLATFORM` to avoid QEMU emulation for Go compilation
-- **Base images**: Red Hat UBI9 (good for enterprise compliance)
-- **Non-root**: Runs as user 1001
-- **Dependency caching**: go.mod/go.sum cached before source copy
-- **OpenSSL installation**: Installed in runtime image for FIPS
+**Dockerfile Quality (Good):**
+- Multi-stage build (builder + runtime)
+- Base: `registry.access.redhat.com/ubi9/go-toolset` (builder), `ubi9/ubi-minimal` (runtime)
+- Native cross-compilation via `BUILDPLATFORM`/`TARGETPLATFORM` — avoids QEMU emulation
+- FIPS compliance: `GOEXPERIMENT=strictfipsruntime`, CGO_ENABLED=1 with OpenSSL for native builds
+- Non-root user (1001)
+- `.dockerignore` present
+- Go module layer caching (COPY go.mod/go.sum before source)
 
-**Multi-architecture Support**:
-- amd64 and arm64 built on native runners (not QEMU)
-- Multi-arch manifest created via `docker buildx imagetools`
-- Podman support alongside Docker
+**Multi-arch:**
+- amd64 + arm64 builds on native runners (no QEMU for Go compilation)
+- Docker manifest for multi-arch image tag
 
-**Gaps**:
-- No vulnerability scanning (Trivy/Snyk) of built images
-- No SBOM generation
-- No image signing/attestation (Cosign)
-- No startup or runtime validation of built images
+**Gaps:**
+- No Trivy/Snyk/Grype vulnerability scanning
+- No SBOM generation (Syft)
+- No image signing (cosign/sigstore)
+- No image startup health check validation in CI (tested implicitly via E2E)
 
 ### Security
 
-**Current State**:
-- Pre-commit hook: `detect-private-key` (basic secret detection)
-- SHA-pinned GitHub Actions (supply chain security)
-- Non-root container (user 1001)
-- FIPS compliance built into image
-- Dependabot for dependency updates
-- CODEOWNERS for mandatory review
+**Present:**
+- Dependabot for dependency updates (GH Actions, Go, Docker)
+- Private key detection in pre-commit hooks
+- SHA-pinned GitHub Actions (enforced by custom script)
+- FIPS compliance in container builds
+- Non-root container user
+- Webhook validation for CRD (CEL rules + Go webhook)
 
-**Missing**:
-- No Trivy/Snyk container scanning
-- No CodeQL/gosec SAST scanning
-- No Gitleaks/TruffleHog secret detection in CI
-- No SBOM generation (Syft)
-- No image signing (Cosign)
-- No `.trivyignore` or vulnerability exception management
+**Missing:**
+- No container vulnerability scanning (Trivy, Snyk, Grype)
+- No SAST (CodeQL, gosec, Semgrep)
+- No secret scanning in CI (Gitleaks, TruffleHog)
+- No SBOM generation
+- No image signing/attestation
+- No dependency vulnerability scanning beyond Dependabot PRs
 
 ### Agent Rules (Agentic Flow Quality)
 
-- **Status**: Missing
-- **Coverage**: No test type rules exist
-- **Quality**: N/A
-- **Gaps**: No CLAUDE.md, AGENTS.md, or `.claude/` directory
-- **Recommendation**: Generate rules with `/test-rules-generator` covering:
-  - Unit test patterns (envtest setup, testify conventions, builder pattern)
-  - E2E test patterns (Kind cluster, resource readiness, cleanup)
-  - Controller test patterns (reconciliation, status updates)
-  - CEL validation test patterns
-  - Webhook test patterns
+**Status**: Present — comprehensive `CLAUDE.md` at repository root
+
+**Quality Assessment:**
+- **Architecture documentation**: Excellent — reconciliation pipeline, key packages, distribution resolution, resource ownership, ConfigMap cache design all documented
+- **Build commands**: Complete — all make targets documented with examples
+- **Test commands**: Good — specific test package/function examples, E2E prerequisites noted
+- **Code conventions**: Documented — error messages, import ordering, linter config, test patterns, code generation workflow
+
+**Gaps:**
+- No `.claude/` directory or `.claude/rules/` for test creation patterns
+- No specific test automation guidance (what makes a good unit test, integration test, or E2E test for this operator)
+- No AGENTS.md for multi-agent workflow guidance
+- No custom skills for common development tasks
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add container vulnerability scanning** - Add Trivy scanning to PR workflow for filesystem scanning and to build workflow for image scanning. This is the most critical missing security control.
+1. **Add container security scanning to PR workflow**
+   - Add Trivy filesystem + image scanning to `code-coverage.yml` or new dedicated workflow
+   - Set severity threshold to CRITICAL+HIGH to block PRs with serious vulnerabilities
+   - Effort: 2-4 hours
 
-2. **Set meaningful coverage thresholds** - Current `.limgo.json` thresholds are all 0%. Run tests locally to determine actual coverage, then set thresholds ~5% below current levels to prevent regressions.
-
-3. **Add CodeQL SAST scanning** - GitHub's native CodeQL for Go provides free, high-quality static analysis. Add as a new workflow triggered on PRs and weekly schedule.
+2. **Set real coverage thresholds in `.limgo.json`**
+   - Run `make test`, examine per-package coverage in `cover.out`
+   - Set thresholds to ~5% below current values to create a regression floor
+   - Configure limgo to fail the build when thresholds are not met
+   - Effort: 2-3 hours
 
 ### Priority 1 (High Value)
 
-4. **Add SBOM generation and image signing** - Add Syft for SBOM generation and Cosign for image signing in the build and release workflows. Important for supply chain security compliance.
+3. **Add CodeQL/SAST workflow**
+   - GitHub CodeQL is free for public repos and excellent for Go
+   - Schedule weekly full scan + PR-triggered incremental analysis
+   - Effort: 2-3 hours
 
-5. **Create agent rules** - Add `.claude/rules/` with patterns for the project's test conventions (envtest, testify, builder pattern, E2E structure).
+4. **Add SBOM generation and image signing to release pipeline**
+   - Use Syft for SBOM generation, cosign for image signing
+   - Attach SBOM as release artifact and push attestation to registry
+   - Effort: 4-6 hours
 
-6. **Add secret detection** - Add Gitleaks to pre-commit hooks and/or as a CI workflow step.
-
-7. **Add concurrency control to coverage workflow** - The `code-coverage.yml` workflow lacks `concurrency` configuration, unlike `pre-commit.yml`.
-
-8. **Add Go module caching** - Add `actions/cache` for Go modules across workflows to speed up builds.
+5. **Create `.claude/rules/` with test patterns**
+   - Document unit test patterns (envtest setup, table-driven tests, testify conventions)
+   - Document E2E test patterns (Kind cluster, resource polling, cleanup)
+   - Document error handling conventions (testify require vs assert)
+   - Use `/test-rules-generator` to bootstrap
+   - Effort: 3-4 hours
 
 ### Priority 2 (Nice-to-Have)
 
-9. **Add performance testing** - Test operator reconciliation performance under load (many CRs, rapid updates).
+6. **Add Go module caching** — Set `cache: true` on `setup-go` action in all workflows (30 min)
 
-10. **Add Prometheus metrics testing** - The config includes a `prometheus/monitor.yaml` but no tests for metrics endpoints.
+7. **Expand E2E distribution coverage** — Currently only tests "starter" distribution; add coverage for other distribution types
 
-11. **Consider contract tests** - For the API boundary between the operator and inference providers (Ollama, vLLM).
+8. **Add concurrency control to `code-coverage.yml`** — Prevent concurrent runs (30 min)
 
-12. **Add chaos/resilience testing** - Test operator behavior during node failures, network partitions.
+9. **Add Gitleaks secret scanning** — Detect accidental credential commits in CI (1-2 hours)
+
+10. **Add Codecov integration** — Replace/supplement limgo with Codecov for PR coverage diff comments and trend tracking (2-3 hours)
 
 ## Comparison to Gold Standards
 
 | Dimension | ogx-k8s-operator | odh-dashboard | notebooks | kserve |
 |-----------|-----------------|---------------|-----------|--------|
-| Unit Test Coverage | 8.5 | 9.0 | 7.0 | 9.0 |
-| E2E Testing | 8.0 | 9.0 | 8.0 | 9.0 |
-| Build Integration | 7.0 | 8.0 | 7.5 | 8.0 |
-| Image Testing | 6.5 | 8.0 | 9.0 | 7.5 |
-| Coverage Tracking | 6.0 | 9.0 | 6.0 | 9.0 |
-| CI/CD Automation | 8.5 | 9.0 | 8.0 | 9.0 |
-| Security Scanning | 3.0 | 7.0 | 7.0 | 8.0 |
-| Agent Rules | 0.0 | 8.0 | 2.0 | 2.0 |
+| Unit Tests | 8/10 - Strong ratio, envtest | 9/10 - Multi-layer | 7/10 - Image-focused | 9/10 - Comprehensive |
+| Integration/E2E | 9/10 - Full E2E on PR | 9/10 - Contract tests | 8/10 - Image validation | 9/10 - Multi-version |
+| Build Integration | 7/10 - Multi-arch, FIPS | 8/10 - Konflux-aware | 9/10 - Multi-layer image | 7/10 - Standard |
+| Image Testing | 5/10 - E2E only | 7/10 - Startup validation | 9/10 - 5-layer validation | 6/10 - Basic |
+| Coverage Tracking | 5/10 - Tool present, no enforcement | 8/10 - Codecov enforced | 6/10 - Basic | 9/10 - Threshold gates |
+| CI/CD | 9/10 - Excellent automation | 9/10 - Well-organized | 8/10 - Comprehensive | 8/10 - Standard |
+| Agent Rules | 7/10 - Strong CLAUDE.md | 9/10 - Rules + skills | 5/10 - Basic | 3/10 - None |
 
-**Key Differentiators vs Gold Standards**:
-- **Stronger than average**: Test-to-code ratio (1.13:1), pre-commit hooks, FIPS compliance, multi-arch native compilation
-- **Weaker than average**: Security scanning (no Trivy/CodeQL/Gitleaks), coverage enforcement (0% thresholds), agent rules (none)
+**Notable strengths vs. gold standards:**
+- SHA-pinned GitHub Actions with enforcement script (unique — most repos don't enforce this)
+- Custom error message convention enforced by pre-commit (unique)
+- Mergify integration with full CI check requirements
+- E2E tests automated on PR (many operators only run E2E on demand)
+- FIPS compliance built into Dockerfile
+
+**Notable gaps vs. gold standards:**
+- No security scanning (odh-dashboard has Trivy, kserve has CodeQL)
+- Coverage thresholds not enforced (kserve has hard gates)
+- No contract testing (odh-dashboard has this)
+- No image-specific testing beyond E2E deployment (notebooks has 5-layer validation)
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/code-coverage.yml` - Unit tests + limgo coverage
-- `.github/workflows/pre-commit.yml` - Linting and manifest generation
-- `.github/workflows/run-e2e-test.yml` - E2E tests on Kind
-- `.github/workflows/build-image.yml` - Post-merge multi-arch image build
-- `.github/workflows/release-image.yml` - Release image build
-- `.github/workflows/generate-release.yml` - Full release pipeline
-- `.github/mergify.yml` - Auto-merge configuration
-- `.github/dependabot.yml` - Dependency updates
+- `.github/workflows/pre-commit.yml` — Pre-commit hooks on PR + push
+- `.github/workflows/code-coverage.yml` — Unit/integration tests + limgo coverage
+- `.github/workflows/run-e2e-test.yml` — E2E tests with Kind cluster
+- `.github/workflows/build-image.yml` — Post-merge multi-arch image build
+- `.github/workflows/release-image.yml` — Versioned release image build
+- `.github/workflows/generate-release.yml` — Full release pipeline
+- `.github/mergify.yml` — Auto-merge configuration
+- `.github/dependabot.yml` — Dependency update automation
 
 ### Testing
-- `controllers/*_test.go` - Controller unit tests (envtest)
-- `api/v1beta1/*_test.go` - API/CRD/webhook tests
-- `pkg/deploy/*_test.go` - Deploy package tests
-- `pkg/compare/*_test.go` - Comparison tests
-- `tests/e2e/` - E2E test suite
+- `controllers/suite_test.go` — envtest setup for controller tests
+- `controllers/ogxserver_controller_test.go` — Main controller tests (16 functions)
+- `api/v1beta1/ogxserver_cel_test.go` — CEL validation rule tests (18 functions)
+- `api/v1beta1/ogxserver_webhook_test.go` — Webhook validation tests
+- `pkg/config/config_test.go` — Configuration tests (54 functions)
+- `tests/e2e/e2e_test.go` — E2E test orchestrator
+- `tests/e2e/creation_test.go` — Server creation + lifecycle tests
+- `tests/e2e/validation_test.go` — CRD + operator validation
+- `tests/e2e/tls_test.go` — TLS/CA bundle tests
+- `tests/e2e/deletion_test.go` — Resource cleanup tests
 
 ### Code Quality
-- `.golangci.yml` - Linter configuration (v2)
-- `.pre-commit-config.yaml` - Pre-commit hooks
-- `.limgo.json` - Coverage thresholds
-- `Makefile` - Build, test, lint targets
+- `.golangci.yml` — golangci-lint v2 config (`default: all`)
+- `.pre-commit-config.yaml` — 12 standard + 6 custom hooks
+- `.limgo.json` — Coverage thresholds (currently at 0)
+- `hack/check_go_errors.py` — Error message format enforcer
+- `hack/check-workflows-uses-hashes.sh` — GH Actions SHA pin enforcer
 
-### Container Images
-- `Dockerfile` - Multi-stage build with FIPS support
+### Container
+- `Dockerfile` — Multi-stage, UBI9, FIPS-compliant, multi-arch
+- `.dockerignore` — Build context filtering
+- `config/overlays/cert-manager/` — Vanilla K8s deployment
+- `config/overlays/openshift/` — OpenShift deployment
 
-### Security
-- `.github/dependabot.yml` - Dependency scanning
-- `.github/CODEOWNERS` - Required reviewers
+### Agent Rules
+- `CLAUDE.md` — Comprehensive project documentation for AI agents

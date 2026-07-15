@@ -4,8 +4,7 @@
 
 - **Node.js 22+** and npm
 - **Red Hat VPN** connection (for LDAP roster sync)
-- A **Jira Cloud API token** for live data — [create one here](https://id.atlassian.com/manage-profile/security/api-tokens)
-- Or just use **Demo Mode** (no credentials needed)
+- A **Jira Cloud API token** for live data — [create one here](https://id.atlassian.com/manage-profile/security/api-tokens) or just use **Demo Mode** (no credentials needed)
 
 ## Getting Started
 
@@ -13,8 +12,9 @@
 
 ```bash
 git clone https://github.com/red-hat-data-services/rhai-org-pulse.git
-cd team-tracker
+cd rhai-org-pulse
 npm install
+npm run setup    # Symlinks core platform files (src/, shared/, modules/team-tracker) into workspace
 ```
 
 ### 2. Configure environment
@@ -63,52 +63,49 @@ npm run lint        # linting
 
 ## Project Structure
 
-```
-src/
-  components/         # Vue components (App.vue is root with hash routing)
-  composables/        # Composition API hooks (useRoster, useAuth, useGithubStats, etc.)
-  services/api.js     # API client with caching
-  utils/metrics.js    # Metric calculations
-  __tests__/          # Frontend tests (Vitest + jsdom)
+This repo is the AI Engineering consumer of [`@org-pulse/core`](https://github.com/red-hat-data-services/org-pulse-core). Core platform files (`src/`, `shared/`, `modules/team-tracker`) are symlinked into the workspace by `npm run setup`.
 
+```
 server/
-  dev-server.js       # Express server (local dev + production)
-  storage.js          # Local file storage abstraction
-  demo-storage.js     # Demo mode fixture storage
-  jira/               # Jira Cloud API integration
-    jira-client.js    # HTTP client (basic auth, Jira Cloud endpoints)
-    person-metrics.js # Per-person JQL metrics
-    sprint-report.js  # Sprint report API
-    __tests__/        # Server-side tests
-  github/
-    contributions.js  # GitHub GraphQL API (contribution stats)
-  roster-sync/        # Automated roster building
-    index.js          # Orchestrator (sync + daily scheduler)
-    ldap.js           # LDAP client (Red Hat corporate directory)
-    sheets.js         # Google Sheets API (enrichment data)
-    merge.js          # Combines LDAP + Sheets into roster format
-    config.js         # Sync config CRUD (stored on PVC/filesystem)
-    constants.js      # Shared constants
+  index.js            # Thin wrapper — calls core's startServer() with AI Eng config
+
+modules/              # AI Eng-specific feature modules (auto-discovered via module.json)
+  ai-impact/          # AI Impact assessments
+  releases/           # Release tracking & execution pipeline
+  system-health/      # System health monitoring
+  upstream-pulse/     # Upstream community tracking
+  ai-catalyst/        # AI Catalyst
+  customer-insights/  # Customer insights (Google Sheets)
+  okr-hub/            # OKR tracking & commitment reports
+  product-builds/     # Product build tracking
+
+platform/             # AI Eng-specific core UI customizations (About page tabs, etc.)
 
 deploy/
-  core.backend.Dockerfile       # Core backend image (platform + team-tracker)
-  core.frontend.Dockerfile      # Core frontend image (complete, core-only)
-  core.frontend-builder.Dockerfile  # Core frontend build stage (for orgs adding modules)
-  core.frontend-runtime.Dockerfile  # Core frontend nginx runtime
-  ai-eng.backend.Dockerfile     # AI Eng backend (extends core + all modules)
-  ai-eng.frontend.Dockerfile    # AI Eng frontend (extends core + all modules)
-  nginx-default.conf    # nginx config for container/smoke-test SPA + API proxy
+  ai-eng.backend.Dockerfile     # AI Eng backend (extends core backend image)
+  ai-eng.frontend.Dockerfile    # AI Eng frontend (extends core builder + runtime)
   openshift/
-    base/               # Kustomize base manifests
-    overlays/ai-eng/    # AI Engineering shared overlay
+    overlays/ai-eng/        # AI Engineering shared overlay (kustomize remote base from core)
     overlays/ai-eng-dev/    # AI Eng dev cluster overlay
     overlays/ai-eng-preprod/ # AI Eng preprod overlay
     overlays/ai-eng-prod/   # AI Eng prod overlay
-    overlays/local/     # Local Kind cluster overlay
 
-fixtures/             # Demo mode fixture data
+scripts/
+  setup.js                  # Symlinks core files into workspace
+  validate-dockerfile-deps.js  # Verifies Dockerfile deps match package.json
+  openapi-route-count.json  # Route count snapshot for OpenAPI validation
+
+tests/
+  smoke/              # Playwright smoke tests (container images)
+  integration/        # Playwright module integration tests
+fixtures/             # Demo mode fixture data (AI Eng modules)
 data/                 # Local dev data (gitignored)
 secrets/              # Service account keys (gitignored)
+
+# Symlinked from @org-pulse/core (created by npm run setup):
+src/                  # → node_modules/@org-pulse/core/src/
+shared/               # → node_modules/@org-pulse/core/shared/
+modules/team-tracker/ # → node_modules/@org-pulse/core/modules/team-tracker/
 ```
 
 ## Making Changes
@@ -156,7 +153,7 @@ npm test            # Run all tests
 npm run test:watch  # Watch mode
 
 # Run a specific test file
-npx vitest run server/jira/__tests__/sprint-report.test.js
+npx vitest run modules/team-tracker/server/jira/__tests__/sprint-report.test.js
 ```
 
 #### Smoke tests
@@ -166,12 +163,8 @@ Smoke tests use **Playwright** to verify the production container images work co
 **Note:** First-time image pulls can take a while (~5-10 minutes)
 
 ```bash
-make build-core-backend-image   # Build core backend image (team-tracker only)
-make build-core-frontend-image  # Build core frontend image (team-tracker only)
-make smoke-test-core            # Run smoke tests against core images
-
-make build-backend-image   # Build AI Eng backend image (all modules)
-make build-frontend-image  # Build AI Eng frontend image (all modules)
+make build-backend-image   # Build AI Eng backend image (extends core)
+make build-frontend-image  # Build AI Eng frontend image (extends core)
 make smoke-test            # Run smoke tests against AI Eng images
 ```
 

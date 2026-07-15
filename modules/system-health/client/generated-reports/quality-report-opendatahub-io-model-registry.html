@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on May 29, 2026 at 08:42 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:14 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/model-registry</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="135.71668799999998"
+                                stroke-dashoffset="118.75210199999997"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.6</div>
+                        <div class="score-value">7.9</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Strong Go unit tests with Testcontainers, solid frontend specs with Jest/Cypress</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">157 Go test files with testcontainers, pytest, Jest; 31% test-to-code ratio</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Multi-version KinD E2E, Python client E2E, CSI E2E, catalog E2E, fuzz testing</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">E2E on KinD with multi-K8s, multi-DB, multi-Python, Cypress, fuzz testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">PR-time image build + KinD deployment with operator validation, but no Konflux simulation</div>
+                            <div class="scorecard-status">PR image builds + KinD deployment + operator validation; Tekton/Konflux pipelines</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">PR image build + KinD deployment, multi-Dockerfile setup, but no startup probe or multi-arch PR validation</div>
+                            <div class="scorecard-status">Multi-arch builds, UBI9 base images, SBOM generation; limited runtime smoke tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">Codecov integration for Go and Python, but no codecov.yml config, no threshold enforcement</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Codecov integration with fail_ci_if_error but no coverage thresholds or gates</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">33 workflows, smart path filtering, concurrency via prepare job, multi-K8s-version matrix</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">36 well-organized workflows with path-based triggers and pinned action SHAs</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Excellent CLAUDE.md/AGENTS.md with repo map, commands, conventions, but no .claude/rules/</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Comprehensive AGENTS.md and 4 skills; missing test-specific creation rules</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No coverage threshold enforcement</div>
-                            <p>Coverage can silently regress without breaking CI</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No CodeQL or SAST analysis on PRs</div>
-                            <p>Security vulnerabilities in code not caught until post-merge or manual review</p>
+                            <div class="item-description">No coverage thresholds or gates</div>
+                            <p>Coverage can silently regress without any PR gate blocking the merge</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No PR-time Konflux build simulation</div>
-                            <p>Konflux-specific build failures discovered only post-merge</p>
+                            <div class="item-description">No golangci-lint project configuration</div>
+                            <p>Using default linters only; missing security and style linters like gosec, errcheck strict mode, goconst</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Trivy scanning is scheduled-only, not on PRs</div>
-                            <p>New vulnerabilities introduced in PRs not caught until next weekly scan</p>
+                            <div class="item-description">Trivy scanning is periodic only, not on PRs</div>
+                            <p>Vulnerable dependencies can be merged without detection; discovered only on weekly schedule</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No Cypress E2E in CI against live backend</div>
+                            <p>Cypress runs only mocked; real API integration issues not caught until manual testing</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
+                            </div>
+                        </li>
                         <li class="item-card low">
-                            <div class="item-description">No .claude/rules/ directory for test automation patterns</div>
-                            <p>AI-generated tests may not follow project-specific patterns</p>
+                            <div class="item-description">No test-specific agent rules for test creation</div>
+                            <p>AI-generated tests may not follow project conventions for each test type</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -465,31 +465,31 @@
                         
                         <li class="item-card ">
                             <div class="item-description">Add codecov.yml with coverage thresholds</div>
-                            <p>Prevent coverage regression on PRs with automatic enforcement</p>
+                            <p>Prevent coverage regressions with project/patch targets (e.g., 70% project, 80% patch)</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL workflow for Go and Python analysis</div>
-                            <p>Automated SAST scanning catches security vulnerabilities on every PR</p>
+                            <div class="item-description">Add Trivy scanning to PR workflow</div>
+                            <p>Catch vulnerable dependencies before merge, not a week later</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create .golangci.yml with security linters</div>
+                            <p>Enable gosec, errcheck, goconst, exhaustive for stronger static analysis</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to PR workflow</div>
-                            <p>Catch new container vulnerabilities before merge rather than weekly</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Generate .claude/rules/ for test patterns</div>
-                            <p>Improve AI agent test quality by codifying Go, Python, and TypeScript test conventions</p>
+                            <div class="item-description">Generate test-specific agent rules with /test-rules-generator</div>
+                            <p>Improve AI-generated test quality and consistency across Go, Python, and TypeScript</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -509,15 +509,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add codecov.yml with patch and project coverage thresholds (e.g., 80% target)</li><li>Add CodeQL SAST scanning workflow triggered on PRs</li><li>Move Trivy image scanning to run on PR builds, not just weekly schedule</li></ul>
+                            <ul><li>Add codecov.yml with coverage thresholds (70% project target, 80% patch target) to prevent regressions</li><li>Add Trivy or Snyk scanning to PR workflows for early vulnerability detection</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add PR-time Konflux build simulation to catch downstream build issues</li><li>Add multi-architecture image build validation on PRs (currently only single-arch)</li><li>Create .claude/rules/ with test patterns for Go (Testcontainers, envtest), Python (pytest, nox), TypeScript (Jest, Cypress)</li><li>Add container startup validation (health check) after KinD deployment in PR workflow</li></ul>
+                            <ul><li>Create .golangci.yml with gosec, errcheck, goconst, exhaustive, and nolintlint enabled</li><li>Add Cypress E2E tests against a live BFF+server stack on KinD for real integration validation</li><li>Create .claude/rules/ with test-specific rules for unit, integration, and E2E test creation</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add dependency review action for PRs to flag license and vulnerability issues</li><li>Add UI E2E tests running on PRs (Cypress tests exist but no PR workflow runs them)</li><li>Add performance regression testing for API endpoints</li><li>Consider adding contract tests between Python client and Go server</li></ul>
+                            <ul><li>Add performance/load testing for model registry API endpoints</li><li>Add contract tests between Python client and Go server API</li><li>Consider CodeQL SAST integration alongside Semgrep for defense-in-depth</li></ul>
                         </div>
                     </div>
                 </div>

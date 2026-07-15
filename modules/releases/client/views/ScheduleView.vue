@@ -105,6 +105,7 @@
               <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-800/50">
                 <th class="px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Release</th>
                 <th class="px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Plan Freeze</th>
+                <th class="px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Feature Freeze</th>
                 <th class="px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Code Freeze</th>
                 <th class="px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Release Date</th>
               </tr>
@@ -121,6 +122,9 @@
                 </td>
                 <td class="px-4 py-3">
                   <MilestoneCell :date="r.milestones?.planningFreeze" :muted="isReleased(r)" />
+                </td>
+                <td class="px-4 py-3">
+                  <MilestoneCell :date="r.milestones?.featureFreeze" :muted="isReleased(r)" />
                 </td>
                 <td class="px-4 py-3">
                   <MilestoneCell :date="r.milestones?.codeFreeze" :muted="isReleased(r)" />
@@ -206,6 +210,7 @@ function nextMilestone(release) {
   const ms = release.milestones || {}
   const milestones = [
     { key: 'planningFreeze', label: 'Plan Freeze', date: ms.planningFreeze },
+    { key: 'featureFreeze', label: 'Feature Freeze', date: ms.featureFreeze },
     { key: 'codeFreeze', label: 'Code Freeze', date: ms.codeFreeze },
     { key: 'ga', label: 'Release Date', date: ms.ga }
   ]

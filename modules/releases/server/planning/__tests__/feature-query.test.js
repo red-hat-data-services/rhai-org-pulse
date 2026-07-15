@@ -145,6 +145,20 @@ describe('feature-query', function() {
       expect(result.riceScore).toBe(42)
     })
 
+    it('unwraps riceScore from Jira object format', function() {
+      var fields = {}
+      fields[CUSTOM_FIELDS.riceScore] = { value: 100.5 }
+      var result = normalizeIssue({ key: 'RHAISTRAT-16b', fields: fields })
+      expect(result.riceScore).toBe(100.5)
+    })
+
+    it('handles riceScore object with null value', function() {
+      var fields = {}
+      fields[CUSTOM_FIELDS.riceScore] = { value: null }
+      var result = normalizeIssue({ key: 'RHAISTRAT-16c', fields: fields })
+      expect(result.riceScore).toBeNull()
+    })
+
     it('handles completely empty fields', function() {
       var result = normalizeIssue({ key: 'RHAISTRAT-17', fields: {} })
       expect(result.key).toBe('RHAISTRAT-17')

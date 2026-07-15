@@ -35,7 +35,7 @@ const tabs = [
   { id: 'outcomes', label: 'Big Rocks' },
   { id: 'pm-hub', label: 'PM Hub' },
   { id: 'feature-readiness', label: 'Features List (1-n)' },
-  { id: 'bu-feedback', label: 'Sustaining' },
+  { id: 'bu-feedback', label: 'Field and BU Feedback' },
 ]
 
 var moduleNav = inject('moduleNav', null)

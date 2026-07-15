@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:29 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:51 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/fms-hf-tuning</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#fd7e14"
+                                stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="237.504204"
+                                stroke-dashoffset="220.539618"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">5.8</div>
+                        <div class="score-value">6.1</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">234 test functions across 21 files with pytest; good coverage of core SFT trainer and data preprocessing</div>
+                            <div class="scorecard-status">21 test files with pytest; strong test-to-code ratio (1.12:1 lines) but only 45% module coverage</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No dedicated integration or E2E test suites; no cluster-based GPU validation or model training smoke tests</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">No integration or E2E tests; no cluster-based testing; GPU tests only via separate tox env</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">PR builds validated via Konflux Tekton pipelines but no PR-time Docker build in GitHub Actions; image.yaml only runs on main push</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Tekton/Konflux PR pipeline builds container image; no PR-time GitHub Actions image build or startup validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Minimal runtime validation — only checks &#x27;which accelerate&#x27; on NVCR image; no functional startup tests</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Basic accelerate binary check on main push; no PR-time image validation; no multi-arch testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Coverage workflow generates reports with genbadge but no codecov integration, no PR commenting, no enforcement thresholds</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Coverage tox env exists but no codecov integration, no thresholds, no PR gating</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Multi-Python matrix testing, tox-based orchestration, Konflux integration, /build /merge PR commands, automated tag sync</div>
+                            <div class="scorecard-status">Multi-Python matrix testing; format/lint on PRs; Tekton Konflux pipeline with security tasks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory — zero AI-assisted test automation guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules for test creation</div>
                         </div>
                     </div>
                 </div>
@@ -411,51 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No integration or E2E test suite</div>
-                            <p>Training regressions, GPU-specific failures, and multi-node issues not caught before release</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">40-60 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No container image functional testing</div>
-                            <p>Image startup failures, missing dependencies, and runtime errors discovered only in production</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No coverage enforcement or PR reporting</div>
-                            <p>Coverage can silently regress with no guardrails; developers unaware of untested code paths</p>
+                            <div class="item-description">No coverage enforcement or reporting integration</div>
+                            <p>Coverage can silently regress with no threshold gates or PR annotations</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No security scanning in CI</div>
-                            <p>Vulnerability in dependencies or container images not detected until downstream consumption</p>
+                            <div class="item-description">No integration or E2E testing</div>
+                            <p>Training pipeline correctness is only validated via unit-level mocks; runtime failures undetected until deployment</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">16-24 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No security scanning in GitHub Actions workflows</div>
+                            <p>Vulnerabilities in Python dependencies and source code not caught until Konflux/Tekton pipeline</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No PR-time image build validation in GitHub Actions</div>
-                            <p>Dockerfile/dependency breakages only caught post-merge on main branch</p>
+                            <div class="item-description">45% of source modules have no corresponding test files</div>
+                            <p>Significant areas of code (collators, data processors, tracker factory, configs) untested</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">12-20 hours</span>
                             </div>
                         </li>
-                        <li class="item-card low">
-                            <div class="item-description">Pre-commit config outdated (black 22.3.0, isort 5.11.5)</div>
-                            <p>Potential formatting inconsistencies with newer Python syntax</p>
+                        <li class="item-card medium">
+                            <div class="item-description">No PR-time container image build or validation in GitHub Actions</div>
+                            <p>Dockerfile changes only validated post-merge on main branch push; broken images may ship</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -472,43 +464,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to PR workflow</div>
-                            <p>Early detection of CVEs in base images and Python dependencies</p>
+                            <div class="item-description">Add Codecov integration with threshold enforcement</div>
+                            <p>Prevent coverage regression; provide PR annotations showing coverage delta</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add CodeQL or Snyk scanning workflow to GitHub Actions</div>
+                            <p>Catch security vulnerabilities early in the PR cycle before Tekton pipeline</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Integrate Codecov with coverage thresholds</div>
-                            <p>Automated coverage reporting on PRs with regression prevention</p>
+                            <div class="item-description">Add PR-time Docker build validation step</div>
+                            <p>Catch Dockerfile and dependency issues before merge</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create agent rules for unit test patterns (.claude/rules/)</div>
+                            <p>Improve AI-generated test quality and consistency for this project</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add PR-time Docker build step to test.yaml</div>
-                            <p>Catch Dockerfile breakages before merge; validate both UBI9 and NVCR images</p>
+                            <div class="item-description">Add conftest.py with shared fixtures</div>
+                            <p>Reduce test boilerplate; improve test isolation and maintainability</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create CLAUDE.md with basic test patterns</div>
-                            <p>Enable AI agents to generate consistent, idiomatic tests for this codebase</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Update pre-commit hook versions</div>
-                            <p>Ensure formatting tools support latest Python syntax features</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -525,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add integration tests that perform actual model fine-tuning with small models and verify output quality</li><li>Implement container image functional testing — verify all entrypoints, accelerate launch, and GPU detection</li><li>Add Trivy or Snyk scanning to the PR workflow for both source and container image layers</li><li>Integrate Codecov with coverage threshold enforcement and PR status checks</li></ul>
+                            <ul><li>Add Codecov or Coveralls integration with minimum 70% threshold and PR blocking</li><li>Add security scanning (CodeQL SAST) to GitHub Actions PR workflow</li><li>Add PR-time Docker image build and startup validation to catch build regressions</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Create E2E test suite that validates training workflows on GPU infrastructure (periodic job)</li><li>Add PR-time Docker build validation for both Dockerfile and nvcr.Dockerfile</li><li>Create comprehensive CLAUDE.md and .claude/rules/ for test automation guidance</li><li>Add conftest.py with shared fixtures to reduce test code duplication</li></ul>
+                            <ul><li>Create integration tests that validate full training pipeline with small model + dataset</li><li>Increase module test coverage from 45% to 80%+ (focus on data processors, collators, configs)</li><li>Add agent rules (.claude/rules/) for unit test and integration test creation patterns</li><li>Add conftest.py with shared pytest fixtures and test data factories</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add performance regression testing for training throughput benchmarks</li><li>Implement multi-architecture image builds (x86_64 + ARM64)</li><li>Add SBOM generation and image signing to release pipeline</li><li>Create contract tests between fms-hf-tuning and downstream consumers (RHOAI operator)</li></ul>
+                            <ul><li>Add multi-architecture container image testing</li><li>Implement E2E tests with GPU support in CI (or mock GPU for pipeline validation)</li><li>Add performance regression testing for training throughput</li><li>Upgrade pre-commit hooks (Black 22.3.0 is 3+ years old)</li></ul>
                         </div>
                     </div>
                 </div>

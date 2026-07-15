@@ -3,410 +3,518 @@ repository: "kubeflow/hub"
 overall_score: 7.6
 scorecard:
   - dimension: "Unit Tests"
-    score: 8.0
-    status: "Strong Go unit tests (148 files, 31% test-to-source ratio), Jest + Cypress for UI (77 files), Python pytest (36 files). Uses testify, Testcontainers, envtest."
+    score: 7.0
+    status: "Good Go/Python/TS coverage with testify, pytest, Jest; multi-DB testing but no enforcement thresholds"
   - dimension: "Integration/E2E"
     score: 9.0
-    status: "Excellent multi-version K8s E2E via Kind across Python clients (3.10-3.14), multi-DB (MySQL+PostgreSQL), CSI E2E with Helm, Catalog E2E, fuzz testing on OpenAPI changes."
+    status: "Excellent KinD-based E2E across multi-K8s, multi-DB, multi-Python versions; fuzz testing included"
   - dimension: "Build Integration"
-    score: 7.0
-    status: "PR-time image builds with Kind deployment validation for server and UI. No Konflux simulation but solid real-cluster testing."
+    score: 8.0
+    status: "PR-time image build + KinD deployment + connectivity test for server, UI, controller, CSI"
   - dimension: "Image Testing"
-    score: 7.0
-    status: "Multi-architecture builds (linux/amd64+arm64), distroless base images, UBI9 for ODH variant. Image loaded into Kind and validated on PRs."
+    score: 7.5
+    status: "Multi-arch builds (amd64+arm64), multi-stage Dockerfiles, UBI base, PR-time build validation"
   - dimension: "Coverage Tracking"
     score: 4.0
-    status: "Coverage files generated (coverage.txt, coverage.html, cover.out) but no Codecov/Coveralls integration, no thresholds, no PR reporting."
+    status: "Codecov badge present but no codecov.yml config, no CI upload, no enforcement thresholds"
   - dimension: "CI/CD Automation"
     score: 9.0
-    status: "38 workflow files, well-organized with path filters, concurrency control via prepare job, Dependabot across all ecosystems, OpenSSF Scorecard."
+    status: "33 workflows with excellent path filtering, SHA-pinned actions, OpenSSF Scorecard, SBOM+cosign"
   - dimension: "Agent Rules"
     score: 7.0
-    status: "Comprehensive AGENTS.md with repo map, commands, conventions, and guardrails. CLAUDE.md mirrors. No .claude/rules/ directory for test-type-specific guidance."
+    status: "Comprehensive AGENTS.md with repo map, commands, and conventions; 4 custom skills; missing .claude/rules/"
 critical_gaps:
-  - title: "No coverage tracking or enforcement"
-    impact: "Coverage can silently regress with no visibility in PRs. No baseline, no trends, no threshold gates."
+  - title: "No coverage tracking or enforcement in CI"
+    impact: "Coverage can silently regress on any PR without detection; codecov badge may be stale"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No dedicated SAST/CodeQL workflow"
-    impact: "Only Trivy for image scanning (weekly schedule). No source-level static analysis on PRs for security vulnerabilities."
+  - title: "No SAST/CodeQL scanning"
+    impact: "Security vulnerabilities in code patterns (injection, auth bypass) go undetected"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No secret detection in CI"
-    impact: "No Gitleaks or TruffleHog scanning. Pre-commit has detect-private-key but excludes test files."
+  - title: "Trivy scanning only weekly, not on PRs"
+    impact: "Vulnerable dependencies can be merged and deployed before weekly scan catches them"
     severity: "MEDIUM"
     effort: "2-3 hours"
-  - title: "Trivy scanning is weekly-only, not on PRs"
-    impact: "Vulnerable dependencies can be merged without detection. Security issues found only on Monday scans."
+  - title: "No secret scanning workflow (Gitleaks/TruffleHog)"
+    impact: "Accidentally committed secrets may not be caught by pre-commit alone"
     severity: "MEDIUM"
-    effort: "2-3 hours"
-  - title: "No .claude/rules/ directory for test-type-specific guidance"
-    impact: "AI agents lack structured per-test-type patterns (unit, integration, E2E, contract). AGENTS.md covers conventions but not actionable test templates."
+    effort: "1-2 hours"
+  - title: "No test-specific agent rules (.claude/rules/)"
+    impact: "AI-generated tests may not follow project patterns for testcontainers, envtest, nox sessions"
     severity: "LOW"
-    effort: "4-6 hours"
-quick_wins:
-  - title: "Add Codecov integration to build.yml"
-    effort: "2-4 hours"
-    impact: "Immediate coverage visibility in PRs, trend tracking, and regression prevention."
-  - title: "Add CodeQL analysis workflow"
-    effort: "1-2 hours"
-    impact: "Automated SAST on every PR, catches SQL injection, command injection, and Go-specific vulnerabilities."
-  - title: "Move Trivy scanning to PR trigger"
-    effort: "1-2 hours"
-    impact: "Catch vulnerable dependencies before merge, not a week later."
-  - title: "Add Gitleaks pre-commit hook and CI check"
-    effort: "1-2 hours"
-    impact: "Prevent accidental secret commits across all languages."
-  - title: "Generate .claude/rules/ for test patterns"
     effort: "3-4 hours"
-    impact: "Structured AI-agent guidance for consistent test generation across Go, Python, and TypeScript."
+quick_wins:
+  - title: "Add codecov.yml and enable coverage upload in build.yml"
+    effort: "2-3 hours"
+    impact: "Immediate visibility into coverage trends and PR-level regression detection"
+  - title: "Add CodeQL workflow for Go and Python"
+    effort: "1-2 hours"
+    impact: "Automated detection of code-level security vulnerabilities"
+  - title: "Add Trivy scanning to PR image build workflow"
+    effort: "1-2 hours"
+    impact: "Catch vulnerable dependencies before merge, not days later"
+  - title: "Add Gitleaks to pre-commit or CI"
+    effort: "1 hour"
+    impact: "Prevent accidental secret commits beyond the basic detect-private-key hook"
+  - title: "Create .claude/rules/ for test patterns"
+    effort: "2-3 hours"
+    impact: "AI agents produce tests matching project conventions (testcontainers, envtest, nox)"
 recommendations:
   priority_0:
-    - "Add Codecov/Coveralls integration with coverage thresholds (e.g., 70% minimum, no regression on PRs)"
-    - "Add CodeQL or Semgrep SAST workflow running on every PR"
-    - "Move Trivy image scanning to PR-triggered in addition to weekly schedule"
+    - "Configure codecov.yml with coverage thresholds and upload coverage from build.yml workflow"
+    - "Add CodeQL analysis workflow for Go and Python SAST scanning"
   priority_1:
-    - "Add Gitleaks secret detection to pre-commit and CI"
-    - "Create .claude/rules/ with per-test-type templates (Go unit, integration with Testcontainers, controller with envtest, Python pytest, TypeScript Jest, Cypress)"
-    - "Add SBOM attestation to production image builds (already have cosign setup)"
-    - "Add UI E2E (Cypress) to PR CI — currently only Jest unit tests run on PRs"
+    - "Move Trivy scanning to PR workflow in addition to weekly schedule"
+    - "Add Gitleaks secret scanning to CI pipeline"
+    - "Create .claude/rules/ with test pattern rules for Go (testcontainers), Python (nox/pytest), and TypeScript (Jest)"
   priority_2:
-    - "Add contract testing between Python clients and Go server API"
-    - "Add performance regression testing for model registry operations"
-    - "Add load testing for concurrent model version operations"
-    - "Consider adding golangci-lint config at project root (currently using defaults)"
+    - "Add golangci-lint configuration file (.golangci.yml) with explicit linter selection"
+    - "Add accessibility testing for the UI frontend"
+    - "Add contract tests between UI BFF and backend API"
+    - "Consider adding E2E tests for the UI (Cypress/Playwright)"
 ---
 
-# Quality Analysis: kubeflow/hub (Kubeflow Hub / Model Registry)
+# Quality Analysis: kubeflow/hub
 
 ## Executive Summary
 
 - **Overall Score: 7.6/10**
-- **Repository Type**: Kubernetes-native Go monorepo with Python clients, React/TypeScript UI, and controller
-- **Primary Languages**: Go (server, controller, BFF, CSI), Python (clients, jobs), TypeScript/React (UI)
-- **Key Strengths**: Exceptional E2E testing with multi-version Kubernetes and multi-database matrix, comprehensive CI/CD with 38 workflows, strong agent rules (AGENTS.md), OpenSSF Scorecard integration
-- **Critical Gaps**: No coverage tracking/enforcement, no SAST/CodeQL on PRs, Trivy only runs weekly, no secret detection in CI
-- **Agent Rules Status**: Present and comprehensive (AGENTS.md + CLAUDE.md), but no `.claude/rules/` directory for test-specific patterns
+- **Repository Type**: Polyglot monorepo (Go backend, Python clients, TypeScript/React UI)
+- **Components**: Model Registry server, Catalog service, Controller, CSI storage-initializer, UI (BFF + frontend), async-upload job
+- **Key Strengths**: Exceptional E2E testing with multi-version KinD deployments, comprehensive CI/CD with 33 workflows, SBOM generation + cosign signing, OpenSSF Scorecard, and a thorough AGENTS.md
+- **Critical Gaps**: No coverage tracking/enforcement in CI, no SAST scanning, Trivy only runs weekly
+- **Agent Rules Status**: Present and comprehensive (AGENTS.md), but missing `.claude/rules/` for test-specific patterns
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 8/10 | 148 Go test files, 55 TS test files, 36 Python test files. Strong test-to-source ratios. |
-| Integration/E2E | 9/10 | Multi-K8s-version (v1.33-v1.34), multi-DB (MySQL+PostgreSQL), multi-Python (3.10-3.14) matrix. Kind-based E2E. Fuzz testing. |
-| Build Integration | 7/10 | PR-time image builds validated on Kind clusters. No Konflux simulation but real deployment testing. |
-| Image Testing | 7/10 | Multi-arch (amd64+arm64), distroless/UBI9 base images, Kind load + deploy validation. No PR-time vulnerability scan. |
-| Coverage Tracking | 4/10 | Coverage files generated locally but no CI integration (no Codecov/Coveralls), no thresholds, no PR reporting. |
-| CI/CD Automation | 9/10 | 38 workflows with smart path filters, Dependabot for all ecosystems, OpenSSF Scorecard, auto-generated code sync. |
-| Agent Rules | 7/10 | Excellent AGENTS.md with repo map, commands, conventions. No `.claude/rules/` for test-type templates. |
+| Unit Tests | 7.0/10 | Good test coverage with testify, pytest, Jest; multi-DB testing |
+| Integration/E2E | 9.0/10 | Excellent KinD-based E2E, multi-K8s/DB/Python versions, fuzz testing |
+| **Build Integration** | **8.0/10** | **PR-time image build + KinD deployment + connectivity verification** |
+| Image Testing | 7.5/10 | Multi-arch (amd64+arm64), multi-stage builds, UBI base images |
+| Coverage Tracking | 4.0/10 | Coverage generation exists locally but no CI upload or enforcement |
+| CI/CD Automation | 9.0/10 | 33 workflows, SHA-pinned actions, path filtering, OpenSSF Scorecard |
+| Agent Rules | 7.0/10 | Comprehensive AGENTS.md + 4 custom skills, missing test-specific rules |
 
 ## Critical Gaps
 
-### 1. No Coverage Tracking or Enforcement
-- **Impact**: Coverage can silently regress with no visibility in PRs. No baseline, no trends, no threshold gates.
+### 1. No Coverage Tracking or Enforcement in CI
+- **Impact**: Coverage can silently regress on any PR without detection
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: The Makefile generates `coverage.txt` and `coverage.html` locally, and Python E2E generates `--cov-report=xml`, but none of this is uploaded to Codecov/Coveralls. No coverage comments appear on PRs.
+- **Details**: The repository has a Codecov badge in the README and `make test-cover` generates coverage locally, but there is no `codecov.yml` configuration file, no coverage upload step in the `build.yml` workflow, and no enforcement thresholds. The badge may be stale or non-functional.
+- **Fix**: Add `codecov.yml` with project/patch coverage thresholds; add coverage upload step after `make test-cover` in `build.yml`; configure PR comments showing coverage diff.
 
-### 2. No Dedicated SAST/CodeQL Workflow
-- **Impact**: Only Trivy for image scanning (weekly schedule). No source-level static analysis on PRs for security vulnerabilities.
+### 2. No SAST/CodeQL Scanning
+- **Impact**: Code-level security vulnerabilities (SQL injection, command injection, auth bypass) go undetected
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: CodeQL is referenced only for uploading Trivy SARIF results, not for actual source code analysis. No Semgrep, gosec, or equivalent runs on PRs.
+- **Details**: While Trivy scans container images for OS/library vulnerabilities, there is no static application security testing. CodeQL is referenced only for uploading Scorecard SARIF results, not for actual code analysis.
+- **Fix**: Add a CodeQL analysis workflow scanning Go and Python code on PRs and pushes to main.
 
-### 3. No Secret Detection in CI
-- **Impact**: Pre-commit has `detect-private-key` but excludes test files. No Gitleaks or TruffleHog in CI pipeline.
+### 3. Trivy Scanning Only Weekly
+- **Impact**: Vulnerable dependencies can be merged and remain in production for up to a week before detection
 - **Severity**: MEDIUM
 - **Effort**: 2-3 hours
+- **Details**: `trivy-image-scanning.yaml` runs on a weekly schedule (Monday 00:00 UTC). No vulnerability scanning occurs during the PR workflow. The `build-image-pr.yml` builds and deploys images but doesn't scan them.
+- **Fix**: Add Trivy filesystem/repo scanning to PR workflows; optionally scan the built image in `build-image-pr.yml`.
 
-### 4. Trivy Scanning is Weekly-Only
-- **Impact**: Vulnerable dependencies can be merged and deployed before the next Monday scan.
+### 4. No Secret Scanning Workflow
+- **Impact**: Pre-commit `detect-private-key` catches only private key patterns, not other secret types
 - **Severity**: MEDIUM
-- **Effort**: 2-3 hours
-- **Details**: `trivy-image-scanning.yaml` runs on `schedule: cron '0 0 * * 1'` only. No PR-triggered scanning.
+- **Effort**: 1-2 hours
+- **Details**: The pre-commit config includes `detect-private-key` but excludes test files. No Gitleaks, TruffleHog, or GitHub Secret Scanning workflow exists.
 
-### 5. UI Cypress Tests Not in PR CI
-- **Impact**: 22 Cypress E2E test files exist but don't appear to run in any PR workflow. Only Jest unit tests run via `npm run test`.
-- **Severity**: MEDIUM
-- **Effort**: 4-6 hours
+### 5. Missing Test-Specific Agent Rules
+- **Impact**: AI agents generating tests may not follow project-specific patterns
+- **Severity**: LOW
+- **Effort**: 3-4 hours
+- **Details**: AGENTS.md mentions testing requirements at a high level but lacks `.claude/rules/` with detailed test patterns for each component (Go testcontainers, envtest, Python nox sessions, TypeScript Jest patterns).
 
 ## Quick Wins
 
-### 1. Add Codecov Integration (2-4 hours)
-- **Impact**: Immediate coverage visibility in PRs, trend tracking, regression prevention
-- **Implementation**: Upload `coverage.txt` from `build.yml`, add `.codecov.yml` with threshold config
+### 1. Add Codecov Configuration and Upload (2-3 hours)
+Add `codecov.yml` and update `build.yml`:
 
-### 2. Add CodeQL Analysis Workflow (1-2 hours)
-- **Impact**: Automated SAST on every PR for Go, Python, and JavaScript/TypeScript
-- **Implementation**: Standard CodeQL workflow with `language: [go, python, javascript]`
+```yaml
+# codecov.yml
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 2%
+    patch:
+      default:
+        target: 80%
+```
 
-### 3. Move Trivy to PR Trigger (1-2 hours)
-- **Impact**: Catch vulnerable dependencies before merge
-- **Implementation**: Add `pull_request:` trigger to `trivy-image-scanning.yaml`
+Add to `build.yml` after `make test-cover`:
+```yaml
+- name: Upload coverage
+  uses: codecov/codecov-action@v4
+  with:
+    files: coverage.txt
+    flags: go-unit
+    token: ${{ secrets.CODECOV_TOKEN }}
+```
 
-### 4. Add Gitleaks to CI (1-2 hours)
-- **Impact**: Prevent accidental secret commits
-- **Implementation**: Add `gitleaks/gitleaks-action` step to PR workflows
+### 2. Add CodeQL Workflow (1-2 hours)
+```yaml
+name: CodeQL
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'
+permissions:
+  security-events: write
+  contents: read
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        language: [go, python]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+      - uses: github/codeql-action/autobuild@v3
+      - uses: github/codeql-action/analyze@v3
+```
 
-### 5. Generate .claude/rules/ (3-4 hours)
-- **Impact**: Structured AI-agent guidance for consistent test generation
-- **Implementation**: Create rules for Go unit, Go integration (Testcontainers), controller (envtest), Python pytest, TypeScript Jest, Cypress E2E
+### 3. Add Trivy to PR Image Build (1-2 hours)
+Add after the image build step in `build-image-pr.yml`:
+```yaml
+- name: Trivy vulnerability scan
+  uses: aquasecurity/trivy-action@v0
+  with:
+    image-ref: "${{ env.IMG_REGISTRY }}/${{ env.IMG_ORG }}/${{ env.IMG_REPO }}:${{ steps.tags.outputs.tag }}"
+    format: table
+    exit-code: 1
+    severity: CRITICAL,HIGH
+```
+
+### 4. Add Gitleaks (1 hour)
+Add to `.pre-commit-config.yaml`:
+```yaml
+- repo: https://github.com/gitleaks/gitleaks
+  rev: v8.18.0
+  hooks:
+    - id: gitleaks
+```
+
+### 5. Create Test Pattern Agent Rules (2-3 hours)
+Create `.claude/rules/` with rules for:
+- `go-unit-tests.md` — testify assertions, testcontainers for DB tests, table-driven tests
+- `go-controller-tests.md` — envtest setup, kubebuilder patterns
+- `python-tests.md` — nox sessions, pytest fixtures, E2E with KinD
+- `typescript-tests.md` — Jest patterns, PatternFly component testing
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflow Inventory (38 files)**:
+**Strengths:**
+- **33 workflow files** covering all components with intelligent path filtering
+- **SHA-pinned actions** throughout — excellent supply chain security practice
+- **OpenSSF Scorecard** integrated with weekly analysis and badge
+- **Dependabot** configured for all 5 ecosystems (gomod, pip, docker, github-actions, npm)
+- **Path-based triggers** prevent unnecessary CI runs
+- **Reusable workflows** (`prepare.yml` called by multiple workflows)
+- **First-time contributor handling** with automated welcome and approval flow
+- **Concurrency control** in workflow approval
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `build.yml` | PR + push | Go compile, unit tests (server + catalog) |
-| `build-image-pr.yml` | PR | Build server image, deploy on Kind, test with Python client |
-| `build-image-ui-pr.yml` | PR (ui/) | Build UI image, deploy via script |
-| `python-tests.yml` | PR + push | Lint, mypy, autogen check, E2E across K8s versions + DBs + Python versions |
-| `controller-test.yml` | PR (controller/) | Controller unit tests with envtest, build controller image |
-| `csi-test.yml` | PR (csi/) | CSI E2E on Kind with Helm |
-| `async-upload-test.yml` | PR (async-upload/) | Python unit + integration + E2E + autogen check |
-| `ui-bff-build.yml` | PR (ui/) | BFF Go lint + build + autogen check |
-| `ui-frontend-build.yml` | PR (ui/) | Frontend npm test + build + autogen check |
-| `trivy-image-scanning.yaml` | Weekly schedule | Trivy scan on 5 published images |
-| `scorecard.yml` | Weekly + push | OpenSSF Scorecard analysis |
-| `go-mod-tidy-diff-check.yml` | PR + push | Verify go.mod/go.sum are tidy |
-| `go-generate.yml` | Weekly | Auto-PR for go generate drift |
-| `check-db-schema-structs.yaml` | PR + push | Verify GORM structs match MySQL + PostgreSQL schemas |
-| `check-openapi-spec-pr.yaml` | PR | Validate OpenAPI spec |
-| `test-fuzz.yml` | dispatch | Fuzz testing against PR branches |
-| `build-and-push-*.yml` | push (main/tags) | Build and push production images |
-| `prepare.yml` | reusable | Shared preparation job |
+**PR Workflows (13 total):**
+| Workflow | Trigger | What It Tests |
+|----------|---------|---------------|
+| `build.yml` | All PRs | Go compile + unit tests with coverage |
+| `build-image-pr.yml` | Backend PRs | Docker build + KinD deploy + Python client connectivity |
+| `build-image-ui-pr.yml` | UI PRs | UI Docker image build |
+| `controller-test.yml` | Controller paths | envtest + controller image build |
+| `csi-test.yml` | CSI paths | Full KinD E2E with storage-initializer |
+| `python-tests.yml` | All PRs | Lint, mypy, unit tests, E2E on KinD, fuzz testing, catalog E2E |
+| `async-upload-test.yml` | Async job paths | Python tests + E2E |
+| `ui-frontend-build.yml` | UI paths | npm test + build |
+| `ui-bff-build.yml` | UI paths | golangci-lint + Go build |
+| `check-db-schema-structs.yaml` | All PRs | DB schema struct generation check |
+| `check-gitattributes.yaml` | All PRs | .gitattributes validation |
+| `check-openapi-spec-pr.yaml` | OpenAPI paths | OpenAPI spec validation |
+| `go-mod-tidy-diff-check.yml` | All PRs | go.mod/go.sum cleanliness |
 
-**Strengths**:
-- Smart path-based triggers (only run controller tests when controller files change)
-- Multi-database testing matrix (MySQL + PostgreSQL) for E2E
-- Multi-Kubernetes-version testing (v1.33.7, v1.34.3)
-- Multi-Python-version testing (3.10-3.14)
-- Autogen drift detection across Go, Python, and async-upload
-- DB schema struct validation on PRs (both MySQL and PostgreSQL)
-- Reusable workflow pattern via `prepare.yml`
-- Dependabot configured for gomod, pip, docker, github-actions, npm
+**Release Workflows (6 total):**
+- All images: cosign signing + SBOM (SPDX JSON) + attestation
+- Multi-architecture: linux/amd64 + linux/arm64 via buildx
+- Python client release to PyPI via Poetry
 
-**Gaps**:
-- No concurrency groups for PR workflows (duplicate runs can pile up)
-- No caching for Go modules in `build.yml` (other workflows cache)
-- Go generate is weekly-only, not on PRs
+**Gaps:**
+- No coverage upload to external service
+- No SAST scanning
+- No Trivy on PRs
 
 ### Test Coverage
 
-**Go (Server + Controller)**:
-- 148 test files / 472 source files = 31% test-to-source ratio
-- Frameworks: `testing` + `stretchr/testify` for assertions, `Testcontainers` for DB integration tests
-- Controller tests use `envtest` (kubebuilder test framework)
-- Coverage generated locally (`coverage.txt`, `cover.out`) but not uploaded to any service
-- Test packages: `internal/core/`, `internal/db/service/`, `internal/db/filter/`, `internal/server/`, `internal/mapper/`, `internal/platform/`, `pkg/inferenceservice-controller/`
+**Go (157 test files / 508 source files = 31% ratio):**
+- `internal/core/` — Comprehensive business logic tests (artifact, experiment, inference_service, model_version, registered_model, serving_environment, etc.)
+- `internal/converter/` — Converter utility tests
+- `internal/db/service/` — Database service tests with testcontainers (MySQL, PostgreSQL)
+- `internal/server/openapi/` — API service tests
+- `internal/datastore/embedmd/` — Embedded metadata tests
+- `pkg/inferenceservice-controller/` — Controller tests with envtest/kubebuilder
+- `tools/catalog-gen/` — Catalog generator tests
+- `catalog/cmd/` — Catalog config tests
 
-**TypeScript/React (UI)**:
-- 55 test files / 396 source files = 14% test-to-source ratio
-- Jest for unit tests (configured in `jest.config.js`)
-- 22 Cypress `.cy.ts` files for component/E2E testing (mocked backend)
-- Coverage directory configured: `jest-coverage/`
-- Cypress tests appear to be mocked-mode only (not real API)
+**Python (38 test files / 210 source files = 18% ratio):**
+- `clients/python/` — Model registry Python client with nox sessions (lint, mypy, tests, e2e, fuzz)
+- `catalog/clients/python/` — Catalog Python client with E2E
+- `jobs/async-upload/tests/` — Upload, download, config, models, MR client tests
+- `tools/csv-exporter/tests/` — CSV export and compliance tests
+- `test/python/` — Integration test (MR connectivity)
 
-**Python (Clients + Jobs)**:
-- 36 test files / 208 source files = 17% test-to-source ratio
-- pytest with nox sessions
-- E2E tests run against Kind-deployed server
-- Integration tests for async-upload job
-- Fuzz testing via nox `fuzz` session (runs against real API)
+**TypeScript (55 test files / 347 source files = 16% ratio):**
+- `clients/ui/frontend/src/` — Component tests, hook tests, API tests, utility tests
+- PatternFly component testing
+- Context provider tests
+- Markdown component tests
+
+**E2E Testing (Exceptional):**
+- KinD cluster deployment for Python E2E (multi-K8s: v1.33.7, v1.34.3)
+- Multi-database: MySQL (`db` overlay) and PostgreSQL (`postgres` overlay)
+- Multi-Python: 3.10, 3.11, 3.12, 3.13, 3.14
+- CSI E2E with Helm, KinD, and kustomize
+- Fuzz testing on main pushes and OpenAPI-changing PRs
+- Catalog E2E with dedicated KinD deployment
+- Port-forwarding for service connectivity
+
+**Coverage Generation:**
+- `make test-cover` produces `coverage.txt` and `coverage.html`
+- `make -C catalog test-cover` for catalog component
+- Python: `--cov-report=xml` used in E2E nox session
+- No upload to external tracking service
 
 ### Code Quality
 
-**Linting**:
-- **Go**: golangci-lint v2.9.0 (BFF has custom `.golangci.yaml`, server uses defaults)
-- **Python**: ruff (format + lint), mypy (type checking via nox sessions)
-- **TypeScript**: ESLint via `.eslintrc.cjs`
-- **Pre-commit hooks**: check-json, check-merge-conflict, detect-private-key, end-of-file-fixer, trailing-whitespace, ruff (lint+format for Python)
+**Linting:**
+- Go: golangci-lint v2.9.0 (build) / v2.12.2 (BFF) — no project-level config file, using defaults
+- Python: ruff (linting + formatting) + mypy (type checking) via nox sessions
+- OpenAPI spec validation via openapi-generator-cli
+- DB schema struct validation (generated code check)
+- Go mod tidy diff check
+- Gitattributes validation
 
-**Static Analysis**:
-- No CodeQL, gosec, or Semgrep for source analysis
-- OpenSSF Scorecard (weekly + push) — good supply chain hygiene
-- OpenAPI spec validation on PRs
+**Pre-commit Hooks:**
+- `check-added-large-files` — prevents large file commits
+- `check-ast` — validates Python AST
+- `check-json` — validates JSON syntax
+- `check-merge-conflict` — catches unresolved conflicts
+- `detect-private-key` — basic secret detection (excludes test files)
+- `end-of-file-fixer` / `trailing-whitespace` — formatting
+- `ruff` — Python linting + formatting (scoped to `clients/python`)
+
+**Missing:**
+- No project-level `.golangci.yml` with explicit linter selection
+- Pre-commit hooks only cover Python (ruff), not Go linting
+- No ESLint configuration visible (likely in `package.json` or webpack config)
 
 ### Container Images
 
-**Dockerfiles**:
-- `Dockerfile` — Multi-stage, UBI9/go-toolset builder, distroless runtime, multi-arch (`$BUILDPLATFORM`, `$TARGETOS`, `$TARGETARCH`)
-- `Dockerfile.odh` — Red Hat variant with UBI9, CGO_ENABLED=1
-- `clients/ui/Dockerfile` — Multi-stage: Node.js (UI build) + Go (BFF build) + distroless runtime
-- `jobs/async-upload/Dockerfile` — Python job image
+**Dockerfiles (7 total):**
+| Image | Dockerfile | Base | Build |
+|-------|-----------|------|-------|
+| Server | `Dockerfile` | UBI9 go-toolset → UBI9 minimal | Multi-stage, multi-arch |
+| Server (ODH) | `Dockerfile.odh` | UBI9 go-toolset → UBI9 minimal | Multi-stage, amd64 only |
+| UI | `clients/ui/Dockerfile` | — | Multi-arch |
+| UI Standalone | `clients/ui/Dockerfile.standalone` | — | Multi-arch |
+| Controller | `cmd/controller/Dockerfile.controller` | — | Multi-arch |
+| CSI | `cmd/csi/Dockerfile.csi` | — | Multi-arch |
+| Async Upload | `jobs/async-upload/Dockerfile` | — | Multi-arch |
 
-**Image Build Process**:
-- PR builds: Server and UI images built and tested on Kind (real deployment validation)
-- Production builds: Multi-arch (linux/amd64+arm64), SBOM generation via Syft, image signing via cosign
-- 5 images scanned weekly by Trivy: server, ui, async-upload, storage-initializer, ui-standalone
+**Security Features:**
+- Cosign signing on all release images
+- SBOM generation (SPDX JSON) via Syft/anchore on all release images
+- SBOM attestation via cosign
+- Non-root user (65532:65532) in server Dockerfile
+- UBI9 minimal base images (Red Hat certified)
+- Multi-stage builds with dependency caching
 
-**Gaps**:
-- No PR-triggered Trivy scanning
-- No image startup validation tests (health check probes tested implicitly via Kind deploy)
+**PR Validation:**
+- `build-image-pr.yml` builds server image, deploys to KinD, tests connectivity
+- `build-image-ui-pr.yml` builds UI image
+- Controller and CSI workflows also build images on PR
 
 ### Security
 
-**Present**:
-- OpenSSF Scorecard (supply chain security)
-- Trivy image scanning (weekly, CRITICAL+HIGH severity)
-- Dependabot (weekly updates for all ecosystems)
-- Pinned GitHub Actions SHA references throughout
-- `detect-private-key` pre-commit hook
-- SARIF upload to GitHub Security tab
-- Token permissions minimized (`contents: read` default)
-- Cosign signing + SBOM for production images
+**Strengths:**
+- OpenSSF Scorecard with published badge
+- Trivy image scanning (5 images, CRITICAL+HIGH severity, SARIF upload)
+- Cosign image signing and SBOM attestation
+- Dependabot across all ecosystems
+- SHA-pinned GitHub Actions throughout
+- `permissions: read-all` default with minimal escalation
+- FOSSA license compliance scanning
+- UBI9 minimal base images
 
-**Missing**:
-- No CodeQL/SAST for source code analysis
+**Gaps:**
+- No CodeQL/SAST scanning for code-level vulnerabilities
 - No Gitleaks/TruffleHog for comprehensive secret detection
-- No Snyk or equivalent for real-time dependency vulnerability tracking
-- Trivy not on PR trigger
+- Trivy only weekly, not on PRs
+- No Snyk integration
+- `detect-private-key` pre-commit hook excludes test files
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status**: Present and well-structured
+**Status**: Present and comprehensive
 
-**AGENTS.md (root)**: Comprehensive — includes:
-- Agent behavior policy (atomic changes, no CI modification)
-- Kubeflow AI Policy compliance (commit message attribution)
-- Full repository map with directory descriptions
-- Complete commands reference (build, lint, test, deploy, code generation)
-- CI checks table showing what runs on PRs
-- Detailed development workflow for AI agents
-- Auto-generated file warnings
-- Core development principles per language (Go, Python, TypeScript)
-- Testing requirements (bug fixes must include tests)
+**AGENTS.md (17KB):**
+- Agent behavior policy with clear DOs and DON'Ts
+- Context awareness guidelines
+- Complete repository map with directory descriptions
+- All commands documented (setup, build, lint, test, code generation, Docker)
+- CI checks table explaining what runs on PRs
+- Development workflow for AI agents (before changes, validation, commit hygiene)
+- Auto-generated files clearly identified
+- Core development principles per language (Go, TypeScript, Python)
+- Testing requirements (bug fixes MUST include tests)
 - Security checklist
-- Database and OpenAPI change procedures
+- Database and OpenAPI change workflows
 
-**CLAUDE.md (root)**: Mirrors AGENTS.md content — same comprehensive guidance available for Claude Code.
+**Custom Skills (.agents/skills/):**
+- `catalog-add-route` — Add new catalog routes
+- `catalog-sample-data` — Generate sample catalog data
+- `init-catalog` — Initialize catalog service
+- `sync-catalog` — Sync catalog data
 
-**Gaps**:
-- No `.claude/rules/` directory — no per-test-type templates
-- No `.claude/skills/` directory — no custom skills
-- AGENTS.md covers testing conventions but doesn't provide actionable templates (e.g., "here's how to write a Testcontainers integration test for a new DB service method")
-- No test generation checklist or quality gates
+**Gaps:**
+- No `.claude/rules/` directory with test-specific patterns
+- No rules for testcontainers setup patterns
+- No rules for envtest/kubebuilder test patterns
+- No rules for nox session configuration
+- No rules for PatternFly/Jest component testing patterns
+- Custom skills are catalog-focused, no testing skills
 
-### Fuzz Testing
-
-**Noteworthy**: The repository has a dedicated fuzz testing infrastructure:
-- Manual dispatch workflow (`test-fuzz.yml`) for PR-specific fuzz testing
-- Automatic fuzz in `python-tests.yml` when OpenAPI files change or on main push
-- Uses nox `fuzz` session against real Kind-deployed server
-- Tests both MySQL and PostgreSQL backends
+**Recommendation**: Generate test pattern rules with `/test-rules-generator` covering:
+- Go unit tests (testify, table-driven)
+- Go integration tests (testcontainers MySQL/PostgreSQL)
+- Go controller tests (envtest)
+- Python tests (nox, pytest, E2E with KinD)
+- TypeScript tests (Jest, PatternFly)
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add Codecov/Coveralls integration**
-   - Upload `coverage.txt` from `build.yml`, `cover.out` from `controller-test.yml`, `--cov-report=xml` from Python E2E
-   - Set minimum threshold (e.g., 70%) and "no regression" policy
-   - Add coverage badge to README
+1. **Configure coverage tracking and enforcement**
+   - Create `codecov.yml` with project coverage target (auto) and patch target (80%)
+   - Add coverage upload step in `build.yml` after `make test-cover` and `make -C catalog test-cover`
+   - Add Python coverage upload from E2E workflow (`--cov-report=xml`)
+   - Enable PR comments showing coverage delta
+   - Effort: 4-6 hours
 
 2. **Add CodeQL analysis workflow**
-   - Configure for `go`, `python`, `javascript` languages
-   - Run on `pull_request` and `push` to main
-   - Upload SARIF to GitHub Security tab
-
-3. **Add Trivy scanning on PR trigger**
-   - Build image in PR, scan before merge
-   - Block PRs with CRITICAL vulnerabilities
+   - Create `.github/workflows/codeql.yml` for Go and Python SAST scanning
+   - Run on PRs and pushes to main, plus weekly schedule
+   - Effort: 2-4 hours
 
 ### Priority 1 (High Value)
 
-4. **Add Gitleaks secret detection**
-   - Add to pre-commit and as CI workflow step
-   - Configure `.gitleaks.toml` with allowlists for test fixtures
+3. **Add PR-time vulnerability scanning**
+   - Add Trivy filesystem scan to `build.yml` for dependency vulnerabilities
+   - Add Trivy image scan to `build-image-pr.yml` for the built image
+   - Set exit-code: 1 for CRITICAL severity, warning for HIGH
+   - Effort: 2-3 hours
 
-5. **Create `.claude/rules/` directory** with test-type-specific templates:
-   - `go-unit-tests.md` — testify assertions, table-driven tests, mock patterns
-   - `go-integration-tests.md` — Testcontainers for MySQL+PostgreSQL
-   - `go-controller-tests.md` — envtest setup, CRD validation, reconciler testing
-   - `python-pytest.md` — pytest fixtures, nox sessions, E2E patterns
-   - `typescript-jest.md` — component testing, hook testing, PatternFly patterns
-   - `cypress-e2e.md` — mocked API patterns, page object models
+4. **Add comprehensive secret scanning**
+   - Add Gitleaks to pre-commit config (all file types, not just private keys)
+   - Optionally add a Gitleaks CI workflow for historical scanning
+   - Effort: 1-2 hours
 
-6. **Run Cypress tests in PR CI**
-   - Add Cypress component tests to `ui-frontend-build.yml`
-   - 22 test files exist but don't run in CI
-
-7. **Add SBOM attestation to all image builds**
-   - Already have Syft/cosign for server images
-   - Extend to UI, async-upload, and CSI images
+5. **Create test-specific agent rules**
+   - Create `.claude/rules/go-unit-tests.md` with testify patterns, table-driven tests
+   - Create `.claude/rules/go-integration-tests.md` with testcontainers patterns
+   - Create `.claude/rules/go-controller-tests.md` with envtest patterns
+   - Create `.claude/rules/python-tests.md` with nox/pytest patterns
+   - Create `.claude/rules/typescript-tests.md` with Jest/PatternFly patterns
+   - Effort: 3-4 hours
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add contract tests between Python clients and Go server**
-   - Ensure Python client compatibility with API changes
-   - Currently validated only via E2E (expensive)
+6. **Add explicit golangci-lint configuration**
+   - Create `.golangci.yml` with specific linter selection rather than defaults
+   - Enable security-focused linters (gosec, goconst, exhaustive)
+   - Effort: 2-3 hours
 
-9. **Add concurrency groups to PR workflows**
-   - Prevent duplicate runs on rapid pushes
-   - Example: `concurrency: { group: ${{ github.workflow }}-${{ github.ref }}, cancel-in-progress: true }`
+7. **Add UI E2E testing**
+   - Implement Cypress or Playwright E2E tests for the React frontend
+   - Add to CI with the existing KinD-based deployment
+   - Effort: 16-24 hours
 
-10. **Add project-level `.golangci.yml` for server**
-    - Currently using defaults — opportunity to enable additional linters
-    - BFF has its own config; server should too
+8. **Add contract tests between UI BFF and backend**
+   - Define API contracts between BFF and model registry server
+   - Prevent breaking changes from being merged
+   - Effort: 8-12 hours
 
-11. **Add performance/load testing**
-    - Benchmark model registry operations under load
-    - Track regression in API response times
+9. **Add accessibility testing for UI**
+   - Integrate axe-core or pa11y for automated a11y checks
+   - Add to UI frontend build workflow
+   - Effort: 4-6 hours
 
 ## Comparison to Gold Standards
 
 | Dimension | kubeflow/hub | odh-dashboard | notebooks | kserve |
 |-----------|-------------|---------------|-----------|--------|
-| Unit Tests | 8/10 | 9/10 | 7/10 | 9/10 |
-| Integration/E2E | 9/10 | 9/10 | 8/10 | 9/10 |
-| Build Integration | 7/10 | 8/10 | 7/10 | 7/10 |
-| Image Testing | 7/10 | 7/10 | 9/10 | 7/10 |
-| Coverage Tracking | 4/10 | 8/10 | 5/10 | 8/10 |
-| CI/CD Automation | 9/10 | 9/10 | 8/10 | 9/10 |
-| Agent Rules | 7/10 | 9/10 | 3/10 | 4/10 |
-| **Overall** | **7.6/10** | **8.7/10** | **7.0/10** | **7.9/10** |
+| Unit Tests | Good (31% Go ratio) | Excellent | Good | Excellent |
+| Integration/E2E | **Excellent** (multi-K8s/DB/Py) | Excellent | Good | Excellent |
+| Build Integration | **Strong** (KinD deploy on PR) | Strong | N/A | Good |
+| Image Testing | Strong (multi-arch, UBI, SBOM) | Good | **Excellent** (5-layer) | Good |
+| Coverage Tracking | **Weak** (no CI upload) | Strong | Moderate | **Excellent** (enforcement) |
+| CI/CD Automation | **Excellent** (33 workflows) | Excellent | Good | Excellent |
+| Security Scanning | Good (Trivy, cosign, SBOM) | Good | Good | Good |
+| Agent Rules | Good (AGENTS.md) | **Excellent** (rules/) | None | None |
+| Fuzz Testing | **Present** (Python fuzz) | None | None | Limited |
+| OpenSSF Scorecard | **Yes** | No | No | No |
 
-**Key Differentiators**:
-- kubeflow/hub excels at E2E testing with its multi-dimensional matrix (K8s versions x DBs x Python versions)
-- Fuzz testing is a standout feature not commonly seen
-- Agent rules (AGENTS.md) are exceptionally thorough — one of the best in the Kubeflow ecosystem
-- Coverage tracking is the biggest gap relative to gold standards
+**Notable Strengths vs. Gold Standards:**
+- Fuzz testing is uncommon — kubeflow/hub has it
+- OpenSSF Scorecard integration with published badge is best-in-class
+- Multi-K8s version E2E testing (v1.33.7 + v1.34.3) exceeds most projects
+- SBOM generation + cosign attestation on all release images is exemplary
+- Multi-Python version testing (3.10-3.14) demonstrates broad compatibility commitment
+- AGENTS.md is among the most comprehensive agent documentation seen
+
+**Key Gap vs. Gold Standards:**
+- Coverage tracking is the biggest gap — kserve has enforcement, odh-dashboard has reporting, hub has neither in CI
 
 ## File Paths Reference
 
-### CI/CD
+### CI/CD Workflows
 - `.github/workflows/build.yml` — Main build + unit tests
-- `.github/workflows/build-image-pr.yml` — PR image build + Kind deploy
-- `.github/workflows/python-tests.yml` — Python lint, unit, E2E, fuzz
-- `.github/workflows/controller-test.yml` — Controller tests with envtest
-- `.github/workflows/csi-test.yml` — CSI E2E with Kind + Helm
+- `.github/workflows/build-image-pr.yml` — PR image build + KinD deploy
+- `.github/workflows/python-tests.yml` — Python lint, unit, E2E, fuzz, catalog
+- `.github/workflows/controller-test.yml` — Controller envtest
+- `.github/workflows/csi-test.yml` — CSI E2E on KinD
 - `.github/workflows/trivy-image-scanning.yaml` — Weekly Trivy scan
 - `.github/workflows/scorecard.yml` — OpenSSF Scorecard
-- `.github/dependabot.yml` — Multi-ecosystem dependency updates
+- `.github/workflows/build-and-push-image.yml` — Release with cosign + SBOM
 
-### Testing
-- `internal/db/service/*_test.go` — Integration tests (Testcontainers)
-- `internal/core/*_test.go` — Core business logic unit tests
-- `pkg/inferenceservice-controller/*_test.go` — Controller unit tests
-- `clients/ui/frontend/src/__tests__/cypress/` — Cypress E2E tests (22 files)
-- `clients/python/` — Python client tests (nox sessions)
-- `jobs/async-upload/tests/` — Async upload job tests
+### Test Directories
+- `internal/core/*_test.go` — Business logic unit tests
+- `internal/db/service/*_test.go` — Database integration tests (testcontainers)
+- `pkg/inferenceservice-controller/*_test.go` — Controller tests (envtest)
+- `clients/python/` — Python client (nox: lint, mypy, tests, e2e, fuzz)
+- `catalog/clients/python/` — Catalog Python client (nox: lint, e2e)
+- `clients/ui/frontend/src/**/*.spec.ts(x)` — UI component tests
+- `test/csi/e2e_test.sh` — CSI E2E test script
+- `jobs/async-upload/tests/` — Async upload Python tests
 
-### Code Quality
+### Configuration
 - `.pre-commit-config.yaml` — Pre-commit hooks
-- `clients/ui/bff/.golangci.yaml` — BFF linter config
-- `clients/ui/frontend/.eslintrc.cjs` — Frontend ESLint config
-- `clients/ui/frontend/jest.config.js` — Jest configuration
-
-### Container Images
-- `Dockerfile` — Server image (multi-arch, distroless)
-- `Dockerfile.odh` — ODH variant (UBI9, CGO_ENABLED)
-- `clients/ui/Dockerfile` — UI image (Node + Go + distroless)
-- `jobs/async-upload/Dockerfile` — Async upload job image
-
-### Agent Rules
-- `AGENTS.md` — Comprehensive agent behavior policy + repo map + commands
-- `CLAUDE.md` — Claude Code-specific guidance (mirrors AGENTS.md)
+- `.github/dependabot.yml` — Dependency updates (5 ecosystems)
+- `Makefile` — Build, test, lint, code generation targets
+- `AGENTS.md` / `CLAUDE.md` — Agent rules and documentation
+- `.agents/skills/` — Custom catalog skills

@@ -1,455 +1,410 @@
 ---
 repository: "opendatahub-io/litellm"
-overall_score: 8.1
+overall_score: 8.4
 scorecard:
   - dimension: "Unit Tests"
     score: 9.0
-    status: "Exceptional coverage with 2,000+ test files across Python (pytest) and TypeScript (Vitest). Parallelized with pytest-xdist, flaky test reruns, and well-organized test directories."
+    status: "Exceptional test-to-code ratio (~1:1) with 1788 test files, parallelized pytest-xdist execution, flaky test reruns, and 22 conftest fixtures"
   - dimension: "Integration/E2E"
-    score: 7.0
-    status: "Strong integration test suites for LLM translation, proxy, MCP, and guardrails. E2E tests exist (multi_instance_e2e_tests) but require real provider API keys. No automated E2E in CI."
+    score: 7.5
+    status: "Docker-based server root path E2E tests, multi-instance E2E, LLM translation RC tests, and MCP integration tests; limited full-stack E2E automation on PRs"
   - dimension: "Build Integration"
-    score: 5.0
-    status: "UI build check on PRs. No PR-time Docker image build validation. No Konflux/Tekton pipeline. Multiple Dockerfiles but none tested in CI on PRs."
+    score: 6.5
+    status: "UI build validation on PRs, Docker image build in server root path tests, Helm unit tests; no PR-time Konflux simulation"
   - dimension: "Image Testing"
-    score: 5.0
-    status: "Multi-stage Dockerfile with Chainguard base (wolfi-base). Cosign key present for signing. No runtime validation, no Trivy/Snyk scanning in CI, no multi-arch builds."
+    score: 6.0
+    status: "Multi-variant Dockerfiles (non_root, alpine, database), hardened compose for QA, server root path smoke tests; no Trivy/Snyk container scanning in CI"
   - dimension: "Coverage Tracking"
     score: 9.0
-    status: "Codecov integration with component-level coverage. Patch coverage threshold at 100%. Project coverage threshold allows max 1% drop. Coverage uploaded via OIDC."
+    status: "Codecov integration with per-component coverage, 1% project threshold, 0% patch threshold, OIDC-based upload, per-workflow coverage artifacts"
   - dimension: "CI/CD Automation"
-    score: 9.0
-    status: "46 GitHub Actions workflows. Comprehensive PR checks: unit tests, linting, code quality, security scanning, benchmarks. Reusable workflow pattern. Concurrency control and caching."
+    score: 9.5
+    status: "50+ workflows with concurrency control, reusable workflow templates, caching, security guards, performance benchmarks, and documentation validation"
   - dimension: "Agent Rules"
-    score: 8.0
-    status: "Excellent CLAUDE.md and AGENTS.md with architecture, testing strategy, code patterns, common pitfalls, and development guidelines. No .claude/rules/ directory with per-test-type rules."
+    score: 8.5
+    status: "Comprehensive CLAUDE.md (180 lines), AGENTS.md (276 lines), GEMINI.md with testing patterns, UI guidelines, architecture docs; missing .claude/rules/ directory"
 critical_gaps:
-  - title: "No container image scanning in CI"
-    impact: "Vulnerabilities in base images and dependencies not caught before merge. Cosign key exists but no scanning pipeline."
+  - title: "No container vulnerability scanning in CI"
+    impact: "CVEs in base images or dependencies not caught before merge or release"
     severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No PR-time Docker build validation"
-    impact: "Dockerfile changes can break production builds. Multiple Dockerfiles (8+) with no CI validation on PRs."
-    severity: "HIGH"
-    effort: "6-8 hours"
-  - title: "No Konflux/Tekton pipeline (ODH fork)"
-    impact: "As an ODH fork, lacks the standard ODH build pipeline. No Tekton tasks or PipelineRuns configured."
-    severity: "HIGH"
-    effort: "16-24 hours"
-  - title: "E2E tests not automated in CI"
-    impact: "E2E test suites (multi_instance_e2e, proxy_e2e) exist but require manual execution with real API keys."
+    effort: "2-4 hours"
+  - title: "No pre-commit hook configuration"
+    impact: "Developers may push code without local linting/formatting checks, relying solely on CI"
+    severity: "MEDIUM"
+    effort: "1-2 hours"
+  - title: "No PR-time Konflux/production build simulation"
+    impact: "Build differences between PR CI and Konflux production builds may go undetected"
     severity: "MEDIUM"
     effort: "8-12 hours"
-  - title: "No pre-commit hooks"
-    impact: "Formatting and lint issues caught only in CI, not at commit time. Developers must remember to run black manually."
-    severity: "LOW"
-    effort: "1-2 hours"
+  - title: "Security and DB tests only run on push, not on PRs"
+    impact: "Security regressions in external contributions not caught until post-merge"
+    severity: "MEDIUM"
+    effort: "4-6 hours"
 quick_wins:
   - title: "Add Trivy container scanning to PR workflow"
     effort: "2-3 hours"
-    impact: "Detect CVEs in the Chainguard base image and Python dependencies before merge"
-  - title: "Add pre-commit hooks for Black, Ruff, and MyPy"
+    impact: "Early detection of CVEs in container images before merge"
+  - title: "Add pre-commit hooks configuration"
     effort: "1-2 hours"
-    impact: "Catch formatting and lint issues before push, reducing CI failures"
-  - title: "Add PR-time Docker build smoke test"
-    effort: "3-4 hours"
-    impact: "Validate that the main Dockerfile builds successfully on every PR"
-  - title: "Create .claude/rules/ directory with test-type-specific rules"
+    impact: "Catch formatting and linting issues locally before push"
+  - title: "Create .claude/rules/ directory with test pattern rules"
     effort: "2-3 hours"
-    impact: "Structured agent guidance for unit, integration, and E2E test creation"
+    impact: "Structured, file-pattern-triggered test guidance for AI agents"
+  - title: "Add SBOM generation to Docker build workflow"
+    effort: "1-2 hours"
+    impact: "Supply chain transparency and compliance readiness"
 recommendations:
   priority_0:
-    - "Add container vulnerability scanning (Trivy) to PR and periodic workflows"
-    - "Set up Konflux/Tekton build pipeline for ODH integration"
-    - "Add PR-time Docker image build validation for the main Dockerfile"
+    - "Add container image vulnerability scanning (Trivy/Grype) to PR and release workflows"
+    - "Enable security tests on PRs using service containers instead of external secrets"
   priority_1:
-    - "Automate E2E proxy tests with mock/recorded API responses in CI"
-    - "Add multi-architecture Docker build support (amd64/arm64)"
-    - "Create .claude/rules/ with per-test-type rules (unit, integration, e2e)"
+    - "Add pre-commit hook configuration (.pre-commit-config.yaml) with Black, Ruff, MyPy, and secret scanning"
+    - "Create .claude/rules/ directory with file-pattern-triggered test rules extracted from AGENTS.md"
+    - "Add SBOM generation and image signing verification to CI"
   priority_2:
-    - "Add pre-commit hooks to enforce formatting locally"
-    - "Implement contract testing for the proxy API"
-    - "Add SBOM generation to container build pipeline"
+    - "Add PR-time Konflux build simulation to catch production build divergence"
+    - "Add container runtime health check tests beyond server root path"
+    - "Expand multi-instance E2E test coverage beyond team management"
 ---
 
 # Quality Analysis: opendatahub-io/litellm
 
 ## Executive Summary
 
-- **Overall Score: 8.1/10**
-- **Repository Type**: Python library + FastAPI proxy server (LLM Gateway)
-- **Primary Language**: Python (3,648 files, 250K+ lines) + TypeScript UI dashboard
-- **Framework**: FastAPI, Prisma ORM, Next.js UI
-- **Fork Status**: ODH fork of [BerriAI/litellm](https://github.com/BerriAI/litellm) — synced to v1.84.0
-
-### Key Strengths
-- **Exceptional test volume**: 2,000+ test files across Python and TypeScript with excellent organization
-- **Robust CI/CD**: 46 GitHub Actions workflows covering unit tests, linting, security, code quality, and benchmarks
-- **Strong coverage tracking**: Codecov with component-level tracking, 100% patch coverage threshold, and max 1% project drop
-- **Comprehensive agent rules**: Detailed CLAUDE.md and AGENTS.md with architecture docs, testing patterns, and common pitfalls
-- **Security-conscious**: CodeQL, Semgrep, Zizmor, GitGuardian, OSSF Scorecard, and secret scanning
-
-### Critical Gaps
-- **No container image scanning** (Trivy/Snyk) despite cosign key being present
-- **No PR-time Docker build validation** across 8+ Dockerfiles
-- **No Konflux/Tekton pipeline** for the ODH fork
-- **E2E tests require manual execution** with real API keys
-
-### Agent Rules Status: **Strong but incomplete**
-- CLAUDE.md: Comprehensive (testing strategy, code patterns, common pitfalls)
-- AGENTS.md: Detailed (provider patterns, testing considerations, UI guidelines)
-- .claude/rules/: **Missing** — no per-test-type structured rules
+- **Overall Score: 8.4/10**
+- **Repository Type**: Python library + proxy server (FastAPI) with React dashboard
+- **Primary Language**: Python (3,648 files), TypeScript/JavaScript (1,406 files)
+- **Framework**: FastAPI proxy server, Prisma ORM, Next.js dashboard
+- **Key Strengths**: Exceptional test-to-code ratio (~1:1), 50+ CI workflows with reusable templates, Codecov with component-level tracking, multi-layered security scanning (CodeQL, Semgrep, GitGuardian, zizmor, OpenSSF Scorecard), comprehensive agent documentation
+- **Critical Gaps**: No container vulnerability scanning, no pre-commit hooks, security tests don't run on PRs
+- **Agent Rules Status**: Present and comprehensive (CLAUDE.md + AGENTS.md + GEMINI.md); missing `.claude/rules/` directory for file-pattern-triggered rules
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 9.0/10 | Exceptional coverage with 2,000+ test files, pytest-xdist parallelization, flaky reruns |
-| Integration/E2E | 7.0/10 | Strong integration suites, E2E exists but requires manual execution |
-| **Build Integration** | **5.0/10** | **UI build check only. No Docker build or Konflux validation on PRs** |
-| Image Testing | 5.0/10 | Chainguard base, cosign key, but no scanning or runtime validation |
-| Coverage Tracking | 9.0/10 | Codecov with components, 100% patch threshold, OIDC upload |
-| CI/CD Automation | 9.0/10 | 46 workflows, reusable patterns, concurrency control, caching |
-| Agent Rules | 8.0/10 | Excellent CLAUDE.md/AGENTS.md, missing .claude/rules/ structure |
+| Unit Tests | 9.0/10 | Exceptional 1:1 test-to-code ratio, parallelized execution, flaky reruns |
+| Integration/E2E | 7.5/10 | Docker-based E2E, LLM translation tests, MCP tests; limited full-stack E2E |
+| Build Integration | 6.5/10 | UI build + Helm + server root path validation; no Konflux simulation |
+| Image Testing | 6.0/10 | Multi-variant Dockerfiles, hardened compose; no vulnerability scanning |
+| Coverage Tracking | 9.0/10 | Codecov with component-level tracking, strict thresholds, OIDC upload |
+| CI/CD Automation | 9.5/10 | 50+ workflows, reusable templates, caching, concurrency, security guards |
+| Agent Rules | 8.5/10 | Comprehensive CLAUDE.md + AGENTS.md + GEMINI.md; missing .claude/rules/ |
 
 ## Critical Gaps
 
-### 1. No Container Image Scanning
-- **Impact**: Vulnerabilities in Chainguard wolfi-base images and Python dependencies not detected before merge
+### 1. No Container Vulnerability Scanning in CI
+- **Impact**: CVEs in base images (wolfi-base) or Python dependencies are not detected before merge or release. Chainguard images reduce base-layer risk, but application-layer vulnerabilities remain unchecked.
 - **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: The repo has `cosign.pub` for image signing but zero vulnerability scanning in CI. No Trivy, Snyk, or Grype integration despite 8+ Dockerfiles.
+- **Effort**: 2-4 hours
+- **Recommendation**: Add Trivy or Grype scanning to PR workflow after Docker build step
 
-### 2. No PR-Time Docker Build Validation
-- **Impact**: Dockerfile changes can break production builds undetected
-- **Severity**: HIGH
-- **Effort**: 6-8 hours
-- **Details**: Multiple Dockerfiles exist (`Dockerfile`, `docker/Dockerfile.alpine`, `docker/Dockerfile.database`, `docker/Dockerfile.non_root`, `docker/Dockerfile.custom_ui`, `docker/Dockerfile.dev`, `docker/Dockerfile.health_check`, `deploy/Dockerfile.ghcr_base`) but none are built or validated in CI on PRs. Only the UI build (`npm run build`) is checked.
+### 2. No Pre-commit Hook Configuration
+- **Impact**: Developers rely solely on CI for formatting (Black), linting (Ruff), and type checking (MyPy). Local development feedback loop is slower.
+- **Severity**: MEDIUM
+- **Effort**: 1-2 hours
+- **Recommendation**: Add `.pre-commit-config.yaml` with Black, Ruff, MyPy, and GitGuardian/ggshield hooks
 
-### 3. No Konflux/Tekton Pipeline (ODH Fork)
-- **Impact**: As an opendatahub-io fork, this repo lacks the standard ODH build pipeline
-- **Severity**: HIGH
-- **Effort**: 16-24 hours
-- **Details**: No `.tekton/` directory, no Konflux configuration. Other ODH repos use Konflux for reproducible builds and SLSA provenance. This fork relies entirely on upstream GitHub Actions.
-
-### 4. E2E Tests Not Automated in CI
-- **Impact**: Multi-instance and proxy E2E scenarios only verified manually
+### 3. No PR-time Konflux/Production Build Simulation
+- **Impact**: Build divergence between CI (GitHub Actions) and production (Konflux) may go undetected until post-merge
 - **Severity**: MEDIUM
 - **Effort**: 8-12 hours
-- **Details**: Test directories `tests/multi_instance_e2e_tests/`, `tests/proxy_e2e_anthropic_messages_tests/`, `tests/basic_proxy_startup_tests/` exist but aren't run in any CI workflow. They require real LLM provider API keys.
+- **Recommendation**: Add a workflow that simulates Konflux build constraints and validates the built image
 
-### 5. No Pre-Commit Hooks
-- **Impact**: Developers must manually run `uv run black .` before committing
-- **Severity**: LOW
-- **Effort**: 1-2 hours
-- **Details**: No `.pre-commit-config.yaml` file. Black formatting, Ruff linting, and MyPy checks are only caught in CI, leading to unnecessary CI round-trips.
+### 4. Security and Database Tests Only Run on Push
+- **Impact**: `test-unit-security`, `test-unit-proxy-db`, and `test-unit-caching-redis` only run on push to protected branches, meaning security regressions in external contributions are caught post-merge
+- **Severity**: MEDIUM
+- **Effort**: 4-6 hours
+- **Recommendation**: Refactor to use ephemeral service containers (PostgreSQL, Redis) so these tests can safely run on PR events from forks
 
 ## Quick Wins
 
 ### 1. Add Trivy Container Scanning (2-3 hours)
-Detect CVEs in the Chainguard base image and Python dependencies before merge.
-
+Add to existing PR workflow after Docker image build:
 ```yaml
-# .github/workflows/trivy-scan.yml
-name: Container Scanning
-on:
-  pull_request:
-    paths: ['Dockerfile', 'docker/**', 'pyproject.toml', 'uv.lock']
-jobs:
-  trivy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build image
-        run: docker build -t litellm:pr-test .
-      - name: Run Trivy
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'litellm:pr-test'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
-      - uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
+- name: Run Trivy vulnerability scanner
+  uses: aquasecurity/trivy-action@master
+  with:
+    image-ref: 'litellm-test:${{ github.sha }}'
+    format: 'sarif'
+    output: 'trivy-results.sarif'
+    severity: 'CRITICAL,HIGH'
+- name: Upload Trivy scan results
+  uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: 'trivy-results.sarif'
 ```
 
-### 2. Add Pre-Commit Hooks (1-2 hours)
-Catch formatting and lint issues before push.
-
+### 2. Add Pre-commit Configuration (1-2 hours)
+Create `.pre-commit-config.yaml`:
 ```yaml
-# .pre-commit-config.yaml
 repos:
   - repo: https://github.com/psf/black
-    rev: 25.1.0
+    rev: '24.10.0'
     hooks:
       - id: black
-        args: [--exclude, '/enterprise/']
+        args: ['--exclude', '/enterprise/']
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.0
+    rev: 'v0.8.0'
     hooks:
       - id: ruff
-        args: [--fix]
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.22.0
+        args: ['--fix']
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
     hooks:
-      - id: gitleaks
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
 ```
 
-### 3. Add PR-Time Docker Build Smoke Test (3-4 hours)
-Validate that the main Dockerfile builds successfully on every PR.
+### 3. Create .claude/rules/ Directory (2-3 hours)
+Extract test patterns from AGENTS.md and CLAUDE.md into file-pattern-triggered rules:
+- `.claude/rules/unit-tests.md` - Python unit test patterns (pytest, conftest, mocking)
+- `.claude/rules/ui-tests.md` - React Testing Library patterns (Vitest, act(), screen)
+- `.claude/rules/provider-tests.md` - LLM provider test patterns
 
+### 4. Add SBOM Generation (1-2 hours)
+Add to Docker build workflow:
 ```yaml
-# Add to existing PR workflow
-docker-build-check:
-  runs-on: ubuntu-latest
-  timeout-minutes: 15
-  steps:
-    - uses: actions/checkout@v4
-    - name: Build Docker image
-      run: docker build --target builder -t litellm:test .
+- name: Generate SBOM
+  uses: anchore/sbom-action@v0
+  with:
+    image: 'litellm:${{ github.sha }}'
+    format: 'spdx-json'
 ```
-
-### 4. Create .claude/rules/ Directory (2-3 hours)
-Structured agent guidance for test creation. Use `/test-rules-generator` to bootstrap.
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflow Inventory (46 workflows)**:
-
-| Category | Workflows | Trigger |
-|----------|-----------|---------|
-| **Unit Tests** | 14 workflows via reusable `_test-unit-base.yml` | PR |
-| **Code Quality** | `test-code-quality.yml` (20+ quality checks) | PR |
-| **Linting** | `test-linting.yml` (Black, Ruff, MyPy, circular imports, secret scan) | PR |
-| **Security** | CodeQL (Python, JS, Actions), Semgrep, Zizmor, GitGuardian, OSSF Scorecard | PR + Scheduled |
-| **UI** | `test-litellm-ui-build.yml` (build check) | PR |
-| **Helm** | `helm_unit_test.yml` (chart tests with integrity verification) | PR + Push |
-| **Performance** | `codspeed.yml` (CodSpeed benchmarks) | PR + Push |
-| **MCP** | `test-mcp.yml` | PR |
-| **Supply Chain** | `guard-fork-dependencies.yml`, `guard-main-branch.yml` | PR |
-| **Release** | `create-release.yml`, `publish_to_pypi.yml`, `create_daily_staging_branch.yml` | Manual/Scheduled |
-| **Schema** | `check-schema-sync.yml`, `sync-schema.yml` | PR |
-
-**Strengths**:
-- Reusable workflow pattern (`_test-unit-base.yml`, `_test-unit-services-base.yml`) prevents duplication
-- Concurrency control on most workflows (`cancel-in-progress: true`)
-- Dependency caching via `actions/cache` with `uv.lock` hash key
-- Fork dependency guard prevents supply chain attacks via `uv.lock` or `pyproject.toml` changes
-- Pinned action versions with SHA hashes (not tags) — excellent supply chain hygiene
-- Branch protection: PRs to `main` must come from `litellm_internal_staging` or `litellm_hotfix_*`
+**Strengths (Score: 9.5/10)**:
+- **50+ GitHub Actions workflows** covering unit tests, linting, security scanning, documentation validation, performance benchmarks, and release automation
+- **Reusable workflow templates** (`_test-unit-base.yml`, `_test-unit-services-base.yml`) with parameterized test paths, worker counts, reruns, and timeouts
+- **Excellent concurrency control** on all PR-triggered workflows with `cancel-in-progress: true`
+- **Dependency caching** via `actions/cache` for uv dependencies and `.venv`
+- **Pin-by-SHA** for all GitHub Actions (checkout, setup-python, cache, codecov) - excellent supply chain security
+- **Branch protection guards**: `guard-main-branch.yml` restricts PR sources, `guard-fork-dependencies.yml` blocks fork dependency changes
+- **Performance benchmarks**: CodSpeed integration on PRs and main branch
+- **zizmor**: GitHub Actions security analysis on PRs
+- **OpenSSF Scorecard**: Weekly supply-chain security assessment
+- **LLM translation tests**: Triggered on release candidate tags for comprehensive provider validation
 
 **Gaps**:
-- No Docker image build in any PR workflow
-- No multi-architecture build testing
-- E2E/integration test suites not triggered on PRs
+- Security and DB-dependent tests (security, proxy-db, caching-redis) are push-only, not triggered on PRs
+- No Konflux build simulation in PR workflows
+- No container vulnerability scanning
 
 ### Test Coverage
 
-**Test File Distribution**:
+**Strengths (Score: 9.0/10)**:
+- **1,788 test files** for 1,797 source files = ~1:1 test-to-code ratio (exceptional)
+- **Organized test structure**: `tests/test_litellm/` (1,060 files, modern structure), `tests/proxy_unit_tests/` (65), `tests/router_unit_tests/` (18), plus legacy and specialized directories
+- **392 UI test files** using Vitest and React Testing Library
+- **22 conftest.py fixtures** across test directories for shared setup
+- **Parallelized execution**: pytest-xdist with configurable worker counts (typically 2-4)
+- **Flaky test handling**: `--reruns` with configurable retry counts and delays
+- **Specialized test categories**:
+  - Container tests (`tests/test_litellm/containers/` - 8 test files)
+  - MCP tests (`tests/mcp_tests/`)
+  - Multi-instance E2E (`tests/multi_instance_e2e_tests/`)
+  - Audio, OCR, image generation tests
+  - Load/performance tests (`tests/load_tests/`)
+  - Security tests (`tests/proxy_security_tests/`)
+  - Documentation validation tests
+  - Code coverage enforcement tests (21+ custom scripts)
+- **Custom code quality tests** (`tests/code_coverage_tests/` - 31 files): License checks, import safety, key leak prevention, memory tests, recursive detection, async client enforcement, architectural style enforcement
 
-| Directory | Files | Description |
-|-----------|-------|-------------|
-| `tests/test_litellm/` | 970 | Core unit tests (new structure, CI-integrated) |
-| `tests/proxy_unit_tests/` | ~48 | Proxy unit tests |
-| `tests/llm_translation/` | ~30 | LLM provider translation tests |
-| `tests/litellm/` | 35 | Additional unit tests |
-| `tests/code_coverage_tests/` | 20 | Code quality enforcement scripts |
-| `tests/documentation_tests/` | 5 | Doc/API coverage validation |
-| `tests/benchmarks/` | 1 | CodSpeed performance benchmarks |
-| `tests/load_tests/` | varies | Load testing suite |
-| `tests/mcp_tests/` | varies | MCP protocol tests |
-| `tests/multi_instance_e2e_tests/` | varies | E2E tests (manual) |
-| **UI tests** (`ui/litellm-dashboard/`) | 392 | Vitest + React Testing Library |
-| **Total** | **2,000+** | |
+**Gaps**:
+- Full-stack E2E coverage is limited to server root path tests and single multi-instance test
+- No Playwright/Cypress browser-based E2E for the dashboard UI
 
-**Testing Framework**:
-- **Python**: pytest with pytest-xdist (parallel), pytest-rerunfailures (flaky reruns), pytest-cov
-- **TypeScript**: Vitest with React Testing Library
-- **Helm**: helm-unittest plugin v0.4.4
+### Code Quality
 
-**Test-to-Code Ratio**: ~0.55 (2,037 test files / 3,648 source files) — strong
+**Strengths (Score: 8.5/10)**:
+- **Black** code formatter enforced in CI
+- **Ruff** linter with custom rules (line length 120, function complexity checks, print statement detection)
+- **MyPy** type checking with Pydantic plugin
+- **Pyright** configured for IDE support
+- **Flake8** with comprehensive ignore list (deferred to Black/Ruff)
+- **Circular import detection** as CI check
+- **Import safety validation** (`from litellm import *` must succeed)
+- **Semgrep** custom rules:
+  - Security: Prevent `.claude/` directory commits
+  - Reliability: Detect unbounded `asyncio.Queue()` usage
+- **Custom architectural enforcement**:
+  - `ban_copy_deepcopy_kwargs.py` - Prevent expensive kwargs copying
+  - `check_fastuuid_usage.py` - Enforce fast UUID library
+  - `prevent_key_leaks_in_exceptions.py` - Security enforcement
+  - `enforce_llms_folder_style.py` - Architectural consistency
+  - `check_unsafe_enterprise_import.py` - Import boundary enforcement
 
-**Code Quality Tests** (custom enforcement scripts):
-- License checking, import validation, recursive detection
-- Ban `set_verbose`, ban `copy.deepcopy(kwargs)`, check `fastuuid` usage
-- Provider folder documentation, router code coverage, callback manager test
-- Log level checking, key leak prevention, unsafe enterprise imports
-
-### Code Quality Tools
-
-| Tool | Configuration | Status |
-|------|--------------|--------|
-| **Black** | Default (line-length via ruff) | Enforced in CI |
-| **Ruff** | `ruff.toml` — line-length 120, extends E501/PLR0915/T20 | Enforced in CI |
-| **MyPy** | `litellm/mypy.ini` — warn_return_any=False, namespace_packages=True | Enforced in CI |
-| **Flake8** | `.flake8` — legacy config, extensively disabled | Present but superseded by Ruff |
-| **Semgrep** | `.semgrep/rules/` — custom Python + security rules | Enforced on PRs |
-| **Pyright** | `pyrightconfig.json` | Present (not in CI) |
-| **Pre-commit** | None | Missing |
+**Gaps**:
+- No `.pre-commit-config.yaml` for local development
+- Ruff excludes `tests/*` from linting (intentional but means test code quality isn't enforced)
 
 ### Container Images
 
-**Dockerfiles** (8 total):
-
-| File | Purpose |
-|------|---------|
-| `Dockerfile` | Production image (Chainguard wolfi-base, multi-stage, uv) |
-| `docker/Dockerfile.alpine` | Alpine-based variant |
-| `docker/Dockerfile.database` | Database-enabled variant |
-| `docker/Dockerfile.non_root` | Non-root security variant |
-| `docker/Dockerfile.custom_ui` | Custom UI variant |
-| `docker/Dockerfile.dev` | Development image |
-| `docker/Dockerfile.health_check` | Health check image |
-| `deploy/Dockerfile.ghcr_base` | GHCR base image |
-
-**Strengths**:
-- Chainguard wolfi-base (security-hardened, minimal attack surface)
-- Multi-stage build (builder → runtime)
-- Layer caching optimization (dependency install before source copy)
-- Non-root variant available
-- `cosign.pub` present for image signing
-- `docker-compose.yml` and `docker-compose.hardened.yml` for local dev
+**Strengths (Score: 6.0/10)**:
+- **7 Dockerfile variants**: Main, non_root, alpine, database, dev, custom_ui, health_check, build_from_pip
+- **Chainguard wolfi-base** as base image (security-hardened, minimal)
+- **Multi-stage builds**: Builder + runtime separation with proper layer caching
+- **Hardened docker-compose** (`docker-compose.hardened.yml`): read-only root filesystem, cap_drop ALL, no-new-privileges, non-root user with Squid proxy
+- **Image signing**: `cosign.pub` present for image verification
+- **Docker-based E2E**: `test_server_root_path.yml` builds and smoke-tests Docker images on PRs with matrix strategy
+- **uv for dependency management** in containers with frozen lockfile
 
 **Gaps**:
-- No Trivy/Snyk/Grype scanning in any workflow
-- No multi-architecture builds (amd64 only)
-- No image startup/runtime validation tests
+- No Trivy/Snyk/Grype vulnerability scanning in any CI workflow
 - No SBOM generation
-- cosign signing not automated in CI
+- No multi-architecture builds (amd64 only implied)
+- No container runtime functional tests beyond server root path routing
+- Image signing workflow not found in CI (cosign.pub exists but no signing pipeline)
 
-### Security Practices
+### Security
 
-| Practice | Status | Details |
-|----------|--------|---------|
-| **CodeQL** | Active | Python, JavaScript/TypeScript, GitHub Actions — PR + scheduled |
-| **Semgrep** | Active | Custom rules in `.semgrep/rules/` — PR trigger |
-| **Zizmor** | Active | GitHub Actions security analysis — PR + push |
-| **GitGuardian** | Active | Secret scanning via ggshield — PR trigger |
-| **OSSF Scorecard** | Active | Supply-chain security analysis — scheduled + push to main |
-| **Secret Detection** | Active | Custom test (`test_no_hardcoded_secrets.py`) + GitGuardian |
-| **Fork Dependency Guard** | Active | Blocks fork PRs from modifying `uv.lock` or adding dependencies |
-| **Action Pinning** | Active | All actions pinned to SHA hashes, not tags |
-| **Container Scanning** | Missing | No Trivy, Snyk, or Grype |
-| **Dependency Scanning** | Partial | Via CodeQL only, no Dependabot or Renovate |
-| **Image Signing** | Partial | cosign.pub present, no automated signing pipeline |
+**Strengths (Score: 9.0/10)**:
+- **CodeQL**: Runs on PRs and push to main, plus daily schedule; covers Python, JavaScript/TypeScript, and GitHub Actions
+- **Semgrep**: Custom security rules on PRs with custom `.semgrep/rules/` directory
+- **GitGuardian (ggshield)**: Secret scanning with comprehensive `.gitguardian.yaml` configuration
+- **zizmor**: GitHub Actions security analysis on PRs
+- **OpenSSF Scorecard**: Weekly supply-chain assessment with SARIF upload
+- **Custom secret scanning test**: `test_no_hardcoded_secrets.py` in CI
+- **Bug bounty program**: Documented in security.md with severity-based bounty tiers ($500-$3,000)
+- **Supply chain hardening**:
+  - All GitHub Actions pinned by SHA digest
+  - Fork dependency changes blocked (`guard-fork-dependencies.yml`)
+  - `persist-credentials: false` on all checkout steps
+  - Helm plugin integrity verification via SHA
+- **Key leak prevention**: Custom test to prevent API keys in exceptions
+- **Enterprise import boundary**: Prevents unsafe imports across enterprise/OSS boundary
+
+**Gaps**:
+- No container image vulnerability scanning
+- No dependency update automation (Dependabot/Renovate not visible)
 
 ### Agent Rules (Agentic Flow Quality)
 
-**CLAUDE.md** (181 lines):
-- Development commands (install, test, lint, format)
-- Architecture overview with component descriptions
-- Key code patterns (providers, error handling, configuration)
-- Testing strategy with specific directory guidance
-- 20+ code style rules (imports, dict spread, guard at resolution time, etc.)
-- UI component library migration guidance (Tremor → antd)
-- Database access patterns (Prisma, no raw SQL, batch writes)
-- CI supply-chain safety rules
-- Proxy troubleshooting guide
+**Strengths (Score: 8.5/10)**:
+- **CLAUDE.md** (180 lines): Development commands, testing strategy, architecture overview, key patterns, PR templates, testing best practices
+- **AGENTS.md** (276 lines): Comprehensive agent instructions covering provider implementation, UI component guidelines, testing standards (Vitest/RTL patterns), important coding patterns, PR requirements
+- **GEMINI.md**: Parallel agent documentation for Google's AI coding tools
+- **Detailed testing guidance**: Testing strategy section covers unit, integration, proxy, load, and provider tests
+- **UI testing rules**: Specific React Testing Library patterns, query priority order, act() usage, mock patterns
+- **Architectural awareness**: Agent docs cover provider implementation patterns, type safety, router strategies, streaming, function calling
 
-**AGENTS.md** (277 lines):
-- Repository structure overview
-- Development guidelines for code changes
-- UI testing rules (Vitest, React Testing Library, query priority)
-- MCP OAuth/OpenAPI transport mapping rules
-- MCP credential storage patterns
-- Browser storage safety (sessionStorage only)
-- Common pitfalls (8 documented)
-
-**Missing**:
-- No `.claude/` directory
-- No `.claude/rules/` with per-test-type rules (unit-tests.md, integration-tests.md, e2e-tests.md)
-- No `.claude/skills/` for custom automation
-- Testing guidance is embedded in CLAUDE.md/AGENTS.md rather than structured as separate rule files
+**Gaps**:
+- No `.claude/rules/` directory for file-pattern-triggered rules (e.g., `*.test.py` triggers unit test rules automatically)
+- No `.claude/skills/` directory for custom skills
+- Testing rules are embedded in AGENTS.md rather than in dedicated rule files
+- Semgrep rule explicitly blocks `.claude/` directory commits, which conflicts with having `.claude/rules/`
+- No dedicated rules for provider-specific test patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add container vulnerability scanning** — Integrate Trivy scanning into PR workflow for the main Dockerfile. The Chainguard base image reduces attack surface but Python dependencies still need scanning.
+1. **Add container vulnerability scanning to CI** - Add Trivy or Grype scanning to PR workflow after Docker image builds. The Chainguard base images reduce but don't eliminate risk. Application-layer Python dependencies remain unscanned.
 
-2. **Set up Konflux/Tekton build pipeline** — As an ODH fork, this repo should have a `.tekton/` directory with PipelineRuns for reproducible builds and SLSA provenance, matching other `opendatahub-io` repositories.
-
-3. **Add PR-time Docker build validation** — At minimum, validate that the primary `Dockerfile` builds successfully on PRs that modify container-related files.
+2. **Enable security tests on PRs** - Refactor `test-unit-security` and `test-unit-proxy-db` to use ephemeral PostgreSQL service containers (`services: postgres:`) instead of external credentials. This allows safe execution on PR events, catching security regressions before merge.
 
 ### Priority 1 (High Value)
 
-4. **Automate E2E proxy tests in CI** — Use VCR (Video Cassette Recorder) pattern or recorded API responses to run E2E proxy tests without real API keys. The repo already uses VCR for LLM translation tests (`tests/_flush_vcr_cache.py`).
+3. **Add pre-commit hooks** - Create `.pre-commit-config.yaml` with Black, Ruff, and basic hygiene hooks. This accelerates the local development feedback loop and reduces CI failures.
 
-5. **Add multi-architecture Docker build support** — Build and test for both amd64 and arm64 to support Apple Silicon development and diverse deployment targets.
+4. **Create .claude/rules/ test pattern rules** - Extract the testing patterns from AGENTS.md and CLAUDE.md into file-pattern-triggered rules. This provides context-aware guidance when AI agents create or modify test files. Note: Requires updating the Semgrep rule `no-claude-directory-committed` to allow `.claude/rules/` while still blocking `.claude/settings.local.json` and similar.
 
-6. **Create `.claude/rules/` directory** — Extract testing patterns from CLAUDE.md/AGENTS.md into structured rule files. Use `/test-rules-generator` skill to bootstrap `unit-tests.md`, `integration-tests.md`, `e2e-tests.md`, and `ui-tests.md`.
+5. **Add SBOM generation and image signing to CI** - Integrate `anchore/sbom-action` for SBOM and `cosign sign` in the release workflow to complete the supply chain security posture.
+
+6. **Add dependency update automation** - Configure Dependabot or Renovate for automated Python, JavaScript, and GitHub Actions dependency updates.
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Add pre-commit hooks** — Black + Ruff + Gitleaks to catch issues before push.
+7. **Add PR-time Konflux build simulation** - Create a workflow that builds the image using Konflux-equivalent constraints to catch build divergence before merge.
 
-8. **Implement contract testing** — The proxy server has a large API surface. Contract tests would catch breaking changes between the proxy and its clients.
+8. **Add browser-based UI E2E tests** - The 392 unit-level UI tests are strong, but Playwright/Cypress E2E tests would validate the full dashboard user flows.
 
-9. **Add SBOM generation** — Include Software Bill of Materials in the container build pipeline using Syft or Trivy.
+9. **Expand multi-instance E2E tests** - Currently limited to team management; expand to cover key management, model routing, and failover scenarios.
 
-10. **Add Dependabot or Renovate** — Automated dependency updates beyond CodeQL's alerting. Python dependencies are pinned in `uv.lock` but need periodic update review.
+10. **Add multi-architecture container builds** - Support arm64 alongside amd64 for broader deployment compatibility.
 
 ## Comparison to Gold Standards
 
 | Dimension | litellm | odh-dashboard | notebooks | kserve |
 |-----------|---------|---------------|-----------|--------|
-| Unit Tests | 9/10 | 9/10 | 7/10 | 9/10 |
-| Integration/E2E | 7/10 | 9/10 | 8/10 | 9/10 |
-| Build Integration | 5/10 | 8/10 | 9/10 | 7/10 |
-| Image Testing | 5/10 | 7/10 | 9/10 | 7/10 |
-| Coverage Tracking | 9/10 | 9/10 | 6/10 | 9/10 |
-| CI/CD Automation | 9/10 | 9/10 | 8/10 | 9/10 |
-| Agent Rules | 8/10 | 9/10 | 5/10 | 4/10 |
-| **Overall** | **8.1** | **8.9** | **7.6** | **7.9** |
+| Unit Tests | 9.0 | 9.0 | 7.0 | 9.0 |
+| Integration/E2E | 7.5 | 9.0 | 8.0 | 9.0 |
+| Build Integration | 6.5 | 8.0 | 7.0 | 7.0 |
+| Image Testing | 6.0 | 7.0 | 9.0 | 7.0 |
+| Coverage Tracking | 9.0 | 9.0 | 6.0 | 9.0 |
+| CI/CD Automation | 9.5 | 9.0 | 8.0 | 8.0 |
+| Agent Rules | 8.5 | 9.0 | 3.0 | 2.0 |
+| **Overall** | **8.4** | **8.7** | **7.0** | **7.6** |
 
-**vs. odh-dashboard**: litellm matches on unit tests, CI/CD, and coverage but lags on build integration (no Docker build checks), image testing (no scanning), and agent rules (no `.claude/rules/` structure).
+**Notable Strengths vs. Gold Standards**:
+- CI/CD Automation (9.5) is best-in-class with 50+ workflows, reusable templates, and comprehensive security guards
+- Coverage Tracking (9.0) matches gold standards with component-level Codecov and strict thresholds
+- Agent Rules (8.5) is near gold standard with multi-agent documentation (Claude, Gemini)
+- Custom code quality enforcement tests are unique and exemplary (architectural style, memory safety, import safety)
 
-**vs. notebooks**: litellm excels on unit tests and coverage tracking but falls short on image testing (no multi-arch, no runtime validation, no scanning) and build integration.
-
-**vs. kserve**: litellm leads on agent rules and coverage tracking but trails on integration/E2E testing (kserve has comprehensive envtest-based E2E).
+**Notable Gaps vs. Gold Standards**:
+- Image Testing (6.0) lags notebooks (9.0) due to missing vulnerability scanning and SBOM
+- Integration/E2E (7.5) lags odh-dashboard (9.0) due to limited full-stack browser E2E
+- Build Integration (6.5) lacks Konflux simulation present in some gold standards
 
 ## File Paths Reference
 
-### CI/CD
-- `.github/workflows/_test-unit-base.yml` — Reusable unit test workflow
-- `.github/workflows/test-code-quality.yml` — 20+ code quality checks
-- `.github/workflows/test-linting.yml` — Black, Ruff, MyPy, secret scan
-- `.github/workflows/codeql.yml` — CodeQL SAST (Python, JS, Actions)
-- `.github/workflows/test-semgrep.yml` — Custom Semgrep rules
-- `.github/workflows/zizmor.yml` — GitHub Actions security
-- `.github/workflows/scorecard.yml` — OSSF Scorecard
-- `.github/workflows/codspeed.yml` — Performance benchmarks
-- `.github/workflows/guard-fork-dependencies.yml` — Supply chain guard
-- `.github/workflows/guard-main-branch.yml` — Branch protection
+### CI/CD Configuration
+- `.github/workflows/_test-unit-base.yml` - Reusable unit test template with coverage
+- `.github/workflows/_test-unit-services-base.yml` - Reusable template with service containers
+- `.github/workflows/test-unit-*.yml` - 14 domain-specific unit test workflows
+- `.github/workflows/test-code-quality.yml` - Custom code quality enforcement (21+ scripts)
+- `.github/workflows/test-linting.yml` - Black, Ruff, MyPy, secret scanning
+- `.github/workflows/codeql.yml` - CodeQL SAST (Python, JS/TS, Actions)
+- `.github/workflows/test-semgrep.yml` - Custom Semgrep rules
+- `.github/workflows/scorecard.yml` - OpenSSF Scorecard
+- `.github/workflows/zizmor.yml` - GitHub Actions security analysis
+- `.github/workflows/codspeed.yml` - Performance benchmarks
+- `.github/workflows/guard-main-branch.yml` - Branch protection enforcement
+- `.github/workflows/guard-fork-dependencies.yml` - Fork dependency change blocking
 
 ### Testing
-- `tests/test_litellm/` — Primary unit test suite (970 files)
-- `tests/proxy_unit_tests/` — Proxy unit tests
-- `tests/llm_translation/` — LLM provider translation tests
-- `tests/code_coverage_tests/` — Custom code quality enforcement
-- `tests/benchmarks/` — CodSpeed performance tests
-- `tests/multi_instance_e2e_tests/` — E2E tests (manual)
-- `ui/litellm-dashboard/src/**/*.test.*` — UI component tests (392 files)
+- `tests/test_litellm/` - Primary unit tests (1,060 files)
+- `tests/proxy_unit_tests/` - Legacy proxy unit tests (65 files)
+- `tests/router_unit_tests/` - Router unit tests (18 files)
+- `tests/code_coverage_tests/` - Custom quality enforcement scripts (31 files)
+- `tests/documentation_tests/` - Documentation validation (10 files)
+- `tests/multi_instance_e2e_tests/` - Multi-instance E2E tests
+- `tests/proxy_security_tests/` - Security-focused tests
+- `tests/load_tests/` - Performance/load tests
+- `tests/benchmarks/` - Benchmark tests
+- `ui/litellm-dashboard/tests/` - UI unit tests (392 files)
 
 ### Code Quality
-- `ruff.toml` — Ruff linter config
-- `litellm/mypy.ini` — MyPy type checker config
-- `.flake8` — Legacy Flake8 config
-- `.semgrep/rules/` — Custom Semgrep rules (Python, security)
-- `codecov.yaml` — Codecov component-level tracking
-- `pyrightconfig.json` — Pyright type checker config
+- `ruff.toml` - Ruff linter configuration
+- `.flake8` - Flake8 configuration
+- `pyrightconfig.json` - Pyright type checking
+- `pyproject.toml` - pytest, coverage, mypy configuration
+- `.semgrep/rules/` - Custom Semgrep rules (security, reliability)
+- `.gitguardian.yaml` - GitGuardian secret scanning configuration
 
 ### Container Images
-- `Dockerfile` — Production image (Chainguard wolfi-base)
-- `docker/Dockerfile.*` — Variant images (alpine, database, non-root, etc.)
-- `docker-compose.yml` — Development compose
-- `docker-compose.hardened.yml` — Hardened compose
-- `cosign.pub` — Image signing key
-- `.dockerignore` — Build context exclusions
+- `Dockerfile` - Main production Dockerfile (Chainguard wolfi-base)
+- `docker/Dockerfile.non_root` - Non-root hardened variant
+- `docker/Dockerfile.alpine` - Alpine-based variant
+- `docker/Dockerfile.database` - Database-included variant
+- `docker/Dockerfile.dev` - Development variant
+- `docker-compose.yml` - Standard development compose
+- `docker-compose.hardened.yml` - Security-hardened QA compose
+- `cosign.pub` - Image signing public key
+
+### Coverage
+- `codecov.yaml` - Codecov configuration with component mapping
+- `pyproject.toml` `[tool.coverage.run]` - Coverage source configuration
 
 ### Agent Rules
-- `CLAUDE.md` — Claude Code guidance (181 lines)
-- `AGENTS.md` — Agent instructions (277 lines)
+- `CLAUDE.md` - Claude Code agent instructions (180 lines)
+- `AGENTS.md` - Comprehensive AI agent instructions (276 lines)
+- `GEMINI.md` - Gemini agent instructions
+- `ARCHITECTURE.md` - Detailed architecture documentation
+- `CONTRIBUTING.md` - Contribution guidelines
+- `security.md` - Security policy and bug bounty

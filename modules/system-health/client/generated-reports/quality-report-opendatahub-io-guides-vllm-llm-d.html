@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:21 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 03:56 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/guides-vllm-llm-d</h2>
         </header>
 
@@ -365,7 +365,7 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">Repository is empty — no code or tests exist</div>
+                            <div class="scorecard-status">Repository is empty — no code or tests present</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
@@ -380,7 +380,7 @@
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">Repository is empty — no Dockerfile or image testing</div>
+                            <div class="scorecard-status">Repository is empty — no container image definitions</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
@@ -395,7 +395,7 @@
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">Repository is empty — no agent rules or CLAUDE.md</div>
+                            <div class="scorecard-status">Repository is empty — no agent rules or documentation</div>
                         </div>
                     </div>
                 </div>
@@ -412,42 +412,26 @@
                         
                         <li class="item-card high">
                             <div class="item-description">Repository is completely empty</div>
-                            <p>No code, tests, CI/CD, or documentation exist — everything must be built from scratch</p>
+                            <p>No code, tests, CI/CD, or documentation exist — the project has not been initialized</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">Varies</span>
+                                <span class="meta-tag effort-tag">Variable — depends on project scope</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No README or project description</div>
+                            <p>Contributors and stakeholders cannot understand the project&#x27;s purpose or roadmap</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
                             <div class="item-description">No CI/CD pipeline</div>
-                            <p>When code lands, there will be zero automated quality gates</p>
+                            <p>No automated quality gates of any kind</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No test framework or infrastructure</div>
-                            <p>No safety net for regressions once development begins</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No container image build or scanning</div>
-                            <p>No image validation, vulnerability scanning, or runtime testing</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No agent rules for AI-assisted development</div>
-                            <p>AI agents will have no guidance on test patterns or code quality standards</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,35 +448,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add a README.md with project scope and architecture</div>
-                            <p>Sets project direction and helps contributors understand the repo purpose</p>
+                            <div class="item-description">Initialize the repository with a README, LICENSE, and .gitignore</div>
+                            <p>Establishes project identity, licensing, and basic hygiene</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create initial CI/CD workflow with linting</div>
-                            <p>Establishes quality gates from day one</p>
+                            <div class="item-description">Add a GitHub Actions CI workflow skeleton</div>
+                            <p>Enables automated linting and testing as soon as code lands</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CLAUDE.md with coding standards and test expectations</div>
-                            <p>Guides AI-assisted development with consistent patterns</p>
+                            <div class="item-description">Create a CLAUDE.md with project conventions</div>
+                            <p>Sets quality expectations and patterns for AI-assisted development from day one</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Containerfile with multi-stage build</div>
-                            <p>Enables image builds and lays groundwork for image testing</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +485,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Bootstrap repository with initial code, README, and project structure before any development begins</li><li>Set up CI/CD pipeline (GitHub Actions) with at minimum linting and unit tests on PRs</li><li>Add Containerfile and image build workflow for the vLLM/llm-d guide artifacts</li></ul>
+                            <ul><li>Initialize the repository with at minimum a README.md, LICENSE, and .gitignore appropriate for the target language</li><li>Define the project&#x27;s scope, architecture, and testing strategy before writing production code</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Integrate coverage tracking (Codecov or Coveralls) from the first test</li><li>Add Trivy container scanning to the build workflow</li><li>Create agent rules (.claude/rules/) for test creation patterns matching the project&#x27;s language/framework</li></ul>
+                            <ul><li>Set up CI/CD with GitHub Actions including lint, test, and build jobs from the first commit</li><li>Adopt a test-first approach — add unit test infrastructure alongside the first production code</li><li>Add Dockerfile/Containerfile with multi-stage build and Trivy scanning from the start</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add E2E test infrastructure for guide validation (e.g., deploying sample workloads)</li><li>Implement pre-commit hooks for code formatting and linting</li><li>Add SBOM generation and image signing for supply-chain security</li></ul>
+                            <ul><li>Create .claude/rules/ with test creation guidelines so AI agents generate consistent tests</li><li>Configure Codecov or Coveralls integration to enforce coverage thresholds early</li><li>Add pre-commit hooks for linting and formatting</li></ul>
                         </div>
                     </div>
                 </div>

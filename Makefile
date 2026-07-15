@@ -1,12 +1,8 @@
-.PHONY: build-frontend-image build-backend-image build-core-frontend-image build-core-backend-image build-core-frontend-builder-image build-core-frontend-runtime-image build-core-base-images smoke-test smoke-test-core _start-frontend clean-smoke-test clean-integration-test test-module help
+.PHONY: build-frontend-image build-backend-image pull-core-images smoke-test _start-frontend clean-smoke-test clean-integration-test test-module help
 
 FRONTEND_IMAGE ?= frontend-smoke-local
 BACKEND_IMAGE ?= backend-smoke-local
-CORE_FRONTEND_IMAGE ?= core-frontend-smoke-local
-CORE_BACKEND_IMAGE ?= core-backend-smoke-local
-CORE_FRONTEND_BUILDER_IMAGE ?= core-frontend-builder-smoke-local
-CORE_FRONTEND_RUNTIME_IMAGE ?= core-frontend-runtime-smoke-local
-CORE_TAG ?= local
+CORE_TAG ?= v$(shell node -p "require('@org-pulse/core/package.json').version")
 FRONTEND_CONTAINER := frontend-smoke-local
 BACKEND_CONTAINER := backend-smoke-local
 PLAYWRIGHT_IMAGE := quay.io/browser/playwright-chromium:playwright-1.60.0
@@ -78,6 +74,15 @@ help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-25s\033[0m %s\n", $$1, $$2}'
 
 # ========================================
+# Core Images — Pull from Quay
+# ========================================
+pull-core-images: ## Pull core images from Quay (version from @org-pulse/core)
+	@echo "Pulling core images tagged $(CORE_TAG)..."
+	$(CONTAINER_RUNTIME) pull quay.io/org-pulse/org-pulse-core-backend:$(CORE_TAG)
+	$(CONTAINER_RUNTIME) pull quay.io/org-pulse/org-pulse-core-frontend-builder:$(CORE_TAG)
+	$(CONTAINER_RUNTIME) pull quay.io/org-pulse/org-pulse-core-frontend-runtime:$(CORE_TAG)
+
+# ========================================
 # Image Builds — AI Engineering (full)
 # ========================================
 build-frontend-image: ## Build AI Eng frontend image
@@ -87,32 +92,6 @@ build-frontend-image: ## Build AI Eng frontend image
 build-backend-image: ## Build AI Eng backend image
 	@echo "Building AI Eng backend container image..."
 	@$(CONTAINER_RUNTIME) build -f deploy/ai-eng.backend.Dockerfile --build-arg CORE_TAG=$(CORE_TAG) -t $(BACKEND_IMAGE) .
-
-# ========================================
-# Image Builds — Core (platform only)
-# ========================================
-build-core-frontend-image: ## Build core frontend image (team-tracker only)
-	@echo "Building core frontend container image..."
-	@$(CONTAINER_RUNTIME) build -f deploy/core.frontend.Dockerfile -t $(CORE_FRONTEND_IMAGE) .
-
-build-core-backend-image: ## Build core backend image (team-tracker only)
-	@echo "Building core backend container image..."
-	@$(CONTAINER_RUNTIME) build -f deploy/core.backend.Dockerfile -t $(CORE_BACKEND_IMAGE) .
-
-build-core-frontend-builder-image: ## Build core frontend builder image (for extending)
-	@echo "Building core frontend builder container image..."
-	@$(CONTAINER_RUNTIME) build -f deploy/core.frontend-builder.Dockerfile -t $(CORE_FRONTEND_BUILDER_IMAGE) .
-
-build-core-frontend-runtime-image: ## Build core frontend runtime image (for extending)
-	@echo "Building core frontend runtime container image..."
-	@$(CONTAINER_RUNTIME) build -f deploy/core.frontend-runtime.Dockerfile -t $(CORE_FRONTEND_RUNTIME_IMAGE) .
-
-# Build all core images needed as base for AI Eng images, tagged with CORE_TAG
-build-core-base-images: build-core-backend-image build-core-frontend-builder-image build-core-frontend-runtime-image ## Build core images needed for AI Eng
-	@echo "Tagging core images as :$(CORE_TAG) for AI Eng FROM references..."
-	@$(CONTAINER_RUNTIME) tag $(CORE_BACKEND_IMAGE) quay.io/org-pulse/org-pulse-core-backend:$(CORE_TAG)
-	@$(CONTAINER_RUNTIME) tag $(CORE_FRONTEND_BUILDER_IMAGE) quay.io/org-pulse/org-pulse-core-frontend-builder:$(CORE_TAG)
-	@$(CONTAINER_RUNTIME) tag $(CORE_FRONTEND_RUNTIME_IMAGE) quay.io/org-pulse/org-pulse-core-frontend-runtime:$(CORE_TAG)
 
 # ========================================
 # Smoke Tests
@@ -134,22 +113,6 @@ smoke-test: ## Run smoke tests against AI Eng images
 		bash -c "$(SETUP_CMD) && npm run test:smoke" || \
 		(EXIT_CODE=$$?; $(MAKE) clean-smoke-test; exit $$EXIT_CODE)
 	@echo "All smoke tests passed!"
-	@$(MAKE) clean-smoke-test
-
-smoke-test-core: ## Run smoke tests against core images
-	$(call start-container,$(BACKEND_CONTAINER),$(CORE_BACKEND_IMAGE),$(BACKEND_PORT),/api/healthz,-e DEMO_MODE=true)
-	@if [ "$(CONTAINER_RUNTIME)" = "podman" ] && [ "$(OS)" = "Darwin" ]; then \
-		BACKEND_HOST=$$($(CONTAINER_RUNTIME) run --rm alpine ip route | awk '/default/ {print $$3}'); \
-		$(MAKE) -s _start-frontend BACKEND_HOST=$$BACKEND_HOST FRONTEND_IMAGE=$(CORE_FRONTEND_IMAGE); \
-	else \
-		$(MAKE) -s _start-frontend BACKEND_HOST=127.0.0.1 FRONTEND_IMAGE=$(CORE_FRONTEND_IMAGE); \
-	fi
-	@echo "Running Playwright smoke tests against core images..."
-	$(CONTAINER_RUNTIME) run $(CONTAINER_FLAGS) $(COMMON_ENV) \
-		$(PLAYWRIGHT_IMAGE) \
-		bash -c "$(SETUP_CMD) && npm run test:smoke" || \
-		(EXIT_CODE=$$?; $(MAKE) clean-smoke-test; exit $$EXIT_CODE)
-	@echo "Core smoke tests passed!"
 	@$(MAKE) clean-smoke-test
 
 # Helper target to start frontend with dynamic BACKEND_HOST

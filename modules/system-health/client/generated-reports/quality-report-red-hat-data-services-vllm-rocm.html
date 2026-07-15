@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on May 28, 2026 at 10:05 PM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 05:41 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/vllm-rocm</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="508.93757999999997"
+                                stroke-dashoffset="475.0084079999999"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">1.0</div>
+                        <div class="score-value">1.6</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No source code or test files exist in this repository</div>
+                            <div class="scorecard-status">No source code or test files present — build-wrapper repo only</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or end-to-end tests of any kind</div>
+                            <div class="scorecard-status">No integration or E2E tests — repo contains only a Dockerfile and Tekton pipeline</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Konflux pipeline builds image on PR via label/comment trigger, but no automated validation</div>
+                            <div class="scorecard-status">Konflux PR build via Tekton with Clair scan and preflight checks, but no runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">Image builds from upstream base but no runtime validation, smoke tests, or vulnerability scanning</div>
+                            <div class="scorecard-status">Image builds via Konflux pipeline; no startup, runtime, or functional validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tools configured; no source code to measure</div>
+                            <div class="scorecard-status">No coverage tooling — no source code to cover</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Konflux PR pipeline exists but is label/comment-triggered, not automatic on every PR</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Tekton PipelineRun for PR builds with cancel-in-progress; no GitHub Actions or periodic jobs</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
+                            <div class="scorecard-status">No CLAUDE.md, .claude/ directory, or agent rules of any kind</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +411,51 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No runtime validation of built container image</div>
-                            <p>Image may fail to start, crash on GPU initialization, or serve incorrect responses — issues only discovered in staging or production</p>
+                            <div class="item-description">No container image runtime validation</div>
+                            <p>Image may build successfully but fail at startup — broken entrypoint, missing Python modules, or incompatible ROCm libraries not detected until deployment</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No automated tests of any kind</div>
-                            <p>Regressions in base image, environment variables, or entrypoint configuration go undetected until deployment</p>
+                            <div class="item-description">No smoke test or health-check validation</div>
+                            <p>vLLM gRPC adapter may not start or respond correctly; discovered only in staging/production</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Konflux build is not auto-triggered on PRs</div>
-                            <p>Contributors must manually request builds via /build-rocm comment or label; easy to skip, leading to untested merges</p>
+                            <div class="item-description">No vulnerability scanning beyond Clair</div>
+                            <p>Clair scans OS packages but misses Python dependency CVEs (pip packages in the base image)</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No container security scanning in repository</div>
-                            <p>Vulnerability CVEs in base image or dependencies not caught before merge</p>
+                            <div class="item-description">No .dockerignore file</div>
+                            <p>Build context may include unnecessary files (.git, docs), increasing build time and image layer sizes</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">0.5 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">skip-checks: true in Tekton PipelineRun</div>
+                            <p>Enterprise Contract and other Konflux validation checks are skipped on PR builds</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card low">
-                            <div class="item-description">Vestigial pre-commit config with no matching source files</div>
-                            <p>False sense of code quality enforcement; .pre-commit-config.yaml references Python/C++/shell tools but repo has no such files</p>
+                        <li class="item-card medium">
+                            <div class="item-description">No base image pinning or digest verification</div>
+                            <p>Dockerfile uses a tag-based base image (registry.redhat.io/rhaiis/vllm-rocm-rhel9:3.2.1) without digest pinning — builds are not fully reproducible</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,35 +472,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add automatic Konflux build trigger on every PR</div>
-                            <p>Ensures every PR builds the image before merge, eliminating manual /build-rocm step</p>
+                            <div class="item-description">Add a .dockerignore file</div>
+                            <p>Faster builds, smaller build context, avoids leaking .git metadata</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">0.5 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add container startup smoke test to pipeline</div>
-                            <p>Catches entrypoint crashes, missing dependencies, and environment variable issues before merge</p>
+                            <div class="item-description">Add container startup smoke test to Tekton pipeline</div>
+                            <p>Catch broken entrypoint, missing modules, or ROCm library issues before merge</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Dockerfile linting (hadolint)</div>
-                            <p>Catches Dockerfile best-practice violations and security issues in the build recipe</p>
+                            <div class="item-description">Pin base image by digest</div>
+                            <p>Reproducible builds — prevents silent base image changes from breaking downstream</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Remove or scope pre-commit config to actual repo content</div>
-                            <p>Eliminates confusion about what quality tools actually apply to this repository</p>
+                            <div class="item-description">Add Trivy scanning for Python dependencies</div>
+                            <p>Detect CVEs in pip packages that Clair&#x27;s OS-level scan misses</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">30 minutes</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create a basic CLAUDE.md with repo context</div>
+                            <p>AI agents and new contributors understand this is a build-wrapper repo, not a source repo</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +525,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add container runtime validation: test that the built image starts, binds ports 8000/8033, and responds to health checks</li><li>Enable automatic Konflux PR builds (remove on-comment/on-label gating) so every PR is validated</li></ul>
+                            <ul><li>Add container runtime validation — build the image, start it, verify vllm_tgis_adapter responds on gRPC port 8033</li><li>Add Python dependency vulnerability scanning (Trivy or Grype) alongside existing Clair scan</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add Trivy or Clair vulnerability scanning as a required PR check (Clair scan exists but with skip-checks: true)</li><li>Add hadolint Dockerfile linting to CI</li><li>Create a basic smoke test that validates the GRPC adapter entrypoint</li></ul>
+                            <ul><li>Enable Enterprise Contract checks (remove skip-checks: true) or document why they are skipped</li><li>Add base image digest pinning and Renovate/Dependabot for automated base image updates</li><li>Add a Tekton task to verify the ENTRYPOINT runs without GPU (--help or dry-run mode)</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add CLAUDE.md with build and contribution guidelines</li><li>Add integration test that loads a small model and sends a test inference request</li><li>Document the relationship between this repo and upstream vllm-project/vllm</li></ul>
+                            <ul><li>Create CLAUDE.md documenting repo purpose, relationship to upstream vllm, and Konflux build process</li><li>Add SBOM generation and image signing/attestation</li><li>Consider adding a periodic reconciliation job to detect drift between this repo and konflux-central</li></ul>
                         </div>
                     </div>
                 </div>

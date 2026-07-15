@@ -1,129 +1,157 @@
 ---
 repository: "red-hat-data-services/rhoai-additional-images"
-overall_score: 1.2
+overall_score: 1.6
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No code exists — repository is a YAML-only image reference list"
+    status: "No code exists — repository is a YAML-only image manifest registry"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests; no executable code to test"
+    status: "No integration or E2E tests; image references are never validated"
   - dimension: "Build Integration"
     score: 0.0
-    status: "No build process — no Dockerfiles, Makefiles, or build scripts"
+    status: "No CI/CD workflows; no PR validation of any kind"
   - dimension: "Image Testing"
-    score: 1.0
-    status: "Images are referenced by digest (pinned), but no validation of digest integrity or image pull testing"
+    score: 0.0
+    status: "No image pull, startup, or vulnerability validation for listed images"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tools — no code to cover"
+    status: "No coverage tooling — nothing to measure"
   - dimension: "CI/CD Automation"
-    score: 2.0
-    status: "No CI/CD workflows; PR reviews are the only gate; branch-per-release strategy provides some structure"
+    score: 3.0
+    status: "Branch-per-release model provides some structure; but no automation whatsoever"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules"
+    status: "No CLAUDE.md, .claude/ directory, or agent guidance"
 critical_gaps:
-  - title: "No YAML schema validation on PRs"
-    impact: "Malformed YAML or invalid image references can be merged without detection, potentially breaking disconnected installations"
+  - title: "Zero CI/CD — no GitHub Actions, no PR checks, no automation"
+    impact: "Typos, invalid digests, and broken image references merge unchecked"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No image digest verification"
-    impact: "Referenced image digests could point to non-existent or deleted images; broken references not caught until customer installation"
+    effort: "4-8 hours"
+  - title: "No image reference validation"
+    impact: "SHA digests could be wrong, images could be deleted or unreachable — nobody knows until disconnected deployment fails"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No CI/CD pipeline at all"
-    impact: "Zero automated checks on PRs — entirely dependent on human review for correctness"
+  - title: "No YAML schema validation on PRs"
+    impact: "Malformed YAML or wrong structure can merge silently"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No branch protection or required reviews"
-    impact: "PRs can be merged without review, risking accidental data corruption across release branches"
-    severity: "MEDIUM"
-    effort: "1 hour"
-quick_wins:
-  - title: "Add YAML lint workflow"
-    effort: "1-2 hours"
-    impact: "Catches syntax errors and formatting inconsistencies before merge"
-  - title: "Add image digest existence check"
     effort: "2-3 hours"
-    impact: "Validates that every referenced image digest is pullable from its registry"
+  - title: "No vulnerability scanning of referenced images"
+    impact: "Known CVEs in referenced images are never flagged — disconnected environments inherit all vulnerabilities"
+    severity: "HIGH"
+    effort: "4-6 hours"
+  - title: "No CODEOWNERS or branch protection"
+    impact: "Anyone with write access can push directly; no review enforcement"
+    severity: "MEDIUM"
+    effort: "1-2 hours"
+quick_wins:
+  - title: "Add YAML lint CI workflow"
+    effort: "1-2 hours"
+    impact: "Catch malformed YAML before merge — prevents disconnected environment failures"
+  - title: "Add image digest verification workflow"
+    effort: "2-3 hours"
+    impact: "Verify all referenced image digests actually exist in their registries"
   - title: "Add CODEOWNERS file"
     effort: "30 minutes"
-    impact: "Ensures correct reviewers are automatically assigned for PR reviews"
-  - title: "Add a LICENSE file"
-    effort: "15 minutes"
-    impact: "Clarifies usage rights for this public repository"
+    impact: "Enforce review requirements for image reference changes"
+  - title: "Add YAML schema validation"
+    effort: "2-3 hours"
+    impact: "Ensure consistent structure across all release branches"
+  - title: "Create CLAUDE.md with contribution guidelines"
+    effort: "1-2 hours"
+    impact: "Guide AI agents and contributors on proper image reference format"
 recommendations:
   priority_0:
-    - "Create a GitHub Actions workflow that validates YAML syntax and schema on every PR"
-    - "Add an image digest verification step that confirms all referenced digests exist and are pullable"
-    - "Enforce branch protection rules requiring at least 1 review approval before merge"
+    - "Implement GitHub Actions workflow to validate YAML syntax and structure on every PR"
+    - "Add image digest verification that pulls and validates each referenced image exists"
+    - "Add CODEOWNERS file and enable branch protection on release branches"
   priority_1:
-    - "Define a YAML schema (JSON Schema) for rhoai-disconnected-images.yaml to enforce structure"
-    - "Add automated cross-branch consistency checks to detect drift between release branches"
-    - "Create agent rules (.claude/rules/) with guidelines for updating image references"
+    - "Add Trivy/Grype scanning of all referenced images to flag CVEs before merge"
+    - "Create a JSON schema for rhoai-disconnected-images.yaml and validate on PRs"
+    - "Add automated staleness detection — flag images older than N days or with newer builds available"
   priority_2:
-    - "Add a changelog or release-notes automation to track image reference changes per release"
-    - "Implement image vulnerability pre-screening by checking Quay/Red Hat security grades for referenced images"
-    - "Add documentation on the disconnected installation workflow this repository supports"
+    - "Create agent rules (.claude/rules/) for proper image reference contributions"
+    - "Add automated release branch creation workflow"
+    - "Implement diff-based PR validation showing which images were added/removed/changed"
 ---
 
 # Quality Analysis: rhoai-additional-images
 
 ## Executive Summary
 
-- **Overall Score: 1.2/10**
-- **Repository Type**: Data-only (YAML image reference list)
-- **Primary Language**: None (YAML configuration only)
-- **Purpose**: Stores additional RHOAI container image references not tracked in manifests, primarily for disconnected/air-gapped installations
+- **Overall Score: 1.6/10**
+- **Repository Type**: Configuration-only — YAML image manifest registry for RHOAI disconnected environments
+- **Primary Language**: YAML (no application code)
+- **Key Strengths**: Consistent branch-per-release model (rhoai-2.11 through rhoai-3.5); clear purpose; simple, flat structure
+- **Critical Gaps**: Zero CI/CD automation; no PR validation; no image verification; no vulnerability scanning; no agent rules
+- **Agent Rules Status**: Missing — no CLAUDE.md, .claude/, or contribution guidelines
 
-This is an extremely minimal repository containing only a single YAML file (`rhoai-disconnected-images.yaml`) and a README across all 30+ branches. It has **zero code**, **zero tests**, **zero CI/CD**, and **zero automation**. While its simplicity is understandable given its narrow purpose (image reference storage), the complete absence of validation creates real risk — a typo in a SHA256 digest or malformed YAML could break disconnected installations with no automated detection.
+### Repository Overview
 
-- **Key Strengths**: Images pinned by digest (not tag), clear branch-per-release strategy
-- **Critical Gaps**: No CI/CD, no YAML validation, no image verification, no agent rules
-- **Agent Rules Status**: Missing
+`rhoai-additional-images` stores container image references (as SHA256 digests) for RHOAI components that are not included in the main operator manifests. These are specifically for **disconnected/air-gapped environments** that need to pre-mirror all required images. The repository has:
+
+- **1 file per release branch**: `rhoai-disconnected-images.yaml` (67 lines on rhoai-3.5)
+- **159 total commits** across all branches
+- **60 merged pull requests**
+- **Release branches**: rhoai-2.11 through rhoai-3.5 (plus EA branches)
+- **1 open PR** as of analysis date
+- **No license file**
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
 | Unit Tests | 0/10 | No code exists — YAML-only repository |
-| Integration/E2E | 0/10 | No integration or E2E tests |
-| **Build Integration** | **0/10** | **No build process of any kind** |
-| Image Testing | 1/10 | Digests pinned but never validated |
-| Coverage Tracking | 0/10 | No code to cover |
-| CI/CD Automation | 2/10 | Branch structure only; no automated checks |
-| Agent Rules | 0/10 | No .claude/ directory or agent guidance |
+| Integration/E2E | 0/10 | No validation that image references are correct or reachable |
+| **Build Integration** | **0/10** | **No CI/CD workflows of any kind** |
+| Image Testing | 0/10 | No image pull validation, no startup testing, no scanning |
+| Coverage Tracking | 0/10 | Nothing to measure — no tests, no code |
+| CI/CD Automation | 3/10 | Branch-per-release provides structure; but zero automation |
+| Agent Rules | 0/10 | No CLAUDE.md, .claude/ directory, or contribution guidance |
+
+**Weighted Overall: 1.6/10** (weighted: Unit 20%, Integration/E2E 25%, Image Testing 20%, Coverage 15%, CI/CD 20%)
 
 ## Critical Gaps
 
-### 1. No YAML Schema Validation on PRs
-- **Impact**: Malformed YAML or invalid image references can be merged without detection, potentially breaking disconnected installations
+### 1. Zero CI/CD — No GitHub Actions, No PR Checks
+- **Impact**: Typos, invalid SHA digests, wrong image names, and malformed YAML all merge without any automated check. Given this repository directly affects disconnected environment deployments, errors here surface only at deployment time in air-gapped environments where debugging is extremely difficult.
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Evidence**: All 87+ PRs merged with zero automated checks; PR #79 removed images that had to be reverted in PR #80, suggesting manual review alone is insufficient
+- **Effort**: 4-8 hours to implement basic workflow suite
+- **Evidence**: No `.github/workflows/` directory exists on any branch. No Makefile, no Jenkinsfile, no CI configuration of any kind.
 
-### 2. No Image Digest Verification
-- **Impact**: Referenced image digests could point to non-existent, deleted, or compromised images; failures only surface during customer installation in air-gapped environments
+### 2. No Image Reference Validation
+- **Impact**: The core purpose of this repository is listing valid image references. Yet there is no automated check that these digests:
+  - Actually exist in their registries (quay.io, registry.redhat.io)
+  - Haven't been deleted or garbage-collected
+  - Match the expected tag (comments say the tag but the reference is a digest)
+  - Are pullable with appropriate credentials
 - **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Evidence**: The YAML file on `rhoai-3.4` references 60+ image digests across `quay.io/modh` and `registry.redhat.io/rhoai` — none are verified to be pullable
+- **Effort**: 4-6 hours (skopeo inspect in CI)
 
-### 3. No CI/CD Pipeline
-- **Impact**: Zero automated checks on PRs — entirely dependent on human review for correctness
+### 3. No YAML Schema Validation
+- **Impact**: The YAML structure is ad-hoc — a single top-level key `additional-images:` with a flat list. No schema enforces this structure. Comments are used informally for metadata (image tags, deprecation notices, Jira references) but there's no machine-readable schema.
 - **Severity**: HIGH
-- **Effort**: 2-4 hours to set up basic GitHub Actions
-- **Evidence**: No `.github/workflows/` directory exists on any branch
+- **Effort**: 2-3 hours
 
-### 4. No Branch Protection or Required Reviews
-- **Impact**: PRs can be merged without review, risking accidental data corruption
+### 4. No Vulnerability Scanning of Referenced Images
+- **Impact**: This repository lists images for disconnected environments. If any referenced image contains known CVEs, those vulnerabilities will be deployed into air-gapped environments where patching is especially difficult. No scanning is performed.
+- **Severity**: HIGH
+- **Effort**: 4-6 hours (Trivy/Grype scanning workflow)
+
+### 5. No CODEOWNERS or Branch Protection
+- **Impact**: Anyone with write access can push directly to release branches. There's no enforced review requirement. For a repository that directly impacts production disconnected deployments, this is a significant governance gap.
 - **Severity**: MEDIUM
-- **Effort**: 1 hour (GitHub settings)
+- **Effort**: 1-2 hours
+
+### 6. No Documentation Beyond README
+- **Impact**: The README is a single sentence: "To store additional RHOAI images which are not being refernced in the manifests" (with a typo). There's no contribution guide, no format specification, no process documentation for adding/removing images.
+- **Severity**: MEDIUM
+- **Effort**: 2-3 hours
 
 ## Quick Wins
 
-### 1. Add YAML Lint Workflow (1-2 hours)
-Catches syntax errors and formatting inconsistencies before merge.
+### 1. Add YAML Lint CI Workflow (1-2 hours)
+Catch malformed YAML before merge.
 
 ```yaml
 # .github/workflows/yaml-lint.yml
@@ -141,13 +169,12 @@ jobs:
           config_data: |
             extends: default
             rules:
-              line-length:
-                max: 256
-              document-start: disable
+              line-length: disable
+              truthy: disable
 ```
 
-### 2. Add Image Digest Existence Check (2-3 hours)
-Validates that every referenced image digest is pullable from its registry.
+### 2. Add Image Digest Verification (2-3 hours)
+Verify all referenced image digests actually exist.
 
 ```yaml
 # .github/workflows/verify-images.yml
@@ -160,10 +187,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install skopeo
         run: sudo apt-get install -y skopeo
-      - name: Verify digests exist
+      - name: Verify digests
         run: |
           grep -oP '^\s*-\s+\K\S+@sha256:\S+' rhoai-disconnected-images.yaml | while read img; do
-            echo "Checking: $img"
+            echo "Checking $img..."
             skopeo inspect --no-tags "docker://$img" > /dev/null 2>&1 || {
               echo "::error::Image not found: $img"
               exit 1
@@ -171,154 +198,226 @@ jobs:
           done
 ```
 
-### 3. Add CODEOWNERS File (30 minutes)
-Ensures correct reviewers are automatically assigned.
+### 3. Add CODEOWNERS (30 minutes)
+Enforce review requirements.
 
 ```
 # CODEOWNERS
 * @red-hat-data-services/rhoai-release-team
 ```
 
-### 4. Add a LICENSE File (15 minutes)
-This is a public repository with no license, which creates legal ambiguity.
+### 4. Add YAML Schema (2-3 hours)
+Ensure consistent structure.
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["additional-images"],
+  "properties": {
+    "additional-images": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9.-]+/[a-z0-9._/-]+@sha256:[a-f0-9]{64}$"
+      }
+    }
+  },
+  "additionalProperties": false
+}
+```
+
+### 5. Create CLAUDE.md (1-2 hours)
+Guide AI agents and contributors.
+
+```markdown
+# CLAUDE.md — rhoai-additional-images
+
+## Purpose
+This repository stores additional RHOAI container image references (by SHA digest)
+for disconnected/air-gapped environment deployments.
+
+## Structure
+- One release branch per RHOAI version (e.g., rhoai-3.5)
+- Each branch contains `rhoai-disconnected-images.yaml`
+- Images are listed as `registry/repo@sha256:digest`
+
+## Contribution Rules
+- Always use full SHA256 digest, never floating tags
+- Add a comment above each image with the human-readable tag
+- Reference the Jira issue in commit messages
+- Target the correct release branch (never merge to main)
+```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
+**Status: Non-existent**
 
-**Status**: Non-existent
+There are zero CI/CD configuration files anywhere in the repository. No `.github/workflows/`, no `Makefile`, no `Jenkinsfile`, no `.gitlab-ci.yml`. Pull requests merge without any automated validation.
 
-- No `.github/workflows/` directory on any branch (all 30+ branches checked)
-- No `Makefile`, `Jenkinsfile`, `.gitlab-ci.yml`, or any CI configuration
-- PRs are merged through GitHub UI with manual review only
-- 87+ PRs merged to date with zero automation gates
-- **Notable incident**: PR #79 (remove 2024.1 images) was immediately reverted by PR #80 (restore required notebook images), suggesting that better validation could have prevented the incorrect removal
+The branch-per-release model (rhoai-2.11 through rhoai-3.5, plus EA branches like rhoai-3.4-ea.1) provides organizational structure, but there is no automation around branch creation, image validation, or release processes.
 
 ### Test Coverage
+**Status: Not applicable (no code) — but validation tests are critically missing**
 
-**Status**: Not applicable (no executable code)
-
-- The repository contains zero executable code — only YAML data files
-- No test files of any kind exist (`*_test.go`, `*.spec.ts`, `*.test.py`, etc.)
-- No test directories (`test/`, `tests/`, `e2e/`, `integration/`)
-- **However**, the YAML data itself is testable:
-  - YAML syntax validation
-  - Schema conformance checks
-  - Image digest format validation (sha256 hex, correct length)
-  - Registry reachability checks
-  - Cross-branch consistency verification
+While there is no application code to test, this repository would greatly benefit from validation tests:
+- **YAML syntax validation** — ensures the file parses correctly
+- **Schema validation** — ensures the structure matches expectations
+- **Digest format validation** — ensures all entries are valid `registry/repo@sha256:hex` format
+- **Registry reachability** — ensures referenced images actually exist
+- **Duplicate detection** — ensures no image is listed twice
+- **Staleness detection** — flags images that may have newer builds available
 
 ### Code Quality
+**Status: Minimal**
 
-**Status**: Minimal
-
-- No linting tools configured (no `.yamllint`, `.pre-commit-config.yaml`, etc.)
+- No linting configuration for YAML files
 - No pre-commit hooks
-- No static analysis
-- YAML file uses comments to annotate image sources (e.g., `# Corresponds to quay.io/modh/ray:2.52.1-py311-cu121`), which is good practice
-- Image references are consistently pinned by `@sha256:` digest rather than mutable tags — this is the single strongest quality practice in the repository
+- No `.editorconfig` or formatting standards
+- Comments within `rhoai-disconnected-images.yaml` are inconsistent:
+  - Some images have Jira references (e.g., `RHOAIENG-37682`)
+  - Some have tag mappings (e.g., `quay.io/modh/ray:2.52.1-py311-cu121`)
+  - Some have deprecation notices
+  - Some have future action TODOs
+  - Many have no comments at all
 
 ### Container Images
+**Status: This IS the container image manifest — but no validation exists**
 
-**Status**: Reference-only (no builds)
+The entire purpose of this repository is maintaining container image references. The latest branch (rhoai-3.5) lists approximately 50+ images from:
+- `quay.io/modh/` — Ray, FMS HF Tuning images
+- `registry.redhat.io/rhoai/` — Workbench (Jupyter, CodeServer), Pipeline Runtime images
 
-- This repository does not build images — it references them
-- Images are sourced from two registries:
-  - `quay.io/modh/` — upstream/community images
-  - `registry.redhat.io/rhoai/` — official Red Hat images
-- All references use immutable `@sha256:` digests (good practice)
-- Categories of referenced images:
-  - Ray runtime images (CUDA, ROCm variants)
-  - Notebook images (minimal, data science, PyTorch, TensorFlow, TrustyAI)
-  - Code Server images
-  - FMS HF Tuning images
-  - LLM Compressor images
-- **Gap**: No verification that these digests are valid, pullable, or free of known CVEs
+Image categories observed:
+- **Ray runtime images** — CUDA and ROCm variants (multiple Python/Ray/CUDA versions)
+- **FMS HF Tuning** — Fine-tuning images
+- **Workbench images** — Jupyter notebooks, CodeServer (CPU, CUDA, ROCm)
+- **Pipeline runtime images** — Data science, PyTorch, TensorFlow (CPU, CUDA, ROCm)
+
+**No validation exists** for any of these image references.
 
 ### Security
+**Status: Non-existent**
 
-**Status**: Non-existent
-
-- No security scanning of any kind
-- No dependency scanning (though there are no dependencies)
+- No vulnerability scanning (Trivy, Grype, Snyk) of referenced images
 - No secret detection
-- No Trivy/Snyk/CodeQL integration
-- No image vulnerability checking for referenced images
-- **Risk**: Referenced images could contain known CVEs without detection at the reference-list level
-- **Positive**: No secrets to leak — the YAML contains only public image references
+- No SBOM generation
+- No image signing verification
+- No CODEOWNERS file
+- No branch protection visible
+- For a repository that affects air-gapped deployments, this is a significant security gap
 
 ### Agent Rules (Agentic Flow Quality)
+**Status: Missing**
 
-- **Status**: Missing
-- **Coverage**: None — no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
-- **Quality**: N/A
-- **Gaps**: 
-  - No guidelines for how to add or update image references
-  - No conventions documented for comment formatting
-  - No branch naming or PR title conventions documented
-  - No guidance on which images belong in this repo vs. manifests
-- **Recommendation**: Create a `CLAUDE.md` with guidelines for updating the YAML file, including:
-  - Always use `@sha256:` digests, never tags
-  - Add a comment with the human-readable tag for each digest
-  - Group images by category (notebooks, runtimes, etc.)
-  - Reference the JIRA ticket in PR title
+- No `CLAUDE.md` or `AGENTS.md` in root
+- No `.claude/` directory
+- No `.claude/rules/` for contribution rules
+- No `.claude/skills/` for custom skills
+- No testing documentation
+- **Recommendation**: Generate contribution rules with `/test-rules-generator` — even for YAML-only repos, agent rules can enforce proper format, digest validation patterns, and branch targeting
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Create a GitHub Actions YAML validation workflow** — Validates syntax and schema on every PR. Prevents malformed data from reaching release branches.
-2. **Add image digest verification** — Uses `skopeo inspect` to confirm every referenced digest exists and is pullable. Prevents broken references from reaching disconnected installations.
-3. **Enable branch protection** — Require at least 1 approved review before merge on all `rhoai-*` branches. Prevents accidental merges of bad data.
+1. **Implement GitHub Actions workflow suite for PR validation**
+   - YAML syntax linting
+   - Schema validation against a defined JSON schema
+   - Digest format validation (regex check for `registry/repo@sha256:64-hex-chars`)
+   - Duplicate entry detection
+   - Diff-based summary showing what images were added/removed/changed
+
+2. **Add image digest verification CI**
+   - Use `skopeo inspect` to verify each referenced digest exists in its registry
+   - Run on PRs and periodically (weekly) to catch deleted/garbage-collected images
+   - Report which images are unreachable
+
+3. **Enable branch protection on all release branches**
+   - Require at least 1 approval
+   - Require status checks to pass
+   - Add CODEOWNERS file
 
 ### Priority 1 (High Value)
 
-4. **Define a formal YAML schema** — Create a JSON Schema for `rhoai-disconnected-images.yaml` to enforce structure (list of strings, each matching `registry/repo@sha256:hex` format).
-5. **Add cross-branch consistency checks** — Automated comparison to detect unintended drift between release branches (e.g., image removed from one branch but not others).
-6. **Create agent rules** — `.claude/rules/` with guidelines for modifying the image reference list, including format conventions and validation requirements.
-7. **Add CODEOWNERS** — Automatic reviewer assignment for PRs.
+4. **Add vulnerability scanning for all referenced images**
+   - Weekly Trivy/Grype scan of every listed image
+   - Alert on CRITICAL/HIGH CVEs
+   - Especially important since these images go to disconnected environments where patching is harder
+
+5. **Create a JSON schema for the YAML format and validate on PRs**
+   - Define the expected structure
+   - Validate image reference format
+   - Validate comment conventions (tag mappings, Jira references)
+
+6. **Add automated staleness detection**
+   - Flag images that have newer builds available in the same tag series
+   - Flag images where the corresponding tag has moved to a different digest
+   - Run weekly as a scheduled workflow
+
+7. **Improve documentation**
+   - Expand README with purpose, structure, and contribution process
+   - Document the branch-per-release strategy
+   - Document the image categories and which team owns each
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Automated changelog generation** — Track which images were added, removed, or updated per release branch.
-9. **Image vulnerability pre-screening** — Check Quay/RH security grades for referenced images before accepting a PR.
-10. **Documentation** — Add a CONTRIBUTING.md explaining the workflow for updating image references, the relationship to disconnected installations, and the branch strategy.
-11. **Add a LICENSE file** — Clarify usage rights for this public repository.
+8. **Create agent rules (`.claude/rules/`) for proper contributions**
+   - Format rules for image references
+   - Branch targeting rules (which release branch to target)
+   - Comment conventions (tag mapping, Jira references, deprecation notices)
+
+9. **Add automated release branch creation workflow**
+   - When a new RHOAI version is tagged, automatically create the release branch
+   - Copy the previous release's image list as a starting point
+   - Open a PR for review
+
+10. **Implement diff-based PR annotation**
+    - Show a clear summary of which images were added, removed, or updated
+    - Highlight digest changes with the corresponding tag changes
+    - Flag potential issues (e.g., downgrading an image version)
+
+11. **Add image metadata enrichment**
+    - Automatically fetch and display image size, creation date, and OS/arch
+    - Show CVE counts for each image
+    - Make PR reviews more informed
 
 ## Comparison to Gold Standards
 
-| Practice | Gold Standard (odh-dashboard) | Gold Standard (notebooks) | rhoai-additional-images |
-|----------|-------------------------------|---------------------------|------------------------|
-| CI/CD Workflows | 15+ workflows covering lint, test, build, deploy | Multi-stage image testing pipeline | None |
-| Unit Tests | Comprehensive Jest/Cypress suite | Python/notebook tests | N/A (no code) |
-| Integration Tests | Contract tests, API tests | Multi-framework notebook validation | None |
-| E2E Tests | Cypress E2E with multi-browser | Image boot tests across platforms | None |
-| Coverage Tracking | Codecov with thresholds | Coverage reports | None |
-| Image Testing | N/A | 5-layer image validation | None (images referenced but not validated) |
-| Security Scanning | CodeQL, Trivy, Snyk | Trivy scanning | None |
-| Agent Rules | Comprehensive .claude/rules/ | Testing guidance docs | None |
-| YAML Validation | Schema-validated configs | N/A | None |
-| Branch Protection | Required reviews, status checks | Required reviews | Not configured |
-
-## Repository Characteristics
-
-This repository is unusual in that it contains **zero executable code**. It serves as a versioned registry of container image references for RHOAI disconnected/air-gapped installations. Key characteristics:
-
-- **30+ branches** spanning RHOAI versions 2.11 through 3.5-ea.1
-- **Single YAML file** per branch listing image digests
-- **87+ merged PRs** to date, all manually reviewed
-- **Active maintenance** — most recent PR merged May 14, 2026
-- **Contributors** primarily update image SHA digests as new versions are released
-- **No build artifacts** — this repo is consumed by other tools/processes that mirror images for disconnected environments
+| Dimension | rhoai-additional-images | odh-dashboard | notebooks | kserve |
+|-----------|------------------------|---------------|-----------|--------|
+| CI/CD Workflows | None | 15+ workflows | 10+ workflows | 20+ workflows |
+| PR Validation | None | Lint, test, build | Lint, test, build | Lint, test, coverage |
+| Image Validation | None | Build & test images | 5-layer validation | Build & push |
+| Schema Validation | None | TypeScript strict | Notebook spec validation | CRD validation |
+| Vulnerability Scanning | None | Snyk, CodeQL | Trivy scanning | Trivy, CodeQL |
+| Branch Protection | Unknown | Enforced | Enforced | Enforced |
+| CODEOWNERS | None | Present | Present | Present |
+| Agent Rules | None | Comprehensive | Basic | None |
+| Documentation | 1-line README | Extensive | Good | Extensive |
 
 ## File Paths Reference
 
-| File | Location | Purpose |
-|------|----------|---------|
-| `README.md` | Root | Repository description (1 line) |
-| `rhoai-disconnected-images.yaml` | Root | Image reference list |
-| `.github/workflows/` | Missing | No CI/CD configuration |
-| `CLAUDE.md` | Missing | No agent rules |
-| `CODEOWNERS` | Missing | No automatic reviewer assignment |
-| `LICENSE` | Missing | No license file |
-| `CONTRIBUTING.md` | Missing | No contribution guidelines |
+### Repository Structure (rhoai-3.5 branch)
+```
+rhoai-additional-images/
+├── README.md                           # 1-line description
+└── rhoai-disconnected-images.yaml      # 67 lines, ~50+ image references
+```
+
+### Key Observations
+- **main branch**: Only contains README.md (initial commit)
+- **Release branches** (rhoai-2.11 through rhoai-3.5): Each contains README.md + rhoai-disconnected-images.yaml
+- **EA branches** (rhoai-3.4-ea.1, rhoai-3.5-ea.1, etc.): Early-access release branches
+- **Patch branches** (moulalis-patch-*, cherry-pick, etc.): Contributor working branches
+
+### Missing Files (Expected for a repo of this purpose)
+- `.github/workflows/` — No CI/CD
+- `CODEOWNERS` — No ownership enforcement
+- `schema.json` — No YAML schema
+- `.yamllint.yml` — No YAML linting config
+- `CLAUDE.md` — No agent guidance
+- `.claude/rules/` — No contribution rules
+- `CONTRIBUTING.md` — No contribution guide
+- `LICENSE` — No license file

@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:05 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 03:47 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/architecture-decision-records</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="463.69868399999996"
+                                stroke-dashoffset="373.220892"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">1.8</div>
+                        <div class="score-value">3.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -390,12 +390,27 @@
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">Only stale-bot workflow; no markdown linting, link checking, or ADR validation</div>
+                            <div class="scorecard-status">Only a stale-bot workflow; no link checking, linting, or template validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Has .claude/skills/odh-adr-create skill; no rules directory or test guidance</div>
+                            <div class="scorecard-status">Basic ADR creation skill exists but no validation or review rules</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Documentation Governance</h3>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Template exists but inconsistent adherence; duplicate ADR numbers; broken links</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Content Quality</h3>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Active repo with 38 ADRs; good template but uneven compliance</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Contributor Experience</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">CODEOWNERS present but no PR template, CONTRIBUTING guide, or issue templates</div>
                         </div>
                     </div>
                 </div>
@@ -411,32 +426,40 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No markdown linting or link validation in CI</div>
-                            <p>Broken links, inconsistent formatting, and stale references go undetected</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No ADR template compliance validation</div>
-                            <p>ADRs may be merged with missing required sections (What, Why, Goals, Alternatives, etc.)</p>
+                            <div class="item-description">No CI/CD validation for documentation quality</div>
+                            <p>Broken links, formatting issues, and template non-compliance go undetected until manual review</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No CODEOWNERS enforcement via branch protection</div>
-                            <p>CODEOWNERS file exists but without required reviews, ADRs can be merged without architect approval</p>
+                        <li class="item-card high">
+                            <div class="item-description">Duplicate ADR numbers in operator directory</div>
+                            <p>Three pairs of duplicated numbers (0007, 0009, 0011) create confusion and violate the ADR numbering contract</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Missing ADR status tracking and lifecycle automation</div>
-                            <p>No way to track which ADRs are Draft, Approved, or Superseded without reading each file</p>
+                            <div class="item-description">No PR template or contributor guide</div>
+                            <p>New contributors have no guidance on ADR submission process, review expectations, or quality standards</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">Broken internal links in arch-overview.md</div>
+                            <p>20+ broken image references in the main architecture overview document</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">Inconsistent ADR template adherence</div>
+                            <p>Some ADRs missing required sections (Alternatives, Stakeholder Impacts); one uses bold headings instead of ## sections</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
@@ -456,35 +479,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add markdownlint CI workflow</div>
-                            <p>Enforces consistent markdown formatting across all ADRs and documentation</p>
+                            <div class="item-description">Add markdown linting CI workflow</div>
+                            <p>Automated detection of formatting issues, broken links, and style inconsistencies</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add link checker workflow (lychee or markdown-link-check)</div>
-                            <p>Catches broken links to external docs, images, and cross-references</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add PR template for new ADRs</div>
-                            <p>Guides contributors to include required sections and metadata</p>
+                            <div class="item-description">Add PR template for ADR submissions</div>
+                            <p>Standardized PR process with checklist for required sections, reviewer assignment, and status</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add .claude/rules/ directory with ADR review guidelines</div>
-                            <p>Enables AI-assisted ADR review for completeness and quality</p>
+                            <div class="item-description">Fix duplicate ADR numbers</div>
+                            <p>Resolve three pairs of duplicated operator ADR numbers to restore numbering integrity</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add internal link checker workflow</div>
+                            <p>Catch broken links before merge, especially for image references</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +524,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add markdown linting workflow (markdownlint-cli2) to enforce formatting standards on PRs</li><li>Add link validation workflow to catch broken internal and external links</li></ul>
+                            <ul><li>Add CI workflow for markdown linting (markdownlint) and link validation to catch quality issues pre-merge</li><li>Fix the three pairs of duplicate ADR numbers in the operator directory (0007, 0009, 0011)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Create ADR template validation script that checks all required sections are present</li><li>Add PR template with checklist for ADR submissions</li><li>Create .claude/rules/ with ADR review guidelines for AI-assisted quality checks</li></ul>
+                            <ul><li>Create CONTRIBUTING.md with ADR submission guidelines, review process, and template checklist</li><li>Add a PR template with ADR quality checklist (required sections, numbering, status field)</li><li>Create an ADR validation skill that checks template compliance and numbering conflicts</li><li>Fix the 20+ broken image links in documentation/arch-overview.md</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Build ADR index generator that creates a status dashboard from ADR metadata</li><li>Add spell-checker workflow (cspell) for technical documentation quality</li><li>Create a CONTRIBUTING.md with the ADR authoring workflow</li></ul>
+                            <ul><li>Add issue templates for proposing new ADRs</li><li>Add an ADR status dashboard or index page with filtering by status and component</li><li>Create a CI check that validates ADR YAML metadata tables for consistency</li><li>Add spell-checking and writing style linting (vale) to CI</li></ul>
                         </div>
                     </div>
                 </div>

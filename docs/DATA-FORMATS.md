@@ -219,6 +219,13 @@ Stores the consolidated configuration for automated roster building (merged from
   "lastSyncAt": "2026-03-27T06:00:00.000Z",
   "lastSyncStatus": "success",
   "lastSyncError": null,
+  "ldapFields": {
+    "discovered": ["rhatRnDComponent", "rhatSubproduct", "rhatJobRole"],
+    "discoveredAt": "2026-06-18T12:00:00.000Z",
+    "enabled": [
+      { "attribute": "rhatRnDComponent", "label": "Business Unit" }
+    ]
+  },
   "_migratedFrom": "roster-sync-config.json"
 }
 ```
@@ -233,6 +240,7 @@ Stores the consolidated configuration for automated roster building (merged from
 - `autoSync` controls the automatic sync scheduler (default disabled).
 - `lastSyncAt`, `lastSyncStatus`, `lastSyncError` are auto-populated during sync runs.
 - `teamDataSource` controls where team structure data lives: `"sheets"` (default, Google Sheets enrichment) or `"in-app"` (managed via the Team Structure Management UI). When `"in-app"`, Sheets Phase 2 enrichment is skipped during sync.
+- `ldapFields` configures admin-managed LDAP attribute discovery and sync. `discovered` is the cached list of all available LDAP attributes from the last schema query (populated via `POST /api/admin/roster-sync/ldap-discover`). `enabled` is the admin-selected subset with display labels (max 20). Attributes already in the hardcoded base set (`LDAP_ATTRS`) are rejected. Empty or missing `ldapFields` means no extra LDAP attributes are synced (backward compatible).
 - `_migratedFrom` is set to `"roster-sync-config.json"` after one-time migration from the legacy config file. The old file is never deleted (rollback safety net).
 
 ## Sync Log — `data/team-data/sync-log.json`
@@ -351,7 +359,8 @@ The single source of truth for all people data. Built by the consolidated sync p
       "jiraTeam": "Platform",
       "specialty": "backend",
       "teamIds": ["team_a1b2c3"],
-      "_appFields": { "field_x1y2z3": "backend" }
+      "_appFields": { "field_x1y2z3": "backend" },
+      "ldapExtra": { "rhatRnDComponent": "Enablement", "rhatSubproduct": "Red Hat OpenShift AI" }
     }
   }
 }
@@ -367,6 +376,7 @@ The single source of truth for all people data. Built by the consolidated sync p
 - Enrichment fields from Google Sheets (`_teamGrouping`, `specialty`, `jiraTeam`, etc.) are stored as top-level fields on person records.
 - `teamIds` is an array of team IDs (e.g., `["team_a1b2c3"]`) linking the person to in-app managed teams. Defaults to `[]`. Only used when `teamDataSource` is `"in-app"`.
 - `_appFields` is an object mapping field definition IDs to values. Values are strings for single-value fields, or arrays of strings for multi-value fields (e.g., `{ "field_x1y2z3": "backend", "field_mv0001": ["Python", "Go"] }`). Stores person-level custom field values managed in-app. The `_` prefix ensures it is not overwritten by Sheets enrichment during sync.
+- `ldapExtra` is an optional object containing admin-enabled LDAP attributes beyond the hardcoded base set. Keys are LDAP attribute names (e.g., `rhatRnDComponent`), values are strings or arrays for multi-value attributes. Only present when admin has enabled extra LDAP fields via Settings > LDAP Fields. Populated during roster sync; cleared when all extra fields are disabled.
 
 **Derived roster API response (`GET /api/roster`):**
 - When multiple org roots share the same explicitly-configured `displayName` in config, `deriveRoster()` merges them into a single org entry.
@@ -919,6 +929,62 @@ The API response format:
 
 ---
 
+## Releases — Quality 90-Day Summary (API Response)
+
+**Note:** Computed dynamically by the `GET /api/modules/releases/delivery/quality/90day-summary` endpoint from stored versions and bug files. No stored file — data is derived at request time.
+
+The API response format:
+
+```json
+{
+  "releases": [
+    {
+      "version": "3.4",
+      "products": [
+        {
+          "name": "rhoai-3.4",
+          "bugCount": 12,
+          "daysElapsed": 54,
+          "isComplete": false,
+          "releaseDate": "2026-05-08"
+        },
+        {
+          "name": "rhelai-3.4",
+          "bugCount": 5,
+          "daysElapsed": 54,
+          "isComplete": false,
+          "releaseDate": "2026-05-08"
+        },
+        {
+          "name": "rhaii-3.4",
+          "bugCount": 3,
+          "daysElapsed": 54,
+          "isComplete": false,
+          "releaseDate": "2026-05-08"
+        }
+      ],
+      "total": 20
+    }
+  ]
+}
+```
+
+**Fields (release):**
+- `version` (string): Release family number (e.g., "3.4")
+- `products` (array): Product-level breakdown
+- `total` (number): Total bugs across all products in this release family
+
+**Fields (product):**
+- `name` (string): Full version name (e.g., "rhoai-3.4")
+- `bugCount` (number): Bugs created within 90 days of GA
+- `daysElapsed` (number): Days since GA, capped at 90
+- `isComplete` (boolean): Whether the 90-day tracking window has closed
+- `releaseDate` (string): ISO date (YYYY-MM-DD) of the GA release
+
+Releases are sorted descending by version number (newest first). Only major versions (X.X) are included; z-stream versions (e.g., 3.3.1) are excluded.
+
+---
+
 ## API Tokens — `data/api-tokens.json`
 
 Stores hashed API tokens for bearer-token authentication. Created on first token creation.
@@ -1237,11 +1303,11 @@ Metadata from the most recent fetch attempt.
 
 ## Release Health Cache — `data/releases/planning/health-cache-{version}-{phase}.json`
 
-Generated by the health pipeline (`runHealthPipeline()`). Version 3 adds planning-phase support.
+Generated by the health pipeline (`runHealthPipeline()`). Version 4 adds FPDoR readiness.
 
 ```json
 {
-  "healthCacheVersion": 3,
+  "healthCacheVersion": 4,
   "cachedAt": "2026-06-09T14:30:00.000Z",
   "version": "3.5",
   "releasePhaseMode": "planning",
@@ -1255,6 +1321,10 @@ Generated by the health pipeline (`runHealthPipeline()`). Version 3 adds plannin
       "withHardBlockers": 10,
       "withWarnings": 5,
       "byCheck": { "DoR-P1": 40, "DoR-P2": 42, "DoR-P3": 45, "DoR-P4": 35, "DoR-P5": 38 }
+    },
+    "fpdorReadiness": {
+      "fullyPassed": 25,
+      "totalFeatures": 45
     }
   },
   "features": [
@@ -1268,6 +1338,17 @@ Generated by the health pipeline (`runHealthPipeline()`). Version 3 adds plannin
         "totalCount": 5,
         "hasHardBlockers": false,
         "hardBlockersFailed": []
+      },
+      "fpdor": {
+        "items": [
+          { "name": "Requirements Clarity", "pass": null, "source": "jira", "state": "not-evaluated" },
+          { "name": "RICE Score", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Components", "pass": true, "source": "jira", "state": "passed" },
+          { "name": "Acceptance Criteria", "pass": null, "source": "strat-pipeline", "state": "not-evaluated" }
+        ],
+        "passedCount": 5,
+        "totalCount": 10,
+        "evaluatedCount": 7
       }
     }
   ]
@@ -1276,7 +1357,7 @@ Generated by the health pipeline (`runHealthPipeline()`). Version 3 adds plannin
 
 | Field | Type | Added In | Description |
 |-------|------|----------|-------------|
-| `healthCacheVersion` | number | v1 | Schema version (bumped from 2 to 3 for planning checks) |
+| `healthCacheVersion` | number | v1 | Schema version (current: 4) |
 | `releasePhaseMode` | `"planning"` / `"execution"` / `"unknown"` | v3 | Derived from `computeMilestoneInfo().currentPhase`. `"planning"` = before GA Freeze. |
 | `summary.planningReadiness` | object / null | v3 | Aggregated planning check results. Null when not in planning mode or `enablePlanningChecks` is false. |
 | `summary.planningReadiness.byCheck` | object | v3 | Map of check ID to count of features passing that check (e.g., `{ "DoR-P1": 40 }`). |
@@ -1284,6 +1365,14 @@ Generated by the health pipeline (`runHealthPipeline()`). Version 3 adds plannin
 | `features[].planningChecks.checks[]` | array | v3 | Array of `{ id, label, passed, severity, detail }` objects. All checks have `severity: "hard-blocker"`. |
 | `features[].planningChecks.hasHardBlockers` | boolean | v3 | True if any hard-blocker check failed. |
 | `features[].planningChecks.hardBlockersFailed` | array | v3 | Subset of `checks` where `severity === "hard-blocker"` and `passed === false`. |
+| `summary.fpdorReadiness` | object / null | v4 | Aggregate FPDoR readiness. Null in empty cache. |
+| `summary.fpdorReadiness.fullyPassed` | number | v4 | Features where all evaluated FPDoR items passed (`evaluatedCount >= 6`). |
+| `summary.fpdorReadiness.totalFeatures` | number | v4 | Total features assessed. |
+| `features[].fpdor` | object / null | v4 | Per-feature FPDoR (Feature Planning Definition of Readiness) result. |
+| `features[].fpdor.items[]` | array | v4 | Array of 10 `{ name, pass, source, state, detail }` objects. `pass`: `true`/`false`/`null`; `source`: `"jira"` or `"strat-pipeline"`; `state`: `"passed"`, `"failed"`, or `"not-evaluated"`. |
+| `features[].fpdor.passedCount` | number | v4 | Items where `pass === true`. |
+| `features[].fpdor.evaluatedCount` | number | v4 | Items where `pass !== null` (7 jira items always evaluated). |
+| `features[].fpdor.totalCount` | number | v4 | Always 10 (7 jira + 3 strat-pipeline). |
 
 **Planning check IDs:**
 
@@ -1505,9 +1594,9 @@ Disconnected readiness reports tracking repository readiness scores for disconne
 
 ---
 
-## Catalyst Showcase Data — `data/catalyst-showcase/showcase-data.json`
+## AI Catalyst Showcase Data — `data/ai-catalyst/showcase/showcase-data.json`
 
-Synced from a Google Sheet via the catalyst-showcase module. Contains all showcase entries and strategy pillar definitions.
+Synced from a Google Sheet via the ai-catalyst module (showcase feature). Contains all showcase entries and strategy pillar definitions.
 
 ```json
 {
@@ -1572,6 +1661,62 @@ Synced from a Google Sheet via the catalyst-showcase module. Contains all showca
 | `entries[].quayUrl` | string | Pipe-separated Quay repo URLs |
 | `entries[].otherResourceUrls` | string | Pipe-separated misc resource URLs |
 | `entries[].mermaidSource` | string | Mermaid diagram source (rendered on detail page) |
+
+---
+
+## OKR Hub — Feature Delivery Accuracy
+
+### Config: `okr-hub/feature-delivery-config.json`
+
+```json
+{
+  "releases": [
+    {
+      "name": "Release 3.4",
+      "products": [
+        { "version": "rhoai-3.4", "freezeDate": "2026-03-01", "releaseDate": "2026-05-14" },
+        { "version": "rhelai-3.4", "freezeDate": "2026-02-15", "releaseDate": "2026-03-19" },
+        { "version": "rhaii-3.4", "freezeDate": "2026-02-15", "releaseDate": "2026-03-19" }
+      ]
+    }
+  ]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `releases[].name` | string | Display name for the release group |
+| `releases[].products[].version` | string | Jira version name used in Target Version and Fix Version queries |
+| `releases[].products[].freezeDate` | ISO date string | Planning freeze cutoff date for committed feature count |
+| `releases[].products[].releaseDate` | ISO date string | GA date for the product version |
+
+### Response: `GET /api/modules/okr-hub/reports/feature-delivery`
+
+```json
+{
+  "releases": [
+    {
+      "name": "Release 3.4",
+      "products": [
+        { "version": "rhoai-3.4", "freezeDate": "2026-03-01", "releaseDate": "2026-05-14", "committed": 42, "delivered": 38, "accuracy": 90 }
+      ],
+      "committed": 42,
+      "delivered": 38,
+      "accuracy": 90
+    }
+  ],
+  "summary": { "committed": 42, "delivered": 38, "accuracy": 90 }
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `releases[].products[].committed` | number | Feature count with Target Version set before freeze date |
+| `releases[].products[].delivered` | number | Feature count with Fix Version set to this version |
+| `releases[].products[].accuracy` | number | `round(delivered / committed * 100)`, 0 if committed is 0 |
+| `summary.committed` | number | Total committed across all releases |
+| `summary.delivered` | number | Total delivered across all releases |
+| `summary.accuracy` | number | Overall accuracy percentage |
 
 ---
 

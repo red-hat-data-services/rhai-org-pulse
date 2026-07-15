@@ -1,431 +1,447 @@
 ---
 repository: "feast-dev/feast"
-overall_score: 7.4
+overall_score: 7.6
 scorecard:
   - dimension: "Unit Tests"
-    score: 8.0
-    status: "Strong Python unit tests with multi-version matrix; Go and operator tests present"
+    score: 8.5
+    status: "Strong coverage with 221 Python + 47 Go + 6 Java test files; multi-OS/Python-version matrix"
   - dimension: "Integration/E2E"
-    score: 8.5
-    status: "Extensive integration suite covering 15+ backends; operator E2E with KIND; label-gated PR tests"
-  - dimension: "Build Integration"
-    score: 6.5
-    status: "Docker smoke tests with multi-arch on PR; operator image build in E2E; no Konflux simulation"
-  - dimension: "Image Testing"
-    score: 7.0
-    status: "PR-time Docker smoke tests with health checks for feature-server; multi-arch (amd64/arm64)"
-  - dimension: "Coverage Tracking"
-    score: 3.0
-    status: "pytest-cov in CI deps but no coverage enforcement, no codecov/coveralls, no PR reporting"
-  - dimension: "CI/CD Automation"
-    score: 8.5
-    status: "30+ workflows, good concurrency control, uv caching, nightly CI, semantic releases"
-  - dimension: "Agent Rules"
     score: 8.0
-    status: "AGENTS.md, CLAUDE.md, .claude/rules/, .claude/skills/, .cursor/rules/ — comprehensive agent guidance"
+    status: "Extensive integration suite across 10+ backends; operator E2E with KIND; label-gated PR triggers"
+  - dimension: "Build Integration"
+    score: 7.0
+    status: "Docker smoke tests on PR with multi-arch; but no Konflux simulation or full operator deployment on every PR"
+  - dimension: "Image Testing"
+    score: 7.5
+    status: "Docker smoke tests validate health endpoints on amd64+arm64; multi-arch builds for feature-server"
+  - dimension: "Coverage Tracking"
+    score: 4.0
+    status: "Go coverage generated but no codecov integration; no Python coverage enforcement or reporting"
+  - dimension: "CI/CD Automation"
+    score: 9.0
+    status: "31 workflows covering lint, test, build, security, release; concurrency control everywhere"
+  - dimension: "Agent Rules"
+    score: 9.0
+    status: "CLAUDE.md, AGENTS.md, .claude/rules, 4 skills (architecture, dev, testing, user-guide); CODEOWNERS; comprehensive"
 critical_gaps:
-  - title: "No coverage tracking or enforcement"
-    impact: "Cannot measure test effectiveness or catch coverage regressions; no visibility into untested code paths"
+  - title: "No Python coverage tracking or enforcement"
+    impact: "Coverage can silently degrade without detection; no visibility into test health trends"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No container vulnerability scanning"
-    impact: "Published Docker images may contain known CVEs; no Trivy/Snyk in any workflow"
+  - title: "Integration tests require label approval, not auto-triggered on PR"
+    impact: "Integration regressions can merge if reviewers forget to label; delays feedback loop"
+    severity: "MEDIUM"
+    effort: "2-4 hours"
+  - title: "No container vulnerability scanning in CI"
+    impact: "Vulnerable base images or dependencies can ship undetected"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "Integration tests require label gating"
-    impact: "First-time contributors cannot run integration tests without maintainer intervention; creates bottleneck"
+  - title: "Go coverage generated but not reported or enforced"
+    impact: "Go code coverage trends are invisible to contributors"
     severity: "MEDIUM"
-    effort: "4-8 hours"
-  - title: "No SBOM generation or image signing"
-    impact: "Supply chain security gap; images published without provenance attestation"
-    severity: "MEDIUM"
-    effort: "4-6 hours"
+    effort: "2-3 hours"
 quick_wins:
-  - title: "Add Codecov integration to unit_tests.yml"
-    effort: "2-3 hours"
-    impact: "Immediate visibility into coverage trends and PR coverage delta"
-  - title: "Add Trivy container scanning to docker_smoke_tests.yml"
+  - title: "Add codecov integration with pytest-cov for Python"
+    effort: "3-4 hours"
+    impact: "Immediate visibility into coverage trends; PR-level coverage diff reporting"
+  - title: "Add Trivy container scanning to docker_smoke_tests workflow"
     effort: "1-2 hours"
-    impact: "Catch known CVEs before merging image-related changes"
-  - title: "Add coverage threshold enforcement in pyproject.toml"
+    impact: "Early detection of vulnerabilities in built images before release"
+  - title: "Upload Go coverage to codecov"
     effort: "1-2 hours"
-    impact: "Prevent coverage regressions with automated enforcement"
-  - title: "Add missing test type rules to .claude/rules/"
+    impact: "Unified coverage dashboard across Python and Go codebases"
+  - title: "Add SBOM generation to image builds"
     effort: "2-3 hours"
-    impact: "Guide AI agents to generate higher-quality unit, integration, and E2E tests"
+    impact: "Supply chain transparency and compliance readiness"
 recommendations:
   priority_0:
-    - "Implement Codecov/Coveralls integration with PR reporting and minimum threshold enforcement"
-    - "Add Trivy container scanning to PR workflows for all built images"
+    - "Implement Python coverage tracking with codecov — add pytest-cov to unit_tests.yml and enforce minimum thresholds"
+    - "Add Trivy container scanning to docker_smoke_tests.yml and publish_images.yml workflows"
   priority_1:
-    - "Add SBOM generation and image signing (cosign) to publish_images.yml"
-    - "Create test-type-specific agent rules (.claude/rules/unit-tests.md, integration-tests.md, e2e-tests.md)"
-    - "Add coverage gating to prevent regressions on merged code"
+    - "Auto-trigger at least pr_local_integration_tests on all PRs (remove label gate for core integration tests)"
+    - "Add SBOM generation (syft/trivy) to image publishing pipeline"
+    - "Upload Go coverage reports to codecov alongside Python coverage"
   priority_2:
-    - "Add performance/benchmark regression testing to PR workflow"
-    - "Implement contract tests for REST API boundaries"
-    - "Add Go coverage tracking alongside Python coverage"
+    - "Add performance regression detection to benchmark tests (fail on significant degradation)"
+    - "Add contract tests between Python SDK and Go feature server"
+    - "Implement image signing with cosign for published images"
 ---
 
-# Quality Analysis: feast-dev/feast
+# Quality Analysis: Feast (feast-dev/feast)
 
 ## Executive Summary
 
-- **Overall Score: 7.4/10**
-- **Repository Type**: Polyglot ML feature store (Python primary, Go, Java, TypeScript)
-- **Key Strengths**: Exceptional integration test breadth (15+ backend integrations), well-organized CI/CD with 30+ workflows, strong agent rules ecosystem, PR-time Docker smoke tests with multi-arch support
-- **Critical Gaps**: No coverage tracking or enforcement despite having pytest-cov in dependencies, no container vulnerability scanning, no SBOM generation
-- **Agent Rules Status**: Present and comprehensive — AGENTS.md, CLAUDE.md, .claude/rules/, .claude/skills/ with 4 skills, .cursor/rules/
+- **Overall Score: 7.6/10**
+- **Repository Type**: Polyglot feature store (Python SDK + Go feature server + Kubernetes operator + Java serving client + React UI)
+- **Primary Languages**: Python (620 source files), Go (64 source files), Java, TypeScript
+- **Key Strengths**: Exceptional CI/CD automation (31 workflows), comprehensive integration test matrix across 10+ backends, excellent agent rules with 4 skills and component-specific rules, Docker smoke tests with multi-arch validation, strong security posture (CodeQL + govulncheck + detect-secrets + Safety)
+- **Critical Gaps**: No Python coverage tracking/enforcement, no container vulnerability scanning, integration tests gated behind manual labels
+- **Agent Rules Status**: Excellent — CLAUDE.md, AGENTS.md, 2 Claude rules, 4 Claude skills, CODEOWNERS
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 8.0/10 | Strong Python unit tests with multi-version matrix (3.10, 3.11, 3.12) on Linux + macOS; Go + operator unit tests; UI tests |
-| Integration/E2E | 8.5/10 | Extensive integration suite covering 15+ backends (DuckDB, Redis, Postgres, Snowflake, etc.); operator E2E with KIND; label-gated PR tests |
-| **Build Integration** | **6.5/10** | **Docker smoke tests with multi-arch on PR; operator image build in E2E; no Konflux simulation** |
-| Image Testing | 7.0/10 | PR-time Docker smoke tests with health checks for feature-server; multi-arch (amd64/arm64); MCP endpoint validation |
-| Coverage Tracking | 3.0/10 | pytest-cov listed as CI dependency but never invoked in workflows; no codecov/coveralls; Go coverage in Makefile only |
-| CI/CD Automation | 8.5/10 | 30+ workflows, universal concurrency control, uv caching, nightly CI with DynamoDB/Bigtable cleanup, semantic releases |
-| Agent Rules | 8.0/10 | AGENTS.md, CLAUDE.md, .claude/rules/ (2 rules), .claude/skills/ (4 skills), .cursor/rules/ — comprehensive but missing test-type rules |
+| Unit Tests | 8.5/10 | 221 Python + 47 Go + 6 Java test files; multi-OS/Python-version matrix |
+| Integration/E2E | 8.0/10 | 10+ backend-specific integration suites; operator E2E with KIND cluster |
+| Build Integration | 7.0/10 | Docker smoke tests on PR; no Konflux simulation |
+| Image Testing | 7.5/10 | Health endpoint validation on amd64+arm64; multi-arch feature-server |
+| Coverage Tracking | 4.0/10 | Go coverage generated but unreported; no Python coverage at all |
+| CI/CD Automation | 9.0/10 | 31 workflows with concurrency control, caching, path filtering |
+| Agent Rules | 9.0/10 | Full agent setup: CLAUDE.md, AGENTS.md, rules, 4 skills, CODEOWNERS |
 
 ## Critical Gaps
 
-### 1. No Coverage Tracking or Enforcement
-- **Impact**: Cannot measure test effectiveness, catch coverage regressions, or identify untested code paths
+### 1. No Python Coverage Tracking or Enforcement
+- **Impact**: Coverage can silently degrade with no visibility; new code may ship undertested
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: `pytest-cov` is listed in `pyproject.toml` under `[ci]` dependencies, but no workflow actually runs `--cov` flags or uploads results to Codecov/Coveralls. The Go `Makefile` has a `test-java-with-coverage` target that generates `coverage.out`, but it is not wired into any CI workflow. There is no `.codecov.yml` or `.coveragerc` file.
+- **Details**: The `unit_tests.yml` workflow runs `make test-python-unit` but does not generate or upload coverage reports. No `.codecov.yml` or `.coveragerc` exists. The Makefile's Go test target generates `coverage.out` but it's not uploaded anywhere.
 
 ### 2. No Container Vulnerability Scanning
-- **Impact**: Published Docker images (feature-server, feature-server-dev, operator) may contain known CVEs
+- **Impact**: Vulnerable base images (UBI9, node:17.9.0-slim) or Python/Go dependencies can ship undetected
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: The `security.yml` workflow runs CodeQL (SAST), Safety (Python deps), and govulncheck (Go deps), but there is zero container-level scanning. No Trivy, Snyk, or Grype in any workflow. No `.trivyignore` or `.snyk` files exist. The `docker_smoke_tests.yml` builds and health-checks the image but does not scan it.
+- **Details**: The `docker_smoke_tests.yml` builds and starts containers but performs no vulnerability scanning. No Trivy, Snyk, or Grype integration exists anywhere in the CI pipeline.
 
-### 3. Integration Tests Require Label Gating
-- **Impact**: First-time contributors cannot run integration tests without a maintainer adding `ok-to-test`, `approved`, or `lgtm` labels
+### 3. Integration Tests Require Label Approval
+- **Impact**: Integration regressions can merge if reviewers forget to add `ok-to-test`/`approved`/`lgtm` labels; creates a feedback gap
 - **Severity**: MEDIUM
-- **Effort**: 4-8 hours
-- **Details**: All PR integration test workflows (`pr_integration_tests.yml`, `pr_local_integration_tests.yml`, `pr_duckdb_integration_tests.yml`, `pr_ray_integration_tests.yml`, `pr_remote_rbac_integration_tests.yml`) gate on labels. While this is a valid security measure for `pull_request_target` workflows that access secrets, it creates friction for external contributors and delays feedback loops.
+- **Effort**: 2-4 hours
+- **Details**: All integration test workflows (`pr_integration_tests.yml`, `pr_local_integration_tests.yml`, `pr_duckdb_integration_tests.yml`, `pr_ray_integration_tests.yml`, `operator-e2e-integration-tests.yml`) are gated behind label checks. While this is understandable for workflows needing cloud credentials, `pr_local_integration_tests.yml` only uses containerized stubs and could run automatically.
 
-### 4. No SBOM Generation or Image Signing
-- **Impact**: Supply chain security gap; no provenance attestation for published images
+### 4. Go Coverage Not Reported
+- **Impact**: Go code (feature server + operator) coverage trends are invisible
 - **Severity**: MEDIUM
-- **Effort**: 4-6 hours
-- **Details**: `publish_images.yml` builds and pushes images to registries but does not generate SBOMs (Syft/Anchore) or sign images (cosign). No attestation workflow exists.
+- **Effort**: 2-3 hours
+- **Details**: The operator Makefile `test` target and Go test commands generate `coverage.out` but never upload to any service.
 
 ## Quick Wins
 
-### 1. Add Codecov Integration to unit_tests.yml (2-3 hours)
-- **Impact**: Immediate visibility into coverage trends and PR coverage delta
-- **Implementation**:
+### 1. Add Codecov Integration for Python (3-4 hours)
+Add `pytest-cov` to unit test runs and upload to codecov:
 ```yaml
-# Add to unit_tests.yml after "Test Python" step
-- name: Generate coverage report
+# In unit_tests.yml, modify test step:
+- name: Test Python
   run: |
-    uv run pytest --cov=feast --cov-report=xml \
-      sdk/python/tests/unit
-- name: Upload coverage to Codecov
+    make test-python-unit PYTEST_ARGS="--cov=feast --cov-report=xml"
+- name: Upload coverage
   uses: codecov/codecov-action@v4
   with:
-    file: ./coverage.xml
+    files: ./coverage.xml
     flags: python-unit
-    token: ${{ secrets.CODECOV_TOKEN }}
 ```
 
-### 2. Add Trivy Container Scanning (1-2 hours)
-- **Impact**: Catch known CVEs before merging image-related changes
-- **Implementation**:
+### 2. Add Trivy Scanning to Docker Smoke Tests (1-2 hours)
 ```yaml
-# Add to docker_smoke_tests.yml after "Build feature-server image" step
-- name: Run Trivy vulnerability scan
+# Add after the "Build feature-server image" step in docker_smoke_tests.yml:
+- name: Scan image for vulnerabilities
   uses: aquasecurity/trivy-action@master
   with:
     image-ref: 'feastdev/feature-server:smoke-${{ matrix.arch }}'
-    format: 'table'
-    exit-code: '1'
+    format: 'sarif'
+    output: 'trivy-results.sarif'
     severity: 'CRITICAL,HIGH'
+- name: Upload scan results
+  uses: github/codeql-action/upload-sarif@v4
+  with:
+    sarif_file: 'trivy-results.sarif'
 ```
 
-### 3. Add Coverage Threshold in pyproject.toml (1-2 hours)
-- **Impact**: Prevent coverage regressions with automated enforcement
-- **Implementation**:
-```toml
-# Add to pyproject.toml
-[tool.pytest.ini_options]
-addopts = "--cov=feast --cov-fail-under=60"
+### 3. Upload Go Coverage to Codecov (1-2 hours)
+```yaml
+# Add to operator_pr.yml after test step:
+- name: Upload Go coverage
+  uses: codecov/codecov-action@v4
+  with:
+    files: infra/feast-operator/cover-unit.out
+    flags: go-operator
 ```
 
-### 4. Add Missing Test Type Agent Rules (2-3 hours)
-- **Impact**: Guide AI agents to generate higher-quality tests
-- **Details**: Create `.claude/rules/unit-tests.md`, `.claude/rules/integration-tests.md`, and `.claude/rules/e2e-tests.md` with patterns from existing test files
+### 4. Add SBOM Generation (2-3 hours)
+```yaml
+# Add to publish_images.yml:
+- name: Generate SBOM
+  uses: anchore/sbom-action@v0
+  with:
+    image: ${{ env.REGISTRY }}/${{ matrix.component }}:${{ steps.get-version.outputs.version_without_prefix }}
+    format: spdx-json
+    output-file: sbom-${{ matrix.component }}.spdx.json
+```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Strengths:**
-- **30+ workflows** with well-organized separation of concerns
-- **Universal concurrency control**: Every workflow uses `concurrency.group` with `cancel-in-progress: true`
-- **Smart test skipping**: `check_skip_tests.yml` skips tests when only docs/community/examples change
-- **uv caching**: Modern dependency management with `astral-sh/setup-uv@v5` and `enable-cache: true`
-- **Nightly CI**: Daily integration tests with DynamoDB/Bigtable cleanup scripts
-- **Semantic releases**: `.releaserc.js` + `.commitlintrc.yaml` + commitlint pre-commit hook
-- **Label-gated security**: `pull_request_target` workflows require `ok-to-test`/`approved`/`lgtm` labels
+**Workflow Inventory (31 workflows)**:
 
-**PR Workflows (automatic on every PR):**
-| Workflow | Trigger | Description |
-|----------|---------|-------------|
-| `unit_tests.yml` | All PRs | Python (3.10-3.12, Linux+macOS), UI (yarn) |
-| `smoke_tests.yml` | All PRs | Import smoke tests across Python versions |
-| `linter.yml` | All PRs + push | pre-commit + ruff + mypy |
-| `lint_pr.yml` | All PRs | PR title semantic validation |
-| `operator_pr.yml` | All PRs | Go operator unit tests |
-| `security.yml` | PRs to master | CodeQL + Safety + govulncheck |
-| `docker_smoke_tests.yml` | Feature server changes | Multi-arch Docker build + health check |
+| Category | Workflows | Trigger |
+|----------|-----------|---------|
+| **PR Quality Gates** | `unit_tests.yml`, `linter.yml`, `lint_pr.yml`, `smoke_tests.yml`, `operator_pr.yml` | PR (auto) |
+| **Docker Validation** | `docker_smoke_tests.yml` | PR on specific paths (auto) |
+| **Integration Tests** | `pr_integration_tests.yml`, `pr_local_integration_tests.yml`, `pr_duckdb_integration_tests.yml`, `pr_ray_integration_tests.yml`, `pr_registration_integration_tests.yml`, `pr_remote_rbac_integration_tests.yml` | PR (label-gated) |
+| **E2E/API Tests** | `operator-e2e-integration-tests.yml`, `registry-rest-api-tests.yml` | PR (label-gated) |
+| **Security** | `security.yml` | PR + push + weekly schedule |
+| **Post-Merge** | `master_only.yml` | Push to master |
+| **Nightly** | `nightly-ci.yml`, `nightly_python_sdk_release.yml` | Cron schedule |
+| **Release/Publish** | `release.yml`, `publish.yml`, `publish_images.yml`, `publish_python_sdk.yml`, `publish_web_ui.yml`, `publish_helm_charts.yml`, `build_wheels.yml` | Manual/workflow_dispatch |
+| **Utility** | `deploy-website.yml`, `check_skip_tests.yml`, `update_stable_branch.yml`, `pr_website_build.yml` | Various |
 
-**PR Workflows (label-gated):**
-| Workflow | Gate | Description |
-|----------|------|-------------|
-| `pr_integration_tests.yml` | ok-to-test/approved/lgtm | Full integration with GCP/AWS/Snowflake |
-| `pr_local_integration_tests.yml` | ok-to-test/approved/lgtm | Local integration with containerized stubs |
-| `pr_duckdb_integration_tests.yml` | ok-to-test/approved/lgtm | DuckDB offline store tests |
-| `pr_ray_integration_tests.yml` | ok-to-test/approved/lgtm | Ray compute engine tests |
-| `pr_remote_rbac_integration_tests.yml` | ok-to-test/approved/lgtm | Remote RBAC integration |
-| `pr_registration_integration_tests.yml` | ok-to-test/approved/lgtm | Registration integration tests |
-| `registry-rest-api-tests.yml` | ok-to-test/approved/lgtm | REST API tests with KIND cluster |
-| `operator-e2e-integration-tests.yml` | ok-to-test/approved/lgtm | Operator E2E with KIND |
+**Strengths**:
+- All workflows use `concurrency` with `cancel-in-progress: true` — excellent resource management
+- Path filtering (`paths-ignore: docs/**, community/**, examples/**`) prevents unnecessary test runs
+- Multi-Python-version matrix (3.10, 3.11, 3.12) on unit tests
+- Cross-OS testing (ubuntu-latest, macos-14) for unit tests
+- Proper use of `pull_request_target` with security label checks for workflows needing cloud credentials
+- Good use of `uv` for dependency management with caching
 
-**Weaknesses:**
-- No coverage upload/reporting in any workflow
-- No container vulnerability scanning
-- `nightly-ci.yml` uses deprecated `::set-output`
+**Gaps**:
+- No workflow-level timeouts on several workflows (except operator E2E and REST API tests)
+- `nightly-ci.yml` uses deprecated `set-output` syntax
 
 ### Test Coverage
 
-**Python (Primary):**
-- **489 source files** / **298 test files** — test-to-code ratio: **0.61** (good)
-- **201 test files** follow `test_*.py` naming convention
-- **Framework**: pytest with rich plugin ecosystem (xdist, timeout, lazy-fixture, ordering, mock, env, benchmark, asyncio)
-- **Test categories**: Unit, integration (local + cloud), smoke, benchmarks, component, doctest
-- **Multi-version**: Python 3.10, 3.11, 3.12 on Linux; 3.11, 3.12 on macOS
-- **Testcontainers**: Used for local integration tests (Redis, Postgres, etc.)
-- **Pixi environments**: `duckdb-tests`, `ray-tests`, `registration-tests` for isolated test runs
+**Python Tests (221 test files)**:
+- **Unit Tests**: 141 files in `sdk/python/tests/unit/` — comprehensive coverage of core functionality
+- **Integration Tests**: 42 files in `sdk/python/tests/integration/` — covers BigQuery, Snowflake, Redis, DynamoDB, DuckDB, Spark, Trino, Postgres, MySQL, Cassandra, Hazelcast, Ray, RBAC, REST API
+- **Universal Tests**: Framework for running the same test scenarios across different backend configurations
+- **Benchmarks**: Performance benchmarking with `--benchmark` flag, results uploaded to S3
+- **Fixtures**: 10 `conftest.py` files providing test infrastructure
+- **Test-to-Code Ratio**: 221 test files / 620 source files = 0.36 (adequate for a project with many backend adapters)
 
-**Go:**
-- **38 source files** / **17 test files** — test-to-code ratio: **0.45** (adequate)
-- Standard Go testing framework
+**Go Tests (47 test files)**:
+- Feature server tests (HTTP/gRPC server, feature store logic)
+- Online store tests (SQLite, Redis, Postgres, DynamoDB)
+- Registry tests (config, MySQL store)
+- Type conversion tests
 
-**Operator (Go):**
-- **24 source files** / **32 test files** — test-to-code ratio: **1.33** (excellent)
-- E2E tests with KIND, previous-version tests, upgrade tests, data-source-type tests
-- Strong CRD testing and reconciliation loop coverage
+**Operator Tests**:
+- Unit tests with envtest (Kubernetes API testing)
+- E2E tests on KIND cluster
+- Upgrade tests (version migration validation)
+- Previous version compatibility tests
+- Data source type tests
 
-**UI (TypeScript/React):**
-- 3 test files (RegistryVisualization, ProjectSelector, FeastUISansProviders)
-- Uses React Testing Library with Jest
-- Very limited coverage relative to 168 TS/TSX files
+**Java Tests (6 files)**:
+- Serving and serving-client tests
 
-**Java:**
-- 6 test files covering serving client and serving service
-- Minimal coverage for 58 Java source files
+**UI Tests**:
+- Yarn/Jest tests for React UI
+- Format checking and build validation
 
 ### Code Quality
 
-**Linting:**
-- **Python**: `ruff` for linting + formatting (configured in `pyproject.toml`), `mypy` for type checking with caching
-- **Go**: Standard `gofmt` + operator linting via Makefile
-- **No** `.golangci.yaml` for Go linting — relies on default go vet
-- **No** ESLint config for TypeScript/UI — uses yarn format:check
+**Linting**:
+- **Python**: Ruff (linting + formatting), MyPy (type checking with caching)
+- **Go**: golangci-lint (operator), standard gofmt
+- **JavaScript**: Format checking via yarn
+- **PR Titles**: commitlint with conventional commits (enforced in CI and pre-commit)
 
-**Pre-commit Hooks (`.pre-commit-config.yaml`):**
-- `format-files`: ruff check --fix + ruff format (commit stage)
-- `lint-files`: ruff check + ruff format --check (commit stage)
+**Pre-commit Hooks** (well-configured):
+- `format-files`: Ruff auto-fix + format on commit
+- `lint-files`: Ruff check + format check on commit
+- `lint-push`: Lint gate on push (check-only, no auto-fix)
 - `template`: Build Jinja2 templates when template files change
-- `lint-push`: Pre-push lint gate (check-only, no auto-fix)
-- `detect-secrets`: Yelp detect-secrets with baseline (`.secrets.baseline`)
-- `commitlint`: Conventional commit message validation
+- `detect-secrets`: Yelp detect-secrets with baseline file
+- `commitlint`: Conventional commit enforcement on commit messages
 
-**Static Analysis:**
-- **CodeQL**: Python + JavaScript/TypeScript (on PRs to master + weekly schedule)
-- **Safety**: Python dependency security scan
-- **govulncheck**: Go vulnerability check for both feature-server and feast-operator
-- **detect-secrets**: Secret detection via pre-commit with baseline
+**Static Analysis**:
+- CodeQL (Python + JavaScript/TypeScript) — runs on PR, push, and weekly schedule
+- govulncheck for Go vulnerabilities (feature server + operator)
+- Safety scan for Python dependency vulnerabilities
+- detect-secrets with baseline tracking
 
 ### Container Images
 
-**Dockerfiles Found:**
-- `ui/docker/Dockerfile`: Node.js-based UI build (node:17.9.0-slim — outdated)
-- `infra/feast-operator/Dockerfile`: Multi-stage Go build on UBI9 (registry.access.redhat.com/ubi9)
+**Docker Smoke Tests** (PR-triggered):
+- Builds `feature-server` and `feature-server-dev` images
+- Tests both `amd64` and `arm64` architectures
+- Validates `/health` endpoint startup
+- Uses QEMU + Docker Buildx for cross-platform builds
 
-**Docker Smoke Tests (PR-time):**
-- Builds `feature-server` and `feature-server-dev` images on PRs
-- Tests **both amd64 and arm64** architectures via QEMU
-- Runs health check validation (`/health` endpoint)
-- Path-scoped — only runs when feature server files change
+**Production Image Publishing**:
+- 4 images: feature-server, feature-transformation-server, feast-operator, go-feature-server
+- Multi-arch builds (linux/amd64 + linux/arm64) for feature-server
+- Published to quay.io/feastdev
+- Semantic versioning with automatic "latest" tagging
+- Post-merge CI builds and publishes dev images to quay.io/feastdev-ci
 
-**MCP Feature Server Runtime (PR-time):**
-- Starts feature server with MCP HTTP support
-- Validates MCP endpoint handshake (session ID, protocol version)
-- Tests health endpoint
+**Dockerfiles**:
+- `infra/feast-operator/Dockerfile`: Multi-stage build from UBI9 Go toolset
+- `ui/docker/Dockerfile`: Node.js 17.9.0-slim (outdated — security concern)
 
-**Gaps:**
-- **No vulnerability scanning** of built images
-- **No SBOM generation** for any image
-- **No image signing** (cosign/Notary)
-- UI Dockerfile uses outdated `node:17.9.0-slim` (Node 17 is EOL)
-- No `.dockerignore` optimization analysis
+**Gaps**:
+- No Trivy/Grype scanning on built images
+- No SBOM generation
+- No image signing (cosign)
+- UI Dockerfile uses outdated Node.js 17 (EOL)
 
 ### Security
 
-**Strengths:**
-- **CodeQL**: Multi-language SAST (Python, JavaScript/TypeScript) on PRs + weekly
-- **Safety scan**: Python dependency security scanning
-- **govulncheck**: Go vulnerability scanning for both Go modules
-- **detect-secrets**: Pre-commit secret detection with maintained baseline
-- **Label-gated workflows**: Security against PR injection via `pull_request_target`
+**Strengths**:
+- CodeQL SAST for Python and JavaScript/TypeScript
+- govulncheck for Go vulnerability detection
+- Python dependency scanning via Safety
+- detect-secrets with baseline file and comprehensive detector configuration
+- `pull_request_target` + label gating for workflows with cloud credentials — proper fork-safety
 
-**Gaps:**
-- **No Trivy/Snyk/Grype** container image scanning
-- **No SBOM generation** (Syft, Anchore)
-- **No image signing/attestation** (cosign, sigstore)
-- **No Dependabot/Renovate** configuration visible
-- Safety scan uses `continue-on-error: true` — failures are not blocking
+**Gaps**:
+- No container image scanning (Trivy, Grype, Snyk)
+- No SBOM generation for supply chain transparency
+- No image signing/attestation
+- govulncheck and Safety both use `continue-on-error: true` — vulnerabilities won't block merges
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status**: Present and comprehensive
+**Status**: Excellent — among the most comprehensive agent setups observed
 
-**What Exists:**
-- `CLAUDE.md` (minimal — pointer file)
-- `AGENTS.md` (comprehensive — project overview, dev commands, technologies, code style, skills table)
-- `.claude/rules/feast-components.md` — component checklist for tests, docs, skills
-- `.claude/rules/feast-skills-maintenance.md` — rules for maintaining skills/rules consistency
-- `.claude/skills/` — 4 skills (feast-architecture, feast-dev, feast-testing, feast-user-guide)
-- `.cursor/rules/` — mirrored rules for Cursor IDE
-- `skills/` — tool-agnostic skills directory
+**Present**:
+- `CLAUDE.md` (references AGENTS.md)
+- `AGENTS.md` — comprehensive agent instructions with:
+  - Project overview and key technologies
+  - Development commands (setup, lint, test, build)
+  - Skills table with 4 entries
+  - Code style conventions
+  - Contributing guidelines
+- `.claude/rules/feast-components.md` — path-triggered rule for component changes (online/offline stores, registry, operator)
+- `.claude/rules/feast-skills-maintenance.md` — meta-rule for keeping skills/rules in sync with codebase
+- `.claude/skills/feast-architecture/SKILL.md` — component internals and data flows
+- `.claude/skills/feast-dev/SKILL.md` — contributor workflow
+- `.claude/skills/feast-testing/SKILL.md` — test patterns and debugging
+- `.claude/skills/feast-user-guide/SKILL.md` — end-user feature definitions and retrieval
+- `CODEOWNERS` — granular ownership for core interfaces, specific backends, and subsystems
 
-**Quality Assessment:**
-- **Comprehensive**: Covers project overview, development workflow, testing commands, code style, documentation locations
-- **Well-structured**: Clear skills table, single-file lint commands, proto compilation guidance
-- **Multi-agent**: Supports Claude Code, Cursor, Copilot, and Codex via AGENTS.md and tool-agnostic skills
-- **Maintained**: Rules include maintenance guidance for keeping skills/rules in sync
+**Quality Assessment**:
+- Rules are path-scoped (trigger only when relevant files change)
+- Skills are well-separated by audience (architecture vs dev vs testing vs user)
+- Cross-reference between rules and skills (component rule points to testing skill)
+- Meta-rule ensures skills stay in sync with codebase reality
+- Cursor rules kept in sync with Claude rules (documented requirement)
 
-**Gaps:**
-- No test-type-specific rules (no `.claude/rules/unit-tests.md`, `integration-tests.md`, `e2e-tests.md`)
-- Rules focus on component checklists, not test patterns/assertions/mocking strategies
-- No quality gate checklists for AI-generated tests
+**Minor Gaps**:
+- No explicit test creation rules (e.g., unit-tests.md, integration-tests.md patterns)
+- No CI/CD troubleshooting skill
+- Could benefit from a "new backend contribution" skill template
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Implement Codecov integration with coverage enforcement**
-   - Add `--cov=feast --cov-report=xml` to unit test workflow
-   - Upload to Codecov with `codecov/codecov-action@v4`
-   - Set minimum threshold (suggest: 60% initial, increase over time)
-   - Add `.codecov.yml` with PR comment and status check configuration
+1. **Implement Python coverage tracking with codecov**
+   - Add `pytest-cov` to test dependencies
+   - Modify `unit_tests.yml` to generate and upload coverage XML
+   - Set minimum coverage threshold (e.g., 70% initially, ramp to 80%)
+   - Add PR coverage diff reporting via codecov bot
 
-2. **Add Trivy container scanning to PR workflows**
-   - Add `aquasecurity/trivy-action` after image build in `docker_smoke_tests.yml`
-   - Fail on CRITICAL and HIGH severity CVEs
-   - Add `.trivyignore` for known false positives
+2. **Add container vulnerability scanning**
+   - Integrate Trivy into `docker_smoke_tests.yml` for PR-time scanning
+   - Add Trivy to `publish_images.yml` for release-time scanning
+   - Upload SARIF results to GitHub Security tab
+   - Set `exit-code: 1` for CRITICAL vulnerabilities to block merges
 
 ### Priority 1 (High Value)
 
-3. **Add SBOM generation and image signing to publish_images.yml**
-   - Generate SBOMs with `anchore/sbom-action` or Syft
-   - Sign images with `sigstore/cosign-installer`
-   - Attach attestation to published images
+3. **Auto-trigger local integration tests on all PRs**
+   - `pr_local_integration_tests.yml` uses only containerized stubs (no cloud credentials needed)
+   - Remove the label gate for this workflow to catch integration regressions automatically
+   - Keep label gates for cloud-dependent workflows (GCP, AWS, Snowflake)
 
-4. **Create test-type-specific agent rules**
-   - `.claude/rules/unit-tests.md` — pytest patterns, mocking strategies, fixtures
-   - `.claude/rules/integration-tests.md` — testcontainers patterns, backend-specific setup
-   - `.claude/rules/e2e-tests.md` — KIND cluster setup, operator E2E patterns
+4. **Add SBOM generation and image signing**
+   - Use anchore/sbom-action for SBOM generation during image publishing
+   - Add cosign signing for all published images
+   - Attach SBOMs as image attestations
 
-5. **Fix Safety scan to be blocking**
-   - Remove `continue-on-error: true` from security.yml Safety step
-   - Or add a threshold-based exit code
+5. **Upload Go coverage and unify reporting**
+   - Add codecov upload to `operator_pr.yml` and Go test targets
+   - Create unified codecov dashboard with flags for Python, Go, Java
+   - Set per-component thresholds
 
-6. **Add Go linting with golangci-lint**
-   - Add `.golangci.yaml` with recommended linters
-   - Add golangci-lint step to `operator_pr.yml`
+6. **Fix `continue-on-error` on security scans**
+   - Remove `continue-on-error: true` from govulncheck and Safety scans
+   - Or configure proper severity thresholds so only CRITICAL/HIGH block
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Add performance regression testing**
-   - Wire `pytest-benchmark` results into PR comments
-   - Track benchmark trends over time
+7. **Add performance regression detection**
+   - The benchmark infrastructure exists (pytest-benchmark, S3 upload)
+   - Add automated comparison against baseline to detect performance regressions
+   - Fail builds on significant degradation (e.g., >10% latency increase)
 
-8. **Update UI Dockerfile base image**
-   - Replace `node:17.9.0-slim` with current LTS (Node 22)
+8. **Add contract tests between Python SDK and Go feature server**
+   - Verify serialization compatibility between Python and Go
+   - Test protobuf schema evolution
+   - Validate feature retrieval parity
 
-9. **Add Dependabot/Renovate for dependency updates**
-   - Auto-update Python, Go, npm, and GitHub Actions dependencies
-   - Group minor/patch updates to reduce noise
+9. **Update outdated base images**
+   - UI Dockerfile uses `node:17.9.0-slim` (Node 17 is EOL)
+   - Update to Node 20 LTS or 22 LTS
 
-10. **Add contract tests for REST API boundaries**
-    - Test API compatibility between Python SDK and feature server
-    - Ensure gRPC proto compatibility across SDK versions
+10. **Add test creation rules to agent skills**
+    - Create `.claude/rules/test-patterns.md` with examples for each test type
+    - Add unit test templates for new online/offline store backends
+    - Include integration test fixture patterns
 
 ## Comparison to Gold Standards
 
-| Dimension | feast | odh-dashboard | notebooks | kserve |
+| Dimension | Feast | odh-dashboard | notebooks | kserve |
 |-----------|-------|---------------|-----------|--------|
-| Unit Tests | 8.0 | 9.0 | 7.0 | 9.0 |
-| Integration/E2E | 8.5 | 9.0 | 7.0 | 9.0 |
-| Build Integration | 6.5 | 9.0 | 8.0 | 7.0 |
-| Image Testing | 7.0 | 7.0 | 9.5 | 7.0 |
-| Coverage Tracking | 3.0 | 8.0 | 5.0 | 9.0 |
-| CI/CD Automation | 8.5 | 9.0 | 8.0 | 8.0 |
-| Agent Rules | 8.0 | 8.0 | 3.0 | 3.0 |
-| **Overall** | **7.4** | **8.7** | **7.2** | **7.7** |
+| Unit Tests | 8.5 | 9.0 | 7.0 | 9.0 |
+| Integration/E2E | 8.0 | 9.0 | 6.0 | 9.0 |
+| Build Integration | 7.0 | 8.0 | 9.0 | 7.0 |
+| Image Testing | 7.5 | 7.0 | 9.5 | 6.0 |
+| Coverage Tracking | 4.0 | 8.0 | 5.0 | 9.0 |
+| CI/CD Automation | 9.0 | 9.0 | 8.0 | 8.0 |
+| Agent Rules | 9.0 | 9.0 | 3.0 | 2.0 |
+| **Overall** | **7.6** | **8.4** | **6.8** | **7.1** |
 
-**Key Takeaways:**
-- Feast has **best-in-class agent rules** with multi-agent support (Claude, Cursor, Copilot, Codex)
-- Feast's integration test breadth across 15+ backends is **exceptional**
-- The biggest gap vs. gold standards is **coverage tracking** — fixing this would jump the score to ~8.0
-- Container security (scanning + signing) is the second-largest gap
+**Key Differentiators**:
+- Feast has the most comprehensive agent rules setup among analyzed repositories
+- Feast's integration test matrix across 10+ backends is exceptionally thorough
+- Feast's CI/CD is among the most mature with 31 well-organized workflows
+- The critical gap is coverage tracking — Feast is the only project in this comparison with no coverage enforcement
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/unit_tests.yml` — Python + UI unit tests
-- `.github/workflows/smoke_tests.yml` — Import smoke tests
-- `.github/workflows/linter.yml` — pre-commit + ruff + mypy
-- `.github/workflows/pr_integration_tests.yml` — Full cloud integration
-- `.github/workflows/pr_local_integration_tests.yml` — Local containerized integration
-- `.github/workflows/docker_smoke_tests.yml` — Docker build + health check
-- `.github/workflows/operator-e2e-integration-tests.yml` — Operator E2E with KIND
-- `.github/workflows/registry-rest-api-tests.yml` — REST API tests with KIND
-- `.github/workflows/security.yml` — CodeQL + Safety + govulncheck
-- `.github/workflows/nightly-ci.yml` — Nightly full integration
+- `.github/workflows/unit_tests.yml` — Unit tests (PR + push)
+- `.github/workflows/linter.yml` — Python linting + MyPy
+- `.github/workflows/lint_pr.yml` — PR title validation
+- `.github/workflows/smoke_tests.yml` — Import smoke test
+- `.github/workflows/docker_smoke_tests.yml` — Docker image validation
+- `.github/workflows/pr_integration_tests.yml` — Cloud integration tests
+- `.github/workflows/pr_local_integration_tests.yml` — Local integration tests
+- `.github/workflows/operator-e2e-integration-tests.yml` — Operator E2E on KIND
+- `.github/workflows/registry-rest-api-tests.yml` — REST API tests on KIND
+- `.github/workflows/security.yml` — CodeQL + govulncheck + Safety
+- `.github/workflows/nightly-ci.yml` — Nightly integration + cleanup
+- `.github/workflows/publish_images.yml` — Docker image publishing
 
 ### Testing
-- `sdk/python/tests/unit/` — Python unit tests (7 subdirectories)
-- `sdk/python/tests/integration/` — Python integration tests (11 subdirectories)
-- `sdk/python/tests/component/` — Component tests (Ray, Spark)
+- `sdk/python/tests/unit/` — 141 Python unit test files
+- `sdk/python/tests/integration/` — 42 Python integration test files
+- `sdk/python/tests/universal/` — Universal test framework
 - `sdk/python/tests/benchmarks/` — Performance benchmarks
-- `go/` — Go feature server tests
-- `infra/feast-operator/test/` — Operator E2E, upgrade, previous-version tests
-- `ui/src/` — UI component tests
+- `go/internal/feast/` — Go feature server tests
+- `infra/feast-operator/test/e2e/` — Operator E2E tests
+- `infra/feast-operator/test/upgrade/` — Operator upgrade tests
 
 ### Code Quality
-- `pyproject.toml` — ruff config, test dependencies, optional extras
-- `.pre-commit-config.yaml` — Pre-commit hooks (ruff, detect-secrets, commitlint)
-- `.secrets.baseline` — detect-secrets baseline
-- `.commitlintrc.yaml` — Conventional commit enforcement
+- `.pre-commit-config.yaml` — Pre-commit hooks (Ruff, detect-secrets, commitlint)
+- `pyproject.toml` — Ruff configuration, dependencies
+- `.commitlintrc.yaml` — Conventional commit rules
+- `.secrets.baseline` — Detect-secrets baseline
+- `CODEOWNERS` — Code ownership
 
 ### Container Images
-- `ui/docker/Dockerfile` — UI container
-- `infra/feast-operator/Dockerfile` — Operator container (UBI9)
+- `infra/feast-operator/Dockerfile` — Operator image (UBI9)
+- `ui/docker/Dockerfile` — UI image (node:17.9.0-slim)
 
 ### Agent Rules
-- `AGENTS.md` — Primary agent instructions (multi-tool)
-- `CLAUDE.md` — Claude Code pointer
+- `CLAUDE.md` — Entry point (references AGENTS.md)
+- `AGENTS.md` — Comprehensive agent instructions
 - `.claude/rules/feast-components.md` — Component change checklist
-- `.claude/rules/feast-skills-maintenance.md` — Skills/rules maintenance guidance
-- `.claude/skills/` — 4 Claude skills (architecture, dev, testing, user-guide)
-- `.cursor/rules/` — Cursor IDE rules (mirrored from .claude/rules/)
-- `skills/` — Tool-agnostic skills directory
+- `.claude/rules/feast-skills-maintenance.md` — Skills maintenance meta-rule
+- `.claude/skills/feast-architecture/SKILL.md` — Architecture skill
+- `.claude/skills/feast-dev/SKILL.md` — Development skill
+- `.claude/skills/feast-testing/SKILL.md` — Testing skill
+- `.claude/skills/feast-user-guide/SKILL.md` — User guide skill

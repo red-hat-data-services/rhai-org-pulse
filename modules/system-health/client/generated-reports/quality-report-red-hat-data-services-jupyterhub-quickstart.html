@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:36 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:55 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/jupyterhub-quickstart</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="497.62785599999995"
+                                stroke-dashoffset="508.93757999999997"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">1.2</div>
+                        <div class="score-value">1.0</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No unit tests exist anywhere in the repository</div>
+                            <div class="scorecard-status">No test files exist; 970 lines of Python with zero test coverage</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E tests of any kind</div>
+                            <div class="scorecard-status">No integration or E2E test infrastructure of any kind</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">Legacy aicoe-ci with thoth-build check only; no PR-time build validation</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.5/10</div>
+                            <div class="scorecard-status">Dockerfile present but no PR-time build validation or multi-stage builds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">Dockerfile present but no image testing, scanning, or validation</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No image runtime validation, startup testing, or multi-arch support</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tooling, thresholds, or reporting</div>
+                            <div class="scorecard-status">No coverage tools, no codecov/coveralls integration</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No GitHub Actions workflows; only legacy aicoe-ci config with minimal checks</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No GitHub Actions workflows; only legacy AICoE/Thoth CI config</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
+                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no test automation guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,51 +411,51 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Zero test coverage across the entire repository</div>
-                            <p>All changes are deployed without any automated verification; regressions are undetectable</p>
+                            <div class="item-description">Zero test coverage across entire codebase</div>
+                            <p>Any code change risks introducing regressions with no safety net; 970 lines of Python are completely untested</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No CI/CD pipeline (GitHub Actions)</div>
-                            <p>No automated checks on PRs; code quality and build correctness are not verified</p>
+                            <div class="item-description">No CI/CD pipeline (GitHub Actions or equivalent)</div>
+                            <p>No automated checks on PRs; broken code can be merged freely</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container image security scanning</div>
-                            <p>Vulnerable base images and dependencies shipped to production without detection</p>
+                            <div class="item-description">Severely outdated base image and dependencies</div>
+                            <p>CentOS 7 (EOL), Python 3.6 (EOL), cryptography 3.3.1 and other packages with known CVEs create critical security exposure</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">24-40 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">SSL verification disabled in production code</div>
+                            <p>Man-in-the-middle attacks possible against Kubernetes API; urllib3 warnings suppressed hides security issues</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Severely outdated and unmaintained dependencies</div>
-                            <p>Python 3.6 EOL, CentOS 7 EOL base image, JupyterHub 1.2.1 (current is 4.x+), known CVEs in cryptography 3.3.1</p>
+                            <div class="item-description">No container security scanning</div>
+                            <p>Vulnerabilities in base image and dependencies are never detected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">40+ hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No linting, formatting, or static analysis</div>
-                            <p>Code quality is not enforced; style drift and bugs go undetected</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card low">
-                            <div class="item-description">No agent rules for AI-assisted development</div>
-                            <p>AI agents have no guidance on testing patterns, code conventions, or quality gates</p>
+                        <li class="item-card medium">
+                            <div class="item-description">No linting or static analysis</div>
+                            <p>Code quality issues, potential bugs, and style inconsistencies go undetected</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -473,7 +473,7 @@
                         
                         <li class="item-card ">
                             <div class="item-description">Add a basic GitHub Actions CI workflow with linting</div>
-                            <p>Establish automated PR checks and prevent broken code from merging</p>
+                            <p>Establishes automated quality gates on PRs; prevents broken merges</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -481,26 +481,26 @@
                         </li>
                         <li class="item-card ">
                             <div class="item-description">Add Trivy container scanning</div>
-                            <p>Immediately surface critical CVEs in base image and dependencies</p>
+                            <p>Immediately surfaces known CVEs in the outdated base image and dependencies</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add unit tests for convert_size_to_bytes() and resolve_image_name()</div>
-                            <p>Cover the two testable pure functions in the codebase; establish test infrastructure</p>
+                            <div class="item-description">Add pre-commit hooks with basic Python linting (ruff)</div>
+                            <p>Catches code quality issues before they enter the repository</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add unit tests for convert_size_to_bytes and resolve_image_name</div>
+                            <p>Tests the two most testable functions with clear inputs/outputs</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add pre-commit hooks for basic Python linting</div>
-                            <p>Catch formatting and obvious errors before commit</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Evaluate whether this repository is still actively maintained — last release was 2020, Python 3.6 and CentOS 7 are EOL</li><li>If maintained: upgrade base image to UBI 8/9, Python 3.9+, and JupyterHub 4.x</li><li>Add a GitHub Actions CI workflow with at minimum: Python linting, Dockerfile build verification, and dependency vulnerability scan</li></ul>
+                            <ul><li>Evaluate whether this repository should be archived - it appears to be in maintenance/legacy mode with a CentOS 7/Python 3.6 base</li><li>If actively maintained: migrate from CentOS 7/Python 3.6 to a supported UBI base with Python 3.9+</li><li>Add basic CI/CD pipeline (GitHub Actions) with linting, build validation, and security scanning</li><li>Fix SSL verification bypass in jupyterhub_config.py - this is a production security vulnerability</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add unit tests for jupyterhub_config.py utility functions (convert_size_to_bytes, resolve_image_name)</li><li>Add container image build and startup validation to CI</li><li>Add Trivy or Snyk scanning for container images</li><li>Add codecov or similar coverage tracking</li></ul>
+                            <ul><li>Add unit tests for core utility functions (convert_size_to_bytes, resolve_image_name, extract_hostname)</li><li>Add container image build and startup validation in CI</li><li>Update all pinned dependencies to current versions (most are from 2020-2021)</li><li>Add Dependabot or Renovate for automated dependency updates</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Create agent rules (.claude/rules/) for test patterns and code conventions</li><li>Add integration tests that validate JupyterHub configuration loading</li><li>Add pre-commit hooks for flake8/ruff and black/isort</li><li>Consider adding Renovate or Dependabot for dependency management</li></ul>
+                            <ul><li>Add integration tests for OpenShift template rendering</li><li>Create agent rules (.claude/rules/) for test patterns</li><li>Add SBOM generation and image signing</li><li>Add CodeQL or Semgrep for static analysis</li></ul>
                         </div>
                     </div>
                 </div>

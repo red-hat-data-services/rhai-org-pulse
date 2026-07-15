@@ -1,473 +1,447 @@
 ---
 repository: "red-hat-data-services/rhai-org-pulse"
-overall_score: 6.8
+overall_score: 8.2
 scorecard:
   - dimension: "Unit Tests"
-    score: 8.0
-    status: "222 test files for 492 source files (45% ratio); Vitest + @vue/test-utils; well-organized per-module structure"
+    score: 8.5
+    status: "293 unit tests via Vitest across client/server; strong test-to-code ratio (0.86:1); modules like releases (105) and team-tracker (79) have excellent coverage. Gaps in okr-hub and system-health (0 tests each)."
   - dimension: "Integration/E2E"
     score: 8.0
-    status: "Playwright smoke + module integration tests against containers; dynamic matrix for changed modules"
+    status: "14 Playwright specs covering smoke + integration; matrix-driven CI for per-module integration; containerized test execution; shared helpers and constants."
   - dimension: "Build Integration"
-    score: 8.0
-    status: "PR builds Docker images and runs Playwright smoke tests; kustomize and OpenAPI validation"
+    score: 8.5
+    status: "PR-time container builds with smoke tests for both core and AI Eng images; kustomize overlay validation; multi-image build pipeline with layered architecture."
   - dimension: "Image Testing"
-    score: 6.0
-    status: "Multi-stage builds with UBI9; runtime smoke tests; no vulnerability scanning or SBOM"
+    score: 7.5
+    status: "Smoke tests validate image startup, health endpoints, UI rendering, and routing. No vulnerability scanning (Trivy/Snyk) or SBOM generation."
   - dimension: "Coverage Tracking"
-    score: 1.0
-    status: "No coverage tracking, thresholds, or reporting configured anywhere"
+    score: 3.0
+    status: "No codecov/coveralls integration; no coverage thresholds; no PR coverage reporting; no coverage generation configured in vitest."
   - dimension: "CI/CD Automation"
     score: 9.0
-    status: "Smart path filtering, concurrency control, Socket Security, automated deploys, Claude code review"
+    status: "Mature 7-workflow pipeline: CI, integration tests, build/push, Claude AI review, guard configs, sync-preprod, claude-issues. Smart change detection, concurrency control, matrix strategy."
   - dimension: "Agent Rules"
-    score: 9.0
-    status: "Comprehensive AGENTS.md + CLAUDE.md; automated Claude review and issue triage; AI config guard"
+    score: 9.5
+    status: "Exceptional: AGENTS.md (vendor-neutral), .claude/CLAUDE.md (deep architecture), .claude/commands/ (pr-review, create-module), .github/instructions/review.instructions.md (automated review checklist). Guard workflow protects AI config changes."
 critical_gaps:
-  - title: "No test coverage tracking or enforcement"
-    impact: "Cannot measure coverage trends, detect regressions, or enforce minimum thresholds; no visibility into untested code"
+  - title: "No code coverage tracking or enforcement"
+    impact: "Cannot measure test effectiveness; no PR coverage regression alerts; blind spots in untested modules go undetected"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No container image vulnerability scanning"
-    impact: "Known CVEs in base images or dependencies could ship to production undetected"
+  - title: "No container vulnerability scanning"
+    impact: "CVEs in base images and dependencies not detected until production; no SBOM for compliance"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No SAST or CodeQL integration"
-    impact: "Security vulnerabilities in application code may not be caught before merge"
+  - title: "Zero unit tests for okr-hub and system-health modules"
+    impact: "Two active modules have no test coverage at all; bugs ship undetected"
+    severity: "MEDIUM"
+    effort: "8-16 hours"
+  - title: "No SAST/CodeQL or secret detection"
+    impact: "Static analysis vulnerabilities and leaked secrets not caught pre-merge"
     severity: "MEDIUM"
     effort: "2-4 hours"
-  - title: "No SBOM generation or image signing"
-    impact: "Cannot verify supply chain integrity or audit component inventory"
-    severity: "MEDIUM"
-    effort: "4-6 hours"
 quick_wins:
-  - title: "Add Vitest coverage reporting and Codecov integration"
+  - title: "Add Vitest coverage generation and codecov integration"
     effort: "3-4 hours"
-    impact: "Immediate visibility into test coverage with PR comments and trend tracking"
+    impact: "Immediate visibility into coverage gaps; PR-level coverage reporting; prevents coverage regressions"
   - title: "Add Trivy container scanning to build-images workflow"
     effort: "1-2 hours"
-    impact: "Catches known CVEs in container images before deployment"
-  - title: "Add CodeQL or Semgrep workflow for SAST"
-    effort: "2-3 hours"
-    impact: "Automated detection of security anti-patterns in JavaScript code"
-  - title: "Add .claude/rules/ test automation guidelines"
-    effort: "2-3 hours"
-    impact: "Standardize AI-generated test quality across unit, integration, and smoke tests"
+    impact: "Automated CVE detection for all 6 container images before push to Quay"
+  - title: "Enable CodeQL analysis workflow"
+    effort: "1-2 hours"
+    impact: "Free GitHub-native SAST scanning for JavaScript vulnerabilities"
+  - title: "Add unit tests for system-health module"
+    effort: "4-6 hours"
+    impact: "Cover 6 Vue components and 8 JS files currently at 0% test coverage"
 recommendations:
   priority_0:
-    - "Add Vitest coverage with --coverage flag, set minimum threshold at 60%, integrate with Codecov for PR reporting"
-    - "Add Trivy scanning for both backend and frontend container images in build-images.yml"
+    - "Add Vitest coverage generation (--coverage flag + v8/istanbul provider) and integrate with codecov for PR-level reporting"
+    - "Add Trivy/Grype container scanning step to build-images.yml before pushing to Quay"
+    - "Write unit tests for okr-hub and system-health modules (currently 0 tests each)"
   priority_1:
-    - "Add CodeQL or Semgrep SAST workflow for JavaScript/Node.js security analysis"
-    - "Add SBOM generation (Syft or Trivy SBOM mode) for supply chain visibility"
-    - "Create .claude/rules/ with test patterns for Vitest unit tests and Playwright integration tests"
+    - "Enable GitHub CodeQL workflow for JavaScript SAST scanning"
+    - "Add Gitleaks or TruffleHog for secret detection in PRs"
+    - "Add coverage thresholds (e.g., 70% minimum) to prevent coverage regressions"
+    - "Add customer-insights module unit tests (only 1 test for 38 files)"
   priority_2:
-    - "Add multi-architecture builds (amd64 + arm64) for developer parity"
-    - "Add performance/load testing for API endpoints"
-    - "Add contract tests between frontend API client and backend routes"
-    - "Add accessibility testing with axe-core in Playwright tests"
+    - "Add multi-architecture image builds (arm64) for developer parity"
+    - "Add SBOM generation (Syft/SPDX) for compliance tracking"
+    - "Consider adding API contract tests for the /api/modules/* endpoints"
+    - "Add performance testing for dashboard load times"
 ---
 
-# Quality Analysis: rhai-org-pulse (Org Pulse)
+# Quality Analysis: rhai-org-pulse
 
 ## Executive Summary
 
-- **Overall Score: 6.8/10**
-- **Repository Type**: Web application (Vue 3 SPA + Express backend)
-- **Language**: JavaScript (no TypeScript, by design)
-- **Framework**: Vue 3 + Vite + Tailwind CSS (frontend), Express (backend)
-- **Deployment**: OpenShift via ArgoCD, dual containers (frontend nginx + backend Express)
-
-### Key Strengths
-1. **Excellent CI/CD pipeline** — Smart path-based filtering, concurrency control, Socket Security, automated deployments with image tag PRs, and comprehensive PR validation including Docker builds
-2. **Strong test culture** — 222 test files covering frontend components, backend routes, stores, and utilities with Vitest + Playwright
-3. **Industry-leading agent integration** — Claude Code review with autofix, issue triage bot, AI config guardrails, comprehensive AGENTS.md and CLAUDE.md
-
-### Critical Gaps
-1. **No coverage tracking** — Zero coverage reporting, thresholds, or trend analysis
-2. **No security scanning** — No Trivy, Snyk, CodeQL, or any vulnerability scanning
-3. **No SBOM or image signing** — No supply chain verification
-
-### Agent Rules Status: **Strong** — AGENTS.md, .claude/CLAUDE.md, review instructions, and two Claude workflows (review + issues). Missing `.claude/rules/` for test-specific patterns.
+- **Overall Score: 8.2/10**
+- **Repository Type**: Vue 3 + Express modular engineering dashboard
+- **Primary Language**: JavaScript (646 JS files, 371 Vue components)
+- **Framework**: Vue 3 SPA + Express backend, deployed on OpenShift via ArgoCD
+- **Key Strengths**: Exceptionally mature CI/CD pipeline with 7 workflows, outstanding agent rules documentation, strong unit test coverage with 293 tests, innovative AI-powered code review with autofix, PR-time container smoke testing
+- **Critical Gaps**: No coverage tracking/enforcement, no vulnerability scanning, two modules with zero tests
+- **Agent Rules Status**: **Exemplary** — best-in-class multi-vendor AI agent documentation with config guard workflow
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 8/10 | 222 test files, 45% test-to-source ratio, Vitest + vue/test-utils |
-| Integration/E2E | 8/10 | Playwright smoke + module integration against containers |
-| Build Integration | 8/10 | PR-time Docker builds, smoke tests, kustomize & OpenAPI validation |
-| Image Testing | 6/10 | UBI9 multi-stage builds, runtime smoke tests; no vuln scanning |
-| Coverage Tracking | **1/10** | **No coverage tracking, thresholds, or reporting** |
-| CI/CD Automation | 9/10 | Smart path filtering, concurrency, Socket Security, auto-deploy |
-| Agent Rules | 9/10 | Comprehensive AGENTS.md, Claude review + issues, AI config guard |
+| Unit Tests | 8.5/10 | 293 tests via Vitest; strong coverage in core modules; gaps in okr-hub, system-health |
+| Integration/E2E | 8.0/10 | 14 Playwright specs; matrix-driven CI; containerized execution |
+| **Build Integration** | **8.5/10** | **PR-time container builds + smoke tests; kustomize validation; layered image architecture** |
+| Image Testing | 7.5/10 | Health endpoint + UI smoke tests; no vulnerability scanning or SBOM |
+| Coverage Tracking | 3.0/10 | No codecov; no thresholds; no PR reporting; no coverage generation |
+| CI/CD Automation | 9.0/10 | 7 workflows; smart change detection; AI review; concurrency control |
+| Agent Rules | 9.5/10 | AGENTS.md + .claude/CLAUDE.md + review instructions + guard workflow + commands |
+
+**Weighted Overall: 8.2/10**
 
 ## Critical Gaps
 
-### 1. No Test Coverage Tracking or Enforcement
-- **Impact**: Cannot measure coverage trends, detect regressions, or enforce minimum thresholds
+### 1. No Code Coverage Tracking or Enforcement
+- **Impact**: Cannot measure test effectiveness; coverage regressions go undetected; untested modules like okr-hub (0 tests) have no visibility
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: Vitest has built-in coverage via `@vitest/coverage-v8`, but it's not configured. No `--coverage` flags, no codecov integration, no thresholds. With 222 test files, coverage is likely reasonable but unmeasured.
-- **Fix**: Add coverage config to `vitest.config.mjs`, set thresholds, integrate Codecov
+- **Details**: Vitest supports `--coverage` with V8 or Istanbul providers. No `.codecov.yml`, no coverage thresholds in CI, no PR coverage comments. The 293 unit tests may cover a solid percentage but there's no way to know or enforce it.
 
-### 2. No Container Image Vulnerability Scanning
-- **Impact**: Known CVEs in UBI9 base images or npm dependencies could ship undetected
+### 2. No Container Vulnerability Scanning
+- **Impact**: CVEs in Red Hat UBI9, Node.js 22, nginx base images and npm dependencies not detected before push to Quay
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: `build-images.yml` builds and pushes images without any scanning step. No Trivy, Snyk, or equivalent.
-- **Fix**: Add `aquasecurity/trivy-action` step after image build, before push
+- **Details**: 6 Dockerfiles produce images pushed to Quay.io with no scanning step. `npm audit --omit=dev --audit-level=high` runs in CI (good) but only covers npm deps, not OS-level packages in base images. No Trivy, Snyk, or Grype integration. No SBOM generation.
 
-### 3. No SAST / CodeQL Integration
-- **Impact**: Security vulnerabilities in application code (injection, XSS, etc.) not caught systematically
+### 3. Zero Unit Tests for okr-hub and system-health Modules
+- **Impact**: Two active modules ship with zero automated test coverage
+- **Severity**: MEDIUM
+- **Effort**: 8-16 hours
+- **Details**: okr-hub has 14 Vue components + 8 JS files, system-health has 6 Vue + 8 JS — all untested. customer-insights has only 1 test for 38 source files. This is a significant gap given the project's otherwise strong testing culture.
+
+### 4. No SAST/CodeQL or Secret Detection
+- **Impact**: Static analysis vulnerabilities and accidentally committed secrets not caught
 - **Severity**: MEDIUM
 - **Effort**: 2-4 hours
-- **Details**: While Claude review checks for OWASP top 10 (per review instructions), there's no deterministic SAST tool. AI review is good but not a substitute for static analysis.
-- **Fix**: Add `github/codeql-action` workflow for JavaScript analysis
-
-### 4. No SBOM Generation or Image Signing
-- **Impact**: Cannot verify supply chain integrity or audit dependency inventory
-- **Severity**: MEDIUM
-- **Effort**: 4-6 hours
-- **Details**: No Syft, Trivy SBOM, cosign, or attestation in the build pipeline.
-- **Fix**: Add SBOM generation step and cosign signing to build-images.yml
+- **Details**: No CodeQL, gosec, Semgrep, Gitleaks, or TruffleHog configured. While the Claude AI review catches some issues, it doesn't replace purpose-built static analysis tools. Socket Security is used for supply chain (good) but doesn't cover application-level SAST.
 
 ## Quick Wins
 
-### 1. Add Vitest Coverage Reporting (3-4 hours)
-```bash
-npm install -D @vitest/coverage-v8
-```
-
+### 1. Add Vitest Coverage Generation + Codecov (3-4 hours)
 Add to `vitest.config.mjs`:
-```javascript
-test: {
-  coverage: {
-    provider: 'v8',
-    reporter: ['text', 'lcov'],
-    thresholds: {
-      lines: 60,
-      functions: 60,
-      branches: 50,
-    },
-  },
+```js
+coverage: {
+  provider: 'v8',
+  reporter: ['text', 'lcov'],
+  reportsDirectory: './coverage',
+  thresholds: { lines: 60 }
 }
 ```
-
-Add to `ci.yml`:
+Add to CI:
 ```yaml
 - name: Run tests with coverage
   run: npm test -- --coverage
-
-- name: Upload coverage to Codecov
+- name: Upload coverage
   uses: codecov/codecov-action@v4
   with:
-    token: ${{ secrets.CODECOV_TOKEN }}
+    files: coverage/lcov.info
 ```
 
 ### 2. Add Trivy Container Scanning (1-2 hours)
-Add to `build-images.yml` after image build:
+Add after each image build in `build-images.yml`:
 ```yaml
-- name: Scan backend image
+- name: Scan image for vulnerabilities
   uses: aquasecurity/trivy-action@master
   with:
-    image-ref: ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
-    format: 'table'
-    exit-code: '1'
-    severity: 'CRITICAL,HIGH'
+    image-ref: ${{ env.CORE_BACKEND_IMAGE }}:${{ env.BUILD_SHA }}
+    severity: CRITICAL,HIGH
+    exit-code: 1
 ```
 
-### 3. Add CodeQL Workflow (2-3 hours)
-Create `.github/workflows/codeql.yml`:
+### 3. Enable CodeQL Analysis (1-2 hours)
 ```yaml
 name: CodeQL
-on:
-  pull_request:
-    branches: [main]
-  schedule:
-    - cron: '0 8 * * 1'
+on: [push, pull_request]
 jobs:
   analyze:
     runs-on: ubuntu-latest
-    permissions:
-      security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: github/codeql-action/init@v3
-        with:
-          languages: javascript
+        with: { languages: javascript }
       - uses: github/codeql-action/analyze@v3
 ```
 
-### 4. Add `.claude/rules/` Test Guidelines (2-3 hours)
-Create test automation rules for AI agents to improve generated test quality.
+### 4. Add Unit Tests for system-health Module (4-6 hours)
+- 6 Vue components + 8 JS server files with zero test coverage
+- Start with server route handlers and data transformation logic
+- Use existing patterns from `modules/team-tracker/server/__tests__/` as templates
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
+**Score: 9.0/10** — One of the most mature CI/CD setups analyzed.
+
 **Workflow Inventory** (7 workflows):
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `ci.yml` | PR | Lint, test, build, kustomize validate, smoke tests |
-| `build-images.yml` | Push to main/preprod | Build/push images, update tags, auto-merge deploy PRs |
-| `integration-tests.yml` | PR (path-filtered) | Module-specific Playwright tests with dynamic matrix |
-| `claude-review.yml` | PR | AI code review with autofix capability |
-| `claude-issues.yml` | Issue/comment | AI issue triage and bug fixing |
-| `guard-ai-configs.yml` | PR/review | Protect AI config files from unauthorized changes |
-| `sync-preprod.yml` | Weekly cron | Sync main → preprod branch |
+| `ci.yml` | PR, merge_group | Lint, test, build, kustomize validate, smoke tests |
+| `integration-tests.yml` | PR, merge_group | Matrix-driven per-module Playwright tests |
+| `build-images.yml` | Push to main/preprod | Build 6 images, smoke test, push to Quay, update deploy tags |
+| `claude-review.yml` | PR (all types) | AI code review with autofix + structured verdict |
+| `guard-ai-configs.yml` | PR | Protect AI config files (AGENTS.md, .claude/) |
+| `claude-issues.yml` | Issue creation | AI-powered issue triage |
+| `sync-preprod.yml` | Weekly cron | Auto-create main→preprod sync PR |
 
-**Notable Practices**:
-- Path-based change detection (`dorny/paths-filter`) for integration tests — only tests changed modules
-- Concurrency control on build and integration workflows with `cancel-in-progress`
-- Socket Security firewall for npm installs
-- `npm audit --omit=dev --audit-level=high` on PRs
-- Kustomize overlay validation for all environments
-- OpenAPI spec validation as a required check
-- Module manifest validation
-- Automated image tag update PRs with auto-merge
-- Fork-safe Claude review (read-only mode for forks)
+**Strengths**:
+- Smart change detection using `dorny/paths-filter` and `git diff` — only builds/tests what changed
+- Concurrency control (`cancel-in-progress: true`) on integration tests and builds
+- Matrix strategy for integration tests — automatically tests only changed modules
+- Merge queue support across all required checks (no-op jobs for queue events)
+- Version bumping with collision detection (bumps until unused tag found)
+- Layered image architecture: core → AI Eng, with proper `FROM` chain
+- Socket Security for supply chain protection during `npm ci`
 
-**CI Score: 9/10** — One of the strongest CI/CD setups seen. Smart, efficient, and comprehensive.
+**Gaps**:
+- No caching of Docker layers between builds (each CI run rebuilds from scratch)
+- No parallel image builds (core backend + frontend build sequentially due to dependencies)
+- Could benefit from build time reporting
 
 ### Test Coverage
 
-**Unit Tests (Vitest)**:
-- **222 test files** across all areas: src, shared, server, and all 5 modules
-- **Test-to-source ratio**: 0.45 (222 test files / 492 source files)
-- Framework: Vitest with `@vue/test-utils` for Vue components, `jsdom` for browser env
-- Smart environment selection: `jsdom` for client code, `node` for server code
-- Path aliases configured (`@shared`, `@modules`)
+**Unit Tests (8.5/10)**:
 
-**Test Organization by Area**:
-- `src/__tests__/` — App shell tests (6 files)
-- `shared/server/__tests__/` — Shared server utilities (17 files)
-- `shared/client/__tests__/` — Shared client utilities (3 files)
-- `shared/server/roster-sync/__tests__/` — Roster sync (4 files)
-- `server/__tests__/` and `server/*/\_\_tests\_\_/` — Server tests (13 files)
-- `modules/ai-impact/__tests__/` — AI Impact module (22 files)
-- `modules/releases/__tests__/` — Releases module (47 files — most tested)
-- `modules/team-tracker/__tests__/` — Team Tracker module (48 files)
-- `modules/upstream-pulse/__tests__/` — Upstream Pulse module (3 files)
-- `modules/product-builds/__tests__/` — Product Builds module (3 files)
+| Area | Test Files | Source Files | Ratio |
+|------|-----------|-------------|-------|
+| releases module | 105 | 186 | 0.56 |
+| team-tracker module | 79 | 140 | 0.56 |
+| ai-impact module | 35 | 94 | 0.37 |
+| server/ | 13 | ~20 | 0.65 |
+| shared/server/ | 25 | ~25 | 1.00 |
+| product-builds | 7 | 27 | 0.26 |
+| ai-catalyst | 5 | 27 | 0.19 |
+| upstream-pulse | 3 | 24 | 0.13 |
+| customer-insights | 1 | 38 | 0.03 |
+| **okr-hub** | **0** | **22** | **0.00** |
+| **system-health** | **0** | **14** | **0.00** |
 
-**Smoke Tests (Playwright)**:
-- `tests/smoke/app-loads.spec.js` — 5 comprehensive tests:
-  - Load without JS errors
-  - Core layout structure
-  - No stuck loading states
-  - Client-side routing
-  - Basic accessibility (semantic landmarks)
-- Runs in official Playwright container (`mcr.microsoft.com/playwright:v1.60.0`)
-- Runs against production container images in demo mode
+- **Testing framework**: Vitest 4.x with jsdom (client) + node (server) projects
+- **Vue testing**: @vue/test-utils for component tests
+- **Mock patterns**: In-memory mock storage, scope registries, proper test isolation
+- **Test quality**: Well-structured with `describe`/`it` blocks, proper setup/teardown
+- **Workspace config**: Separate Vitest projects for server (node env) and client (jsdom env)
 
-**Integration Tests (Playwright)**:
-- `tests/integration/` — 5 module-specific test files
+**Integration/E2E Tests (8.0/10)**:
+
+- 14 Playwright specs: 1 smoke test + 13 integration tests (11 module + 2 cross-cutting)
+- Container-based execution using `quay.io/browser/playwright-chromium` — no local browser installs needed
+- Reusable composite action (`.github/actions/test-org-pulse-module/`) for CI
+- Shared helpers (`helpers.js`) and constants (`constants.js`) for consistent patterns
+- Tests cover: sidebar visibility, view loading, content rendering, API integration, error tracking
 - Tag-based filtering (`@module-name`) for selective execution
-- Dynamic CI matrix tests only changed modules
-- Reusable composite action for consistent execution
 
-**Coverage**: No coverage tracking configured.
+**Coverage Tracking (3.0/10)**:
+- **No coverage generation** configured in `vitest.config.mjs`
+- **No codecov/coveralls** integration
+- **No coverage thresholds** to prevent regressions
+- **No PR-level coverage reporting**
+- This is the biggest quality gap for an otherwise well-tested project
 
 ### Code Quality
 
+**Score: 8.0/10**
+
 **Linting**:
-- ESLint 10 with flat config (`eslint.config.mjs`)
-- `eslint-plugin-vue` (essential rules)
-- Two custom rules:
-  - `no-cross-module-imports` — Enforces module isolation
-  - `no-module-process-env` — Enforces secrets system
-- `no-unused-vars` with `_` prefix pattern
+- ESLint 10.x with Vue plugin (`flat/essential` config)
+- Custom ESLint rules: `no-cross-module-imports` (enforces module isolation), `no-module-process-env` (enforces secrets system)
+- `lint-staged` + `husky` pre-commit hook runs ESLint on staged files
+- CI lint step in both `ci.yml` and `build-images.yml`
 
-**Pre-commit Hooks**:
-- Husky with `lint-staged`
-- Auto-runs ESLint `--fix` on staged `.js`, `.mjs`, `.cjs`, `.vue` files
+**Validation scripts**:
+- `validate:modules` — validates module.json manifests
+- `validate:platform` — validates platform extension manifests
+- `validate:openapi` — validates OpenAPI JSDoc annotations (minimum operation count)
 
-**Dependency Management**:
-- Dependabot for npm (weekly, 10 PRs) and GitHub Actions (weekly, 5 PRs)
-- Socket Security firewall in CI
-- `npm audit --omit=dev --audit-level=high` on PRs
+**Code Organization**:
+- Clean modular architecture with clear boundaries
+- `@shared` alias for cross-cutting code
+- Storage abstraction prevents raw filesystem access
+- Module isolation enforced at lint level
 
-**Missing**:
-- No TypeScript (by design, documented constraint)
-- No `.pre-commit-config.yaml` (uses Husky instead — this is fine)
-- No SAST tools (CodeQL, Semgrep, gosec)
-- No secret detection (Gitleaks, TruffleHog)
+**Gaps**:
+- No `.pre-commit-config.yaml` (uses husky instead — adequate but less comprehensive)
+- No TypeScript (by design — constraint #6), but no JSDoc type checking either
+- No dead code detection or dependency analysis tools
 
 ### Container Images
 
+**Score: 7.5/10**
+
 **Build Process**:
-- **Backend**: Single-stage, UBI9 Node.js 20 minimal, production deps only, non-root (UID 1001)
-- **Frontend**: Multi-stage — build stage (npm + vite build) → serve stage (UBI9 nginx 124)
-- Build args for traceability: `GIT_SHA`, `BUILD_DATE`
-- Internal CA trust configured for corporate proxy
-- `.dockerignore` present
+- 6 Dockerfiles with multi-stage builds
+- Red Hat UBI9 base images (`ubi9/nodejs-22-minimal`, `hi/nodejs`, `hi/nginx`)
+- Hardened runtime images (distroless-like, minimal CVE surface)
+- Layered architecture: core images → AI Eng extends core
+- Proper USER directives (runs as non-root user 65532)
 
 **Runtime Testing**:
-- Backend: Process liveness check (HTTP + kill -0 fallback)
-- Frontend: Full Playwright smoke tests against running containers
-- Demo mode for deterministic test data
+- Backend smoke test: health endpoint validation (`/api/healthz`)
+- Frontend smoke test: Full Playwright suite against containerized app
+- Both core and AI Eng image variants tested
+- Demo mode enables testing without external credentials
 
-**Missing**:
-- No Trivy/Snyk vulnerability scanning
-- No SBOM generation
-- No image signing (cosign)
-- No multi-architecture support (amd64 only)
-- No Dockerfile linting (hadolint)
+**Gaps**:
+- **No vulnerability scanning** (Trivy, Snyk, Grype)
+- **No SBOM generation** (Syft, SPDX)
+- **No image signing/attestation** (cosign, Sigstore)
+- No multi-architecture builds (Linux amd64 only; ARM workaround documented but not automated)
+- No Docker layer caching in CI
 
 ### Security
 
-**Present**:
-- Socket Security dependency firewall (npm ci)
-- npm audit on PRs (high severity)
-- Dependabot for automated dependency updates
-- OpenShift OAuth proxy for production auth
-- Storage abstraction prevents path traversal
-- DOMPurify for HTML sanitization
-- Guard AI configs workflow (team approval required)
-- Review instructions include OWASP top 10 checklist
-- Non-root containers (UID 1001)
-- Structured JSON output from Claude review (verdict + blocking issues)
+**Score: 6.5/10**
 
-**Missing**:
-- No SAST/CodeQL
+**What's in place**:
+- Socket Security supply chain protection during `npm ci`
+- `npm audit --omit=dev --audit-level=high` in CI
+- Guard workflow protecting AI configuration changes (AGENTS.md, .claude/)
+- Non-root container execution (user 65532)
+- Red Hat hardened base images (minimal attack surface)
+- OAuth proxy for production auth
+- Storage abstraction prevents path traversal
+- DOMPurify for HTML sanitization (via `dompurify` dependency)
+- Claude AI review checks for OWASP top 10 vulnerabilities
+
+**Gaps**:
+- No CodeQL/SAST workflow
+- No Gitleaks/TruffleHog for secret detection
 - No container vulnerability scanning
-- No secret detection
-- No SBOM
-- No image signing
+- No dependency pinning for GitHub Actions (some use `@v7`, `@v6` floating tags)
+- No `.trivyignore` or vulnerability management process
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status**: Present and comprehensive
+**Score: 9.5/10** — Best-in-class among analyzed repositories.
 
-**Files**:
+**What's in place**:
+
 | File | Purpose | Quality |
 |------|---------|---------|
-| `AGENTS.md` | Vendor-neutral conventions, 8 hard constraints | Excellent |
-| `.claude/CLAUDE.md` | Architecture, API routes, deployment, testing | Excellent |
-| `.github/instructions/review.instructions.md` | Shared review checklist with verdict rules | Strong |
-| `.claude/commands/pr-review.md` | Manual PR review command | Good |
-| `.claude/commands/create-module.md` | Module scaffolding command | Good |
-| `.cursor/rules/upstream-pulse-module.mdc` | Cursor rules for one module | Basic |
-
-**CI Integration**:
-- `claude-review.yml` — Automated review on every PR with autofix capability, structured PASS/FAIL verdict, fork-safe (read-only for forks)
-- `claude-issues.yml` — Issue triage, labeling, bug fixing, feature proposals (with approval gate)
-- `guard-ai-configs.yml` — Protects AGENTS.md, .claude/, review instructions, and the guard workflow itself from unauthorized changes
+| `AGENTS.md` | Vendor-neutral conventions, hard constraints, architecture | Excellent — 9 hard constraints, testing policy, code style |
+| `.claude/CLAUDE.md` | Deep architecture, API routes, deployment details, data flow | Excellent — comprehensive reference for AI agents |
+| `.claude/commands/pr-review.md` | Structured PR review command | Good — clear steps |
+| `.claude/commands/create-module.md` | Module scaffolding command | Good — automates boilerplate |
+| `.github/instructions/review.instructions.md` | Review checklist with integration test enforcement | Excellent — OWASP, hard constraint validation, verdict rules |
+| `.github/workflows/guard-ai-configs.yml` | Protects AI config files from unauthorized changes | Excellent — team-based approval via commit status API |
+| `.github/workflows/claude-review.yml` | Automated AI code review on PRs with autofix | Excellent — fork-safe, structured verdict, Vertex AI backend |
+| `.github/workflows/claude-issues.yml` | AI-powered issue triage | Good — automated classification |
 
 **Strengths**:
-- Hard constraints are enforced by both CI and AI review
-- Documentation is layered (AGENTS.md for all tools, CLAUDE.md for Claude-specific)
-- Review criteria explicitly cover security, correctness, conventions, performance, and API docs
-- Issue bot has approval gate for features (won't implement without explicit go-ahead)
-- "Claimed" label system prevents AI and human work from colliding
+- **Vendor-neutral**: `AGENTS.md` works for Claude, Copilot, Cursor, and any future AI tool
+- **Defense in depth**: Guard workflow prevents unauthorized AI config changes
+- **Integration test enforcement**: Review instructions require integration tests for module changes
+- **Structured output**: Claude review uses JSON schema for machine-readable PASS/FAIL verdicts
+- **Fork safety**: Separate read-only review path for fork PRs (no code execution)
+- **Autofix**: Claude review can push fix commits directly, with lint+test validation
 
-**Gaps**:
-- No `.claude/rules/` directory with test-specific patterns
-- No test automation guidance beyond what's in AGENTS.md
-- Could benefit from `/test-rules-generator` to create Vitest/Playwright test patterns
+**Minor gaps**:
+- No `.claude/rules/` directory with test type-specific rules
+- Could benefit from test generation templates in agent instructions
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add test coverage tracking with Codecov** (4-6 hours)
-   - Install `@vitest/coverage-v8`
-   - Configure coverage thresholds in `vitest.config.mjs` (start at 60% lines, ratchet up)
-   - Add Codecov upload to `ci.yml`
-   - Add `.codecov.yml` with PR comment settings
-   - This is the single biggest gap for a repo with 222 test files
+1. **Add Vitest coverage generation + codecov integration** — The most impactful gap. 293 tests exist but coverage is unmeasured. Add `--coverage` flag and codecov upload. Effort: 3-4 hours.
 
-2. **Add container vulnerability scanning** (2-4 hours)
-   - Add Trivy scanning to `build-images.yml` for both backend and frontend images
-   - Set exit-code 1 for CRITICAL/HIGH severities
-   - Consider `.trivyignore` for known acceptable CVEs
-   - Block image push if critical CVEs found
+2. **Add Trivy container scanning** — 6 images pushed to Quay with no vulnerability scanning. Add `aquasecurity/trivy-action` step before each image push. Effort: 1-2 hours.
+
+3. **Write unit tests for okr-hub and system-health** — Two modules with 0 tests. Start with server-side logic and data transformations. Effort: 8-16 hours.
 
 ### Priority 1 (High Value)
 
-3. **Add SAST/CodeQL workflow** (2-4 hours)
-   - Add `.github/workflows/codeql.yml` for JavaScript analysis
-   - Run on PRs and weekly schedule
-   - Complements Claude review with deterministic static analysis
+4. **Enable CodeQL analysis** — Free SAST scanning for JavaScript. GitHub-native, minimal setup. Effort: 1-2 hours.
 
-4. **Add SBOM generation** (4-6 hours)
-   - Use Trivy SBOM mode or Syft in build-images.yml
-   - Attach SBOM as build artifact
-   - Consider cosign for image signing
+5. **Add secret detection** — Gitleaks or TruffleHog workflow to catch accidentally committed credentials. Effort: 1-2 hours.
 
-5. **Create `.claude/rules/` test patterns** (2-3 hours)
-   - Unit test patterns for Vitest (component tests, store tests, route tests)
-   - Integration test patterns for Playwright module tests
-   - Smoke test patterns for new features
-   - Run `/test-rules-generator` to bootstrap these
+6. **Add coverage thresholds** — Once codecov is integrated, set minimum thresholds (e.g., 60-70%) to prevent coverage regressions. Effort: 1 hour.
+
+7. **Increase customer-insights test coverage** — Only 1 test for 38 source files (27 JS server files + 11 Vue components). Effort: 6-8 hours.
 
 ### Priority 2 (Nice-to-Have)
 
-6. **Add multi-architecture builds** (6-8 hours) — Enable arm64 for developer parity on Apple Silicon
-7. **Add accessibility testing with axe-core** (4-6 hours) — Extend Playwright smoke tests with `@axe-core/playwright`
-8. **Add API contract tests** (8-12 hours) — Validate frontend API client against backend OpenAPI spec
-9. **Add performance testing** (8-12 hours) — Load testing for API endpoints with k6 or similar
-10. **Add Hadolint for Dockerfile linting** (1-2 hours)
+8. **Multi-architecture image builds** — Add `docker/build-push-action` with `platforms: linux/amd64,linux/arm64`. Effort: 4-6 hours.
+
+9. **SBOM generation** — Add Syft/SPDX step for compliance. Effort: 2-3 hours.
+
+10. **API contract tests** — The extensive OpenAPI annotations could drive automated contract testing against the Express API. Effort: 8-12 hours.
+
+11. **Pin GitHub Actions by SHA** — Some actions use floating tags (`@v7`, `@v6`). Pin to commit SHA for supply chain safety. Effort: 2-3 hours.
+
+12. **Docker layer caching** — Add `docker/setup-buildx-action` + cache-to/cache-from for faster CI builds. Effort: 2-3 hours.
 
 ## Comparison to Gold Standards
 
-| Dimension | rhai-org-pulse | odh-dashboard (Gold) | notebooks (Gold) | Gap |
-|-----------|---------------|---------------------|------------------|-----|
-| Unit Tests | Vitest, 222 files, 45% ratio | Jest, comprehensive, 80%+ | pytest, good | Coverage tracking |
-| Integration/E2E | Playwright containers, matrix | Cypress + Playwright, multi-env | Python scripts | Multi-browser |
-| Build Integration | Docker + smoke on PR | Konflux + multi-mode | Multi-arch + validation | Similar quality |
-| Image Testing | UBI9, runtime smoke | Multi-stage, Testcontainers | 5-layer validation | Vuln scanning |
-| Coverage Tracking | **None** | Codecov, 80% threshold | Coverage reports | **Major gap** |
-| CI/CD Automation | Path filter, Socket, auto-deploy | Comprehensive CI/CD | Image matrix CI | Comparable |
-| Security Scanning | Socket, npm audit | Trivy, CodeQL, Snyk | Trivy | SAST + container |
-| Agent Rules | Excellent (9/10) | Strong (8/10) | Minimal | Leading |
+| Dimension | rhai-org-pulse | odh-dashboard | notebooks | kserve |
+|-----------|---------------|---------------|-----------|--------|
+| Unit Tests | 8.5 | 9.0 | 7.0 | 9.0 |
+| Integration/E2E | 8.0 | 9.0 | 6.0 | 8.0 |
+| Build Integration | 8.5 | 7.0 | 8.0 | 7.0 |
+| Image Testing | 7.5 | 7.0 | 9.0 | 6.0 |
+| Coverage Tracking | 3.0 | 8.0 | 5.0 | 9.0 |
+| CI/CD Automation | 9.0 | 8.0 | 7.0 | 8.0 |
+| Agent Rules | **9.5** | 8.0 | 3.0 | 2.0 |
+| **Overall** | **8.2** | **8.0** | **6.5** | **7.0** |
+
+**Standout areas**:
+- **Agent rules**: Best-in-class among all analyzed repositories — the guard workflow for AI configs is unique
+- **CI/CD automation**: 7 workflows covering the full lifecycle including AI-powered review
+- **Build integration**: PR-time container builds with Playwright smoke tests is gold-standard
+- **Module isolation**: ESLint-enforced module boundaries with lint-time prevention
+
+**Key gaps vs gold standards**:
+- **Coverage tracking**: Significantly behind kserve (coverage enforcement) and odh-dashboard (codecov integration)
+- **Vulnerability scanning**: Behind notebooks (Trivy + multi-layer validation)
+- **SAST**: Behind odh-dashboard (CodeQL integration)
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/ci.yml` — PR validation pipeline
-- `.github/workflows/build-images.yml` — Image build and deployment
-- `.github/workflows/integration-tests.yml` — Module integration tests
-- `.github/workflows/claude-review.yml` — AI code review
-- `.github/workflows/claude-issues.yml` — AI issue assistant
-- `.github/workflows/guard-ai-configs.yml` — AI config protection
-- `.github/workflows/sync-preprod.yml` — Branch sync
-- `.github/actions/test-org-pulse-module/action.yml` — Reusable test action
-- `.github/dependabot.yml` — Dependency updates
+- `.github/workflows/ci.yml` — PR validation (lint, test, build, kustomize)
+- `.github/workflows/integration-tests.yml` — Per-module Playwright tests
+- `.github/workflows/build-images.yml` — Image build, smoke test, push, deploy
+- `.github/workflows/claude-review.yml` — AI code review with autofix
+- `.github/workflows/guard-ai-configs.yml` — AI config change protection
+- `.github/workflows/sync-preprod.yml` — Weekly main→preprod sync
+- `.github/actions/test-org-pulse-module/action.yml` — Reusable integration test action
 
 ### Testing
-- `vitest.config.mjs` — Unit test configuration
-- `playwright.config.js` — E2E test configuration
+- `vitest.config.mjs` — Vitest configuration (server + client projects)
+- `playwright.config.js` — Playwright configuration
+- `vitest.setup.js` — Vitest setup file
 - `tests/smoke/app-loads.spec.js` — Smoke tests
-- `tests/integration/*.spec.js` — Integration tests
-- `*/__tests__/**/*.test.js` — Unit tests (222 files)
+- `tests/integration/*.spec.js` — Integration tests (13 files)
+- `src/__tests__/` — Frontend unit tests (9 files)
+- `server/__tests__/` — Server unit tests (9 files)
+- `shared/server/__tests__/` — Shared server unit tests (13 files)
+- `modules/*/__tests__/` — Module-specific unit tests
 
 ### Code Quality
 - `eslint.config.mjs` — ESLint flat config with custom rules
-- `eslint-rules/no-cross-module-imports.js` — Module isolation rule
-- `eslint-rules/no-module-process-env.js` — Secrets enforcement rule
-- `.husky/pre-commit` — Lint-staged hook
-- `scripts/validate-modules.js` — Module manifest validation
-- `scripts/validate-openapi.js` — OpenAPI annotation validation
+- `eslint-rules/no-cross-module-imports.js` — Custom ESLint rule
+- `eslint-rules/no-module-process-env.js` — Custom ESLint rule
+- `.husky/pre-commit` — Runs lint-staged
 
 ### Container Images
-- `deploy/backend.Dockerfile` — Backend container (UBI9 Node.js 20)
-- `deploy/frontend.Dockerfile` — Frontend container (UBI9 nginx 124)
-- `.dockerignore` — Build context exclusions
-- `deploy/nginx.conf` — Nginx configuration
-- `deploy/nginx-entrypoint.sh` — Container entrypoint
+- `deploy/core.backend.Dockerfile` — Core backend (UBI9 + hardened Node)
+- `deploy/core.frontend.Dockerfile` — Core frontend (UBI9 + hardened nginx)
+- `deploy/core.frontend-builder.Dockerfile` — Frontend builder stage
+- `deploy/core.frontend-runtime.Dockerfile` — Frontend runtime stage
+- `deploy/ai-eng.backend.Dockerfile` — AI Eng backend (extends core)
+- `deploy/ai-eng.frontend.Dockerfile` — AI Eng frontend (extends core)
 
 ### Agent Rules
-- `AGENTS.md` — Vendor-neutral conventions (8 hard constraints)
-- `.claude/CLAUDE.md` — Claude Code reference (architecture, APIs, deployment)
-- `.claude/commands/pr-review.md` — PR review slash command
+- `AGENTS.md` — Vendor-neutral agent conventions
+- `.claude/CLAUDE.md` — Claude-specific deep reference
+- `.claude/commands/pr-review.md` — PR review command
 - `.claude/commands/create-module.md` — Module scaffolding command
 - `.github/instructions/review.instructions.md` — Shared review checklist
-- `.cursor/rules/upstream-pulse-module.mdc` — Cursor IDE rules
-
-### Deployment
-- `deploy/openshift/base/` — Base Kubernetes manifests
-- `deploy/openshift/overlays/{dev,preprod,prod,local}/` — Environment overlays
-- `Makefile` — Build and test commands

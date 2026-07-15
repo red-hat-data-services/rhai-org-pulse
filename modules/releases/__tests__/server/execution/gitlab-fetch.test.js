@@ -16,9 +16,9 @@ function createZipBuffer(files) {
 function makeStorage() {
   const written = {}
   return {
-    writeToStorage(key, data) { written[key] = data },
-    readFromStorage(key) { return written[key] || null },
-    listStorageFiles(dir) {
+    async writeToStorage(key, data) { written[key] = data },
+    async readFromStorage(key) { return written[key] || null },
+    async listStorageFiles(dir) {
       const prefix = dir + '/'
       return Object.keys(written)
         .filter(k => k.startsWith(prefix))

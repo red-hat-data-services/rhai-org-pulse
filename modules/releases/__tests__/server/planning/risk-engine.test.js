@@ -213,18 +213,10 @@ describe('computeFeatureRisk', function() {
     expect(result.riskScore).toBe(result.flags.length)
   })
 
-  it('bumps green to yellow when planningStatus is not-ready', function() {
+  it('does not bump risk based on planningStatus (decoupled from old DoR gates)', function() {
     var result = computeFeatureRisk(healthyFeature, null, healthyEnrichment, {
       today: dateOf('2026-04-01'),
       planningStatus: 'not-ready'
-    })
-    expect(result.risk).toBe('yellow')
-  })
-
-  it('does not bump risk when planningStatus is in-planning', function() {
-    var result = computeFeatureRisk(healthyFeature, null, healthyEnrichment, {
-      today: dateOf('2026-04-01'),
-      planningStatus: 'in-planning'
     })
     expect(result.risk).toBe('green')
   })

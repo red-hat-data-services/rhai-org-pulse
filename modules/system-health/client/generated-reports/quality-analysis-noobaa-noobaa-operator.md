@@ -1,453 +1,404 @@
 ---
 repository: "noobaa/noobaa-operator"
-overall_score: 5.1
+overall_score: 5.6
 scorecard:
   - dimension: "Unit Tests"
-    score: 4.5
-    status: "49 test files for 124 source files but 29 packages lack any tests; no coverage tracking"
+    score: 5.5
+    status: "50 test files across 21 packages using Ginkgo/Gomega + stdlib, but test-to-code ratio is low (8.9K vs 49K lines) and no coverage tracking"
   - dimension: "Integration/E2E"
-    score: 6.5
-    status: "Strong KMS/admission/CLI/upgrade integration suites on Minikube/Kind with Ginkgo"
+    score: 7.0
+    status: "Strong KMS integration tests on Kind/Minikube clusters, admission webhook tests, upgrade tests, but COSI tests disabled and no formal E2E suite"
   - dimension: "Build Integration"
-    score: 3.0
-    status: "Image built on PR for integration tests but no Konflux simulation or manifest validation"
+    score: 4.0
+    status: "PR builds image and runs unit tests but no Konflux simulation, no image startup validation, no manifest generation testing"
   - dimension: "Image Testing"
-    score: 3.5
-    status: "Simple single-stage Dockerfile; no runtime validation, multi-arch, or image scanning"
+    score: 3.0
+    status: "Dockerfile builds image but no runtime validation, no security scanning, no multi-arch support, no SBOM generation"
   - dimension: "Coverage Tracking"
     score: 1.0
-    status: "No codecov, no coverage flags, no thresholds — zero coverage visibility"
+    status: "No coverage generation, no codecov/coveralls integration, no coverage thresholds or PR reporting"
   - dimension: "CI/CD Automation"
-    score: 6.5
-    status: "26 workflows with good concurrency control; many are PR-triggered but some key tests manual-only"
+    score: 7.5
+    status: "24 workflows with 16 PR-triggered, good concurrency control and caching, nightly upgrade tests, but excessive workflow sprawl"
   - dimension: "Agent Rules"
-    score: 0.5
-    status: "No CLAUDE.md, no .claude/ directory, no AI agent test guidance"
+    score: 0.0
+    status: "No CLAUDE.md, no .claude/ directory, no agent rules for test automation guidance"
 critical_gaps:
-  - title: "Zero test coverage tracking or enforcement"
-    impact: "No visibility into which code paths are tested; regressions can slip through undetected"
+  - title: "No code coverage tracking or enforcement"
+    impact: "Cannot measure test effectiveness, regressions go undetected, no visibility into coverage trends"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "29 of 42 Go packages have no unit tests"
-    impact: "Controller, CRD, diagnostics, backingstore, and other critical packages are untested"
-    severity: "HIGH"
-    effort: "40-60 hours"
-  - title: "No security scanning (Trivy, CodeQL, SAST, Dependabot)"
-    impact: "Vulnerabilities in dependencies and container images are not detected before merge"
+  - title: "No container security scanning"
+    impact: "Vulnerabilities in base images and dependencies are never detected pre-merge"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No container image runtime validation"
-    impact: "Image startup failures and misconfigurations not caught until deployment"
+  - title: "No image runtime validation"
+    impact: "Broken images discovered only at deployment time, not during PR review"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "Legacy Travis CI config still present alongside GitHub Actions"
-    impact: "Confusing CI story; Travis config references Go 1.16 (severely outdated)"
+  - title: "No SBOM generation or image signing"
+    impact: "Cannot verify supply chain integrity; non-compliant with SLSA/Sigstore best practices"
     severity: "MEDIUM"
-    effort: "1-2 hours"
-  - title: "COSI integration tests disabled (on: [])"
-    impact: "COSI feature has no automated test coverage"
+    effort: "4-6 hours"
+  - title: "COSI integration tests disabled"
+    impact: "COSI feature regressions are completely undetectable"
     severity: "MEDIUM"
-    effort: "2-4 hours"
-quick_wins:
-  - title: "Add codecov integration with coverage threshold"
-    effort: "2-4 hours"
-    impact: "Immediate visibility into test coverage; can enforce minimum thresholds on PRs"
-  - title: "Add Trivy container scanning to PR workflow"
-    effort: "1-2 hours"
-    impact: "Catch CVEs in base image and dependencies before merge"
-  - title: "Enable Dependabot for Go module updates"
-    effort: "30 minutes"
-    impact: "Automated dependency vulnerability detection and update PRs"
-  - title: "Remove or archive legacy .travis.yml"
-    effort: "15 minutes"
-    impact: "Eliminate confusion about which CI system is authoritative"
-  - title: "Add CodeQL analysis workflow"
-    effort: "1-2 hours"
-    impact: "Automated static analysis catches common Go security issues"
-  - title: "Create basic CLAUDE.md with test patterns"
+    effort: "8-16 hours"
+  - title: "No AI agent rules for test automation"
+    impact: "AI-assisted development produces inconsistent, low-quality tests"
+    severity: "LOW"
     effort: "2-3 hours"
-    impact: "Guide AI agents to generate tests following project conventions (Ginkgo/Gomega)"
+quick_wins:
+  - title: "Add Trivy scanning to PR workflow"
+    effort: "1-2 hours"
+    impact: "Catch CVEs in base images and Go dependencies before merge"
+  - title: "Add codecov integration with coverage generation"
+    effort: "3-4 hours"
+    impact: "Visibility into test coverage, PR-level coverage reporting, trend tracking"
+  - title: "Add go test -coverprofile to make test-go target"
+    effort: "30 minutes"
+    impact: "Generate coverage data for every test run"
+  - title: "Consolidate duplicate KMS test workflows"
+    effort: "2-3 hours"
+    impact: "Reduce CI maintenance burden from 7 near-identical workflows to 1 matrix job"
+  - title: "Create basic CLAUDE.md with test patterns"
+    effort: "1-2 hours"
+    impact: "Guide AI-generated tests to follow existing Ginkgo/Gomega patterns"
 recommendations:
   priority_0:
-    - "Add coverage tracking (codecov) with PR gates — start with a 30% threshold and ratchet up"
-    - "Add Trivy and CodeQL security scanning to the PR workflow"
-    - "Write unit tests for the 29 untested packages, prioritizing controller/, admission/, and system/"
+    - "Add code coverage tracking (go test -coverprofile) and integrate with Codecov"
+    - "Add Trivy container scanning to the PR workflow"
+    - "Add image startup validation test (docker run + healthcheck) to PR workflow"
   priority_1:
-    - "Add multi-architecture image builds (amd64/arm64)"
-    - "Add container image runtime validation (startup test, health check verification)"
-    - "Re-enable and fix the COSI integration tests"
-    - "Create CLAUDE.md with Ginkgo/Gomega test patterns and operator conventions"
+    - "Consolidate 7 KMS test workflows into a single matrix workflow"
+    - "Re-enable COSI integration tests or document why disabled"
+    - "Add multi-architecture image builds (arm64 support)"
+    - "Add SBOM generation with Syft and image signing with Cosign"
   priority_2:
-    - "Add SBOM generation and image signing/attestation"
-    - "Implement pre-commit hooks for linting and formatting"
-    - "Add Dependabot configuration for automated dependency updates"
-    - "Clean up legacy Travis CI configuration"
+    - "Create CLAUDE.md and .claude/rules/ for test automation guidance"
+    - "Add CodeQL or gosec for static security analysis"
+    - "Remove legacy Travis CI configuration (.travis.yml, .travis/ directory)"
+    - "Add Gitleaks for secret detection in PRs"
 ---
 
 # Quality Analysis: noobaa-operator
 
 ## Executive Summary
 
-- **Overall Score: 5.1/10**
+- **Overall Score: 5.6/10**
 - **Repository Type**: Kubernetes Operator (Go)
-- **Primary Language**: Go (173 files, ~47,800 LOC)
-- **Test Framework**: Go testing + Ginkgo/Gomega
-- **Key Strengths**: Comprehensive integration test suite covering KMS providers, admission webhooks, CLI flows, CNPG deployment, and upgrade scenarios — all running on Minikube/Kind with good concurrency control
-- **Critical Gaps**: Zero coverage tracking, 29/42 packages have no unit tests, no security scanning (Trivy/CodeQL/Dependabot), no container image validation
-- **Agent Rules Status**: Missing — no CLAUDE.md, no .claude/ directory
+- **Primary Language**: Go (175 files, 57,965 total lines)
+- **Test Framework**: Ginkgo v2 + Gomega (with some stdlib `testing`)
+- **Key Strengths**: Extensive KMS integration testing on real clusters, good CI/CD automation with 16 PR-triggered workflows, concurrency control, Go module caching, pre-commit lint hooks
+- **Critical Gaps**: Zero code coverage tracking, no container security scanning, no image runtime validation, no SBOM/signing, COSI tests disabled
+- **Agent Rules Status**: Missing - No CLAUDE.md, no `.claude/` directory
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 4.5/10 | 49 test files but 29 packages untested; no coverage |
-| Integration/E2E | 6.5/10 | Strong KMS/admission/CLI/upgrade suites on real clusters |
-| **Build Integration** | **3.0/10** | **Image built for integration tests only; no Konflux sim** |
-| Image Testing | 3.5/10 | Single-stage Dockerfile; no runtime validation or scanning |
-| Coverage Tracking | 1.0/10 | Zero coverage infrastructure |
-| CI/CD Automation | 6.5/10 | 26 workflows with concurrency; some key tests manual-only |
-| Agent Rules | 0.5/10 | No AI agent guidance whatsoever |
+| Unit Tests | 5.5/10 | 50 test files, low test-to-code ratio (18%), no coverage tracking |
+| Integration/E2E | 7.0/10 | Strong KMS tests on Kind/Minikube, admission webhooks, upgrade tests |
+| **Build Integration** | **4.0/10** | **PR builds image but no Konflux simulation or startup validation** |
+| Image Testing | 3.0/10 | Basic Dockerfile, no runtime validation, no scanning, no multi-arch |
+| Coverage Tracking | 1.0/10 | No coverage generation, no codecov, no thresholds |
+| CI/CD Automation | 7.5/10 | 24 workflows, 16 PR-triggered, good caching, but excessive sprawl |
+| Agent Rules | 0.0/10 | No agent rules, no CLAUDE.md, no test automation guidance |
 
 ## Critical Gaps
 
-### 1. Zero Test Coverage Tracking or Enforcement
-- **Impact**: No visibility into which code paths are tested; regressions slip through undetected
+### 1. No Code Coverage Tracking or Enforcement
+- **Impact**: Cannot measure test effectiveness; regressions go undetected; no visibility into coverage trends across PRs
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: No `.codecov.yml`, no `-coverprofile` flags in `make test-go`, no coverage gates on PRs. The `go test ./pkg/... ./cmd/... ./version/...` command runs tests but discards coverage data entirely.
+- **Details**: The `make test-go` target runs `go test ./pkg/... ./cmd/... ./version/...` without `-coverprofile`. No `.codecov.yml` exists. No PR comments show coverage deltas.
+- **Fix**: Add `-coverprofile=coverage.out` to the test command and integrate with Codecov GitHub App
 
-### 2. 29 of 42 Go Packages Have No Unit Tests
-- **Impact**: Controllers (backingstore, namespacestore, noobaa, obc, cosi, cephcluster), CRD validation, diagnostics, options, and other critical packages have zero test coverage
-- **Severity**: HIGH
-- **Effort**: 40-60 hours
-- **Details**: Only 13 of 42 packages containing source code have any test files. Critical operator reconciliation logic in `pkg/controller/` subpackages is entirely untested at the unit level. The test-to-code line ratio is 7,451:47,842 (15.6%) — well below the 30%+ gold standard for operators.
-
-### 3. No Security Scanning
-- **Impact**: CVEs in the UBI9 base image, Go dependencies, and source code are not detected before merge
+### 2. No Container Security Scanning
+- **Impact**: Vulnerabilities in `ubi9/ubi-minimal` base image and Go dependencies are never detected
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: No Trivy, Snyk, CodeQL, gosec, Semgrep, or Gitleaks integration. No Dependabot config. No SBOM generation. The container image uses `ubi9/ubi-minimal:latest` without any vulnerability scanning.
+- **Details**: No Trivy, Snyk, Grype, or any container scanning tool is configured in any workflow. No `.trivyignore` exists.
+- **Fix**: Add a Trivy scan step to the PR workflow after image build
 
-### 4. No Container Image Runtime Validation
-- **Impact**: Image startup failures, missing binaries, or misconfigured entrypoints not caught until deployment
+### 3. No Image Runtime Validation
+- **Impact**: Broken operator images are only discovered at deployment time
 - **Severity**: HIGH
 - **Effort**: 4-8 hours
-- **Details**: The Dockerfile is a simple single-stage copy of a pre-built binary. While integration tests build and load the image into Minikube, there's no isolated image startup test, health check validation, or structured image testing layer.
+- **Details**: The `testing.yml` workflow builds the image but does not validate it starts correctly. The admission test workflow does load and run the image in Minikube, providing partial coverage.
 
-### 5. Legacy Travis CI Configuration
-- **Impact**: Confusing CI story — `.travis.yml` references Go 1.16 (4+ years outdated) and Minikube on xenial
+### 4. No SBOM Generation or Image Signing
+- **Impact**: Supply chain integrity cannot be verified; non-compliant with SLSA best practices
 - **Severity**: MEDIUM
-- **Effort**: 1-2 hours
-- **Details**: Travis CI config is still present but all active CI runs on GitHub Actions. The `.travis/` directory contains helper scripts still used by GHA workflows (e.g., `install-tools.sh`, `install-5nodes-kind-cluster.sh`), but the `.travis.yml` itself is obsolete.
+- **Effort**: 4-6 hours
 
-### 6. COSI Integration Tests Disabled
-- **Impact**: The COSI (Container Object Storage Interface) feature has no automated test coverage
+### 5. COSI Integration Tests Disabled
+- **Impact**: COSI feature regressions are completely undetectable
 - **Severity**: MEDIUM
-- **Effort**: 2-4 hours
-- **Details**: `run_cosi_test.yaml` has `on: []` (empty trigger list) with a comment "SHOULD BE RETURNED ONCE COSI IS BACK". This feature path is completely unvalidated in CI.
+- **Effort**: 8-16 hours
+- **Details**: `run_cosi_test.yaml` has `on: []` with a TODO comment: "SHOULD BE RETURNED ONCE COSI IS BACK"
+
+### 6. Legacy Travis CI Configuration
+- **Impact**: Confusion about which CI system is authoritative; `.travis/` scripts are still used by GitHub Actions workflows
+- **Severity**: LOW
+- **Details**: `.travis.yml` references Go 1.16.x (very outdated) but `.travis/` helper scripts are actively used by GHA workflows (kind cluster setup, Vault install, etc.)
 
 ## Quick Wins
 
-### 1. Add Codecov Integration (2-4 hours)
-Add coverage tracking to `make test-go` and configure codecov:
-
+### 1. Add Coverage Generation (30 minutes)
 ```makefile
 test-go: gen cli
-	$(TIME) go test -coverprofile=coverage.out -covermode=atomic ./pkg/... ./cmd/... ./version/...
-	@echo "✅ test-go"
+	$(TIME) go test -coverprofile=coverage.out ./pkg/... ./cmd/... ./version/...
+	@echo "Coverage report: coverage.out"
+	@echo "done test-go"
 ```
 
-Add `.codecov.yml`:
+### 2. Add Codecov Integration (2-3 hours)
 ```yaml
-coverage:
-  status:
-    project:
-      default:
-        target: 30%
-        threshold: 5%
-    patch:
-      default:
-        target: 50%
+# Add to operator-tests.yml after "Run Tests"
+- name: Upload Coverage
+  uses: codecov/codecov-action@v4
+  with:
+    files: coverage.out
+    flags: unittests
+    fail_ci_if_error: false
 ```
 
-### 2. Add Trivy Container Scanning (1-2 hours)
-Add to the `operator-tests.yml` workflow:
-
+### 3. Add Trivy Scanning (1-2 hours)
 ```yaml
+# New workflow or add to operator-tests.yml
 - name: Run Trivy vulnerability scanner
   uses: aquasecurity/trivy-action@master
   with:
-    image-ref: 'noobaa/noobaa-operator:latest'
+    image-ref: 'noobaa/noobaa-operator:${{ env.VERSION }}'
     format: 'sarif'
-    exit-code: '1'
+    output: 'trivy-results.sarif'
     severity: 'CRITICAL,HIGH'
 ```
 
-### 3. Enable Dependabot (30 minutes)
-Create `.github/dependabot.yml`:
-
+### 4. Consolidate KMS Workflows into Matrix (2-3 hours)
+Replace 7 near-identical `run_kms_*.yml` workflows with a single matrix job:
 ```yaml
-version: 2
-updates:
-  - package-ecosystem: "gomod"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
+strategy:
+  matrix:
+    kms-type: [dev, tls-sa, tls-token, azure-vault, ibm-kp, kmip, rotate]
 ```
 
-### 4. Remove Legacy Travis CI (15 minutes)
-Delete `.travis.yml` (but keep `.travis/` scripts that are still referenced by GHA workflows). Consider migrating the helper scripts to a `scripts/` or `hack/` directory.
-
-### 5. Add CodeQL Analysis (1-2 hours)
-Create `.github/workflows/codeql.yml` for automated Go static analysis on PRs.
-
-### 6. Create Basic CLAUDE.md (2-3 hours)
-Document Ginkgo/Gomega test patterns, operator testing conventions, and test infrastructure setup.
+### 5. Create Basic Agent Rules (1-2 hours)
+Create `CLAUDE.md` with existing test patterns (Ginkgo suites, table-driven tests, Kind/Minikube setup).
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Strengths**:
-- 26 GitHub Actions workflows covering a broad set of test scenarios
-- Good use of concurrency groups with `cancel-in-progress: true` on most workflows
-- Go caching via `actions/setup-go` with `cache: true` and `cache-dependency-path`
-- PR-triggered workflows for core tests: operator unit tests, CLI tests, admission tests, KMS tests (7 providers), CNPG deployment, core config map
-- Nightly upgrade tests via cron schedule
-- Manual dispatch for builds and upgrade tests with configurable inputs
+**Strengths:**
+- 24 total workflows, 16 triggered on push/pull_request
+- All workflows use concurrency groups with `cancel-in-progress: true`
+- Consistent Go module caching via `actions/setup-go@v5` with `cache: true`
+- Nightly upgrade tests via `schedule` trigger
+- Workflow composition: `upgrade-tests-workflow.yaml` is reusable via `workflow_call`
+- 90-minute timeout on all jobs (consistent)
 
-**Weaknesses**:
-- No workflow for code coverage collection or reporting
-- No security scanning workflows (CodeQL, Trivy, Dependabot)
-- Legacy `.travis.yml` still present (Go 1.16, xenial)
-- COSI tests disabled (`on: []`)
-- HAC tests and OLM tests are dispatch-only (not PR-triggered)
-- `testing.yml` workflow appears to be a stub (mostly commented-out code for auto-updating core images)
-- CodeRabbit configured for code review but no automated quality gates
+**Weaknesses:**
+- **Workflow sprawl**: 7 KMS test workflows that are nearly identical (same setup, different Vault config)
+- **No workflow organization**: Flat structure with no job reuse across KMS tests
+- **Legacy Travis CI**: `.travis.yml` still present (Go 1.16.x), but `.travis/` scripts are actively used by GHA
+- **No status checks enforcement**: No required checks configuration visible
+- **OLM tests disabled**: `operator-olm-tests.yml` is `workflow_dispatch` only with TODO comment
+- **`testing.yml` is misleading**: Named "Testing flows" but actually just validates core image tag update, not real testing
 
-**Workflow Summary**:
+**Workflow Inventory:**
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| operator-tests.yml | push/PR | Unit tests (`make test`) |
-| cli-tests.yml | push/PR | CLI flow tests on Minikube |
-| golangci-lint.yml | push/PR | Linting |
-| run_admission_test.yml | push/PR | Admission webhook integration |
-| run_cnpg_deployment_test.yml | push/PR | CNPG deployment sanity |
-| core-config-map-tests.yml | push/PR | Core config map validation |
-| run_kms_*.yml (7 workflows) | push/PR | KMS provider integration tests |
-| nightly-upgrade-tests.yaml | cron (daily) | Upgrade path validation |
-| manual-build.yml | dispatch | Manual image build & push |
-| manual-upgrade-tests.yaml | dispatch | Manual upgrade testing |
-| operator-olm-tests.yml | dispatch | OLM packaging validation |
-| run_hac_test.yml | dispatch | HA controller tests |
-| run_cosi_test.yaml | disabled | COSI integration (disabled) |
-| releaser.yaml | dispatch | Release automation |
+| Workflow | Trigger | Type |
+|----------|---------|------|
+| operator-tests.yml | push/PR | Unit tests |
+| cli-tests.yml | push/PR | CLI integration |
+| core-config-map-tests.yml | push/PR | Config tests |
+| golangci-lint.yml | push/PR | Lint |
+| run_admission_test.yml | push/PR | Integration (Minikube) |
+| run_cnpg_deployment_test.yml | push/PR | Integration (Minikube) |
+| run_kms_dev_test.yml | push/PR | KMS Integration (Kind) |
+| run_kms_azure_vault_test.yml | push/PR | KMS Integration (Kind) |
+| run_kms_ibm_kp_test.yml | push/PR | KMS Integration (Kind) |
+| run_kms_kmip_test.yml | push/PR | KMS Integration (Kind) |
+| run_kms_rotate_test.yml | push/PR | KMS Integration (Kind) |
+| run_kms_tls_sa_test.yml | push/PR | KMS Integration (Kind) |
+| run_kms_tls_token_test.yml | push/PR | KMS Integration (Kind) |
+| testing.yml | push/PR | Image tag validation |
+| nightly-upgrade-tests.yaml | schedule | Upgrade tests |
+| run_cosi_test.yaml | DISABLED | COSI integration |
+| operator-olm-tests.yml | dispatch | OLM tests |
+| run_hac_test.yml | dispatch | HA tests |
+| manual-upgrade-tests.yaml | dispatch | Manual upgrade |
+| manual-build.yml | dispatch | Manual build |
+| build-cnpg.yml | dispatch | CNPG build |
+| releaser.yaml | dispatch | Release |
+| update-noobaa-core-tag.yml | schedule | Core tag update |
+| upgrade-tests-workflow.yaml | workflow_call | Reusable upgrade |
 
 ### Test Coverage
 
-**Test Files**: 49 test files for 124 source files (0.40 ratio)
-**Test LOC**: 7,451 test lines for 47,842 source lines (15.6%)
-**Framework**: Go testing + Ginkgo v2 / Gomega
+**Unit Tests (5.5/10):**
+- 50 test files across 21 test packages
+- 8,914 lines of test code vs 49,051 lines of production Go code
+- **Test-to-code ratio: 18.2%** (below industry standard of 30-50%)
+- Mix of Ginkgo/Gomega BDD-style and stdlib table-driven tests
+- 16 Ginkgo test suites with proper suite setup files
+- Good test isolation in package-level directories
 
-**Tested Packages** (13 of 42):
-- `pkg/util/` — utility functions, TLS, predicates
-- `pkg/admission/test/unit/` — admission webhook unit tests
-- `pkg/admission/test/integ/` — admission webhook integration tests
-- `pkg/bucket/` — bucket operations
-- `pkg/cli/` — CLI commands
-- `pkg/controller/bucketclass/` — bucket class controller
-- `pkg/controller/ha/` — HA controller
-- `pkg/cosi/` — COSI driver
-- `pkg/nb/` — NooBaa API
-- `pkg/obc/` — OBC handling
-- `pkg/operator/` — operator reconciliation
-- `pkg/system/` — system reconciliation (partial: 3 test files for db_reconciler, pdb_alert_silencer, phase2_creating)
-- `pkg/validations/` — validation logic
-- `pkg/util/kms/test/` — KMS integration tests (6 providers)
-- `test/upgrade/` — upgrade scenario tests
+**Integration Tests (7.0/10):**
+- **KMS Integration**: 7 separate KMS provider tests (Vault dev, TLS-SA, TLS-token, Azure Vault, IBM KP, KMIP, key rotation) all running on Kind clusters with real infrastructure
+- **Admission Webhook Tests**: Full Minikube deployment with operator install, admission controller setup, and webhook validation testing
+- **CNPG Deployment Test**: Full Minikube deployment with NooBaa + CloudNative PostgreSQL
+- **Upgrade Tests**: Nightly version upgrade tests with data persistence validation (S3 object put/get across upgrade)
+- **CLI Tests**: Shell-based CLI flow testing via `test_cli_flow.sh`
 
-**Untested Packages** (29 of 42 — critical gaps marked with ⚠️):
-- ⚠️ `pkg/controller/backingstore/` — backingstore reconciliation
-- ⚠️ `pkg/controller/namespacestore/` — namespacestore reconciliation
-- ⚠️ `pkg/controller/noobaa/` — main operator controller
-- ⚠️ `pkg/controller/obc/` — OBC controller
-- ⚠️ `pkg/controller/cosi/` — COSI controller
-- ⚠️ `pkg/admission/` — admission handler logic (7 files, tests are in subdirectory)
-- ⚠️ `pkg/diagnostics/` — diagnostics collection (5 files)
-- ⚠️ `pkg/util/kms/` — KMS implementation (9 files)
-- `pkg/apis/noobaa/v1alpha1/` — API types (generated, lower priority)
-- `pkg/backingstore/`, `pkg/bucketclass/`, `pkg/noobaaaccount/` — CLI subcommands
-- `pkg/bundle/`, `pkg/bundler/` — bundle management
-- `pkg/cnpg/`, `pkg/crd/`, `pkg/hac/`, `pkg/install/`, `pkg/olm/`, `pkg/options/`, `pkg/pvstore/`, `pkg/sts/`, `pkg/version/`
+**Gaps:**
+- No formal E2E test directory structure
+- COSI tests disabled (`on: []`)
+- OLM tests disabled (dispatch-only with TODO)
+- HAC tests dispatch-only
+- No envtest usage for controller testing (all integration tests require full cluster)
+- No contract testing between operator and noobaa-core
 
 ### Code Quality
 
-**Linting**:
-- golangci-lint v2 configured with `.golangci.yml`
-- Runs on every push/PR via dedicated workflow
-- Uses the default linter set with staticcheck ST1005 suppression
-- Customized lint runner script supporting both pre-commit and makefile modes
-- 5-minute timeout configured
+**Linting (6.0/10):**
+- golangci-lint v2.5.0 configured with `.golangci.yml`
+- Runs on push/PR via dedicated workflow
+- **Pre-commit hook**: Git hooks configured via `.githooks/` directory, running lint on staged Go files only
+- Exclusions: Generated files (`zz_generated.go`, `pkg/apis/noobaa/v1alpha1`, `pkg/bundle`)
+- Suppression: `ST1005` (capitalized error strings) allowed
+- **Weakness**: Minimal linter configuration - relies mostly on defaults, does not enable additional linters like `errcheck`, `ineffassign`, `govet`
 
-**Pre-commit Hooks**:
-- No `.pre-commit-config.yaml`
-- The `run-golangci-lint.sh` script supports a precommit mode but no hooks are configured
-- Git hooks are generated via `make gen` (`install-hooks` target) but only for linting
+**Code Review:**
+- CodeRabbit AI review configured (`.coderabbit.yaml`) with "chill" profile
+- PR template exists but is minimal (167 bytes)
+- No CODEOWNERS file detected
 
-**Static Analysis**:
-- No CodeQL integration
-- No gosec or Semgrep
-- No Gitleaks for secret detection
-- CodeRabbit configured for PR reviews (`.coderabbit.yaml`) — limited to code review, not security scanning
-
-**Code Generation**:
-- `make gen-api-fail-if-dirty` validates API changes are committed
-- Controller-gen and deepcopy-gen for Kubernetes types
-- Bundle generation for OLM packaging
+**Static Analysis:**
+- No CodeQL, gosec, Semgrep, or any SAST tool
+- No dependency scanning (Dependabot, Renovate)
+- No secret detection (Gitleaks, TruffleHog)
 
 ### Container Images
 
-**Dockerfile Analysis** (`build/Dockerfile`):
-- Base image: `registry.access.redhat.com/ubi9/ubi-minimal:latest`
-- Single-stage build (binary is pre-built externally)
-- Installs `tar` for `kubectl cp` support
-- Runs as non-root (USER 1001)
-- Simple COPY of pre-built binary
-- No health check defined
-- No LABEL metadata (version, maintainer, etc.)
-- `.dockerignore` present
+**Build Process (4.0/10):**
+- Single-stage Dockerfile based on `ubi9/ubi-minimal`
+- Pre-compiled binary copied into image (built externally via Makefile)
+- Dev Dockerfile with Delve debugger support
+- Bundle Dockerfile for OLM
+- KMIP test has its own Dockerfile (`pkg/util/kms/test/kmip/pykmip/Dockerfile`)
 
-**DevDockerfile** (`build/DockerfileDev`):
-- Separate development Dockerfile exists
-
-**Multi-Architecture**:
-- No multi-arch build support
-- No `docker buildx` or manifest list usage
-- Single platform builds only
-
-**Image Security**:
-- No Trivy/Snyk scanning
-- No SBOM generation
-- No image signing or attestation
-- No vulnerability thresholds
+**Weaknesses:**
+- No multi-architecture support (only `GOOS=linux GOARCH=amd64`)
+- No container security scanning (Trivy, Snyk, Grype)
+- No SBOM generation (Syft)
+- No image signing (Cosign)
+- No image startup validation in CI
+- No `.trivyignore` for CVE management
+- `tar` installed via `microdnf` without version pinning
 
 ### Security
 
-- **Container Scanning**: None
-- **SAST/CodeQL**: None
-- **Dependency Scanning**: None (no Dependabot, no Snyk)
-- **Secret Detection**: None (no Gitleaks, no TruffleHog)
-- **SBOM**: None
-- **Image Signing**: None
-- **Supply Chain**: No SLSA provenance, no Sigstore integration
+**Overall Security Posture: Weak (2.0/10)**
+
+| Practice | Status |
+|----------|--------|
+| Container scanning (Trivy/Snyk) | Not configured |
+| SAST (CodeQL/gosec) | Not configured |
+| Dependency scanning | Not configured |
+| Secret detection (Gitleaks) | Not configured |
+| SBOM generation | Not configured |
+| Image signing | Not configured |
+| Vulnerability thresholds | Not configured |
+| Supply chain security (SLSA) | Not configured |
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: None — no test type rules, no AI agent guidance
+- **CLAUDE.md**: Not present
+- **AGENTS.md**: Not present
+- **`.claude/` directory**: Not present
+- **`.claude/rules/`**: Not present
+- **Coverage**: No test type rules exist
 - **Quality**: N/A
-- **Gaps**:
-  - No `CLAUDE.md` or `AGENTS.md` in repository root
-  - No `.claude/` directory
-  - No `.claude/rules/` for test creation rules
-  - No `.claude/skills/` for custom skills
-  - No testing documentation for AI agents
-- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
-  - Unit test patterns (Ginkgo/Gomega with `Describe`/`Context`/`It` blocks)
-  - Integration test patterns (Minikube/Kind setup, operator deployment)
-  - KMS test patterns (provider-specific setup and teardown)
-  - Admission webhook test patterns
-  - CLI flow test patterns
+- **Gaps**: All test types lack AI agent guidance
+- **Recommendation**: Generate rules with `/test-rules-generator` covering:
+  - Ginkgo/Gomega unit test patterns
+  - Table-driven stdlib test patterns
+  - Kind/Minikube integration test setup
+  - KMS test infrastructure patterns
+  - CLI shell test patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add coverage tracking with codecov** — Add `-coverprofile` to `make test-go`, configure `.codecov.yml` with a 30% initial threshold, and add coverage upload to the `operator-tests.yml` workflow. This provides immediate visibility into the 15.6% test-to-code ratio and creates a ratchet for improvement.
-
-2. **Add Trivy and CodeQL security scanning** — The repository builds Docker images from `ubi9-minimal:latest` with no vulnerability scanning. Add Trivy for container scanning and CodeQL for Go static analysis as PR-triggered workflows.
-
-3. **Write unit tests for critical untested packages** — Prioritize:
-   - `pkg/controller/noobaa/` — main operator reconciliation logic
-   - `pkg/controller/backingstore/` — backingstore lifecycle
-   - `pkg/admission/` — admission handler (7 untested source files)
-   - `pkg/diagnostics/` — diagnostics collection (5 files)
-   - `pkg/util/kms/` — KMS implementation logic (9 files, only integration tests exist)
+1. **Add code coverage tracking** - Add `-coverprofile=coverage.out` to `make test-go`, integrate Codecov, set minimum threshold at current baseline
+2. **Add Trivy container scanning** - Scan built images in PR workflow, fail on CRITICAL/HIGH CVEs
+3. **Add image startup validation** - After building the operator image, run `docker run --rm <image> version` to verify the binary works
 
 ### Priority 1 (High Value)
 
-4. **Add multi-architecture image builds** — Support amd64 and arm64 using `docker buildx` for broader platform compatibility.
-
-5. **Add container image runtime validation** — Implement a smoke test that starts the container and verifies the operator binary responds to `--help` or a health check endpoint.
-
-6. **Re-enable COSI integration tests** — The `run_cosi_test.yaml` workflow is disabled. Investigate the blocking issue and restore automated testing.
-
-7. **Create CLAUDE.md with test patterns** — Document:
-   - Ginkgo v2 `Describe`/`Context`/`It` patterns used in the project
-   - Gomega matchers and assertion style
-   - Suite setup with `RegisterFailHandler` and `RunSpecs`
-   - Integration test infrastructure (Minikube, Kind, `install-5nodes-kind-cluster.sh`)
-   - KMS test provider pattern
+4. **Consolidate KMS workflows** - Replace 7 nearly-identical `run_kms_*.yml` with one matrix workflow; reduces maintenance from 7 files to 1
+5. **Re-enable COSI integration tests** - Or document explicitly why disabled with tracking issue
+6. **Add multi-architecture builds** - Support `arm64` in addition to `amd64`
+7. **Add SBOM generation** - Use Syft to generate SBOMs during release builds
+8. **Add CodeQL or gosec** - Static security analysis for Go code
+9. **Add Dependabot or Renovate** - Automated dependency updates
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add SBOM generation and image signing** — Integrate Syft for SBOM and cosign for image attestation.
-
-9. **Implement pre-commit hooks** — The lint script supports precommit mode; configure `.pre-commit-config.yaml` to enforce it.
-
-10. **Enable Dependabot** — Automated Go module and GitHub Actions dependency updates.
-
-11. **Clean up legacy Travis CI** — Remove `.travis.yml`, migrate reusable scripts from `.travis/` to `scripts/`.
-
-12. **Add CODEOWNERS** — Define code ownership for critical paths.
+10. **Create CLAUDE.md** - Document test patterns (Ginkgo suites, table-driven tests, Kind setup) for AI-assisted development
+11. **Remove legacy Travis CI** - Move `.travis/` scripts to `scripts/` and delete `.travis.yml`
+12. **Add Gitleaks** - Prevent secrets from being committed
+13. **Add envtest** - Enable faster controller tests without full cluster (currently all integration tests need Kind/Minikube)
+14. **Add CODEOWNERS** - Enforce review requirements for critical paths
+15. **Improve PR template** - Add checklist for test coverage, security review, documentation
 
 ## Comparison to Gold Standards
 
-| Dimension | noobaa-operator | odh-dashboard | notebooks | kserve |
-|-----------|----------------|---------------|-----------|--------|
-| Unit Tests | 4.5/10 — 29/42 packages untested | 9/10 — Jest + multi-layer | 7/10 — pytest suites | 9/10 — Go testing |
-| Integration/E2E | 6.5/10 — Strong KMS/admission/CLI | 9/10 — Cypress + contract | 8/10 — notebook lifecycle | 9/10 — multi-version |
-| Build Integration | 3.0/10 — No Konflux sim | 8/10 — PR-time build validation | 7/10 — Image pipeline | 7/10 — Build checks |
-| Image Testing | 3.5/10 — No runtime validation | 8/10 — Container startup | 9/10 — 5-layer validation | 7/10 — Image tests |
-| Coverage | 1.0/10 — None | 9/10 — Codecov enforced | 7/10 — Coverage tracked | 9/10 — Enforcement |
-| CI/CD | 6.5/10 — Good but gaps | 9/10 — Comprehensive | 8/10 — Well-automated | 9/10 — Multi-version |
-| Agent Rules | 0.5/10 — None | 8/10 — Comprehensive rules | 3/10 — Basic | 2/10 — Minimal |
-| **Overall** | **5.1/10** | **8.6/10** | **7.0/10** | **7.4/10** |
+| Dimension | noobaa-operator | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
+|-----------|-----------------|---------------------|-------------------|---------------|
+| Unit Test Coverage | 18% ratio, no tracking | >70% with enforcement | N/A (images) | >80% with codecov |
+| Integration Tests | Strong KMS suite on Kind | Contract + API tests | N/A | Multi-version K8s |
+| E2E Tests | Partial (admission, upgrade) | Cypress + Playwright | N/A | Full E2E suite |
+| Coverage Tracking | None | Codecov with thresholds | N/A | Codecov + enforcement |
+| Container Scanning | None | Trivy + SBOM | 5-layer validation | Trivy + Snyk |
+| CI/CD Organization | 24 workflows (sprawl) | Organized matrix jobs | Well-structured | Clean matrix jobs |
+| Agent Rules | None | Comprehensive rules | N/A | Some rules |
+| Pre-commit Hooks | golangci-lint | Lint + format + type | N/A | Multiple hooks |
+| Multi-arch | amd64 only | Multi-arch builds | Multi-arch | Multi-arch |
+| Secret Detection | None | Gitleaks | N/A | Multiple tools |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/operator-tests.yml` — Main unit test workflow
-- `.github/workflows/golangci-lint.yml` — Linting workflow
-- `.github/workflows/cli-tests.yml` — CLI integration tests
-- `.github/workflows/run_admission_test.yml` — Admission webhook tests
-- `.github/workflows/run_cnpg_deployment_test.yml` — CNPG deployment tests
-- `.github/workflows/run_kms_*.yml` — KMS provider integration tests (7 workflows)
-- `.github/workflows/nightly-upgrade-tests.yaml` — Nightly upgrade tests
-- `.github/workflows/manual-build.yml` — Manual build & push
-- `.travis.yml` — Legacy Travis CI (obsolete)
+- `.github/workflows/` - 24 workflow files
+- `Makefile` - Build and test targets
+- `.travis.yml` - Legacy Travis CI (still present)
+- `.travis/` - Helper scripts (actively used by GHA)
 
 ### Testing
-- `pkg/*/test/` — Test suites organized by package
-- `test/upgrade/` — Upgrade scenario tests
-- `test/cli/test_cli_flow.sh` — CLI integration test script
+- `pkg/*/` - Package-level unit tests (`*_test.go`)
+- `test/upgrade/` - Upgrade test suite
+- `test/cli/` - CLI flow tests (shell scripts)
+- `pkg/admission/test/` - Admission webhook tests (unit + integration)
+- `pkg/util/kms/test/` - KMS integration tests (7 providers)
 
 ### Code Quality
-- `.golangci.yml` — golangci-lint v2 configuration
-- `scripts/run-golangci-lint.sh` — Lint runner (precommit + makefile modes)
-- `.coderabbit.yaml` — CodeRabbit PR review config
+- `.golangci.yml` - Minimal linter config
+- `.githooks/` - Pre-commit lint hooks
+- `.coderabbit.yaml` - AI code review config
 
 ### Container Images
-- `build/Dockerfile` — Production image
-- `build/DockerfileDev` — Development image
-- `.dockerignore` — Docker build exclusions
+- `build/Dockerfile` - Production image (ubi9-minimal)
+- `build/DockerfileDev` - Dev image with Delve
+- `build/bundle/Dockerfile` - OLM bundle image
+- `.dockerignore` - Docker build exclusions
 
-### Build
-- `Makefile` — Build, test, lint, and release targets
-- `build/tools/` — Build helper scripts
-- `deploy/` — Kubernetes deployment manifests
+### Configuration
+- `go.mod` - Go 1.26.3, Ginkgo v2, Gomega
+- `pull_request_template.md` - PR template
+- `deploy/` - Kubernetes manifests and CRDs

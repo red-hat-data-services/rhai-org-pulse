@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on May 29, 2026 at 08:30 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 03:33 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">openshift/kube-rbac-proxy</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#fd7e14"
+                                stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="254.46878999999996"
+                                stroke-dashoffset="203.57503199999996"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">5.5</div>
+                        <div class="score-value">6.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">Good package coverage (6/8 packages), strong test-to-code ratio, but no coverage tracking</div>
+                            <div class="scorecard-status">Decent unit tests with race detection but 2 packages untested and no coverage tracking</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Comprehensive E2E suite with Kind cluster, 12 test scenarios across RBAC, TLS, auth, and path filtering</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Strong E2E suite with 12 scenarios running on Kind, automated on every PR</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">No PR-time image build validation, no Konflux simulation, no multi-arch PR testing</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">PR builds binary but no Konflux simulation, no OCP image validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.5/10</div>
-                            <div class="scorecard-status">Distroless base image, multi-arch support in Makefile, but no scanning, no SBOM, no runtime validation</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.5/10</div>
+                            <div class="scorecard-status">Multi-arch builds (5 archs) but no runtime validation, no vulnerability scanning</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No codecov, no coveralls, no coverage reporting, no thresholds</div>
+                            <div class="scorecard-status">No coverage tool, no codecov, no thresholds, no PR coverage reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Well-structured single workflow with concurrency control, lint, build, unit + E2E on PRs</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Well-structured GitHub Actions with concurrency control, pinned actions, parallel jobs</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules or AI test guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules of any kind</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +411,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No code coverage tracking or enforcement</div>
-                            <p>Cannot measure test coverage, no regressions detected, no PR gates for coverage drops</p>
+                            <div class="item-description">No test coverage tracking or enforcement</div>
+                            <p>Coverage regression goes completely undetected — no visibility into whether new code is tested</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No security scanning (CVE, SAST, dependency, secret detection)</div>
-                            <p>Vulnerabilities in dependencies and container images go undetected until downstream consumption</p>
+                            <div class="item-description">No container vulnerability scanning</div>
+                            <p>Security vulnerabilities in base images and dependencies are not detected before release</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No PR-time OCP image build validation</div>
+                            <p>Dockerfile.ocp build failures only discovered in OpenShift CI post-merge or in Konflux</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No PR-time container image build validation</div>
-                            <p>Dockerfile.ocp build failures only discovered post-merge in OpenShift CI/Konflux</p>
+                            <div class="item-description">authn and options packages have zero unit tests</div>
+                            <p>Authentication and CLI option parsing — security-critical code paths — are untested at unit level</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No agent rules for AI-assisted development</div>
-                            <p>AI agents cannot produce consistent, high-quality tests matching project conventions</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">3-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Missing unit tests for authn and options packages</div>
-                            <p>Authentication configuration and CLI options parsing untested at unit level</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,35 +456,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add codecov integration to PR workflow</div>
-                            <p>Immediate visibility into test coverage, enable coverage gates on PRs</p>
+                            <div class="item-description">Add codecov integration with coverage threshold</div>
+                            <p>Immediate visibility into test coverage and prevention of coverage regression</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning step to build workflow</div>
-                            <p>Catch known CVEs in base images and dependencies before merge</p>
+                            <div class="item-description">Add Trivy scanning to PR workflow</div>
+                            <p>Early detection of CVEs in distroless base image and Go dependencies</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add gosec static analysis to lint job</div>
-                            <p>Detect common Go security issues (SQL injection patterns, hardcoded creds, etc.)</p>
+                            <div class="item-description">Add -coverprofile flag to unit test make target</div>
+                            <p>Enables coverage reporting pipeline with minimal effort</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Generate agent rules with /test-rules-generator</div>
-                            <p>Enable AI agents to write consistent tests following project patterns</p>
+                            <div class="item-description">Create basic CLAUDE.md with test patterns</div>
+                            <p>AI-assisted development follows existing project conventions</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +501,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add coverage generation to test-unit target and integrate codecov reporting in CI</li><li>Add Trivy container image scanning and Go dependency vulnerability scanning to PR workflow</li><li>Add CodeQL or gosec SAST scanning for security-critical proxy code</li></ul>
+                            <ul><li>Add test coverage generation (-coverprofile) and codecov integration with &gt;=70% threshold</li><li>Add Trivy container scanning to PR workflow for both Dockerfile and Dockerfile.ocp images</li><li>Write unit tests for pkg/authn (OIDC, delegating auth) and cmd/kube-rbac-proxy/app/options</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add PR-time Dockerfile.ocp build validation to catch OpenShift-specific build failures</li><li>Add unit tests for pkg/authn and cmd/kube-rbac-proxy/app/options packages</li><li>Create .claude/rules/ with unit test and E2E test patterns for AI-assisted development</li></ul>
+                            <ul><li>Add PR-time Dockerfile.ocp build validation to catch OpenShift-specific build failures</li><li>Add SBOM generation (syft/cosign) to image build process</li><li>Add gosec or CodeQL SAST scanning for security-sensitive proxy code</li><li>Create .claude/rules/ with unit-test and e2e-test patterns for AI-assisted development</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SBOM generation for container images</li><li>Add multi-architecture build testing in CI (currently only builds amd64)</li><li>Add fuzz testing for auth parsing and path filtering (security-critical paths)</li></ul>
+                            <ul><li>Add pre-commit hooks for license checks and go vet</li><li>Add fuzz testing for auth filter parsing (pkg/filters, pkg/authz)</li><li>Add benchmark tests for proxy hot path (pkg/proxy)</li><li>Implement Dependabot or Renovate for automated dependency updates</li></ul>
                         </div>
                     </div>
                 </div>

@@ -1,406 +1,429 @@
 ---
 repository: "red-hat-data-services/ml-metadata"
-overall_score: 3.3
+overall_score: 3.4
 scorecard:
   - dimension: "Unit Tests"
     score: 6.0
-    status: "Extensive C++ unit test suite using GoogleTest via Bazel, but tests are not executed in CI"
+    status: "Extensive C++ unit tests via Bazel/GoogleTest and Python tests, but not executed in CI"
   - dimension: "Integration/E2E"
     score: 2.0
-    status: "Manual-only MySQL/PostgreSQL integration tests, no automated E2E testing"
+    status: "No integration or E2E tests in CI; multi-DB test files exist but no automated execution"
   - dimension: "Build Integration"
     score: 3.0
-    status: "PR workflow builds Docker image but no runtime validation, no Konflux simulation in GHA"
+    status: "PR workflow builds Docker image only; no test execution, no Konflux simulation at PR time"
   - dimension: "Image Testing"
     score: 2.0
-    status: "Image build only, no startup validation, no vulnerability scanning, no SBOM"
+    status: "Multi-stage Docker build exists but no runtime validation, startup testing, or health checks"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage generation, no codecov integration, no enforcement"
+    status: "No coverage tracking, no codecov/coveralls, no coverage thresholds or PR reporting"
   - dimension: "CI/CD Automation"
     score: 4.0
-    status: "Minimal workflows (PR build + master push), no test execution, no linting in CI"
+    status: "Minimal CI: image build only on PR and master push; no test execution, linting, or security scanning"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules or test guidance"
+    status: "No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance"
 critical_gaps:
-  - title: "No tests execute in CI — PR or push"
-    impact: "Regressions can merge freely; the extensive C++ test suite provides zero protection in practice"
+  - title: "No tests executed in CI"
+    impact: "Code regressions can merge undetected; the 35 existing test files are never validated in PRs"
     severity: "HIGH"
-    effort: "16-24 hours"
-  - title: "No coverage tracking or enforcement"
-    impact: "No visibility into test coverage trends; no gate to prevent coverage regression"
+    effort: "8-16 hours"
+  - title: "No coverage tracking whatsoever"
+    impact: "No visibility into test coverage; coverage can degrade silently over time"
+    severity: "HIGH"
+    effort: "4-6 hours"
+  - title: "No security scanning (Trivy, CodeQL, SAST)"
+    impact: "Vulnerabilities in C++ code, Python deps, and container images go undetected"
+    severity: "HIGH"
+    effort: "2-4 hours"
+  - title: "No linting or static analysis in CI"
+    impact: "Code quality issues, style inconsistencies, and potential bugs not caught before merge"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "No security scanning (SAST, container, dependency)"
-    impact: "Vulnerabilities in Bazel dependencies or container base images go undetected"
-    severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No container image runtime validation"
-    impact: "Image builds may produce non-functional containers; startup failures discovered only in deployment"
-    severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No linting or static analysis in CI"
-    impact: "Code quality issues are not caught before merge"
+  - title: "No container runtime validation"
+    impact: "Image startup failures, misconfigured entrypoints, or missing dependencies caught only in production"
     severity: "MEDIUM"
-    effort: "2-4 hours"
+    effort: "4-6 hours"
   - title: "No agent rules for AI-assisted development"
-    impact: "AI agents have no guidance on testing standards, patterns, or quality gates"
+    impact: "AI-generated code lacks repo-specific patterns and test standards guidance"
     severity: "LOW"
-    effort: "2-3 hours"
+    effort: "2-4 hours"
 quick_wins:
   - title: "Add Trivy container scanning to PR workflow"
     effort: "1-2 hours"
-    impact: "Immediate detection of known vulnerabilities in base images and dependencies"
-  - title: "Add image startup validation after PR build"
-    effort: "2-3 hours"
-    impact: "Catches non-functional images before merge"
-  - title: "Add basic linting step (clang-tidy or cppcheck)"
+    impact: "Immediate detection of CVEs in base images and dependencies"
+  - title: "Add bazel test step to PR workflow"
     effort: "2-4 hours"
-    impact: "Catches common C++ code quality issues automatically"
-  - title: "Create CLAUDE.md with testing guidance"
+    impact: "Activate the 35 existing test files that currently never run in CI"
+  - title: "Add Renovate/Dependabot for Go/Python dependency updates"
+    effort: "1 hour"
+    impact: "Renovate already configured for Konflux; extend to cover Go and Python deps"
+  - title: "Add basic CLAUDE.md with test creation guidance"
     effort: "1-2 hours"
-    impact: "Enables AI agents to follow project testing conventions"
+    impact: "Improve AI-assisted development quality with repo-specific patterns"
 recommendations:
   priority_0:
-    - "Add Bazel test execution to PR workflow — run sqlite-backed unit tests that don't require external databases"
-    - "Add container vulnerability scanning (Trivy) to PR and push workflows"
-    - "Add image startup smoke test after Docker build in PR workflow"
+    - "Execute bazel test targets in PR CI workflow to validate C++ and Go tests before merge"
+    - "Add Python test execution (pytest or bazel py_test) in PR CI workflow"
+    - "Integrate coverage reporting (gcov/lcov for C++, coverage.py for Python) with minimum thresholds"
+    - "Add container security scanning (Trivy) to PR and master workflows"
   priority_1:
-    - "Integrate codecov or similar coverage tracking with Bazel test coverage"
-    - "Add CodeQL or gosec/cppcheck for static analysis"
-    - "Create automated integration test workflow with Docker Compose for MySQL/PostgreSQL backends"
+    - "Add gRPC server smoke test after image build (start container, verify gRPC health endpoint)"
+    - "Set up static analysis: clang-tidy for C++, pylint/ruff for Python"
+    - "Add CodeQL or similar SAST for C++ vulnerability detection"
+    - "Create comprehensive agent rules (.claude/rules/) for test automation"
   priority_2:
-    - "Create agent rules (.claude/rules/) for test patterns and quality standards"
-    - "Add SBOM generation and image signing to push workflow"
-    - "Add multi-architecture build support beyond amd64"
+    - "Add multi-database integration testing (MySQL, PostgreSQL, SQLite) in CI"
+    - "Implement pre-commit hooks for formatting and linting"
+    - "Add SBOM generation for container images"
+    - "Add performance regression testing for metadata store operations"
 ---
 
-# Quality Analysis: ml-metadata (opendatahub-io/ml-metadata)
+# Quality Analysis: ml-metadata (red-hat-data-services)
 
 ## Executive Summary
 
-- **Overall Score: 3.3/10**
-- **Repository Type**: C++/Python library — ML Metadata gRPC server (Google upstream fork)
-- **Primary Languages**: C++ (core), Python (bindings/tests), Go (minimal bindings)
-- **Build System**: Bazel (source build), Docker (container packaging)
-- **Key Strengths**: Extensive C++ unit test suite with GoogleTest; multi-database backend testing (SQLite, MySQL, PostgreSQL); well-structured Bazel build; Tekton/Konflux pipeline integration for Konflux builds
-- **Critical Gaps**: Tests do not run in CI; zero coverage tracking; no security scanning; no linting; no agent rules
-- **Agent Rules Status**: Missing — no CLAUDE.md, no .claude/ directory
-
-This is a **forked upstream Google project** (google/ml-metadata) with minimal Red Hat/ODH-specific CI/CD additions. The repository has only 1 commit visible in the shallow clone and a single branch (`master`). The CI/CD setup is extremely minimal — only two GitHub Actions workflows that build a Docker image but run no tests.
+- **Overall Score: 3.4/10**
+- **Repository Type**: ML infrastructure library / gRPC metadata store server (C++, Python, Go bindings)
+- **Build System**: Bazel 5.x
+- **Key Strengths**: Extensive upstream unit test suite (35 test files, ~25,000 lines of test code across C++/Python/Go); multi-stage Docker builds with Red Hat UBI9 base; multi-architecture Konflux pipeline (x86_64, ARM64, ppc64le); well-structured Bazel build system with GoogleTest framework
+- **Critical Gaps**: No tests run in CI at all; no coverage tracking; no security scanning; no linting; no container runtime validation
+- **Agent Rules Status**: Missing - No CLAUDE.md, no .claude/ directory
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 6.0/10 | Extensive C++ test suite exists but never runs in CI |
-| Integration/E2E | 2.0/10 | Manual-only MySQL/PostgreSQL tests, no automated E2E |
-| **Build Integration** | **3.0/10** | **PR builds Docker image only, no runtime validation** |
-| Image Testing | 2.0/10 | Image build-only, no scanning, no startup validation |
-| Coverage Tracking | 0.0/10 | No coverage generation, no reporting, no enforcement |
-| CI/CD Automation | 4.0/10 | Minimal 2-workflow setup (build PR + push master) |
-| Agent Rules | 0.0/10 | No agent rules, no AI test guidance |
+| Unit Tests | 6.0/10 | Extensive test files exist but are never executed in CI |
+| Integration/E2E | 2.0/10 | Multi-DB test files exist but no automated execution |
+| **Build Integration** | **3.0/10** | **PR builds Docker image only; no test execution or Konflux sim** |
+| Image Testing | 2.0/10 | Multi-stage builds exist but no runtime validation |
+| Coverage Tracking | 0.0/10 | No coverage tracking of any kind |
+| CI/CD Automation | 4.0/10 | Minimal: image build on PR/push only |
+| Agent Rules | 0.0/10 | No agent rules or test automation guidance |
 
 ## Critical Gaps
 
-### 1. No Tests Execute in CI (Severity: HIGH)
+### 1. No Tests Executed in CI
+- **Impact**: Code regressions can merge undetected. The repository contains 35 test files with ~25,000 lines of test code (C++, Python, Go) that are never validated during PRs.
+- **Severity**: HIGH
+- **Effort**: 8-16 hours
+- **Details**: The PR workflow (`build-pr.yaml`) only builds a Docker image. There is no `bazel test` step, no `pytest` execution, no Go test runner. All 26+ Bazel `cc_test` targets, 3+ `py_test` targets, and Go tests sit idle.
 
-**Impact**: The repository has **27 C++ test files** (~18,793 lines), **4 Python test files** (~4,133 lines), and **1 Go test file**, but **none of them run in any CI workflow**. Both GitHub Actions workflows (`build-pr.yaml`, `build-master.yaml`) only build the Docker image. The extensive test suite provides zero regression protection.
+### 2. No Coverage Tracking
+- **Impact**: No visibility into whether new code is tested. Coverage can degrade silently.
+- **Severity**: HIGH
+- **Effort**: 4-6 hours
+- **Details**: No `.codecov.yml`, no coverage generation flags in `.bazelrc`, no coverage CI step, no PR coverage reporting. Bazel supports `--collect_code_coverage` and `--combined_report=lcov` natively.
 
-**Details**:
-- `build-pr.yaml`: Triggered on PR, runs `build_docker_image.sh` only
-- `build-master.yaml`: Triggered on push to master, builds and pushes to Quay.io
-- Bazel test targets exist in BUILD files but are never invoked
-- SQLite-backed tests (`ml_metadata_cc_test` macro) could run without external services
-- MySQL/PostgreSQL tests are tagged `manual` and `local` — require external servers
+### 3. No Security Scanning
+- **Impact**: Vulnerabilities in C++ code, third-party Bazel dependencies, Python packages, and container images go completely undetected.
+- **Severity**: HIGH
+- **Effort**: 2-4 hours
+- **Details**: No Trivy, Snyk, CodeQL, gosec, Semgrep, or any SAST/DAST tool configured. The Dockerfiles pull from `registry.access.redhat.com/ubi9` which has its own CVE surface. No `.trivyignore` or `.gitleaks.toml`.
 
-**Effort**: 16-24 hours (need Bazel setup in CI, cache optimization, test selection)
+### 4. No Linting or Static Analysis
+- **Impact**: Code quality issues, undefined behavior in C++, Python anti-patterns, and style inconsistencies not caught before merge.
+- **Severity**: HIGH
+- **Effort**: 4-8 hours
+- **Details**: No `.golangci.yaml`, no `.eslintrc`, no `ruff.toml`, no `clang-tidy`, no `.pre-commit-config.yaml`. The only code quality signal is whether the Docker image builds successfully.
 
-### 2. No Coverage Tracking (Severity: HIGH)
-
-**Impact**: No visibility into what the tests actually cover. No codecov, coveralls, or any coverage tool integration. No coverage thresholds or enforcement. Coverage regression is invisible.
-
-**Effort**: 4-8 hours (Bazel has `--combined_report=lcov` support)
-
-### 3. No Security Scanning (Severity: HIGH)
-
-**Impact**: No Trivy, Snyk, or any container scanning. No CodeQL or SAST tools. No dependency scanning. No secret detection. The Dockerfile uses `registry.access.redhat.com/ubi9/ubi:latest` and `ubi9/ubi-minimal:latest` — known good bases, but no scanning validates runtime dependencies.
-
-**Effort**: 4-6 hours
-
-### 4. No Container Runtime Validation (Severity: HIGH)
-
-**Impact**: The PR workflow builds the image but never starts it. A broken `ENTRYPOINT`, missing library, or runtime error would not be caught until deployment.
-
-**Effort**: 4-6 hours
-
-### 5. No Linting or Static Analysis (Severity: MEDIUM)
-
-**Impact**: No `.golangci.yaml`, no `clang-tidy`, no `cppcheck`, no Python linters configured. No pre-commit hooks (`.pre-commit-config.yaml` is absent). Code quality depends entirely on code review.
-
-**Effort**: 2-4 hours
-
-### 6. No Agent Rules (Severity: LOW)
-
-**Impact**: No `CLAUDE.md`, no `.claude/` directory, no `.claude/rules/` for test creation. AI agents have no guidance on testing standards.
-
-**Effort**: 2-3 hours
+### 5. No Container Runtime Validation
+- **Impact**: Image startup failures, gRPC server crashes, or configuration issues only discovered at deployment time.
+- **Severity**: MEDIUM
+- **Effort**: 4-6 hours
+- **Details**: The PR workflow builds the image but never runs it. No health check, no gRPC endpoint verification, no container startup test. The `metadata_store_server` binary could fail at runtime and the CI would pass.
 
 ## Quick Wins
 
-### 1. Add Trivy Scanning to PR Workflow (1-2 hours)
-
-Add a step after the Docker build in `build-pr.yaml`:
-
+### 1. Add Trivy Container Scanning to PR Workflow
+- **Effort**: 1-2 hours
+- **Impact**: Immediate CVE detection in UBI9 base images and installed packages
+- **Implementation**:
 ```yaml
 - name: Run Trivy vulnerability scanner
   uses: aquasecurity/trivy-action@master
   with:
     image-ref: 'quay.io/${{ env.QUAY_ORG }}/${{ env.MLMD_IMAGE_REPO }}:${{ steps.tags.outputs.tag }}'
-    format: 'table'
-    exit-code: '1'
+    format: 'sarif'
+    output: 'trivy-results.sarif'
     severity: 'CRITICAL,HIGH'
 ```
 
-### 2. Add Image Startup Smoke Test (2-3 hours)
-
-After building the image, verify it starts correctly:
-
+### 2. Add Bazel Test Step to PR Workflow
+- **Effort**: 2-4 hours (Bazel install + test step)
+- **Impact**: Activate 35 existing test files covering metadata store, query engine, utilities
+- **Implementation**:
 ```yaml
-- name: Smoke test container
+- name: Run Bazel tests
   run: |
-    docker run -d --name mlmd-test \
-      -e GRPC_PORT=8080 \
-      -e METADATA_STORE_SERVER_CONFIG_FILE="" \
-      quay.io/${{ env.QUAY_ORG }}/${{ env.MLMD_IMAGE_REPO }}:${{ steps.tags.outputs.tag }}
-    sleep 5
-    docker logs mlmd-test
-    # Verify container is running (not crashed)
-    docker inspect mlmd-test --format='{{.State.Running}}' | grep true
-    docker stop mlmd-test
+    bazel test --test_output=errors \
+      //ml_metadata/metadata_store:... \
+      //ml_metadata/util:... \
+      //ml_metadata/query:...
 ```
 
-### 3. Create CLAUDE.md (1-2 hours)
+### 3. Extend Renovate for Python/Go Dependencies
+- **Effort**: 1 hour
+- **Impact**: Automated dependency updates beyond Konflux configs
+- **Details**: `renovate.json` already exists and extends `konflux-central` defaults. Add Python (`pyproject.toml`, `test_constraints.txt`) and Go (`go.mod`) managers.
 
-Add basic AI agent guidance with test patterns and build instructions.
-
-### 4. Add Clang-Tidy to PR Workflow (2-4 hours)
-
-Enable static analysis with minimal configuration.
+### 4. Add Basic CLAUDE.md
+- **Effort**: 1-2 hours
+- **Impact**: Guide AI-assisted development with repo-specific Bazel patterns, test frameworks, and code conventions
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows Found**: 2 GitHub Actions workflows + 1 composite action + 2 Tekton pipelines
+**Workflows Inventory:**
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `build-pr.yaml` | PR (paths-ignore docs) | Build Docker image only |
-| `build-master.yaml` | Push to master | Build + push to Quay.io |
-| `build/action.yaml` | Composite action | Shared build logic |
-| Tekton PR | PipelinesAsCode (PR to master) | Konflux multi-arch build |
-| Tekton Push | PipelinesAsCode (push to master) | Konflux multi-arch build |
+| `build-pr.yaml` | Pull Request | Build Docker image (no push, no tests) |
+| `build-master.yaml` | Push to master | Build + push Docker image to Quay.io |
 
-**Positive**:
-- Concurrency control: Both GHA workflows use `cancel-in-progress: true`
-- Path-ignore: PR workflow skips builds for docs-only changes
-- Shared build action: Composite action avoids duplication
-- Tekton/Konflux: Multi-arch container build pipeline with centralized pipeline reference (`odh-konflux-central`)
-- Resource allocation: Tekton tasks request 8 CPU / 16GB RAM for builds
+**What's Missing:**
+- No test execution workflow
+- No lint/format check workflow
+- No security scanning workflow
+- No coverage reporting workflow
+- No release/tag workflow
+- No periodic test execution
 
-**Negative**:
-- No test execution in any workflow
-- No linting step
-- No security scanning step
-- No coverage reporting
-- No caching for Bazel builds (could save significant time)
-- Only 2 workflows total — no periodic, nightly, or scheduled jobs
-- Tekton cancel-in-progress is `false` — concurrent PR builds accumulate
+**Positive:**
+- Concurrency control configured (`cancel-in-progress: true`)
+- Reusable composite action (`.github/actions/build/action.yaml`)
+- Path-based triggering to skip unnecessary builds
+
+**Konflux/Tekton:**
+- Well-configured multi-arch pipeline (`x86_64`, `ARM64`, `ppc64le`)
+- Managed centrally via `konflux-central` repository
+- Source image build enabled
+- PR and label-triggered builds
+- 4-hour timeout for complex Bazel builds
 
 ### Test Coverage
 
-**C++ Tests (GoogleTest via Bazel)**:
-- 27 test source files (`*_test.cc`)
-- ~18,793 lines of test code
-- Test suite headers for reuse (`*_test_suite.h`)
-- Well-structured test hierarchy: metadata_source → metadata_access_object → metadata_store
-- Database-specific tests: SQLite (automated), MySQL (manual), PostgreSQL (manual)
+**Test File Inventory:**
 
-**Python Tests**:
-- 4 test files: `metadata_store_test.py`, `mlmd_types_test.py`, `types_test.py`, `metadata_resolver_test.py`
-- ~4,133 lines of Python test code
-- Tests likely exercise the Python bindings over the C++ library
+| Category | Files | Lines | Framework |
+|----------|-------|-------|-----------|
+| C++ unit tests | 27 | ~19,700 | GoogleTest (gtest) |
+| Python tests | 4 | ~4,100 | Python unittest (via Bazel) |
+| Go tests | 1 | ~1,560 | Go testing + protocmp |
+| C++ test headers | 3 | ~1,500 | GoogleTest fixtures |
+| **Total** | **35** | **~26,860** | |
 
-**Go Tests**:
-- 1 test file: `metadata_store_test.go`
-- Tests the Go bindings
+**Test-to-Code Ratio**: C++ test files (27) vs source files (31) = 0.87 ratio (good for C++)
 
-**Test-to-Code Ratio**:
-- C++ tests: 18,793 lines / 22,012 source lines = **0.85** (good ratio)
-- Python tests: 4,133 lines / 5,373 source lines = **0.77** (good ratio)
-- Overall: **0.84** — healthy test volume, but tests are never executed in CI
+**Test Coverage by Module:**
 
-**Coverage**: None. No `--coverage` flags, no codecov integration, no coverage files generated.
+| Module | Test Files | Status |
+|--------|-----------|--------|
+| `metadata_store/` | 24 CC, 3 PY, 1 GO | Core logic well-covered with tests |
+| `util/` | 4 CC | Utility functions have dedicated tests |
+| `query/` | 2 CC | Query builder and AST resolver tested |
+| `tools/mlmd_resolver/` | 1 PY | Resolver utility tested |
+| `proto/` | 0 | No proto-level tests (acceptable for generated code) |
+| `simple_types/` | 0 | No tests for simple types module |
+
+**Database-Specific Tests:**
+- SQLite tests: `sqlite_metadata_source_test.cc`, `sqlite_query_config_executor_test.cc`, `sqlite_metadata_access_object_test.cc`, `sqlite_rdbms_metadata_access_object_test.cc`
+- MySQL tests: `mysql_metadata_source_test.cc`, `mysql_query_config_executor_test.cc`, `mysql_metadata_access_object_test.cc`
+- PostgreSQL tests: `postgresql_metadata_source_test.cc`, `postgresql_query_executor_test.cc`, `postgresql_metadata_access_object_test.cc`
+
+**Key Gap**: Despite this extensive test suite, **none of these tests run in any CI workflow**.
 
 ### Code Quality
 
-- **Linting**: None configured. No `.clang-tidy`, no `clang-format`, no Python linters
-- **Pre-commit hooks**: None (no `.pre-commit-config.yaml`)
-- **Static analysis**: None (no CodeQL, no gosec, no cppcheck)
-- **Code formatting**: No automated formatting enforcement
-- **Build system**: Bazel with well-defined BUILD files and custom macros (`ml_metadata_cc_test`)
+**Linting & Static Analysis**: None configured
+- No clang-tidy for C++
+- No pylint/ruff/flake8 for Python
+- No golangci-lint for Go
+- No pre-commit hooks
+
+**Build Configuration**:
+- `.bazelrc` enforces C++17 standard
+- Proto3 optional fields enabled
+- Bazel version pinned via `.bazelversion`
+- Build reproducibility via Bazel hermetic builds
+
+**Code Organization**:
+- Clean separation: `metadata_store/`, `proto/`, `query/`, `util/`, `tools/`
+- Proper Bazel BUILD files in each package
+- Test files co-located with source (good practice)
 
 ### Container Images
 
-**Dockerfiles Found**: 5 total
-- `Dockerfile` (upstream, Ubuntu 20.04 builder)
-- `Dockerfile.redhat` (Red Hat, UBI9 builder — **production Dockerfile**)
-- `Dockerfile.fedora` (Fedora-based)
-- `Dockerfile.manylinux2010` (Python wheel builds)
-- `Dockerfile` (dev_debug)
+**Dockerfiles:**
 
-**Dockerfile.redhat Analysis**:
-- Multi-stage build: UBI9 builder → UBI9-minimal runtime
-- Installs Bazel 5 from COPR repo for building
-- Patches ZetaSQL for UBI9 compatibility
-- Runs as non-root user (65534:65534) — good security practice
-- Minimal runtime image with only `tzdata`
-- No HEALTHCHECK instruction
-- No vulnerability scanning
+| Dockerfile | Base Image | Purpose |
+|------------|-----------|---------|
+| `Dockerfile` | Ubuntu 20.04 | Upstream default |
+| `Dockerfile.redhat` | UBI9 | Red Hat downstream build |
+| `Dockerfile.konflux` | UBI9 (pinned SHA) | Konflux pipeline build |
+| `Dockerfile.fedora` | Fedora 38 | Fedora variant |
+| `Dockerfile.manylinux2010` | manylinux2010 | Python wheel builds |
+| `Dockerfile` (dev_debug) | (unknown) | Development debugging |
+
+**Security Observations:**
+- `Dockerfile.konflux` pins base images by SHA digest (good practice)
+- `Dockerfile.redhat` uses unpinned `ubi9/ubi:latest` tag (risk: non-reproducible builds)
+- Final stage runs as non-root user (`USER 65534:65534`) (good practice)
+- Multi-stage build reduces attack surface (good practice)
+- No Trivy/Snyk scanning in any workflow
 - No SBOM generation
+- No image signing/attestation
 
-**docker-compose.yml**: Used for building Python wheels for different Python versions (3.9, 3.10, 3.11)
+**Build Architecture:**
+- Bazel build of C++ `metadata_store_server` binary
+- MariaDB connector library copied to final image
+- gRPC server exposed on port 8080
+- Multi-arch support via Konflux (x86_64, ARM64, ppc64le)
+
+**Runtime Testing**: None
+- No container startup validation
+- No gRPC health check
+- No integration test with database backends
 
 ### Security
 
-- **Container scanning**: None
-- **SAST/CodeQL**: None
-- **Dependency scanning**: None (Bazel deps pinned by SHA256 in WORKSPACE — good)
-- **Secret detection**: None
-- **Image signing**: None
-- **SBOM**: None
+**Current State**: No security tooling whatsoever
 
-**Positive**: Bazel dependencies are pinned by SHA256 hash in `WORKSPACE`, providing supply chain integrity for the build. Container runs as non-root.
+| Security Practice | Status |
+|-------------------|--------|
+| Container scanning (Trivy/Snyk) | Not configured |
+| SAST (CodeQL/Semgrep) | Not configured |
+| Dependency scanning | Not configured |
+| Secret detection (Gitleaks) | Not configured |
+| Image signing | Not configured |
+| SBOM generation | Not configured |
+| Non-root container user | Configured (65534) |
+| Pinned base images | Konflux only |
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: No rules for any test type
+- **Coverage**: No agent rules exist
 - **Quality**: N/A
-- **Gaps**: No CLAUDE.md, no .claude/ directory, no agent rules whatsoever
-- **Recommendation**: Generate rules with `/test-rules-generator` covering:
-  - C++ GoogleTest patterns for metadata store tests
-  - Bazel test target creation
-  - Python test patterns for bindings
-  - Docker image validation tests
+- **Gaps**: No `CLAUDE.md`, no `.claude/` directory, no `AGENTS.md`, no test creation rules, no development guidelines for AI assistants
+- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
+  - Bazel-based C++ test patterns (GoogleTest)
+  - Python test patterns
+  - Go test patterns with protocmp
+  - gRPC server testing guidance
+  - Multi-database test fixture usage
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Run SQLite-backed unit tests in PR workflow**
-   - Add Bazel setup and test execution step
-   - Start with `sqlite_*_test` targets that don't need external databases
-   - Cache Bazel build artifacts between runs
+1. **Execute existing tests in CI** (8-16 hours)
+   - Add Bazel installation step to PR workflow
+   - Run `bazel test //ml_metadata/...` for C++ and Go tests
+   - Run Python tests via Bazel py_test targets
+   - Start with SQLite-based tests (no external DB needed)
 
-2. **Add container vulnerability scanning**
-   - Add Trivy or Snyk to PR and push workflows
-   - Set severity thresholds (fail on CRITICAL/HIGH)
+2. **Add container security scanning** (2-4 hours)
+   - Add Trivy scanning to PR and master workflows
+   - Set severity threshold (CRITICAL, HIGH)
+   - Upload SARIF results to GitHub Security tab
 
-3. **Add image startup smoke test**
-   - Start the built image after PR build
-   - Verify the gRPC server starts and listens on the configured port
+3. **Implement coverage tracking** (4-6 hours)
+   - Add `--collect_code_coverage` flag to Bazel test step
+   - Generate LCOV reports
+   - Integrate with Codecov
+   - Set minimum coverage threshold (60% to start)
 
 ### Priority 1 (High Value)
 
-4. **Add coverage tracking with Bazel**
-   - Use `bazel coverage` with `--combined_report=lcov`
-   - Integrate with codecov for PR reporting
-   - Set initial threshold based on current coverage
+4. **Add container runtime validation** (4-6 hours)
+   - Start built image as container in CI
+   - Verify gRPC port responds
+   - Run basic gRPC health check
+   - Test with SQLite backend (no external DB needed)
 
-5. **Add static analysis**
-   - CodeQL for C++ vulnerability scanning
-   - Clang-tidy for code quality
-   - Python linting (ruff or flake8)
+5. **Set up static analysis** (4-8 hours)
+   - Add clang-tidy for C++ code
+   - Add ruff/pylint for Python
+   - Add golangci-lint for Go
+   - Consider CodeQL for security-focused analysis
 
-6. **Automate MySQL/PostgreSQL integration tests**
-   - Use docker-compose in CI to spawn database containers
-   - Run the manual-tagged tests against real databases
-   - Schedule as periodic (nightly) job if too slow for PRs
+6. **Create agent rules** (2-4 hours)
+   - Add `CLAUDE.md` with repository overview and development patterns
+   - Create `.claude/rules/` with test creation guidelines
+   - Document Bazel build patterns and test frameworks
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Create agent rules**
-   - Add `.claude/rules/` with test creation guidance
-   - Document GoogleTest patterns specific to this codebase
-   - Include Bazel BUILD file conventions
+7. **Multi-database integration testing** (8-16 hours)
+   - Add docker-compose service for MySQL/PostgreSQL
+   - Run database-specific test suites against real databases
+   - Test migration paths between database versions
 
-8. **Add SBOM generation and image signing**
-   - Add Cosign signing to push workflow
-   - Generate SBOM with Syft or similar tool
+8. **Add pre-commit hooks** (2-3 hours)
+   - Format checking (clang-format, black, goimports)
+   - Import sorting
+   - Trailing whitespace
 
-9. **Add multi-architecture builds to GHA**
-   - Currently only Tekton/Konflux does multi-arch
-   - Add buildx for cross-platform validation in GHA
+9. **SBOM generation** (2-3 hours)
+   - Generate SBOM for container images via Syft
+   - Attach to image as attestation
+   - Integrate with Konflux supply chain security
 
-10. **Add Bazel build caching**
-    - Cache `~/.cache/bazel` between CI runs
-    - Could reduce 8h Tekton timeout significantly
+10. **Performance regression testing** (8-16 hours)
+    - Benchmark metadata store operations
+    - Track gRPC latency over time
+    - Alert on performance degradation
 
 ## Comparison to Gold Standards
 
-| Dimension | ml-metadata | odh-dashboard | notebooks | kserve |
-|-----------|:-----------:|:-------------:|:---------:|:------:|
-| Unit Tests in CI | ❌ | ✅ | ✅ | ✅ |
-| Integration Tests | Manual only | ✅ Automated | ✅ | ✅ |
-| E2E Tests | ❌ | ✅ Cypress | ✅ | ✅ |
-| Coverage Tracking | ❌ | ✅ Codecov | Partial | ✅ |
-| Container Scanning | ❌ | ✅ Trivy | ✅ | ✅ |
-| Image Smoke Tests | ❌ | ✅ | ✅ 5-layer | ✅ |
-| SAST/CodeQL | ❌ | ✅ | Partial | ✅ |
-| Pre-commit Hooks | ❌ | ✅ | Partial | ✅ |
-| Agent Rules | ❌ | ✅ Comprehensive | ❌ | ❌ |
-| Concurrency Control | ✅ | ✅ | ✅ | ✅ |
-| Multi-arch Builds | ✅ (Tekton) | ✅ | ✅ | ✅ |
-| Non-root Container | ✅ | ✅ | ✅ | ✅ |
-| Pinned Dependencies | ✅ (Bazel SHA) | ✅ | ✅ | ✅ |
+| Practice | ml-metadata | odh-dashboard | notebooks | kserve |
+|----------|-------------|---------------|-----------|--------|
+| CI test execution | None | Comprehensive (unit, integration, E2E) | Multi-layer | Full suite |
+| Coverage tracking | None | Codecov with enforcement | Basic | Codecov with thresholds |
+| Security scanning | None | Trivy + CodeQL | Trivy | Trivy + CodeQL |
+| Container testing | Build only | Build + startup + functional | 5-layer validation | Build + deploy + test |
+| Linting | None | ESLint + Prettier | Varied | golangci-lint |
+| Pre-commit hooks | None | Husky + lint-staged | Basic | golangci-lint |
+| Agent rules | None | Comprehensive (.claude/rules/) | None | None |
+| Multi-arch builds | Konflux (3 arch) | Single arch | Multi-arch | Multi-arch |
+| Dependency mgmt | Renovate (Konflux only) | Dependabot | Renovate | Dependabot |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/build-pr.yaml` — PR container build
-- `.github/workflows/build-master.yaml` — Master push and Quay.io publish
-- `.github/actions/build/action.yaml` — Shared build composite action
-- `.tekton/odh-mlmd-grpc-server-pull-request.yaml` — Konflux PR pipeline
-- `.tekton/odh-mlmd-grpc-server-push.yaml` — Konflux push pipeline
+- `.github/workflows/build-pr.yaml` - PR image build workflow
+- `.github/workflows/build-master.yaml` - Master branch image build + push
+- `.github/actions/build/action.yaml` - Reusable Docker build action
+- `.tekton/odh-mlmd-grpc-server-pull-request.yaml` - Konflux multi-arch pipeline
+- `.github/renovate.json` - Renovate dependency management config
 
-### Build
-- `WORKSPACE` — Bazel dependency definitions (all SHA-pinned)
-- `.bazelrc` — Bazel build configuration
-- `ml_metadata/ml_metadata.bzl` — Custom Bazel macros
-- `ml_metadata/metadata_store/BUILD` — Main BUILD file with test targets
-- `setup.py` — Python package setup
+### Build System
+- `WORKSPACE` - Bazel workspace with external dependencies
+- `.bazelrc` - Bazel build configuration
+- `ml_metadata/ml_metadata.bzl` - Custom Bazel macros (cc_test, go_test, go_library)
+- `ml_metadata/metadata_store/BUILD` - Main package BUILD with 19+ test targets
+- `ml_metadata/util/BUILD` - Utility package with 4 test targets
+- `ml_metadata/query/BUILD` - Query package with 3 test targets
 
-### Container
-- `ml_metadata/tools/docker_server/Dockerfile.redhat` — Production Dockerfile (UBI9)
-- `ml_metadata/tools/docker_server/Dockerfile` — Upstream Dockerfile (Ubuntu)
-- `ml_metadata/tools/docker_server/Dockerfile.fedora` — Fedora Dockerfile
-- `ml_metadata/tools/docker_server/build_docker_image.sh` — Build script
-- `docker-compose.yml` — Python wheel build environments
-- `.dockerignore` — Docker ignore (only excludes .git)
+### Container Images
+- `ml_metadata/tools/docker_server/Dockerfile.redhat` - Red Hat UBI9 build
+- `ml_metadata/tools/docker_server/Dockerfile.konflux` - Konflux build (pinned SHAs)
+- `ml_metadata/tools/docker_server/Dockerfile` - Upstream Ubuntu build
+- `ml_metadata/tools/docker_server/Dockerfile.fedora` - Fedora build
+- `ml_metadata/tools/docker_server/build_docker_image.sh` - Build script
 
-### Tests
-- `ml_metadata/metadata_store/*_test.cc` — 27 C++ test files
-- `ml_metadata/metadata_store/*_test.py` — Python binding tests
-- `ml_metadata/metadata_store/metadata_store_test.go` — Go binding test
-- `ml_metadata/tools/mlmd_resolver/metadata_resolver_test.py` — Resolver test
-- `ml_metadata/util/*_test.cc` — Utility test files
-- `ml_metadata/query/*_test.cc` — Query module tests
+### Test Files (Selected)
+- `ml_metadata/metadata_store/metadata_store_test.cc` - Core C++ tests
+- `ml_metadata/metadata_store/metadata_store_test.py` - Python API tests (2,631 lines)
+- `ml_metadata/metadata_store/metadata_store_test.go` - Go binding tests (1,559 lines)
+- `ml_metadata/query/filter_query_builder_test.cc` - Query builder tests
+- `ml_metadata/util/record_parsing_utils_test.cc` - Record parsing tests
 
-### Proto
-- `ml_metadata/proto/metadata_store.proto` — Core protobuf definitions
-- `ml_metadata/proto/metadata_store_service.proto` — gRPC service definition
-- `ml_metadata/proto/metadata_source.proto` — Metadata source protocol
-- `ml_metadata/proto/testing/mock.proto` — Test mock protobuf
+### Configuration
+- `pyproject.toml` - Python build system config
+- `setup.py` - Python package setup
+- `docker-compose.yml` - Multi-version Python wheel builds
+- `test_constraints.txt` - Test environment constraints

@@ -1,435 +1,378 @@
 ---
 repository: "kubeflow/spark-operator"
-overall_score: 7.4
+overall_score: 7.6
 scorecard:
   - dimension: "Unit Tests"
-    score: 7.5
-    status: "Good coverage with envtest for controllers/webhooks; 44 test files, 0.36 test-to-code ratio"
+    score: 8.5
+    status: "Strong unit test suite with envtest, Ginkgo/Gomega, and good controller coverage"
   - dimension: "Integration/E2E"
     score: 9.0
-    status: "Excellent multi-version E2E matrix (4 K8s versions x 2 deploy methods), Ginkgo/Gomega framework"
+    status: "Excellent E2E with Kind, multi-K8s-version matrix, dual deploy methods (Helm + Kustomize)"
   - dimension: "Build Integration"
-    score: 7.0
-    status: "PR builds Docker image and deploys to Kind/Minikube; Helm chart testing; no Konflux simulation"
+    score: 6.0
+    status: "Docker build on PR via Helm chart-testing install, but no Konflux simulation or image runtime validation"
   - dimension: "Image Testing"
     score: 5.0
-    status: "Multi-arch builds (amd64/arm64), multi-stage Dockerfile, but no image scanning or runtime validation"
+    status: "Multi-arch builds (amd64/arm64), multi-stage Dockerfile, but no Trivy/Snyk scanning or SBOM"
   - dimension: "Coverage Tracking"
-    score: 3.0
-    status: "Local coverprofile generation only; no codecov/coveralls integration or PR enforcement"
+    score: 4.0
+    status: "Local coverprofile generated but no Codecov/Coveralls CI integration or PR enforcement"
   - dimension: "CI/CD Automation"
-    score: 8.5
-    status: "Well-organized workflows with concurrency control, path-based triggers, pinned actions"
+    score: 9.0
+    status: "12 well-organized workflows, concurrency control, SHA-pinned actions, release automation"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory present"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory — zero AI agent guidance"
 critical_gaps:
-  - title: "No coverage tracking or enforcement"
-    impact: "Coverage can silently regress with no visibility in PRs"
-    severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No container image vulnerability scanning"
-    impact: "CVEs in base images and dependencies go undetected until production"
+  - title: "No coverage tracking in CI"
+    impact: "Coverage regressions go undetected; no PR gates prevent coverage drops"
     severity: "HIGH"
     effort: "2-4 hours"
+  - title: "No container image security scanning"
+    impact: "Vulnerabilities in base images and dependencies are not caught pre-release"
+    severity: "HIGH"
+    effort: "2-3 hours"
   - title: "No SAST/CodeQL integration"
-    impact: "Potential code-level security vulnerabilities not caught pre-merge"
-    severity: "HIGH"
-    effort: "2-3 hours"
-  - title: "No dependency management automation"
-    impact: "Outdated dependencies with known vulnerabilities may persist"
+    impact: "Static security analysis not running; potential code-level vulnerabilities missed"
     severity: "MEDIUM"
-    effort: "1-2 hours"
+    effort: "2-3 hours"
   - title: "No agent rules for AI-assisted development"
-    impact: "AI tools generate inconsistent tests and code without project-specific guidance"
-    severity: "MEDIUM"
-    effort: "4-6 hours"
+    impact: "AI code assistants produce inconsistent, low-quality contributions without project-specific guidance"
+    severity: "LOW"
+    effort: "3-4 hours"
 quick_wins:
-  - title: "Add Trivy scanning to PR workflow"
+  - title: "Add Codecov integration to unit-test step"
+    effort: "2 hours"
+    impact: "PR-level coverage reporting and regression prevention"
+  - title: "Add Trivy container scanning workflow"
     effort: "1-2 hours"
-    impact: "Immediate CVE detection for container images on every PR"
-  - title: "Add codecov integration with PR comments"
-    effort: "2-4 hours"
-    impact: "Visible coverage tracking and regression prevention in PRs"
-  - title: "Enable CodeQL analysis workflow"
-    effort: "1-2 hours"
-    impact: "Automated SAST for Go code on every PR"
-  - title: "Add Dependabot configuration"
-    effort: "30 minutes"
-    impact: "Automated dependency updates with security alerts"
-  - title: "Create basic CLAUDE.md with testing guidelines"
+    impact: "Automatic vulnerability detection for all built images"
+  - title: "Add CodeQL workflow for Go static analysis"
+    effort: "1 hour"
+    impact: "Catch security issues via GitHub's built-in SAST scanning"
+  - title: "Create basic .claude/rules/ for test patterns"
     effort: "2-3 hours"
-    impact: "Consistent AI-assisted code generation following project patterns"
+    impact: "Consistent AI-generated tests following project conventions"
 recommendations:
   priority_0:
-    - "Add codecov/coveralls integration with coverage thresholds and PR enforcement"
-    - "Add Trivy or Grype container scanning to the integration workflow"
-    - "Enable GitHub CodeQL for automated SAST scanning on PRs and pushes"
+    - "Integrate Codecov into CI with coverage threshold enforcement on PRs"
+    - "Add Trivy or Snyk container image scanning to release and PR workflows"
   priority_1:
-    - "Add Dependabot or Renovate for automated dependency updates"
-    - "Add image signing with cosign and SBOM generation"
-    - "Create comprehensive agent rules (.claude/rules/) for test patterns"
-    - "Add secret detection (Gitleaks) to CI pipeline"
+    - "Add CodeQL/gosec static analysis workflow for Go code"
+    - "Add secret detection (Gitleaks) to PR workflow"
+    - "Add image startup/runtime validation tests in CI"
   priority_2:
-    - "Add performance/load testing for operator reconciliation loops"
-    - "Expand golangci-lint configuration with more linters (errcheck, gosec, gocritic)"
-    - "Add chaos engineering tests for operator resilience"
-    - "Consider adding contract tests for Spark application CRD versioning"
+    - "Create CLAUDE.md and .claude/rules/ for AI agent test guidance"
+    - "Add SBOM generation to release image builds"
+    - "Add performance/benchmark regression tests for operator reconcile loops"
 ---
 
 # Quality Analysis: kubeflow/spark-operator
 
 ## Executive Summary
 
-- **Overall Score: 7.4/10**
-- **Repository Type**: Kubernetes Operator (Go, kubebuilder-based)
-- **Primary Language**: Go 1.24
-- **Framework**: controller-runtime / kubebuilder, Helm chart
-- **Key Strengths**: Excellent E2E testing with multi-version K8s matrix, strong CI/CD automation with concurrency control, comprehensive Helm chart testing with 20 test files, innovative drift detection between Helm and Kustomize manifests
-- **Critical Gaps**: No coverage tracking/enforcement, no container image scanning, no SAST/CodeQL, no dependency automation, no agent rules
+- **Overall Score: 7.6/10**
+- **Repository Type**: Kubernetes Operator (Go, controller-runtime)
+- **Primary Language**: Go (59,121 LOC source, 18,453 LOC tests)
+- **Framework**: Kubebuilder / controller-runtime / Helm chart
+- **Key Strengths**: Excellent E2E test infrastructure with multi-K8s-version matrix testing, strong CI/CD automation with 12 well-organized workflows, comprehensive Helm chart testing, innovative Kustomize drift detection
+- **Critical Gaps**: No coverage tracking in CI, no container security scanning, no SAST/CodeQL, no agent rules
 - **Agent Rules Status**: Missing
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 7.5/10 | Good envtest-based controller/webhook testing; 44 test files |
-| Integration/E2E | 9.0/10 | 4 K8s versions x 2 deploy methods matrix; Ginkgo/Gomega |
-| **Build Integration** | **7.0/10** | **PR-time Docker build + Kind/Minikube deployment; no Konflux sim** |
-| Image Testing | 5.0/10 | Multi-arch builds but no scanning or runtime validation |
-| Coverage Tracking | 3.0/10 | Local coverprofile only; no CI integration or enforcement |
-| CI/CD Automation | 8.5/10 | Well-organized, path-triggered, concurrency-controlled workflows |
-| Agent Rules | 0.0/10 | No agent configuration present |
+| Unit Tests | 8.5/10 | Strong envtest-based unit tests across controllers, webhooks, schedulers |
+| Integration/E2E | 9.0/10 | Multi-K8s-version (v1.32-v1.35), dual deploy (Helm + Kustomize), Kind-based |
+| **Build Integration** | **6.0/10** | **Docker build via chart-testing install, but no Konflux simulation** |
+| Image Testing | 5.0/10 | Multi-arch builds, multi-stage Dockerfile, but no scanning or SBOM |
+| Coverage Tracking | 4.0/10 | Local coverprofile only, no CI integration or PR enforcement |
+| CI/CD Automation | 9.0/10 | 12 workflows, concurrency control, SHA-pinned actions, release automation |
+| Agent Rules | 0.0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory |
 
 ## Critical Gaps
 
-### 1. No Coverage Tracking or Enforcement
-- **Impact**: Coverage can silently regress with no visibility; contributors have no coverage targets
-- **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: The Makefile generates `cover.out` and `cover.html` locally, but there's no codecov/coveralls integration, no PR coverage comments, and no coverage threshold enforcement. Coverage data is generated but never uploaded or tracked.
-
-### 2. No Container Image Vulnerability Scanning
-- **Impact**: CVEs in base images (Spark, golang) and Go dependencies go undetected. The base image `docker.io/library/spark:4.0.1` plus apt packages are never scanned.
+### 1. No Coverage Tracking in CI
+- **Impact**: Coverage regressions go undetected; contributors cannot see coverage impact of PRs
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: Neither Trivy, Snyk, Grype, nor any other scanner is configured. No `.trivyignore` exists. The Dockerfile installs `tini` via apt-get without pinning versions.
+- **Details**: The Makefile generates `cover.out` and `cover.html` locally via `go test -coverprofile`, but there is no Codecov, Coveralls, or equivalent CI integration. No coverage thresholds are enforced on PRs. Coverage data is generated but never uploaded or reported.
 
-### 3. No SAST/CodeQL Integration
-- **Impact**: Code-level security vulnerabilities (injection, unsafe operations) are not caught by automated analysis
+### 2. No Container Image Security Scanning
+- **Impact**: Vulnerabilities in the Spark base image (`docker.io/library/spark:4.0.1`) and Go dependencies are not detected before release
 - **Severity**: HIGH
 - **Effort**: 2-3 hours
-- **Details**: While OSSF Scorecard runs on pushes to master (security posture assessment), no actual code scanning (CodeQL, gosec, Semgrep) runs on PRs to catch vulnerabilities in application code.
+- **Details**: Neither Trivy, Snyk, nor any other container scanning tool is configured. The SECURITY.md mentions "Image Scanning" as a prevention mechanism, but no scanning workflow exists. The Dockerfile uses a pinned Spark base image with digest, which is good practice, but runtime vulnerabilities are not checked.
 
-### 4. No Dependency Management Automation
-- **Impact**: Outdated dependencies with known vulnerabilities may persist indefinitely
+### 3. No SAST/CodeQL Integration
+- **Impact**: Code-level security vulnerabilities (injection, misuse of crypto, etc.) are not caught by static analysis
 - **Severity**: MEDIUM
-- **Effort**: 1-2 hours
-- **Details**: No Dependabot or Renovate configuration found. Go module updates rely entirely on manual maintainer effort.
+- **Effort**: 2-3 hours
+- **Details**: The repository has an OSSF Scorecard workflow (supply-chain security) but no CodeQL, gosec, or Semgrep workflow for Go code analysis. The golangci-lint config enables useful linters but not security-focused ones (gosec, goconst).
 
-### 5. No Agent Rules for AI-Assisted Development
-- **Impact**: AI tools (Claude Code, Copilot) lack project-specific testing guidance, producing inconsistent output
-- **Severity**: MEDIUM
-- **Effort**: 4-6 hours
-- **Details**: No `CLAUDE.md`, `AGENTS.md`, or `.claude/` directory exists. The project uses specific patterns (envtest, Ginkgo suites, stretchr/testify for non-controller code) that AI tools wouldn't know without rules.
+### 4. No Agent Rules for AI-Assisted Development
+- **Impact**: AI code assistants produce inconsistent tests and contributions without project-specific patterns
+- **Severity**: LOW
+- **Effort**: 3-4 hours
+- **Details**: No CLAUDE.md, AGENTS.md, or `.claude/` directory exists. Given the project's specific testing patterns (envtest, Ginkgo/Gomega BDD-style, Helm unittest), AI agents would benefit from guidance on test conventions, import patterns, and suite setup.
 
 ## Quick Wins
 
-### 1. Add Trivy Scanning to PR Workflow (1-2 hours)
-Add to `integration.yaml`:
-```yaml
-  image-scan:
-    needs: build-spark-operator
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build image
-        run: docker build -t spark-operator:scan .
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'spark-operator:scan'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
-      - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
-```
+### 1. Add Codecov Integration (2 hours)
+- **Impact**: PR-level coverage reporting and regression prevention
+- **Implementation**: Add codecov upload step after `make unit-test` in integration.yaml:
+  ```yaml
+  - name: Upload coverage to Codecov
+    uses: codecov/codecov-action@v5
+    with:
+      files: cover.out
+      fail_ci_if_error: false
+  ```
 
-### 2. Add Codecov Integration (2-4 hours)
-Update `integration.yaml` build-spark-operator job:
-```yaml
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./cover.out
-          flags: unittests
-          fail_ci_if_error: true
-```
-Add `.codecov.yml`:
-```yaml
-coverage:
-  status:
-    project:
-      default:
-        target: auto
-        threshold: 2%
-    patch:
-      default:
-        target: 80%
-```
+### 2. Add Trivy Container Scanning (1-2 hours)
+- **Impact**: Automatic vulnerability detection for operator and kubectl images
+- **Implementation**: Add a new workflow or step:
+  ```yaml
+  - name: Run Trivy vulnerability scanner
+    uses: aquasecurity/trivy-action@master
+    with:
+      image-ref: ghcr.io/kubeflow/spark-operator/controller:local
+      format: 'sarif'
+      output: 'trivy-results.sarif'
+      severity: 'CRITICAL,HIGH'
+  ```
 
-### 3. Enable CodeQL Analysis (1-2 hours)
-```yaml
-name: "CodeQL"
-on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: go
-      - uses: github/codeql-action/autobuild@v3
-      - uses: github/codeql-action/analyze@v3
-```
+### 3. Add CodeQL Workflow (1 hour)
+- **Impact**: Catch security issues via GitHub's built-in SAST
+- **Implementation**: Add `.github/workflows/codeql.yml` using standard Go CodeQL template
 
-### 4. Add Dependabot Configuration (30 minutes)
-Create `.github/dependabot.yml`:
-```yaml
-version: 2
-updates:
-  - package-ecosystem: "gomod"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-```
+### 4. Add Security Linters to golangci-lint (30 minutes)
+- **Impact**: Catch security issues during linting
+- **Implementation**: Add `gosec` and `goconst` to `.golangci.yaml`:
+  ```yaml
+  enable:
+    - gosec
+    - goconst
+  ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflows Inventory (10 total)**:
+**Workflow Inventory** (12 workflows):
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `integration.yaml` | PR + push to master/release-* | Code checks, unit tests, build, Helm tests, E2E tests |
+| `integration.yaml` | PR + push (master, release-*) | Code checks, unit tests, build, Helm tests, E2E |
+| `kustomize-drift-check.yaml` | PR + push (path-filtered) | Detect Helm/Kustomize semantic drift |
 | `kustomize-lint.yaml` | PR + push (path-filtered) | Static Kustomize manifest validation |
-| `kustomize-drift-check.yaml` | PR + push (path-filtered) | Helm vs. Kustomize semantic drift detection |
-| `scorecard.yaml` | Weekly + push to master | OSSF Scorecard supply-chain security |
-| `release.yaml` | Push to release-* (VERSION path) | Multi-arch image build + tag + GitHub release |
-| `release-latest-images.yaml` | Push to master | Latest image builds |
-| `release-helm-charts.yaml` | Published releases | Helm chart OCI release |
-| `check-release.yaml` | PR to release-* | Semver + chart version validation |
-| `stale.yaml` | Cron (every 2 hours) | Stale issue/PR management |
-| `welcome-new-contributors.yaml` | PR/issue opened | Community welcome messages |
+| `shell-lint.yaml` | PR + push (*.sh, Makefile) | shfmt + shellcheck for shell scripts |
+| `docs.yaml` | PR + push (docs/) | Sphinx docs build + link checking |
+| `check-release.yaml` | PR (release-* + VERSION) | Version format validation |
+| `release.yaml` | push (release-* + VERSION) | Full release (images + Helm + GitHub) |
+| `release-latest-images.yaml` | push (master) | Build and push latest images |
+| `release-helm-charts.yaml` | release published | Package and push Helm charts to GHCR |
+| `scorecard.yaml` | schedule + push (master) | OSSF supply-chain security scoring |
+| `stale.yaml` | schedule (every 2h) | Auto-close stale issues/PRs |
+| `welcome-new-contributors.yaml` | PR/issue opened | Welcome messages for first-time contributors |
 
 **Strengths**:
-- All workflows use concurrency control with `cancel-in-progress: true`
-- All GitHub Actions pinned by SHA with version comments
-- Path-based filtering for Kustomize workflows avoids unnecessary runs
-- `permissions: contents: read` follows least-privilege principle
-- Innovative drift detection test between Helm and Kustomize manifests
+- All workflows use SHA-pinned actions (not floating tags) - excellent supply chain security
+- Concurrency control on all PR/push workflows with `cancel-in-progress: true`
+- Minimal permissions (`contents: read` by default)
+- Path-filtered triggers reduce unnecessary CI runs
+- `zizmor` annotations document intentional security decisions
+- `persist-credentials: false` on checkout actions to minimize token exposure
 
 **Gaps**:
-- No coverage upload step in any workflow
-- No image scanning in any workflow
-- No SAST scanning on PRs
-- No dependency automation (Dependabot/Renovate)
+- No Go module caching (relies on `actions/setup-go` built-in cache)
+- No test result caching between runs
+- No parallel job execution within the unit test step
 
 ### Test Coverage
 
-**Unit Tests (7.5/10)**:
-- 44 test files / 120 source files (0.36 ratio)
-- 16,684 lines of test code / 56,448 lines of source (0.30 ratio)
-- Uses `envtest` for controller and webhook testing (5 envtest suites)
-- Ginkgo/Gomega for BDD-style tests (controllers, webhooks, E2E)
-- `stretchr/testify` for non-controller code (drift, kustomize, scheduler tests)
-- Coverage generated locally (`cover.out`, `cover.html`) but never uploaded
-- Tested packages: controllers (3), webhooks (7 test files), schedulers (3), certificates, features, utilities, API defaults
+**Unit Tests (8.5/10)**:
+- **47 test files**, **15,448 lines** of unit test code
+- **Test-to-code ratio**: 0.31 (test LOC / source LOC) - good for an operator project
+- **Framework**: Ginkgo/Gomega (BDD-style) + testify/assert + controller-runtime envtest
+- **envtest usage**: Controllers (SparkApplication, ScheduledSparkApplication, SparkConnect), webhooks, and certificate package all use envtest with real API server
+- **Coverage areas**:
+  - Controllers: SparkApplication (submission, monitoring, web UI, driver ingress, PDB, event filtering, REST submission), ScheduledSparkApplication, SparkConnect
+  - Webhooks: SparkApplication validator, ScheduledSparkApplication defaulter/validator, SparkConnect validator, SparkPod defaulter, ResourceQuota
+  - Schedulers: KubeScheduler, Volcano, YuniKorn (resource usage, memory, Java parsing)
+  - PKG: Certificate management, feature gates, namespace utilities, predicates, SparkApplication/SparkPod utilities
 
-**Integration/E2E Tests (9.0/10)**:
-- **Multi-version K8s matrix**: v1.32.11, v1.33.7, v1.34.3, v1.35.0
-- **Multi-deploy method**: Helm and Kustomize deployment paths both tested
-- **Kind cluster**: Tests use real Kind clusters with image loading
-- **Ginkgo E2E suite**: Tests SparkApplication lifecycle, SparkConnect, namespace filtering
-- **1,040 lines of E2E test code** across 3 test files
-- **30-minute timeout** for E2E tests
-- **Helm chart install test**: Builds image, loads to Minikube, runs `ct install`
-- **Drift detection**: Semantic comparison of Helm vs. Kustomize rendered manifests (RBAC, webhooks, deployments)
-- **Kustomize lint**: Static build validation without cluster
+**E2E Tests (9.0/10)**:
+- **5 test files**, **1,595 lines** of E2E test code
+- **Framework**: Ginkgo/Gomega with Kind clusters
+- **K8s version matrix**: v1.32.11, v1.33.7, v1.34.3, v1.35.0 (4 versions)
+- **Deploy method matrix**: Helm and Kustomize (dual deployment testing)
+- **Total E2E matrix**: 8 combinations (4 K8s versions x 2 deploy methods)
+- **Test scenarios**: spark-pi application lifecycle, SparkConnect, PodDisruptionBudgets, namespace filtering
+- **Timeout**: 30 minutes per test run
 
-**Helm Chart Tests (20 test files)**:
-- Controller: deployment, service, serviceaccount, RBAC, PDB
-- Webhook: deployment, service, RBAC, PDB, mutating/validating webhook configs
-- Spark: serviceaccount, RBAC
-- Hooks: job, serviceaccount, cluster role/binding
-- Prometheus: PodMonitor
-- Cert-Manager: issuer, certificate
+**Helm Chart Tests (Strong)**:
+- **20 test files**, **4,103 lines** of Helm unittest YAML
+- **Coverage**: Controller, webhook, certmanager, hook, prometheus, spark resources
+- **Tests**: Deployment, service, RBAC, PDB, ServiceAccount, webhooks, monitoring
+
+**Infrastructure Tests (Innovative)**:
+- **Kustomize drift detection**: Go tests that render both Helm and Kustomize manifests and compare RBAC rules, webhook configs, and deployment specs semantically
+- **Kustomize lint**: Static validation of Kustomize build output
+- **CRD drift detection**: Automated check that chart CRDs match generated manifests
 
 ### Code Quality
 
-**Linting (Moderate)**:
-- `golangci-lint v2.1.6` with 8 linters enabled:
-  - `copyloopvar`, `dupword`, `importas`, `predeclared`, `tagalign`, `unconvert`, `unused`, `goimports`
-- `go fmt` check in CI
-- `go vet` check in CI
-- Import alias enforcement for K8s API groups
-- 2-minute lint timeout
+**Linting (Strong)**:
+- **golangci-lint v2.1.6** with focused linter set: copyloopvar, dupword, importas, predeclared, tagalign, unconvert, unused
+- **goimports** formatter enabled
+- **Import alias enforcement** for standard k8s packages (consistent codebase style)
+- 2-minute timeout, 50 max issues per linter
 
-**Missing Linters** (compared to gold standard):
-- `errcheck` - unchecked error returns
-- `gosec` - security-focused linting
-- `gocritic` - style and performance suggestions
-- `revive` - drop-in replacement for golint
-- `staticcheck` - advanced static analysis
-- `bodyclose` - HTTP response body close checks
-- `noctx` - HTTP requests without context
+**Pre-commit Hooks (Good)**:
+- helm-docs: Auto-generate Helm chart documentation
+- shfmt: Shell script formatting (2-space indent, case-indent, space-redirects)
+- shellcheck: Shell script linting
 
-**Pre-commit Hooks (Minimal)**:
-- Only `helm-docs` hook configured
-- No Go-specific hooks (fmt, vet, lint)
-- No commit message validation
+**Static Analysis (Partial)**:
+- OSSF Scorecard for supply-chain security (weekly + on push)
+- go vet runs on every PR
+- Missing: CodeQL, gosec, Semgrep for code-level SAST
+
+**Shell Script Quality**:
+- Dedicated `shell-lint.yaml` workflow with shfmt formatting check + shellcheck lint
+- All tracked `*.sh` files are linted
 
 ### Container Images
 
 **Build Process (Good)**:
-- Multi-stage build: `golang:1.24.10` builder + `spark:4.0.1` runtime
-- Docker BuildKit cache mounts for `/go/pkg/mod/` and Go build cache
-- Multi-architecture support: `linux/amd64`, `linux/arm64` via `docker buildx`
-- Non-root user execution (`spark` user, UID 185)
-- Proper layer ordering for cache efficiency
-- `TARGETARCH` build arg for cross-compilation
+- **Multi-stage Dockerfile**: Go builder stage + Spark runtime stage
+- **Base image pinning**: `golang:1.25.11` and `spark:4.0.1` both pinned with SHA256 digests
+- **Build caching**: Docker BuildKit `--mount=type=cache` for Go modules and build cache
+- **Multi-architecture**: amd64 + arm64 via Docker buildx
+- **Two images**: Controller operator image + kubectl utility image
 
-**Security Gaps**:
-- No Trivy/Snyk/Grype scanning
-- No SBOM generation
-- No image signing (cosign)
-- No vulnerability threshold enforcement
-- apt-get installs `tini` without version pinning
-- No `.dockerignore` review for sensitive file exclusion
+**Gaps**:
+- No Trivy/Snyk scanning in any workflow
+- No SBOM (Software Bill of Materials) generation
+- No image signing or attestation (Cosign/Sigstore)
+- No runtime validation (image startup test, health check verification)
 
 ### Security
 
-**Present**:
-- OSSF Scorecard analysis (weekly + on push to master)
-- SARIF upload to GitHub Security tab
-- Pinned GitHub Actions by SHA
-- Least-privilege permissions in workflows
+**Strengths**:
+- SECURITY.md with responsible disclosure process
+- OSSF Scorecard workflow (supply-chain posture)
+- SHA-pinned GitHub Actions across all workflows
+- Minimal GITHUB_TOKEN permissions
+- `persist-credentials: false` on checkout
+- Security advisory process via GitHub Security Advisory
 
-**Missing**:
-- No CodeQL/SAST scanning on PRs
-- No container image scanning
-- No dependency scanning/automation (Dependabot/Renovate)
-- No secret detection (Gitleaks/TruffleHog)
-- No image signing or attestation
-- No SBOM generation
+**Gaps**:
+- No CodeQL/gosec static analysis
+- No dependency vulnerability scanning (Dependabot alerts may be enabled but no CI workflow)
+- No Gitleaks/TruffleHog secret detection
+- No container image vulnerability scanning
+- golangci-lint does not include gosec linter
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: None - no `.claude/`, `CLAUDE.md`, or `AGENTS.md` files
+- **Coverage**: None
 - **Quality**: N/A
-- **Gaps**: Complete absence of AI agent configuration
-- **Recommendation**: Generate comprehensive rules with `/test-rules-generator` covering:
-  - Unit test patterns (envtest suites vs. testify)
-  - E2E test patterns (Ginkgo BDD style)
+- **Gaps**:
+  - No `CLAUDE.md` or `AGENTS.md` in repository root
+  - No `.claude/` directory
+  - No `.claude/rules/` with test creation guidance
+  - No `.claude/skills/` with custom skills
+- **Recommendation**: Generate rules with `/test-rules-generator` to create:
+  - Unit test rules (envtest + Ginkgo/Gomega patterns)
+  - E2E test rules (Kind cluster setup, Ginkgo BDD style)
   - Webhook test patterns
-  - Helm chart test patterns
-  - Controller reconciliation test patterns
+  - Helm unittest patterns
+  - Import alias conventions (importas linter rules)
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add codecov/coveralls integration** with coverage thresholds and PR enforcement. The `cover.out` file is already generated — just upload it and add threshold enforcement.
+1. **Integrate Codecov/Coveralls into CI** - Upload `cover.out` from unit tests, set minimum coverage threshold (e.g., 70%), and require coverage to not decrease on PRs.
 
-2. **Add container image vulnerability scanning** (Trivy or Grype) to the PR workflow. This is especially important given the `spark:4.0.1` base image and apt-get installs.
-
-3. **Enable CodeQL analysis** for automated SAST scanning on PRs. As a popular open-source operator, the project is a target for supply chain attacks.
+2. **Add container image vulnerability scanning** - Add Trivy scanning to the `integration.yaml` workflow after Docker build step, and to release workflows. Upload SARIF results to GitHub Security tab.
 
 ### Priority 1 (High Value)
 
-4. **Add Dependabot/Renovate** for automated dependency updates across Go modules, GitHub Actions, and Docker base images.
+3. **Add CodeQL workflow** - Create `.github/workflows/codeql.yml` for Go static security analysis. GitHub provides this free for public repositories.
 
-5. **Add image signing with cosign** and SBOM generation. Important for Kubernetes operators deployed in production environments.
+4. **Add gosec to golangci-lint** - Enable the `gosec` linter in `.golangci.yaml` to catch common Go security issues during regular linting.
 
-6. **Create comprehensive agent rules** (`.claude/rules/`) for test patterns — the project uses multiple testing frameworks (Ginkgo/Gomega, testify, envtest) that need specific guidance.
+5. **Add secret detection** - Add Gitleaks as a pre-commit hook and/or CI step to prevent accidental credential exposure.
 
-7. **Add secret detection** (Gitleaks) to CI pipeline to prevent accidental credential commits.
+6. **Add image startup validation** - After building the Docker image in CI, add a step to verify the container starts and responds to health checks.
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Expand golangci-lint** configuration with additional linters (`errcheck`, `gosec`, `gocritic`, `staticcheck`, `bodyclose`). Current 8 linters is moderate — gold standard projects enable 15-25.
+7. **Create agent rules** - Add `CLAUDE.md` and `.claude/rules/` with test creation guidance matching the project's Ginkgo/Gomega + envtest patterns.
 
-9. **Add performance regression testing** for operator reconciliation loops. As a Spark operator handling potentially large-scale workloads, reconciliation performance matters.
+8. **Add SBOM generation** - Use Syft or Docker's built-in SBOM support in release image builds.
 
-10. **Add chaos engineering tests** for operator resilience (pod deletion during reconciliation, webhook unavailability).
+9. **Add benchmark/performance tests** - Create `go test -bench` targets for critical reconcile loop paths to detect performance regressions.
 
-11. **Consider contract tests** for CRD versioning between v1alpha1 and v1beta2 APIs to ensure backward compatibility.
+10. **Add Dependabot configuration** - Create `.github/dependabot.yml` for automated Go module and GitHub Actions dependency updates.
 
 ## Comparison to Gold Standards
 
-| Dimension | spark-operator | odh-dashboard | notebooks | kserve |
-|-----------|---------------|---------------|-----------|--------|
-| Unit Tests | 7.5 | 9.0 | 7.0 | 9.0 |
-| Integration/E2E | 9.0 | 9.0 | 8.0 | 9.5 |
-| Build Integration | 7.0 | 8.0 | 7.0 | 7.0 |
-| Image Testing | 5.0 | 7.0 | 9.0 | 6.0 |
-| Coverage Tracking | 3.0 | 9.0 | 5.0 | 9.0 |
-| CI/CD Automation | 8.5 | 9.0 | 8.0 | 9.0 |
-| Agent Rules | 0.0 | 8.0 | 2.0 | 1.0 |
-| **Overall** | **7.4** | **8.7** | **7.0** | **8.2** |
-
-**Notable differentiators**:
-- spark-operator has **best-in-class E2E testing** with its 4x2 version/deploy matrix
-- The **Helm/Kustomize drift detection** is a unique, innovative quality practice not seen in other projects
-- **20 Helm chart unit tests** is above average for Kubernetes operators
-- Main weakness is the security/coverage tooling gap — common in CNCF projects outside the Red Hat ecosystem
+| Feature | spark-operator | odh-dashboard | notebooks | kserve |
+|---------|---------------|---------------|-----------|--------|
+| Unit Tests | Ginkgo+envtest | Jest+RTL | pytest | Go testing+envtest |
+| E2E Tests | Kind+Ginkgo (4 K8s versions) | Cypress | Image validation | Kind+Ginkgo |
+| Coverage CI | Local only | Codecov enforced | N/A | Codecov enforced |
+| Image Scanning | None | Trivy | Trivy | Trivy |
+| SAST | Scorecard only | CodeQL | N/A | CodeQL |
+| Pre-commit | helm-docs+shell | husky+lint-staged | N/A | golangci-lint |
+| Agent Rules | None | Comprehensive | None | None |
+| Helm Tests | 20 files (strong) | N/A | N/A | Helm tests |
+| Multi-K8s Testing | 4 versions | N/A | N/A | Multiple versions |
+| Kustomize Drift | Yes (innovative) | N/A | N/A | N/A |
+| Multi-arch | amd64+arm64 | N/A | Multi-arch | amd64+arm64 |
+| Secret Detection | None | Gitleaks | N/A | None |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/integration.yaml` — Main PR workflow (code checks, unit tests, build, Helm, E2E)
-- `.github/workflows/kustomize-lint.yaml` — Kustomize static validation
-- `.github/workflows/kustomize-drift-check.yaml` — Helm vs. Kustomize drift detection
-- `.github/workflows/scorecard.yaml` — OSSF Scorecard security assessment
-- `.github/workflows/release.yaml` — Multi-arch release pipeline
-- `.github/workflows/release-helm-charts.yaml` — Helm chart OCI release
+- `.github/workflows/integration.yaml` - Main PR/push workflow (code checks, unit tests, build, Helm tests, E2E)
+- `.github/workflows/kustomize-drift-check.yaml` - Helm/Kustomize drift detection
+- `.github/workflows/kustomize-lint.yaml` - Static Kustomize validation
+- `.github/workflows/shell-lint.yaml` - Shell script formatting and linting
+- `.github/workflows/scorecard.yaml` - OSSF supply-chain security
+- `.github/workflows/release.yaml` - Release workflow
+- `.github/workflows/release-latest-images.yaml` - Latest image builds
+- `.github/workflows/release-helm-charts.yaml` - Helm chart packaging
 
 ### Testing
-- `test/e2e/` — E2E test suite (Ginkgo, 1040 lines, 3 test files)
-- `test/drift/` — Helm/Kustomize drift detection tests
-- `test/kustomize/` — Kustomize build validation tests
-- `internal/webhook/*_test.go` — Webhook validation/defaulter tests (7 files)
-- `internal/controller/*/` — Controller reconciliation tests (3 packages)
-- `charts/spark-operator-chart/tests/` — Helm chart unit tests (20 files)
+- `internal/controller/sparkapplication/*_test.go` - SparkApplication controller tests (envtest)
+- `internal/controller/scheduledsparkapplication/*_test.go` - ScheduledSparkApplication tests
+- `internal/controller/sparkconnect/*_test.go` - SparkConnect controller tests
+- `internal/webhook/*_test.go` - Webhook validation/defaulting tests
+- `internal/scheduler/**/*_test.go` - Scheduler integration tests
+- `pkg/certificate/*_test.go` - Certificate management tests
+- `pkg/util/*_test.go` - Utility function tests
+- `test/e2e/` - E2E tests (Kind + Ginkgo)
+- `test/drift/drift_test.go` - Helm/Kustomize drift detection tests
+- `test/kustomize/kustomize_build_test.go` - Kustomize build validation
+- `charts/spark-operator-chart/tests/` - Helm chart unittest YAML (20 files)
 
 ### Code Quality
-- `.golangci.yaml` — Linter config (8 linters enabled)
-- `.pre-commit-config.yaml` — Pre-commit hooks (helm-docs only)
-- `Makefile` — Build/test/lint targets
+- `.golangci.yaml` - golangci-lint v2 configuration
+- `.pre-commit-config.yaml` - Pre-commit hooks (helm-docs, shfmt, shellcheck)
+- `Makefile` - Build, test, lint, and deploy targets
 
 ### Container Images
-- `Dockerfile` — Operator multi-stage build (Go builder + Spark runtime)
-- `spark-docker/Dockerfile` — Custom Spark image with GCS/BigQuery/Prometheus support
+- `Dockerfile` - Main operator image (multi-stage, Go builder + Spark runtime)
+- `docker/Dockerfile.kubectl` - kubectl utility image
+- `spark-docker/` - Spark-specific Docker configuration
 
-### Dependencies
-- `go.mod` — Go module definition (Go 1.24.10, controller-runtime v0.20.4)
+### Security
+- `SECURITY.md` - Vulnerability reporting and disclosure process
+- `.github/workflows/scorecard.yaml` - OSSF Scorecard analysis

@@ -1,444 +1,450 @@
 ---
 repository: "anomalyco/opencode"
-overall_score: 7.4
+overall_score: 7.6
 scorecard:
   - dimension: "Unit Tests"
     score: 8.5
-    status: "Extensive test suite with 439 test files across packages, strong 1:4 test-to-source ratio by file count"
+    status: "675 test files across 30+ packages with bun:test, strong test-to-code ratio (1:3.3)"
   - dimension: "Integration/E2E"
-    score: 7.0
-    status: "Playwright E2E on Linux and Windows with CI integration, but limited scenario coverage (4 spec files)"
+    score: 8.5
+    status: "52 Playwright E2E specs with regression, smoke, and performance suites, cross-platform CI"
   - dimension: "Build Integration"
     score: 5.0
-    status: "Storybook build check on PRs, Nix evaluation, but no container build validation on PRs"
+    status: "Container builds only on push to dev, no PR-time image validation or multi-arch PR testing"
   - dimension: "Image Testing"
     score: 5.5
-    status: "Multi-arch Docker builds with startup validation (RUN opencode --version), but no runtime or security scanning"
+    status: "Multi-arch Dockerfile with startup validation (RUN opencode --version), but no runtime testing"
   - dimension: "Coverage Tracking"
-    score: 3.0
-    status: "No code coverage tool integration (no codecov, coveralls, or threshold enforcement)"
+    score: 2.0
+    status: "No codecov/coveralls integration, no coverage thresholds, no PR coverage reporting"
   - dimension: "CI/CD Automation"
-    score: 9.0
-    status: "29 workflows with concurrency control, caching, JUnit reporting, multi-platform testing, AI-powered review"
+    score: 8.5
+    status: "24+ workflows with concurrency control, Turbo caching, Blacksmith runners, multi-platform"
   - dimension: "Agent Rules"
-    score: 7.5
-    status: "Comprehensive AGENTS.md with style guide and testing philosophy; .opencode/ directory with commands, skills, tools"
+    score: 9.0
+    status: "Comprehensive AGENTS.md with style guide, test patterns, commit conventions; .opencode/ with custom tools, agents, and skills"
 critical_gaps:
-  - title: "No code coverage tracking or enforcement"
-    impact: "Cannot measure test adequacy, no regressions caught by coverage drops, unknown dead code"
+  - title: "No test coverage tracking or enforcement"
+    impact: "Coverage regressions go undetected; no visibility into which code paths are untested"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No security scanning (SAST, container scanning, dependency audit)"
-    impact: "Vulnerabilities in dependencies and container images not detected until production"
+  - title: "No security scanning in CI (no Trivy, CodeQL, or SAST)"
+    impact: "Vulnerabilities in dependencies and code are not detected before merge"
     severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "Limited E2E scenario coverage"
-    impact: "Only 4 Playwright spec files covering session timeline - major features like file editing, provider config, permissions untested"
-    severity: "HIGH"
-    effort: "20-40 hours"
-  - title: "No container image security scanning"
-    impact: "Base images (alpine, ubuntu:24.04) and installed packages not audited for CVEs"
+    effort: "4-6 hours"
+  - title: "No PR-time container image build validation"
+    impact: "Image build failures discovered only after merge to dev branch"
     severity: "MEDIUM"
+    effort: "4-8 hours"
+  - title: "No dependency vulnerability scanning"
+    impact: "Known CVEs in npm packages can ship without detection"
+    severity: "HIGH"
     effort: "2-4 hours"
 quick_wins:
-  - title: "Add Trivy scanning to container build workflow"
+  - title: "Add codecov integration with bun:test coverage output"
+    effort: "3-4 hours"
+    impact: "Immediate visibility into test coverage trends and PR-level coverage delta reporting"
+  - title: "Add GitHub CodeQL or Semgrep workflow"
     effort: "1-2 hours"
-    impact: "Immediate visibility into container vulnerabilities across all 5+ Dockerfiles"
-  - title: "Add codecov integration to test workflow"
-    effort: "2-4 hours"
-    impact: "Track coverage trends, enforce minimum thresholds on PRs"
-  - title: "Add npm audit / bun audit to CI"
-    effort: "1 hour"
-    impact: "Catch known vulnerabilities in 90+ dependencies"
-  - title: "Add CodeQL or Semgrep SAST workflow"
+    impact: "Automated SAST catches injection, XSS, and prototype pollution in TypeScript"
+  - title: "Add npm audit / Snyk to PR workflow"
+    effort: "1-2 hours"
+    impact: "Block PRs that introduce dependencies with known critical vulnerabilities"
+  - title: "Add container build step to PR test workflow"
     effort: "2-3 hours"
-    impact: "Detect code-level security issues (XSS, injection) automatically on PRs"
+    impact: "Catch Dockerfile and build script failures before merge"
 recommendations:
   priority_0:
-    - "Add code coverage collection and enforcement - integrate codecov with minimum threshold (e.g., 60%)"
-    - "Add security scanning pipeline - Trivy for containers, CodeQL/Semgrep for SAST, npm audit for dependencies"
+    - "Implement test coverage tracking with codecov or coveralls - bun:test supports coverage output, wire it into CI and set minimum thresholds"
+    - "Add SAST scanning (CodeQL or Semgrep) to PR workflow for automated security analysis"
+    - "Add dependency vulnerability scanning (npm audit, Snyk, or Dependabot) to catch known CVEs"
   priority_1:
-    - "Expand E2E test coverage beyond session timeline to cover provider configuration, file operations, permissions, and plugin management"
-    - "Add container image runtime validation in CI - test that built containers can serve requests, not just print version"
-    - "Add dependency license scanning for compliance"
+    - "Add PR-time container image build validation to catch Dockerfile issues before merge"
+    - "Add Trivy or Snyk container scanning to the containers workflow for image vulnerability detection"
+    - "Add integration tests for the HTTP API server with full request-response lifecycle validation"
   priority_2:
-    - "Add performance regression testing (benchmark test suite exists but not in CI)"
-    - "Add contract tests for SDK/API boundaries between packages"
-    - "Add accessibility testing for web app (a11y)"
-    - "Consider adding pre-commit hooks beyond pre-push typecheck"
+    - "Add accessibility testing (axe-core) to the Playwright E2E suite"
+    - "Add visual regression testing with Playwright screenshot comparison"
+    - "Consider adding mutation testing to validate test quality"
 ---
 
-# Quality Analysis: anomalyco/opencode
+# Quality Analysis: OpenCode (anomalyco/opencode)
 
 ## Executive Summary
 
-- **Overall Score: 7.4/10**
-- **Repository Type**: TypeScript monorepo (AI-powered development tool)
-- **Primary Language**: TypeScript (Bun runtime)
-- **Architecture**: Monorepo with 20+ packages (CLI, web app, desktop, SDK, core, LLM, UI, enterprise)
-- **Build System**: Turbo + Bun + SST (serverless)
-- **Key Strengths**: Exceptional unit test coverage (~439 test files, 113K LoC), sophisticated CI/CD with 29 workflows, AI-powered code review, multi-platform testing (Linux + Windows), strong developer tooling (AGENTS.md, .opencode/ commands)
-- **Critical Gaps**: No code coverage tracking, no security scanning (SAST/container/dependency), limited E2E coverage
-- **Agent Rules Status**: Present and comprehensive (AGENTS.md + .opencode/ directory)
+- **Overall Score: 7.6/10**
+- **Repository Type**: TypeScript/Bun monorepo - AI-powered development tool (TUI, web app, desktop app, CLI, SDK)
+- **Primary Language**: TypeScript (2,261 source files)
+- **Package Manager**: Bun 1.3.14 with Turborepo
+- **Framework**: SolidJS (frontend), Effect (backend), Playwright (E2E), Electron (desktop)
+
+### Key Strengths
+- **Exceptional test density**: 675 test files across 30+ packages with a 1:3.3 test-to-source ratio
+- **Comprehensive E2E suite**: 52 Playwright specs organized into smoke, regression, and performance categories with cross-platform (Linux + Windows) CI
+- **Sophisticated CI/CD**: 24+ GitHub Actions workflows with concurrency control, Turbo caching, Blacksmith runners, and matrix strategies
+- **Strong agent rules**: Detailed AGENTS.md with style guide, testing philosophy, and commit conventions; plus `.opencode/` directory with custom tools, agents, commands, and skills
+- **Contract testing**: Schema contract hygiene tests and client-server contract identity verification
+- **Performance testing**: Dedicated Playwright performance benchmarks with Chrome trace analysis
+
+### Critical Gaps
+- **No test coverage tracking** - No codecov, coveralls, or any coverage reporting
+- **No security scanning** - No CodeQL, Semgrep, Trivy, or SAST in any workflow
+- **No dependency scanning** - No npm audit, Snyk, or Dependabot configuration
+- **Container builds not validated on PRs** - Image builds only run on push to dev
+
+### Agent Rules Status: **Comprehensive**
+- AGENTS.md provides detailed style guide, testing philosophy ("avoid mocks"), commit conventions
+- `.opencode/` directory with custom tools, agents, commands, skills, and glossaries
+- Performance test suite has its own AGENTS.md with benchmark-specific guidance
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 8.5/10 | 439 test files, 113K test LoC, Bun test runner with JUnit output |
-| Integration/E2E | 7.0/10 | Playwright E2E on Linux+Windows, but only 4 spec files |
-| **Build Integration** | **5.0/10** | **Storybook + Nix eval on PRs, no container build validation** |
-| Image Testing | 5.5/10 | Multi-arch Docker with startup check, no runtime/security testing |
-| Coverage Tracking | 3.0/10 | No codecov, no thresholds, no PR coverage reporting |
-| CI/CD Automation | 9.0/10 | 29 workflows, concurrency control, caching, AI review |
-| Agent Rules | 7.5/10 | AGENTS.md with style guide + testing philosophy; .opencode/ skills |
+| Unit Tests | 8.5/10 | 675 test files, bun:test framework, strong coverage across all packages |
+| Integration/E2E | 8.5/10 | 52 Playwright specs, cross-platform CI (Linux + Windows), regression + smoke + perf |
+| **Build Integration** | **5.0/10** | **Container builds on push to dev only, no PR-time image validation** |
+| Image Testing | 5.5/10 | Multi-arch Dockerfile with startup check, but no runtime or security scanning |
+| Coverage Tracking | 2.0/10 | No coverage tool integration, no thresholds, no PR reporting |
+| CI/CD Automation | 8.5/10 | 24+ workflows, concurrency control, Turbo cache, Blacksmith, multi-platform |
+| Agent Rules | 9.0/10 | AGENTS.md + .opencode/ with tools, agents, commands, skills, glossaries |
 
 ## Critical Gaps
 
-### 1. No Code Coverage Tracking or Enforcement
-- **Impact**: Cannot measure test adequacy; coverage regressions go unnoticed; unknown dead code accumulates
+### 1. No Test Coverage Tracking or Enforcement
+- **Impact**: Coverage regressions go completely undetected; no visibility into which code paths lack tests
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: Despite having 439 test files, there is no coverage collection (`--coverage` flag), no codecov/coveralls integration, and no minimum threshold enforcement on PRs. Test adequacy is unmeasured.
+- **Details**: Despite 675 test files, there is no codecov/coveralls integration, no coverage thresholds, and no PR-level coverage delta reporting. `bun:test` supports `--coverage` flag but it's not wired into CI.
 
-### 2. No Security Scanning Pipeline
-- **Impact**: Vulnerabilities in 90+ npm dependencies and container base images go undetected until production incidents
+### 2. No Security Scanning in CI
+- **Impact**: Vulnerabilities in code and dependencies are not detected before merge
 - **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Details**: No Trivy, Snyk, or Grype for container scanning. No CodeQL, Semgrep, or gosec for SAST. No `npm audit` / `bun audit` in CI. The `.gitleaksignore` file exists (for test fixtures) indicating awareness of secret scanning, but no active gitleaks workflow was found.
+- **Effort**: 4-6 hours
+- **Details**: No CodeQL, Semgrep, Trivy, Snyk, or any SAST/DAST tool is configured in any workflow. The `.gitleaksignore` file exists (for test data), but no Gitleaks workflow runs. The project has a SECURITY.md with threat model but no automated scanning.
 
-### 3. Limited E2E Scenario Coverage
-- **Impact**: Major user-facing features like file editing, provider configuration, plugin management, permission flows, and MCP integration have no browser-level test coverage
+### 3. No Dependency Vulnerability Scanning
+- **Impact**: Known CVEs in npm packages can ship without detection
 - **Severity**: HIGH
-- **Effort**: 20-40 hours
-- **Details**: Only 4 Playwright spec files exist (1 smoke, 3 regression) totaling ~1,087 lines — all focused on the session timeline view. The test infrastructure is solid (mock server, CI integration with artifacts), but scenario breadth is minimal.
-
-### 4. No Container Image Security Scanning
-- **Impact**: Base images (alpine, ubuntu:24.04) and installed system packages not audited for CVEs; 5+ Dockerfiles across packages
-- **Severity**: MEDIUM
 - **Effort**: 2-4 hours
+- **Details**: No Dependabot, Renovate, npm audit, or Snyk configured. The project has 14+ patched dependencies (listed in package.json `patchedDependencies`), suggesting awareness of dependency issues, but no automated scanning catches new ones.
+
+### 4. No PR-Time Container Image Build Validation
+- **Impact**: Dockerfile or build script failures discovered only after merge to dev
+- **Severity**: MEDIUM
+- **Effort**: 4-8 hours
+- **Details**: The `containers.yml` workflow only triggers on push to dev branch (paths: `packages/containers/**`). The main `opencode` Dockerfile is not built or validated on PRs at all.
 
 ## Quick Wins
 
-### 1. Add Trivy Scanning to Container Build Workflow
-- **Effort**: 1-2 hours
-- **Impact**: Immediate visibility into container vulnerabilities
-- **Implementation**: Add `aquasecurity/trivy-action` step after `docker build` in `containers.yml`:
-```yaml
-- name: Scan container image
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: ${{ env.REGISTRY }}/opencode:${{ env.TAG }}
-    format: 'sarif'
-    output: 'trivy-results.sarif'
-    severity: 'CRITICAL,HIGH'
-```
+### 1. Add Codecov Integration (3-4 hours)
+- **Impact**: Immediate visibility into test coverage trends and PR-level coverage delta
+- **Implementation**:
+  ```yaml
+  # Add to .github/workflows/test.yml after "Run unit tests" step
+  - name: Generate coverage
+    run: bun turbo test -- --coverage
+  - name: Upload coverage
+    uses: codecov/codecov-action@v4
+    with:
+      token: ${{ secrets.CODECOV_TOKEN }}
+  ```
 
-### 2. Add Codecov Integration to Test Workflow
-- **Effort**: 2-4 hours
-- **Impact**: Track coverage trends, enforce minimum thresholds
-- **Implementation**: Add `--coverage` flag to Bun test commands and upload via `codecov/codecov-action`. Create `.codecov.yml` with thresholds.
+### 2. Add CodeQL/Semgrep Workflow (1-2 hours)
+- **Impact**: Automated SAST catches injection, XSS, and prototype pollution patterns
+- **Implementation**:
+  ```yaml
+  # .github/workflows/codeql.yml
+  name: CodeQL
+  on: [push, pull_request]
+  jobs:
+    analyze:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+        - uses: github/codeql-action/init@v3
+          with:
+            languages: javascript-typescript
+        - uses: github/codeql-action/analyze@v3
+  ```
 
-### 3. Add npm/Dependency Audit to CI
-- **Effort**: 1 hour
-- **Impact**: Catch known CVEs in 90+ dependencies automatically
-- **Implementation**: Add `bun audit` step to PR workflow or create a dedicated security workflow.
+### 3. Add npm audit to PR Workflow (1-2 hours)
+- **Impact**: Block PRs that introduce dependencies with known critical vulnerabilities
+- **Implementation**: Add `bun pm audit` or equivalent step to the test workflow.
 
-### 4. Add CodeQL SAST Workflow
-- **Effort**: 2-3 hours
-- **Impact**: Detect code-level security issues (XSS, injection, prototype pollution) automatically
-- **Implementation**: Add `.github/workflows/codeql.yml` with JavaScript/TypeScript analysis.
+### 4. Add Container Build to PR Workflow (2-3 hours)
+- **Impact**: Catch Dockerfile and build script failures before merge
+- **Implementation**: Add a build-only (no push) container step to the test workflow with path filtering.
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Score: 9.0/10** - Exceptional automation
-
-The repository has **29 GitHub Actions workflows** — one of the most comprehensive CI/CD setups observed:
+**Workflows Inventory (24+ workflows):**
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `test.yml` | PR, push(dev) | Unit tests (Linux + Windows) + E2E (Playwright) |
-| `typecheck.yml` | PR, push(dev) | TypeScript type checking via `bun typecheck` |
-| `nix-eval.yml` | PR, push(dev) | Nix flake evaluation (4 systems) |
-| `storybook.yml` | PR, push(dev) | Storybook build validation |
-| `pr-standards.yml` | PR (opened/edited) | Conventional commit title + issue link enforcement |
-| `compliance-close.yml` | Schedule (30m) | Auto-close non-compliant PRs after 2h |
-| `review.yml` | Issue comment (/review) | AI-powered code review via opencode |
-| `opencode.yml` | Issue comment (/oc) | AI assistant on PRs |
-| `containers.yml` | Push(dev), paths | Multi-arch container builds (GHCR) |
-| `publish.yml` | Push(dev/ci/beta) | Full release pipeline (CLI + npm + Docker + GitHub Action + VSCode extension) |
-| `deploy.yml` | Push(dev/production) | SST deployment to AWS |
-| `duplicate-issues.yml` | Issues | Automated duplicate detection |
-| `pr-management.yml` | PR events | PR lifecycle management |
-| `triage.yml` | Issues | Automated issue triage |
-| `stats.yml` | Push(dev) | Repository statistics |
+| `test.yml` | PR, push to dev | Unit tests (Linux + Windows matrix) + E2E (Playwright, Linux + Windows) |
+| `typecheck.yml` | PR to dev, push to dev | TypeScript type checking via `bun typecheck` |
+| `storybook.yml` | PR to dev, push to dev | Storybook build validation (path-filtered) |
+| `nix-eval.yml` | PR to dev, push to dev | Nix flake evaluation across 4 platforms |
+| `containers.yml` | Push to dev (path-filtered) | Multi-arch container builds with QEMU/Buildx |
+| `publish.yml` | Push to dev/ci/beta, manual | Full release pipeline: version, build, publish |
+| `deploy.yml` | Push to dev/production | SST deployment to AWS |
+| `pr-standards.yml` | PR opened/edited/sync | Conventional commit title enforcement, issue linking |
+| `pr-management.yml` | PR opened | Duplicate PR detection (AI-powered via opencode) |
+| `review.yml` | Issue comment `/review` | AI-powered code review (uses opencode + GPT-5.5) |
+| `opencode.yml` | Issue/PR comment `/oc` | AI coding assistant triggered by comments |
+| `beta.yml` | Hourly schedule | Beta branch sync |
+| `close-issues.yml` / `close-prs.yml` | Scheduled | Stale issue/PR management |
 
 **Strengths:**
-- Concurrency control with intelligent grouping (dev branch preserves all runs, PRs cancel stale)
-- Turbo cache for fast rebuilds
-- Playwright browser caching
-- JUnit report publishing with `mikepenz/action-junit-report`
-- Artifact upload for test results
-- Cross-platform testing (Linux + Windows)
-- SHA-pinned actions with version comments
-- AI-powered code review enforcing the project's own style guide
+- Concurrency control with smart grouping (keeps dev runs, cancels stale PRs)
+- Turbo cache with SHA-based keys for fast incremental builds
+- Blacksmith runners (4-vCPU) for faster CI execution
+- Cross-platform testing (Linux + Windows) for both unit and E2E
+- Pinned action versions with SHA hashes (supply chain security)
+- Artifact upload for Playwright test results with 7-day retention
+- AI-powered PR review and duplicate detection workflows
 
-**Minor Gaps:**
-- No dedicated security scanning workflow
-- No coverage reporting in CI
-- Container builds only on `dev` push, not validated on PRs
+**Gaps:**
+- No security scanning workflows
+- No coverage upload step
+- Container builds not validated on PRs
 
 ### Test Coverage
 
-**Score: 8.5/10 (Unit) / 7.0/10 (E2E)**
+**Unit Tests (Score: 8.5/10)**
+- **Framework**: `bun:test` (native Bun test runner)
+- **Test files**: 675 across all packages
+- **Source files**: 2,261 TypeScript files
+- **Test-to-code ratio**: 1:3.3 (strong)
+- **Key packages tested**: core (100+ test files), opencode (80+ test files), llm, tui, client, schema, protocol, session-ui, ui
+- **Testing philosophy**: "Avoid mocks as much as possible... Test actual implementation, do not duplicate logic into tests" (AGENTS.md)
+- **Notable patterns**: Effect-based test helpers, custom `testEffect` wrappers, fixture-based testing
 
-#### Unit Tests — Excellent
+**Integration/E2E Tests (Score: 8.5/10)**
+- **Framework**: Playwright 1.59.1 with Chromium
+- **E2E specs**: 52 Playwright spec files
+- **Organization**: `smoke/`, `regression/`, `performance/` directories
+- **Configuration**: 60s timeout, retry on CI (2 retries), parallel execution, trace on retry, screenshot on failure, video on failure
+- **Mock server**: Custom SSE transport mock for testing without real LLM backends
+- **Performance suite**: Chrome trace analysis, visual stability benchmarks, navigation milestone tracking
+- **Cross-platform**: Runs on both Linux and Windows in CI
+- **Special**: HTTP API exerciser (`test:httpapi`) with coverage, auth, and effect modes
 
-- **439 test files** across the monorepo
-- **113,357 lines of test code** against ~339,442 lines of source (33% test-to-source ratio by LoC)
-- **Test-to-source file ratio**: 439:1,748 (~1:4)
-- **Framework**: Bun test runner (built-in)
-- **Output**: JUnit XML reports for CI visibility
-- **Cross-platform**: Tests run on both Linux and Windows
+**Contract Tests**
+- Schema contract hygiene tests verify type safety and encoding
+- Client contract identity tests ensure Core and Server reuse authoritative Schema values
+- Import boundary tests verify package dependency constraints
 
-**Coverage by Package:**
-| Package | Test Files | Key Areas |
-|---------|-----------|-----------|
-| `packages/opencode` | ~200+ | CLI, TUI, ACP, server, session, tools, plugins, MCP, LSP, PTY |
-| `packages/app` | ~60+ | Components, context, pages, utils, addons, i18n |
-| `packages/core` | ~40+ | Config, filesystem, git, models, plugins (30+ providers), npm |
-| `packages/llm` | ~20+ | Provider adapters, caching, routing, schema, streaming |
-| `packages/ui` | ~6 | Component rendering tests |
-| `packages/enterprise` | 2 | Share and storage |
-| `packages/desktop` | 2 | Shell env and HTML rendering |
-| `packages/console` | 4 | Provider usage, rate limiter, dates |
-
-**Notable Testing Patterns:**
-- HTTP recorder for replay-based provider tests (`packages/http-recorder`)
-- Mock server for E2E tests (`packages/app/e2e/utils/mock-server.ts`)
-- `.tsx` test files for SolidJS component testing with happy-dom
-- HttpAPI exerciser gate tests (coverage, auth, and effect modes)
-- Benchmark test suite (`bench:test`) and profiler (`profile:test`) scripts
-
-#### E2E Tests — Growing
-
-- **Framework**: Playwright (Chromium only)
-- **Spec files**: 4 (1 smoke, 3 regression)
-- **Total E2E LoC**: ~1,087
-- **CI**: Runs on Linux + Windows with 30-min timeout, 2 retries on CI
-- **Artifacts**: JUnit reports, test results, Playwright HTML reports
-- **Infrastructure**: Dev server auto-start, mock server utility
-
-**E2E Gap**: Only session timeline is tested. Missing coverage for:
-- Provider configuration flows
-- File editing/viewing
-- Plugin management
-- Permission dialogs
-- MCP server connections
-- Desktop-specific features
+**Coverage Tracking (Score: 2.0/10)**
+- No codecov or coveralls integration
+- No coverage thresholds configured
+- No PR coverage reporting
+- `bun:test` supports `--coverage` but it's not used in CI
 
 ### Code Quality
 
-**Score: 7.5/10**
+**Linting (Strong)**
+- **Tool**: OxLint 1.60.0 (fast Rust-based linter)
+- **Configuration**: `.oxlintrc.json` with type-aware mode enabled
+- **Categories**: `suspicious: warn` with targeted rule overrides
+- **Notable rules**: `typescript/no-floating-promises: warn`, `typescript/no-misused-spread: warn`
+- **Ignore patterns**: node_modules, dist, .build, .sst, .d.ts, generated files
 
-- **Linter**: OxLint (`oxlint` v1.60.0) — modern, fast Rust-based linter
-  - Type-aware mode enabled
-  - `suspicious` category active
-  - Reasonable rule customizations (Effect.gen/SolidJS compatibility)
-  - No-floating-promises and no-misused-spread warnings enabled
-- **Formatter**: Prettier (semi: false, printWidth: 120)
-- **Editor Config**: Consistent (UTF-8, LF, 2-space indent)
-- **Pre-push Hook**: Husky pre-push runs Bun version check + typecheck
-- **Type Checking**: `tsgo` (TypeScript Go compiler, native-preview) for speed
-- **No Pre-commit Hook**: Only pre-push; lint/format not enforced before commit
+**Formatting**
+- **Tool**: Prettier 3.6.2
+- **Config**: `semi: false`, `printWidth: 120`
+- **EditorConfig**: UTF-8, LF line endings, 2-space indent
 
-**Gap**: No lint step in CI workflows (oxlint runs locally via `bun lint` but isn't enforced in GitHub Actions).
+**Pre-commit Hooks**
+- **Tool**: Husky 9.1.7
+- **Setup**: `prepare: "husky"` script in package.json
+- No `.pre-commit-config.yaml` (uses Husky directly)
+
+**TypeScript**
+- Extends `@tsconfig/bun/tsconfig.json`
+- Type checking via `bun typecheck` (Turbo-orchestrated)
+- Enforced in CI via dedicated `typecheck.yml` workflow
+
+**Static Analysis**
+- OxLint provides some static analysis via its `suspicious` category
+- No dedicated SAST tool (CodeQL, Semgrep) configured
 
 ### Container Images
 
-**Score: 5.5/10**
-
-**5 Dockerfiles found:**
-| Path | Base Image | Purpose |
-|------|-----------|---------|
-| `packages/opencode/Dockerfile` | `alpine` | CLI distribution (multi-arch: amd64+arm64) |
-| `packages/containers/base/Dockerfile` | `ubuntu:24.04` | CI base image |
-| `packages/containers/bun-node/Dockerfile` | (extends base) | CI with Bun+Node |
-| `packages/containers/publish/Dockerfile` | (extends base) | Release pipeline |
-| `packages/containers/rust/Dockerfile` | (extends base) | Rust build environment |
-| `packages/containers/tauri-linux/Dockerfile` | (extends base) | Desktop builds |
-
-**Strengths:**
-- Multi-architecture support (amd64 + arm64) for CLI image
-- Multi-stage builds
-- Startup validation: `RUN opencode --version`
-- GHCR publishing with proper auth
-- Docker Buildx + QEMU for cross-compilation
+**Build Process (Score: 5.5/10)**
+- 7 Dockerfiles across packages (opencode, stats/server, containers/*)
+- Main Dockerfile uses multi-stage build with Alpine base
+- Multi-architecture support (amd64, arm64) via QEMU/Buildx
+- Startup validation: `RUN opencode --version` in Dockerfile
+- GHCR registry with automated push
 
 **Gaps:**
-- No security scanning (Trivy, Snyk, Grype)
+- No container vulnerability scanning (Trivy, Snyk)
 - No SBOM generation
 - No image signing/attestation
-- No runtime functional testing (only `--version` check)
-- Container builds not validated on PRs (only on `dev` push)
+- No runtime functional testing of containers
+- Container builds not in PR workflow
 
-### Security Practices
+### Security
 
-**Score: 4.0/10**
+**Current State:**
+- `.gitleaksignore` file exists (for test fixture false positives)
+- SECURITY.md with detailed threat model and responsible disclosure
+- Action SHAs pinned in workflows (supply chain security)
+- `.dockerignore` present
 
-- **Secret Detection**: `.gitleaksignore` file exists (suppresses test fixtures) — indicates awareness but no active gitleaks workflow
-- **No SAST**: No CodeQL, Semgrep, or gosec workflows
-- **No Container Scanning**: No Trivy, Snyk, or Grype integration
-- **No Dependency Audit**: No `npm audit`, `bun audit`, or Dependabot/Renovate
-- **SHA-pinned Actions**: Actions use full commit SHAs with version comments — excellent supply chain practice
-- **PR Compliance**: Automated checks enforce PR template adherence with 2-hour grace period before auto-close
+**Missing:**
+- No CodeQL, Semgrep, or any SAST tool
+- No Trivy, Snyk, or container scanning
+- No Dependabot or Renovate for dependency updates
+- No npm audit in CI
+- No secret scanning workflow (despite `.gitleaksignore`)
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Score: 7.5/10**
+**Status**: Comprehensive and well-structured
 
-- **Status**: Present and comprehensive
-- **AGENTS.md**: Detailed document covering:
-  - Conventional commit conventions
-  - Style guide (destructuring, imports, variables, control flow)
-  - Schema definitions (Drizzle)
-  - Testing philosophy ("avoid mocks, test actual implementation")
-  - Type checking instructions
-- **.opencode/ Directory**: Rich configuration including:
-  - `agent/`: Duplicate PR detection, triage agents
-  - `command/`: 8 custom commands (ai-deps, changelog, commit, issues, learn, rmslop, spellcheck, translate)
-  - `glossary/`: i18n translation glossaries (18 languages)
-  - `skills/`: Effect pattern skill
-  - `tool/`: Custom GitHub PR search and triage tools
-  - `plugins/`: TUI smoke testing plugin
-  - `themes/`: Custom theme support
-  - `opencode.jsonc`: Project configuration
+**AGENTS.md** (root-level):
+- Detailed style guide covering imports, variables, control flow, destructuring
+- Schema definitions (Drizzle conventions)
+- Testing philosophy ("avoid mocks", "test actual implementation")
+- Commit conventions (conventional commits)
+- Branch naming conventions
+- TypeScript checking guidelines
+- V2 Session Core architectural constraints
 
-**Strengths:**
-- Testing philosophy explicitly stated ("avoid mocks")
-- Test-from-package-dir guard (`do-not-run-tests-from-root`)
-- Style guide covers real patterns with good/bad examples
-- Custom tooling for AI-assisted development
+**.opencode/ Directory**:
+- Custom tools: `github-triage.ts`, `github-pr-search.ts`
+- Custom agents: `triage.md`, `duplicate-pr.md`
+- Custom commands: `translate.md`, `spellcheck.md`, `rmslop.md`, `learn.md`, `issues.md`, `commit.md`, `changelog.md`, `ai-deps.md`
+- Skills: `effect/SKILL.md`
+- Themes: Custom TUI themes
+- Glossaries: 15+ language glossaries for i18n
+- Plugins: TUI smoke test plugin
 
-**Gaps:**
-- No explicit test creation rules (no `.claude/rules/unit-tests.md` equivalent)
-- No E2E test writing guidelines
-- No testing checklist or quality gates
-- AGENTS.md focuses on style rather than test patterns
+**Performance Tests AGENTS.md**: Dedicated agent rules for benchmark authoring
+
+**Assessment**: This is one of the most comprehensive agent rule setups seen in any repository. The `.opencode/` directory functions as a complete agent development ecosystem with tools, commands, agents, and skills.
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add code coverage collection and enforcement**
-   - Integrate `codecov` with Bun's `--coverage` flag
-   - Set minimum threshold (suggest 60% initially, raise to 70%)
-   - Add PR coverage comments showing delta
-   - Effort: 4-6 hours
+1. **Implement test coverage tracking with codecov**
+   - Wire `bun:test --coverage` into CI
+   - Upload to codecov with PR comments
+   - Set minimum thresholds (e.g., 60% initial, ratchet up)
+   - Estimated effort: 4-6 hours
 
-2. **Add security scanning pipeline**
-   - Container scanning: Add Trivy to `containers.yml`
-   - SAST: Add CodeQL workflow for JavaScript/TypeScript
-   - Dependency audit: Add `bun audit` to PR workflow
-   - Secret scanning: Add gitleaks workflow
-   - Effort: 4-8 hours total
+2. **Add SAST scanning to PR workflow**
+   - Add CodeQL for TypeScript/JavaScript analysis
+   - Or Semgrep with TypeScript rules
+   - Block PRs with high-severity findings
+   - Estimated effort: 2-4 hours
+
+3. **Add dependency vulnerability scanning**
+   - Enable Dependabot or configure Snyk
+   - Add `bun pm audit` step to test workflow
+   - Set severity thresholds for blocking
+   - Estimated effort: 2-4 hours
 
 ### Priority 1 (High Value)
 
-3. **Expand E2E test coverage**
-   - Add spec files for provider configuration, file operations, permissions, plugin management
-   - Target 15-20 spec files covering major user flows
-   - Effort: 20-40 hours
+4. **Add PR-time container build validation**
+   - Add build-only Docker step to test workflow (path-filtered)
+   - Validate multi-arch builds before merge
+   - Estimated effort: 4-8 hours
 
-4. **Add lint enforcement in CI**
-   - Add `bun lint` (oxlint) step to PR workflow
-   - Currently only runs locally; CI enforcement ensures consistency
-   - Effort: 1 hour
+5. **Add Trivy container scanning**
+   - Integrate into `containers.yml` workflow
+   - Scan for OS and library vulnerabilities
+   - Generate SBOM as build artifact
+   - Estimated effort: 2-4 hours
 
-5. **Validate container builds on PRs**
-   - Add Docker build step to PR workflow (build but don't push)
-   - Catch Dockerfile issues before merge
-   - Effort: 2-3 hours
+6. **Add secret scanning with Gitleaks**
+   - Create dedicated workflow (the `.gitleaksignore` already exists)
+   - Run on PRs and periodic schedule
+   - Estimated effort: 1-2 hours
 
 ### Priority 2 (Nice-to-Have)
 
-6. **Add performance regression testing to CI**
-   - Benchmark infrastructure exists (`bench:test`, `perf/` directory)
-   - Run benchmarks in CI and track trends
-   - Effort: 4-8 hours
+7. **Add accessibility testing**
+   - Integrate `@axe-core/playwright` into E2E suite
+   - Validate WCAG compliance for web UI
+   - Estimated effort: 4-6 hours
 
-7. **Add contract tests for SDK/API boundaries**
-   - SDK clients should validate against server API schemas
-   - HTTP recorder pattern is already in place — extend to contract testing
-   - Effort: 8-16 hours
+8. **Add visual regression testing**
+   - Use Playwright screenshot comparison
+   - Baseline screenshots for key UI states
+   - Estimated effort: 4-6 hours
 
-8. **Add accessibility testing**
-   - Use `axe-playwright` plugin for a11y checks in E2E tests
-   - Effort: 4-6 hours
-
-9. **Add pre-commit hook for lint/format**
-   - Currently only pre-push runs typecheck
-   - Catch lint/format issues earlier in workflow
-   - Effort: 1 hour
+9. **Consider mutation testing**
+   - Evaluate Stryker for TypeScript
+   - Validate that existing tests catch real bugs
+   - Estimated effort: 8-12 hours
 
 ## Comparison to Gold Standards
 
-| Dimension | opencode | odh-dashboard | notebooks | kserve |
+| Dimension | OpenCode | odh-dashboard | notebooks | kserve |
 |-----------|----------|---------------|-----------|--------|
-| Unit Tests | 8.5 | 9.0 | 7.0 | 9.0 |
-| Integration/E2E | 7.0 | 9.0 | 8.0 | 9.5 |
-| Build Integration | 5.0 | 8.0 | 7.0 | 7.0 |
-| Image Testing | 5.5 | 7.0 | 9.5 | 6.0 |
-| Coverage Tracking | 3.0 | 8.0 | 5.0 | 9.0 |
-| CI/CD Automation | 9.0 | 8.5 | 8.0 | 8.5 |
-| Agent Rules | 7.5 | 8.5 | 3.0 | 2.0 |
-| **Overall** | **7.4** | **8.6** | **7.4** | **8.1** |
+| Unit Tests | 8.5 | 9.0 | 7.0 | 8.5 |
+| Integration/E2E | 8.5 | 9.5 | 6.0 | 9.0 |
+| Build Integration | 5.0 | 7.0 | 8.0 | 7.0 |
+| Image Testing | 5.5 | 6.0 | 9.5 | 6.0 |
+| Coverage Tracking | 2.0 | 8.0 | 5.0 | 9.0 |
+| CI/CD Automation | 8.5 | 9.0 | 8.0 | 8.5 |
+| Agent Rules | 9.0 | 8.0 | 3.0 | 2.0 |
+| **Security Scanning** | **1.0** | **7.0** | **6.0** | **7.0** |
 
-**Key Differentiators:**
-- opencode excels in CI/CD automation (29 workflows, AI-powered review) and agent rules
-- Major gaps vs gold standards are in coverage tracking and security scanning
-- E2E infrastructure is solid but scenario coverage lags behind odh-dashboard
+**Key Takeaway**: OpenCode excels in testing, CI/CD, and agent rules but has significant blind spots in coverage tracking and security scanning that most mature projects have addressed.
 
 ## File Paths Reference
 
-### CI/CD Workflows
-- `.github/workflows/test.yml` - Unit + E2E test orchestration
-- `.github/workflows/typecheck.yml` - TypeScript type checking
-- `.github/workflows/nix-eval.yml` - Nix flake evaluation
-- `.github/workflows/storybook.yml` - Storybook build check
-- `.github/workflows/pr-standards.yml` - PR title + issue enforcement
-- `.github/workflows/compliance-close.yml` - Auto-close non-compliant PRs
-- `.github/workflows/review.yml` - AI-powered code review
-- `.github/workflows/containers.yml` - Container image builds
-- `.github/workflows/publish.yml` - Full release pipeline
+### CI/CD
+- `.github/workflows/test.yml` - Main test workflow (unit + E2E)
+- `.github/workflows/typecheck.yml` - TypeScript checking
+- `.github/workflows/containers.yml` - Container builds
+- `.github/workflows/publish.yml` - Release pipeline
 - `.github/workflows/deploy.yml` - SST deployment
+- `.github/workflows/pr-standards.yml` - PR conventional commit enforcement
+- `.github/workflows/pr-management.yml` - AI duplicate detection
+- `.github/workflows/review.yml` - AI code review
+- `.github/workflows/storybook.yml` - Storybook build
+- `.github/workflows/nix-eval.yml` - Nix flake evaluation
 
 ### Testing
-- `packages/opencode/test/` - Core CLI test suite (~200+ files)
-- `packages/app/src/**/*.test.ts` - App component tests (~60+ files)
-- `packages/app/e2e/` - Playwright E2E tests (4 specs)
-- `packages/core/test/` - Core library tests (~40+ files)
-- `packages/llm/test/` - LLM provider tests (~20+ files)
-- `packages/app/playwright.config.ts` - Playwright configuration
+- `packages/core/test/` - Core package tests (100+ files)
+- `packages/opencode/test/` - OpenCode package tests (80+ files)
+- `packages/app/e2e/` - Playwright E2E tests (52 specs)
+- `packages/app/e2e/regression/` - Regression tests
+- `packages/app/e2e/smoke/` - Smoke tests
+- `packages/app/e2e/performance/` - Performance benchmarks
+- `packages/schema/test/contract-hygiene.test.ts` - Contract hygiene
+- `packages/client/test/contract-identity.test.ts` - Contract identity
 
 ### Code Quality
 - `.oxlintrc.json` - OxLint configuration (type-aware)
-- `.editorconfig` - Editor settings
-- `.husky/pre-push` - Pre-push hook (version + typecheck)
-- `turbo.json` - Turbo task configuration
+- `tsconfig.json` - TypeScript configuration
+- `.editorconfig` - Editor configuration
+- `turbo.json` - Turborepo task configuration
 
 ### Container Images
-- `packages/opencode/Dockerfile` - CLI distribution image
-- `packages/containers/*/Dockerfile` - CI/build environment images
+- `packages/opencode/Dockerfile` - Main CLI container
+- `packages/containers/` - Build containers (base, bun-node, rust, publish, tauri-linux)
+- `.dockerignore` - Docker build context exclusions
 
 ### Agent Rules
-- `AGENTS.md` - Style guide and testing philosophy
-- `.opencode/` - Commands, skills, tools, agents, glossaries
+- `AGENTS.md` - Main agent rules and style guide
+- `.opencode/tool/` - Custom agent tools
+- `.opencode/agent/` - Custom agents
+- `.opencode/command/` - Custom commands
+- `.opencode/skills/` - Custom skills
+- `.opencode/glossary/` - i18n glossaries
+- `packages/app/e2e/performance/AGENTS.md` - Performance test agent rules
 
-### Configuration
-- `package.json` - Root workspace configuration
-- `tsconfig.json` - TypeScript configuration
-- `sst.config.ts` - SST (serverless) configuration
-- `flake.nix` - Nix flake for reproducible builds
+### Security
+- `SECURITY.md` - Security policy and threat model
+- `.gitleaksignore` - Gitleaks false positive suppressions

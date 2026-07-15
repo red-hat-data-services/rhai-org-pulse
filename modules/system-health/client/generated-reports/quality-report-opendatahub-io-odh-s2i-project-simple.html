@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:48 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 04:23 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/odh-s2i-project-simple</h2>
         </header>
 
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No unit tests exist — zero test files in repository</div>
+                            <div class="scorecard-status">No test files, no testing framework, no test infrastructure</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.5/10</div>
-                            <div class="scorecard-status">Only a manual Jupyter notebook for ad-hoc Flask endpoint testing</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No integration or E2E tests; only manual notebook-based curl testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CI/CD pipeline, no Dockerfile, no build automation of any kind</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">S2I build relies entirely on OpenShift platform; no PR-time validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No container image definition exists — relies entirely on S2I builder image</div>
+                            <div class="scorecard-status">No Dockerfile, no container image testing, no runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tooling, no codecov, no thresholds</div>
+                            <div class="scorecard-status">No coverage tools, no codecov, no thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.5/10</div>
-                            <div class="scorecard-status">No GitHub Actions, no Makefile, no automated workflows</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No CI/CD workflows; relies on OpenShift S2I webhook triggers</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules</div>
                         </div>
                     </div>
                 </div>
@@ -411,48 +411,40 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Zero automated tests</div>
-                            <p>Any code change can silently break prediction endpoint or Flask routing with no detection</p>
+                            <div class="item-description">No CI/CD pipeline of any kind</div>
+                            <p>No automated checks on PRs; broken code can be merged without detection</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No CI/CD pipeline</div>
-                            <p>No automated validation on push/PR — broken code reaches production unchecked</p>
+                            <div class="item-description">Zero test coverage — no test files exist</div>
+                            <p>Prediction logic, Flask routing, and gunicorn config are entirely untested</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No security scanning or dependency auditing</div>
+                            <p>Vulnerable dependencies (Flask, gunicorn) can ship undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">No Dockerfile or container build definition</div>
-                            <p>Image build relies entirely on S2I builder — no local reproducibility, no vulnerability scanning possible</p>
+                        <li class="item-card medium">
+                            <div class="item-description">No container image definition or testing</div>
+                            <p>S2I builds are opaque; no local reproducibility or image validation</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No dependency pinning</div>
-                            <p>requirements.txt lists Flask and gunicorn without versions — builds are non-reproducible</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">1 hour</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No security scanning</div>
-                            <p>No dependency audit, no SAST, no secret detection — vulnerabilities accumulate silently</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No code quality tooling</div>
-                            <p>No linter, no formatter, no type checking — code quality relies entirely on manual review</p>
+                            <div class="item-description">Potential JSON injection in prediction endpoint</div>
+                            <p>wsgi.py uses json.loads on raw request data without validation or error handling</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
@@ -472,35 +464,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Pin dependency versions in requirements.txt</div>
-                            <p>Reproducible builds, protection against breaking upstream changes</p>
+                            <div class="item-description">Add a GitHub Actions CI workflow with basic linting</div>
+                            <p>Catch syntax errors and style issues on every PR</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add pytest with a unit test for the predict function</div>
+                            <p>Establish test infrastructure and catch regressions in prediction logic</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add Dependabot for dependency updates</div>
+                            <p>Automated security patches for Flask and gunicorn</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add a basic pytest unit test for the predict function</div>
-                            <p>Establishes test infrastructure and catches prediction regressions</p>
+                            <div class="item-description">Pin dependency versions in requirements.txt</div>
+                            <p>Reproducible builds; prevent unexpected breakage from upstream releases</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add a GitHub Actions CI workflow with linting and tests</div>
-                            <p>Automated quality gate on every PR</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add a Dockerfile for local builds and scanning</div>
-                            <p>Local reproducibility, enables Trivy/security scanning</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">15 minutes</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +509,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add pytest-based unit tests for prediction.py and wsgi.py (predict function, Flask routes)</li><li>Create a GitHub Actions workflow that runs tests, linting, and security checks on PRs</li><li>Pin all dependency versions in requirements.txt (e.g., Flask==3.0.0, gunicorn==21.2.0)</li></ul>
+                            <ul><li>Create a GitHub Actions CI pipeline with linting (ruff/flake8), testing (pytest), and dependency scanning</li><li>Add unit tests for prediction.py and wsgi.py Flask routes</li><li>Pin dependency versions in requirements.txt (Flask, gunicorn)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add a Dockerfile to enable local container builds, vulnerability scanning, and image testing</li><li>Add ruff or flake8 linting configuration</li><li>Add Trivy or pip-audit for dependency vulnerability scanning</li></ul>
+                            <ul><li>Add a Dockerfile/Containerfile for local S2I image builds and testing</li><li>Add input validation and error handling to the /predictions endpoint</li><li>Integrate Trivy or Snyk for container/dependency vulnerability scanning</li><li>Add codecov integration with a minimum coverage threshold</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Create .claude/rules/ with test automation guidance for AI agents</li><li>Add pre-commit hooks for formatting and linting</li><li>Add integration tests that start Flask and hit endpoints automatically</li></ul>
+                            <ul><li>Create agent rules (.claude/rules/) for test patterns and contribution guidelines</li><li>Add pre-commit hooks for formatting and linting</li><li>Add integration tests that exercise the Flask app end-to-end with test client</li><li>Add a Makefile with standard targets (test, lint, build, run)</li></ul>
                         </div>
                     </div>
                 </div>

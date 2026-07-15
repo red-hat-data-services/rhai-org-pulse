@@ -1,459 +1,386 @@
 ---
 repository: "red-hat-data-services/llm-d-routing-sidecar"
-overall_score: 3.9
+overall_score: 5.4
 scorecard:
   - dimension: "Unit Tests"
-    score: 5.0
-    status: "Ginkgo/Gomega framework with tests for proxy forwarding, NIXL v1/v2 connectors, and SSRF allowlist. LMCache connector, TLS, errors, and signals have no tests."
+    score: 6.0
+    status: "Ginkgo/Gomega tests cover proxy routing and SSRF allowlist; connector_lmcache and errors.go untested"
   - dimension: "Integration/E2E"
-    score: 3.0
-    status: "Kind-based E2E infrastructure exists but tests only verify pod status. Not automated in CI."
+    score: 4.0
+    status: "E2E scaffold exists with Kind config but only validates pod-is-Running; no request-level E2E"
   - dimension: "Build Integration"
     score: 3.0
-    status: "No PR-time Docker build in GitHub CI. Tekton PR build is comment-triggered only (/build-konflux)."
+    status: "No PR-time Docker build; Konflux build is comment-triggered, not automatic; CGO_ENABLED mismatch between Dockerfiles"
   - dimension: "Image Testing"
     score: 2.0
-    status: "Trivy scan on release only. No runtime validation, no image startup testing, no Testcontainers."
+    status: "No image startup or runtime validation; Trivy scan runs only on release, not on PRs"
   - dimension: "Coverage Tracking"
     score: 1.0
-    status: "No coverage generation, no codecov/coveralls integration, no thresholds, no PR reporting."
+    status: "No coverage tool integration; no coverage reports generated or enforced"
   - dimension: "CI/CD Automation"
     score: 6.0
-    status: "PR workflow runs lint + unit tests with Go caching. Strong Tekton push pipeline with 8 security scans. No concurrency control on PR workflow."
+    status: "PR workflow runs lint + unit tests; lacks concurrency control, caching strategy, and E2E automation"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no AGENTS.md, no .claude/ directory. Zero AI agent test guidance."
+    status: "No CLAUDE.md, .claude/ directory, or agent rules of any kind"
 critical_gaps:
-  - title: "No test coverage tracking"
-    impact: "Cannot measure or enforce code coverage. Regressions can be introduced without visibility."
+  - title: "No code coverage tracking or enforcement"
+    impact: "Impossible to know which code paths are tested; regressions go undetected"
+    severity: "HIGH"
+    effort: "2-4 hours"
+  - title: "Trivy security scanning only on release, not PRs"
+    impact: "Vulnerabilities introduced in PRs are not caught until after merge and release"
+    severity: "HIGH"
+    effort: "1-2 hours"
+  - title: "No PR-time Docker image build validation"
+    impact: "Dockerfile changes (incl. CGO_ENABLED=0 vs =1 mismatch) discovered only post-merge in Konflux"
     severity: "HIGH"
     effort: "2-4 hours"
   - title: "LMCache connector has zero test coverage"
-    impact: "Entire P/D protocol path (connector_lmcache.go, 88 lines) is untested. Bugs ship silently."
+    impact: "88 lines of production proxy logic with no tests; regressions are silent"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "E2E tests only verify pod status"
-    impact: "No functional validation of the sidecar proxy behavior in a real cluster. Critical integration bugs (routing, TLS, SSRF) not caught."
+  - title: "E2E tests are non-functional (only check pod Running status)"
+    impact: "No end-to-end validation of request routing, prefill/decode flow, or TLS behavior"
     severity: "HIGH"
-    effort: "8-16 hours"
-  - title: "No PR-time Docker image build validation"
-    impact: "Dockerfile/Dockerfile.konflux divergence (CGO_ENABLED=0 vs 1, different base images) not caught until post-merge Konflux build."
+    effort: "8-12 hours"
+  - title: "CGO_ENABLED mismatch between Dockerfile (=0) and Dockerfile.konflux (=1)"
+    impact: "Potential runtime binary incompatibility between dev and production builds"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "Trivy/security scanning absent from PR workflow"
-    impact: "Vulnerabilities discovered only after merge in Tekton push pipeline. No shift-left security."
-    severity: "MEDIUM"
-    effort: "1-2 hours"
-  - title: "No agent rules for AI-assisted development"
-    impact: "AI agents generating code or tests have no project-specific guidance. Inconsistent patterns, missed testing requirements."
-    severity: "MEDIUM"
-    effort: "2-4 hours"
+    effort: "1 hour"
 quick_wins:
-  - title: "Add coverage generation to make test"
+  - title: "Add Codecov/Coveralls integration with coverage threshold"
+    effort: "2-4 hours"
+    impact: "Immediately surface untested code paths; enforce coverage baseline on PRs"
+  - title: "Move Trivy scan from release workflow to PR workflow"
     effort: "1-2 hours"
-    impact: "Generate coverage profiles enabling codecov integration and visibility into test gaps."
-  - title: "Add codecov integration to PR workflow"
-    effort: "2-3 hours"
-    impact: "Automated coverage reporting on every PR. Catch coverage regressions before merge."
+    impact: "Catch vulnerabilities before merge; already have the trivy-scan action"
   - title: "Add Docker build step to PR workflow"
     effort: "1-2 hours"
-    impact: "Validate both Dockerfile and Dockerfile.konflux build successfully on every PR."
-  - title: "Move Trivy scan to PR workflow"
-    effort: "1 hour"
-    impact: "Shift-left security scanning. Catch vulnerabilities before merge."
+    impact: "Catch Dockerfile build failures on PRs instead of post-merge in Konflux"
   - title: "Add concurrency control to PR workflow"
     effort: "30 minutes"
-    impact: "Cancel stale CI runs when new commits are pushed. Save CI resources."
-  - title: "Write unit tests for LMCache connector"
+    impact: "Prevent redundant CI runs on rapid pushes; save CI minutes"
+  - title: "Fix CGO_ENABLED mismatch between Dockerfiles"
+    effort: "30 minutes"
+    impact: "Eliminate a class of production-only runtime failures"
+  - title: "Add tests for connector_lmcache.go"
     effort: "3-4 hours"
-    impact: "Cover an entire untested P/D protocol path (88 lines). Follow existing NIXL test patterns."
+    impact: "Cover 88 lines of currently untested proxy routing logic"
 recommendations:
   priority_0:
-    - "Add coverage generation (ginkgo --cover) and codecov integration to enforce minimum coverage thresholds"
-    - "Write unit tests for connector_lmcache.go following the existing NIXL v1/v2 test patterns"
-    - "Add Docker image build validation to PR workflow (both Dockerfile and Dockerfile.konflux)"
-    - "Move Trivy scanning from release-only to PR workflow for shift-left security"
+    - "Add coverage tracking (Codecov) with minimum threshold enforcement (e.g., 60%)"
+    - "Move Trivy scanning to PR workflow to catch vulnerabilities pre-merge"
+    - "Fix CGO_ENABLED=0 vs CGO_ENABLED=1 mismatch between Dockerfile and Dockerfile.konflux"
+    - "Add PR-time Docker build validation step"
   priority_1:
-    - "Expand E2E tests beyond pod-status check to validate proxy routing, prefill/decode handoff, TLS, and SSRF protection"
-    - "Add unit tests for tls.go (certificate generation), errors.go (error response formatting), and status_response_writer.go"
-    - "Automate Tekton PR build (remove comment-trigger requirement) or add Konflux build simulation to GitHub CI"
-    - "Create comprehensive agent rules (.claude/rules/) for test automation guidance"
+    - "Write unit tests for connector_lmcache.go (currently 0% coverage on 88 LoC)"
+    - "Expand E2E tests beyond pod-Running check to validate actual request routing"
+    - "Add SSRF protection integration tests with real InferencePool resources"
+    - "Add concurrency control and caching optimization to PR workflow"
   priority_2:
-    - "Add secret detection scanning (gitleaks or trufflehog) to PR workflow"
-    - "Add integration tests using Testcontainers for sidecar container runtime validation"
-    - "Add performance/load testing for the reverse proxy under concurrent prefill/decode requests"
-    - "Consider adding multi-architecture build validation in PR workflow"
+    - "Create .claude/ agent rules for test patterns and standards"
+    - "Add CodeQL/SAST workflow for static security analysis"
+    - "Add error response testing for edge cases (malformed JSON, connection failures)"
+    - "Add TLS certificate rotation and mTLS integration tests"
 ---
 
 # Quality Analysis: llm-d-routing-sidecar
 
 ## Executive Summary
 
-- **Overall Score: 3.9/10**
-- **Repository Type**: Go reverse-proxy sidecar for disaggregated LLM inference (prefill/decode)
-- **Primary Language**: Go 1.24, Ginkgo v2 / Gomega testing framework
-- **Key Strengths**: Solid linting configuration (18+ golangci-lint rules), pre-commit hooks, comprehensive Tekton push pipeline with 8 security scan stages, well-structured proxy code with SSRF protection
-- **Critical Gaps**: No coverage tracking, LMCache connector untested, E2E tests are skeletal, no PR-time image build validation, security scanning only post-merge
-- **Agent Rules Status**: Missing - no CLAUDE.md, AGENTS.md, or .claude/ directory
+- **Overall Score: 5.4/10**
+- **Repository Type**: Go reverse proxy sidecar for LLM prefill/decode disaggregation
+- **Primary Language**: Go 1.24 with Ginkgo/Gomega test framework
+- **Key Strengths**: Good unit test patterns for core proxy routing; solid golangci-lint config with 20+ linters; pre-commit hooks in place; multi-arch Konflux build pipeline; SSRF protection with allowlist feature
+- **Critical Gaps**: No coverage tracking at all; Trivy only on releases; no PR-time Docker build; LMCache connector entirely untested; E2E tests are essentially stubs; CGO_ENABLED mismatch between Dockerfiles
+- **Agent Rules Status**: Missing — no CLAUDE.md, .claude/ directory, or AI agent guidance
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 5.0/10 | Ginkgo/Gomega tests for proxy, NIXL v1/v2, allowlist. LMCache, TLS, errors untested. |
-| Integration/E2E | 3.0/10 | Kind infrastructure exists, but tests only check pod status. Not in CI. |
-| **Build Integration** | **3.0/10** | **No PR-time Docker build. Tekton PR requires `/build-konflux` comment trigger.** |
-| Image Testing | 2.0/10 | Trivy on release only. No runtime validation or startup testing. |
-| Coverage Tracking | 1.0/10 | Zero coverage infrastructure. No generation, no reporting, no thresholds. |
-| CI/CD Automation | 6.0/10 | PR runs lint + test with Go caching. Strong Tekton push pipeline. No concurrency control. |
-| Agent Rules | 0.0/10 | No AI agent rules, no test automation guidance, no .claude/ directory. |
+| Unit Tests | 6.0/10 | Ginkgo/Gomega tests cover proxy routing (NIXL v1/v2) and SSRF allowlist; connector_lmcache untested |
+| Integration/E2E | 4.0/10 | E2E scaffold with Kind config exists but only validates pod-is-Running status |
+| **Build Integration** | **3.0/10** | **No PR-time Docker build; Konflux is comment-triggered; CGO_ENABLED mismatch** |
+| Image Testing | 2.0/10 | No image startup or runtime validation; Trivy only on release |
+| Coverage Tracking | 1.0/10 | No coverage tool, no reports, no enforcement |
+| CI/CD Automation | 6.0/10 | PR workflow runs lint + tests; no concurrency control or E2E automation |
+| Agent Rules | 0.0/10 | No agent rules or test automation guidance |
 
 ## Critical Gaps
 
-### 1. No Test Coverage Tracking
-- **Impact**: Cannot measure code coverage or catch regressions. Unknown how much of the codebase is exercised by tests.
+### 1. No Code Coverage Tracking or Enforcement
+- **Impact**: Cannot determine which code paths are tested; no way to detect coverage regressions
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: The `make test` target runs `ginkgo -v ./internal/...` without `--cover` or `--coverprofile`. No codecov.yml, no .coveragerc, no coverage threshold enforcement. PRs merge with zero visibility into coverage impact.
+- **Details**: No `.codecov.yml`, no Coveralls integration, `go test` does not generate coverage profiles. The `make test` target runs `ginkgo -v ./internal/...` without `-coverprofile`.
 
-### 2. LMCache Connector Has Zero Test Coverage
-- **Impact**: The entire LMCache P/D protocol path (`connector_lmcache.go`, 88 lines) ships without any test validation. Bugs in this connector would reach production undetected.
+### 2. Trivy Security Scanning Only on Release
+- **Impact**: Vulnerabilities introduced in PR dependencies are not caught until after merge and release tagging
+- **Severity**: HIGH
+- **Effort**: 1-2 hours
+- **Details**: The `trivy-scan` composite action already exists at `.github/actions/trivy-scan/`, but it's only referenced in `ci-release.yaml`. Simply adding it to `ci-pr-checks.yaml` after the build step would close this gap.
+
+### 3. No PR-Time Docker Image Build Validation
+- **Impact**: Dockerfile syntax errors, dependency issues, and build-arg mismatches are only caught post-merge in Konflux
+- **Severity**: HIGH
+- **Effort**: 2-4 hours
+- **Details**: The PR workflow (`ci-pr-checks.yaml`) only runs lint and Go tests. There is no step that validates `docker build` succeeds. The Konflux pipeline (`.tekton/odh-llm-d-routing-sidecar-pull-request.yaml`) is triggered by `/build-konflux` comment, not automatically.
+
+### 4. CGO_ENABLED Mismatch Between Dockerfiles
+- **Impact**: `Dockerfile` builds with `CGO_ENABLED=0` (static binary, no C deps), while `Dockerfile.konflux` builds with `CGO_ENABLED=1` (dynamic linking, requires C libraries at runtime). This can cause production-only binary incompatibility.
+- **Severity**: HIGH
+- **Effort**: 1 hour
+- **Details**: The `Dockerfile.konflux` also uses a different base image (`ubi9/ubi:latest` vs `ubi9/ubi-micro:latest`) and adds `-mod=mod`, so these differences are intentional but undocumented. The CGO_ENABLED difference is likely a bug.
+
+### 5. LMCache Connector Has Zero Test Coverage
+- **Impact**: 88 lines of production proxy routing logic for the LMCache P/D protocol have no tests; any regression is silent
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: NIXL v1 and v2 connectors both have dedicated test files with thorough assertions. The LMCache connector follows a similar pattern (read body, modify, forward to prefiller, then decoder) but has zero test coverage. The existing mock infrastructure (`test/mock/chat_completions_handler.go`) supports this connector type and could be reused.
+- **Details**: `connector_lmcache.go` implements the LMCache protocol but has no corresponding test file. Both `connector_nixl.go` (tested via `proxy_test.go`) and `connector_nixlv2.go` (tested via `connector_nixlv2_test.go`) have coverage, but LMCache does not.
 
-### 3. E2E Tests Only Verify Pod Status
-- **Impact**: No functional E2E validation of the sidecar's core behavior (request routing, prefill/decode handoff, protocol negotiation, TLS, SSRF protection). Critical integration bugs not caught.
+### 6. E2E Tests Are Non-Functional
+- **Impact**: No validation of actual request routing, prefill/decode flow, TLS termination, or SSRF protection in a real cluster
 - **Severity**: HIGH
-- **Effort**: 8-16 hours
-- **Details**: `test/e2e/e2e_test.go` contains a single test case that checks if a qwen pod reaches "Running" status. No HTTP requests are made to the sidecar, no proxy behavior is validated. The Kind cluster infrastructure (kustomize overlays, RBAC configs, gateway configs) is in place but underutilized.
-
-### 4. No PR-Time Docker Image Build Validation
-- **Impact**: The two Dockerfiles diverge significantly (CGO_ENABLED=0 vs CGO_ENABLED=1, ubi9/ubi-micro vs ubi9/ubi base images, `go build` vs `go build -mod=mod`). Build failures discovered only post-merge.
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: `ci-pr-checks.yaml` runs lint and test only. `ci-release.yaml` builds the image only on tag/release. The Tekton PR pipeline (`odh-llm-d-routing-sidecar-pull-request.yaml`) requires a `/build-konflux` comment to trigger. This means a PR can merge with a broken Dockerfile.
-
-### 5. Security Scanning Absent from PR Workflow
-- **Impact**: Vulnerabilities in dependencies or base images are only discovered after merge, in the Tekton push pipeline. No shift-left security.
-- **Severity**: MEDIUM
-- **Effort**: 1-2 hours
-- **Details**: The Trivy composite action exists at `.github/actions/trivy-scan/` but is only used in `ci-release.yaml`. The comprehensive security scanning (Clair, Snyk, Coverity, ClamAV, shell-check, unicode-check, RPM signature) runs only in the Tekton push pipeline.
-
-### 6. No Agent Rules for AI-Assisted Development
-- **Impact**: AI agents generating code or tests have no project-specific patterns, testing requirements, or quality gates to follow.
-- **Severity**: MEDIUM
-- **Effort**: 2-4 hours
-- **Details**: No `CLAUDE.md`, `AGENTS.md`, or `.claude/` directory. AI agents would not know about the Ginkgo/Gomega test patterns, the mock infrastructure, the connector protocol patterns, or SSRF protection testing requirements.
+- **Effort**: 8-12 hours
+- **Details**: `test/e2e/e2e_test.go` only checks that the Qwen pod reaches `Running` status. It does not send any HTTP requests through the sidecar proxy. The test infrastructure (Kind config, Kustomize overlays, mock server configs) exists but is not exercised.
 
 ## Quick Wins
 
-### 1. Add Coverage Generation to `make test` (1-2 hours)
-```makefile
-test: ## Run tests with coverage
-	@printf "\033[33;1m==== Running tests ====\033[0m\n"
-	go install github.com/onsi/ginkgo/v2/ginkgo@latest
-	ginkgo -v --cover --coverprofile=coverage.out ./internal/...
-	go tool cover -func=coverage.out
-```
+### 1. Add Codecov Integration with Coverage Threshold
+- **Effort**: 2-4 hours
+- **Impact**: Immediately reveals untested code paths and blocks PRs that drop coverage
+- **Implementation**:
+  ```yaml
+  # In ci-pr-checks.yaml, replace the test step:
+  - name: Run go test with coverage
+    run: |
+      go install github.com/onsi/ginkgo/v2/ginkgo@latest
+      ginkgo -v --coverprofile=coverage.out ./internal/...
+  
+  - name: Upload coverage to Codecov
+    uses: codecov/codecov-action@v4
+    with:
+      files: coverage.out
+      token: ${{ secrets.CODECOV_TOKEN }}
+  ```
 
-### 2. Add Codecov to PR Workflow (2-3 hours)
-```yaml
-      - name: Run go test with coverage
-        run: make test
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          files: coverage.out
-          fail_ci_if_error: true
-```
+### 2. Move Trivy Scan to PR Workflow
+- **Effort**: 1-2 hours
+- **Impact**: Catches security vulnerabilities before merge
+- **Implementation**: Add after a Docker build step in `ci-pr-checks.yaml`:
+  ```yaml
+  - name: Build test image
+    run: docker build -t test-image:pr .
+  
+  - name: Run Trivy scan
+    uses: ./.github/actions/trivy-scan
+    with:
+      image: test-image:pr
+  ```
 
-### 3. Add Docker Build to PR Workflow (1-2 hours)
-```yaml
-      - name: Build Docker image (dev)
-        run: docker build -t test-dev .
-      - name: Build Docker image (Konflux)
-        run: docker build -f Dockerfile.konflux -t test-konflux .
-```
+### 3. Add Docker Build Step to PR Workflow
+- **Effort**: 1-2 hours
+- **Impact**: Catches Dockerfile issues before merge
+- **Implementation**:
+  ```yaml
+  - name: Build Docker image (validation only)
+    run: docker build -t validation:test .
+  ```
 
-### 4. Move Trivy to PR Workflow (1 hour)
-```yaml
-      - name: Build test image
-        run: docker build -t sidecar-test .
-      - name: Run Trivy scan
-        uses: ./.github/actions/trivy-scan
-        with:
-          image: sidecar-test
-```
+### 4. Add Concurrency Control to PR Workflow
+- **Effort**: 30 minutes
+- **Impact**: Prevents redundant CI runs when pushing rapid updates to a PR
+- **Implementation**:
+  ```yaml
+  concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+    cancel-in-progress: true
+  ```
 
-### 5. Add Concurrency Control (30 minutes)
-```yaml
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-```
-
-### 6. Write LMCache Connector Tests (3-4 hours)
-Follow the existing pattern in `connector_nixlv2_test.go`:
-- Create `connector_lmcache_test.go`
-- Test prefill request with max_tokens=1 modification
-- Test decode request with original body forwarding
-- Test error handling for malformed requests and prefiller failures
+### 5. Fix CGO_ENABLED Mismatch
+- **Effort**: 30 minutes
+- **Impact**: Eliminates production-only binary failures
+- **Implementation**: Align `Dockerfile.konflux` to use `CGO_ENABLED=0` (or document why `CGO_ENABLED=1` is intentional for Konflux builds).
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**GitHub Actions Workflows:**
+**Workflows Found**: 2
+- `ci-pr-checks.yaml` — PR-triggered: lint (golangci-lint v2.1.6) + unit tests + markdown link checking
+- `ci-release.yaml` — Tag/release-triggered: Docker build, push to GHCR, Trivy scan
 
-| Workflow | Trigger | Steps |
-|----------|---------|-------|
-| `ci-pr-checks.yaml` | PR to main | Checkout, Go setup (1.24, cached), markdown link checker, golangci-lint v2.1.6, `make test` |
-| `ci-release.yaml` | Tag push / release published | Checkout, Docker build+push (ghcr.io/llm-d), Trivy scan |
+**Strengths**:
+- Go module cache via `actions/setup-go@v5` with `cache-dependency-path`
+- Custom composite actions for reusable build/test/scan steps
+- Markdown link checker for documentation quality
+- Multi-arch Docker builds (amd64 + arm64) on release
 
-**Composite Actions:** `docker-build-and-push`, `go-test`, `markdown-link-checker`, `push-image`, `trivy-scan`
-
-**Tekton/Konflux Pipelines:**
-
-| Pipeline | Trigger | Key Tasks |
-|----------|---------|-----------|
-| `odh-llm-d-routing-sidecar-pull-request.yaml` | `/build-konflux` comment on PR | Multi-arch build (x86_64 + arm64), hermetic, go mod prefetch |
-| `llm-d-routing-sidecar-push.yaml` | Push to release-0.3 | Full build + 8 security scans (Clair, Snyk, Coverity, ClamAV, shell-check, unicode-check, RPM signature, deprecated base image) + SBOM |
-
-**Gaps:**
-- No concurrency control on PR workflow
-- No E2E tests in any CI pipeline
-- No image build on PR in GitHub CI
-- Tekton PR build requires manual trigger
-- No notification/alerting on GitHub CI failures (Tekton has Slack notifications)
+**Gaps**:
+- No concurrency control on PR workflow — redundant runs on rapid pushes
+- No E2E test automation in any workflow
+- No Docker build validation on PRs
+- No Trivy on PRs (only release)
+- No CodeQL or SAST workflow
+- Konflux pipeline is comment-triggered (`/build-konflux`), not automatic
 
 ### Test Coverage
 
-**Framework**: Ginkgo v2 + Gomega (BDD-style)
+**Test Framework**: Ginkgo v2 + Gomega (BDD-style)
 
-**Test File Inventory:**
+**Unit Tests** (4 test files, 545 test LoC):
+- `proxy_test.go` (257 lines) — Tests reverse proxy routing for NIXL V1 connector: request forwarding without prefill header (10 table-driven entries covering 5 paths × secure/insecure), and prefill+decode flow with proper header assertions
+- `connector_nixlv2_test.go` (196 lines) — Tests NIXL V2 connector: kv_transfer_params field structure, backward compatibility, and decode forwarding
+- `allowlist_test.go` (92 lines) — Tests SSRF allowlist validation: enabled/disabled states, host:port parsing, IPv6, and negative cases
+- `proxy_suite_test.go` (28 lines) — Ginkgo bootstrap
 
-| Test File | Source File | Lines | What's Tested |
-|-----------|------------|-------|---------------|
-| `proxy_test.go` | `proxy.go`, `chat_completions.go`, `connector_nixl.go` | 257 | Reverse proxy forwarding across 5 paths (chat completions, completions, embeddings, score, healthz) with both secure and insecure modes. NIXL v1 prefill/decode handoff. |
-| `connector_nixlv2_test.go` | `connector_nixlv2.go` | 196 | NIXL v2 protocol with kv_transfer_params structure. Backward-compatible and standard header behaviors. |
-| `allowlist_test.go` | `allowlist.go` | 92 | SSRF protection: disabled mode (allow all), enabled mode (allowlist enforcement), host:port parsing, IPv6 support. |
-| `proxy_suite_test.go` | (suite setup) | 28 | Ginkgo suite registration. |
+**E2E Tests** (1 test file, 90 lines):
+- `e2e_test.go` — Only validates pod reaches Running status; no HTTP request testing
+- Kind configuration exists at `test/e2e/kind-config.yaml`
+- Kustomize overlays for Kind and llm-d deployment exist
 
-**Test-to-Code Ratio**: ~573 test lines / ~1,498 source lines = **0.38** (below the 0.5+ target for critical infrastructure)
+**Test Helpers**:
+- `test/mock/chat_completions_handler.go` (148 lines) — Mock prefill/decode HTTP handlers
+- `test/mock/generic_handler.go` (42 lines) — Generic request capture handler
+- `test/utils/utils.go` (57 lines) — Command execution helper
 
-**Untested Source Files:**
+**Test-to-Code Ratio**: 694 test LoC / 1817 source LoC = **0.38** (below 0.5 target)
 
-| File | Lines | Risk |
-|------|-------|------|
-| `connector_lmcache.go` | 88 | **HIGH** - Entire P/D protocol path untested |
-| `errors.go` | 78 | MEDIUM - Error response formatting (tested indirectly) |
-| `tls.go` | 72 | MEDIUM - Self-signed certificate generation |
-| `status_response_writer.go` | 47 | LOW - Simple buffered writer (tested indirectly via connector tests) |
-| `main.go` | 109 | LOW - CLI entry point with flag parsing |
-| `internal/signals/` | ~30 | LOW - OS signal handling |
-
-**Mock Infrastructure**: Well-designed mocks in `test/mock/`:
-- `chat_completions_handler.go` - Simulates prefill and decode backends, supports all connector types
-- `generic_handler.go` - Generic HTTP handler for testing
+**Untested Source Files**:
+- `connector_lmcache.go` (88 lines) — Entire LMCache protocol untested
+- `errors.go` (78 lines) — Error response helpers untested
+- `chat_completions.go` (58 lines) — Chat completions handler untested
+- `status_response_writer.go` (47 lines) — Buffered response writer untested
+- `tls.go` (72 lines) — TLS certificate generation/loading untested
+- `allowlist.go` (386 lines) — Kubernetes watcher logic untested (only the validator is tested)
 
 ### Code Quality
 
-**Linting (`.golangci.yml`)**: Version 2 config with 18 linters enabled:
-- Code correctness: `govet`, `errcheck`, `ineffassign`, `unused`, `unconvert`
-- Performance: `perfsprint`, `prealloc`, `makezero`
-- Style: `goimports`, `gofmt`, `goconst`, `nakedret`
-- Go-specific: `copyloopvar`, `durationcheck`, `fatcontext`, `loggercheck`
-- Domain-specific: `ginkgolinter` (validates Ginkgo/Gomega usage)
-- Text: `dupword`, `misspell`
-- Design: `revive`, `gocritic`, `unparam`
+**Linting**: Strong configuration
+- `.golangci.yml` (v2 format) with 20+ linters enabled
+- Includes: `errcheck`, `govet`, `revive`, `ineffassign`, `unused`, `ginkgolinter`, `misspell`, `perfsprint`, `goconst`, `nakedret`, `prealloc`, `unparam`
+- Formatters: `goimports`, `gofmt`
+- 5-minute timeout, parallel runners allowed
 
-**Pre-commit Hooks (`.pre-commit-config.yaml`)**:
-- `trailing-whitespace`, `end-of-file-fixer`, `check-yaml` (pre-commit-hooks v5.0.0)
-- `go-fmt`, `golangci-lint` (pre-commit-golang v0.5.1)
+**Pre-commit Hooks**: Present
+- `.pre-commit-config.yaml` with:
+  - `trailing-whitespace`, `end-of-file-fixer`, `check-yaml` (pre-commit-hooks v5.0.0)
+  - `go-fmt`, `golangci-lint` (pre-commit-golang v0.5.1)
 
-**Git Hooks**: Custom `hooks/pre-commit` script that runs `make lint` + `make test`. Installed via `make install-hooks` (`git config core.hooksPath hooks`).
-
-**Strengths**: Comprehensive linting with Ginkgo-specific linter. Pre-commit hooks enforce quality locally. Good code organization.
+**Static Analysis**: Missing
+- No CodeQL workflow
+- No gosec or Semgrep
+- No secret detection (Gitleaks/TruffleHog)
 
 ### Container Images
 
-**Dockerfiles:**
+**Dockerfiles**: 2
+- `Dockerfile` — Multi-stage, UBI9 go-toolset:1.24 builder → ubi9-micro runtime, CGO_ENABLED=0, non-root user (65532)
+- `Dockerfile.konflux` — Similar but CGO_ENABLED=1, ubi9/ubi:latest runtime (larger), `-mod=mod` flag, RHEL labels
 
-| File | Base Image | CGO | Notes |
-|------|-----------|-----|-------|
-| `Dockerfile` | `ubi9/go-toolset:1.24` → `ubi9/ubi-micro:latest` | Disabled (CGO_ENABLED=0) | Dev/GitHub CI builds. Minimal runtime image. |
-| `Dockerfile.konflux` | `ubi9/go-toolset:1.24@sha256:...` → `ubi9/ubi:latest` | Enabled (CGO_ENABLED=1) | Production Konflux builds. Pinned builder, larger runtime. Uses `go build -mod=mod`. |
+**Build Pipeline**:
+- Makefile supports docker/podman/buildah with multi-arch capability
+- Release workflow uses buildx for linux/amd64,linux/arm64
+- Konflux pipeline builds linux/x86_64 + linux-m2xlarge/arm64
 
-**Divergence Risks:**
-- CGO_ENABLED differs (0 vs 1) - could cause runtime behavior differences
-- Base image differs (ubi-micro vs ubi) - different system libraries available
-- Dockerfile.konflux uses `-mod=mod` flag - module handling differs
-- No automated test validates both build successfully on PRs
+**Security Scanning**:
+- Trivy scan on release images (HIGH, CRITICAL severity)
+- No SBOM generation
+- No image signing/attestation
+- No vulnerability threshold enforcement (scan is informational only)
 
-**Security:**
-- Both run as non-root (USER 65532:65532)
-- Multi-stage builds to minimize attack surface
-- Konflux Dockerfile uses pinned digest for builder image
+**Gaps**:
+- No image startup validation (health check, readiness)
+- No runtime testing (functional request through containerized sidecar)
+- No `.dockerignore` to exclude test/docs from image
+- Trivy version pinned to old v0.44.1
 
 ### Security
 
-**Application-Level Security:**
-- **SSRF Protection**: Built into the proxy via `AllowlistValidator`. Validates prefill target URLs against Kubernetes InferencePool pod allowlist. Well-tested.
-- **TLS Support**: Self-signed cert generation, configurable per-connection TLS for prefiller and decoder. Strong cipher suite configuration (TLS 1.2+, ECDHE only).
+**SSRF Protection**: Implemented (feature-flagged)
+- `AllowlistValidator` watches InferencePool resources and maintains pod IP allowlist
+- Tests cover enabled/disabled states and host:port parsing
+- Proper 403 Forbidden on unauthorized targets
 
-**CI/CD Security Scanning:**
-
-| Tool | Where | When |
-|------|-------|------|
-| Trivy (HIGH, CRITICAL) | GitHub Actions | Release only |
-| Clair vulnerability scan | Tekton push | Post-merge |
-| Snyk SAST | Tekton push | Post-merge |
-| Coverity SAST | Tekton push | Post-merge |
-| ClamAV malware scan | Tekton push | Post-merge |
-| Shell-check | Tekton push | Post-merge |
-| Unicode-check | Tekton push | Post-merge |
-| RPM signature scan | Tekton push | Post-merge |
-| Deprecated base image check | Tekton push | Post-merge |
-| Ecosystem cert preflight | Tekton push | Post-merge |
-
-**Gaps:**
-- No security scanning in GitHub PR workflow
-- No secret detection (gitleaks, trufflehog)
-- No SBOM generation in GitHub CI (only Tekton)
-- All comprehensive scanning is post-merge only
+**Gaps**:
+- No CodeQL/SAST workflow
+- No dependency scanning (e.g., `govulncheck`)
+- No secret detection
+- TLS implementation (`tls.go`) untested
+- Certificate generation for development uses InsecureSkipVerify patterns
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: None - no test type rules exist
+- **Coverage**: No rules for any test type
 - **Quality**: N/A
-- **Gaps**:
-  - No `CLAUDE.md` or `AGENTS.md` in repository root
-  - No `.claude/` directory
-  - No `.claude/rules/` for test creation rules
-  - No documentation of test patterns, mock usage, or connector test conventions
-- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
-  - Unit test patterns (Ginkgo `Describe`/`It`/`BeforeEach`, Gomega matchers)
-  - Mock infrastructure usage (`test/mock/` handlers)
-  - Connector protocol testing patterns (prefill/decode handoff verification)
-  - SSRF protection test patterns
-  - E2E test conventions (Kind cluster, kustomize overlays)
+- **Gaps**: No CLAUDE.md, no `.claude/` directory, no AGENTS.md, no test automation guidance
+- **Recommendation**: Generate rules with `/test-rules-generator` covering:
+  - Unit test patterns (Ginkgo DescribeTable, BeforeEach setup, DeferCleanup)
+  - Mock server patterns (ChatCompletionHandler, GenericHandler)
+  - E2E patterns (Kind cluster setup, kubectl validation)
+  - Test naming conventions and file organization
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add coverage generation and codecov integration** (2-4 hours)
-   - Modify `make test` to generate coverage profiles
-   - Add codecov GitHub Action to PR workflow
-   - Set initial coverage threshold (e.g., 40%) and ratchet upward
-
-2. **Write unit tests for `connector_lmcache.go`** (4-6 hours)
-   - Follow the NIXL v2 test pattern in `connector_nixlv2_test.go`
-   - Test max_tokens modification for prefill request
-   - Test original body forwarding to decoder
-   - Test error handling (invalid JSON, prefiller failures)
-
-3. **Add Docker image build validation to PR workflow** (2-4 hours)
-   - Build both `Dockerfile` and `Dockerfile.konflux` on every PR
-   - Catch divergence-related build failures before merge
-
-4. **Move Trivy scanning to PR workflow** (1 hour)
-   - Reuse existing `.github/actions/trivy-scan` composite action
-   - Scan the dev image built on PR
+1. **Add coverage tracking with Codecov** — Generate coverage profiles in CI, upload to Codecov, set a minimum threshold (suggest 60% initial, increase to 75% over time)
+2. **Move Trivy scanning to PR workflow** — The action already exists; reference it in `ci-pr-checks.yaml` after a Docker build step
+3. **Fix CGO_ENABLED mismatch** — Align Dockerfile.konflux with Dockerfile (CGO_ENABLED=0) or document the intentional difference
+4. **Add PR-time Docker build** — Validate both `Dockerfile` and `Dockerfile.konflux` build successfully on PRs
 
 ### Priority 1 (High Value)
 
-5. **Expand E2E tests to validate proxy behavior** (8-16 hours)
-   - Send actual HTTP requests to the sidecar in the Kind cluster
-   - Test prefill/decode routing with mock vLLM pods
-   - Test SSRF protection with unauthorized prefill targets
-   - Test TLS mode
-   - Automate E2E in CI (at least nightly/periodic)
-
-6. **Add unit tests for untested modules** (4-6 hours)
-   - `tls.go`: Test certificate generation and validation
-   - `errors.go`: Test error response format matches vLLM contract
-   - `status_response_writer.go`: Test buffered write behavior
-
-7. **Automate Tekton PR build or add Konflux simulation** (4-8 hours)
-   - Remove `/build-konflux` comment trigger for auto-run on PR
-   - Or: Add a GitHub Actions step that simulates the Konflux hermetic build
-
-8. **Create agent rules for AI-assisted development** (2-4 hours)
-   - Create `.claude/rules/unit-tests.md` with Ginkgo patterns
-   - Create `.claude/rules/e2e-tests.md` with Kind cluster patterns
-   - Document mock infrastructure usage and connector test conventions
+5. **Write tests for connector_lmcache.go** — Follow the existing pattern in `connector_nixlv2_test.go`; cover max_tokens mutation, prefiller forwarding, and error paths
+6. **Expand E2E tests** — Send actual HTTP requests through the sidecar; validate prefill/decode routing, SSRF protection, and TLS termination
+7. **Add SSRF protection integration tests** — Test with real InferencePool resources and pod watcher in envtest or Kind
+8. **Add concurrency control** — Prevent redundant CI runs with `cancel-in-progress`
+9. **Add govulncheck** — Scan Go dependencies for known vulnerabilities
 
 ### Priority 2 (Nice-to-Have)
 
-9. **Add secret detection** (1-2 hours)
-   - Add gitleaks or trufflehog to PR workflow
-   - Configure for Go project patterns
-
-10. **Add integration tests with Testcontainers** (8-12 hours)
-    - Test sidecar container startup and health endpoint
-    - Test with containerized mock vLLM backends
-    - Validate both Dockerfile variants produce working images
-
-11. **Add performance/load testing** (8-16 hours)
-    - Benchmark proxy latency and throughput under concurrent requests
-    - Test LRU cache behavior under load (prefiller proxy cache, size 16)
-    - Identify bottlenecks in prefill/decode handoff
-
-12. **Add concurrency control to PR workflow** (30 minutes)
-    - Cancel stale CI runs on new pushes to the same PR
+10. **Create agent rules** — `.claude/rules/` with unit test, integration test, and E2E test patterns
+11. **Add CodeQL workflow** — Static analysis for Go security issues
+12. **Add error response tests** — Cover `errors.go` helper functions
+13. **Add TLS tests** — Certificate generation, rotation, mTLS scenarios
+14. **Add .dockerignore** — Exclude test/, docs/, hack/ from image builds
+15. **Update Trivy** — Pin to a recent version instead of v0.44.1
 
 ## Comparison to Gold Standards
 
-| Dimension | llm-d-routing-sidecar | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
-|-----------|----------------------|---------------------|-----------------|---------------|
-| Unit Test Framework | Ginkgo/Gomega | Jest/React Testing Library | pytest | Go testing + Ginkgo |
-| Test-to-Code Ratio | 0.38 | 0.8+ | 0.6+ | 0.7+ |
-| Coverage Tracking | None | Codecov with thresholds | Coverage reports | Codecov enforced |
-| E2E Tests | Skeletal (pod status) | Cypress, comprehensive | Image validation suite | Multi-version E2E |
-| E2E in CI | No | Yes (PR) | Yes (periodic) | Yes (PR + periodic) |
-| PR Image Build | No | Yes | Yes | Yes |
-| Security Scanning (PR) | No | Yes (CodeQL) | Yes (Trivy) | Yes (multiple) |
-| Security Scanning (Post-merge) | 8 Tekton scans | CodeQL + Snyk | Trivy | Multiple tools |
-| Pre-commit Hooks | Yes (lint + test) | Yes | Yes | Yes |
-| Linting | 18 golangci-lint rules | ESLint comprehensive | Linting suite | golangci-lint |
-| Agent Rules | None | Comprehensive | Partial | Partial |
-| Contract Tests | None | Yes | N/A | Yes |
+| Practice | llm-d-routing-sidecar | odh-dashboard | notebooks | kserve |
+|---|---|---|---|---|
+| Unit test coverage | Partial (core proxy only) | Comprehensive | N/A | Comprehensive |
+| Integration/E2E | Stub only | Multi-layer | Image-level | Multi-version |
+| Coverage tracking | None | Codecov enforced | N/A | Codecov enforced |
+| PR Docker build | None | Yes | Yes | Yes |
+| Security scanning | Release-only Trivy | PR + release | Image scanning | PR + release |
+| Pre-commit hooks | Yes | Yes | Limited | Yes |
+| Linter config | Strong (20+ linters) | Strong | N/A | Strong |
+| Agent rules | None | Comprehensive | None | None |
+| SSRF protection | Yes (feature-flagged) | N/A | N/A | N/A |
+| Multi-arch builds | Yes (amd64+arm64) | Yes | Yes | Yes |
+| SBOM/attestation | None | Yes | Yes | Yes |
 
 ## File Paths Reference
 
-### CI/CD
-- `.github/workflows/ci-pr-checks.yaml` - PR lint and test workflow
-- `.github/workflows/ci-release.yaml` - Release build and scan workflow
-- `.github/actions/trivy-scan/action.yml` - Trivy composite action
-- `.github/actions/docker-build-and-push/` - Docker build composite action
-- `.tekton/odh-llm-d-routing-sidecar-pull-request.yaml` - Tekton PR pipeline (comment-triggered)
-- `.tekton/llm-d-routing-sidecar-push.yaml` - Tekton push pipeline (comprehensive)
-
-### Testing
-- `internal/proxy/proxy_test.go` - Proxy forwarding and NIXL v1 tests
-- `internal/proxy/connector_nixlv2_test.go` - NIXL v2 protocol tests
-- `internal/proxy/allowlist_test.go` - SSRF protection tests
-- `internal/proxy/proxy_suite_test.go` - Ginkgo suite setup
-- `test/e2e/e2e_test.go` - E2E test (pod status only)
-- `test/mock/chat_completions_handler.go` - Mock handler infrastructure
-- `test/config/` - Kustomize overlays for Kind and NIXL testing
-
-### Code Quality
-- `.golangci.yml` - 18-linter configuration (v2 format)
-- `.pre-commit-config.yaml` - Pre-commit hooks (whitespace, YAML, go-fmt, lint)
-- `hooks/pre-commit` - Git hook running lint + test
-
-### Container Images
-- `Dockerfile` - Dev/GitHub CI image (CGO_ENABLED=0, ubi-micro)
-- `Dockerfile.konflux` - Production Konflux image (CGO_ENABLED=1, ubi, pinned)
-
-### Source Code (Core)
-- `internal/proxy/proxy.go` - Reverse proxy server (315 lines)
-- `internal/proxy/allowlist.go` - SSRF protection via K8s allowlist (386 lines)
-- `internal/proxy/connector_nixlv2.go` - NIXL v2 P/D protocol (165 lines)
-- `internal/proxy/connector_nixl.go` - NIXL v1 P/D protocol (178 lines)
-- `internal/proxy/connector_lmcache.go` - LMCache P/D protocol (88 lines, **untested**)
-- `cmd/llm-d-routing-sidecar/main.go` - CLI entry point (109 lines)
+| Category | Path | Notes |
+|---|---|---|
+| CI - PR | `.github/workflows/ci-pr-checks.yaml` | Lint + test on PRs |
+| CI - Release | `.github/workflows/ci-release.yaml` | Docker build + Trivy on tags |
+| Tekton/Konflux | `.tekton/odh-llm-d-routing-sidecar-pull-request.yaml` | Comment-triggered PR build |
+| Linter | `.golangci.yml` | 20+ linters, v2 format |
+| Pre-commit | `.pre-commit-config.yaml` | go-fmt, golangci-lint |
+| Dockerfile | `Dockerfile` | CGO_ENABLED=0, ubi-micro |
+| Dockerfile.konflux | `Dockerfile.konflux` | CGO_ENABLED=1, ubi |
+| Unit tests | `internal/proxy/*_test.go` | 4 test files, 545 LoC |
+| E2E tests | `test/e2e/e2e_test.go` | Pod-Running check only |
+| E2E config | `test/config/` | Kind, Kustomize overlays |
+| Mock servers | `test/mock/` | ChatCompletionHandler |
+| Main | `cmd/llm-d-routing-sidecar/main.go` | CLI entrypoint |
+| Core source | `internal/proxy/proxy.go` | 315 LoC, reverse proxy |
+| SSRF | `internal/proxy/allowlist.go` | 386 LoC, pod watcher |
+| Makefile | `Makefile` | Build, test, image targets |

@@ -59,7 +59,7 @@ export function useOverviewData() {
         const m = dropMetrics.value[drop.key]
         if (m?.timeline?.reached_production) {
           if (inWindow) {
-            prodDropsList.push({ productKey, name: drop.name, days: m.timeline.days_to_production })
+            prodDropsList.push({ productKey, name: drop.name, days: m.timeline.days_to_production, date: drop.created_at })
             activeProducts.add(productKey)
           }
           if (m.timeline.days_to_production != null) {
@@ -280,7 +280,7 @@ export function useOverviewData() {
         }
       })
 
-      const rhaiisArtifactsPromise = apiRequest(`${BASE}/artifacts?product_key=rhaiis&environment=production&limit=10`)
+      const rhaiisArtifactsPromise = apiRequest(`${BASE}/artifacts?product_key=rhaiis&environment=production&type=containers&limit=30`)
         .then(data => Array.isArray(data) ? data : [])
         .catch(() => [])
 
@@ -296,8 +296,32 @@ export function useOverviewData() {
       dropMetrics.value = metricsMap
 
       // Phase 3: fetch artifact details + wheels for RHAIIS production artifacts (for graph)
+      // Group by release version, deduplicate by image name, take the latest release
+      const latestReleaseArtifacts = (() => {
+        if (rhaiisArtifactsList.length === 0) return []
+        const byVersion = {}
+        for (const art of rhaiisArtifactsList) {
+          const tag = art.key.split(':').pop() || ''
+          const version = tag.replace(/-\d{8,}$/, '') || tag
+          if (!/^\d+\.\d+/.test(version)) continue
+          if (!byVersion[version]) byVersion[version] = []
+          byVersion[version].push(art)
+        }
+        const groups = Object.entries(byVersion)
+          .map(([v, arts]) => ({ version: v, artifacts: arts, newest: new Date(arts[0].created_at) }))
+          .sort((a, b) => b.newest - a.newest)
+        const latest = groups[0]?.artifacts || []
+        // Deduplicate by image name (keep newest build of each variant)
+        const seen = new Map()
+        for (const art of latest) {
+          const imageName = art.key.split(':')[0]
+          if (!seen.has(imageName)) seen.set(imageName, art)
+        }
+        return [...seen.values()]
+      })()
+
       const detailResults = await Promise.all(
-        rhaiisArtifactsList.slice(0, 5).map(async (art) => {
+        latestReleaseArtifacts.map(async (art) => {
           try {
             const [detail, wheels] = await Promise.all([
               apiRequest(`${BASE}/artifacts/${encodeURIComponent(art.key)}`),

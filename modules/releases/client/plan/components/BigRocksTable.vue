@@ -282,6 +282,9 @@ function handleDeleteClick(event, rock) {
                   :loading="healthLoading"
                   :rockName="rock.name"
                   :releasePhaseMode="releasePhaseMode"
+                  :outcomeKeys="rock.outcomeKeys || []"
+                  :outcomeDescriptions="rock.outcomeDescriptions || {}"
+                  :jiraBaseUrl="jiraBaseUrl"
                 />
               </tr>
             </template>

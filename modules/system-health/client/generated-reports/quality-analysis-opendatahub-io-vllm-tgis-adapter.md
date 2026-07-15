@@ -1,128 +1,140 @@
 ---
 repository: "opendatahub-io/vllm-tgis-adapter"
-overall_score: 6.2
+overall_score: 6.4
 scorecard:
   - dimension: "Unit Tests"
     score: 7.0
-    status: "Good pytest suite covering core modules; decent test-to-code ratio"
+    status: "Good pytest suite with 28 tests covering core modules, parameterized testing, async tests"
   - dimension: "Integration/E2E"
     score: 7.5
-    status: "Live gRPC and HTTP server tests with multi-version vLLM matrix; no dedicated E2E suite"
+    status: "Full gRPC/HTTP server integration tests with multi-version vLLM matrix"
   - dimension: "Build Integration"
     score: 3.0
-    status: "No PR-time container build validation; no Konflux simulation; image built externally in opendatahub-io/vllm"
+    status: "No Dockerfile in repo, no PR-time image build validation, no Konflux simulation"
   - dimension: "Image Testing"
     score: 2.0
-    status: "No Dockerfile in repo; image built externally with no runtime validation in this repo"
+    status: "No container image testing — image built externally in opendatahub-io/vllm repo"
   - dimension: "Coverage Tracking"
     score: 7.5
-    status: "Codecov integration with PR uploads; coverage config in pyproject.toml; no enforcement thresholds"
+    status: "Codecov integration with branch coverage enabled, but no enforcement thresholds"
   - dimension: "CI/CD Automation"
-    score: 7.0
-    status: "Well-structured nox-based CI with caching, concurrency, multi-version matrix; limited to one test workflow"
+    score: 8.0
+    status: "Well-organized workflows with concurrency control, matrix testing, caching, scheduled runs"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory present"
+    status: "No CLAUDE.md, no .claude/ directory, no agent rules for test creation"
 critical_gaps:
-  - title: "No container image build or test in this repository"
-    impact: "Image issues in opendatahub-io/vllm repo not caught here; adapter-level regressions in container context discovered late"
+  - title: "No container image build or testing in this repository"
+    impact: "Image is built externally (opendatahub-io/vllm). No validation that adapter integrates correctly with the vLLM image before merge."
     severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "No security scanning (SAST, dependency, container)"
-    impact: "Vulnerabilities in grpc/protobuf dependencies and adapter code not detected until downstream"
+    effort: "12-16 hours"
+  - title: "No security scanning (SAST, dependency vulnerabilities, secrets)"
+    impact: "Known CVEs in grpcio/protobuf dependencies or leaked secrets could reach production undetected"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No coverage enforcement thresholds"
-    impact: "Coverage can silently regress without blocking PRs"
+  - title: "No codecov enforcement thresholds"
+    impact: "Coverage can silently decrease as new code is merged without adequate tests"
     severity: "MEDIUM"
     effort: "1-2 hours"
+  - title: "No E2E tests against real GPU hardware"
+    impact: "All CI tests run on CPU-only vLLM builds; GPU-specific code paths (CUDA kernels, flash attention) are untested"
+    severity: "HIGH"
+    effort: "40+ hours (requires GPU CI infrastructure)"
   - title: "No agent rules for AI-assisted development"
-    impact: "AI agents lack context on test patterns, coding standards, and project-specific conventions"
-    severity: "MEDIUM"
+    impact: "AI-generated PRs lack project-specific test patterns, gRPC conventions, and quality standards"
+    severity: "LOW"
     effort: "2-3 hours"
 quick_wins:
-  - title: "Add codecov.yml with coverage thresholds"
+  - title: "Add .codecov.yml with coverage thresholds"
     effort: "1 hour"
-    impact: "Prevent silent coverage regression on PRs"
-  - title: "Add Dependabot security alerts or CodeQL scanning"
+    impact: "Prevent coverage regressions on PRs with minimum patch and project targets"
+  - title: "Add Trivy/Snyk dependency scanning to PR workflow"
     effort: "1-2 hours"
-    impact: "Automated vulnerability detection for Python dependencies"
-  - title: "Add mypy to CI (already in dev dependencies)"
-    effort: "1 hour"
-    impact: "Type safety enforcement; mypy already configured in pyproject.toml but not run in CI"
-  - title: "Create basic CLAUDE.md with project conventions"
+    impact: "Catch known CVEs in grpcio, protobuf, and transitive dependencies before merge"
+  - title: "Add CodeQL or Semgrep SAST scanning"
     effort: "1-2 hours"
-    impact: "Enable AI-assisted development with project-specific context"
+    impact: "Detect security anti-patterns in Python code (command injection in setup.py subprocess calls, etc.)"
+  - title: "Create basic agent rules (.claude/rules/)"
+    effort: "2-3 hours"
+    impact: "Guide AI agents on pytest patterns, gRPC test conventions, and fixture usage"
+  - title: "Add gitleaks secret detection pre-commit hook"
+    effort: "30 minutes"
+    impact: "Prevent accidental commit of API keys or tokens"
 recommendations:
   priority_0:
-    - "Add security scanning workflow (CodeQL or Semgrep for SAST, pip-audit for dependency scanning)"
-    - "Add codecov.yml with minimum coverage thresholds (e.g., 70% project, 5% patch minimum)"
+    - "Add security scanning (Trivy for dependencies, CodeQL for SAST) to the PR workflow"
+    - "Create .codecov.yml with project threshold (e.g., 70%) and patch threshold (e.g., 80%)"
   priority_1:
-    - "Add container build smoke test to CI (build and startup check in test workflow)"
-    - "Enable mypy in CI workflow (already configured, just needs nox session activation)"
-    - "Create .claude/rules/ with unit test and integration test guidelines"
+    - "Add integration test that builds and validates the downstream vLLM container image with this adapter installed"
+    - "Expand test coverage for untested modules: validation.py, logits_processors.py, structured_outputs.py, logs.py, scripts.py"
+    - "Add gRPC proto backward-compatibility checks (buf breaking)"
   priority_2:
-    - "Add performance benchmarks for gRPC throughput and latency"
-    - "Add contract tests for protobuf schema compatibility across vLLM versions"
-    - "Add multi-architecture build testing"
+    - "Create agent rules for AI-assisted test generation (.claude/rules/)"
+    - "Add GPU-based E2E test workflow (even if periodic/manual dispatch)"
+    - "Add performance regression benchmarks for inference latency"
+    - "Add mypy to CI (currently available via nox but not run in default CI)"
 ---
 
 # Quality Analysis: vllm-tgis-adapter
 
 ## Executive Summary
 
-- **Overall Score: 6.2/10**
-- **Repository Type**: Python library/adapter (gRPC server adapter for vLLM with TGIS compatibility)
-- **Primary Language**: Python (3.9+)
-- **Framework**: vLLM, gRPC, protobuf
-
-**Key Strengths**: Well-structured test suite using pytest with a sophisticated multi-version vLLM matrix (v0.10.0 through v0.11.2). Strong pre-commit configuration with ruff linting and formatting. Good use of nox for test automation. Codecov integration in CI.
-
-**Critical Gaps**: No container image build or testing in this repository (images built externally in opendatahub-io/vllm). Zero security scanning (no SAST, no dependency scanning, no secret detection). No coverage enforcement thresholds despite Codecov integration. No agent rules for AI-assisted development.
-
-**Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory present.
+- **Overall Score: 6.4/10**
+- **Repository Type**: Python library — vLLM adapter providing TGIS-compatible gRPC server
+- **Primary Language**: Python 3.9+
+- **Frameworks**: vLLM, gRPC, pytest, nox, pre-commit
+- **Key Strengths**: Multi-version vLLM testing matrix, solid unit/integration test suite, Codecov integration, excellent pre-commit hooks, well-structured CI
+- **Critical Gaps**: No security scanning, no container image testing, no coverage enforcement, no agent rules
+- **Agent Rules Status**: Missing — no CLAUDE.md, no `.claude/` directory
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 7.0/10 | Good pytest suite covering core modules; decent test-to-code ratio |
-| Integration/E2E | 7.5/10 | Live gRPC/HTTP server tests with multi-version vLLM matrix |
-| **Build Integration** | **3.0/10** | **No PR-time container build validation; image built externally** |
-| Image Testing | 2.0/10 | No Dockerfile in repo; image built externally with no validation |
-| Coverage Tracking | 7.5/10 | Codecov integration; coverage config present; no enforcement |
-| CI/CD Automation | 7.0/10 | Nox-based CI with caching, concurrency, multi-version matrix |
-| Agent Rules | 0.0/10 | No agent rules present |
+| Unit Tests | 7.0/10 | Good pytest suite (28 tests, 7 test files) with parameterized tests and async support |
+| Integration/E2E | 7.5/10 | Full gRPC/HTTP server integration tests with 5-version vLLM matrix |
+| **Build Integration** | **3.0/10** | **No Dockerfile, no PR-time image validation, external image build** |
+| Image Testing | 2.0/10 | No container image testing — image built in separate repo |
+| Coverage Tracking | 7.5/10 | Codecov integration with branch coverage, but no enforcement thresholds |
+| CI/CD Automation | 8.0/10 | Well-organized with concurrency control, caching, matrix testing |
+| Agent Rules | 0.0/10 | No agent rules, no CLAUDE.md, no test automation guidance |
 
 ## Critical Gaps
 
-### 1. No Container Image Build or Test in Repository
-- **Impact**: The adapter is packaged into container images via the separate `opendatahub-io/vllm` repository. Adapter-level regressions in the container context are not caught in this repo's CI. Configuration drift between the PyPI package and the container image goes undetected.
-- **Severity**: HIGH
-- **Effort**: 8-12 hours
-- **Details**: The Docker image is at `quay.io/opendatahub/vllm` built from `opendatahub-io/vllm`'s `Dockerfile.ubi`. No Dockerfile exists in this repo. No container startup or runtime tests exist.
-
-### 2. No Security Scanning
-- **Impact**: Vulnerabilities in gRPC, protobuf, and other dependencies not detected until downstream builds. No SAST analysis of the Python code. No secret detection for accidental credential commits.
+### 1. No Security Scanning
+- **Impact**: Dependencies like `grpcio`, `protobuf`, `accelerate`, and `requests` could contain known CVEs that reach production undetected
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: Missing CodeQL/Semgrep for SAST. Missing pip-audit/safety for dependency scanning. Missing Gitleaks/TruffleHog for secret detection. The repo handles gRPC TLS certificates and credentials which makes security scanning especially important.
+- **Details**: No Trivy, Snyk, CodeQL, Semgrep, or any SAST/dependency scanning configured. No `.gitleaks.toml` for secret detection. Dependabot covers version updates but doesn't flag security advisories in CI.
 
-### 3. No Coverage Enforcement Thresholds
-- **Impact**: Code coverage can silently regress on any PR. While Codecov uploads exist, there's no `codecov.yml` to enforce minimum project or patch coverage.
+### 2. No Container Image Testing
+- **Impact**: The adapter is shipped as part of the `quay.io/opendatahub/vllm` image built from `opendatahub-io/vllm`. There's no validation in this repo that the adapter correctly integrates with the container build.
+- **Severity**: HIGH
+- **Effort**: 12-16 hours
+- **Details**: No Dockerfile/Containerfile exists in this repo. Image build happens in `opendatahub-io/vllm` using `Dockerfile.ubi`. No PR-time smoke test verifying the adapter installs and starts correctly in the container context.
+
+### 3. No Coverage Enforcement
+- **Impact**: Code coverage can silently regress as new features/fixes are merged
 - **Severity**: MEDIUM
 - **Effort**: 1-2 hours
+- **Details**: Codecov is integrated and uploads results, but no `.codecov.yml` exists to enforce minimum thresholds. The `fail_ci_if_error: true` flag only fails on upload errors, not coverage drops.
 
-### 4. No Agent Rules for AI-Assisted Development
-- **Impact**: AI coding agents cannot leverage project-specific test patterns, conventions, or quality standards when contributing to this repository.
-- **Severity**: MEDIUM
+### 4. CPU-Only Testing
+- **Impact**: GPU-specific code paths (CUDA kernels, flash attention integration, multi-GPU inference) are never tested in CI
+- **Severity**: HIGH
+- **Effort**: 40+ hours (requires GPU CI infrastructure)
+- **Details**: All CI runs use `VLLM_TARGET_DEVICE=cpu` with CPU-compiled vLLM. This is a pragmatic choice given CI constraints but leaves GPU-specific behavior untested.
+
+### 5. Missing Agent Rules
+- **Impact**: AI-assisted development produces inconsistent test patterns and misses project conventions
+- **Severity**: LOW
 - **Effort**: 2-3 hours
+- **Details**: No `.claude/` directory, no `CLAUDE.md`, no test creation rules. Contributors using AI tools won't get guidance on pytest fixtures, gRPC test patterns, or nox session conventions.
 
 ## Quick Wins
 
-### 1. Add codecov.yml with Coverage Thresholds (1 hour)
+### 1. Add `.codecov.yml` with Thresholds (1 hour)
 ```yaml
-# codecov.yml
 coverage:
   status:
     project:
@@ -134,37 +146,51 @@ coverage:
         target: 80%
 ```
 
-### 2. Add CodeQL or pip-audit Security Scanning (1-2 hours)
+### 2. Add Trivy Dependency Scanning (1-2 hours)
 ```yaml
-# .github/workflows/security.yaml
-name: Security
+- name: Run Trivy vulnerability scanner
+  uses: aquasecurity/trivy-action@master
+  with:
+    scan-type: 'fs'
+    scan-ref: '.'
+    severity: 'CRITICAL,HIGH'
+    exit-code: '1'
+```
+
+### 3. Add CodeQL SAST Scanning (1-2 hours)
+Create `.github/workflows/codeql.yml`:
+```yaml
+name: CodeQL
 on:
   push:
     branches: [main]
   pull_request:
   schedule:
-    - cron: "0 6 * * 1"
-
+    - cron: '0 6 * * 1'
 jobs:
-  pip-audit:
+  analyze:
     runs-on: ubuntu-latest
+    permissions:
+      security-events: write
     steps:
-      - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
         with:
-          python-version: "3.12"
-      - run: uv pip install pip-audit
-      - run: pip-audit -r <(uv pip compile pyproject.toml)
+          languages: python
+      - uses: github/codeql-action/analyze@v3
 ```
 
-### 3. Enable mypy in CI (1 hour)
-mypy is already configured in `pyproject.toml` and available as a dev dependency. Add to the nox lint session:
-```bash
-nox --envdir ~/.nox --reuse-venv=yes -v -s lint-${{ matrix.pyv }} -- --mypy
+### 4. Add Gitleaks Secret Detection (30 minutes)
+Add to `.pre-commit-config.yaml`:
+```yaml
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.0
+    hooks:
+      - id: gitleaks
 ```
 
-### 4. Create Basic Agent Rules (1-2 hours)
-Generate using `/test-rules-generator` to create `.claude/rules/` with unit test and integration test patterns specific to this project's pytest + nox setup.
+### 5. Create Basic Agent Rules (2-3 hours)
+Create `.claude/rules/testing.md` with pytest conventions, fixture patterns, and gRPC test utilities documentation. Use `/test-rules-generator` for automated generation.
 
 ## Detailed Findings
 
@@ -173,246 +199,187 @@ Generate using `/test-rules-generator` to create `.claude/rules/` with unit test
 **Workflows (3 total)**:
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `tests.yaml` | push/PR/merge_group/schedule/dispatch | Lint + tests + coverage + build |
-| `release.yaml` | release published / dispatch | Build + publish to PyPI |
+| `tests.yaml` | push/PR/merge_group/schedule/dispatch | Lint + test matrix across 5 vLLM versions |
+| `release.yaml` | release/dispatch | Build and publish to PyPI |
 | `pre-commit-autoupdate.yml` | daily schedule | Auto-update pre-commit hooks |
 
 **Strengths**:
-- Concurrency control with `cancel-in-progress: true` — prevents redundant runs
-- Multi-version vLLM matrix testing (v0.10.0, v0.10.1.1, v0.10.2, v0.11.0, v0.11.2) — excellent forward/backward compatibility
-- Multiple caching layers (uv, nox envs, ccache, HuggingFace hub) — well-optimized build times
-- Nox-based automation provides consistent local and CI execution
-- Merge group support for merge queues
-- Dependabot configured for both GitHub Actions and pip dependencies
-- Weekly scheduled test runs to catch upstream vLLM breakage
+- **Multi-version matrix**: Tests against vLLM v0.10.0, v0.10.1.1, v0.10.2, v0.11.0, v0.11.2 — excellent backward compatibility coverage
+- **Concurrency control**: `cancel-in-progress: true` prevents resource waste on push-during-PR
+- **Aggressive caching**: uv cache, nox envs cache, HuggingFace hub cache, ccache — minimizes build time
+- **Merge group testing**: Validates merge queues before landing
+- **Scheduled weekly runs**: Catches upstream vLLM breakage early
+- **Timeout**: 30-minute timeout prevents hung jobs
 
 **Gaps**:
-- No container build step in PR workflow
 - No security scanning workflow
-- No performance benchmarking
-- mypy type checking not enabled in CI (available but not invoked)
-- Single OS (ubuntu-latest) — no multi-platform testing
+- No container image build/test workflow
+- Build artifact (wheel) not tested for installation correctness
+- No mypy type checking in default CI (only available via `nox -s lint -- --mypy`)
 
 ### Test Coverage
 
-**Test Files (7 test files, ~647 lines of test code)**:
-| File | Lines | Coverage Area |
-|------|-------|---------------|
-| `test_grpc_server.py` | 234 | gRPC generation, streaming, batched, LoRA, guided decoding, request IDs, error handling |
-| `test_tgis_utils.py` | 168 | Argument parsing (env vars, booleans, store actions) |
-| `test_adapters.py` | 117 | LoRA adapter loading, caching, validation |
-| `test_hub.py` | 54 | HuggingFace model weight download and conversion |
-| `test_termination_log.py` | 35 | Server startup failure and termination logging |
-| `test_http_server.py` | 34 | HTTP health check, completions, metrics |
-| `test_init.py` | 5 | Version string existence |
-
-**Test-to-Code Ratio**: ~647 test lines / ~2,799 source lines = **0.23** (adequate for an adapter library)
-
-**Testing Frameworks**:
-- pytest 8.3.5 (primary)
-- pytest-cov 6.0.0 (coverage)
-- pytest-mock 3.14.0 (mocking)
-- pytest-asyncio 0.25.3 (async tests)
-- Custom `GrpcClient` test utility with comprehensive TLS/mTLS support
+**Test Suite Summary**:
+- **8 test files** with **28 test functions** (excluding parameterized expansions)
+- **1,149 lines of test code** vs **2,799 lines of source code** — 41% test-to-code ratio (decent)
+- **Frameworks**: pytest, pytest-cov, pytest-mock, pytest-asyncio
 
 **Test Categories**:
-- **Unit Tests**: `test_tgis_utils.py`, `test_init.py` — pure unit tests with mocking
-- **Integration Tests**: `test_grpc_server.py`, `test_http_server.py`, `test_adapters.py` — spin up real servers in background threads
-- **Data-dependent Tests**: `test_hub.py` — marked with `@pytest.mark.hf_data`, require HuggingFace downloads
-- **Failure Tests**: `test_termination_log.py` — validates error handling paths
+
+| File | Tests | Type | Coverage Area |
+|------|-------|------|---------------|
+| `test_grpc_server.py` | 8 | Integration | Generation, streaming, batching, LoRA, request IDs, error handling, guided decoding |
+| `test_tgis_utils.py` | 7 | Unit | EnvVarArgumentParser for str/bool/int flags, StoreBoolean action |
+| `test_hub.py` | 6 | Unit (HF data) | Weight file download, conversion, hub file listing |
+| `test_http_server.py` | 3 | Integration | Health check, completions endpoint, metrics |
+| `test_adapters.py` | 2 | Unit | LoRA adapter loading and caching |
+| `test_termination_log.py` | 1 | Integration | Startup failure termination logging |
+| `test_init.py` | 1 | Unit | Version check |
 
 **Strengths**:
-- Integration tests start real gRPC and HTTP servers and validate end-to-end
-- Multi-version vLLM compatibility testing with `skipif` markers
-- Parametrized tests for guided decoding (JSON, regex, grammar, choices)
-- Test fixture isolation with random port allocation
-- Proper cleanup of Prometheus metrics registry between tests
+- Full gRPC server integration tests with actual server startup (conftest spawns real servers)
+- Parameterized guided decoding tests covering JSON, JSON Schema, regex, choices, grammar
+- Version-aware test skips (`pytest.mark.skipif(vllm_version >= ...)`)
+- Well-structured test utilities (GrpcClient, wait_until, TaskFailedError)
+- Async test support with pytest-asyncio
 
 **Gaps**:
-- No tests for `validation.py`, `logits_processors.py`, `structured_outputs.py`, `scripts.py`, `logging.py`
-- No negative testing beyond startup failures (no malformed request tests)
-- No TLS/mTLS connection tests (client supports it, but no tests)
-- No concurrent load testing
-- No test for the healthcheck CLI script
+- **validation.py** (144 lines): No dedicated tests for request validation logic
+- **logits_processors.py** (47 lines): No tests for custom logit processing
+- **structured_outputs.py** (38 lines): No dedicated tests
+- **logs.py** (243 lines): No tests for TGISStatLogger
+- **scripts.py** (231 lines): No tests for CLI entrypoints
+- **http.py** (99 lines): Only health check tested, no HTTP-specific unit tests
+- **healthcheck.py** (96 lines): Only tested indirectly through conftest
+- No negative/error path testing for most modules
+- No performance benchmarks
 
 ### Code Quality
 
-**Linting Configuration**: Excellent
-- **Ruff**: Configured with `select = ["ALL"]` (all rules enabled) with deliberate exclusions — very strict
-- **Pre-commit hooks (7 repos, 15+ hooks)**:
-  - `pre-commit-hooks`: large files, case conflicts, merge markers, YAML/JSON/TOML validation
-  - `ruff-pre-commit`: linting + formatting
-  - `codespell`: spelling errors
-  - `language-formatters`: TOML and YAML formatting
-  - `pyupgrade`: Python 3.9+ compatibility
-- **Type checking**: mypy configured in `pyproject.toml` but NOT enforced in CI
-- **Code style**: Consistent, well-structured codebase with proper type annotations
+**Linting — Excellent**:
+- **Ruff**: `select = ["ALL"]` with targeted ignores — comprehensive linting covering ALL categories
+- **Ruff format**: Auto-formatting via pre-commit
+- **Codespell**: Spell checking
+- **pyupgrade**: Python 3.9+ syntax modernization
+- **Pre-commit hooks**: 13 hooks covering large files, merge conflicts, YAML/JSON/TOML validation, trailing whitespace, line endings
 
-**Gaps**:
-- mypy runs only locally (`nox -s lint -- --mypy`), not in CI pipeline
-- No security-focused linters (bandit is covered by ruff's S rules, but no dedicated SAST)
+**Type Checking — Partial**:
+- **mypy** configured in `pyproject.toml` with `check_untyped_defs = false`
+- Not run in default CI — only available via `nox -s lint -- --mypy`
+- Type stubs for protobuf and requests included in dev deps
+
+**Dependency Management**:
+- **Dependabot**: Weekly updates for pip and github-actions
+- **setuptools_scm**: Version derived from git tags
+- **Pinned versions**: Key deps (grpcio, protobuf, prometheus_client, accelerate, hf-transfer) pinned to exact versions
 
 ### Container Images
 
-**Status**: Images are NOT built in this repository.
-
-- The container image lives at `quay.io/opendatahub/vllm` (not `vllm-tgis-adapter`)
-- Built from `Dockerfile.ubi` in the `opendatahub-io/vllm` repository
-- No Dockerfile, Containerfile, or `.dockerignore` exists in this repo
-- No container startup validation
-- No vulnerability scanning
-- No SBOM generation
-
-This is a significant architectural concern — the adapter code is tested as a Python package but never validated in its actual container runtime context within this repo's CI.
+- **No Dockerfile** exists in this repository
+- Image is built externally in `opendatahub-io/vllm` using `Dockerfile.ubi`
+- Available at `quay.io/opendatahub/vllm`
+- No image build validation, runtime testing, vulnerability scanning, or SBOM generation in this repo
+- This creates a gap: adapter changes are merged without verifying container-level integration
 
 ### Security
 
-**Status**: No security tooling configured.
-
-| Security Dimension | Status |
-|-------------------|--------|
-| SAST (CodeQL/Semgrep) | Not configured |
-| Dependency scanning (pip-audit/safety) | Not configured |
-| Secret detection (Gitleaks) | Not configured |
-| Container scanning (Trivy) | Not applicable (no image) |
-| Vulnerability thresholds | Not configured |
-| SBOM generation | Not configured |
-
-**Risk factors**:
-- Handles gRPC TLS/mTLS credentials
-- Uses protobuf code generation
-- Depends on large ML frameworks (vLLM, PyTorch, HuggingFace)
-- Dependabot is configured (partial mitigation for known CVEs)
+- **No SAST scanning** (no CodeQL, gosec, Semgrep, or Bandit)
+- **No dependency vulnerability scanning** (no Trivy, Snyk, or Safety)
+- **No secret detection** (no Gitleaks, TruffleHog)
+- **No SBOM generation**
+- **No image signing/attestation**
+- **Dependabot** provides version updates but not CI-gated security checks
+- `setup.py` uses `subprocess.check_call` for protoc invocation (low risk but flaggable by SAST)
 
 ### Agent Rules (Agentic Flow Quality)
 
-**Status**: Missing
-
-- **CLAUDE.md**: Not present
-- **AGENTS.md**: Not present
-- **.claude/ directory**: Not present
-- **.claude/rules/**: Not present
-- **.claude/skills/**: Not present
-
-**Gaps**:
-- No guidance for AI agents on test creation patterns
-- No documentation of project-specific conventions for automated coding
-- No test quality checklists or standards
-- Missing rules for: unit tests, integration tests, gRPC testing, mock patterns
-
-**Recommendation**: Generate comprehensive rules using `/test-rules-generator` covering:
-- pytest fixture patterns (the `_servers` fixture pattern is complex and unique)
-- gRPC client testing patterns (`GrpcClient` usage)
-- Multi-version vLLM compatibility testing
-- nox session usage for local development
+- **Status**: Missing
+- **Coverage**: None — no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
+- **Quality**: N/A
+- **Gaps**: No test creation rules, no project conventions for AI agents, no gRPC test patterns documented for automated use
+- **Recommendation**: Generate rules with `/test-rules-generator` covering:
+  - pytest fixture conventions (conftest.py patterns)
+  - gRPC test client usage (GrpcClient from utils.py)
+  - Server integration test patterns (_servers fixture)
+  - Nox session conventions
+  - Multi-version vLLM compatibility patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add security scanning workflow**
-   - CodeQL or Semgrep for SAST
-   - pip-audit for dependency vulnerability scanning
-   - Consider secret detection given TLS credential handling
+1. **Add security scanning to PR workflow** — At minimum, add Trivy for dependency scanning and CodeQL for Python SAST. These catch the most impactful issues with minimal setup (2-4 hours).
 
-2. **Add codecov.yml with enforcement thresholds**
-   - Project coverage minimum: 70%
-   - Patch coverage minimum: 80%
-   - Prevents silent regression
+2. **Create `.codecov.yml` with enforcement thresholds** — Set project target ≥70% and patch target ≥80% to prevent coverage regression. The infrastructure is already in place; only configuration is needed (1 hour).
 
 ### Priority 1 (High Value)
 
-3. **Add container build smoke test**
-   - Create a minimal Dockerfile for CI validation
-   - Verify the adapter starts correctly in a container
-   - Test gRPC health check from outside the container
+3. **Add integration test for downstream container image** — Create a periodic workflow that installs the adapter into the vLLM container image and runs basic smoke tests (inference, health check, gRPC reflection).
 
-4. **Enable mypy in CI**
-   - Already configured in pyproject.toml and available as dev dependency
-   - Add `--mypy` flag to lint nox session in CI workflow
-   - Catches type errors before merge
+4. **Expand unit test coverage** — Add tests for untested modules: `validation.py`, `logits_processors.py`, `structured_outputs.py`, `logs.py`, `scripts.py`. These represent ~603 lines of untested production code.
 
-5. **Create agent rules (.claude/rules/)**
-   - Unit test patterns for pytest + nox
-   - Integration test patterns for gRPC server testing
-   - Multi-version compatibility testing guidance
+5. **Add gRPC proto backward-compatibility checks** — Use `buf breaking` to detect breaking changes in `generation.proto` that would affect downstream consumers.
 
-6. **Add tests for untested modules**
-   - `validation.py` (144 lines, 0 direct tests)
-   - `logits_processors.py` (47 lines, 0 direct tests)
-   - `scripts.py` (231 lines, 0 direct tests)
-   - `healthcheck.py` CLI entrypoint (96 lines, tested indirectly only)
+6. **Enable mypy in CI** — mypy is configured but not run in the default CI path. Add it to the lint step or as a separate job.
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Add gRPC contract tests**
-   - Verify protobuf schema backward compatibility
-   - Test against multiple protobuf/grpc-tools versions
+7. **Create agent rules** — Document test conventions in `.claude/rules/` for AI-assisted development. Use `/test-rules-generator`.
 
-8. **Add performance benchmarks**
-   - gRPC throughput benchmarks (requests/second)
-   - Latency percentile tracking (p50, p95, p99)
-   - Run periodically and track regression
+8. **Add GPU-based testing** — Create a periodic/dispatch-only workflow with GPU runners for testing CUDA-specific code paths.
 
-9. **Add TLS/mTLS integration tests**
-   - Test TLS server startup and client connection
-   - Test mTLS mutual authentication
-   - Test certificate rotation
+9. **Add performance regression benchmarks** — Measure inference latency, token throughput, and gRPC overhead to catch performance regressions.
 
-10. **Multi-platform CI testing**
-    - Add macOS to the test matrix
-    - Test on Python 3.9/3.10/3.11 (currently only 3.12 in CI)
+10. **Add gitleaks to pre-commit** — Prevent accidental secret commits (30 minutes).
 
 ## Comparison to Gold Standards
 
-| Dimension | vllm-tgis-adapter | odh-dashboard | notebooks | kserve |
-|-----------|-------------------|---------------|-----------|--------|
-| Unit Tests | 7/10 | 9/10 | 7/10 | 9/10 |
-| Integration/E2E | 7.5/10 | 9/10 | 8/10 | 9/10 |
-| Build Integration | 3/10 | 8/10 | 9/10 | 7/10 |
-| Image Testing | 2/10 | 7/10 | 10/10 | 7/10 |
-| Coverage Tracking | 7.5/10 | 9/10 | 6/10 | 9/10 |
-| CI/CD Automation | 7/10 | 9/10 | 8/10 | 9/10 |
-| Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
-| **Security Scanning** | **0/10** | **7/10** | **6/10** | **8/10** |
-| **Overall** | **6.2/10** | **8.5/10** | **7.5/10** | **8.0/10** |
-
-**Key Differentiators**:
-- **Strongest area**: Multi-version vLLM compatibility matrix testing is a standout practice
-- **Biggest gap vs. gold standards**: Security scanning (0/10) and container testing (2/10)
-- **Unique challenge**: Container image is built in a different repository, making container-level testing architecturally harder
+| Dimension | vllm-tgis-adapter | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
+|-----------|------------------|---------------------|------------------|---------------|
+| Unit Tests | 7.0 — Good pytest suite | 9.0 — Comprehensive Jest/React | 6.0 — Notebook validation | 9.0 — Extensive Go tests |
+| Integration/E2E | 7.5 — Full server integration | 9.5 — Multi-layer with contracts | 8.0 — Multi-image validation | 9.0 — envtest + Kind |
+| Build Integration | 3.0 — No image build | 8.0 — Multi-mode builds | 9.0 — 5-layer image testing | 7.0 — Operator builds |
+| Image Testing | 2.0 — External build only | 7.0 — Container validation | 9.5 — Gold standard | 6.0 — Basic image tests |
+| Coverage Tracking | 7.5 — Codecov, no thresholds | 9.0 — Enforced thresholds | 5.0 — Limited | 8.0 — Coveralls + thresholds |
+| CI/CD Automation | 8.0 — Matrix, caching, concurrency | 9.5 — Comprehensive | 8.0 — Multi-arch builds | 8.5 — Multi-version |
+| Agent Rules | 0.0 — None | 8.0 — Comprehensive rules | 2.0 — Minimal | 3.0 — Basic CLAUDE.md |
+| **Overall** | **6.4** | **8.6** | **6.8** | **7.2** |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/tests.yaml` — Main test workflow
+- `.github/workflows/tests.yaml` — Main test and lint workflow
 - `.github/workflows/release.yaml` — PyPI release workflow
-- `.github/workflows/pre-commit-autoupdate.yml` — Hook auto-updater
+- `.github/workflows/pre-commit-autoupdate.yml` — Pre-commit hook updates
 - `.github/dependabot.yml` — Dependency update configuration
 - `.github/scripts/install_vllm_build_deps.py` — vLLM CPU build helper
-- `noxfile.py` — Test automation (lint, tests, build, dev sessions)
 
 ### Testing
-- `tests/conftest.py` — Shared fixtures, server lifecycle
-- `tests/utils.py` — GrpcClient, wait utilities
-- `tests/test_grpc_server.py` — gRPC endpoint tests
-- `tests/test_http_server.py` — HTTP endpoint tests
-- `tests/test_adapters.py` — LoRA adapter tests
-- `tests/test_tgis_utils.py` — Argument parsing tests
-- `tests/test_hub.py` — HuggingFace hub tests
-- `tests/test_termination_log.py` — Failure path tests
-- `tests/test_init.py` — Version smoke test
+- `tests/conftest.py` — Server fixtures, argument parsing, port management
+- `tests/utils.py` — GrpcClient, wait_until utility, TLS helpers
+- `tests/test_grpc_server.py` — gRPC generation, streaming, guided decoding tests
+- `tests/test_http_server.py` — HTTP health, completions, metrics tests
+- `tests/test_adapters.py` — LoRA adapter loading and caching tests
+- `tests/test_tgis_utils.py` — Argument parser unit tests
+- `tests/test_hub.py` — HuggingFace model weight tests
+- `tests/test_termination_log.py` — Startup failure logging tests
+- `tests/test_init.py` — Version test
+- `tests/fixtures/` — Test fixture data (LoRA adapters)
 
 ### Code Quality
-- `.pre-commit-config.yaml` — Pre-commit hook configuration (5 repos, 15+ hooks)
 - `pyproject.toml` — Ruff, mypy, coverage, pytest configuration
+- `.pre-commit-config.yaml` — 13 pre-commit hooks
+- `noxfile.py` — Test automation sessions (lint, tests, build, dev)
 
-### Source Code
-- `src/vllm_tgis_adapter/grpc/grpc_server.py` — Core gRPC server (994 lines, largest module)
-- `src/vllm_tgis_adapter/grpc/adapters.py` — LoRA adapter management
-- `src/vllm_tgis_adapter/grpc/validation.py` — Request validation
-- `src/vllm_tgis_adapter/tgis_utils/args.py` — CLI argument parsing
-- `src/vllm_tgis_adapter/tgis_utils/hub.py` — HuggingFace hub integration
-- `src/vllm_tgis_adapter/tgis_utils/scripts.py` — CLI entrypoints
-- `src/vllm_tgis_adapter/__main__.py` — Server startup
-- `src/vllm_tgis_adapter/healthcheck.py` — gRPC health check CLI
+### Build
+- `setup.py` — Custom build step for protobuf generation
+- `pyproject.toml` — Package metadata, dependencies, build system
+
+### Source
+- `src/vllm_tgis_adapter/` — Main package (2,799 lines)
+- `src/vllm_tgis_adapter/grpc/grpc_server.py` — Core gRPC server (994 lines)
+- `src/vllm_tgis_adapter/grpc/adapters.py` — LoRA adapter management (226 lines)
+- `src/vllm_tgis_adapter/grpc/validation.py` — Request validation (144 lines)
+- `src/vllm_tgis_adapter/tgis_utils/args.py` — Argument parsing (258 lines)
+- `src/vllm_tgis_adapter/tgis_utils/hub.py` — HuggingFace hub integration (221 lines)
+- `src/vllm_tgis_adapter/grpc/pb/generation.proto` — gRPC service definition

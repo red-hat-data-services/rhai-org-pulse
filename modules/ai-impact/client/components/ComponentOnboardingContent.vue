@@ -54,6 +54,7 @@ const metrics = computed(() => {
   const completedAutomated = automated.filter(c => c.completionStatus === 'completed')
   const completedManual = manual.filter(c => c.completionStatus === 'completed')
   const inProgressAutomated = automated.filter(c => c.completionStatus === 'in-progress')
+  const newAutomated = automated.filter(c => c.completionStatus === 'new')
 
   const avgDaysAutomated = calcAvgDaysAutomated(completedAutomated)
   const avgDaysManual = calcAvgDaysManual(completedManual)
@@ -64,6 +65,7 @@ const metrics = computed(() => {
   return {
     totalOnboarded: completedAutomated.length,
     totalInProgress: inProgressAutomated.length,
+    totalNew: newAutomated.length,
     completionRate: automated.length ? Math.round((completedAutomated.length / automated.length) * 100) : 0,
     rhoaiCount: automated.filter(c => c.productContext === 'RHOAI').length,
     odhCount: automated.filter(c => c.productContext === 'ODH').length,

@@ -19,9 +19,10 @@ async function pMap(items, fn, concurrency) {
   return results
 }
 
-const ACCEPT_HEADER =
+const ACCEPT_HEADER = 'application/vnd.pypi.simple.v1+json'
+const ACCEPT_HEADER_FALLBACK =
   'application/vnd.pypi.simple.v1+json, ' +
-  'application/vnd.pypi.simple.v1+html;q=0.5, ' +
+  'application/vnd.pypi.simple.v1+html;q=0.2, ' +
   'text/html;q=0.01'
 
 const PACKAGE_NAME_RE = /^[a-zA-Z][a-zA-Z0-9._-]*$/
@@ -98,7 +99,7 @@ function parseSimpleHtml(html) {
 function parseSimpleJson(data) {
   if (!data || !Array.isArray(data.files)) return []
   return data.files.map(function (f) {
-    return { filename: f.filename, url: f.url }
+    return { filename: f.filename, url: f.url, uploadTime: f['upload-time'] || null }
   })
 }
 
@@ -106,6 +107,29 @@ function parseSimpleJson(data) {
 
 function getQueryTimeout() {
   return parseInt(process.env.PACKAGE_INDEX_QUERY_TIMEOUT || '15', 10) * 1000
+}
+
+async function fetchWithRetry(url, acceptHeader, timeout) {
+  let response
+  try {
+    response = await fetch(url, {
+      headers: { Accept: acceptHeader },
+      signal: AbortSignal.timeout(timeout)
+    })
+  } catch (err) {
+    if (err.name === 'TimeoutError') {
+      return { response: null, error: 'timeout' }
+    }
+    try {
+      response = await fetch(url, {
+        headers: { Accept: acceptHeader },
+        signal: AbortSignal.timeout(timeout)
+      })
+    } catch (retryErr) {
+      return { response: null, error: retryErr.message }
+    }
+  }
+  return { response, error: null }
 }
 
 async function fetchIndex(indexUrl, packageName) {
@@ -116,26 +140,14 @@ async function fetchIndex(indexUrl, packageName) {
 
   const url = indexUrl + normalized + '/'
   const timeout = getQueryTimeout()
-  let response
 
-  try {
-    response = await fetch(url, {
-      headers: { Accept: ACCEPT_HEADER },
-      signal: AbortSignal.timeout(timeout)
-    })
-  } catch (err) {
-    if (err.name === 'TimeoutError') {
-      return { indexExists: false, found: false, files: [], error: 'timeout' }
-    }
-    // Retry once on network errors
-    try {
-      response = await fetch(url, {
-        headers: { Accept: ACCEPT_HEADER },
-        signal: AbortSignal.timeout(timeout)
-      })
-    } catch (retryErr) {
-      return { indexExists: false, found: false, files: [], error: retryErr.message }
-    }
+  let { response, error } = await fetchWithRetry(url, ACCEPT_HEADER, timeout)
+  if (error) return { indexExists: false, found: false, files: [], error }
+
+  // Server doesn't support JSON — retry with HTML fallback
+  if (response.status === 406) {
+    ;({ response, error } = await fetchWithRetry(url, ACCEPT_HEADER_FALLBACK, timeout))
+    if (error) return { indexExists: false, found: false, files: [], error }
   }
 
   try {
@@ -151,15 +163,18 @@ async function fetchIndex(indexUrl, packageName) {
 
     const contentType = response.headers.get('content-type') || ''
     let files
+    let format
     if (contentType.includes('json')) {
       const data = await response.json()
       files = parseSimpleJson(data)
+      format = 'json'
     } else {
       const html = await response.text()
       files = parseSimpleHtml(html)
+      format = 'html'
     }
 
-    const result = { indexExists: true, found: true, files }
+    const result = { indexExists: true, found: true, files, format }
     cacheSet(cacheKey, result)
     return { ...result, error: null }
   } catch (err) {
@@ -201,6 +216,16 @@ function getDefaultProductVersion() {
   return process.env.PACKAGE_INDEX_DEFAULT_PRODUCT_VERSION || null
 }
 
+function getUpstreamPypiUrl() {
+  const raw = process.env.UPSTREAM_PYPI_URL || 'https://pypi.org/simple/'
+  return raw.replace(/\/+$/, '') + '/'
+}
+
+function isUpstreamPypiEnabled() {
+  const val = process.env.UPSTREAM_PYPI_ENABLED
+  return val !== 'false' && val !== '0'
+}
+
 module.exports = {
   PACKAGE_NAME_RE,
   VERSION_RE,
@@ -214,6 +239,8 @@ module.exports = {
   getVariants,
   getProductVersions,
   getDefaultProductVersion,
+  getUpstreamPypiUrl,
+  isUpstreamPypiEnabled,
   clearCache,
   getCacheStats,
   pMap,

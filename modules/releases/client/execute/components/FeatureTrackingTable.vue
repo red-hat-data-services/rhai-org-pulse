@@ -4,7 +4,9 @@ import { reactive } from 'vue'
 const props = defineProps({
   groups: { type: Array, default: () => [] },
   portfolioVersion: { type: String, default: '' },
-  featureFreezeDate: { type: String, default: null }
+  featureFreezeDate: { type: String, default: null },
+  totalUniqueFeatures: { type: Number, default: null },
+  filteredFeatureCount: { type: Number, default: null }
 })
 
 const JIRA_BASE = 'https://redhat.atlassian.net/browse'
@@ -68,6 +70,7 @@ function collapseAll() {
 }
 
 function totalFeatureCount() {
+  if (props.totalUniqueFeatures != null) return props.totalUniqueFeatures
   var count = 0
   for (var i = 0; i < props.groups.length; i++) {
     count += props.groups[i].featureCount || 0
@@ -157,7 +160,7 @@ defineExpose({ expandAll, collapseAll })
               </svg>
               <span class="font-bold text-gray-900 dark:text-gray-100">RHAI {{ portfolioVersion }}</span>
               <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
-                {{ totalFeatureCount() }} features
+                <template v-if="filteredFeatureCount != null && filteredFeatureCount !== totalFeatureCount()">{{ filteredFeatureCount }} of </template>{{ totalFeatureCount() }} features
               </span>
               <span
                 v-if="featureFreezeDate"

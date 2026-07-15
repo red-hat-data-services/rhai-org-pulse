@@ -1,14 +1,12 @@
 /**
- * ESLint rule: no-module-process-env
+ * ESLint rule: no-module-process-env (AI Eng extension)
  *
- * Prevents modules from accessing process.env for secrets.
- * Module code should use context.secrets or context.resolveSecret() instead.
- *
- * Non-secret configuration variables (DEMO_MODE, NODE_ENV, etc.) are allowed.
- * Test files are excluded via the ESLint config (ignores pattern).
+ * Extends core's ALLOWED set with AI Eng-specific config variables.
+ * These are non-secret configuration — not credentials or tokens.
  */
 
 const ALLOWED = new Set([
+  // Core config vars
   'DEMO_MODE',
   'NODE_ENV',
   'API_PORT',
@@ -17,13 +15,12 @@ const ALLOWED = new Set([
   'JIRA_HOST',
   'JIRA_STORY_POINTS_FIELD',
   'GITLAB_BASE_URL',
+  'PROXY_AUTH_SECRET',
+  // AI Eng: releases module
   'PRODUCT_PAGES_BASE_URL',
   'PRODUCT_PAGES_RELEASES_URL',
   'PRODUCT_PAGES_PRODUCT_SHORTNAMES',
   'PRODUCT_PAGES_TOKEN_URL',
-  'PRODUCT_BUILDS_API_URL',
-  'UPSTREAM_PULSE_API_URL',
-  'UPSTREAM_SYNC_SERVICE_USER',
   'RELEASE_ANALYSIS_PROJECT_KEYS',
   'RELEASE_ANALYSIS_WEIGHT_FIELD',
   'RELEASE_ANALYSIS_BASELINE_DAYS',
@@ -35,13 +32,23 @@ const ALLOWED = new Set([
   'RELEASE_ANALYSIS_TARGET_VERSION_JQL_FRAGMENT',
   'RELEASE_ANALYSIS_VELOCITY_EXTRA_JQL_BY_PROJECT',
   'SMARTSHEET_SHEET_ID',
-  'PROXY_AUTH_SECRET',
+  // AI Eng: product-builds module
+  'PRODUCT_BUILDS_API_URL',
   'PACKAGE_INDEX_BASE_URL',
   'PACKAGE_INDEX_VARIANTS',
   'PACKAGE_INDEX_PRODUCT_VERSIONS',
   'PACKAGE_INDEX_DEFAULT_PRODUCT_VERSION',
   'PACKAGE_INDEX_QUERY_TIMEOUT',
-  'PACKAGE_INDEX_CACHE_TTL'
+  'PACKAGE_INDEX_CACHE_TTL',
+  'UPSTREAM_PYPI_URL',
+  'UPSTREAM_PYPI_ENABLED',
+  // AI Eng: upstream-pulse module
+  'UPSTREAM_PULSE_API_URL',
+  'UPSTREAM_SYNC_SERVICE_USER',
+  // AI Eng: customer-insights module
+  'SHEETS_CACHE_TTL_MS',
+  'GOOGLE_OAUTH_CALLBACK_URL',
+  'VITE_API_BASE_URL'
 ])
 
 module.exports = {

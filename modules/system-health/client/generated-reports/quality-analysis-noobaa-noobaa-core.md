@@ -4,70 +4,78 @@ overall_score: 5.5
 scorecard:
   - dimension: "Unit Tests"
     score: 6.0
-    status: "Good coverage with Mocha + Jest dual framework, but no coverage measurement"
+    status: "Good test structure with Mocha+Jest but no coverage tracking"
   - dimension: "Integration/E2E"
     score: 7.0
-    status: "Strong external test suites (Ceph S3, Warp, Mint) with containerized execution"
+    status: "Strong S3 compatibility testing (Ceph, Mint, Warp) with containerized infrastructure"
   - dimension: "Build Integration"
     score: 5.0
-    status: "PR-time image builds with multi-arch, but no Konflux simulation"
+    status: "PR builds Docker images with smart caching but no Konflux simulation"
   - dimension: "Image Testing"
     score: 5.0
-    status: "Multi-stage builds with multi-arch support, no vulnerability scanning"
+    status: "Multi-stage Docker builds with containerized tests but no vulnerability scanning"
   - dimension: "Coverage Tracking"
     score: 1.0
-    status: "No coverage tooling, enforcement, or PR reporting whatsoever"
+    status: "No coverage generation, thresholds, or PR reporting"
   - dimension: "CI/CD Automation"
     score: 7.0
-    status: "Comprehensive PR workflow with 10 parallel test jobs and image caching"
+    status: "39 workflows with PR gates, nightly runs, and concurrency control"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, .claude directory, or AI agent guidance exists"
+    status: "No CLAUDE.md, .claude/ directory, or AI agent test guidance"
 critical_gaps:
-  - title: "Zero code coverage tracking"
-    impact: "No visibility into what code is tested; regressions go undetected, coverage drift is invisible"
+  - title: "No code coverage tracking or enforcement"
+    impact: "Cannot measure test effectiveness; regressions go undetected as coverage silently drops"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No security scanning in CI"
-    impact: "Vulnerabilities in dependencies and container images are not detected before merge or release"
+  - title: "No security scanning (SAST, dependency, container)"
+    impact: "Vulnerabilities in code, dependencies, and container images not detected until production"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No secret detection"
-    impact: "Leaked credentials in code or commits are not caught automatically"
+    effort: "4-8 hours"
+  - title: "No dependency management automation (Dependabot/Renovate)"
+    impact: "Known CVEs in npm dependencies persist indefinitely; manual updates missed"
     severity: "HIGH"
     effort: "1-2 hours"
-  - title: "No SBOM generation or image signing"
-    impact: "Supply chain security gaps; cannot audit shipped artifacts for compliance"
+  - title: "Go code has zero test coverage"
+    impact: "TCP/HTTP speed utilities untested; regressions undetectable"
     severity: "MEDIUM"
     effort: "4-6 hours"
-quick_wins:
-  - title: "Add nyc/c8 coverage and Codecov integration"
-    effort: "4-6 hours"
-    impact: "Immediate visibility into tested vs. untested code; PR-level coverage diff reporting"
-  - title: "Add Trivy container scanning to PR workflow"
-    effort: "1-2 hours"
-    impact: "Catch known CVEs in base images and dependencies before merge"
-  - title: "Add Gitleaks secret detection"
-    effort: "1-2 hours"
-    impact: "Prevent credential leaks in commits automatically"
-  - title: "Create basic CLAUDE.md with test patterns"
+  - title: "No pre-commit hooks or automated formatting"
+    impact: "Style inconsistencies and common errors slip into PRs, increasing review burden"
+    severity: "MEDIUM"
     effort: "2-3 hours"
-    impact: "Improve AI-generated code and test consistency"
+quick_wins:
+  - title: "Add Dependabot for npm and Go dependency updates"
+    effort: "1 hour"
+    impact: "Automated CVE detection and dependency freshness for 200+ npm packages"
+  - title: "Add Trivy container scanning to PR workflow"
+    effort: "2 hours"
+    impact: "Catch known vulnerabilities in base images and dependencies before merge"
+  - title: "Enable Istanbul/nyc coverage generation in Mocha runs"
+    effort: "2-3 hours"
+    impact: "Visibility into actual test coverage; baseline for threshold enforcement"
+  - title: "Add CodeQL SAST workflow"
+    effort: "1-2 hours"
+    impact: "Automated detection of injection, XSS, and logic bugs in JavaScript code"
+  - title: "Create .claude/rules/ with test patterns"
+    effort: "2-3 hours"
+    impact: "AI-generated tests follow project conventions; consistent quality"
 recommendations:
   priority_0:
-    - "Implement code coverage tracking (nyc/c8 + Codecov) with PR gating"
-    - "Add container vulnerability scanning (Trivy) to PR and nightly workflows"
-    - "Add secret detection (Gitleaks) to PR workflow"
+    - "Add code coverage tracking with Istanbul/nyc and integrate with Codecov for PR reporting and threshold enforcement"
+    - "Add container vulnerability scanning (Trivy) to the PR build workflow"
+    - "Enable Dependabot or Renovate for automated dependency updates and CVE alerts"
   priority_1:
-    - "Add CodeQL or Semgrep SAST analysis to PR workflow"
-    - "Generate SBOMs (Syft) and sign images (Cosign) in release workflow"
-    - "Add pre-commit hooks for lint and secret detection"
-    - "Consolidate dual test runners (Mocha + Jest) to a single framework"
+    - "Add CodeQL SAST workflow for JavaScript static analysis on PRs"
+    - "Add secret detection with Gitleaks to prevent credential leaks"
+    - "Write Go unit tests for tcp_speed and http_speed utilities"
+    - "Unify test configuration with jest.config.js and .mocharc.yml"
   priority_2:
-    - "Create comprehensive agent rules for test automation (.claude/rules/)"
-    - "Remove legacy Travis CI and Jenkins configurations"
-    - "Add Go component testing (currently 0 test files for 3 Go source files)"
-    - "Add performance regression testing for S3 operations"
+    - "Add pre-commit hooks with ESLint auto-fix and formatting checks"
+    - "Remove legacy Travis CI configuration (.travis.yml)"
+    - "Create comprehensive agent rules for AI-assisted test creation (.claude/rules/)"
+    - "Add SBOM generation and image signing for release images"
+    - "Lower ESLint complexity threshold from 35 to 15 incrementally"
 ---
 
 # Quality Analysis: noobaa-core
@@ -75,409 +83,389 @@ recommendations:
 ## Executive Summary
 
 - **Overall Score: 5.5/10**
-- **Repository Type**: Node.js object storage system with S3 compatibility (minor Go component)
-- **Primary Language**: JavaScript (ES2022), 612 source files, ~785 total JS files
-- **Key Strengths**: Comprehensive PR test suite with 10 parallel jobs, external S3 compatibility tests (Ceph, Warp, Mint), multi-architecture container builds
-- **Critical Gaps**: Zero code coverage tracking, no security scanning at all (no Trivy, CodeQL, Gitleaks), no agent rules
-- **Agent Rules Status**: Missing - no CLAUDE.md, AGENTS.md, or .claude directory
+- **Repository Type**: Object storage system (S3-compatible NooBaa core engine)
+- **Primary Language**: JavaScript/Node.js (626 source files) with C++ native bindings (466 files) and minimal Go utilities
+- **Testing Frameworks**: Mocha (primary), Jest (secondary)
+- **Key Strengths**: Excellent S3 compatibility test suite (Ceph, Mint, Warp), well-organized test directory structure, smart Docker build caching in CI, multi-architecture builds
+- **Critical Gaps**: Zero coverage tracking, no security scanning of any kind (SAST/container/dependency), no dependency automation
+- **Agent Rules Status**: Missing - no CLAUDE.md, .claude/ directory, or AI agent guidance
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 6/10 | Good coverage with Mocha + Jest dual framework, but no coverage measurement |
-| Integration/E2E | 7/10 | Strong external test suites (Ceph S3, Warp, Mint) with containerized execution |
-| **Build Integration** | **5/10** | **PR-time image builds with multi-arch, but no Konflux simulation** |
-| Image Testing | 5/10 | Multi-stage builds with multi-arch support, no vulnerability scanning |
-| Coverage Tracking | 1/10 | No coverage tooling, enforcement, or PR reporting whatsoever |
-| CI/CD Automation | 7/10 | Comprehensive PR workflow with 10 parallel test jobs and image caching |
-| Agent Rules | 0/10 | No CLAUDE.md, .claude directory, or AI agent guidance exists |
+| Unit Tests | 6/10 | Good structure with Mocha+Jest but no coverage tracking |
+| Integration/E2E | 7/10 | Strong S3 compatibility testing with containerized infrastructure |
+| **Build Integration** | **5/10** | **PR builds Docker images but no Konflux simulation** |
+| Image Testing | 5/10 | Multi-stage builds, containerized tests, no vulnerability scanning |
+| Coverage Tracking | 1/10 | No coverage generation, thresholds, or PR reporting |
+| CI/CD Automation | 7/10 | 39 workflows with PR gates, nightly runs, concurrency control |
+| Agent Rules | 0/10 | No AI agent test guidance exists |
 
 ## Critical Gaps
 
-### 1. Zero Code Coverage Tracking
-- **Impact**: No visibility into what code is tested; regressions go undetected, coverage drift is invisible
+### 1. No Code Coverage Tracking or Enforcement
+- **Impact**: Cannot measure test effectiveness; coverage can silently degrade with each merge
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: No codecov, coveralls, nyc, istanbul, or c8 configuration found. Neither Mocha nor Jest test runs generate coverage reports. No PR-level coverage diff is available for reviewers.
+- **Details**: Despite having `clean:test` removing `./coverage`, no coverage generation is configured. No Istanbul/nyc, no Codecov/Coveralls integration, no PR coverage gates. With 626 source files and 222 test files (~35% ratio by count), actual line/branch coverage is unknown.
 
-### 2. No Security Scanning in CI
-- **Impact**: Vulnerabilities in dependencies and container images are not detected before merge or release
+### 2. Zero Security Scanning
+- **Impact**: Vulnerabilities in code, npm dependencies (200+), C++ native code, and Docker images go undetected until production incidents
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: None of the 38 GitHub Actions workflows include Trivy, Snyk, CodeQL, gosec, or Semgrep. Container images (built from CentOS Stream base) are shipped without vulnerability assessment.
+- **Effort**: 4-8 hours total
+- **Details**: No CodeQL/SAST, no Dependabot/Renovate, no Trivy/Snyk, no Gitleaks/TruffleHog. For an object storage system handling data, this is a critical gap.
 
-### 3. No Secret Detection
-- **Impact**: Leaked credentials in code or commits are not caught automatically
+### 3. No Dependency Management Automation
+- **Impact**: Known CVEs in 200+ npm packages and Go modules persist indefinitely; manual tracking is unsustainable
 - **Severity**: HIGH
 - **Effort**: 1-2 hours
-- **Details**: No Gitleaks, TruffleHog, or other secret detection tools configured. Given the project handles cloud credentials (AWS, Azure, IBM Cloud), this is a significant risk.
+- **Details**: No `.github/dependabot.yml` or Renovate config. `package-lock.json` is validated for integrity but not scanned for vulnerabilities.
 
-### 4. No SBOM Generation or Image Signing
-- **Impact**: Supply chain security gaps; cannot audit shipped artifacts for compliance
+### 4. Go Utility Code Has Zero Tests
+- **Impact**: `tcp_speed` and `http_speed` utilities are untested; regressions and logic bugs go undetected
 - **Severity**: MEDIUM
 - **Effort**: 4-6 hours
-- **Details**: Release workflow publishes images to Quay.io and Docker Hub without generating SBOMs (Syft) or signing images (Cosign). No attestation chain for shipped artifacts.
+- **Details**: The `go/` directory contains `cmd/tcp_speed`, `cmd/http_speed`, and `internal/goutils` with zero `_test.go` files.
 
-### 5. Dual Test Framework Fragmentation
-- **Impact**: Test standards are inconsistent; some tests use Mocha conventions, others use Jest
+### 5. No Pre-Commit Hooks
+- **Impact**: Style violations, linting errors, and common mistakes reach PRs, increasing review burden
 - **Severity**: MEDIUM
-- **Effort**: 20-40 hours (long-term migration)
-- **Details**: 49 `.test.js` files use Jest, while 115 `test_*.js` files use Mocha via a centralized index file. Jest runs on PR directly (`jest-unit-tests.yaml`), while Mocha tests run inside containers. This split creates confusion about test patterns and makes coverage aggregation harder.
+- **Effort**: 2-3 hours
+- **Details**: No `.pre-commit-config.yaml`. ESLint runs only in CI, not at commit time. TSLint config still present despite being deprecated.
 
 ## Quick Wins
 
-### 1. Add nyc/c8 Coverage + Codecov Integration
-- **Effort**: 4-6 hours
-- **Impact**: Immediate visibility into tested vs. untested code; PR-level coverage diff reporting
+### 1. Add Dependabot Configuration (~1 hour)
+- **Impact**: Automated CVE detection and dependency freshness
 - **Implementation**:
-  ```yaml
-  # Add to jest-unit-tests.yaml
-  - name: Run Jest with Coverage
-    run: |
-      npm install
-      npm run build
-      npx jest --coverage --coverageReporters=lcov
-  - name: Upload Coverage
-    uses: codecov/codecov-action@v4
-    with:
-      files: ./coverage/lcov.info
-      token: ${{ secrets.CODECOV_TOKEN }}
-  ```
+```yaml
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+  - package-ecosystem: "gomod"
+    directory: "/go"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+```
 
-### 2. Add Trivy Container Scanning
-- **Effort**: 1-2 hours
-- **Impact**: Catch known CVEs in base images and dependencies before merge
+### 2. Add Trivy Container Scanning (~2 hours)
+- **Impact**: Catch known CVEs in base images and npm packages before merge
+- **Implementation**: Add a step to the `build-noobaa-image` job in `run-pr-tests.yaml`:
+```yaml
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'noobaa'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+```
+
+### 3. Enable Coverage Generation (~2-3 hours)
+- **Impact**: Visibility into actual test coverage; baseline for enforcement
+- **Implementation**: Add `nyc` to the Mocha test command in `package.json`:
+```json
+"mocha": "nyc --reporter=lcov --reporter=text node --allow-natives-syntax ./node_modules/.bin/_mocha src/test/utils/index/index.js"
+```
+
+### 4. Add CodeQL SAST (~1-2 hours)
+- **Impact**: Automated detection of injection, prototype pollution, and logic bugs in JavaScript
 - **Implementation**:
-  ```yaml
-  # Add after image build in run-pr-tests.yaml
-  - name: Run Trivy vulnerability scanner
-    uses: aquasecurity/trivy-action@master
-    with:
-      image-ref: 'noobaa'
-      format: 'sarif'
-      output: 'trivy-results.sarif'
-      severity: 'CRITICAL,HIGH'
-  ```
+```yaml
+# .github/workflows/codeql.yml
+name: CodeQL
+on: [pull_request]
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript
+      - uses: github/codeql-action/analyze@v3
+```
 
-### 3. Add Gitleaks Secret Detection
-- **Effort**: 1-2 hours
-- **Impact**: Prevent credential leaks in commits automatically
-- **Implementation**:
-  ```yaml
-  # New workflow: .github/workflows/gitleaks.yaml
-  name: Gitleaks
-  on: [pull_request]
-  jobs:
-    scan:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v4
-          with:
-            fetch-depth: 0
-        - uses: gitleaks/gitleaks-action@v2
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  ```
-
-### 4. Create Basic CLAUDE.md
-- **Effort**: 2-3 hours
-- **Impact**: Improve AI-generated code and test consistency
-- **Implementation**: Document test patterns for both Mocha (index-based) and Jest (.test.js) styles, ESLint conventions, and container-based test execution requirements.
+### 5. Create Basic Agent Rules (~2-3 hours)
+- **Impact**: AI-generated tests follow NooBaa conventions (Mocha patterns, S3 test utilities)
+- **Implementation**: Create `.claude/rules/unit-tests.md` with patterns from existing test files
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Workflow Inventory (38 files)**:
+**Workflow Inventory (39 workflows):**
 
-| Category | Workflows | Trigger |
-|----------|-----------|---------|
-| **PR Tests** | `run-pr-tests.yaml` (orchestrator), `jest-unit-tests.yaml`, `Validate-package-lock.yaml` | `pull_request` |
-| **PR Builds** | `build-arm64-image.yaml`, `build-ppc64le-image.yaml` | `push, pull_request` |
-| **Nightly** | `nightly-tests.yaml`, `test-aws-sdk-clients.yaml`, `nightly-rpm-build-and-install-test.yaml`, `nightly-rpm-master-build.yaml` | `schedule, workflow_dispatch` |
-| **IBM Infra** | `ibm-nightly-vm-provision.yaml`, `ibm-nightly-vm-cleanup.yaml`, `ibm-daily-leftover-cleanup.yaml` + dispatchers | `schedule, workflow_dispatch` |
-| **Build** | `manual-full-build.yaml`, `manual-build-rpm.yaml`, `weekly-build.yaml`, `current-ver-build.yaml`, `next-ver-build.yaml` | `workflow_dispatch, push` |
-| **Release** | `releaser.yaml` | `workflow_dispatch` |
-| **Shared** | `sanity.yaml`, `sanity-ssl.yaml`, `postgres-unit-tests.yaml`, `nc_unit.yml`, `ceph-s3-tests.yaml`, `ceph-nsfs-s3-tests.yaml`, `warp-tests.yaml`, `warp-nc-tests.yaml`, `mint-tests.yaml`, `mint-nc-tests.yaml` | `workflow_call` |
-| **Housekeeping** | `stale.yml` | `schedule` |
-| **RPM** | `rpm-build-base.yaml`, `rpm-build-and-upload-flow.yaml`, `rpm-build-and-install-test-base.yaml`, `manual-rpm-build-and-install-test.yaml` | Various |
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `run-pr-tests.yaml` | PR, dispatch | Main gate: builds image, fans out to 10 test suites |
+| `jest-unit-tests.yaml` | PR, dispatch | Jest unit tests (runs independently without Docker) |
+| `Validate-package-lock.yaml` | PR | Validates package-lock.json integrity |
+| `build-arm64-image.yaml` | PR | Cross-architecture arm64 build validation |
+| `build-ppc64le-image.yaml` | PR | Cross-architecture ppc64le build validation |
+| `test-aws-sdk-clients.yaml` | Nightly (cron) | AWS SDK compatibility testing |
+| `nightly-tests.yaml` | Dispatch | Extended tests with cloud credentials |
+| `ibm-nightly-*` | Dispatch/cron | IBM Cloud VM provisioning for full integration tests |
+| `weekly-build.yaml` | Nightly cron | Nightly master build and publish |
+| `releaser.yaml` | Dispatch | Release automation with multi-registry push |
+| `rpm-build-*.yaml` | Various | RPM packaging and install testing |
+| `stale.yml` | Daily cron | Issue/PR staleness management |
 
-**Strengths**:
-- Comprehensive PR test matrix: sanity, sanity-ssl, postgres unit, NC unit, ceph-s3, ceph-nsfs-s3, warp, warp-nc, mint, mint-nc (10 parallel jobs)
-- Good concurrency control (`cancel-in-progress: true` on most workflows)
-- Smart image caching: pulls base/builder images from quay.io before rebuilding, with date-based tag lookup going back 20 days
-- Conditional base image rebuild based on changed files (package.json, Dockerfile, .nvmrc, fs_napi.cpp)
-- Artifact passing between jobs via `upload-artifact`/`download-artifact`
+**Strengths:**
+- PR pipeline builds a Docker image and runs 10 parallel test suites (sanity, unit, Ceph S3, Warp, Mint, NC variants)
+- Smart base image caching: tries to pull recent images from quay.io before rebuilding
+- Concurrency control with `cancel-in-progress: true` on PR workflows
+- Artifact sharing between jobs (Docker image saved/uploaded/downloaded)
+- Multi-architecture validation (arm64, ppc64le) on every PR
+- IBM Cloud integration for nightly VM-based testing
 
-**Gaps**:
-- Legacy CI configurations still present (`.travis.yml`, `.jenkins/`) - creates confusion
-- No workflow reuse across the non-shared workflows (some duplication in build steps)
-- No test result caching or test impact analysis
-- Nightly tests are `workflow_dispatch` only - not actually scheduled (despite the name)
+**Gaps:**
+- No build caching for npm dependencies (no `actions/cache` for `node_modules`)
+- No test result upload/reporting (JUnit XML, test summary)
+- Legacy Travis CI config (`.travis.yml`) still present alongside GitHub Actions
+- 90-minute timeout across most workflows with no adaptive timeout
+- No test matrix or parallelization within individual test suites
 
 ### Test Coverage
 
-**Test Architecture**:
-- **Dual framework**: Mocha (legacy, majority) + Jest (newer, growing)
-- **Total test files**: 219 JavaScript test files
-- **Unit tests**: 90 files in `src/test/unit_tests/`
-- **Integration tests**: 58 files in `src/test/integration_tests/`
-- **System tests**: 11 files in `src/test/system_tests/`
-- **External S3 compatibility**: Ceph S3, Warp, Mint, Hadoop S3A
-- **Test-to-source ratio**: 219 test files / 612 source files = 0.36
-
-**Test Organization**:
+**Test Architecture:**
 ```
 src/test/
-├── unit_tests/          # 90 files - utilities, API, IAM, NSFS, native, NC
-│   ├── api/             # S3, IAM validation
-│   ├── internal/        # Core components (chunk, file, replication)
-│   ├── nc/              # Non-containerized (lifecycle, config, master keys)
-│   ├── nsfs/            # NSFS filesystem testing
-│   ├── native/          # Native code (fs_napi)
-│   ├── tls/             # TLS configuration
-│   └── util_functions/  # Utility function tests
-├── integration_tests/   # 58 files - DB, API, NSFS, NC CLI
-│   ├── api/             # S3, IAM, STS
-│   ├── db/              # Store tests (md_store, nodes_store)
-│   ├── internal/        # Map client, agent blocks
-│   ├── nc/cli/          # CLI tests (bucket, account, connection)
-│   └── nsfs/            # Concurrency tests
-├── system_tests/        # 11 files - Full system sanity
-├── external_tests/      # S3 compatibility suites
+├── unit_tests/          # Unit tests (Mocha + Jest)
+│   ├── api/             # API unit tests (IAM, S3)
+│   ├── db/              # Database schema tests
+│   ├── internal/        # Core component tests
+│   ├── native/          # Native binding tests
+│   ├── nc/              # Non-containerized mode tests
+│   ├── nsfs/            # NSFS namespace tests
+│   ├── tls/             # TLS configuration tests
+│   └── util_functions_tests/  # Utility function tests + AWS signature test suites
+├── integration_tests/   # Integration tests (require services)
+│   ├── api/             # S3, IAM, STS, Vectors API tests
+│   ├── db/              # Database integration tests
+│   ├── internal/        # Internal subsystem integration
+│   ├── nc/              # NC mode CLI and lifecycle tests
+│   └── nsfs/            # NSFS integration (concurrency, versioning)
+├── external_tests/      # Third-party compatibility suites
 │   ├── ceph_s3_tests/   # Ceph S3 compatibility
-│   ├── warp/            # Warp performance tests
-│   ├── mint/            # MinIO Mint compatibility
-│   └── hadoop_s3a_tests/ # Hadoop S3A tests
-├── pipeline/            # Pipeline tests (namespace cache, quota)
-└── framework/           # Test infrastructure
+│   ├── warp/            # Warp S3 benchmarks
+│   ├── mint/            # MinIO Mint S3 tests
+│   ├── hadoop_s3a_tests/ # Hadoop S3A compatibility
+│   └── different_clients/ # Multi-SDK client tests (Go SDK v2)
+├── system_tests/        # Full system tests
+├── pipeline/            # Pipeline/quota/namespace cache tests
+├── lifecycle/           # Object lifecycle tests
+└── framework/           # Test runner framework and index files
 ```
 
-**Mocha Test Execution**:
-Tests are organized via index files (`src/test/utils/index/index.js`) that `require()` individual test files. This is an older pattern - it means all tests must be maintained in index files, and forgetting to add a test to the index means it won't run.
+**File Counts:**
+- Source files (JS): 626
+- Test files (JS): 222
+- Test-to-code ratio: ~35% (by file count)
+- Jest-style test files (`.test.js`): 51
+- Native C++ files: 466 (with 1 test file)
+- Go files: 3 (with 0 test files)
 
-**Jest Test Execution**:
-49 `.test.js` files run via `npx jest` directly. These follow modern patterns and don't need manual index management.
+**Test Frameworks:**
+- **Mocha**: Primary framework, tests run via index files (`index.js`, `nc_index.js`)
+- **Jest**: Secondary framework, used for newer tests (51 `.test.js` files)
+- **External suites**: Ceph S3, MinIO Mint, Warp benchmark, Hadoop S3A
 
-**Coverage Status**: None. No coverage tooling is configured for either Mocha or Jest.
+**S3 Compatibility Testing (Strong):**
+- Ceph S3 tests validate S3 API compatibility for both containerized and NSFS modes
+- Warp performance/stress tests for S3 operations
+- Mint (MinIO) S3 conformance tests
+- Hadoop S3A connector tests
+- Multi-SDK client testing (Go SDK v2, AWS SDK)
+
+**Gaps:**
+- No unified test configuration (no `jest.config.js`, no `.mocharc.yml`)
+- No coverage generation for either Mocha or Jest
+- Mocha tests use custom index files instead of standard discovery patterns
+- Go utilities completely untested
+- C++ native code has minimal testing (1 test file for 466 source files)
 
 ### Code Quality
 
-**ESLint Configuration** (`.eslintrc.js`):
-- **Approach**: Extends `eslint:all` and selectively overrides - very comprehensive
-- **Plugins**: `@stylistic/js` for style, `header` for copyright enforcement
-- **Notable rules**:
-  - Copyright header enforcement: `header/header` (error)
-  - Complexity limit: 35 (should be ~10)
-  - Max file length: 2000 lines
-  - Max function length: 400 lines
-  - Max parameters: 7
-  - Max statements per function: 60
-  - Line length: 140 chars
-- **Quality**: Strong ESLint config, but thresholds are very permissive (complexity 35, function length 400 lines)
+**Linting (Moderate):**
+- ESLint configured with `eslint:all` base (strict) plus `@stylistic/js`
+- Custom rules: copyright header enforcement, complexity limit (35), consistent naming
+- ESLint ignores `.d.ts` files
+- TSLint still present (deprecated since 2019)
+- EditorConfig for consistent formatting across JS and C++
 
-**Code Review**: CodeRabbit AI configured (`.coderabbit.yaml`) with auto-review on `master` branch, "chill" profile. Good - provides automated review.
+**AI Review Integration:**
+- CodeRabbit configured with "chill" profile
+- Auto-review enabled on PRs targeting `master`
+- Path-specific instructions for `src/test/**` (enforce test inclusion)
+- Related issues and PRs tracking enabled
 
-**Missing**:
-- No pre-commit hooks (`.pre-commit-config.yaml` absent)
-- No static analysis tools (CodeQL, Semgrep)
-- No TypeScript strict mode (only 1 `.ts` file, project is mostly JavaScript)
-- No dependency auditing in CI
+**Gaps:**
+- Complexity threshold of 35 is very high (industry standard: 10-15)
+- No pre-commit hooks to catch issues before commit
+- No Prettier or automated formatting tool
+- No TypeScript strict mode (tsconfig.json exists but minimal use)
 
 ### Container Images
 
-**Dockerfile Inventory** (8 files):
-| File | Purpose |
-|------|---------|
-| `Base.Dockerfile` | Base image with npm deps and native code |
-| `builder.Dockerfile` | Build environment |
-| `NooBaa.Dockerfile` | Production image (multi-stage from CentOS Stream) |
-| `Tests.Dockerfile` | Tester image for CI |
-| `RPM.Dockerfile` | RPM package build |
-| `SSLPostgres.Dockerfile` | SSL Postgres for integration tests |
-| `dev.Dockerfile` | Development environment |
-| `AWSClient.Dockerfile` | AWS SDK client testing |
+**Dockerfile Inventory:**
+| Dockerfile | Purpose |
+|-----------|---------|
+| `NVA_build/builder.Dockerfile` | Node.js build environment |
+| `NVA_build/Base.Dockerfile` | Runtime base image |
+| `NVA_build/NooBaa.Dockerfile` | Production NooBaa image |
+| `NVA_build/Tests.Dockerfile` | Test runner image |
+| `NVA_build/SSLPostgres.Dockerfile` | SSL Postgres test image |
+| `NVA_build/AWSClient.Dockerfile` | AWS client test image |
+| `NVA_build/S3ATester.Dockerfile` | Hadoop S3A test image |
+| `NVA_build/dev.Dockerfile` | Development image |
+| `RPM_build/RPM.Dockerfile` | RPM build image |
+| `standalone/executable.Dockerfile` | Standalone executable |
+| `standalone/export.Dockerfile` | Export image |
 
-**Strengths**:
-- Multi-stage builds (builder → base → production)
-- Multi-architecture support (amd64, arm64, ppc64le) built on every PR
-- Tester image pattern - tests execute in consistent container environment
-- Smart conditional rebuild based on changed files
-- RPM build and install test validates packaging
+**Strengths:**
+- Multi-stage build pipeline (builder → base → noobaa → tester)
+- Separate test runner image for isolation
+- Multi-architecture support (amd64, arm64, ppc64le)
+- RPM packaging pipeline
 
-**Gaps**:
-- No vulnerability scanning on any built images
+**Gaps:**
+- No vulnerability scanning on any images
 - No SBOM generation
-- No image signing/attestation
-- Base image is `quay.io/centos/centos:stream9` - not minimal (could use UBI minimal)
-- `.dockerignore` is minimal (only 3 entries)
+- No image signing or attestation
+- No image size optimization checks
+- No `HEALTHCHECK` instructions visible
 
 ### Security
 
-**Current State**: No security tooling exists in the repository.
+**Current State: Minimal**
+- `.dockerignore` prevents sensitive files from entering images
+- `.gitignore` configured
+- CodeRabbit may catch some security issues in review
+- No dedicated security tooling
 
-| Tool Category | Status | Gap |
-|---------------|--------|-----|
-| Container Scanning (Trivy/Snyk) | Missing | Images shipped without CVE assessment |
-| SAST (CodeQL/Semgrep) | Missing | No static analysis for code vulnerabilities |
-| Secret Detection (Gitleaks) | Missing | Cloud credentials at risk of leaking |
-| Dependency Scanning | Missing | npm audit not run in CI |
-| SBOM Generation (Syft) | Missing | No supply chain transparency |
-| Image Signing (Cosign) | Missing | No artifact integrity verification |
-| DAST | Missing | No dynamic testing of S3 endpoints |
-
-This is the most critical gap in the repository's quality posture. Given that noobaa-core handles cloud storage credentials (AWS, Azure, IBM Cloud), manages object storage with S3 API compatibility, and publishes container images to public registries, the absence of any security scanning is a significant risk.
+**Missing (All Critical):**
+- No CodeQL/SAST workflow
+- No Dependabot/Renovate for dependency updates
+- No container scanning (Trivy/Snyk)
+- No secret detection (Gitleaks/TruffleHog)
+- No SBOM generation
+- No image signing
+- No supply chain security (SLSA, Sigstore)
 
 ### Agent Rules (Agentic Flow Quality)
 
 - **Status**: Missing
-- **Coverage**: None - no CLAUDE.md, AGENTS.md, or `.claude/` directory
+- **Coverage**: None - no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
 - **Quality**: N/A
-- **Gaps**:
-  - No test creation guidelines for AI agents
-  - No documentation of the dual Mocha/Jest pattern
-  - No guidance on container-based vs. direct test execution
-  - No coding standards beyond ESLint configuration
-- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` to cover:
-  - Unit test patterns (Jest `.test.js` format preferred for new tests)
-  - Integration test patterns (with Postgres, NC mode)
-  - The Mocha index file requirement for legacy tests
-  - Container-based test execution requirements
-  - S3 compatibility test patterns (Ceph, Warp, Mint)
+- **Gaps**: No test creation guidance for any test type (unit, integration, E2E, S3 compatibility)
+- **Recommendation**: Generate rules with `/test-rules-generator` covering:
+  - Mocha unit test patterns (describe/it structure, coretest setup)
+  - Jest test patterns (`.test.js` naming, setup/teardown)
+  - S3 compatibility test patterns
+  - Integration test patterns (Docker network, Postgres, container lifecycle)
+  - NC (Non-Containerized) test patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Implement code coverage tracking**
-   - Add `c8` or `nyc` to Mocha test runs, enable `--coverage` for Jest
-   - Integrate Codecov with PR comments and gating
-   - Start with baseline measurement, then set minimum threshold (e.g., 50%)
-   - Effort: 4-6 hours
+1. **Add code coverage tracking** - Install `nyc` for Mocha, configure Jest coverage, integrate with Codecov for PR reporting. Set initial thresholds based on current state, then ratchet up.
 
-2. **Add container vulnerability scanning (Trivy)**
-   - Scan the built `noobaa` image in PR workflow
-   - Set `severity: CRITICAL,HIGH` to fail on serious CVEs
-   - Add `.trivyignore` for accepted risks
-   - Effort: 1-2 hours
+2. **Add container vulnerability scanning** - Add Trivy scanning to the PR workflow after image build. Block merges on CRITICAL/HIGH severity CVEs.
 
-3. **Add secret detection (Gitleaks)**
-   - Add to PR workflow with full history scan
-   - Configure exceptions via `.gitleaks.toml` for test fixtures
-   - Effort: 1-2 hours
+3. **Enable Dependabot** - Add `.github/dependabot.yml` for npm, Go modules, and GitHub Actions. This is a 1-hour task with immediate security value.
 
 ### Priority 1 (High Value)
 
-4. **Add CodeQL SAST analysis**
-   - Enable for JavaScript (primary language)
-   - Run on PR and weekly schedule
-   - Effort: 2-3 hours
+4. **Add CodeQL SAST workflow** - Enable CodeQL for JavaScript analysis on PRs. NooBaa handles user-supplied S3 requests, making injection detection critical.
 
-5. **Add SBOM generation and image signing to release workflow**
-   - Use Syft for SBOM, Cosign for signing
-   - Attach SBOMs as release artifacts
-   - Effort: 4-6 hours
+5. **Add secret detection** - Integrate Gitleaks to prevent accidental credential commits (AWS keys, IBM Cloud API keys used in nightly tests).
 
-6. **Add pre-commit hooks**
-   - ESLint, secret detection, package-lock validation
-   - Use `.pre-commit-config.yaml` with husky or lint-staged
-   - Effort: 2-3 hours
+6. **Write Go unit tests** - The `go/cmd/tcp_speed` and `go/cmd/http_speed` utilities have no tests. Add basic functionality tests.
 
-7. **Consolidate test frameworks**
-   - Migrate Mocha tests to Jest over time
-   - New tests should use Jest `.test.js` pattern exclusively
-   - Remove index file dependency for new tests
-   - Effort: 20-40 hours (phased)
+7. **Unify test framework configuration** - Create `jest.config.js` and `.mocharc.yml` for consistent test discovery and reporting.
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Create comprehensive CLAUDE.md and agent rules**
-   - Document test patterns, architecture, contribution guidelines
-   - Add `.claude/rules/` for unit, integration, and E2E test creation
-   - Effort: 2-3 hours
+8. **Add pre-commit hooks** - Configure `.pre-commit-config.yaml` with ESLint, commit message linting, and file size checks.
 
-9. **Remove legacy CI configurations**
-   - `.travis.yml` appears unused (GHA handles everything)
-   - `.jenkins/` directory may be unused
-   - Effort: 1 hour
+9. **Remove legacy Travis CI** - Delete `.travis.yml` and `.travis/` directory. All CI has moved to GitHub Actions.
 
-10. **Add Go component testing**
-    - 3 Go source files in `go/` with 0 test files
-    - Add basic unit tests for the Go utilities
-    - Effort: 2-4 hours
+10. **Create agent rules** - Generate `.claude/rules/` with test creation patterns for Mocha, Jest, and S3 compatibility suites.
 
-11. **Tighten ESLint thresholds**
-    - Reduce complexity from 35 to ~15
-    - Reduce max-lines-per-function from 400 to ~100
-    - Reduce max-statements from 60 to ~30
-    - Effort: 8-16 hours (phased, with codemod)
+11. **Add SBOM generation and image signing** - For release images, generate CycloneDX/SPDX SBOMs and sign with cosign.
 
-12. **Add npm audit to CI**
-    - Run `npm audit --audit-level=high` in PR workflow
-    - Effort: 30 minutes
+12. **Lower ESLint complexity** - Incrementally reduce the `complexity` threshold from 35 toward 15, refactoring flagged functions.
 
 ## Comparison to Gold Standards
 
-| Capability | noobaa-core | odh-dashboard | notebooks | kserve |
-|------------|-------------|---------------|-----------|--------|
-| Unit Test Framework | Mocha + Jest (dual) | Jest | pytest | Go testing |
-| Integration Tests | Container-based | Cypress + API | Image validation | envtest |
-| E2E Tests | S3 compat suites | Cypress E2E | Multi-layer | KServe E2E |
-| Coverage Tracking | **None** | Codecov enforced | Present | Codecov enforced |
-| Coverage Gating | **None** | PR thresholds | Basic | PR thresholds |
-| Container Scanning | **None** | Trivy | Trivy | Trivy |
-| SAST | **None** | CodeQL | Limited | CodeQL |
-| Secret Detection | **None** | Gitleaks | Gitleaks | Gitleaks |
-| Pre-commit Hooks | **None** | Husky + lint-staged | pre-commit | pre-commit |
-| SBOM/Signing | **None** | Cosign + Syft | Cosign | Cosign + Syft |
-| Agent Rules | **None** | Comprehensive | Basic | Partial |
-| Multi-arch Builds | arm64, ppc64le | amd64 | Multi-arch | Multi-arch |
-| CI Concurrency | cancel-in-progress | cancel-in-progress | cancel-in-progress | cancel-in-progress |
-| Test Parallelism | 10 parallel jobs | Sharded | Matrix | Parallel |
+| Dimension | noobaa-core | odh-dashboard | notebooks | kserve |
+|-----------|-------------|---------------|-----------|--------|
+| Unit Tests | 6/10 | 9/10 | 7/10 | 9/10 |
+| Integration/E2E | 7/10 | 9/10 | 8/10 | 9/10 |
+| Build Integration | 5/10 | 8/10 | 7/10 | 7/10 |
+| Image Testing | 5/10 | 7/10 | 9/10 | 7/10 |
+| Coverage Tracking | 1/10 | 9/10 | 6/10 | 9/10 |
+| CI/CD Automation | 7/10 | 9/10 | 8/10 | 9/10 |
+| Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
+| **Overall** | **5.5/10** | **8.7/10** | **7.1/10** | **7.9/10** |
 
-**Key Takeaways**:
-- noobaa-core excels at S3 compatibility testing and multi-architecture builds
-- The biggest gaps vs. gold standards are in coverage tracking, security scanning, and agent rules
-- The test suite is functionally rich (219 test files, external compatibility suites) but lacks measurement and enforcement
+**Key gaps vs. gold standards:**
+- **vs. odh-dashboard**: Missing coverage enforcement, contract testing, comprehensive agent rules, pre-commit hooks
+- **vs. notebooks**: Missing image vulnerability scanning, SBOM generation, multi-layer image validation
+- **vs. kserve**: Missing coverage thresholds, multi-version testing matrix, CodeQL integration
 
 ## File Paths Reference
 
-### CI/CD
-- `.github/workflows/run-pr-tests.yaml` - Main PR orchestrator
-- `.github/workflows/jest-unit-tests.yaml` - Jest unit tests (PR)
-- `.github/workflows/Validate-package-lock.yaml` - Package lock validation (PR)
-- `.github/workflows/build-arm64-image.yaml` - ARM64 build (PR)
-- `.github/workflows/build-ppc64le-image.yaml` - PPC64LE build (PR)
-- `.github/workflows/nightly-tests.yaml` - Nightly test dispatch
-- `.github/workflows/releaser.yaml` - Release workflow
+### CI/CD Workflows
+- `.github/workflows/run-pr-tests.yaml` - Main PR gate (orchestrates 10 test suites)
+- `.github/workflows/jest-unit-tests.yaml` - Standalone Jest tests on PRs
+- `.github/workflows/nc_unit.yml` - Non-containerized unit tests
+- `.github/workflows/postgres-unit-tests.yaml` - Postgres-backed unit tests
+- `.github/workflows/sanity.yaml` / `sanity-ssl.yaml` - Sanity checks
+- `.github/workflows/ceph-s3-tests.yaml` / `ceph-nsfs-s3-tests.yaml` - S3 compatibility
+- `.github/workflows/warp-tests.yaml` / `warp-nc-tests.yaml` - Warp benchmarks
+- `.github/workflows/mint-tests.yaml` / `mint-nc-tests.yaml` - Mint S3 conformance
+- `.github/workflows/build-arm64-image.yaml` / `build-ppc64le-image.yaml` - Multi-arch
+- `.github/workflows/manual-full-build.yaml` - Full build and publish
+- `.github/workflows/releaser.yaml` - Release automation
+- `.github/workflows/Validate-package-lock.yaml` - Lockfile integrity
 
 ### Testing
-- `src/test/unit_tests/` - 90 unit test files
-- `src/test/integration_tests/` - 58 integration test files
-- `src/test/system_tests/` - 11 system test files
-- `src/test/external_tests/` - Ceph, Warp, Mint, Hadoop S3A
-- `src/test/utils/index/index.js` - Mocha test index (entry point)
-- `src/test/framework/` - Test infrastructure
-
-### Code Quality
-- `.eslintrc.js` - Comprehensive ESLint config (extends eslint:all)
-- `.eslintignore` - ESLint ignore list
-- `.coderabbit.yaml` - CodeRabbit AI review config
-- `tslint.json` - TSLint config (likely unused/legacy)
-
-### Container Images
-- `src/deploy/NVA_build/Base.Dockerfile` - Base image
-- `src/deploy/NVA_build/NooBaa.Dockerfile` - Production image
-- `src/deploy/NVA_build/Tests.Dockerfile` - Test image
-- `src/deploy/NVA_build/builder.Dockerfile` - Builder image
-- `src/deploy/RPM_build/RPM.Dockerfile` - RPM build
+- `src/test/utils/index/index.js` - Main Mocha test index (containerized)
+- `src/test/utils/index/nc_index.js` - NC mode Mocha test index
+- `src/test/unit_tests/` - 51+ unit test files
+- `src/test/integration_tests/` - Integration test suites
+- `src/test/external_tests/` - External S3 compatibility suites
+- `src/test/system_tests/` - System-level tests
 
 ### Build
-- `Makefile` - Build and test targets (extensive: test-postgres, test-cephs3, test-warp, test-mint, etc.)
+- `Makefile` - Primary build orchestration (all test/build targets)
+- `src/deploy/NVA_build/*.Dockerfile` - Multi-stage Docker build chain
+- `src/deploy/RPM_build/RPM.Dockerfile` - RPM packaging
 - `package.json` - npm scripts (test, lint, mocha, jest)
-- `binding.gyp` - Native code build config
 
-### Legacy CI (candidates for removal)
-- `.travis.yml` - Travis CI config
-- `.jenkins/` - Jenkins pipeline configs
+### Code Quality
+- `.eslintrc.js` - Comprehensive ESLint configuration (extends eslint:all)
+- `.eslintignore` - ESLint ignore patterns
+- `tslint.json` - Legacy TSLint config (deprecated)
+- `.editorconfig` - Editor formatting standards
+- `.coderabbit.yaml` - AI code review configuration
+- `tsconfig.json` - TypeScript configuration
+
+### Legacy
+- `.travis.yml` - Travis CI config (superseded by GitHub Actions)
+- `.travis/` - Travis support scripts

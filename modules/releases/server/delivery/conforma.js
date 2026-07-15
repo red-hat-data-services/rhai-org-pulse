@@ -13,7 +13,7 @@ function validateRelease(r) {
   return null
 }
 
-module.exports = function registerConformaRoutes(router, context) {
+module.exports = async function registerConformaRoutes(router, context) {
   const { storage, requireAuth, requireAdmin, requireScope } = context
   const { readFromStorage, writeToStorage, deleteFromStorage } = storage
 
@@ -27,8 +27,8 @@ module.exports = function registerConformaRoutes(router, context) {
    *       200:
    *         description: Conforma data status
    */
-  router.get('/conforma/status', requireAuth, requireScope('releases:read'), function (req, res) {
-    const data = readFromStorage(STORAGE_KEY)
+  router.get('/conforma/status', requireAuth, requireScope('releases:read'), async function (req, res) {
+    const data = await readFromStorage(STORAGE_KEY)
     if (!data) return res.json({ status: 'no_data' })
     res.json({
       fetchedAt: data.fetchedAt || null,
@@ -47,8 +47,8 @@ module.exports = function registerConformaRoutes(router, context) {
    *       200:
    *         description: Conforma releases list
    */
-  router.get('/conforma/releases', requireAuth, requireScope('releases:read'), function (req, res) {
-    const data = readFromStorage(STORAGE_KEY)
+  router.get('/conforma/releases', requireAuth, requireScope('releases:read'), async function (req, res) {
+    const data = await readFromStorage(STORAGE_KEY)
     if (!data) {
       return res.status(404).json({ error: 'No conforma data available. Run the ingestion pipeline.' })
     }
@@ -70,8 +70,8 @@ module.exports = function registerConformaRoutes(router, context) {
    *       200:
    *         description: Single conforma release
    */
-  router.get('/conforma/releases/:version', requireAuth, requireScope('releases:read'), function (req, res) {
-    const data = readFromStorage(STORAGE_KEY)
+  router.get('/conforma/releases/:version', requireAuth, requireScope('releases:read'), async function (req, res) {
+    const data = await readFromStorage(STORAGE_KEY)
     if (!data) {
       return res.status(404).json({ error: 'No conforma data available.' })
     }
@@ -92,7 +92,7 @@ module.exports = function registerConformaRoutes(router, context) {
    *       200:
    *         description: Bulk import results
    */
-  router.post('/conforma/bulk', requireAdmin, requireScope('releases:write'), function (req, res) {
+  router.post('/conforma/bulk', requireAdmin, requireScope('releases:write'), async function (req, res) {
     if (process.env.DEMO_MODE === 'true') {
       return res.json({ status: 'skipped', message: 'Conforma ingest disabled in demo mode.' })
     }
@@ -122,14 +122,14 @@ module.exports = function registerConformaRoutes(router, context) {
     }
 
     const savedAt = new Date().toISOString()
-    writeToStorage(STORAGE_KEY, {
+    await writeToStorage(STORAGE_KEY, {
       fetchedAt: savedAt,
       minDate: minDate || DEFAULT_MIN_DATE,
       count: valid.length,
       releases: valid
     })
 
-    logAudit(readFromStorage, writeToStorage, {
+    await logAudit(readFromStorage, writeToStorage, {
       domain: 'delivery',
       action: 'conforma_bulk_import',
       user: req.userEmail || 'unknown',
@@ -150,12 +150,12 @@ module.exports = function registerConformaRoutes(router, context) {
    *       204:
    *         description: Conforma data cleared
    */
-  router.delete('/conforma', requireAdmin, requireScope('releases:write'), function (req, res) {
+  router.delete('/conforma', requireAdmin, requireScope('releases:write'), async function (req, res) {
     if (process.env.DEMO_MODE === 'true') {
       return res.status(400).json({ error: 'Cannot delete in demo mode.' })
     }
     try {
-      deleteFromStorage(STORAGE_KEY)
+      await deleteFromStorage(STORAGE_KEY)
     } catch {
       // File may not exist — treat as already cleared
     }

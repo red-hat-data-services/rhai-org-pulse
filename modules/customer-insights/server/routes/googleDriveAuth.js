@@ -7,7 +7,10 @@ const oauthStates = new Map()
 
 /**
  * Google Drive OAuth routes for per-user authentication.
- * Users authenticate with their own Google accounts to access Drive files.
+ *
+ * IMPORTANT: This is OPTIONAL functionality for importing files from personal Google Drive.
+ * Customer interactions are stored in a central Google Sheet accessed via service account.
+ * These routes are only needed if users want to import CSV/Sheets files from their own Drive.
  *
  * @param {import('express').Router} router
  * @param {import('@shared/server/module-context').ModuleContext} context
@@ -20,9 +23,8 @@ module.exports = function registerGoogleDriveAuthRoutes(router, context) {
   function getOAuthClient() {
     const clientId = secrets.GOOGLE_OAUTH_CLIENT_ID
     const clientSecret = secrets.GOOGLE_OAUTH_CLIENT_SECRET
-    // eslint-disable-next-line org-pulse/no-module-process-env -- callback URL is deployment config, not a secret
+
     const callbackUrl = process.env.GOOGLE_OAUTH_CALLBACK_URL ||
-    // eslint-disable-next-line org-pulse/no-module-process-env -- base URL is deployment config, not a secret
                        `${process.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/modules/customer-insights/auth/google/callback`
 
     if (!clientId || !clientSecret) {
@@ -377,55 +379,5 @@ module.exports = function registerGoogleDriveAuthRoutes(router, context) {
       console.error('Error downloading file from Drive:', error)
       res.status(500).json({ error: error.message })
     }
-  })
-
-  /**
-   * @openapi
-   * /api/modules/customer-insights/spreadsheet/config:
-   *   get:
-   *     summary: Get configured Google Spreadsheet ID
-   *     tags: [Customer Insights]
-   *     responses:
-   *       200:
-   *         description: Current spreadsheet configuration
-   */
-  router.get('/spreadsheet/config', requireAuth, async (req, res) => {
-    const userEmail = req.userEmail
-    if (!userEmail) {
-      return res.json({ spreadsheetId: null, spreadsheetName: null })
-    }
-    const config = await tokenStore.getSpreadsheetConfig(userEmail)
-    res.json(config || { spreadsheetId: null, spreadsheetName: null })
-  })
-
-  /**
-   * @openapi
-   * /api/modules/customer-insights/spreadsheet/config:
-   *   post:
-   *     summary: Set Google Spreadsheet ID for interactions storage
-   *     tags: [Customer Insights]
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             properties:
-   *               spreadsheetId:
-   *                 type: string
-   *               spreadsheetName:
-   *                 type: string
-   *     responses:
-   *       200:
-   *         description: Configuration saved
-   */
-  router.post('/spreadsheet/config', requireAuth, async (req, res) => {
-    const userEmail = req.userEmail
-    if (!userEmail) {
-      return res.status(401).json({ error: 'Not authenticated' })
-    }
-    const { spreadsheetId, spreadsheetName } = req.body
-    await tokenStore.saveSpreadsheetConfig(userEmail, spreadsheetId, spreadsheetName)
-    res.json({ success: true })
   })
 }

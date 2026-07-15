@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 09:50 AM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 03:28 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">langfuse/langfuse</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#28a745"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="90.47779199999995"
+                                stroke-dashoffset="79.168068"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">8.4</div>
+                        <div class="score-value">8.6</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">325 test files across monorepo with Vitest, strong server/client/worker coverage</div>
+                            <div class="scorecard-status">170 test files (72K+ lines) using Vitest across web, worker, and shared packages with smart isolation strategies</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Multi-matrix integration tests (Postgres 12/15, Azure/Redis-Cluster modes), Docker build health checks</div>
+                            <div class="scorecard-status">Playwright E2E + server E2E tests, multi-deploy-mode matrix (default, Azure, Redis cluster), multi-Postgres-version testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">PR-time Docker build with health checks, multi-service compose validation, full-stack startup test</div>
+                            <div class="scorecard-status">PR-time Docker compose build with health checks, client bundle scanning, full service startup validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Multi-arch (amd64/arm64) builds, multi-stage Dockerfiles, health check validation in CI</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Multi-arch builds (amd64/arm64), Docker health checks, Snyk container scanning, runtime startup validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">V8 coverage provider configured in Vitest but no codecov integration or PR reporting</div>
+                            <div class="scorecard-status">v8 coverage provider configured in worker vitest but no enforcement, no codecov integration, no PR coverage reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
-                            <div class="scorecard-status">19 workflows, smart skip-duplicate, concurrency control, Turbo/pnpm caching, Slack alerts</div>
+                            <div class="scorecard-status">Comprehensive 24-workflow pipeline with merge queue, concurrency control, turbo caching, duplicate skip, Slack notifications</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
-                            <div class="scorecard-status">Best-in-class .agents/ setup with 15 skills, per-package AGENTS.md, verification matrix</div>
+                            <div class="scorecard-status">Exceptional .agents/ setup with 25+ skills, architecture principles, code review, security review, and testing guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +411,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No coverage tracking or enforcement</div>
-                            <p>Coverage regressions go undetected; no visibility into test health over time</p>
+                            <div class="item-description">No coverage enforcement or reporting</div>
+                            <p>Coverage can silently degrade without detection; no PR coverage diffs or minimum thresholds</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No pre-commit secret detection</div>
-                            <p>Secrets could be committed to repository before CI catches them</p>
+                            <div class="item-description">Minimal Playwright E2E test coverage</div>
+                            <p>Only 2 E2E spec files (auth + create-project) out of a large web application; many user flows untested end-to-end</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">20-40 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card low">
+                            <div class="item-description">No pre-commit hooks for security scanning</div>
+                            <p>Security issues only caught in CI, not at commit time; developers may push vulnerable code</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-low">LOW</span>
                                 <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Snyk container scanning is post-merge only</div>
-                            <p>Vulnerable images can be merged to main before scanning detects issues</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Limited Playwright E2E coverage</div>
-                            <p>Only 2 browser E2E specs; UI regressions may not be caught automatically</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +448,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Codecov integration to pipeline</div>
-                            <p>Immediate visibility into coverage trends and PR-level coverage diffs</p>
+                            <div class="item-description">Add Codecov integration with PR coverage reporting</div>
+                            <p>Visibility into coverage trends and PR-level coverage diffs; prevent silent coverage regression</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Gitleaks secret detection to pre-commit and CI</div>
-                            <p>Prevent accidental secret commits before they reach the repository</p>
+                            <div class="item-description">Add coverage threshold enforcement</div>
+                            <p>Prevent coverage from dropping below baseline; worker already has v8 provider configured</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Move Snyk container scanning to PR workflow</div>
-                            <p>Catch container vulnerabilities before merge instead of after</p>
+                            <div class="item-description">Expand Playwright E2E tests for critical user flows</div>
+                            <p>Cover login, dashboard, trace viewing, project settings, and API key management flows</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Dependabot or Renovate for dependency updates</div>
-                            <p>Automated security patches for npm dependencies</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">8-16 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +485,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add Codecov or Coveralls integration with PR-level coverage reporting and minimum thresholds</li><li>Move Snyk container scanning to run on PRs (shift-left vulnerability detection)</li></ul>
+                            <ul><li>Integrate Codecov or similar with coverage thresholds and PR reporting</li><li>Add coverage enforcement gates to the CI pipeline</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Expand Playwright E2E test suite to cover critical user flows (tracing, scoring, prompt management)</li><li>Add Gitleaks or TruffleHog for pre-commit secret detection</li><li>Add contract tests between web/worker/shared API boundaries</li></ul>
+                            <ul><li>Expand Playwright E2E test suite to cover core user journeys (dashboard, traces, evaluations, prompts)</li><li>Add contract tests for tRPC API boundaries between web and shared packages</li><li>Add Storybook visual regression testing (already have 19 stories and Storybook CI)</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add performance regression testing for ingestion and query endpoints</li><li>Enable SBOM generation in Docker image builds</li><li>Add mutation testing (Stryker) for critical business logic</li></ul>
+                            <ul><li>Add performance regression testing for API endpoints</li><li>Add load testing for ingestion pipeline</li><li>Consider adding SBOM generation to release image builds</li></ul>
                         </div>
                     </div>
                 </div>

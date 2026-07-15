@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 12:23 PM</p>
+            <p class="timestamp">Generated on July 06, 2026 at 05:33 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/telecom-customer-churn-airflow</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="508.93757999999997"
+                                stroke-dashoffset="497.62785599999995"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">1.0</div>
+                        <div class="score-value">1.2</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No unit tests exist anywhere in the repository</div>
+                            <div class="scorecard-status">No unit tests exist; zero test files or frameworks configured</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.5/10</div>
-                            <div class="scorecard-status">Single manual verification notebook (test_airflow_success.ipynb) with no automation</div>
+                            <div class="scorecard-status">Single manual verification notebook (test_airflow_success.ipynb) requires live S3/Airflow; no automated integration tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No build system, no Dockerfile, no CI pipeline</div>
+                            <div class="scorecard-status">No CI/CD pipeline, no build validation, no PR checks of any kind</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No container images built or tested; relies on external quay.io image</div>
+                            <div class="scorecard-status">No Dockerfile, no container image build or testing; relies on external pre-built images</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tooling, no coverage thresholds, no reporting</div>
+                            <div class="scorecard-status">No coverage tooling, no codecov, no coverage thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No GitHub Actions, no Makefile, no CI configuration of any kind</div>
+                            <div class="scorecard-status">No .github/workflows, no Makefile, no .gitlab-ci.yml, no Jenkinsfile — zero automation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules</div>
+                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules or test guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,51 +411,51 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No CI/CD pipeline whatsoever</div>
-                            <p>Changes are merged without any automated validation; broken notebooks or DAGs are not caught</p>
+                            <div class="item-description">Zero CI/CD pipeline</div>
+                            <p>No automated checks on any PR — broken code, security issues, and regressions can merge freely</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Zero test coverage</div>
-                            <p>No unit tests for data processing, model training, or DAG definition logic</p>
+                            <div class="item-description">No tests of any kind</div>
+                            <p>No unit, integration, or E2E tests; pipeline correctness is only verified manually after deployment</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">8-16 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No dependency pinning or lock file</div>
-                            <p>requirements.txt pins only 2 of many transitive dependencies; builds are non-reproducible</p>
+                            <div class="item-description">No code quality tooling</div>
+                            <p>No linting, no type checking, no static analysis — code quality is unchecked</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Hardcoded S3 bucket name in pipeline definition</div>
-                            <p>Pipeline file contains environment-specific bucket name, breaking portability</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No security scanning or secret detection</div>
-                            <p>AWS credentials passed via environment variables with no guardrails against accidental commit</p>
+                            <div class="item-description">No security scanning</div>
+                            <p>Pinned but aging dependencies (scikit-learn 1.2.0, pandas 1.5.2) with no vulnerability scanning</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Stale/inconsistent dependency versions</div>
-                            <p>requirements.txt specifies scikit-learn==1.2.0 but test_airflow_success.ipynb installs scikit-learn==1.1.1</p>
+                            <div class="item-description">No .gitignore</div>
+                            <p>Risk of committing sensitive files, caches, or virtual environments</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">0.5 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">Hardcoded S3 bucket values in pipeline definition</div>
+                            <p>Leaked infrastructure details; pipeline is not portable across environments</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -472,35 +472,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add a basic GitHub Actions workflow for notebook validation</div>
-                            <p>Catch syntax errors and import failures before merge</p>
+                            <div class="item-description">Add .gitignore for Python/Jupyter projects</div>
+                            <p>Prevents accidental commits of .ipynb_checkpoints, __pycache__, .env files</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">0.5 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add a GitHub Actions linting workflow with ruff</div>
+                            <p>Catches syntax errors, unused imports, and style issues on every PR</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add Dependabot or Renovate for dependency updates</div>
+                            <p>Automated PRs for outdated/vulnerable dependencies (scikit-learn, pandas, boto3)</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Pin all dependencies in requirements.txt (including boto3)</div>
+                            <p>Reproducible environments; boto3 is currently unpinned</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">0.5 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add basic DAG validation test with pytest</div>
+                            <p>Catches DAG import errors and malformed task definitions before deployment</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add pre-commit hooks with nbstripout and ruff</div>
-                            <p>Prevent notebook outputs and secrets from being committed</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Pin all dependencies with pip-compile or pip freeze</div>
-                            <p>Reproducible environment across all developers and pipeline runs</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add .gitignore for Python artifacts and notebook checkpoints</div>
-                            <p>Cleaner repository, no accidental binary commits</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +525,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add CI/CD pipeline (GitHub Actions) to validate notebooks, lint Python, and run DAG parsing tests</li><li>Create unit tests for data processing logic (process_data.ipynb functions)</li><li>Pin all dependencies with a lock file (pip-compile or Poetry)</li></ul>
+                            <ul><li>Add a minimal GitHub Actions CI pipeline with linting and DAG validation tests</li><li>Add .gitignore to prevent leaking sensitive files or caches</li><li>Pin all Python dependencies and add Dependabot for automated security updates</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Extract notebook logic into importable Python modules for testability</li><li>Add pre-commit hooks (ruff, nbstripout, gitleaks)</li><li>Add Airflow DAG validation tests (airflow dags test)</li></ul>
+                            <ul><li>Write pytest-based unit tests for data processing logic (extract notebook code into modules)</li><li>Add integration tests that validate DAG structure and task dependencies</li><li>Add Trivy or pip-audit scanning for dependency vulnerabilities</li><li>Create CLAUDE.md and agent rules for test automation guidance</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add model validation tests (accuracy thresholds, data schema checks)</li><li>Create agent rules (.claude/rules/) for test automation guidance</li><li>Add Dockerfile for reproducible local development</li></ul>
+                            <ul><li>Containerize the demo with a Dockerfile for reproducible setup</li><li>Add notebook execution tests (papermill-based) to validate notebooks run end-to-end</li><li>Add pre-commit hooks for notebook output stripping and code formatting</li><li>Refactor notebook code into importable Python modules for testability</li></ul>
                         </div>
                     </div>
                 </div>

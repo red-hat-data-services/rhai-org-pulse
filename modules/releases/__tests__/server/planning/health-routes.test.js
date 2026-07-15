@@ -58,10 +58,10 @@ function makeStorage(data) {
     for (var k in data) store[k] = data[k]
   }
   return {
-    readFromStorage: function(key) {
+    readFromStorage: async function(key) {
       return store[key] ? JSON.parse(JSON.stringify(store[key])) : null
     },
-    writeToStorage: function(key, value) {
+    writeToStorage: async function(key, value) {
       store[key] = value
     },
     _store: store
@@ -197,49 +197,49 @@ describe('health routes', function() {
   // ─── GET /releases/:version/health ───
 
   describe('GET /releases/:version/health', function() {
-    it('returns 400 for invalid version', function() {
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health',
+    it('returns 400 for invalid version', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health',
         makeReq({ params: { version: '../evil' } }))
       expect(res._status).toBe(400)
       expect(res._json.error).toContain('Invalid version')
     })
 
-    it('returns 400 for __proto__ version', function() {
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health',
+    it('returns 400 for __proto__ version', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health',
         makeReq({ params: { version: '__proto__' } }))
       expect(res._status).toBe(400)
     })
 
-    it('returns 202 with _noCache when no cache exists', function() {
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health',
+    it('returns 202 with _noCache when no cache exists', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health',
         makeReq({ params: { version: '3.5' } }))
       expect(res._status).toBe(202)
       expect(res._json._noCache).toBe(true)
       expect(res._json.features).toEqual([])
     })
 
-    it('returns cached data when available', function() {
+    it('returns cached data when available', async function() {
       var cached = freshCache('3.5')
       storage._store['releases/planning/health-cache-3.5-all.json'] = cached
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health',
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health',
         makeReq({ params: { version: '3.5' } }))
       expect(res._status).toBe(200)
       expect(res._json.version).toBe('3.5')
       expect(res._json.features).toHaveLength(2)
     })
 
-    it('sets _cacheStale true for old cache', function() {
+    it('sets _cacheStale true for old cache', async function() {
       var cached = freshCache('3.5', { cachedAt: new Date(Date.now() - 20 * 60 * 1000).toISOString() })
       storage._store['releases/planning/health-cache-3.5-all.json'] = cached
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health',
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health',
         makeReq({ params: { version: '3.5' } }))
       expect(res._json._cacheStale).toBe(true)
     })
 
-    it('sets _cacheStale false for fresh cache', function() {
+    it('sets _cacheStale false for fresh cache', async function() {
       var cached = freshCache('3.5')
       storage._store['releases/planning/health-cache-3.5-all.json'] = cached
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health',
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health',
         makeReq({ params: { version: '3.5' } }))
       expect(res._json._cacheStale).toBe(false)
     })
@@ -248,71 +248,71 @@ describe('health routes', function() {
   // ─── Phase validation ───
 
   describe('phase query param validation', function() {
-    it('returns 400 for invalid phase on GET health', function() {
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health',
+    it('returns 400 for invalid phase on GET health', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health',
         makeReq({ params: { version: '3.5' }, query: { phase: 'INVALID' } }))
       expect(res._status).toBe(400)
       expect(res._json.error).toContain('phase')
     })
 
-    it('accepts valid EA1 phase on GET health', function() {
+    it('accepts valid EA1 phase on GET health', async function() {
       storage._store['releases/planning/health-cache-3.5-EA1.json'] = freshCache('3.5')
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health',
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health',
         makeReq({ params: { version: '3.5' }, query: { phase: 'EA1' } }))
       expect(res._status).toBe(200)
     })
 
-    it('accepts valid EA2 phase on GET health', function() {
+    it('accepts valid EA2 phase on GET health', async function() {
       storage._store['releases/planning/health-cache-3.5-EA2.json'] = freshCache('3.5')
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health',
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health',
         makeReq({ params: { version: '3.5' }, query: { phase: 'EA2' } }))
       expect(res._status).toBe(200)
     })
 
-    it('accepts valid GA phase on GET health', function() {
+    it('accepts valid GA phase on GET health', async function() {
       storage._store['releases/planning/health-cache-3.5-GA.json'] = freshCache('3.5')
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health',
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health',
         makeReq({ params: { version: '3.5' }, query: { phase: 'GA' } }))
       expect(res._status).toBe(200)
     })
 
-    it('uses phase-specific cache key', function() {
+    it('uses phase-specific cache key', async function() {
       storage._store['releases/planning/health-cache-3.5-EA2.json'] = freshCache('3.5')
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health',
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health',
         makeReq({ params: { version: '3.5' }, query: { phase: 'EA2' } }))
       expect(res._status).toBe(200)
       expect(res._json.features).toHaveLength(2)
     })
 
-    it('returns 202 when phase-specific cache does not exist', function() {
+    it('returns 202 when phase-specific cache does not exist', async function() {
       storage._store['releases/planning/health-cache-3.5-all.json'] = freshCache('3.5')
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health',
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health',
         makeReq({ params: { version: '3.5' }, query: { phase: 'EA1' } }))
       expect(res._status).toBe(202)
       expect(res._json._noCache).toBe(true)
     })
 
-    it('returns 400 for invalid phase on GET summary', function() {
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health/summary',
+    it('returns 400 for invalid phase on GET summary', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/summary',
         makeReq({ params: { version: '3.5' }, query: { phase: 'WRONG' } }))
       expect(res._status).toBe(400)
     })
 
-    it('returns 400 for invalid phase on POST refresh', function() {
-      var res = callRoute(router._routes, 'POST', '/releases/:version/health/refresh',
+    it('returns 400 for invalid phase on POST refresh', async function() {
+      var res = await callRoute(router._routes, 'POST', '/releases/:version/health/refresh',
         makeReq({ params: { version: '3.5' }, query: { phase: 'BAD' } }))
       expect(res._status).toBe(400)
     })
 
-    it('returns 400 for invalid phase on GET refresh status', function() {
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health/refresh/status',
+    it('returns 400 for invalid phase on GET refresh status', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/refresh/status',
         makeReq({ params: { version: '3.5' }, query: { phase: 'XYZ' } }))
       expect(res._status).toBe(400)
     })
 
-    it('uses phase-specific refresh state key', function() {
+    it('uses phase-specific refresh state key', async function() {
       refreshStates.set('health:3.5:EA1', { running: true, startedAt: '2026-04-26T12:00:00Z', lastResult: null })
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health/refresh/status',
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/refresh/status',
         makeReq({ params: { version: '3.5' }, query: { phase: 'EA1' } }))
       expect(res._json.running).toBe(true)
     })
@@ -321,21 +321,21 @@ describe('health routes', function() {
   // ─── GET /releases/:version/health/summary ───
 
   describe('GET /releases/:version/health/summary', function() {
-    it('returns 400 for invalid version', function() {
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health/summary',
+    it('returns 400 for invalid version', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/summary',
         makeReq({ params: { version: '!bad!' } }))
       expect(res._status).toBe(400)
     })
 
-    it('returns 404 when no cache exists', function() {
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health/summary',
+    it('returns 404 when no cache exists', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/summary',
         makeReq({ params: { version: '3.5' } }))
       expect(res._status).toBe(404)
     })
 
-    it('returns summary from cached data', function() {
+    it('returns summary from cached data', async function() {
       storage._store['releases/planning/health-cache-3.5-all.json'] = freshCache('3.5')
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health/summary',
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/summary',
         makeReq({ params: { version: '3.5' } }))
       expect(res._status).toBe(200)
       expect(res._json.version).toBe('3.5')
@@ -348,36 +348,36 @@ describe('health routes', function() {
   // ─── GET /releases/:version/health/feature/:key ───
 
   describe('GET /releases/:version/health/feature/:key', function() {
-    it('returns 400 for invalid version', function() {
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health/feature/:key',
+    it('returns 400 for invalid version', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/feature/:key',
         makeReq({ params: { version: '!bad', key: 'T-1' } }))
       expect(res._status).toBe(400)
     })
 
-    it('returns 400 for invalid feature key', function() {
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health/feature/:key',
+    it('returns 400 for invalid feature key', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/feature/:key',
         makeReq({ params: { version: '3.5', key: 'not-valid' } }))
       expect(res._status).toBe(400)
       expect(res._json.error).toContain('Invalid feature key')
     })
 
-    it('returns 404 when no cache exists', function() {
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health/feature/:key',
+    it('returns 404 when no cache exists', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/feature/:key',
         makeReq({ params: { version: '3.5', key: 'T-1' } }))
       expect(res._status).toBe(404)
     })
 
-    it('returns 404 when feature not found in cache', function() {
+    it('returns 404 when feature not found in cache', async function() {
       storage._store['releases/planning/health-cache-3.5-all.json'] = freshCache('3.5')
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health/feature/:key',
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/feature/:key',
         makeReq({ params: { version: '3.5', key: 'T-999' } }))
       expect(res._status).toBe(404)
       expect(res._json.error).toContain('T-999')
     })
 
-    it('returns feature data when found', function() {
+    it('returns feature data when found', async function() {
       storage._store['releases/planning/health-cache-3.5-all.json'] = freshCache('3.5')
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health/feature/:key',
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/feature/:key',
         makeReq({ params: { version: '3.5', key: 'T-1' } }))
       expect(res._status).toBe(200)
       expect(res._json.key).toBe('T-1')
@@ -388,35 +388,35 @@ describe('health routes', function() {
   // ─── PUT /releases/:version/health/override/:featureKey ───
 
   describe('PUT /releases/:version/health/override/:featureKey', function() {
-    it('returns 400 for invalid risk level', function() {
-      var res = callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
+    it('returns 400 for invalid risk level', async function() {
+      var res = await callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
         makeReq({ params: { version: '3.5', featureKey: 'T-1' }, body: { riskOverride: 'purple', reason: 'test' } }))
       expect(res._status).toBe(400)
       expect(res._json.error).toContain('riskOverride')
     })
 
-    it('returns 400 when reason is missing', function() {
-      var res = callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
+    it('returns 400 when reason is missing', async function() {
+      var res = await callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
         makeReq({ params: { version: '3.5', featureKey: 'T-1' }, body: { riskOverride: 'green' } }))
       expect(res._status).toBe(400)
       expect(res._json.error).toContain('reason')
     })
 
-    it('returns 400 when reason is empty string', function() {
-      var res = callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
+    it('returns 400 when reason is empty string', async function() {
+      var res = await callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
         makeReq({ params: { version: '3.5', featureKey: 'T-1' }, body: { riskOverride: 'green', reason: '   ' } }))
       expect(res._status).toBe(400)
     })
 
-    it('returns 400 when reason exceeds max length', function() {
-      var res = callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
+    it('returns 400 when reason exceeds max length', async function() {
+      var res = await callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
         makeReq({ params: { version: '3.5', featureKey: 'T-1' }, body: { riskOverride: 'green', reason: 'x'.repeat(501) } }))
       expect(res._status).toBe(400)
       expect(res._json.error).toContain('500')
     })
 
-    it('writes override and returns confirmation on success', function() {
-      var res = callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
+    it('writes override and returns confirmation on success', async function() {
+      var res = await callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
         makeReq({ params: { version: '3.5', featureKey: 'T-1' }, body: { riskOverride: 'green', reason: 'PM verified' } }))
       expect(res._status).toBe(200)
       expect(res._json.featureKey).toBe('T-1')
@@ -428,8 +428,8 @@ describe('health routes', function() {
       expect(overrides.overrides['T-1'].reason).toBe('PM verified')
     })
 
-    it('writes audit log entry', function() {
-      callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
+    it('writes audit log entry', async function() {
+      await callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
         makeReq({ params: { version: '3.5', featureKey: 'T-1' }, body: { riskOverride: 'yellow', reason: 'Under review' } }))
       var auditLog = storage._store['releases/audit-log.json']
       expect(auditLog).toBeDefined()
@@ -442,24 +442,24 @@ describe('health routes', function() {
   // ─── DELETE /releases/:version/health/override/:featureKey ───
 
   describe('DELETE /releases/:version/health/override/:featureKey', function() {
-    it('returns 400 for invalid version', function() {
-      var res = callRoute(router._routes, 'DELETE', '/releases/:version/health/override/:featureKey',
+    it('returns 400 for invalid version', async function() {
+      var res = await callRoute(router._routes, 'DELETE', '/releases/:version/health/override/:featureKey',
         makeReq({ params: { version: '!bad', featureKey: 'T-1' } }))
       expect(res._status).toBe(400)
     })
 
-    it('returns 404 when no override exists', function() {
-      var res = callRoute(router._routes, 'DELETE', '/releases/:version/health/override/:featureKey',
+    it('returns 404 when no override exists', async function() {
+      var res = await callRoute(router._routes, 'DELETE', '/releases/:version/health/override/:featureKey',
         makeReq({ params: { version: '3.5', featureKey: 'T-1' } }))
       expect(res._status).toBe(404)
     })
 
-    it('removes override and returns confirmation', function() {
+    it('removes override and returns confirmation', async function() {
       storage._store['releases/planning/health-overrides-3.5.json'] = {
         version: '3.5',
         overrides: { 'T-1': { riskOverride: 'green', reason: 'old reason' } }
       }
-      var res = callRoute(router._routes, 'DELETE', '/releases/:version/health/override/:featureKey',
+      var res = await callRoute(router._routes, 'DELETE', '/releases/:version/health/override/:featureKey',
         makeReq({ params: { version: '3.5', featureKey: 'T-1' } }))
       expect(res._status).toBe(200)
       expect(res._json.removed).toBe(true)
@@ -468,12 +468,12 @@ describe('health routes', function() {
       expect(overrides.overrides['T-1']).toBeUndefined()
     })
 
-    it('writes audit log entry', function() {
+    it('writes audit log entry', async function() {
       storage._store['releases/planning/health-overrides-3.5.json'] = {
         version: '3.5',
         overrides: { 'T-1': { riskOverride: 'green', reason: 'test' } }
       }
-      callRoute(router._routes, 'DELETE', '/releases/:version/health/override/:featureKey',
+      await callRoute(router._routes, 'DELETE', '/releases/:version/health/override/:featureKey',
         makeReq({ params: { version: '3.5', featureKey: 'T-1' } }))
       var auditLog = storage._store['releases/audit-log.json']
       expect(auditLog).toBeDefined()
@@ -485,29 +485,29 @@ describe('health routes', function() {
   // ─── POST /releases/:version/health/refresh ───
 
   describe('POST /releases/:version/health/refresh', function() {
-    it('returns 400 for invalid version', function() {
-      var res = callRoute(router._routes, 'POST', '/releases/:version/health/refresh',
+    it('returns 400 for invalid version', async function() {
+      var res = await callRoute(router._routes, 'POST', '/releases/:version/health/refresh',
         makeReq({ params: { version: '../bad' } }))
       expect(res._status).toBe(400)
     })
 
-    it('returns already_running when refresh in progress', function() {
+    it('returns already_running when refresh in progress', async function() {
       refreshStates.set('health:3.5:all', { running: true, startedAt: new Date().toISOString() })
-      var res = callRoute(router._routes, 'POST', '/releases/:version/health/refresh',
+      var res = await callRoute(router._routes, 'POST', '/releases/:version/health/refresh',
         makeReq({ params: { version: '3.5' } }))
       expect(res._json.status).toBe('already_running')
     })
 
-    it('returns 429 when max concurrent refreshes reached', function() {
+    it('returns 429 when max concurrent refreshes reached', async function() {
       refreshStates.set('health:3.4:all', { running: true })
       refreshStates.set('health:3.3:all', { running: true })
-      var res = callRoute(router._routes, 'POST', '/releases/:version/health/refresh',
+      var res = await callRoute(router._routes, 'POST', '/releases/:version/health/refresh',
         makeReq({ params: { version: '3.5' } }))
       expect(res._status).toBe(429)
     })
 
-    it('returns started on success', function() {
-      var res = callRoute(router._routes, 'POST', '/releases/:version/health/refresh',
+    it('returns started on success', async function() {
+      var res = await callRoute(router._routes, 'POST', '/releases/:version/health/refresh',
         makeReq({ params: { version: '3.5' } }))
       expect(res._json.status).toBe('started')
     })
@@ -516,23 +516,23 @@ describe('health routes', function() {
   // ─── GET /releases/:version/health/refresh/status ───
 
   describe('GET /releases/:version/health/refresh/status', function() {
-    it('returns 400 for invalid version', function() {
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health/refresh/status',
+    it('returns 400 for invalid version', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/refresh/status',
         makeReq({ params: { version: '!bad' } }))
       expect(res._status).toBe(400)
     })
 
-    it('returns initial state when no refresh has run', function() {
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health/refresh/status',
+    it('returns initial state when no refresh has run', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/refresh/status',
         makeReq({ params: { version: '3.5' } }))
       expect(res._status).toBe(200)
       expect(res._json.running).toBe(false)
       expect(res._json.lastResult).toBeNull()
     })
 
-    it('returns running state during refresh', function() {
+    it('returns running state during refresh', async function() {
       refreshStates.set('health:3.5:all', { running: true, startedAt: '2026-04-26T12:00:00Z', lastResult: null })
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health/refresh/status',
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/refresh/status',
         makeReq({ params: { version: '3.5' } }))
       expect(res._json.running).toBe(true)
       expect(res._json.startedAt).toBe('2026-04-26T12:00:00Z')
@@ -542,7 +542,7 @@ describe('health routes', function() {
   // ─── GET /releases/:version/health with committedSnapshots ───
 
   describe('GET /releases/:version/health with committed snapshots', function() {
-    it('includes committedSnapshots when snapshot files exist', function() {
+    it('includes committedSnapshots when snapshot files exist', async function() {
       storage._store['releases/planning/health-cache-3.5-all.json'] = freshCache('3.5')
       storage._store['releases/planning/committed-snapshot-3.5-EA1.json'] = {
         version: '3.5',
@@ -552,7 +552,7 @@ describe('health routes', function() {
         featureKeys: ['T-1', 'T-2'],
         features: [{ key: 'T-1', summary: 'F1' }, { key: 'T-2', summary: 'F2' }]
       }
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health',
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health',
         makeReq({ params: { version: '3.5' } }))
       expect(res._status).toBe(200)
       expect(res._json.committedSnapshots).toBeDefined()
@@ -562,9 +562,9 @@ describe('health routes', function() {
       expect(res._json.committedSnapshots.EA2).toBeUndefined()
     })
 
-    it('returns empty committedSnapshots when no snapshots exist', function() {
+    it('returns empty committedSnapshots when no snapshots exist', async function() {
       storage._store['releases/planning/health-cache-3.5-all.json'] = freshCache('3.5')
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health',
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health',
         makeReq({ params: { version: '3.5' } }))
       expect(res._status).toBe(200)
       expect(res._json.committedSnapshots).toBeDefined()
@@ -575,26 +575,26 @@ describe('health routes', function() {
   // ─── GET /releases/:version/health/snapshot/:phase ───
 
   describe('GET /releases/:version/health/snapshot/:phase', function() {
-    it('returns 400 for invalid version', function() {
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health/snapshot/:phase',
+    it('returns 400 for invalid version', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/snapshot/:phase',
         makeReq({ params: { version: '../bad', phase: 'EA1' } }))
       expect(res._status).toBe(400)
     })
 
-    it('returns 400 for invalid phase', function() {
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health/snapshot/:phase',
+    it('returns 400 for invalid phase', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/snapshot/:phase',
         makeReq({ params: { version: '3.5', phase: 'INVALID' } }))
       expect(res._status).toBe(400)
       expect(res._json.error).toContain('Invalid phase')
     })
 
-    it('returns 404 when no snapshot exists', function() {
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health/snapshot/:phase',
+    it('returns 404 when no snapshot exists', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/snapshot/:phase',
         makeReq({ params: { version: '3.5', phase: 'EA1' } }))
       expect(res._status).toBe(404)
     })
 
-    it('returns snapshot data when it exists', function() {
+    it('returns snapshot data when it exists', async function() {
       storage._store['releases/planning/committed-snapshot-3.5-EA1.json'] = {
         version: '3.5',
         phase: 'EA1',
@@ -603,7 +603,7 @@ describe('health routes', function() {
         featureKeys: ['T-1'],
         features: [{ key: 'T-1', summary: 'Feature 1' }]
       }
-      var res = callRoute(router._routes, 'GET', '/releases/:version/health/snapshot/:phase',
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/snapshot/:phase',
         makeReq({ params: { version: '3.5', phase: 'ea1' } }))
       expect(res._status).toBe(200)
       expect(res._json.phase).toBe('EA1')
@@ -614,26 +614,26 @@ describe('health routes', function() {
   // ─── POST /releases/:version/health/snapshot/:phase ───
 
   describe('POST /releases/:version/health/snapshot/:phase', function() {
-    it('returns 400 for invalid version', function() {
-      var res = callRoute(router._routes, 'POST', '/releases/:version/health/snapshot/:phase',
+    it('returns 400 for invalid version', async function() {
+      var res = await callRoute(router._routes, 'POST', '/releases/:version/health/snapshot/:phase',
         makeReq({ params: { version: '!bad', phase: 'EA1' } }))
       expect(res._status).toBe(400)
     })
 
-    it('returns 400 for invalid phase', function() {
-      var res = callRoute(router._routes, 'POST', '/releases/:version/health/snapshot/:phase',
+    it('returns 400 for invalid phase', async function() {
+      var res = await callRoute(router._routes, 'POST', '/releases/:version/health/snapshot/:phase',
         makeReq({ params: { version: '3.5', phase: 'WRONG' } }))
       expect(res._status).toBe(400)
     })
 
-    it('returns 404 when no health cache exists', function() {
-      var res = callRoute(router._routes, 'POST', '/releases/:version/health/snapshot/:phase',
+    it('returns 404 when no health cache exists', async function() {
+      var res = await callRoute(router._routes, 'POST', '/releases/:version/health/snapshot/:phase',
         makeReq({ params: { version: '3.5', phase: 'EA1' } }))
       expect(res._status).toBe(404)
       expect(res._json.error).toContain('No health cache')
     })
 
-    it('creates snapshot with matching features and writes audit log', function() {
+    it('creates snapshot with matching features and writes audit log', async function() {
       storage._store['releases/planning/health-cache-3.5-all.json'] = freshCache('3.5', {
         features: [
           { key: 'T-1', summary: 'F1', status: 'In Progress', fixVersions: 'rhoai-3.5.EA1', components: 'Comp1', deliveryOwner: 'owner1' },
@@ -641,7 +641,7 @@ describe('health routes', function() {
           { key: 'T-3', summary: 'F3', status: 'Done', fixVersions: 'rhoai-3.5.EA1, rhoai-3.5.EA2', components: 'Comp3', deliveryOwner: 'owner3' }
         ]
       })
-      var res = callRoute(router._routes, 'POST', '/releases/:version/health/snapshot/:phase',
+      var res = await callRoute(router._routes, 'POST', '/releases/:version/health/snapshot/:phase',
         makeReq({ params: { version: '3.5', phase: 'EA1' } }))
       expect(res._status).toBe(200)
       expect(res._json.phase).toBe('EA1')
@@ -759,20 +759,20 @@ describe('health routes', function() {
   // ─── GET /releases/health-admin/config ───
 
   describe('GET /releases/health-admin/config', function() {
-    it('returns config with defaults when no config saved', function() {
-      var res = callRoute(router._routes, 'GET', '/releases/health-admin/config', makeReq())
+    it('returns config with defaults when no config saved', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/health-admin/config', makeReq())
       expect(res._status).toBe(200)
       expect(res._json.customFieldIds).toBeDefined()
       expect(res._json.enableRice).toBe(false)
       expect(res._json.enableStratCreator).toBe(false)
     })
 
-    it('returns saved config', function() {
+    it('returns saved config', async function() {
       storage._store['releases/planning/config.json'] = {
         customFieldIds: { riceScoreField: 'customfield_10864' },
         healthConfig: { enableRice: true, enableStratCreator: true }
       }
-      var res = callRoute(router._routes, 'GET', '/releases/health-admin/config', makeReq())
+      var res = await callRoute(router._routes, 'GET', '/releases/health-admin/config', makeReq())
       expect(res._status).toBe(200)
       expect(res._json.enableRice).toBe(true)
       expect(res._json.enableStratCreator).toBe(true)
@@ -782,8 +782,8 @@ describe('health routes', function() {
   // ─── PUT /releases/health-admin/config ───
 
   describe('PUT /releases/health-admin/config', function() {
-    it('saves riceScoreField', function() {
-      var res = callRoute(router._routes, 'PUT', '/releases/health-admin/config',
+    it('saves riceScoreField', async function() {
+      var res = await callRoute(router._routes, 'PUT', '/releases/health-admin/config',
         makeReq({ body: { riceScoreField: 'customfield_10864' } }))
       expect(res._status).toBe(200)
       expect(res._json.saved).toBe(true)
@@ -793,15 +793,15 @@ describe('health routes', function() {
       expect(config.customFieldIds.riceScoreField).toBe('customfield_10864')
     })
 
-    it('returns 400 for riceScoreField with invalid characters', function() {
-      var res = callRoute(router._routes, 'PUT', '/releases/health-admin/config',
+    it('returns 400 for riceScoreField with invalid characters', async function() {
+      var res = await callRoute(router._routes, 'PUT', '/releases/health-admin/config',
         makeReq({ body: { riceScoreField: 'bad field!' } }))
       expect(res._status).toBe(400)
       expect(res._json.error).toContain('Invalid riceScoreField')
     })
 
-    it('saves enableRice flag', function() {
-      var res = callRoute(router._routes, 'PUT', '/releases/health-admin/config',
+    it('saves enableRice flag', async function() {
+      var res = await callRoute(router._routes, 'PUT', '/releases/health-admin/config',
         makeReq({ body: { enableRice: true } }))
       expect(res._status).toBe(200)
       expect(res._json.enableRice).toBe(true)
@@ -810,20 +810,20 @@ describe('health routes', function() {
       expect(config.healthConfig.enableRice).toBe(true)
     })
 
-    it('preserves existing field IDs when updating enableRice only', function() {
+    it('preserves existing field IDs when updating enableRice only', async function() {
       storage._store['releases/planning/config.json'] = {
         customFieldIds: { riceScoreField: 'customfield_10864' },
         healthConfig: {}
       }
-      callRoute(router._routes, 'PUT', '/releases/health-admin/config',
+      await callRoute(router._routes, 'PUT', '/releases/health-admin/config',
         makeReq({ body: { enableRice: true } }))
       var config = storage._store['releases/planning/config.json']
       expect(config.customFieldIds.riceScoreField).toBe('customfield_10864')
       expect(config.healthConfig.enableRice).toBe(true)
     })
 
-    it('saves enableStratCreator flag', function() {
-      var res = callRoute(router._routes, 'PUT', '/releases/health-admin/config',
+    it('saves enableStratCreator flag', async function() {
+      var res = await callRoute(router._routes, 'PUT', '/releases/health-admin/config',
         makeReq({ body: { enableStratCreator: true } }))
       expect(res._status).toBe(200)
       expect(res._json.enableStratCreator).toBe(true)
@@ -832,8 +832,8 @@ describe('health routes', function() {
       expect(config.healthConfig.enableStratCreator).toBe(true)
     })
 
-    it('returns enableStratCreator in response', function() {
-      var res = callRoute(router._routes, 'PUT', '/releases/health-admin/config',
+    it('returns enableStratCreator in response', async function() {
+      var res = await callRoute(router._routes, 'PUT', '/releases/health-admin/config',
         makeReq({ body: { enableRice: true, enableStratCreator: true } }))
       expect(res._json.enableRice).toBe(true)
       expect(res._json.enableStratCreator).toBe(true)
@@ -909,8 +909,8 @@ describe('health routes', function() {
   // ─── Open Access ───
 
   describe('open access for authenticated users', function() {
-    it('allows non-admin, non-planning-manager to set risk override', function() {
-      var res = callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
+    it('allows non-admin, non-planning-manager to set risk override', async function() {
+      var res = await callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
         makeReq({
           isAdmin: false,
           isReleaseManager: false,
@@ -922,13 +922,13 @@ describe('health routes', function() {
       expect(res._json.featureKey).toBe('T-1')
     })
 
-    it('allows non-admin, non-planning-manager to create snapshot', function() {
+    it('allows non-admin, non-planning-manager to create snapshot', async function() {
       storage._store['releases/planning/health-cache-3.5-all.json'] = freshCache('3.5', {
         features: [
           { key: 'T-1', summary: 'F1', fixVersions: 'rhoai-3.5.EA1', status: 'In Progress', components: 'Comp1', deliveryOwner: 'owner1' }
         ]
       })
-      var res = callRoute(router._routes, 'POST', '/releases/:version/health/snapshot/:phase',
+      var res = await callRoute(router._routes, 'POST', '/releases/:version/health/snapshot/:phase',
         makeReq({
           isAdmin: false,
           isReleaseManager: false,
@@ -958,8 +958,8 @@ describe('health routes', function() {
   // ─── Audit Actor ───
 
   describe('audit actor tracking', function() {
-    it('uses auditActor in audit log for risk override', function() {
-      callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
+    it('uses auditActor in audit log for risk override', async function() {
+      await callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
         makeReq({
           params: { version: '3.5', featureKey: 'T-1' },
           body: { riskOverride: 'yellow', reason: 'Under review' },
@@ -970,8 +970,8 @@ describe('health routes', function() {
       expect(entry.user).toBe('target@test.com (impersonated by admin@test.com)')
     })
 
-    it('falls back to userEmail when auditActor is not set', function() {
-      callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
+    it('falls back to userEmail when auditActor is not set', async function() {
+      await callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
         makeReq({
           params: { version: '3.5', featureKey: 'T-1' },
           body: { riskOverride: 'red', reason: 'Critical issue' },
@@ -986,8 +986,8 @@ describe('health routes', function() {
   // ─── Health Admin Config Audit ───
 
   describe('PUT /releases/health-admin/config audit logging', function() {
-    it('writes audit log entry on config save', function() {
-      callRoute(router._routes, 'PUT', '/releases/health-admin/config',
+    it('writes audit log entry on config save', async function() {
+      await callRoute(router._routes, 'PUT', '/releases/health-admin/config',
         makeReq({ body: { enableRice: true, riceScoreField: 'customfield_123' } }))
       var auditLog = storage._store['releases/audit-log.json']
       expect(auditLog).toBeDefined()
@@ -997,8 +997,8 @@ describe('health routes', function() {
       expect(entry.details.riceScoreField).toBe('customfield_123')
     })
 
-    it('uses auditActor in health config audit log', function() {
-      callRoute(router._routes, 'PUT', '/releases/health-admin/config',
+    it('uses auditActor in health config audit log', async function() {
+      await callRoute(router._routes, 'PUT', '/releases/health-admin/config',
         makeReq({
           body: { enableStratCreator: true },
           auditActor: 'user@test.com (impersonated by admin@test.com)'

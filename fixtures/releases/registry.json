@@ -9,6 +9,7 @@
       "productPagesVersion": "2.14",
       "milestones": {
         "planningFreeze": "2026-04-15",
+        "featureFreeze": "2026-05-15",
         "codeFreeze": "2026-06-01",
         "ea1": "2026-06-15",
         "ga": "2026-07-01"
@@ -26,6 +27,7 @@
       "productPagesVersion": "2.15",
       "milestones": {
         "planningFreeze": "2026-06-15",
+        "featureFreeze": "2026-07-15",
         "codeFreeze": "2026-08-01",
         "ga": "2026-09-01"
       },

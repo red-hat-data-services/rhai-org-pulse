@@ -1,406 +1,394 @@
 ---
 repository: "opendatahub-io/mlflow"
-overall_score: 7.6
+overall_score: 7.9
 scorecard:
   - dimension: "Unit Tests"
     score: 8.5
-    status: "~993 Python test files, ~507 JS test files; pytest + Jest; parallelized CI with 4-way splitting"
+    status: "722 Python test files + 530 JS/TS test files with pytest and Jest; well-organized per-module test suites"
   - dimension: "Integration/E2E"
-    score: 8.0
-    status: "Playwright E2E on Konflux-built images; docker-compose stack; DB integration tests; multi-version fs2db migration tests"
+    score: 8.5
+    status: "Operator integration tests with Kind cluster, Playwright E2E for UI, database integration tests across PostgreSQL/MySQL/MSSQL"
   - dimension: "Build Integration"
-    score: 7.5
-    status: "Konflux Tekton pipelines for PR+push; multi-arch builds (amd64/arm64/ppc64le/s390x); E2E waits for Konflux image"
+    score: 8.0
+    status: "Konflux PR builds with multi-arch, E2E waits for Konflux image, operator integration builds and deploys on PR"
   - dimension: "Image Testing"
     score: 7.0
-    status: "Konflux hermetic builds with SBOM (Syft); E2E validates runtime via docker-compose; no standalone image smoke tests"
+    status: "Konflux multi-arch builds (amd64/arm64/ppc64le/s390x), UBI9 base, hermetic builds; limited runtime validation outside E2E"
   - dimension: "Coverage Tracking"
     score: 3.0
-    status: "No codecov/coveralls integration; no coverage thresholds or PR coverage reports"
+    status: "JS CI has --coverage flag but no enforcement; no Python coverage tracking, no codecov/coveralls integration"
   - dimension: "CI/CD Automation"
     score: 9.0
-    status: "30+ workflows; concurrency control; caching; auto-close PRs; label gating; matrix strategies; Copilot-aware"
+    status: "49 workflows with concurrency control, path filtering, matrix strategies, test splitting; excellent automation"
   - dimension: "Agent Rules"
-    score: 8.0
-    status: "Comprehensive CLAUDE.md; .claude/rules/ with Python and GitHub Actions guides; .claude/skills/ with 8 custom skills"
+    score: 7.5
+    status: "CLAUDE.md + 2 agent rules (python.md, github-actions.md) + 8 skills; rules are high quality but lack test-specific guidance"
 critical_gaps:
-  - title: "No coverage tracking or enforcement"
-    impact: "Cannot measure test coverage trends, regressions, or enforce minimum thresholds on PRs"
+  - title: "No Python test coverage tracking or enforcement"
+    impact: "Cannot identify undertested code paths; coverage regressions go unnoticed"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No container security scanning in CI"
-    impact: "Vulnerabilities in container images not caught before deployment; relies entirely on Konflux post-build"
+  - title: "No security vulnerability scanning (Trivy/Snyk/CodeQL) in CI"
+    impact: "Dependency and code vulnerabilities not detected pre-merge"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No SAST/CodeQL in workflows"
-    impact: "No automated static application security testing on PRs or pushes"
+  - title: "No coverage enforcement thresholds for JS or Python"
+    impact: "Test coverage can decrease without any CI gate catching it"
     severity: "MEDIUM"
     effort: "2-3 hours"
-  - title: "No standalone container image smoke test"
-    impact: "Image startup/health issues only caught in full E2E suite, not as a fast feedback loop"
+  - title: "Missing agent rules for test creation patterns"
+    impact: "AI-generated tests may not follow project conventions for pytest fixtures, mocking, parametrization"
     severity: "MEDIUM"
     effort: "3-4 hours"
 quick_wins:
-  - title: "Add codecov integration to PR workflow"
+  - title: "Add codecov/coveralls integration for Python tests"
     effort: "4-6 hours"
-    impact: "Immediate visibility into test coverage trends and enforcement on PRs"
+    impact: "Visibility into test coverage trends and PR-level coverage changes"
   - title: "Add Trivy container scanning to PR workflow"
     effort: "1-2 hours"
-    impact: "Early detection of CVEs in the built Konflux image before merge"
-  - title: "Add CodeQL/SAST workflow"
+    impact: "Early detection of CVEs in container images and dependencies"
+  - title: "Add CodeQL or Semgrep SAST scanning"
     effort: "2-3 hours"
-    impact: "Automated security bug detection on every PR"
-  - title: "Add agent rules for test patterns"
+    impact: "Automated detection of security anti-patterns in Python code"
+  - title: "Create agent rules for test patterns (unit-tests.md)"
     effort: "2-3 hours"
-    impact: "Ensure AI-generated tests follow project conventions for E2E and integration test types"
+    impact: "Consistent AI-generated tests following project conventions"
 recommendations:
   priority_0:
-    - "Add pytest-cov and codecov integration to master.yml to track and enforce coverage thresholds"
-    - "Add container vulnerability scanning (Trivy) as a PR check on the Konflux-built image"
+    - "Implement Python test coverage tracking with codecov integration and PR reporting"
+    - "Add container security scanning (Trivy) to the Konflux and/or GitHub Actions pipeline"
   priority_1:
-    - "Add CodeQL or Semgrep SAST scanning workflow for Python and JavaScript"
-    - "Create a standalone container health check job that validates image startup before E2E"
-    - "Add agent rules for E2E test patterns, integration test patterns, and container testing"
+    - "Add CodeQL or Semgrep SAST workflow for Python code analysis"
+    - "Create comprehensive agent rules for test creation (.claude/rules/unit-tests.md, integration-tests.md)"
+    - "Add coverage enforcement thresholds (e.g., 60% minimum, no decrease on PR)"
   priority_2:
-    - "Add secret detection scanning (Gitleaks/TruffleHog) to PR workflow"
-    - "Add performance regression testing for API endpoints"
-    - "Consider contract tests between frontend and backend API boundaries"
+    - "Add dependency scanning workflow (Dependabot or Renovate)"
+    - "Add performance regression testing for model serving endpoints"
+    - "Create agent rules for E2E test patterns with Playwright"
 ---
 
 # Quality Analysis: opendatahub-io/mlflow
 
 ## Executive Summary
 
-- **Overall Score: 7.6/10**
-- **Repository Type**: Python ML platform with TypeScript/React frontend (fork of mlflow/mlflow)
-- **Primary Language**: Python (1,090 source files), TypeScript/JavaScript (507 test files)
-- **Key Strengths**: Massive test suite (993 Python + 507 JS test files), sophisticated CI/CD with 30+ workflows, Konflux integration with multi-arch builds, comprehensive agent rules with custom skills, Playwright E2E tests running against real Konflux-built images
-- **Critical Gaps**: No coverage tracking/enforcement, no container security scanning in CI, no SAST/CodeQL
-- **Agent Rules Status**: Present and comprehensive (CLAUDE.md, 2 rule files, 8 custom skills)
+- **Overall Score: 7.9/10**
+- **Repository Type**: Python ML platform (fork of upstream mlflow/mlflow with RHOAI customizations)
+- **Primary Languages**: Python (2,478 files), TypeScript/JavaScript (3,192 files)
+- **Frameworks**: pytest, Jest, Playwright, Kubernetes operator integration
+- **Key Strengths**: Exceptionally mature CI/CD pipeline with 49 workflows, comprehensive test matrix (Python splits, database backends, ML flavors, Windows, GenAI), Konflux multi-arch builds, Playwright E2E, operator integration tests with Kind, excellent pre-commit hooks (20+ checks), well-structured agent rules
+- **Critical Gaps**: No Python test coverage tracking, no security scanning (Trivy/CodeQL), no coverage enforcement
+- **Agent Rules Status**: Present and high quality — CLAUDE.md + 2 rules + 8 skills, but missing test-specific creation rules
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 8.5/10 | ~993 Python test files, ~507 JS test files; pytest + Jest; 4-way parallel splitting |
-| Integration/E2E | 8.0/10 | Playwright E2E on Konflux images; docker-compose stack; DB integration; fs2db migration tests |
-| **Build Integration** | **7.5/10** | **Konflux Tekton pipelines for PR+push; multi-arch (amd64/arm64/ppc64le/s390x); hermetic builds** |
-| Image Testing | 7.0/10 | Konflux hermetic builds with SBOM (Syft); E2E validates runtime; no standalone smoke test |
-| Coverage Tracking | 3.0/10 | No codecov/coveralls; no coverage thresholds; no PR coverage reports |
-| CI/CD Automation | 9.0/10 | 30+ workflows; concurrency control; caching; auto-close PRs; label gating; Copilot-aware |
-| Agent Rules | 8.0/10 | Full CLAUDE.md; .claude/rules/ (Python, GH Actions); .claude/skills/ (8 custom skills) |
+| Unit Tests | 8.5/10 | 722 Python + 530 JS test files; pytest with splits, Jest with workers |
+| Integration/E2E | 8.5/10 | Operator integration (Kind), Playwright E2E, database tests (PG/MySQL/MSSQL) |
+| **Build Integration** | **8.0/10** | **Konflux PR builds, E2E waits for Konflux image, operator integration builds on PR** |
+| Image Testing | 7.0/10 | Multi-arch Konflux builds (4 architectures), UBI9 base, hermetic; limited standalone runtime validation |
+| Coverage Tracking | 3.0/10 | JS has `--coverage` in CI script but no enforcement; no Python coverage at all |
+| CI/CD Automation | 9.0/10 | 49 workflows, concurrency control, path filtering, matrix strategies, test splitting |
+| Agent Rules | 7.5/10 | CLAUDE.md + python.md + github-actions.md rules + 8 custom skills |
 
 ## Critical Gaps
 
-### 1. No Coverage Tracking or Enforcement
-- **Impact**: Cannot measure test coverage trends or regressions; no minimum threshold enforcement on PRs; developers cannot see which lines are untested
+### 1. No Python Test Coverage Tracking or Enforcement
+- **Impact**: With 2,478 Python source files and 722 test files, there is no way to identify undertested modules or catch coverage regressions
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: Despite having ~993 Python test files and ~507 JS test files, there is no `pytest-cov`, no `.codecov.yml`, no `coveralls` config, and no coverage-related steps in any workflow. The `[tool.coverage]` section in `pyproject.toml` is absent.
+- **Details**: No `.coveragerc`, no `codecov.yml`, no `--cov` flags in pytest configuration. The `test:ci` JS script has `--coverage` but it's unclear if results are tracked anywhere
+- **Recommendation**: Add `pytest-cov` to test requirements, configure `.coveragerc`, integrate with Codecov for PR reporting
 
-### 2. No Container Security Scanning in CI
-- **Impact**: Vulnerabilities in container images and dependencies not caught before deployment; fully dependent on Konflux post-build scanning
+### 2. No Security Vulnerability Scanning in CI
+- **Impact**: Container images and Python dependencies are not scanned for known CVEs before merge
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: No Trivy, Snyk, or Grype scanning in any GitHub workflow. The `.syft.yaml` config exists for SBOM generation (used by Konflux), but no vulnerability scanning is performed as a GitHub PR check. The only security-related workflow is `close-security-issues.yml` which just manages issue lifecycle.
+- **Details**: No Trivy, Snyk, CodeQL, Semgrep, or Grype workflows found. The Syft SBOM generation (.syft.yaml) exists for Konflux supply chain attestation, but no active vulnerability scanning
+- **Recommendation**: Add Trivy scanning for container images and `pip audit` for Python dependencies
 
-### 3. No SAST/CodeQL Integration
-- **Impact**: No automated static application security testing; security vulnerabilities in Python and JavaScript code not caught systematically
+### 3. No Coverage Enforcement Thresholds
+- **Impact**: Test coverage can decrease on any PR without CI catching it
 - **Severity**: MEDIUM
 - **Effort**: 2-3 hours
-- **Details**: No CodeQL, Semgrep, or gosec workflows found. For a project with 60M+ monthly downloads handling ML model artifacts and credentials, this is a notable gap.
+- **Details**: Even where coverage is collected (JS CI), no minimum thresholds or diff-coverage checks exist
+- **Recommendation**: Configure codecov.yml with `project` and `patch` targets
 
-### 4. No Standalone Container Image Smoke Test
-- **Impact**: Image startup and health issues only caught during full E2E suite execution, not as a fast feedback loop
+### 4. Missing Test Creation Agent Rules
+- **Impact**: AI-generated tests may not follow project-specific pytest conventions (fixtures, parametrize, mock patterns)
 - **Severity**: MEDIUM
 - **Effort**: 3-4 hours
-- **Details**: The E2E workflow does validate the Konflux-built image runtime (via docker-compose), but there is no lightweight standalone test that validates image startup, health endpoint, and basic API responses independent of the full Playwright test suite.
+- **Details**: The existing `python.md` rule covers code style excellently but doesn't cover test creation patterns for different test types (unit, integration, E2E)
+- **Recommendation**: Create `.claude/rules/unit-tests.md` and `.claude/rules/e2e-tests.md` with project-specific patterns
 
 ## Quick Wins
 
-### 1. Add Codecov Integration (4-6 hours)
-- **Impact**: Immediate visibility into coverage trends, PR coverage diffs, and enforcement
-- **Implementation**: Add `pytest-cov` to test-requirements.txt, add `--cov=mlflow --cov-report=xml` to pytest invocations in `master.yml`, add codecov upload step
+### 1. Add Trivy Container Scanning (~1-2 hours)
+- **Impact**: Detect CVEs in UBI9 base image and Python dependencies
+- **Implementation**:
+```yaml
+# .github/workflows/security-scan.yml
+name: Security Scan
+on: [pull_request]
+jobs:
+  trivy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+```
 
-### 2. Add Trivy Container Scanning (1-2 hours)
-- **Impact**: Early CVE detection on every PR before merge
-- **Implementation**: Add a Trivy scan step after the Konflux image is built, either in the E2E workflow or as a standalone workflow triggered by Konflux build completion
+### 2. Add Python Coverage Reporting (~4-6 hours)
+- **Impact**: Visibility into which modules need more tests
+- **Implementation**: Add `pytest-cov` and `coverage` to `requirements/test-requirements.txt`, update pytest invocations with `--cov=mlflow --cov-report=xml`
 
-### 3. Add CodeQL/SAST Workflow (2-3 hours)
-- **Impact**: Automated detection of security bugs in Python and JavaScript
-- **Implementation**: Add `.github/workflows/codeql.yml` with Python and JavaScript analysis
+### 3. Create Agent Test Rules (~2-3 hours)
+- **Impact**: AI-generated tests follow project patterns
+- **Implementation**: Create `.claude/rules/unit-tests.md` documenting pytest patterns, fixture usage, parametrize conventions from existing `python.md` rule's test section
 
-### 4. Add E2E/Integration Test Agent Rules (2-3 hours)
-- **Impact**: Ensure AI-generated tests follow project-specific patterns for Playwright E2E, docker-compose integration, and DB tests
-- **Implementation**: Create `.claude/rules/e2e-tests.md` and `.claude/rules/integration-tests.md` with Playwright patterns and docker-compose conventions
+### 4. Add CodeQL SAST (~2-3 hours)
+- **Impact**: Catch injection, XSS, and other security issues in Python code
+- **Implementation**: Use GitHub's built-in CodeQL action with Python language configuration
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### CI/CD Pipeline (Score: 9.0/10)
 
-**Workflows Inventory** (30+ workflows):
+**Strengths:**
+- **49 GitHub Actions workflows** covering linting, testing, building, and deployment
+- **Concurrency control** on all workflows: `cancel-in-progress: true` with properly scoped groups
+- **Path filtering**: Test workflows ignore docs/markdown changes; JS workflow only triggers on `mlflow/server/js/**`
+- **Test splitting**: Python tests split across 4 matrix groups with `pytest-split`; models split across 3 groups
+- **Multi-platform**: Windows tests run alongside Linux
+- **Draft PR skipping**: All jobs check `pull_request.draft == false` (with Copilot bot exception)
+- **Operator integration**: Full Kind cluster deployment and testing on every PR
+- **E2E pipeline**: Waits for Konflux PR image build, then runs Playwright tests against the real container
+- **Tekton/Konflux**: Full PipelineRun configs for both PR and push with hermetic builds and prefetch
 
+**Workflow Inventory (key workflows):**
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `master.yml` | PR + push | Main Python test suite (4-way split, 120min timeout) |
-| `tracing.yml` | PR + push | Tracing SDK tests (core + OTLP) |
-| `js.yml` | PR + push (JS paths) | Frontend Jest tests, lint, type-check, build |
-| `e2e.yml` | After JS workflow | Playwright E2E on Konflux-built image |
-| `lint.yml` | PR + push | Pre-commit hooks (ruff, mypy, clint, typos, etc.) |
-| `slow-tests.yml` | Daily + dispatch | Docker build tests (120min) |
-| `fs2db.yml` | PR + push | Database migration tests (multi-version) |
-| `examples.yml` | PR + push | Example notebook tests |
-| `build-and-push-dev-image.yml` | PR + push | Dev Docker image builds |
-| `gateway-benchmark.yml` | Dispatch | Gateway performance benchmarks |
-| Various automation | PR events | Auto-close, stale PRs, labeling, size checks |
+| `master.yml` | PR + push | Core Python tests (skinny, python, database, flavors, models, evaluate, genai, pyfunc, windows) |
+| `lint.yml` | PR + push | Pre-commit hooks, ruff, mypy, clint, custom linters on Linux + macOS |
+| `js.yml` | PR + push (JS paths) | ESLint, prettier, type-check, Jest tests, build verification |
+| `e2e.yml` | After JS workflow | Playwright E2E using Konflux-built container image |
+| `tracing.yml` | PR + push | Tracing SDK unit tests in isolation |
+| `operator-integration-tests.yml` | PR + push | Kind cluster, operator + MLflow deployment, integration tests |
+| `fs2db.yml` | PR + push | Filesystem-to-database migration E2E tests |
+| `examples.yml` | PR + schedule | ML example notebooks validation |
+| `build-wheel.yml` | push | Python wheel build verification |
+| `protobuf-cross-test.yml` | PR + push | Proto compatibility testing |
 
-**Strengths**:
-- Excellent concurrency control (`cancel-in-progress: true` on all workflows)
-- Matrix strategies for parallel test execution (4-way split for Python tests)
-- Path-based filtering to avoid unnecessary runs
-- Copilot bot awareness (skips draft PRs except for Copilot)
-- Action pin verification via pre-commit (`check_action_pins.py`)
-- OPA/Conftest policy enforcement on workflow files
-- Comprehensive reusable actions (`.github/actions/`)
-
-**Weaknesses**:
-- No coverage collection or reporting in any workflow
-- No security scanning workflows
-- Slow tests only run daily (not on PR for most changes)
-
-### Test Coverage
-
-**Python Tests** (~993 test files):
-- Framework: pytest with extensive configuration in `pyproject.toml`
-- Parallelization: 4-way split via `pytest-split`
-- Timeout: 1200s per test
-- Coverage areas: tracking, tracing, models, deployments, CLI, server, utils, 20+ ML framework integrations (OpenAI, Anthropic, LangChain, transformers, etc.)
-- Integration tests: Database tests (PostgreSQL, MySQL, MSSQL via docker-compose), async logging
-- Docker tests: Separate slow test suite for container builds
-
-**JavaScript/TypeScript Tests** (~507 test files):
-- Framework: Jest (unit/component tests), Playwright (E2E)
-- Unit tests: 507 test files in `mlflow/server/js/src/`
-- E2E tests: 3 Playwright spec files (prompt versioning, GenAI observability, experiment lifecycle)
-- CI: 2-way matrix split on test path patterns
-
-**TypeScript SDK Tests** (libs/typescript/):
-- Integration tests for Claude Code, OpenAI, Anthropic, Gemini, Codex integrations
-- Core library tests
-
-**Test-to-Code Ratio**: ~0.91 (993 Python test files / 1,090 source files) - excellent
-
-### Code Quality
-
-**Linting** (Excellent):
-- Ruff: Python linting and formatting with auto-fix
-- Clint: Custom MLflow-specific linter
-- mypy: Static type checking on dev/ and .claude/skills/
-- ty: Unresolved import detection
-- taplo: TOML formatting
-- buf: Protocol buffer formatting
-- Prettier: JS/TS/MD/YAML formatting
-- ESLint: JS/TS linting (via `yarn lint`)
-- typos: Spelling checker
-- Conftest/Regal: OPA policy enforcement on workflows
-
-**Pre-commit Hooks** (Comprehensive - 25+ hooks):
-- Trailing whitespace, end-of-file fixer
-- VCS permalink validation
-- Ruff, format, mypy, clint
-- uv-lock consistency
-- Action pin verification
-- Component ID registry
-- Proto linting and formatting
-- JS formatting
-- No-spaces-in-filenames
-- DCO sign-off enforcement
-- MLflow-specific typo checking
-
-**Static Analysis**:
-- mypy configured for dev scripts
-- ty for import resolution
-- No SAST tools (CodeQL, Semgrep, gosec) - gap
-
-### Container Images
-
-**Dockerfile.konflux** (Production):
-- Multi-stage build (3 stages: UI builder, Python builder, runtime)
-- Base: UBI9 (Red Hat Universal Base Image)
-- Multi-arch: amd64, arm64, ppc64le, s390x
-- Hermetic builds with `--require-hashes` and `--no-deps`
-- Minimal runtime image (`ubi-minimal`)
-- Non-root user (1001)
-- SBOM generation via Syft (`.syft.yaml` configured)
-- Proper health check endpoint
-
-**Tekton Pipelines** (`.tekton/`):
-- `mlflow-pull-request.yaml`: PR builds with hermetic prefetch (pip, yarn, rpm)
-- `mlflow-push.yaml`: Push builds with stable/latest tags
-- References centralized pipeline from `odh-konflux-central`
-- Extra memory allocation for prefetch (6Gi)
-
-**Docker Compose** (Development/E2E):
-- PostgreSQL 15 backend
-- RustFS (S3-compatible) artifact storage
-- Health checks on all services
-- Configurable via `.env` files
-
-**Gaps**:
-- No Trivy/Snyk scanning in GitHub workflows
-- No standalone image smoke test (only full E2E validates runtime)
-- No image signing/attestation in GitHub workflows (may be handled by Konflux)
-
-### Security
-
-**Present**:
-- SECURITY.md with vulnerability reporting process (GitHub private advisories)
-- DCO sign-off enforcement
-- Action pin verification (SHA-pinned actions)
-- Hermetic Konflux builds with hash verification
-- `.syft.yaml` for SBOM generation
-- Non-root container user
-- Input validation in E2E workflow (sanitizing image tag)
-
-**Missing**:
+**Minor Gaps:**
+- No workflow for dependency vulnerability scanning
 - No SAST/CodeQL workflow
-- No Trivy/Snyk container scanning in GitHub CI
-- No Gitleaks/TruffleHog secret detection
-- No dependency scanning (Dependabot/Renovate) visible in workflows
-- No image signing/attestation in GitHub workflows
 
-### Agent Rules (Agentic Flow Quality)
+### Test Coverage (Score: 8.5/10 Unit, 8.5/10 Integration/E2E)
 
-**Status**: Present and comprehensive
+**Unit Tests:**
+- **722 Python test files** in `tests/` across 80+ subdirectories covering every major module
+- **530 JS/TS test files** for the UI layer
+- **pytest** with strict markers, timeout=1200s, deprecation warning enforcement
+- **Jest** for React components with `--maxWorkers=2` for memory management
+- **Test organization**: Module-mirror structure (tests/tracing/, tests/models/, tests/gateway/, etc.)
+- **ML flavor coverage**: Dedicated test suites for 30+ ML frameworks (sklearn, pytorch, tensorflow, transformers, langchain, etc.)
 
-**CLAUDE.md** (7,152 bytes):
-- Repository overview and quick start
-- Development server setup (local + Databricks backend)
-- Testing commands (pytest, uv, extras)
-- Code quality commands (ruff, clint, typo checking)
-- Git workflow with DCO sign-off requirements
-- Pre-commit hook installation and usage
-- UI development reference (links to JS CLAUDE.md)
-- Code style principles (imports, docstrings, comments, workspace-aware patterns)
+**Integration Tests:**
+- **Database tests**: Multi-backend testing across PostgreSQL, MySQL, MSSQL using docker-compose
+- **Database migration checks**: Verifies schema migrations work across all supported backends
+- **Operator integration**: Full Kubernetes deployment testing with Kind cluster
+  - Builds MLflow runtime image, operator image, and test image
+  - Matrix testing across K8s versions, artifact backends, backend stores, registry stores
+  - TLS and workspace support testing
+- **fs2db**: Filesystem-to-database migration E2E validation
 
-**Rules** (`.claude/rules/`):
-- `python.md` (8,096 bytes): Comprehensive Python style guide covering docstrings, Literal types, try-catch scope, dataclasses, pathlib, subprocess, pattern matching, mock best practices, parametrized tests, decorator typing
-- `github-actions.md` (956 bytes): ubuntu-slim preference, gh CLI over actions/github-script
+**E2E Tests:**
+- **Playwright-based**: 3 spec files covering experiment lifecycle, GenAI observability, prompt versioning
+- **Real container testing**: E2E tests run against Konflux-built image, not dev server
+- **Full stack**: docker-compose stack with MLflow server, PostgreSQL, workspace support
+- **Page Object Model**: Well-structured with pages/, fixtures/, utils/ directories
+- **Artifact upload**: Test reports and results uploaded on failure
 
-**Skills** (`.claude/skills/`):
-- 8 custom skills: add-review-comment, analyze-ci, copilot, fetch-diff, fetch-unresolved-comments, pr-review, resolve, src
-- `pyproject.toml` and `README.md` for skills infrastructure
+**Gaps:**
+- No Python coverage reporting or tracking
+- JS coverage collected in `test:ci` but not reported/enforced
+- E2E spec count is modest (3 specs) relative to UI complexity
 
-**Gaps**:
-- No E2E test creation rules (Playwright patterns, docker-compose setup)
-- No integration test rules
-- No container/image testing rules
-- No coverage/quality gate rules
+### Code Quality (Score: 9.0/10)
+
+**Outstanding pre-commit setup with 25+ hooks:**
+- `ruff`: Python linting with 100-char line length, extensive rule selection, preview mode
+- `ruff format`: Code formatting with docstring support
+- `mypy`: Type checking on dev/ and skills/
+- `clint`: Custom MLflow-specific linter
+- `ty`: Import resolution checking (detects broken `mlflow.*` imports)
+- `prettier`: JS/JSON/YAML formatting
+- `taplo`: TOML formatting
+- `typos`: Spell checking
+- `buf`: Protobuf formatting
+- `conftest`/`check-actions`: OPA Rego policy enforcement on GitHub Actions workflows
+- `regal`: Rego linting
+- `check-component-ids`: React component ID registry validation
+- Multiple custom validators (mlflow-typo, check-init-py, forbid-gif, no-yaml, no-spaces)
+- `uv-lock`: Lock file consistency
+- `must-have-signoff`: DCO enforcement (prepare-commit-msg stage)
+
+**Lint CI:**
+- Runs on both Linux and macOS
+- Function signature checking
+- Whitespace-only change detection
+- uv.lock change warnings
+- Unused media detection
+
+**Excellent ruff configuration** with 30+ enabled rules and file-specific overrides.
+
+### Container Images (Score: 7.0/10)
+
+**Strengths:**
+- **Konflux multi-arch builds**: amd64, arm64, ppc64le, s390x
+- **Hermetic builds**: All dependencies prefetched and locked
+- **UBI9 base images**: Production-grade Red Hat base
+- **Multi-stage Dockerfile**: 3-stage build (UI builder → Python builder → runtime)
+- **SBOM generation**: Syft configuration for supply chain attestation
+- **Security hardening**: Non-root user (1001), PYTHONDONTWRITEBYTECODE, telemetry disabled
+- **Tekton PipelineRuns**: Both PR and push pipelines with proper tagging (odh-pr-{sha}, odh-stable)
+
+**Gaps:**
+- No Trivy/Grype vulnerability scanning
+- No image signing/attestation beyond SBOM
+- No standalone container runtime validation (smoke test) — relies on E2E pipeline
+- Multiple Dockerfiles (7+) in the repo; testing coverage varies
+
+### Security (Score: 4.0/10)
+
+**Present:**
+- Syft SBOM generation for Konflux
+- DCO sign-off enforcement
+- Hermetic Konflux builds
+- Security vulnerability issue template with auto-close + redirect to private reporting
+- Non-root container user
+- `.dockerignore` present
+- `persist-credentials: false` on all checkout actions
+
+**Missing:**
+- ❌ No Trivy/Snyk/Grype container scanning
+- ❌ No CodeQL/Semgrep SAST scanning
+- ❌ No Gitleaks/TruffleHog secret detection
+- ❌ No dependency scanning (pip-audit, safety)
+- ❌ No image signing (cosign)
+- ❌ No Dependabot/Renovate for dependency updates
+
+### Agent Rules (Score: 7.5/10)
+
+**Present and high-quality:**
+- **CLAUDE.md** (7.1 KB): Comprehensive development guide with dev server setup, testing commands, code quality commands, git workflow, pre-commit hooks, debugging tips
+- **.claude/rules/python.md** (8 KB): Excellent Python style guide covering 12 patterns (Literal types, try-catch scope, dataclasses, pathlib, pattern matching, mock best practices, parametrize, decorator metadata)
+- **.claude/rules/github-actions.md** (2.4 KB): Workflow guidelines (ubuntu-slim, gh CLI preference, sparse-checkout, pipefail)
+- **.claude/settings.json**: Configured settings
+- **.claude/hooks/**: Custom hooks
+- **.claude/skills/** (8 skills): add-review-comment, analyze-ci, copilot, fetch-diff, fetch-unresolved-comments, pr-review, rebase-mlflow, resolve
+
+**Gaps:**
+- No dedicated test creation rules (unit-tests.md, integration-tests.md, e2e-tests.md)
+- No operator test pattern rules
+- `python.md` covers mock and parametrize patterns but not full test creation workflows
+- No Playwright E2E test conventions documented
+- No rules for database test patterns or ML flavor test patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add pytest-cov and codecov integration**
-   - Add `pytest-cov` to `requirements/test-requirements.txt`
-   - Add `--cov=mlflow --cov-report=xml` to pytest commands in `master.yml`
-   - Add codecov upload step after tests
-   - Create `.codecov.yml` with minimum coverage thresholds
+1. **Implement Python test coverage tracking with Codecov**
+   - Add `pytest-cov` to test requirements
+   - Configure `--cov=mlflow --cov-report=xml` in CI pytest invocations
+   - Create `.codecov.yml` with project and patch targets
+   - Add Codecov upload step to `master.yml` workflow
    - Effort: 4-6 hours
 
-2. **Add container vulnerability scanning**
-   - Add Trivy scan step in E2E workflow after Konflux image pull
-   - Or create standalone workflow triggered by Konflux build completion
-   - Set severity thresholds (CRITICAL, HIGH)
+2. **Add container security scanning**
+   - Add Trivy filesystem scan in PR workflow
+   - Add `pip audit` step to lint or test workflow
+   - Consider Trivy image scan on Konflux-built images
    - Effort: 2-4 hours
 
 ### Priority 1 (High Value)
 
-3. **Add CodeQL/SAST workflow**
-   - Create `.github/workflows/codeql.yml`
-   - Enable Python and JavaScript analysis
-   - Run on PR and push to master
+3. **Add SAST scanning (CodeQL or Semgrep)**
+   - Enable CodeQL for Python language analysis
+   - Schedule weekly scans + PR triggers
    - Effort: 2-3 hours
 
-4. **Add standalone container health check job**
-   - Create lightweight job that pulls Konflux image, starts it, validates health endpoint
-   - Faster feedback than full E2E suite
+4. **Create comprehensive test agent rules**
+   - `.claude/rules/unit-tests.md`: pytest fixtures, parametrize patterns, mock conventions, test file naming
+   - `.claude/rules/e2e-tests.md`: Playwright page objects, test data fixtures, assertion patterns
    - Effort: 3-4 hours
 
-5. **Expand agent rules for testing**
-   - Create `.claude/rules/e2e-tests.md` with Playwright patterns, fixture usage, docker-compose setup
-   - Create `.claude/rules/integration-tests.md` with DB test patterns
+5. **Enforce coverage thresholds**
+   - Set minimum project coverage (e.g., 60%)
+   - Require no coverage decrease on PRs (patch coverage > 70%)
    - Effort: 2-3 hours
 
 ### Priority 2 (Nice-to-Have)
 
-6. **Add secret detection scanning**
-   - Add Gitleaks or TruffleHog to pre-commit or CI
-   - Effort: 1-2 hours
-
-7. **Add performance regression testing**
-   - Extend gateway-benchmark workflow to run on PR
-   - Track API endpoint latency over time
-   - Effort: 8-12 hours
-
-8. **Add contract tests for frontend/backend**
-   - Define API contracts between React frontend and Python backend
-   - Validate contracts on both sides
-   - Effort: 12-16 hours
+6. **Add dependency update automation** (Dependabot or Renovate)
+7. **Add performance regression testing** for model serving and tracing endpoints
+8. **Add secret detection** (Gitleaks in pre-commit or CI)
+9. **Expand E2E test coverage** (currently 3 specs for a large UI)
+10. **Add image signing** with cosign for Konflux-built images
 
 ## Comparison to Gold Standards
 
 | Dimension | mlflow (this) | odh-dashboard | notebooks | kserve |
-|-----------|--------------|---------------|-----------|--------|
-| Unit Tests | 8.5 | 9.0 | 7.0 | 8.5 |
-| Integration/E2E | 8.0 | 9.0 | 8.0 | 9.0 |
-| Build Integration | 7.5 | 8.0 | 7.0 | 7.0 |
-| Image Testing | 7.0 | 7.0 | 9.0 | 6.0 |
-| Coverage Tracking | 3.0 | 8.0 | 5.0 | 9.0 |
-| CI/CD Automation | 9.0 | 9.0 | 8.0 | 8.5 |
-| Agent Rules | 8.0 | 9.0 | 3.0 | 2.0 |
-| **Overall** | **7.6** | **8.7** | **6.7** | **7.4** |
-
-**Key Differentiators**:
-- mlflow's test volume (1,500+ test files across Python/JS) is exceptional
-- Konflux multi-arch build integration is mature (4 architectures)
-- Agent rules are well-developed with 8 custom skills
-- Main gap vs. gold standards is coverage tracking (3.0 vs. 8.0+ for leaders)
-- E2E tests validating against real Konflux-built images is a strong pattern
+|-----------|---------------|---------------|-----------|--------|
+| Unit Tests | ★★★★☆ (1252 files) | ★★★★★ | ★★★☆☆ | ★★★★★ |
+| Integration/E2E | ★★★★☆ (Kind + Playwright) | ★★★★★ | ★★★★☆ | ★★★★★ |
+| Build Integration | ★★★★☆ (Konflux + E2E) | ★★★★☆ | ★★★★☆ | ★★★☆☆ |
+| Image Testing | ★★★☆☆ (multi-arch, no scan) | ★★★★☆ | ★★★★★ | ★★★☆☆ |
+| Coverage | ★★☆☆☆ (no tracking) | ★★★★★ | ★★★☆☆ | ★★★★★ |
+| CI/CD | ★★★★★ (49 workflows) | ★★★★★ | ★★★★☆ | ★★★★☆ |
+| Security | ★★☆☆☆ (SBOM only) | ★★★★☆ | ★★★★☆ | ★★★☆☆ |
+| Agent Rules | ★★★★☆ (high quality) | ★★★★★ | ★★☆☆☆ | ★★☆☆☆ |
+| **Overall** | **7.9/10** | **9.0/10** | **7.0/10** | **8.0/10** |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/master.yml` - Main Python test suite
-- `.github/workflows/js.yml` - Frontend tests
-- `.github/workflows/e2e.yml` - Playwright E2E tests
-- `.github/workflows/lint.yml` - Linting and pre-commit
-- `.github/workflows/tracing.yml` - Tracing SDK tests
-- `.github/workflows/slow-tests.yml` - Docker build tests (daily)
-- `.github/workflows/fs2db.yml` - DB migration tests
-- `.tekton/mlflow-pull-request.yaml` - Konflux PR pipeline
-- `.tekton/mlflow-push.yaml` - Konflux push pipeline
+- `.github/workflows/master.yml` — Core Python test suite (9 jobs)
+- `.github/workflows/lint.yml` — Pre-commit hooks and linting
+- `.github/workflows/js.yml` — JS linting, type-check, Jest tests, build
+- `.github/workflows/e2e.yml` — Playwright E2E with Konflux image
+- `.github/workflows/operator-integration-tests.yml` — Kind cluster integration tests
+- `.github/workflows/tracing.yml` — Tracing SDK isolated tests
+- `.github/workflows/fs2db.yml` — Filesystem-to-database migration tests
+- `.github/workflows/examples.yml` — ML example validation
+- `.tekton/mlflow-pull-request.yaml` — Konflux PR pipeline
+- `.tekton/mlflow-push.yaml` — Konflux push pipeline
 
 ### Testing
-- `tests/` - 993 Python test files across 80+ subdirectories
-- `mlflow/server/js/src/` - 507 JS/TS test files
-- `mlflow/server/js/e2e/` - 3 Playwright E2E specs
-- `tests/integration/` - Integration tests
-- `tests/docker/` - Docker build tests
+- `tests/` — 80+ subdirectories, 722 Python test files
+- `mlflow/server/js/src/**/*.test.{ts,tsx}` — 530 JS/TS test files
+- `mlflow/server/js/e2e/` — Playwright E2E tests (3 specs)
+- `tests/db/` — Database integration tests with docker-compose
 
 ### Code Quality
-- `.pre-commit-config.yaml` - 25+ pre-commit hooks
-- `pyproject.toml` - pytest config, ruff settings
-- `dev/clint/` - Custom MLflow linter
+- `pyproject.toml` — Ruff, pytest, mypy configuration
+- `.pre-commit-config.yaml` — 25+ pre-commit hooks
+- `.github/policy.rego` — OPA policy for workflow validation
 
 ### Container Images
-- `Dockerfile.konflux` - Production multi-stage build
-- `docker-compose/docker-compose.yml` - E2E test stack
-- `.syft.yaml` - SBOM generation config
-- `docker/` - Development Dockerfiles
+- `Dockerfile.konflux` — Production Konflux build (multi-stage, UBI9)
+- `docker/Dockerfile` — Development image
+- `.syft.yaml` — SBOM generation configuration
+- `.dockerignore` — Build context exclusions
 
 ### Agent Rules
-- `CLAUDE.md` - Main agent configuration
-- `.claude/rules/python.md` - Python coding standards
-- `.claude/rules/github-actions.md` - GH Actions guidelines
-- `.claude/skills/` - 8 custom skills
+- `CLAUDE.md` — Development guide and commands
+- `.claude/rules/python.md` — Python style guide (8 KB)
+- `.claude/rules/github-actions.md` — Workflow guidelines (2.4 KB)
+- `.claude/skills/` — 8 custom skills (pr-review, rebase-mlflow, copilot, etc.)
+- `.claude/settings.json` — Claude Code settings

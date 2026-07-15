@@ -1,320 +1,417 @@
 ---
 repository: "red-hat-data-services/jupyterhub-quickstart"
-overall_score: 1.2
+overall_score: 1.0
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No unit tests exist anywhere in the repository"
+    status: "No test files exist; 970 lines of Python with zero test coverage"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests of any kind"
+    status: "No integration or E2E test infrastructure of any kind"
   - dimension: "Build Integration"
-    score: 1.0
-    status: "Legacy aicoe-ci with thoth-build check only; no PR-time build validation"
+    score: 1.5
+    status: "Dockerfile present but no PR-time build validation or multi-stage builds"
   - dimension: "Image Testing"
-    score: 1.0
-    status: "Dockerfile present but no image testing, scanning, or validation"
+    score: 0.0
+    status: "No image runtime validation, startup testing, or multi-arch support"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling, thresholds, or reporting"
+    status: "No coverage tools, no codecov/coveralls integration"
   - dimension: "CI/CD Automation"
-    score: 2.0
-    status: "No GitHub Actions workflows; only legacy aicoe-ci config with minimal checks"
+    score: 1.0
+    status: "No GitHub Actions workflows; only legacy AICoE/Thoth CI config"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
+    status: "No CLAUDE.md, no .claude/ directory, no test automation guidance"
 critical_gaps:
-  - title: "Zero test coverage across the entire repository"
-    impact: "All changes are deployed without any automated verification; regressions are undetectable"
+  - title: "Zero test coverage across entire codebase"
+    impact: "Any code change risks introducing regressions with no safety net; 970 lines of Python are completely untested"
     severity: "HIGH"
     effort: "16-24 hours"
-  - title: "No CI/CD pipeline (GitHub Actions)"
-    impact: "No automated checks on PRs; code quality and build correctness are not verified"
+  - title: "No CI/CD pipeline (GitHub Actions or equivalent)"
+    impact: "No automated checks on PRs; broken code can be merged freely"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "No container image security scanning"
-    impact: "Vulnerable base images and dependencies shipped to production without detection"
+  - title: "Severely outdated base image and dependencies"
+    impact: "CentOS 7 (EOL), Python 3.6 (EOL), cryptography 3.3.1 and other packages with known CVEs create critical security exposure"
+    severity: "HIGH"
+    effort: "24-40 hours"
+  - title: "SSL verification disabled in production code"
+    impact: "Man-in-the-middle attacks possible against Kubernetes API; urllib3 warnings suppressed hides security issues"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "Severely outdated and unmaintained dependencies"
-    impact: "Python 3.6 EOL, CentOS 7 EOL base image, JupyterHub 1.2.1 (current is 4.x+), known CVEs in cryptography 3.3.1"
+  - title: "No container security scanning"
+    impact: "Vulnerabilities in base image and dependencies are never detected"
     severity: "HIGH"
-    effort: "40+ hours"
-  - title: "No linting, formatting, or static analysis"
-    impact: "Code quality is not enforced; style drift and bugs go undetected"
+    effort: "2-4 hours"
+  - title: "No linting or static analysis"
+    impact: "Code quality issues, potential bugs, and style inconsistencies go undetected"
     severity: "MEDIUM"
     effort: "2-4 hours"
-  - title: "No agent rules for AI-assisted development"
-    impact: "AI agents have no guidance on testing patterns, code conventions, or quality gates"
-    severity: "LOW"
-    effort: "2-3 hours"
 quick_wins:
   - title: "Add a basic GitHub Actions CI workflow with linting"
     effort: "2-3 hours"
-    impact: "Establish automated PR checks and prevent broken code from merging"
+    impact: "Establishes automated quality gates on PRs; prevents broken merges"
   - title: "Add Trivy container scanning"
     effort: "1-2 hours"
-    impact: "Immediately surface critical CVEs in base image and dependencies"
-  - title: "Add unit tests for convert_size_to_bytes() and resolve_image_name()"
-    effort: "2-3 hours"
-    impact: "Cover the two testable pure functions in the codebase; establish test infrastructure"
-  - title: "Add pre-commit hooks for basic Python linting"
+    impact: "Immediately surfaces known CVEs in the outdated base image and dependencies"
+  - title: "Add pre-commit hooks with basic Python linting (ruff)"
     effort: "1-2 hours"
-    impact: "Catch formatting and obvious errors before commit"
+    impact: "Catches code quality issues before they enter the repository"
+  - title: "Add unit tests for convert_size_to_bytes and resolve_image_name"
+    effort: "2-3 hours"
+    impact: "Tests the two most testable functions with clear inputs/outputs"
 recommendations:
   priority_0:
-    - "Evaluate whether this repository is still actively maintained — last release was 2020, Python 3.6 and CentOS 7 are EOL"
-    - "If maintained: upgrade base image to UBI 8/9, Python 3.9+, and JupyterHub 4.x"
-    - "Add a GitHub Actions CI workflow with at minimum: Python linting, Dockerfile build verification, and dependency vulnerability scan"
+    - "Evaluate whether this repository should be archived - it appears to be in maintenance/legacy mode with a CentOS 7/Python 3.6 base"
+    - "If actively maintained: migrate from CentOS 7/Python 3.6 to a supported UBI base with Python 3.9+"
+    - "Add basic CI/CD pipeline (GitHub Actions) with linting, build validation, and security scanning"
+    - "Fix SSL verification bypass in jupyterhub_config.py - this is a production security vulnerability"
   priority_1:
-    - "Add unit tests for jupyterhub_config.py utility functions (convert_size_to_bytes, resolve_image_name)"
-    - "Add container image build and startup validation to CI"
-    - "Add Trivy or Snyk scanning for container images"
-    - "Add codecov or similar coverage tracking"
+    - "Add unit tests for core utility functions (convert_size_to_bytes, resolve_image_name, extract_hostname)"
+    - "Add container image build and startup validation in CI"
+    - "Update all pinned dependencies to current versions (most are from 2020-2021)"
+    - "Add Dependabot or Renovate for automated dependency updates"
   priority_2:
-    - "Create agent rules (.claude/rules/) for test patterns and code conventions"
-    - "Add integration tests that validate JupyterHub configuration loading"
-    - "Add pre-commit hooks for flake8/ruff and black/isort"
-    - "Consider adding Renovate or Dependabot for dependency management"
+    - "Add integration tests for OpenShift template rendering"
+    - "Create agent rules (.claude/rules/) for test patterns"
+    - "Add SBOM generation and image signing"
+    - "Add CodeQL or Semgrep for static analysis"
 ---
 
-# Quality Analysis: jupyterhub-quickstart
+# Quality Analysis: red-hat-data-services/jupyterhub-quickstart
 
 ## Executive Summary
+- Overall Score: 1.0/10
+- Key Strengths: PR template with testing checklist, issue templates for structured reporting, simple and focused codebase
+- Critical Gaps: Zero test coverage, no CI/CD automation, severely outdated dependencies (CentOS 7 EOL, Python 3.6 EOL), SSL verification disabled, no security scanning
+- Agent Rules Status: Missing
 
-- **Overall Score: 1.2/10**
-- **Repository Type**: Python application / OpenShift S2I builder for JupyterHub
-- **Primary Language**: Python (970 LOC), Shell scripts, JSON templates
-- **Last Release**: v3.5.1 (August 26, 2020) — **nearly 6 years ago**
-- **Key Strengths**: Has a PR template with a manual testing checklist; S2I build scripts are structured
-- **Critical Gaps**: Zero tests, no CI/CD workflows, no security scanning, severely outdated dependencies (Python 3.6 EOL, CentOS 7 EOL, JupyterHub 1.2.1)
-- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
-
-This repository is in a **critical state** from a quality perspective. It appears to be largely unmaintained since 2020. There are **zero tests** of any kind, **no GitHub Actions workflows**, **no linting**, and the entire dependency stack is severely outdated with known security vulnerabilities. The base Docker image (`centos/python-36-centos7`) uses an EOL operating system and EOL Python version.
+This repository is a JupyterHub deployment tool for OpenShift, providing S2I builders and templates. It contains approximately 970 lines of Python and 41 lines of shell scripts. The repository appears to be in legacy/maintenance mode with minimal recent activity (last commit was a PR template update). It has **none** of the quality practices expected in a modern software project: no tests, no CI/CD, no linting, no security scanning, and critically outdated dependencies with known vulnerabilities.
 
 ## Quality Scorecard
 
 | Dimension | Score | Status |
 |-----------|-------|--------|
-| Unit Tests | 0/10 | No unit tests exist anywhere in the repository |
-| Integration/E2E | 0/10 | No integration or E2E tests of any kind |
-| Build Integration | 1/10 | Legacy aicoe-ci with thoth-build check only |
-| Image Testing | 1/10 | Dockerfile present but no image testing or validation |
-| Coverage Tracking | 0/10 | No coverage tooling, thresholds, or reporting |
-| CI/CD Automation | 2/10 | No GitHub Actions; only legacy aicoe-ci config |
-| Agent Rules | 0/10 | No agent rules or AI development guidance |
-
-**Weighted Overall: 1.2/10**
+| Unit Tests | 0.0/10 | No test files exist; 970 lines of Python with zero test coverage |
+| Integration/E2E | 0.0/10 | No integration or E2E test infrastructure of any kind |
+| **Build Integration** | **1.5/10** | **Dockerfile present but no PR-time build validation or multi-stage builds** |
+| Image Testing | 0.0/10 | No image runtime validation, startup testing, or multi-arch support |
+| Coverage Tracking | 0.0/10 | No coverage tools, no codecov/coveralls integration |
+| CI/CD Automation | 1.0/10 | No GitHub Actions workflows; only legacy AICoE/Thoth CI config |
+| Agent Rules | 0.0/10 | No CLAUDE.md, no .claude/ directory, no test automation guidance |
 
 ## Critical Gaps
 
-### 1. Zero Test Coverage (Severity: HIGH)
-- **Impact**: All changes are deployed without any automated verification. Regressions in JupyterHub configuration, size conversion utilities, image resolution logic, idle server culling, and workspace setup are completely undetectable.
-- **Details**: The repository contains ~970 lines of Python code across 5 files with non-trivial logic (Kubernetes API calls, OAuth configuration, pod lifecycle management) and **zero test files**.
-- **Effort**: 16-24 hours to establish testing infrastructure and cover critical paths
+1. **Zero test coverage across entire codebase**
+   - Impact: Any code change risks introducing regressions with no safety net; 970 lines of Python are completely untested
+   - Severity: HIGH
+   - Effort: 16-24 hours
+   - Files affected: `jupyterhub_config.py` (278 lines), `jupyterhub_config-workspace.py` (154 lines), `scripts/cull-idle-servers.py` (361 lines), `scripts/backup-user-details.py` (168 lines)
 
-### 2. No CI/CD Pipeline (Severity: HIGH)
-- **Impact**: No automated checks run on pull requests. The `.github/workflows/` directory does not exist. The only CI integration is a legacy `.aicoe-ci.yaml` file that only runs a `thoth-build` check.
-- **Details**: No PR build validation, no automated linting, no dependency checking, no image build verification
-- **Effort**: 4-8 hours to create a comprehensive GitHub Actions pipeline
+2. **No CI/CD pipeline**
+   - Impact: No automated checks on PRs; broken code can be merged freely
+   - Severity: HIGH
+   - Effort: 4-8 hours
+   - Details: The repository has only a `.aicoe-ci.yaml` for legacy Thoth CI and no `.github/workflows/` directory
 
-### 3. No Container Image Security Scanning (Severity: HIGH)
-- **Impact**: The Docker image is based on `centos/python-36-centos7` (EOL), contains `cryptography==3.3.1` (known CVEs), and numerous other outdated packages. No Trivy, Snyk, or any scanner is configured.
-- **Effort**: 2-4 hours to add scanning
+3. **Severely outdated base image and dependencies**
+   - Impact: CentOS 7 reached EOL June 2024; Python 3.6 reached EOL December 2021; cryptography 3.3.1, jinja2 2.11.3, and many other packages have known CVEs
+   - Severity: HIGH
+   - Effort: 24-40 hours (major migration)
+   - Key outdated packages:
+     - Base image: `centos/python-36-centos7` (EOL)
+     - `cryptography==3.3.1` (current: 42.x, multiple CVEs)
+     - `jinja2==2.11.3` (current: 3.x, CVE-2024-22195)
+     - `jupyterhub==1.2.1` (current: 5.x)
+     - `kubernetes==11.0.0` (current: 30.x)
+     - `tornado==6.1` (current: 6.4+)
+     - `sqlalchemy==1.3.23` (current: 2.x)
 
-### 4. Severely Outdated Dependencies (Severity: HIGH)
-- **Impact**: The entire stack is from 2020-2021:
-  - Base image: `centos/python-36-centos7` — CentOS 7 reached EOL June 2024
-  - Python 3.6 — reached EOL December 2021
-  - JupyterHub 1.2.1 — current is 4.x+
-  - `cryptography==3.3.1` — multiple CVEs
-  - `kubernetes==11.0.0` — current is 29.x+
-  - `tornado==6.1`, `SQLAlchemy==1.3.23`, etc.
-- **Effort**: 40+ hours for a full modernization (if repo is still actively maintained)
+4. **SSL verification disabled in production code**
+   - Impact: Man-in-the-middle attacks possible against Kubernetes API calls from JupyterHub
+   - Severity: HIGH
+   - Effort: 2-4 hours
+   - Location: `jupyterhub_config.py:48-52` - `instance.verify_ssl = False` with urllib3 warnings suppressed
+   - Note: Comment states this is a workaround for OpenShift 4.0 beta - this should have been addressed long ago
 
-### 5. No Linting or Static Analysis (Severity: MEDIUM)
-- **Impact**: No flake8, ruff, mypy, pylint, or any code quality tool is configured. No `.pre-commit-config.yaml`. Code style is not enforced.
-- **Effort**: 2-4 hours
+5. **No container security scanning**
+   - Impact: Vulnerabilities in the base image and dependencies are never detected or reported
+   - Severity: HIGH
+   - Effort: 2-4 hours
 
-### 6. No Agent Rules (Severity: LOW)
-- **Impact**: No CLAUDE.md, AGENTS.md, or `.claude/rules/` directory. AI-assisted development has no guidance on repository conventions, testing patterns, or quality gates.
-- **Effort**: 2-3 hours
+6. **No linting or static analysis**
+   - Impact: Code quality issues, potential bugs, and style inconsistencies go undetected
+   - Severity: MEDIUM
+   - Effort: 2-4 hours
 
 ## Quick Wins
 
-### 1. Add a Basic GitHub Actions CI Workflow (2-3 hours)
-```yaml
-name: CI
-on: [pull_request]
-jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.9'
-      - run: pip install flake8
-      - run: flake8 *.py scripts/*.py
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: docker build -t jupyterhub-quickstart .
-```
+1. **Add a basic GitHub Actions CI workflow**
+   - Effort: 2-3 hours
+   - Impact: Establishes automated quality gates on PRs
+   - Implementation:
+   ```yaml
+   # .github/workflows/ci.yml
+   name: CI
+   on: [push, pull_request]
+   jobs:
+     lint:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+         - uses: actions/setup-python@v5
+           with:
+             python-version: '3.9'
+         - run: pip install ruff
+         - run: ruff check .
+     build:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+         - run: docker build -t jupyterhub-quickstart .
+   ```
 
-### 2. Add Trivy Container Scanning (1-2 hours)
-```yaml
-  security:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: docker build -t jupyterhub-quickstart .
-      - uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'jupyterhub-quickstart'
-          severity: 'CRITICAL,HIGH'
-```
+2. **Add Trivy container scanning**
+   - Effort: 1-2 hours
+   - Impact: Immediately surfaces known CVEs in the outdated base image and dependencies
+   - Implementation:
+   ```yaml
+   # Add to CI workflow
+   security:
+     runs-on: ubuntu-latest
+     steps:
+       - uses: actions/checkout@v4
+       - run: docker build -t jupyterhub-quickstart .
+       - uses: aquasecurity/trivy-action@master
+         with:
+           image-ref: 'jupyterhub-quickstart'
+           severity: 'CRITICAL,HIGH'
+   ```
 
-### 3. Add Unit Tests for Utility Functions (2-3 hours)
-The `convert_size_to_bytes()` function in `jupyterhub_config.py` is a pure function that can be tested in isolation:
-```python
-# test_config_utils.py
-import pytest
-from jupyterhub_config import convert_size_to_bytes
+3. **Add pre-commit hooks**
+   - Effort: 1-2 hours
+   - Impact: Catches code quality issues before they enter the repository
+   - Implementation:
+   ```yaml
+   # .pre-commit-config.yaml
+   repos:
+     - repo: https://github.com/astral-sh/ruff-pre-commit
+       rev: v0.4.4
+       hooks:
+         - id: ruff
+         - id: ruff-format
+     - repo: https://github.com/pre-commit/pre-commit-hooks
+       rev: v4.6.0
+       hooks:
+         - id: trailing-whitespace
+         - id: end-of-file-fixer
+         - id: check-yaml
+   ```
 
-@pytest.mark.parametrize("input,expected", [
-    ("1k", 1000),
-    ("1Ki", 1024),
-    ("2Gi", 2 * 1024**3),
-    ("100", 100),
-    ("500m", 500 * 1000**2),
-])
-def test_convert_size_to_bytes(input, expected):
-    assert convert_size_to_bytes(input) == expected
+4. **Add unit tests for testable utility functions**
+   - Effort: 2-3 hours
+   - Impact: Covers the most testable code paths immediately
+   - Implementation:
+   ```python
+   # tests/test_config.py
+   import pytest
+   from jupyterhub_config import convert_size_to_bytes
 
-def test_convert_size_invalid():
-    with pytest.raises(RuntimeError):
-        convert_size_to_bytes("invalid")
-```
+   @pytest.mark.parametrize("input_val,expected", [
+       ("1Gi", 1024**3),
+       ("512Mi", 512 * 1024**2),
+       ("100k", 100 * 1000),
+       ("1024", 1024),
+       ("1g", 1000**3),
+   ])
+   def test_convert_size_to_bytes(input_val, expected):
+       assert convert_size_to_bytes(input_val) == expected
 
-### 4. Add Pre-commit Hooks (1-2 hours)
-```yaml
-# .pre-commit-config.yaml
-repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.0
-    hooks:
-      - id: ruff
-      - id: ruff-format
-```
+   def test_convert_size_to_bytes_invalid():
+       with pytest.raises(RuntimeError):
+           convert_size_to_bytes("invalid")
+   ```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
-- **Workflow Inventory**: No `.github/workflows/` directory exists
-- **Legacy CI**: `.aicoe-ci.yaml` configures a `thoth-build` check only — this is a dependency management tool, not a test/quality pipeline
-- **Thoth Integration**: `.thoth.yaml` configures Thoth's Kebechet for version management
-- **Build Process**: S2I (Source-to-Image) builder pattern with assemble/run scripts
-- **Concurrency Control**: None
-- **Caching**: None
-- **PR Checks**: The PR template includes a manual checklist for testing, but nothing is automated
+
+**Status: Effectively non-existent**
+
+- **No GitHub Actions workflows** - The `.github/workflows/` directory does not exist
+- **Legacy CI only** - `.aicoe-ci.yaml` references Thoth build system, which is an external service not standard GitHub CI
+- `.thoth.yaml` configures version management via Sesheta bot
+- **PR template exists** (`.github/PULL_REQUEST_TEMPLATE.md`) with a testing checklist - this is the only quality gate, and it's entirely manual
+- **Issue templates** exist for bug reports, feature requests, and various release types - good practice
+
+**Key gap**: There is zero automated validation of any kind on pull requests.
 
 ### Test Coverage
-- **Unit Tests**: 0 files, 0 tests
-- **Integration Tests**: None
-- **E2E Tests**: None
-- **Test-to-Code Ratio**: 0:970 (0%)
-- **Coverage Tracking**: None
-- **Coverage Enforcement**: None
+
+**Status: Zero coverage**
+
+- **0 test files** found across the entire repository
+- **0 test frameworks** configured (no pytest, unittest, or any testing dependency)
+- **970 lines of Python** with no test coverage whatsoever
+- No `tests/` or `test/` directory
+- No testing dependencies in `requirements.txt` or any other requirements file
+
+**Testable code that should be covered:**
+- `convert_size_to_bytes()` - Pure function with clear inputs/outputs (14 lines)
+- `resolve_image_name()` - Image name resolution logic (40 lines)
+- `extract_hostname()` - Route hostname extraction (4 lines)
+- `cull-idle-servers.py` - Idle server culling logic (361 lines)
+- `backup-user-details.py` - User details backup utility (168 lines)
 
 ### Code Quality
-- **Linting**: No configuration files for any linter (flake8, ruff, pylint, mypy)
-- **Formatting**: No black, autopep8, or isort configuration
-- **Pre-commit Hooks**: No `.pre-commit-config.yaml`
-- **Static Analysis**: No CodeQL, gosec, Semgrep, or Bandit
-- **Type Checking**: No mypy or pyright configuration
+
+**Status: No automated quality tools**
+
+- **No linter** configured (no ruff, flake8, pylint, mypy)
+- **No formatter** configured (no black, autopep8)
+- **No pre-commit hooks** (no `.pre-commit-config.yaml`)
+- **No type hints** in the codebase
+- **Code style observations**:
+  - Uses `exec()` to load configuration files dynamically (`jupyterhub_config.py:263,270,278`) - security concern
+  - Monkey-patching JupyterHub internals via `wrapt` decorators - fragile
+  - Comments are generally helpful and explain "why"
 
 ### Container Images
-- **Dockerfile**: Single-stage build from `centos/python-36-centos7:latest`
-  - Uses EOL base image (CentOS 7)
-  - Uses EOL Python version (3.6)
-  - Runs as non-root (UID 1001) — good practice
-  - Uses S2I pattern for assembly
-- **Multi-arch Support**: None
-- **Image Scanning**: None
-- **SBOM Generation**: None
-- **Image Signing**: None
-- **Runtime Validation**: None
-- **Startup Testing**: None
 
-### Security Practices
-- **Container Scanning**: None
-- **SAST/CodeQL**: None
-- **Dependency Scanning**: Only Thoth-based (passive, not CI-integrated)
-- **Secret Detection**: None (gitleaks, TruffleHog)
-- **SSL Verification**: Explicitly disabled in `jupyterhub_config.py` (line 52: `instance.verify_ssl = False`) with `urllib3.disable_warnings()` — this is a security concern, though noted as a workaround for OpenShift 4.0 beta
-- **Known Vulnerabilities**: Multiple, due to severely outdated dependencies
+**Status: Minimal, outdated**
+
+- **Dockerfile present** but uses severely outdated base image: `centos/python-36-centos7:latest`
+  - CentOS 7 reached EOL June 30, 2024
+  - Python 3.6 reached EOL December 23, 2021
+- **No multi-stage build** - simple single-stage Dockerfile
+- **No .dockerignore** - entire repository context is sent to Docker daemon
+- **S2I (Source-to-Image) build process** via `.s2i/` directory and `builder/` scripts
+- **No multi-architecture support**
+- **No image signing or attestation**
+- **No SBOM generation**
+- **No startup or runtime testing**
+
+### Security
+
+**Status: Critical concerns**
+
+1. **SSL verification explicitly disabled** (`jupyterhub_config.py:51`):
+   ```python
+   instance.verify_ssl = False
+   ```
+   This was a "workaround for OpenShift 4.0 beta versions" per the comment, but has never been fixed.
+
+2. **urllib3 warnings suppressed** (`jupyterhub_config.py:49`):
+   ```python
+   urllib3.disable_warnings()
+   ```
+   Hides security-related warnings from the user.
+
+3. **Dynamic code execution** (`jupyterhub_config.py:263,270,278`):
+   ```python
+   exec(compile(fp.read(), config_file, 'exec'), globals())
+   ```
+   While this is a JupyterHub pattern for loading config, it executes arbitrary code.
+
+4. **No security scanning**: No Trivy, Snyk, CodeQL, Semgrep, or Gitleaks integration.
+
+5. **Outdated dependencies with known CVEs**:
+   - `cryptography==3.3.1` - Multiple CVEs including buffer overflow vulnerabilities
+   - `jinja2==2.11.3` - CVE-2024-22195 (XSS)
+   - `urllib3==1.26.3` - Multiple CVEs
+   - `requests==2.25.1` - Multiple CVEs
+
+6. **No dependency scanning or automated updates** (no Dependabot/Renovate).
 
 ### Agent Rules (Agentic Flow Quality)
-- **Status**: Missing
-- **Coverage**: No test type rules exist
-- **Quality**: N/A
-- **Gaps**: Everything — no CLAUDE.md, AGENTS.md, `.claude/` directory, or any AI agent guidance
-- **Recommendation**: Generate rules with /test-rules-generator if the repository becomes actively maintained
+
+**Status: Missing**
+
+- No `CLAUDE.md` or `AGENTS.md` in root
+- No `.claude/` directory
+- No `.claude/rules/` for test creation rules
+- No `.claude/skills/` for custom skills
+- No testing documentation of any kind
+- **Recommendation**: Generate rules with `/test-rules-generator` if the repository is to remain active
 
 ## Recommendations
 
-### Priority 0 (Critical) — Address Immediately
-1. **Determine maintenance status**: This repository's last release was August 2020. Determine if it is still actively maintained or if it has been superseded by another project. All other recommendations depend on this decision.
-2. **If maintained — modernize the stack**: Upgrade from CentOS 7 + Python 3.6 to UBI 8/9 + Python 3.9+, and update JupyterHub from 1.2.1 to 4.x
-3. **Add GitHub Actions CI**: Create at minimum a workflow that runs linting and builds the Docker image on PRs
-4. **Add container security scanning**: Trivy or Snyk to surface the many known CVEs
+### Priority 0 (Critical)
+
+- **Evaluate repository lifecycle status**: This repository appears to be in legacy/maintenance mode. If it's no longer actively maintained, it should be formally archived. If it remains active, the items below are critical.
+- **Migrate base image**: Move from `centos/python-36-centos7` (double EOL) to a supported UBI 9 base with Python 3.9+ or 3.11+
+- **Add CI/CD pipeline**: Create GitHub Actions workflows for at minimum: linting, Docker build validation, and security scanning
+- **Fix SSL verification bypass**: Remove `verify_ssl = False` and configure proper CA certificate handling for the OpenShift environment
+- **Update all dependencies**: Major version updates needed for nearly every dependency; the entire `requirements.txt` dates from 2020-2021
 
 ### Priority 1 (High Value)
-1. **Add unit tests**: Start with `convert_size_to_bytes()` and `resolve_image_name()` — the only pure functions testable without a cluster
-2. **Add integration tests**: Test configuration loading paths with mocked Kubernetes/OpenShift APIs
-3. **Add coverage tracking**: pytest-cov + Codecov integration
-4. **Fix SSL verification**: Replace the blanket `verify_ssl = False` with proper CA certificate configuration
-5. **Add linting**: flake8 or ruff with basic configuration
+
+- **Add unit tests**: Start with `convert_size_to_bytes`, `resolve_image_name`, and `extract_hostname` - these are pure/semi-pure functions that can be tested in isolation
+- **Add Trivy security scanning** to CI for the Docker image
+- **Add Dependabot/Renovate** for automated dependency updates
+- **Add pre-commit hooks** with ruff for linting and formatting
+- **Add container image build and startup validation** in CI
 
 ### Priority 2 (Nice-to-Have)
-1. **Create agent rules** (`.claude/rules/`) for testing patterns
-2. **Add Dependabot/Renovate** for automated dependency updates
-3. **Add pre-commit hooks** for code quality enforcement
-4. **Add Dockerfile best practices**: multi-stage builds, hadolint, .dockerignore improvements
-5. **Add SBOM generation** for supply chain security
+
+- Add integration tests for OpenShift template rendering (JSON template validation)
+- Create `.claude/rules/` for test creation guidance
+- Add SBOM generation
+- Add CodeQL or Semgrep for deeper static analysis
+- Add multi-architecture image builds
+- Add `.dockerignore` to reduce build context size
 
 ## Comparison to Gold Standards
 
 | Dimension | jupyterhub-quickstart | odh-dashboard | notebooks | kserve |
 |-----------|----------------------|---------------|-----------|--------|
-| Unit Tests | 0/10 | 9/10 | 6/10 | 9/10 |
-| Integration/E2E | 0/10 | 9/10 | 7/10 | 9/10 |
-| Build Integration | 1/10 | 8/10 | 8/10 | 7/10 |
-| Image Testing | 1/10 | 7/10 | 9/10 | 6/10 |
+| Unit Tests | 0/10 | 9/10 | 7/10 | 9/10 |
+| Integration/E2E | 0/10 | 9/10 | 8/10 | 9/10 |
+| Build Integration | 1.5/10 | 8/10 | 7/10 | 8/10 |
+| Image Testing | 0/10 | 7/10 | 9/10 | 7/10 |
 | Coverage Tracking | 0/10 | 8/10 | 5/10 | 9/10 |
-| CI/CD Automation | 2/10 | 9/10 | 8/10 | 9/10 |
+| CI/CD Automation | 1/10 | 9/10 | 8/10 | 9/10 |
 | Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
-| **Overall** | **1.2/10** | **8.5/10** | **7.0/10** | **8.0/10** |
+| **Overall** | **1.0/10** | **8.5/10** | **7.0/10** | **8.0/10** |
 
-This repository scores significantly below all gold standards across every dimension. The gap is especially stark in testing (0 vs 6-9) and CI/CD (2 vs 8-9).
+This repository represents the widest gap from gold standards across all dimensions. Every other analyzed repository has at minimum basic CI/CD and some test coverage.
 
 ## File Paths Reference
 
-| File | Purpose |
-|------|---------|
-| `Dockerfile` | Container image build (CentOS 7 / Python 3.6 S2I) |
-| `jupyterhub_config.py` | Main JupyterHub configuration (278 lines) |
-| `jupyterhub_config-workspace.py` | Workspace-mode configuration (155 lines) |
-| `scripts/cull-idle-servers.py` | Idle notebook server culling (361 lines) |
-| `scripts/backup-user-details.py` | User backup utility (168 lines) |
-| `.s2i/bin/assemble` | S2I build assemble script |
-| `.s2i/bin/run` | S2I build run script |
-| `builder/assemble` | Image builder assemble script |
-| `.aicoe-ci.yaml` | Legacy AICoE CI configuration |
-| `.thoth.yaml` | Thoth/Kebechet dependency management |
-| `requirements.txt` | Pinned Python dependencies (all severely outdated) |
-| `package.json` | Node.js dependencies (configurable-http-proxy) |
-| `.github/PULL_REQUEST_TEMPLATE.md` | PR template with manual testing checklist |
-| `templates/*.json` | OpenShift deployment templates |
+### Configuration
+- `Dockerfile` - Container image definition (CentOS 7/Python 3.6 based)
+- `jupyterhub_config.py` - Main JupyterHub configuration (278 lines)
+- `jupyterhub_config-workspace.py` - Workspace configuration variant (154 lines)
+- `.aicoe-ci.yaml` - Legacy AICoE/Thoth CI configuration
+- `.thoth.yaml` - Thoth build management config
+- `setup.cfg` - Python package metadata (minimal)
+
+### Dependencies
+- `requirements.txt` - Python runtime dependencies (pip-compile generated, 2020-2021 era)
+- `requirements.in` - Source requirements
+- `requirements-build.txt` - Build-time dependencies
+- `requirements-build.in` - Build-time source requirements
+- `requirements-external.txt` - External dependencies
+- `package.json` - Node.js dependencies for configurable-http-proxy
+
+### Build & Deployment
+- `.s2i/bin/assemble` - S2I build script
+- `.s2i/bin/run` - S2I run script
+- `builder/assemble` - Builder assemble script
+- `builder/run` - Builder run script
+- `start-jupyterhub.sh` - JupyterHub startup script
+- `templates/` - OpenShift deployment templates (JSON)
+- `build-configs/` - OpenShift build configurations
+- `image-streams/` - OpenShift image stream definitions
+
+### Scripts
+- `scripts/cull-idle-servers.py` - Idle notebook server culling (361 lines)
+- `scripts/backup-user-details.py` - User details backup utility (168 lines)
+
+### Community
+- `.github/PULL_REQUEST_TEMPLATE.md` - PR template with testing checklist
+- `.github/ISSUE_TEMPLATE/` - Issue templates (bug report, feature request, releases)
+- `README.md` - Comprehensive deployment documentation
+- `CHANGELOG.md` - Change log
+- `LICENSE` - License file
