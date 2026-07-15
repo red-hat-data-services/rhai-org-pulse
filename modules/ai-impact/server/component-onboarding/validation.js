@@ -1,4 +1,4 @@
-const VALID_COMPLETION_STATUSES = ['completed', 'in-progress'];
+const VALID_COMPLETION_STATUSES = ['completed', 'in-progress', 'in_queue'];
 const VALID_PRODUCT_CONTEXTS = ['RHOAI', 'ODH'];
 const VALID_ONBOARDING_METHODS = ['automated', 'manual'];
 const VALID_KEY_PREFIXES = ['RHOAIENG-'];
@@ -18,6 +18,37 @@ const ONBOARDING_STEP_KEYS = [
   'autoMergeSetup',          // Step 10 — RHOAI only
   'renovateSetup'            // Step 11 — RHOAI only
 ];
+
+/**
+ * Derive dashboard completion status from Jira ticket fields.
+ * Jira "New" tickets are shown as in_queue in the UI.
+ */
+function deriveCompletionStatus(status, completionStatus, context) {
+  const normalized = typeof status === 'string' ? status.trim().toLowerCase() : '';
+
+  if (normalized === 'new') {
+    return 'in_queue';
+  }
+
+  if (context) {
+    const labels = context.labels || [];
+    const resolution = context.resolution || null;
+    const statusCategory = context.statusCategory || null;
+
+    if (labels.includes('component-onboarding-completed')) {
+      return 'completed';
+    }
+    if (resolution === 'Done' || statusCategory === 'Done') {
+      return 'completed';
+    }
+    if (normalized === 'resolved' || normalized === 'closed' || normalized === 'done' || normalized === 'cancelled') {
+      return 'completed';
+    }
+    return 'in-progress';
+  }
+
+  return completionStatus;
+}
 
 /**
  * Validate a component onboarding request body.
@@ -167,6 +198,11 @@ function validateComponentOnboarding(body) {
     errors.push('contextPath must be a string');
   }
 
+  // targetVersion: optional string (Jira customfield_10855, e.g. "rhoai-3.6")
+  if (body.targetVersion !== undefined && body.targetVersion !== null && typeof body.targetVersion !== 'string') {
+    errors.push('targetVersion must be a string or null');
+  }
+
   if (errors.length > 0) {
     return { valid: false, errors };
   }
@@ -177,8 +213,13 @@ function validateComponentOnboarding(body) {
       key: body.key.trim(),
       summary: body.summary.trim(),
       status: body.status.trim(),
-      completionStatus: body.completionStatus,
+      completionStatus: deriveCompletionStatus(body.status, body.completionStatus, {
+        labels: body.labels || [],
+        resolution: body.resolution || null,
+        statusCategory: body.statusCategory || null
+      }),
       productContext: body.productContext,
+      targetVersion: body.targetVersion?.trim() || null,
       syncedAt: body.syncedAt,
       componentName: body.componentName || '',
       repoUrl: body.repoUrl || '',
@@ -200,4 +241,11 @@ function validateComponentOnboarding(body) {
   };
 }
 
-module.exports = { validateComponentOnboarding, VALID_COMPLETION_STATUSES, VALID_PRODUCT_CONTEXTS, VALID_ONBOARDING_METHODS, ONBOARDING_STEP_KEYS };
+module.exports = {
+  validateComponentOnboarding,
+  deriveCompletionStatus,
+  VALID_COMPLETION_STATUSES,
+  VALID_PRODUCT_CONTEXTS,
+  VALID_ONBOARDING_METHODS,
+  ONBOARDING_STEP_KEYS
+};

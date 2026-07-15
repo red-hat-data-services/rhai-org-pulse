@@ -14,12 +14,33 @@ const props = defineProps({
 const emit = defineEmits(['loadDetail', 'retry'])
 
 const chartsExpanded = ref(true)
+const versionFilter = ref('all')
 
 const allComponents = computed(() => props.data?.components ?? {})
 
+const availableVersions = computed(() => {
+  if (Array.isArray(props.data?.availableVersions) && props.data.availableVersions.length) {
+    return props.data.availableVersions
+  }
+  const versions = new Set()
+  for (const comp of Object.values(allComponents.value)) {
+    if (comp.targetVersion) versions.add(comp.targetVersion)
+  }
+  return Array.from(versions).sort()
+})
+
+const filteredComponents = computed(() => {
+  if (versionFilter.value === 'all') return allComponents.value
+  const filtered = {}
+  for (const [key, comp] of Object.entries(allComponents.value)) {
+    if (comp.targetVersion === versionFilter.value) filtered[key] = comp
+  }
+  return filtered
+})
+
 const featureTitles = computed(() => {
   const merged = {}
-  for (const comp of Object.values(allComponents.value)) {
+  for (const comp of Object.values(filteredComponents.value)) {
     Object.assign(merged, comp.featureTitles || {})
   }
   return merged
@@ -48,12 +69,13 @@ function calcAvgDaysManual(list) {
 }
 
 const metrics = computed(() => {
-  const list = Object.values(allComponents.value)
+  const list = Object.values(filteredComponents.value)
   const automated = list.filter(c => (c.onboardingMethod || 'automated') === 'automated')
   const manual = list.filter(c => c.onboardingMethod === 'manual')
   const completedAutomated = automated.filter(c => c.completionStatus === 'completed')
   const completedManual = manual.filter(c => c.completionStatus === 'completed')
   const inProgressAutomated = automated.filter(c => c.completionStatus === 'in-progress')
+  const inQueueAutomated = automated.filter(c => c.completionStatus === 'in_queue')
 
   const avgDaysAutomated = calcAvgDaysAutomated(completedAutomated)
   const avgDaysManual = calcAvgDaysManual(completedManual)
@@ -64,6 +86,7 @@ const metrics = computed(() => {
   return {
     totalOnboarded: completedAutomated.length,
     totalInProgress: inProgressAutomated.length,
+    totalInQueue: inQueueAutomated.length,
     completionRate: automated.length ? Math.round((completedAutomated.length / automated.length) * 100) : 0,
     rhoaiCount: automated.filter(c => c.productContext === 'RHOAI').length,
     odhCount: automated.filter(c => c.productContext === 'ODH').length,
@@ -111,15 +134,33 @@ const metrics = computed(() => {
 
     <!-- Content -->
     <div v-else class="flex-1 flex flex-col overflow-hidden">
+      <!-- Version filter -->
+      <div
+        v-if="availableVersions.length"
+        class="px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex flex-wrap items-center gap-3"
+      >
+        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Version Filter</span>
+        <select
+          v-model="versionFilter"
+          class="text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="all">All versions</option>
+          <option v-for="version in availableVersions" :key="version" :value="version">{{ version }}</option>
+        </select>
+        <span v-if="versionFilter !== 'all'" class="text-xs text-gray-400 dark:text-gray-500">
+          Showing components targeting {{ versionFilter }}
+        </span>
+      </div>
+
       <OnboardingMetricsRow :metrics="metrics" />
       <OnboardingCharts
-        :components="allComponents"
+        :components="filteredComponents"
         :feature-titles="featureTitles"
         :expanded="chartsExpanded"
         @toggle="chartsExpanded = !chartsExpanded"
       />
       <ComponentOnboardingTable
-        :components="allComponents"
+        :components="filteredComponents"
         :feature-titles="featureTitles"
         :detail-cache="detailCache"
         @load-detail="emit('loadDetail', $event)"
