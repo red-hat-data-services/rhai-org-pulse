@@ -837,13 +837,25 @@ async function executeAction(actionId) {
 }
 
 function createFromSuggestion(suggestion) {
-  // Store the suggestion data for the RFE creator
-  sessionStorage.setItem('rfe-prefill', JSON.stringify(suggestion))
+  if (!moduleNav) return
 
-  // Navigate to RFE creator
-  if (moduleNav) {
-    moduleNav.navigateTo('rfe-creator')
+  const params = {
+    prefill: 'suggestion',
+    title: suggestion.title || '',
+    component: suggestion.component || '',
+    businessJustification: suggestion.businessJustification || '',
   }
+  if (suggestion.painPoints) {
+    params.useCases = suggestion.painPoints
+  }
+  if (suggestion.sourceCustomers && Array.isArray(suggestion.sourceCustomers)) {
+    params.sourceCustomers = suggestion.sourceCustomers.join(',')
+  }
+  if (suggestion.acceptanceCriteria) {
+    params.successMetrics = suggestion.acceptanceCriteria
+  }
+
+  moduleNav.navigateTo('rfe-creator', params)
 }
 
 const itemsByTimeframe = computed(() => {
