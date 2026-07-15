@@ -42,7 +42,7 @@
     "@eslint/js": "^10.0.1",
     "@playwright/test": "1.60.0",
     "@tailwindcss/typography": "^0.5.20",
-    "@vitejs/plugin-vue": "^6.0.7",
+    "@vitejs/plugin-vue": "^6.0.8",
     "@vitest/coverage-v8": "^4.1.10",
     "@vue/test-utils": "^2.4.11",
     "autoprefixer": "^10.5.2",
