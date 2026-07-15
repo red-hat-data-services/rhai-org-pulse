@@ -151,7 +151,6 @@
                 <th class="px-4 py-2.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Maintainers</th>
                 <th class="px-4 py-2.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Projects</th>
                 <th v-if="selectedDays !== '0'" class="px-4 py-2.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Trend</th>
-                <th v-if="canManageStrategy" class="px-3 py-2.5 w-10"></th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700/50">
@@ -165,7 +164,7 @@
                   <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ org.name }}</span>
                 </td>
                 <td class="px-4 py-3">
-                  <div class="flex flex-wrap gap-1">
+                  <div class="flex items-center gap-1.5 group/strategy">
                     <span
                       v-if="org.strategicParticipation"
                       class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium"
@@ -176,6 +175,14 @@
                       class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium"
                       :class="getStrategicBadgeClass(org.strategicLeadership)"
                     >{{ getStrategicLabel(org.strategicLeadership) }}</span>
+                    <button
+                      v-if="canManageStrategy"
+                      @click.stop="openEditStrategy(org)"
+                      class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 opacity-0 group-hover/strategy:opacity-100 transition-all"
+                    >
+                      <PencilIcon :size="12" />
+                      Edit
+                    </button>
                   </div>
                 </td>
                 <td class="px-4 py-3 text-right">
@@ -205,15 +212,6 @@
                     {{ org.percentChange > 0 ? '↑' : org.percentChange < 0 ? '↓' : '→' }}{{ Math.abs(org.percentChange).toFixed(1) }}%
                   </span>
                 </td>
-                <td v-if="canManageStrategy" class="px-3 py-3 text-right">
-                  <button
-                    @click.stop="openEditStrategy(org)"
-                    class="p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    title="Edit strategy"
-                  >
-                    <PencilIcon :size="14" />
-                  </button>
-                </td>
               </tr>
             </tbody>
             <!-- Subtotal row -->
@@ -240,7 +238,6 @@
                     {{ tierSummaries[tier].avgChange > 0 ? '↑' : tierSummaries[tier].avgChange < 0 ? '↓' : '→' }}{{ Math.abs(tierSummaries[tier].avgChange).toFixed(1) }}% avg
                   </span>
                 </td>
-                <td v-if="canManageStrategy" class="px-3 py-2.5"></td>
               </tr>
             </tfoot>
           </table>

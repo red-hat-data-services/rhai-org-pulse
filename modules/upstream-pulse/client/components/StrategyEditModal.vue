@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import {
   X as XIcon,
   Target as TargetIcon,
@@ -7,6 +7,9 @@ import {
   CheckCircle2 as CheckCircle2Icon,
   AlertCircle as AlertCircleIcon,
   ChevronDown as ChevronDownIcon,
+  Building2 as Building2Icon,
+  Search as SearchIcon,
+  Check as CheckIcon,
 } from 'lucide-vue-next'
 import { apiRequest } from '@shared/client/services/api'
 
@@ -27,18 +30,29 @@ const leadership = ref('')
 const submitStatus = ref('idle')
 const submitError = ref('')
 
+const orgDropdownOpen = ref(false)
+const orgSearch = ref('')
+const orgHighlightIdx = ref(0)
+const orgSearchRef = ref(null)
+const orgContainerRef = ref(null)
+
+const participationDropdownOpen = ref(false)
+const leadershipDropdownOpen = ref(false)
+const participationContainerRef = ref(null)
+const leadershipContainerRef = ref(null)
+
 const participationOptions = [
-  { value: '', label: 'None' },
-  { value: 'evaluating_participation', label: 'Evaluating Participation' },
-  { value: 'sustaining_participation', label: 'Sustaining Participation' },
-  { value: 'increasing_participation', label: 'Increasing Participation' },
+  { value: '', label: 'None', description: 'No participation goal' },
+  { value: 'evaluating_participation', label: 'Evaluating', description: 'Exploring participation opportunities' },
+  { value: 'sustaining_participation', label: 'Sustaining', description: 'Maintaining current participation' },
+  { value: 'increasing_participation', label: 'Increasing', description: 'Growing participation investment' },
 ]
 
 const leadershipOptions = [
-  { value: '', label: 'None' },
-  { value: 'evaluating_leadership', label: 'Evaluating Leadership' },
-  { value: 'sustaining_leadership', label: 'Sustaining Leadership' },
-  { value: 'increasing_leadership', label: 'Increasing Leadership' },
+  { value: '', label: 'None', description: 'No leadership goal' },
+  { value: 'evaluating_leadership', label: 'Evaluating', description: 'Exploring leadership opportunities' },
+  { value: 'sustaining_leadership', label: 'Sustaining', description: 'Maintaining current leadership' },
+  { value: 'increasing_leadership', label: 'Increasing', description: 'Growing leadership investment' },
 ]
 
 const isAddMode = computed(() => !props.org)
@@ -49,14 +63,35 @@ const availableOrgs = computed(() =>
     .sort((a, b) => a.name.localeCompare(b.name))
 )
 
+const filteredOrgs = computed(() => {
+  if (!orgSearch.value.trim()) return availableOrgs.value
+  const q = orgSearch.value.toLowerCase()
+  return availableOrgs.value.filter(o =>
+    o.name.toLowerCase().includes(q) || o.githubOrg.toLowerCase().includes(q)
+  )
+})
+
+const selectedOrgObj = computed(() =>
+  props.allOrgs.find(o => o.githubOrg === selectedGithubOrg.value)
+)
+
 const targetGithubOrg = computed(() =>
   isAddMode.value ? selectedGithubOrg.value : props.org?.githubOrg
 )
 
 const targetOrgName = computed(() => {
   if (!isAddMode.value) return props.org?.name
-  const found = props.allOrgs.find(o => o.githubOrg === selectedGithubOrg.value)
-  return found?.name || selectedGithubOrg.value
+  return selectedOrgObj.value?.name || selectedGithubOrg.value
+})
+
+const participationLabel = computed(() => {
+  const opt = participationOptions.find(o => o.value === participation.value)
+  return opt ? opt.label : 'None'
+})
+
+const leadershipLabel = computed(() => {
+  const opt = leadershipOptions.find(o => o.value === leadership.value)
+  return opt ? opt.label : 'None'
 })
 
 const canSubmit = computed(() =>
@@ -71,6 +106,75 @@ function resetForm() {
   leadership.value = props.org?.strategicLeadership || ''
   submitStatus.value = 'idle'
   submitError.value = ''
+  orgDropdownOpen.value = false
+  participationDropdownOpen.value = false
+  leadershipDropdownOpen.value = false
+  orgSearch.value = ''
+}
+
+function selectOrg(slug) {
+  selectedGithubOrg.value = slug
+  orgDropdownOpen.value = false
+}
+
+function toggleOrgDropdown() {
+  orgDropdownOpen.value = !orgDropdownOpen.value
+  if (orgDropdownOpen.value) {
+    orgSearch.value = ''
+    orgHighlightIdx.value = 0
+    nextTick(() => orgSearchRef.value?.focus())
+  }
+}
+
+function onOrgKeydown(e) {
+  if (!orgDropdownOpen.value) {
+    if (['ArrowDown', 'Enter', ' '].includes(e.key)) {
+      e.preventDefault()
+      toggleOrgDropdown()
+    }
+    return
+  }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    orgHighlightIdx.value = Math.min(orgHighlightIdx.value + 1, filteredOrgs.value.length - 1)
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    orgHighlightIdx.value = Math.max(orgHighlightIdx.value - 1, 0)
+  } else if (e.key === 'Enter') {
+    e.preventDefault()
+    if (filteredOrgs.value[orgHighlightIdx.value]) {
+      selectOrg(filteredOrgs.value[orgHighlightIdx.value].githubOrg)
+    }
+  } else if (e.key === 'Escape') {
+    e.preventDefault()
+    e.stopPropagation()
+    orgDropdownOpen.value = false
+  }
+}
+
+watch(orgSearch, () => { orgHighlightIdx.value = 0 })
+
+function onClickOutside(e) {
+  if (orgContainerRef.value && !orgContainerRef.value.contains(e.target)) orgDropdownOpen.value = false
+  if (participationContainerRef.value && !participationContainerRef.value.contains(e.target)) participationDropdownOpen.value = false
+  if (leadershipContainerRef.value && !leadershipContainerRef.value.contains(e.target)) leadershipDropdownOpen.value = false
+}
+
+function selectOption(type, value) {
+  if (type === 'participation') {
+    participation.value = value
+    participationDropdownOpen.value = false
+  } else {
+    leadership.value = value
+    leadershipDropdownOpen.value = false
+  }
+}
+
+function getTierColor(value) {
+  if (value.includes('increasing')) return { dot: 'bg-green-500', text: 'text-green-700 dark:text-green-400' }
+  if (value.includes('sustaining')) return { dot: 'bg-blue-500', text: 'text-blue-700 dark:text-blue-400' }
+  if (value.includes('evaluating')) return { dot: 'bg-yellow-500', text: 'text-yellow-700 dark:text-yellow-400' }
+  return { dot: 'bg-gray-300 dark:bg-gray-600', text: 'text-gray-500 dark:text-gray-400' }
 }
 
 async function handleSubmit() {
@@ -101,6 +205,9 @@ function onBackdropClick() {
 
 function onEscape(e) {
   if (e.key === 'Escape' && submitStatus.value !== 'submitting') {
+    if (orgDropdownOpen.value) { orgDropdownOpen.value = false; return }
+    if (participationDropdownOpen.value) { participationDropdownOpen.value = false; return }
+    if (leadershipDropdownOpen.value) { leadershipDropdownOpen.value = false; return }
     emit('close')
   }
 }
@@ -109,13 +216,16 @@ watch(() => props.open, (open) => {
   if (open) {
     resetForm()
     document.addEventListener('keydown', onEscape)
+    document.addEventListener('mousedown', onClickOutside)
   } else {
     document.removeEventListener('keydown', onEscape)
+    document.removeEventListener('mousedown', onClickOutside)
   }
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', onEscape)
+  document.removeEventListener('mousedown', onClickOutside)
 })
 </script>
 
@@ -132,7 +242,7 @@ onBeforeUnmount(() => {
       <div
         role="dialog"
         aria-modal="true"
-        class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-[480px] max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] overflow-y-auto"
+        class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-[480px] max-w-[calc(100vw-2rem)]"
       >
         <!-- Header -->
         <div class="flex items-center justify-between px-6 pt-6 pb-4">
@@ -176,27 +286,78 @@ onBeforeUnmount(() => {
         <!-- Form -->
         <form v-if="submitStatus !== 'success'" @submit.prevent="handleSubmit" class="px-6 pb-6">
           <div class="space-y-4">
-            <!-- Org picker (add mode only) -->
+            <!-- Org picker (add mode) -->
             <div v-if="isAddMode">
               <label class="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Organization <span class="text-red-400">*</span>
               </label>
-              <div class="relative">
-                <select
-                  v-model="selectedGithubOrg"
+              <div ref="orgContainerRef" class="relative" @keydown="onOrgKeydown">
+                <button
+                  type="button"
+                  @click="toggleOrgDropdown"
                   :disabled="submitStatus === 'submitting'"
-                  class="w-full appearance-none pl-3 pr-10 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-500"
+                  class="w-full flex items-center justify-between pl-3 pr-3 py-2.5 text-sm border rounded-xl bg-white dark:bg-gray-700 outline-none transition-all disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed"
+                  :class="orgDropdownOpen
+                    ? 'border-blue-500 ring-2 ring-blue-500'
+                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'"
                 >
-                  <option value="" disabled>Select an organization...</option>
-                  <option v-for="o in availableOrgs" :key="o.githubOrg" :value="o.githubOrg">
-                    {{ o.name }} ({{ o.githubOrg }})
-                  </option>
-                </select>
-                <ChevronDownIcon class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <span v-if="selectedOrgObj" class="flex items-center gap-2 min-w-0">
+                    <Building2Icon class="w-4 h-4 text-gray-400 shrink-0" />
+                    <span class="truncate font-medium text-gray-900 dark:text-gray-100">{{ selectedOrgObj.name }}</span>
+                    <span class="text-gray-400 dark:text-gray-500 shrink-0">{{ selectedOrgObj.githubOrg }}</span>
+                  </span>
+                  <span v-else class="text-gray-400 dark:text-gray-500">Select an organization...</span>
+                  <ChevronDownIcon class="w-4 h-4 text-gray-400 shrink-0 ml-2 transition-transform" :class="{ 'rotate-180': orgDropdownOpen }" />
+                </button>
+
+                <div v-if="orgDropdownOpen" class="absolute z-50 mt-1.5 w-full bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 shadow-xl overflow-hidden">
+                  <div class="p-2 border-b border-gray-100 dark:border-gray-700">
+                    <div class="relative">
+                      <SearchIcon class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                      <input
+                        ref="orgSearchRef"
+                        v-model="orgSearch"
+                        type="text"
+                        placeholder="Search organizations..."
+                        class="w-full pl-8 pr-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-gray-100"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="max-h-[240px] overflow-y-auto py-1">
+                    <div v-if="filteredOrgs.length === 0" class="px-4 py-6 text-center text-sm text-gray-400 dark:text-gray-500">
+                      {{ orgSearch ? `No organizations match "${orgSearch}"` : 'All organizations already have strategic classifications.' }}
+                    </div>
+                    <button
+                      v-for="(o, idx) in filteredOrgs"
+                      :key="o.githubOrg"
+                      type="button"
+                      @click="selectOrg(o.githubOrg)"
+                      @mouseenter="orgHighlightIdx = idx"
+                      class="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors"
+                      :class="{
+                        'bg-blue-50 dark:bg-blue-900/30': idx === orgHighlightIdx,
+                        'bg-gray-50 dark:bg-gray-700/50': o.githubOrg === selectedGithubOrg && idx !== orgHighlightIdx,
+                      }"
+                    >
+                      <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                        :class="o.githubOrg === selectedGithubOrg ? 'bg-blue-100 dark:bg-blue-900/40' : 'bg-gray-100 dark:bg-gray-700'">
+                        <Building2Icon class="w-4 h-4" :class="o.githubOrg === selectedGithubOrg ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'" />
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                          <span class="text-sm font-medium truncate" :class="o.githubOrg === selectedGithubOrg ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'">{{ o.name }}</span>
+                          <span class="text-xs text-gray-400 dark:text-gray-500 shrink-0">{{ o.githubOrg }}</span>
+                        </div>
+                        <span class="text-[11px] text-gray-400 dark:text-gray-500">
+                          {{ o.projectCount }} project{{ o.projectCount !== 1 ? 's' : '' }} tracked
+                        </span>
+                      </div>
+                      <CheckIcon v-if="o.githubOrg === selectedGithubOrg" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                    </button>
+                  </div>
+                </div>
               </div>
-              <p v-if="availableOrgs.length === 0" class="mt-1.5 text-[12px] text-gray-400 dark:text-gray-500">
-                All organizations already have strategic classifications.
-              </p>
             </div>
 
             <!-- Org name (edit mode) -->
@@ -204,8 +365,10 @@ onBeforeUnmount(() => {
               <label class="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Organization
               </label>
-              <div class="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300">
-                {{ org?.name }} <span class="text-gray-400 dark:text-gray-500">({{ org?.githubOrg }})</span>
+              <div class="w-full flex items-center gap-2 px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300">
+                <Building2Icon class="w-4 h-4 text-gray-400 shrink-0" />
+                <span class="font-medium">{{ org?.name }}</span>
+                <span class="text-gray-400 dark:text-gray-500">{{ org?.githubOrg }}</span>
               </div>
             </div>
 
@@ -214,17 +377,40 @@ onBeforeUnmount(() => {
               <label class="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Participation Level
               </label>
-              <div class="relative">
-                <select
-                  v-model="participation"
+              <div ref="participationContainerRef" class="relative">
+                <button
+                  type="button"
+                  @click="participationDropdownOpen = !participationDropdownOpen; leadershipDropdownOpen = false"
                   :disabled="submitStatus === 'submitting'"
-                  class="w-full appearance-none pl-3 pr-10 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-500"
+                  class="w-full flex items-center justify-between pl-3 pr-3 py-2.5 text-sm border rounded-xl bg-white dark:bg-gray-700 outline-none transition-all disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed"
+                  :class="participationDropdownOpen
+                    ? 'border-blue-500 ring-2 ring-blue-500'
+                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'"
                 >
-                  <option v-for="opt in participationOptions" :key="opt.value" :value="opt.value">
-                    {{ opt.label }}
-                  </option>
-                </select>
-                <ChevronDownIcon class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <span class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full shrink-0" :class="getTierColor(participation).dot"></span>
+                    <span class="font-medium text-gray-900 dark:text-gray-100">{{ participationLabel }}</span>
+                  </span>
+                  <ChevronDownIcon class="w-4 h-4 text-gray-400 shrink-0 ml-2 transition-transform" :class="{ 'rotate-180': participationDropdownOpen }" />
+                </button>
+
+                <div v-if="participationDropdownOpen" class="absolute z-50 mt-1.5 w-full bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 shadow-xl overflow-hidden py-1">
+                  <button
+                    v-for="opt in participationOptions"
+                    :key="opt.value"
+                    type="button"
+                    @click="selectOption('participation', opt.value)"
+                    class="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                    :class="{ 'bg-blue-50 dark:bg-blue-900/30': participation === opt.value }"
+                  >
+                    <span class="w-2.5 h-2.5 rounded-full shrink-0" :class="getTierColor(opt.value).dot"></span>
+                    <div class="flex-1 min-w-0">
+                      <span class="text-sm font-medium" :class="participation === opt.value ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'">{{ opt.label }}</span>
+                      <p class="text-[11px] text-gray-400 dark:text-gray-500">{{ opt.description }}</p>
+                    </div>
+                    <CheckIcon v-if="participation === opt.value" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -233,22 +419,45 @@ onBeforeUnmount(() => {
               <label class="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Leadership Level
               </label>
-              <div class="relative">
-                <select
-                  v-model="leadership"
+              <div ref="leadershipContainerRef" class="relative">
+                <button
+                  type="button"
+                  @click="leadershipDropdownOpen = !leadershipDropdownOpen; participationDropdownOpen = false"
                   :disabled="submitStatus === 'submitting'"
-                  class="w-full appearance-none pl-3 pr-10 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-500"
+                  class="w-full flex items-center justify-between pl-3 pr-3 py-2.5 text-sm border rounded-xl bg-white dark:bg-gray-700 outline-none transition-all disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed"
+                  :class="leadershipDropdownOpen
+                    ? 'border-blue-500 ring-2 ring-blue-500'
+                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'"
                 >
-                  <option v-for="opt in leadershipOptions" :key="opt.value" :value="opt.value">
-                    {{ opt.label }}
-                  </option>
-                </select>
-                <ChevronDownIcon class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <span class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full shrink-0" :class="getTierColor(leadership).dot"></span>
+                    <span class="font-medium text-gray-900 dark:text-gray-100">{{ leadershipLabel }}</span>
+                  </span>
+                  <ChevronDownIcon class="w-4 h-4 text-gray-400 shrink-0 ml-2 transition-transform" :class="{ 'rotate-180': leadershipDropdownOpen }" />
+                </button>
+
+                <div v-if="leadershipDropdownOpen" class="absolute z-50 mt-1.5 w-full bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 shadow-xl overflow-hidden py-1">
+                  <button
+                    v-for="opt in leadershipOptions"
+                    :key="opt.value"
+                    type="button"
+                    @click="selectOption('leadership', opt.value)"
+                    class="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                    :class="{ 'bg-blue-50 dark:bg-blue-900/30': leadership === opt.value }"
+                  >
+                    <span class="w-2.5 h-2.5 rounded-full shrink-0" :class="getTierColor(opt.value).dot"></span>
+                    <div class="flex-1 min-w-0">
+                      <span class="text-sm font-medium" :class="leadership === opt.value ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'">{{ opt.label }}</span>
+                      <p class="text-[11px] text-gray-400 dark:text-gray-500">{{ opt.description }}</p>
+                    </div>
+                    <CheckIcon v-if="leadership === opt.value" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                  </button>
+                </div>
               </div>
             </div>
 
             <!-- Validation hint -->
-            <p v-if="!participation && !leadership && (selectedGithubOrg || org)" class="text-[12px] text-amber-600 dark:text-amber-400">
+            <p v-if="isAddMode && !participation && !leadership && selectedGithubOrg" class="text-[12px] text-amber-600 dark:text-amber-400">
               Select at least one participation or leadership level.
             </p>
 
