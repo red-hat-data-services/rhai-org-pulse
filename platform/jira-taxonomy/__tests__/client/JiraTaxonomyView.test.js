@@ -8,6 +8,11 @@ vi.mock('@shared/client/services/api', () => ({
   apiRequest: (...args) => mockApiRequest(...args)
 }))
 
+const mockIsAdmin = ref(false)
+vi.mock('@shared/client/composables/useAuth', () => ({
+  useAuth: () => ({ isAdmin: mockIsAdmin })
+}))
+
 const sampleComponents = {
   fetchedAt: '2026-07-01T12:00:00.000Z',
   project: 'RHAI',
@@ -36,6 +41,7 @@ function mountView() {
 beforeEach(() => {
   mockApiRequest.mockReset()
   mockApiRequest.mockResolvedValue(sampleComponents)
+  mockIsAdmin.value = false
 })
 
 describe('JiraTaxonomyView', () => {
@@ -129,5 +135,62 @@ describe('JiraTaxonomyView', () => {
     const rows = wrapper.findAll('tbody tr')
     const names = rows.map(r => r.findAll('td')[0].text())
     expect(names).toEqual(['Dashboard', 'CodeFlare', 'Authorino'])
+  })
+
+  it('hides refresh button for non-admin users', async () => {
+    mockIsAdmin.value = false
+    const wrapper = mountView()
+    await flushPromises()
+    expect(wrapper.find('button[aria-label*="Refresh"]').exists()).toBe(false)
+  })
+
+  it('shows refresh button for admin users', async () => {
+    mockIsAdmin.value = true
+    const wrapper = mountView()
+    await flushPromises()
+    const btn = wrapper.find('button[aria-label*="Refresh"]')
+    expect(btn.exists()).toBe(true)
+    expect(btn.text()).toContain('Refresh')
+  })
+
+  it('triggers sync and shows success toast', async () => {
+    mockIsAdmin.value = true
+    // fetchComponents returns old syncedAt so cooldown doesn't apply on mount
+    mockApiRequest.mockImplementation((url, opts) => {
+      if (opts && opts.method === 'POST') {
+        return Promise.resolve({ valuesCount: 96 })
+      }
+      return Promise.resolve({
+        ...sampleComponents,
+        fetchedAt: '2026-01-01T00:00:00.000Z' // old date, no cooldown
+      })
+    })
+    const wrapper = mountView()
+    await flushPromises()
+
+    const btn = wrapper.find('button[aria-label*="Refresh"]')
+    await btn.trigger('click')
+    await flushPromises()
+
+    expect(mockApiRequest).toHaveBeenCalledWith(
+      '/modules/team-tracker/field-options/component/sync/trigger',
+      { method: 'POST' }
+    )
+    expect(wrapper.text()).toContain('Synced 96 components from Jira')
+  })
+
+  it('shows cooldown state when recently synced', async () => {
+    mockIsAdmin.value = true
+    mockApiRequest.mockResolvedValue({
+      ...sampleComponents,
+      fetchedAt: new Date().toISOString() // just now
+    })
+    const wrapper = mountView()
+    await flushPromises()
+
+    const btn = wrapper.find('button')
+    expect(btn.attributes('disabled')).toBeDefined()
+    // Should show countdown text (e.g., "4m 59s")
+    expect(btn.text()).toMatch(/\d+m \d+s/)
   })
 })

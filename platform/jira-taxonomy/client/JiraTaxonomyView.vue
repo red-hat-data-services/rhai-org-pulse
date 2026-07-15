@@ -1,5 +1,6 @@
 <template>
   <div class="max-w-7xl mx-auto px-4 py-6">
+    <Toast v-if="toastMessage" :message="toastMessage" :type="toastType" @close="toastMessage = ''" />
     <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Jira Taxonomy</h2>
     <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Browse Jira classification systems</p>
 
@@ -11,13 +12,32 @@
       <svg class="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
-      <span>
+      <span class="flex-1">
         This list is sourced from the
         <a :href="`https://redhat.atlassian.net/projects/${project}/components`" target="_blank" rel="noopener noreferrer" class="font-medium text-primary-600 dark:text-primary-400 hover:underline">{{ project }}</a>
         Jira project's component registry.
         <template v-if="fetchedAt">Last synced {{ formatDate(fetchedAt) }}.</template>
         Components are synced automatically from Jira.
       </span>
+      <button
+        v-if="isAdmin"
+        :disabled="syncing || syncCooldown"
+        @click="triggerSync"
+        class="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border transition-colors"
+        :class="syncCooldown
+          ? 'border-gray-200 dark:border-gray-600 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+          : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed'"
+        :aria-label="syncing ? 'Syncing components from Jira' : syncCooldown ? `Sync available in ${cooldownRemaining}` : 'Refresh components from Jira'"
+      >
+        <svg v-if="syncing" class="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        </svg>
+        <svg v-else class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        {{ syncing ? 'Syncing...' : syncCooldown ? cooldownRemaining : 'Refresh' }}
+      </button>
     </div>
 
     <!-- Loading -->
@@ -108,8 +128,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
+import { useAuth } from '@shared/client/composables/useAuth'
+import Toast from '@shared/client/components/Toast.vue'
+
+const { isAdmin } = useAuth()
 
 // Component browser state
 const loading = ref(false)
@@ -120,6 +144,21 @@ const fetchedAt = ref(null)
 const searchQuery = ref('')
 const sortColumn = ref('name')
 const sortAsc = ref(true)
+
+// Toast state
+const toastMessage = ref('')
+const toastType = ref('success')
+
+// Sync state
+const syncing = ref(false)
+const syncCooldown = ref(false)
+const cooldownRemaining = ref('')
+let cooldownTimer = null
+
+// Sync trigger — coupled to the "component" field-options name,
+// which is the backing store for the /jira-components read endpoint.
+const SYNC_OPTION_SET = 'component'
+const COOLDOWN_MS = 5 * 60 * 1000 // 5 minutes, matches server-side cooldown
 
 const filteredComponents = computed(() => {
   let result = components.value
@@ -185,5 +224,62 @@ async function fetchComponents() {
   }
 }
 
-onMounted(fetchComponents)
+function startCooldown(syncedAtIso) {
+  const syncedAt = new Date(syncedAtIso).getTime()
+  function tick() {
+    const elapsed = Date.now() - syncedAt
+    const remaining = COOLDOWN_MS - elapsed
+    if (remaining <= 0) {
+      syncCooldown.value = false
+      cooldownRemaining.value = ''
+      cooldownTimer = null
+      return
+    }
+    syncCooldown.value = true
+    const mins = Math.floor(remaining / 60000)
+    const secs = Math.ceil((remaining % 60000) / 1000)
+    cooldownRemaining.value = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`
+    cooldownTimer = setTimeout(tick, 1000)
+  }
+  tick()
+}
+
+async function triggerSync() {
+  syncing.value = true
+  try {
+    const result = await apiRequest(`/modules/team-tracker/field-options/${SYNC_OPTION_SET}/sync/trigger`, {
+      method: 'POST'
+    })
+    await fetchComponents()
+    startCooldown(new Date().toISOString())
+    toastType.value = 'success'
+    toastMessage.value = `Synced ${result.valuesCount} components from Jira.`
+  } catch (err) {
+    if (err.status === 429) {
+      // Server-side cooldown — start client timer from the last sync time
+      startCooldown(fetchedAt.value || new Date().toISOString())
+    } else {
+      toastType.value = 'error'
+      toastMessage.value = 'Sync failed: ' + (err.message || 'Unknown error')
+    }
+  } finally {
+    syncing.value = false
+  }
+}
+
+onMounted(() => {
+  fetchComponents().then(() => {
+    // If recently synced, start the cooldown timer
+    if (fetchedAt.value) {
+      const elapsed = Date.now() - new Date(fetchedAt.value).getTime()
+      if (elapsed < COOLDOWN_MS) {
+        startCooldown(fetchedAt.value)
+      }
+    }
+  })
+})
+
+onUnmounted(() => {
+  if (cooldownTimer) clearTimeout(cooldownTimer)
+})
 </script>
