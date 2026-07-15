@@ -3,8 +3,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 function makeStorage(initial = {}) {
   const data = { ...initial }
   return {
-    readFromStorage: vi.fn((key) => data[key] ? JSON.parse(JSON.stringify(data[key])) : null),
-    writeToStorage: vi.fn((key, val) => { data[key] = JSON.parse(JSON.stringify(val)) }),
+    readFromStorage: vi.fn(async (key) => data[key] ? JSON.parse(JSON.stringify(data[key])) : null),
+    writeToStorage: vi.fn(async (key, val) => { data[key] = JSON.parse(JSON.stringify(val)) }),
     _data: data
   }
 }

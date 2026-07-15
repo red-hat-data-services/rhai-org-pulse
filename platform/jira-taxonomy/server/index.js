@@ -22,8 +22,8 @@ module.exports = function registerJiraTaxonomyRoutes(router, context) {
    * Reads the "component" option set and reshapes richValues into the
    * component array format expected by the taxonomy browse UI.
    */
-  function buildComponentResponse() {
-    const data = readFromStorage('team-data/field-options/' + COMPONENT_OPTIONS_NAME + '.json');
+  async function buildComponentResponse() {
+    const data = await readFromStorage('team-data/field-options/' + COMPONENT_OPTIONS_NAME + '.json');
     if (!data || !data.values) {
       return { fetchedAt: null, project: null, components: [], source: null };
     }
@@ -61,9 +61,9 @@ module.exports = function registerJiraTaxonomyRoutes(router, context) {
    *       200:
    *         description: Component list
    */
-  router.get('/jira-components', requireScope('team-tracker:read'), function(req, res) {
+  router.get('/jira-components', requireScope('team-tracker:read'), async function(req, res) {
     try {
-      var result = buildComponentResponse();
+      var result = await buildComponentResponse();
       res.json(result);
     } catch (err) {
       console.error('[jira-taxonomy] Error building component response:', err.message);
