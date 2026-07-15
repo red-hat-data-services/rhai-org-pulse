@@ -27,7 +27,7 @@
   "dependencies": {
     "@dagrejs/dagre": "^3.0.0",
     "@octokit/rest": "^22.0.1",
-    "@org-pulse/core": "^2.0.15",
+    "@org-pulse/core": "^2.0.18",
     "@vue-flow/background": "^1.3.2",
     "@vue-flow/controls": "^1.1.3",
     "@vue-flow/core": "^1.48.2",
