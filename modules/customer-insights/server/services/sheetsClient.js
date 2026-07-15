@@ -163,13 +163,41 @@ async function getSheetId(sheets, spreadsheetId, sheetName) {
 }
 
 /**
- * Ensure headers exist in sheet (create if missing)
+ * Ensure a sheet tab exists, creating it if missing
+ * @param {import('googleapis').sheets_v4.Sheets} sheets - Sheets API client
+ * @param {string} spreadsheetId - Google Spreadsheet ID
+ * @param {string} sheetName - Sheet tab name
+ */
+async function ensureSheetTab(sheets, spreadsheetId, sheetName) {
+  const res = await sheets.spreadsheets.get({
+    spreadsheetId,
+    fields: 'sheets.properties',
+  })
+
+  const exists = res.data.sheets.some(
+    (s) => s.properties.title === sheetName
+  )
+
+  if (!exists) {
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        requests: [{ addSheet: { properties: { title: sheetName } } }],
+      },
+    })
+  }
+}
+
+/**
+ * Ensure headers exist in sheet (create tab and headers if missing)
  * @param {import('googleapis').sheets_v4.Sheets} sheets - Sheets API client
  * @param {string} spreadsheetId - Google Spreadsheet ID
  * @param {string} sheetName - Sheet tab name
  * @param {Array} headerRow - Header row values
  */
 async function ensureHeaders(sheets, spreadsheetId, sheetName, headerRow) {
+  await ensureSheetTab(sheets, spreadsheetId, sheetName)
+
   const existing = await readSheet(sheets, spreadsheetId, `${sheetName}!1:1`)
 
   if (!existing.length || !existing[0].length) {
@@ -189,5 +217,6 @@ module.exports = {
   updateRow,
   deleteRow,
   clearAndWrite,
+  ensureSheetTab,
   ensureHeaders,
 }
