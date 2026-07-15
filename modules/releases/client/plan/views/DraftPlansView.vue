@@ -1,351 +1,10 @@
-<template>
-  <div class="space-y-4">
-    <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3">
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <div class="min-w-0">
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-            Release cycle
-          </p>
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 truncate">
-            {{ cycleLabel }} Draft Plan
-          </h2>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            View / red-pen / freeze over pipeline draft JSON. Keep is implicit — use Move or Descope.
-          </p>
-          <p v-if="draft" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            <span v-if="draft.generatedAt">Generated {{ formatTs(draft.generatedAt) }}</span>
-            <span v-if="draft.generatedAt && draft.summary"> · </span>
-            <span v-if="draft.summary">{{ draft.summary.candidateCount }} candidates</span>
-            <span v-if="activeCycleMeta && activeCycleMeta.source"> · source: {{ activeCycleMeta.source }}</span>
-          </p>
-        </div>
-        <div class="flex flex-wrap items-end gap-2">
-          <label class="text-xs text-gray-500 dark:text-gray-400">
-            Product
-            <select
-              class="mt-0.5 block rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5 text-gray-900 dark:text-gray-100"
-              :value="selectedProduct"
-              :disabled="loading || saving"
-              @change="onProductChange($event.target.value)"
-            >
-              <option value="">All (RHOAI + RHAII)</option>
-              <option v-for="p in availableProducts" :key="p" :value="p">{{ p }}</option>
-            </select>
-          </label>
-          <label class="text-xs text-gray-500 dark:text-gray-400">
-            Cycle
-            <select
-              class="mt-0.5 block min-w-[6rem] rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5 font-medium text-gray-900 dark:text-gray-100"
-              :value="selectedVersion"
-              :disabled="loading || saving || availableCycles.length === 0"
-              @change="onVersionChange($event.target.value)"
-            >
-              <option v-for="c in availableCycles" :key="c.version" :value="c.version">
-                {{ c.label || c.version }}{{ c.demoMode ? ' (demo)' : '' }}
-              </option>
-            </select>
-          </label>
-          <label class="text-xs text-gray-500 dark:text-gray-400">
-            Acting as
-            <select
-              class="mt-0.5 block rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5"
-              :value="editor.meta.currentUser"
-              @change="setCurrentUser($event.target.value)"
-            >
-              <option :value="ADMIN">{{ ADMIN }}</option>
-              <option v-for="a in assignees" :key="a" :value="a">{{ a }}</option>
-            </select>
-          </label>
-          <button
-            type="button"
-            class="rounded-md px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
-            :disabled="loading || saving"
-            @click="onReload"
-          >
-            Reload
-          </button>
-          <button
-            type="button"
-            class="rounded-md px-3 py-1.5 text-sm bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50"
-            :disabled="!dirty || saving || loading"
-            @click="persist"
-          >
-            {{ saving ? 'Saving…' : dirty ? 'Save*' : 'Save' }}
-          </button>
-          <span v-if="dirty" class="text-xs text-amber-600 dark:text-amber-400 self-center">Unsaved changes</span>
-        </div>
-      </div>
-    </div>
-
-    <div
-      v-if="draft && draft.demoMode"
-      class="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-2 text-sm text-amber-800 dark:text-amber-300"
-    >
-      Demo fixture (pipeline draft sample). Live GitLab ingest lands after release-planning MR !25. No Jira writes — freeze simulates Fix Version only.
-    </div>
-
-    <div v-if="error" class="rounded-lg border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 px-4 py-2 text-sm text-red-700 dark:text-red-300">
-      {{ error }}
-    </div>
-
-    <div v-if="loading" class="text-sm text-gray-500 dark:text-gray-400 py-8 text-center">Loading draft plan…</div>
-
-    <div
-      v-else-if="!draft"
-      class="rounded-lg border border-dashed border-gray-300 dark:border-gray-600 px-4 py-10 text-center text-sm text-gray-500 dark:text-gray-400"
-    >
-      No draft plan loaded. Reload to fetch the demo fixture (3.6) or a stored pipeline draft.
-    </div>
-
-    <template v-else>
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-        <div v-for="stat in summaryStats" :key="stat.label" class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2">
-          <div class="text-xs text-gray-500 dark:text-gray-400">{{ stat.label }}</div>
-          <div class="text-lg font-semibold tabular-nums text-gray-900 dark:text-gray-100">{{ stat.value }}</div>
-        </div>
-      </div>
-
-      <div v-if="admin" class="flex flex-wrap gap-2 items-center">
-        <span class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Freeze</span>
-        <button
-          type="button"
-          class="rounded-md px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 disabled:opacity-50"
-          :disabled="finalFrozen || eventFrozen('EA1')"
-          @click="onFreeze('EA1')"
-        >
-          Freeze EA1
-        </button>
-        <button
-          v-if="eventFrozen('EA1') && !finalFrozen"
-          type="button"
-          class="rounded-md px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600"
-          @click="onUnfreeze('EA1')"
-        >
-          Unfreeze EA1
-        </button>
-        <button
-          type="button"
-          class="rounded-md px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 disabled:opacity-50"
-          :disabled="finalFrozen || eventFrozen('EA2')"
-          @click="onFreeze('EA2')"
-        >
-          Freeze EA2
-        </button>
-        <button
-          v-if="eventFrozen('EA2') && !finalFrozen"
-          type="button"
-          class="rounded-md px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600"
-          @click="onUnfreeze('EA2')"
-        >
-          Unfreeze EA2
-        </button>
-        <button
-          type="button"
-          class="rounded-md px-3 py-1.5 text-sm border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 disabled:opacity-50"
-          :disabled="finalFrozen"
-          @click="onFinalGa"
-        >
-          Final GA freeze
-        </button>
-        <button
-          v-if="finalFrozen || eventFrozen('EA1') || eventFrozen('EA2') || eventFrozen('GA')"
-          type="button"
-          class="rounded-md px-3 py-1.5 text-sm border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300"
-          @click="onUnfreezePlan"
-        >
-          Unfreeze plan
-        </button>
-        <button
-          type="button"
-          class="rounded-md px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300"
-          @click="onReset"
-        >
-          Reset to base
-        </button>
-        <span v-if="finalFrozen" class="text-xs font-medium text-red-600 dark:text-red-400">Plan locked (final GA)</span>
-      </div>
-
-      <div class="grid md:grid-cols-3 gap-3">
-        <div
-          v-for="ev in scheduledEvents"
-          :key="ev"
-          class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3"
-        >
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-              {{ ev }}
-              <span v-if="eventFrozen(ev)" class="ml-1 text-[10px] uppercase text-amber-600 dark:text-amber-400">frozen</span>
-            </h3>
-            <span class="text-xs tabular-nums text-gray-500">{{ counts[ev] || 0 }}</span>
-          </div>
-          <ul class="space-y-1 max-h-28 overflow-auto">
-            <li
-              v-for="bar in eventLoadBars(ev).slice(0, 8)"
-              :key="ev + bar.component"
-              class="flex items-center justify-between text-[11px] text-gray-600 dark:text-gray-300 gap-2"
-            >
-              <span class="truncate">{{ bar.component }}</span>
-              <span class="tabular-nums shrink-0" :class="bar.budget != null && bar.load > bar.budget ? 'text-red-600 dark:text-red-400 font-semibold' : ''">
-                {{ bar.load }}<template v-if="bar.budget != null"> / {{ bar.budget }}</template>
-              </span>
-            </li>
-            <li v-if="eventLoadBars(ev).length === 0" class="text-[11px] text-gray-400">No features</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="flex flex-wrap gap-2 items-end">
-        <label class="text-xs text-gray-500 dark:text-gray-400">
-          Event
-          <select v-model="filterEvent" class="block mt-0.5 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1">
-            <option value="">All</option>
-            <option v-for="p in filterPlacements" :key="p" :value="p">{{ p }}</option>
-          </select>
-        </label>
-        <label class="text-xs text-gray-500 dark:text-gray-400">
-          Component
-          <select v-model="filterComponent" class="block mt-0.5 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1">
-            <option value="">All</option>
-            <option v-for="c in components" :key="c" :value="c">{{ c }}</option>
-          </select>
-        </label>
-        <label class="text-xs text-gray-500 dark:text-gray-400 flex-1 min-w-[12rem]">
-          Search
-          <input
-            v-model="filterText"
-            type="search"
-            placeholder="Key, summary, assignee…"
-            class="block mt-0.5 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1"
-          />
-        </label>
-      </div>
-
-      <div class="overflow-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-        <table class="w-full text-xs">
-          <thead class="bg-gray-50 dark:bg-gray-800/80 text-left text-gray-500 dark:text-gray-400">
-            <tr>
-              <th class="px-2 py-2 font-medium">Key</th>
-              <th class="px-2 py-2 font-medium">Summary</th>
-              <th class="px-2 py-2 font-medium">Base</th>
-              <th class="px-2 py-2 font-medium">Move</th>
-              <th class="px-2 py-2 font-medium">Descope</th>
-              <th class="px-2 py-2 font-medium">Approve</th>
-              <th class="px-2 py-2 font-medium">Component</th>
-              <th class="px-2 py-2 font-medium">Assignee</th>
-              <th class="px-2 py-2 font-medium">Proposed FV</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="row in filteredRows"
-              :key="row.key"
-              class="border-t border-gray-100 dark:border-gray-800"
-              :class="{
-                'bg-emerald-50/70 dark:bg-emerald-900/20': row.approved,
-                'opacity-60': row.frozen,
-                'bg-amber-50/40 dark:bg-amber-900/10': row.changed && !row.approved
-              }"
-            >
-              <td class="px-2 py-2 font-mono whitespace-nowrap">{{ row.key }}</td>
-              <td class="px-2 py-2 max-w-[18rem] truncate" :title="row.summary">{{ row.summary }}</td>
-              <td class="px-2 py-2 whitespace-nowrap text-gray-500">{{ row.basePlacement }}</td>
-              <td class="px-2 py-2">
-                <select
-                  class="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-xs px-1 py-0.5 max-w-[7rem]"
-                  :disabled="!row.editable"
-                  :value="row.decision === 'descope' ? '' : row.event === 'Descope' ? '' : row.event"
-                  @change="onMove(row.key, $event.target.value)"
-                >
-                  <option disabled value="">—</option>
-                  <option v-for="p in PLACEMENTS" :key="p" :value="p">{{ p }}</option>
-                </select>
-              </td>
-              <td class="px-2 py-2">
-                <button
-                  v-if="row.decision !== 'descope'"
-                  type="button"
-                  class="text-red-600 dark:text-red-400 hover:underline disabled:opacity-40"
-                  :disabled="!row.editable"
-                  @click="descopeFeature(row.key)"
-                >
-                  Descope
-                </button>
-                <button
-                  v-else
-                  type="button"
-                  class="text-gray-600 dark:text-gray-300 hover:underline disabled:opacity-40"
-                  :disabled="!row.editable"
-                  @click="undescopeFeature(row.key)"
-                >
-                  Undo
-                </button>
-              </td>
-              <td class="px-2 py-2">
-                <input
-                  type="checkbox"
-                  :checked="row.approved"
-                  :disabled="!row.editable || row.decision === 'descope'"
-                  @change="approveFeature(row.key, $event.target.checked)"
-                />
-              </td>
-              <td class="px-2 py-2 whitespace-nowrap">{{ row.component }}</td>
-              <td class="px-2 py-2 whitespace-nowrap">{{ row.assignee }}</td>
-              <td class="px-2 py-2 font-mono whitespace-nowrap text-gray-500">{{ row.proposedFixVersion || '—' }}</td>
-            </tr>
-            <tr v-if="filteredRows.length === 0">
-              <td colspan="9" class="px-2 py-6 text-center text-gray-400">No features match filters</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3">
-        <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Audit</h3>
-        <ul class="space-y-1 max-h-40 overflow-auto text-[11px] text-gray-600 dark:text-gray-300">
-          <li v-for="(a, idx) in editor.audit.slice(0, 40)" :key="idx + a.ts">
-            <span class="tabular-nums text-gray-400">{{ formatTs(a.ts) }}</span>
-            · {{ a.actor }} · {{ a.detail || a.action }}
-          </li>
-          <li v-if="editor.audit.length === 0" class="text-gray-400">No edits yet</li>
-        </ul>
-      </div>
-    </template>
-
-    <div
-      v-if="pendingCapacity"
-      class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div class="w-full max-w-md rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-4 shadow-lg">
-        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Over capacity</h3>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-          {{ pendingCapacity.check && pendingCapacity.check.message }}
-        </p>
-        <div class="mt-4 flex justify-end gap-2">
-          <button
-            type="button"
-            class="rounded-md px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600"
-            @click="cancelCapacityMove"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            class="rounded-md px-3 py-1.5 text-sm bg-primary-600 text-white"
-            @click="confirmCapacityMove"
-          >
-            Move anyway
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup>
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useDraftPlans } from '../composables/useDraftPlans'
+import DraftPlanRow from '../components/DraftPlanRow.vue'
+import DraftPlanDrawer from '../components/DraftPlanDrawer.vue'
+
+var jiraBaseUrl = 'https://issues.redhat.com/browse'
 
 var {
   ADMIN,
@@ -373,7 +32,6 @@ var {
   admin,
   finalFrozen,
   eventFrozen,
-  eventLoadBars,
   loadCycles,
   loadEditor,
   persist,
@@ -392,19 +50,59 @@ var {
   setProductFilter
 } = useDraftPlans()
 
-var scheduledEvents = ['EA1', 'EA2', 'GA']
+var selectedFeatureKey = ref(null)
 var filterPlacements = PLACEMENTS.concat(['Descope'])
 
-var summaryStats = computed(function() {
+var selectedFeature = computed(function() {
+  if (!selectedFeatureKey.value) return null
+  var rows = filteredRows.value
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i].key === selectedFeatureKey.value) return rows[i]
+  }
+  // Keep drawer open if filter hides row — look in full draft via filtered miss
+  return null
+})
+
+watch(filteredRows, function(rows) {
+  if (!selectedFeatureKey.value) return
+  var found = false
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i].key === selectedFeatureKey.value) {
+      found = true
+      break
+    }
+  }
+  if (!found) selectedFeatureKey.value = null
+})
+
+var headers = [
+  { id: 'h-num', label: '#' },
+  { id: 'h-key', label: 'Key' },
+  { id: 'h-title', label: 'Title' },
+  { id: 'h-base', label: 'Base' },
+  { id: 'h-place', label: 'Placement' },
+  { id: 'h-product', label: 'Product' },
+  { id: 'h-comp', label: 'Component' },
+  { id: 'h-assignee', label: 'Assignee' },
+  { id: 'h-ready', label: 'Ready' },
+  { id: 'h-approved', label: 'Approved' },
+  { id: 'h-frozen', label: 'Frozen' }
+]
+
+var summaryBits = computed(function() {
   return [
-    { label: 'Candidates', value: filteredRows.value.length },
-    { label: 'EA1', value: counts.value.EA1 || 0 },
-    { label: 'EA2', value: counts.value.EA2 || 0 },
-    { label: 'GA', value: counts.value.GA || 0 },
-    { label: 'Below cut', value: counts.value['Below cut'] || 0 },
-    { label: 'Descope', value: counts.value.Descope || 0 }
+    { label: filteredRows.value.length + ' features' },
+    { label: (counts.value.EA1 || 0) + ' EA1', tone: 'sky' },
+    { label: (counts.value.EA2 || 0) + ' EA2', tone: 'sky' },
+    { label: (counts.value.GA || 0) + ' GA', tone: 'sky' },
+    { label: (counts.value['Below cut'] || 0) + ' below cut', tone: 'amber' },
+    { label: (counts.value.Descope || 0) + ' descope', tone: 'red' }
   ]
 })
+
+function onSelectFeature(feature) {
+  selectedFeatureKey.value = feature.key
+}
 
 function onMove(key, placement) {
   if (!placement) return
@@ -435,11 +133,13 @@ function onFinalGa() {
 
 function onReset() {
   if (!window.confirm('Reset all edits, freezes, and audit to the base draft?')) return
+  selectedFeatureKey.value = null
   reset()
 }
 
 function onReload() {
   if (dirty.value && !window.confirm('Discard unsaved changes and reload?')) return
+  selectedFeatureKey.value = null
   loadEditor(selectedVersion.value)
 }
 
@@ -450,6 +150,7 @@ function onProductChange(product) {
 async function onVersionChange(version) {
   if (version === selectedVersion.value) return
   if (dirty.value && !window.confirm('Discard unsaved changes and switch cycle?')) return
+  selectedFeatureKey.value = null
   await loadEditor(version)
 }
 
@@ -469,3 +170,256 @@ onMounted(async function() {
   await loadEditor(selectedVersion.value)
 })
 </script>
+
+<template>
+  <div class="space-y-0 overflow-hidden">
+    <!-- Cycle / product bar (mirrors Features List release bar) -->
+    <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-2 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+      <div class="flex flex-wrap items-center gap-3 min-w-0">
+        <div class="min-w-0">
+          <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Release cycle</p>
+          <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{{ cycleLabel }} Draft Plan</h2>
+        </div>
+        <label class="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+          Cycle
+          <select
+            class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+            :value="selectedVersion"
+            :disabled="loading || saving || availableCycles.length === 0"
+            @change="onVersionChange($event.target.value)"
+          >
+            <option v-for="c in availableCycles" :key="c.version" :value="c.version">
+              {{ c.version }}{{ c.demoMode ? ' (demo)' : '' }}
+            </option>
+          </select>
+        </label>
+        <label class="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+          Product
+          <select
+            class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100"
+            :value="selectedProduct"
+            :disabled="loading || saving"
+            @change="onProductChange($event.target.value)"
+          >
+            <option value="">All (RHOAI + RHAII)</option>
+            <option v-for="p in availableProducts" :key="p" :value="p">{{ p }}</option>
+          </select>
+        </label>
+      </div>
+      <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+        <span v-for="bit in summaryBits" :key="bit.label">{{ bit.label }}</span>
+        <label class="flex items-center gap-1">
+          Acting as
+          <select
+            class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 text-xs"
+            :value="editor.meta.currentUser"
+            @change="setCurrentUser($event.target.value)"
+          >
+            <option :value="ADMIN">{{ ADMIN }}</option>
+            <option v-for="a in assignees" :key="a" :value="a">{{ a }}</option>
+          </select>
+        </label>
+        <button
+          type="button"
+          class="px-3 py-1 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+          :disabled="loading || saving"
+          @click="onReload"
+        >Reload</button>
+        <button
+          type="button"
+          class="px-3 py-1 text-xs font-medium rounded-md bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50"
+          :disabled="!dirty || saving || loading"
+          @click="persist"
+        >{{ saving ? 'Saving…' : dirty ? 'Save*' : 'Save' }}</button>
+        <span v-if="dirty" class="text-amber-600 dark:text-amber-400">Unsaved</span>
+      </div>
+    </div>
+
+    <!-- Plan-level freeze toolbar -->
+    <div
+      v-if="admin && draft"
+      class="flex flex-wrap items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700"
+    >
+      <span class="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Freeze</span>
+      <button
+        type="button"
+        class="px-3 py-1 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 disabled:opacity-50"
+        :disabled="finalFrozen || eventFrozen('EA1')"
+        @click="onFreeze('EA1')"
+      >Freeze EA1</button>
+      <button
+        v-if="eventFrozen('EA1') && !finalFrozen"
+        type="button"
+        class="px-3 py-1 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600"
+        @click="onUnfreeze('EA1')"
+      >Unfreeze EA1</button>
+      <button
+        type="button"
+        class="px-3 py-1 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 disabled:opacity-50"
+        :disabled="finalFrozen || eventFrozen('EA2')"
+        @click="onFreeze('EA2')"
+      >Freeze EA2</button>
+      <button
+        v-if="eventFrozen('EA2') && !finalFrozen"
+        type="button"
+        class="px-3 py-1 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600"
+        @click="onUnfreeze('EA2')"
+      >Unfreeze EA2</button>
+      <button
+        type="button"
+        class="px-3 py-1 text-xs font-medium rounded-md border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 disabled:opacity-50"
+        :disabled="finalFrozen"
+        @click="onFinalGa"
+      >Final GA freeze</button>
+      <button
+        v-if="finalFrozen || eventFrozen('EA1') || eventFrozen('EA2') || eventFrozen('GA')"
+        type="button"
+        class="px-3 py-1 text-xs font-medium rounded-md border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300"
+        @click="onUnfreezePlan"
+      >Unfreeze plan</button>
+      <button
+        type="button"
+        class="px-3 py-1 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300"
+        @click="onReset"
+      >Reset to base</button>
+      <span v-if="finalFrozen" class="text-xs font-medium text-red-600 dark:text-red-400">Plan locked</span>
+    </div>
+
+    <!-- Filter strip -->
+    <div class="flex flex-wrap items-end gap-3 px-4 py-2 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+      <label class="text-xs text-gray-500 dark:text-gray-400">
+        Event
+        <select v-model="filterEvent" class="mt-0.5 block rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5">
+          <option value="">All</option>
+          <option v-for="p in filterPlacements" :key="p" :value="p">{{ p }}</option>
+        </select>
+      </label>
+      <label class="text-xs text-gray-500 dark:text-gray-400">
+        Component
+        <select v-model="filterComponent" class="mt-0.5 block rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5">
+          <option value="">All</option>
+          <option v-for="c in components" :key="c" :value="c">{{ c }}</option>
+        </select>
+      </label>
+      <label class="text-xs text-gray-500 dark:text-gray-400 flex-1 min-w-[12rem]">
+        Search
+        <input
+          v-model="filterText"
+          type="search"
+          placeholder="Key, summary, assignee…"
+          class="mt-0.5 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5"
+        />
+      </label>
+    </div>
+
+    <div
+      v-if="draft && draft.demoMode"
+      class="mx-4 mt-3 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-2 text-sm text-amber-800 dark:text-amber-300"
+    >
+      Demo fixture. Click a row for Move / Descope / Approve. Freeze controls stay in the toolbar above.
+    </div>
+
+    <div
+      v-if="error"
+      role="alert"
+      class="mx-4 mt-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 text-sm text-red-700 dark:text-red-400"
+    >
+      {{ error }}
+    </div>
+
+    <!-- Dense table -->
+    <div class="overflow-x-auto">
+      <table role="table" class="w-full text-xs">
+        <thead role="rowgroup" class="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-200 dark:border-gray-700">
+          <tr role="row">
+            <th
+              v-for="header in headers"
+              :key="header.id"
+              role="columnheader"
+              scope="col"
+              class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+              :class="header.id === 'h-num' ? 'px-2 text-center w-8' : ''"
+            >
+              {{ header.label }}
+            </th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          <template v-if="loading && filteredRows.length === 0">
+            <tr v-for="i in 5" :key="'skel-' + i" role="row" class="border-b border-gray-100 dark:border-gray-800">
+              <td v-for="j in headers.length" :key="j" class="px-3 py-3">
+                <div class="h-3 rounded animate-pulse bg-gray-200 dark:bg-gray-700" :class="j === 3 ? 'w-24' : 'w-16'" />
+              </td>
+            </tr>
+          </template>
+
+          <DraftPlanRow
+            v-for="(row, idx) in filteredRows"
+            :key="row.key"
+            :feature="row"
+            :index="idx + 1"
+            :jira-base-url="jiraBaseUrl"
+            @select="onSelectFeature"
+          />
+
+          <tr v-if="!loading && !draft" role="row">
+            <td :colspan="headers.length" class="px-4 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
+              No draft plan loaded
+            </td>
+          </tr>
+          <tr v-else-if="!loading && filteredRows.length === 0" role="row">
+            <td :colspan="headers.length" class="px-4 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
+              No features match filters
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div
+      v-if="draft"
+      class="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900"
+    >
+      <span v-if="draft.generatedAt">Generated {{ formatTs(draft.generatedAt) }}</span>
+      <span v-if="activeCycleMeta && activeCycleMeta.source"> · source: {{ activeCycleMeta.source }}</span>
+      <span> · click a row to edit placement</span>
+      <span v-if="editor.audit.length"> · {{ editor.audit.length }} audit entries</span>
+    </div>
+
+    <DraftPlanDrawer
+      :feature="selectedFeature"
+      :jira-base-url="jiraBaseUrl"
+      @close="selectedFeatureKey = null"
+      @move="onMove"
+      @descope="descopeFeature"
+      @undescope="undescopeFeature"
+      @approve="approveFeature"
+    />
+
+    <div
+      v-if="pendingCapacity"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div class="w-full max-w-md rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-4 shadow-lg">
+        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Over capacity</h3>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+          {{ pendingCapacity.check && pendingCapacity.check.message }}
+        </p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button
+            type="button"
+            class="rounded-md px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600"
+            @click="cancelCapacityMove"
+          >Cancel</button>
+          <button
+            type="button"
+            class="rounded-md px-3 py-1.5 text-sm bg-primary-600 text-white"
+            @click="confirmCapacityMove"
+          >Move anyway</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
