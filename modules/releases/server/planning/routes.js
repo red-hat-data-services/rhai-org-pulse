@@ -65,8 +65,8 @@ module.exports = async function registerPlanningRoutes(router, context) {
         var migrated = 0
         for (var mi = 0; mi < pmData.emails.length; mi++) {
           var email = pmData.emails[mi]
-          if (!context.roleStore.hasRole(email, 'planning-manager')) {
-            context.roleStore.assignRole(email, 'planning-manager')
+          if (!(await context.roleStore.hasRole(email, 'planning-manager'))) {
+            await context.roleStore.assignRole(email, 'planning-manager')
             migrated++
           }
         }
