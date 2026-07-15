@@ -344,7 +344,7 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
    *       200:
    *         description: Draft plan with editor state (edits, meta, audit)
    *       400:
-   *         description: Invalid version format
+   *         description: Invalid version format or unknown product
    *       404:
    *         description: No draft plan data found
    */
@@ -355,6 +355,9 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
     }
 
     var product = req.query.product || 'RHOAI';
+    if (KNOWN_PRODUCTS.indexOf(product) === -1) {
+      return res.status(400).json({ error: 'Unknown product: ' + product });
+    }
     var draftRaw = await storage.readFromStorage(DATA_PREFIX + '/drafts/' + product + '/' + version + '.json');
     var draft = draftRaw ? normalizeDraft(draftRaw) : null;
 
@@ -406,7 +409,7 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
    *       200:
    *         description: Editor state saved
    *       400:
-   *         description: Invalid version format or missing required fields
+   *         description: Invalid version format, unknown product, or missing required fields
    */
   router.put('/editor/:version', requireAuth, requireScope('releases:write'), async function(req, res) {
     var version = req.params.version;
@@ -415,6 +418,9 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
     }
 
     var product = (req.query.product || (req.body && req.body.product) || 'RHOAI');
+    if (KNOWN_PRODUCTS.indexOf(product) === -1) {
+      return res.status(400).json({ error: 'Unknown product: ' + product });
+    }
     var body = req.body || {};
     if (!body.edits || typeof body.edits !== 'object' || Array.isArray(body.edits)) {
       return res.status(400).json({ error: 'edits object is required' });

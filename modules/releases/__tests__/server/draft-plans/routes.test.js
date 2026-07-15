@@ -428,6 +428,16 @@ describe('draft-plans routes', () => {
       expect(res._json.meta.planVersion).toBe('3.6')
     })
 
+    it('rejects unknown product', async () => {
+      const { router } = await setupRouter()
+      const res = await callRoute(router, 'get', '/editor/:version', {
+        params: { version: '3.6' },
+        query: { product: '../etc/passwd' }
+      })
+      expect(res._status).toBe(400)
+      expect(res._json.error).toContain('Unknown product')
+    })
+
     it('prefers stored draft over demo', async () => {
       const { router } = await setupRouter({
         [`${DATA_PREFIX}/drafts/RHOAI/3.6.json`]: {
@@ -477,6 +487,17 @@ describe('draft-plans routes', () => {
       const stored = storage._store[`${DATA_PREFIX}/editor/RHOAI/3.6.json`]
       expect(stored.edits['RHAISTRAT-1'].placement).toBe('EA2')
       expect(stored.audit).toHaveLength(1)
+    })
+
+    it('rejects unknown product', async () => {
+      const { router } = await setupRouter()
+      const res = await callRoute(router, 'put', '/editor/:version', {
+        params: { version: '3.6' },
+        query: { product: 'NOPE' },
+        body: { edits: {}, meta: {}, audit: [] }
+      })
+      expect(res._status).toBe(400)
+      expect(res._json.error).toContain('Unknown product')
     })
 
     it('rejects missing edits', async () => {
