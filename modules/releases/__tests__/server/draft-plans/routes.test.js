@@ -35,10 +35,11 @@ function makeStorage(data = {}) {
 }
 
 function makeRouter() {
-  const routes = { get: {}, post: {} }
+  const routes = { get: {}, post: {}, put: {} }
   return {
     get: vi.fn(function(path, ...handlers) { routes.get[path] = handlers }),
     post: vi.fn(function(path, ...handlers) { routes.post[path] = handlers }),
+    put: vi.fn(function(path, ...handlers) { routes.put[path] = handlers }),
     _routes: routes
   }
 }
@@ -409,6 +410,82 @@ describe('draft-plans routes', () => {
       expect(result.lastFetchTimestamp).toBe('2026-07-08T12:00:00Z')
       expect(result.fileCount).toBe(2)
       expect(result.tokenSource).toBe('GITLAB_TOKEN')
+    })
+  })
+
+  describe('GET /editor/:version', () => {
+    it('returns demo fixture for 3.6 when no stored draft', async () => {
+      const { router } = await setupRouter()
+      const res = await callRoute(router, 'get', '/editor/:version', {
+        params: { version: '3.6' },
+        query: { product: 'RHOAI' }
+      })
+
+      expect(res._status).toBe(200)
+      expect(res._json.draft.demoMode).toBe(true)
+      expect(res._json.draft.candidates.length).toBeGreaterThan(0)
+      expect(res._json.edits).toEqual({})
+      expect(res._json.meta.planVersion).toBe('3.6')
+    })
+
+    it('prefers stored draft over demo', async () => {
+      const { router } = await setupRouter({
+        [`${DATA_PREFIX}/drafts/RHOAI/3.6.json`]: {
+          version: '3.6',
+          generatedAt: '2026-07-15T00:00:00Z',
+          candidates: [
+            {
+              key: 'RHAISTRAT-1',
+              summary: 'Stored',
+              basePlacement: 'EA1',
+              component: 'KubeRay',
+              assignee: 'A'
+            }
+          ],
+          ceilingsByComponent: { KubeRay: { EA1: 2, EA2: 0, GA: 1 } }
+        }
+      })
+
+      const res = await callRoute(router, 'get', '/editor/:version', {
+        params: { version: '3.6' },
+        query: { product: 'RHOAI' }
+      })
+
+      expect(res._json.draft.demoMode).toBe(false)
+      expect(res._json.draft.candidates).toHaveLength(1)
+      expect(res._json.draft.candidates[0].key).toBe('RHAISTRAT-1')
+      expect(res._json.ceilingsByComponent.KubeRay.EA1).toBe(2)
+    })
+  })
+
+  describe('PUT /editor/:version', () => {
+    it('persists edits meta and audit', async () => {
+      const { router, storage } = await setupRouter()
+      const res = await callRoute(router, 'put', '/editor/:version', {
+        params: { version: '3.6' },
+        query: { product: 'RHOAI' },
+        body: {
+          edits: { 'RHAISTRAT-1': { decision: 'move', placement: 'EA2' } },
+          meta: { planVersion: '3.6', currentUser: 'Admin', frozenEvents: {} },
+          audit: [{ action: 'decision', detail: 'test' }]
+        },
+        user: { displayName: 'Erle' }
+      })
+
+      expect(res._status).toBe(200)
+      expect(res._json.status).toBe('saved')
+      const stored = storage._store[`${DATA_PREFIX}/editor/RHOAI/3.6.json`]
+      expect(stored.edits['RHAISTRAT-1'].placement).toBe('EA2')
+      expect(stored.audit).toHaveLength(1)
+    })
+
+    it('rejects missing edits', async () => {
+      const { router } = await setupRouter()
+      const res = await callRoute(router, 'put', '/editor/:version', {
+        params: { version: '3.6' },
+        body: { meta: {} }
+      })
+      expect(res._status).toBe(400)
     })
   })
 })

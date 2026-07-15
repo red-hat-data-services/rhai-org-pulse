@@ -1,7 +1,40 @@
 const { fetchDraftPlans, DATA_PREFIX, DEFAULT_CONFIG, KNOWN_PRODUCTS } = require('./fetch');
 const { logAudit } = require('../planning/audit-log');
+const { normalizeDraft } = require('./normalize');
+const fs = require('fs');
+const path = require('path');
 
 const COOLDOWN_MS = 5 * 60 * 1000;
+const VERSION_RE = /^[a-zA-Z0-9 ._-]{1,50}$/;
+const DEMO_FIXTURE_PATH = path.join(__dirname, 'fixtures', 'draft-3.6-demo.json');
+
+function loadDemoFixture() {
+  try {
+    var raw = JSON.parse(fs.readFileSync(DEMO_FIXTURE_PATH, 'utf8'));
+    return normalizeDraft(raw);
+  } catch (err) {
+    console.warn('[releases/draft-plans] Failed to load demo fixture:', err.message);
+    return null;
+  }
+}
+
+function emptyEditorEnvelope(planVersion, baseGeneratedAt) {
+  return {
+    edits: {},
+    meta: {
+      planVersion: planVersion || null,
+      baseGeneratedAt: baseGeneratedAt || null,
+      currentUser: 'Admin',
+      editorsAllowlist: null,
+      frozenEvents: {},
+      finalGaFrozen: false,
+      locked: false,
+      lockedBy: null,
+      lockedAt: null
+    },
+    audit: []
+  };
+}
 
 module.exports = async function registerDraftPlanRoutes(router, context) {
   const { storage, requireAuth, requireScope, secrets, registerRefresh, isRefreshRunning } = context;
@@ -293,6 +326,105 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/releases/draft-plans/editor/{version}:
+   *   get:
+   *     tags: [Releases]
+   *     summary: Get draft plan base + red-pen editor state for a version
+   */
+  router.get('/editor/:version', requireAuth, requireScope('releases:read'), async function(req, res) {
+    var version = req.params.version;
+    if (!VERSION_RE.test(version)) {
+      return res.status(400).json({ error: 'Invalid version format' });
+    }
+
+    var product = req.query.product || 'RHOAI';
+    var draftRaw = await storage.readFromStorage(DATA_PREFIX + '/drafts/' + product + '/' + version + '.json');
+    var draft = draftRaw ? normalizeDraft(draftRaw) : null;
+
+    if (!draft || !draft.candidates || draft.candidates.length === 0) {
+      if (version === '3.6') {
+        draft = loadDemoFixture();
+      }
+    }
+
+    if (!draft || !draft.candidates || draft.candidates.length === 0) {
+      return res.status(404).json({ error: 'No draft plan data found for version ' + version });
+    }
+
+    var editorKey = DATA_PREFIX + '/editor/' + product + '/' + version + '.json';
+    var stored = await storage.readFromStorage(editorKey);
+    var envelope = emptyEditorEnvelope(draft.version, draft.generatedAt);
+    if (stored && typeof stored === 'object') {
+      if (stored.edits && typeof stored.edits === 'object') envelope.edits = stored.edits;
+      if (stored.meta && typeof stored.meta === 'object') {
+        envelope.meta = Object.assign({}, envelope.meta, stored.meta);
+      }
+      if (Array.isArray(stored.audit)) envelope.audit = stored.audit;
+    }
+
+    res.json({
+      draft: draft,
+      ceilingsByComponent: draft.ceilingsByComponent || {},
+      edits: envelope.edits,
+      meta: envelope.meta,
+      audit: envelope.audit
+    });
+  });
+
+  /**
+   * @openapi
+   * /api/modules/releases/draft-plans/editor/{version}:
+   *   put:
+   *     tags: [Releases]
+   *     summary: Persist red-pen edits, meta, and audit for a draft plan version
+   */
+  router.put('/editor/:version', requireAuth, requireScope('releases:write'), async function(req, res) {
+    var version = req.params.version;
+    if (!VERSION_RE.test(version)) {
+      return res.status(400).json({ error: 'Invalid version format' });
+    }
+
+    var product = (req.query.product || (req.body && req.body.product) || 'RHOAI');
+    var body = req.body || {};
+    if (!body.edits || typeof body.edits !== 'object' || Array.isArray(body.edits)) {
+      return res.status(400).json({ error: 'edits object is required' });
+    }
+    if (!body.meta || typeof body.meta !== 'object' || Array.isArray(body.meta)) {
+      return res.status(400).json({ error: 'meta object is required' });
+    }
+    if (body.audit !== undefined && !Array.isArray(body.audit)) {
+      return res.status(400).json({ error: 'audit must be an array' });
+    }
+
+    var payload = {
+      edits: body.edits,
+      meta: body.meta,
+      audit: Array.isArray(body.audit) ? body.audit.slice(0, 500) : [],
+      savedAt: new Date().toISOString()
+    };
+
+    var editorKey = DATA_PREFIX + '/editor/' + product + '/' + version + '.json';
+    await storage.writeToStorage(editorKey, payload);
+
+    var user = (req.user && (req.user.displayName || req.user.email || req.user.uid)) || 'unknown';
+    await logAudit(storage.readFromStorage.bind(storage), storage.writeToStorage.bind(storage), {
+      domain: 'draft-plans',
+      version: version,
+      action: 'editor_save',
+      user: user,
+      summary: 'Saved draft plan editor state for ' + product + ' ' + version,
+      details: {
+        editCount: Object.keys(payload.edits).length,
+        auditCount: payload.audit.length,
+        finalGaFrozen: !!(payload.meta && payload.meta.finalGaFrozen)
+      }
+    });
+
+    res.json({ status: 'saved', savedAt: payload.savedAt });
+  });
+
   // ─── Parameterized routes ──────────────────────────────────────────
 
   /**
@@ -321,7 +453,7 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
    */
   router.get('/:version', requireAuth, requireScope('releases:read'), async function(req, res) {
     var version = req.params.version;
-    if (!/^[a-zA-Z0-9 ._-]{1,50}$/.test(version)) {
+    if (!VERSION_RE.test(version)) {
       return res.status(400).json({ error: 'Invalid version format' });
     }
 
@@ -386,7 +518,7 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
    */
   router.get('/:version/health', requireAuth, requireScope('releases:read'), async function(req, res) {
     var version = req.params.version;
-    if (!/^[a-zA-Z0-9 ._-]{1,50}$/.test(version)) {
+    if (!VERSION_RE.test(version)) {
       return res.status(400).json({ error: 'Invalid version format' });
     }
 

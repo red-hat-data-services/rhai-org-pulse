@@ -18,6 +18,7 @@
     <div class="p-6">
       <DashboardView v-if="activeTab === 'outcomes'" />
       <FeatureReadinessView v-else-if="activeTab === 'feature-readiness'" />
+      <DraftPlansView v-else-if="activeTab === 'draft-plans'" />
       <BuFeedbackView v-else-if="activeTab === 'bu-feedback'" />
       <PmHubView v-else-if="activeTab === 'pm-hub'" />
     </div>
@@ -28,6 +29,7 @@
 import { ref, inject, watch } from 'vue'
 import DashboardView from '../plan/views/DashboardView.vue'
 import FeatureReadinessView from '../plan/views/FeatureReadinessView.vue'
+import DraftPlansView from '../plan/views/DraftPlansView.vue'
 import BuFeedbackView from '../plan/views/BuFeedbackView.vue'
 import PmHubView from '../plan/views/PmHubView.vue'
 
@@ -35,6 +37,7 @@ const tabs = [
   { id: 'outcomes', label: 'Big Rocks' },
   { id: 'pm-hub', label: 'PM Hub' },
   { id: 'feature-readiness', label: 'Features List (1-n)' },
+  { id: 'draft-plans', label: 'Draft Plans' },
   { id: 'bu-feedback', label: 'Field and BU Feedback' },
 ]
 
