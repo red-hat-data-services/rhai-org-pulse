@@ -301,3 +301,19 @@ export function useDraftPlans() {
     setCurrentUser
   }
 }
+
+/** Test-only: reset module-level singleton state between cases. */
+export function _resetDraftPlansForTests() {
+  draft.value = null
+  ceilings.value = {}
+  editor.value = emptyEditorState()
+  loading.value = false
+  saving.value = false
+  error.value = null
+  dirty.value = false
+  pendingCapacity.value = null
+  selectedVersion.value = '3.6'
+  filterEvent.value = ''
+  filterComponent.value = ''
+  filterText.value = ''
+}
