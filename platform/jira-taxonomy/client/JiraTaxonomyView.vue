@@ -236,8 +236,9 @@ function startCooldown(syncedAtIso) {
       return
     }
     syncCooldown.value = true
-    const mins = Math.floor(remaining / 60000)
-    const secs = Math.ceil((remaining % 60000) / 1000)
+    const totalSecs = Math.ceil(remaining / 1000)
+    const mins = Math.floor(totalSecs / 60)
+    const secs = totalSecs % 60
     cooldownRemaining.value = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`
     cooldownTimer = setTimeout(tick, 1000)
   }
