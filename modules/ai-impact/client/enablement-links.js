@@ -101,6 +101,17 @@ export const enablementCategories = [
     ],
   },
   {
+    id: 'epic-creator',
+    title: 'Epic Creator',
+    section: 'ai-workflows',
+    links: [
+      { label: 'Enablement Slides', icon: 'Presentation', url: 'https://docs.google.com/presentation/d/1it2DXpN3CAWgNd-6MrzsTb8B7uG0wQrck_Tw06cghDg/edit?slide=id.ecs01#slide=id.ecs01' },
+      { label: 'Enablement Recording', icon: 'Video', url: 'https://drive.google.com/file/d/1ZV-irsI5DJ57Kdjc7DezVw9hBEgukqKs/view' },
+      { label: 'Enablement Chat', icon: 'MessageSquare', url: 'https://drive.google.com/file/d/1KZkuEzCAQyy3nU56af4BdBour8w1M78I/view' },
+      { label: 'Enablement Notes', icon: 'StickyNote', url: 'https://docs.google.com/document/d/1dJ9iueSJRXuUiMle7gKOi8pl-4_ZtzfeuvaV3UpFPcE/edit?tab=t.bd5xpweg9otp' },
+    ],
+  },
+  {
     id: 'agent-eval-harness',
     title: 'Agent Eval Harness',
     section: 'other',
