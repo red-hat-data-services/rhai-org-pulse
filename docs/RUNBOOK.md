@@ -218,10 +218,8 @@ data/
     registry.json               # Team metadata
     field-definitions.json      # Jira field mappings
     field-options/              # Named allowed-value sets
-  team-tracker/
-    metrics/{person}.json       # Per-person Jira metrics (365-day lookback)
-    snapshots/{team}/{date}.json
-    allocation/                 # Sprint allocation data
+  people/{name}.json              # Per-person Jira metrics (365-day lookback)
+  snapshots/{teamKey}/{date}.json # Team snapshots (teamKey sanitized: :: → --)
   github-contributions.json
   gitlab-contributions.json
   releases/
