@@ -235,6 +235,34 @@ test.describe('AI Impact Views @ai-impact', () => {
     await testView(page, 'test-plan-review', 'Test Plan Review');
   });
 
+  test('Test Plan Review renders trend charts and time window selector', async ({ page }) => {
+    await page.goto('/#/ai-impact/test-plan-review');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const timeWindowSelect = page.locator('select#tp-time-window');
+    await expect(timeWindowSelect).toBeVisible();
+
+    const trendHeading = page.locator('text=Trend Visualization');
+    await expect(trendHeading).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('Feature Review renders trend charts and time window selector', async ({ page }) => {
+    await page.goto('/#/ai-impact/feature-review');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const timeWindowSelect = page.locator('select#fr-time-window');
+    await expect(timeWindowSelect).toBeVisible();
+
+    const trendHeading = page.locator('text=Trend Visualization');
+    await expect(trendHeading).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
   test('should load Build & Release view', async ({ page }) => {
     await testView(page, 'build-release', 'Build & Release');
   });
