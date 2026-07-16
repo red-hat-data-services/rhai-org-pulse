@@ -23,7 +23,7 @@ function createUserTokenStore(storageBackend) {
    * @returns {Promise<object|null>}
    */
   async function getTokens(userEmail) {
-    const allTokens = readFromStorage(TOKEN_KEY) || {}
+    const allTokens = await readFromStorage(TOKEN_KEY) || {}
     return allTokens[userEmail] || null
   }
 
@@ -33,14 +33,14 @@ function createUserTokenStore(storageBackend) {
    * @param {object} tokens
    */
   async function saveTokens(userEmail, tokens) {
-    const allTokens = readFromStorage(TOKEN_KEY) || {}
+    const allTokens = await readFromStorage(TOKEN_KEY) || {}
 
     allTokens[userEmail] = {
       ...tokens,
       updatedAt: new Date().toISOString()
     }
 
-    writeToStorage(TOKEN_KEY, allTokens)
+    await writeToStorage(TOKEN_KEY, allTokens)
   }
 
   /**
@@ -48,43 +48,15 @@ function createUserTokenStore(storageBackend) {
    * @param {string} userEmail
    */
   async function deleteTokens(userEmail) {
-    const allTokens = readFromStorage(TOKEN_KEY) || {}
+    const allTokens = await readFromStorage(TOKEN_KEY) || {}
     delete allTokens[userEmail]
-    writeToStorage(TOKEN_KEY, allTokens)
-  }
-
-  /**
-   * Get spreadsheet config for a user
-   * @param {string} userEmail
-   * @returns {Promise<object|null>}
-   */
-  async function getSpreadsheetConfig(userEmail) {
-    const tokens = await getTokens(userEmail)
-    return tokens ? {
-      spreadsheetId: tokens.spreadsheetId || null,
-      spreadsheetName: tokens.spreadsheetName || null
-    } : null
-  }
-
-  /**
-   * Save spreadsheet config for a user
-   * @param {string} userEmail
-   * @param {string} spreadsheetId
-   * @param {string} spreadsheetName
-   */
-  async function saveSpreadsheetConfig(userEmail, spreadsheetId, spreadsheetName) {
-    const tokens = await getTokens(userEmail) || {}
-    tokens.spreadsheetId = spreadsheetId
-    tokens.spreadsheetName = spreadsheetName
-    await saveTokens(userEmail, tokens)
+    await writeToStorage(TOKEN_KEY, allTokens)
   }
 
   return {
     getTokens,
     saveTokens,
-    deleteTokens,
-    getSpreadsheetConfig,
-    saveSpreadsheetConfig
+    deleteTokens
   }
 }
 

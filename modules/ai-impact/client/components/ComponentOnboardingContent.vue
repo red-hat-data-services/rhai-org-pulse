@@ -75,7 +75,7 @@ const metrics = computed(() => {
   const completedAutomated = automated.filter(c => c.completionStatus === 'completed')
   const completedManual = manual.filter(c => c.completionStatus === 'completed')
   const inProgressAutomated = automated.filter(c => c.completionStatus === 'in-progress')
-  const inQueueAutomated = automated.filter(c => c.completionStatus === 'in_queue')
+  const inQueueAutomated = automated.filter(c => c.completionStatus === 'in_queue' || c.completionStatus === 'new')
 
   const avgDaysAutomated = calcAvgDaysAutomated(completedAutomated)
   const avgDaysManual = calcAvgDaysManual(completedManual)

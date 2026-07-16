@@ -3,7 +3,8 @@ import { onMounted, inject, ref, computed, reactive, watch } from 'vue'
 import { useDropDetail } from '../composables/useDrops'
 import { useArtifacts } from '../composables/useArtifacts'
 import { apiRequest } from '@shared/client/services/api'
-import { formatDate, envBadgeClass, archBadgeClass, konfluxStateBadgeClass, testStatusBadgeClass, testStatusLabel, formatDuration, getCommitUrl } from '../utils/formatting'
+import { formatDate, envBadgeClass, archBadgeClass, konfluxStateBadgeClass, testStatusBadgeClass, testStatusLabel, formatDuration, getCommitUrl, getRegistryUrl, getQuayDirectTagUrl, getQuayAllTagsUrl, getDigestUrl } from '../utils/formatting'
+import ChiBadge from '../components/ChiBadge.vue'
 import DropTimeline from '../components/DropTimeline.vue'
 
 const BASE = '/modules/product-builds'
@@ -119,33 +120,10 @@ function formatRelativeDate(dateString) {
   return diffYears === 1 ? '1 year ago' : `${diffYears} years ago`
 }
 
-function getQuayDirectTagUrl(key) {
-  if (!key || !key.startsWith('quay.io/')) return null
-  const withoutRegistry = key.replace('quay.io/', '')
-  const [path, tag] = withoutRegistry.split(':')
-  if (!tag) return null
-  return `https://quay.io/repository/${path}/tag/${tag}`
-}
-
-function getQuayAllTagsUrl(key) {
-  if (!key || !key.startsWith('quay.io/')) return null
-  const withoutRegistry = key.replace('quay.io/', '')
-  const [path, tag] = withoutRegistry.split(':')
-  const url = `https://quay.io/repository/${path}?tab=tags`
-  return tag ? `${url}&tag=${tag}` : url
-}
-
-function getRegistryUrl(key) {
-  if (!key) return null
-  if (key.startsWith('quay.io/')) {
-    const path = key.replace('quay.io/', '').split(':')[0]
-    return `https://quay.io/repository/${path}?tab=tags`
-  }
-  if (key.startsWith('registry.redhat.io/')) {
-    const path = key.replace('registry.redhat.io/', '').split(':')[0]
-    return `https://catalog.redhat.com/en/search?searchType=All&q=${encodeURIComponent(path)}&p=1`
-  }
-  return null
+function getProdKey(art) {
+  const names = art?.alternative_names
+  if (!Array.isArray(names)) return null
+  return names.find(n => n.startsWith('registry.redhat.io/')) || null
 }
 
 function downloadPackagesAsJson(artifactKey) {
@@ -227,13 +205,6 @@ function getAcceleratorInfo(artifact) {
     python: labels['com.redhat.aiplatform.python'] || 'unknown',
     baseImage: labels['com.redhat.aiplatform.image'] || null
   }
-}
-
-function getDigestUrl(artifact) {
-  if (!artifact?.sha_digest || !artifact?.key) return null
-  if (!artifact.key.startsWith('quay.io/')) return null
-  const path = artifact.key.replace('quay.io/', '').split(':')[0]
-  return `https://quay.io/repository/${path}/manifest/${artifact.sha_digest}`
 }
 
 const totalColumns = 7
@@ -319,48 +290,68 @@ const totalColumns = 7
                       <span
                         class="text-sm font-medium text-primary-600 dark:text-blue-400 truncate hover:underline"
                         @click.stop="navigateToArtifact(art.key)"
-                      >{{ art.key }}</span>
+                      >{{ getProdKey(art) || art.key }}</span>
                       <button
-                        @click="copyKey(art.key, $event)"
+                        @click="copyKey(getProdKey(art) || art.key, $event)"
                         class="shrink-0 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                         title="Copy artifact key"
                       >
-                        <svg v-if="copiedKey === art.key" class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                        <svg v-if="copiedKey === (getProdKey(art) || art.key)" class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
                         <svg v-else class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                       </button>
                     </div>
                   </td>
                   <td class="px-4 py-3" @click.stop>
                     <div class="flex items-center gap-1.5">
-                      <a
-                        v-if="getQuayDirectTagUrl(art.key)"
-                        :href="getQuayDirectTagUrl(art.key)"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="text-primary-600 dark:text-blue-400 hover:text-primary-700 dark:hover:text-blue-300"
-                        title="Direct link to this tag"
-                      >
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                      </a>
-                      <a
-                        v-if="getQuayAllTagsUrl(art.key)"
-                        :href="getQuayAllTagsUrl(art.key)"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50"
-                        title="View all tags (old Quay.io UI)"
-                      >all tags</a>
-                      <a
-                        v-if="!getQuayDirectTagUrl(art.key) && getRegistryUrl(art.key)"
-                        :href="getRegistryUrl(art.key)"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="text-primary-600 dark:text-blue-400 hover:text-primary-700 dark:hover:text-blue-300"
-                        title="View in registry"
-                      >
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                      </a>
-                      <span v-if="!getQuayDirectTagUrl(art.key) && !getQuayAllTagsUrl(art.key) && !getRegistryUrl(art.key)" class="text-gray-400 dark:text-gray-500">—</span>
+                      <template v-if="getProdKey(art)">
+                        <a
+                          :href="getRegistryUrl(getProdKey(art))"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="text-primary-600 dark:text-blue-400 hover:text-primary-700 dark:hover:text-blue-300"
+                          title="View production image in Red Hat Catalog"
+                        >
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                        </a>
+                        <a
+                          :href="getRegistryUrl(getProdKey(art))"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50"
+                          title="View production image in Red Hat Catalog"
+                        >prod</a>
+                      </template>
+                      <template v-else>
+                        <a
+                          v-if="getQuayDirectTagUrl(art.key)"
+                          :href="getQuayDirectTagUrl(art.key)"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="text-primary-600 dark:text-blue-400 hover:text-primary-700 dark:hover:text-blue-300"
+                          title="Direct link to this tag"
+                        >
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                        </a>
+                        <a
+                          v-if="getQuayAllTagsUrl(art.key)"
+                          :href="getQuayAllTagsUrl(art.key)"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50"
+                          title="View all tags (old Quay.io UI)"
+                        >all tags</a>
+                        <a
+                          v-if="!getQuayDirectTagUrl(art.key) && getRegistryUrl(art.key)"
+                          :href="getRegistryUrl(art.key)"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="text-primary-600 dark:text-blue-400 hover:text-primary-700 dark:hover:text-blue-300"
+                          title="View in registry"
+                        >
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                        </a>
+                        <span v-if="!getQuayDirectTagUrl(art.key) && !getQuayAllTagsUrl(art.key) && !getRegistryUrl(art.key)" class="text-gray-400 dark:text-gray-500">—</span>
+                      </template>
                     </div>
                   </td>
                   <td class="px-4 py-3">
@@ -450,14 +441,29 @@ const totalColumns = 7
                               <svg v-else class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                             </button>
                           </div>
-                          <div v-if="art.alternative_names?.length" class="mt-3">
+                          <div v-if="art.alternative_names?.length || getProdKey(art)" class="mt-3">
                             <span class="font-medium text-gray-900 dark:text-gray-100">Alternative Names:</span>
-                            <div v-for="name in art.alternative_names" :key="name" class="ml-3 text-gray-600 dark:text-gray-400 mt-0.5">
-                              - <span class="font-mono text-xs">{{ name }}</span>
+                            <div v-if="getProdKey(art)" class="ml-3 text-gray-600 dark:text-gray-400 mt-0.5">
+                              - <a v-if="getRegistryUrl(art.key)" :href="getRegistryUrl(art.key)" target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-primary-600 dark:text-blue-400 hover:underline" @click.stop>{{ art.key }}</a>
+                              <span v-else class="font-mono text-xs">{{ art.key }}</span>
+                              <button @click="copyKey(art.key, $event)" class="ml-1 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 inline-flex align-middle">
+                                <svg v-if="copiedKey === art.key" class="w-3 h-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                                <svg v-else class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                              </button>
+                            </div>
+                            <div v-for="name in (art.alternative_names || []).filter(n => n !== getProdKey(art))" :key="name" class="ml-3 text-gray-600 dark:text-gray-400 mt-0.5">
+                              - <a v-if="getRegistryUrl(name)" :href="getRegistryUrl(name)" target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-primary-600 dark:text-blue-400 hover:underline" @click.stop>{{ name }}</a>
+                              <span v-else class="font-mono text-xs">{{ name }}</span>
                               <button @click="copyKey(name, $event)" class="ml-1 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 inline-flex align-middle">
                                 <svg v-if="copiedKey === name" class="w-3 h-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
                                 <svg v-else class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                               </button>
+                            </div>
+                          </div>
+                          <div v-if="art.health_index" class="mt-3">
+                            <span class="font-medium text-gray-900 dark:text-gray-100">Health Index:</span>
+                            <div class="mt-1">
+                              <ChiBadge :health-index="art.health_index" show-details />
                             </div>
                           </div>
                           <div v-if="art.drop_keys?.length" class="mt-3">

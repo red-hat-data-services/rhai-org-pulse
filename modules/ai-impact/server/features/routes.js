@@ -116,8 +116,8 @@ module.exports = function registerFeatureRoutes(router, context) {
   // ─── 1. Static routes FIRST ───
 
   // GET /features/status (Admin) — feature data status for settings page
-  router.get('/features/status', requireAdmin, requireScope('ai-impact:read'), function(req, res) {
-    const data = readFeatures(readFromStorage);
+  router.get('/features/status', requireAdmin, requireScope('ai-impact:read'), async function(req, res) {
+    const data = await readFeatures(readFromStorage);
     res.json({
       lastSyncedAt: data.lastSyncedAt,
       lastJiraSyncAt: data.lastJiraSyncAt || null,
@@ -223,16 +223,16 @@ module.exports = function registerFeatureRoutes(router, context) {
   });
 
   // GET /features — list all features (slim projection)
-  router.get('/features', requireScope('ai-impact:read'), function(req, res) {
-    const data = readFeatures(readFromStorage);
+  router.get('/features', requireScope('ai-impact:read'), async function(req, res) {
+    const data = await readFeatures(readFromStorage);
     res.json(getLatestProjection(data));
   });
 
   // ─── 2. Parameterized routes AFTER ───
 
   // GET /features/:key — single feature + history
-  router.get('/features/:key', requireScope('ai-impact:read'), function(req, res) {
-    const data = readFeatures(readFromStorage);
+  router.get('/features/:key', requireScope('ai-impact:read'), async function(req, res) {
+    const data = await readFeatures(readFromStorage);
     const entry = data.features[req.params.key];
     if (!entry) {
       return res.status(404).json({ error: 'Not found' });

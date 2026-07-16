@@ -24,20 +24,31 @@ try {
   process.exit(0);
 }
 
-const target = path.join(coreDir, 'shared');
-const link = path.join(process.cwd(), 'shared');
+const coreShared = path.join(coreDir, 'shared');
+const localShared = path.join(process.cwd(), 'shared');
 
-if (!fs.existsSync(link)) {
-  fs.symlinkSync(target, link, 'dir');
-  console.log('[ai-eng] Symlinked shared/');
-} else {
-  // Check if it's already a correct symlink
+// Ensure shared/ directory exists (it may contain local data files)
+if (!fs.existsSync(localShared)) {
+  fs.mkdirSync(localShared);
+}
+
+// Symlink shared/server and shared/client individually so that module
+// server code using relative require() paths (e.g. ../../../../shared/server/jira)
+// resolves correctly. We can't symlink shared/ itself because it may
+// contain local data files (shared/data/).
+for (const sub of ['server', 'client']) {
+  const target = path.join(coreShared, sub);
+  const link = path.join(localShared, sub);
+
   try {
     const existing = fs.readlinkSync(link);
-    if (path.resolve(path.dirname(link), existing) !== target) {
-      console.log('[ai-eng] shared/ exists but points elsewhere — skipping');
-    }
+    if (path.resolve(path.dirname(link), existing) === target) continue;
+    fs.unlinkSync(link);
   } catch {
-    // Not a symlink — local directory exists, skip
+    // Not a symlink or doesn't exist — proceed
+    if (fs.existsSync(link)) continue; // Real directory, don't touch
   }
+
+  fs.symlinkSync(target, link, 'dir');
+  console.log(`[ai-eng] Symlinked shared/${sub}`);
 }

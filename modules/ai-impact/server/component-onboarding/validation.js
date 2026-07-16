@@ -44,7 +44,7 @@ function deriveCompletionStatus(status, completionStatus, context) {
     if (normalized === 'resolved' || normalized === 'closed' || normalized === 'done' || normalized === 'cancelled') {
       return 'completed';
     }
-    if (completionStatus === 'in_queue') {
+    if (completionStatus === 'in_queue' || completionStatus === 'new') {
       return 'in_queue';
     }
     return 'in-progress';
@@ -82,8 +82,9 @@ function validateComponentOnboarding(body) {
     errors.push('status must be a non-empty string');
   }
 
-  // completionStatus: required enum
-  if (!VALID_COMPLETION_STATUSES.includes(body.completionStatus)) {
+  // completionStatus: required enum (legacy "new" is normalized to in_queue)
+  const normalizedCompletionStatus = body.completionStatus === 'new' ? 'in_queue' : body.completionStatus;
+  if (!VALID_COMPLETION_STATUSES.includes(normalizedCompletionStatus)) {
     errors.push(`completionStatus must be one of: ${VALID_COMPLETION_STATUSES.join(', ')}`);
   }
 
@@ -216,7 +217,7 @@ function validateComponentOnboarding(body) {
       key: body.key.trim(),
       summary: body.summary.trim(),
       status: body.status.trim(),
-      completionStatus: deriveCompletionStatus(body.status, body.completionStatus, {
+      completionStatus: deriveCompletionStatus(body.status, normalizedCompletionStatus, {
         labels: body.labels || [],
         resolution: body.resolution || null,
         statusCategory: body.statusCategory || null

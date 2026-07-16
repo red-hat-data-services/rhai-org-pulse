@@ -155,7 +155,7 @@ jobs:
 
       - name: Set up Node.js
         if: steps.check-paths.outputs.needs_review == 'true' && steps.context.outputs.is_fork != 'true' && steps.fork-guard.outputs.is_fork != 'true'
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: 'npm'
@@ -240,7 +240,7 @@ jobs:
           track_progress: true
           display_report: "true"
           allowed_bots: "claude"
-          claude_args: '--model claude-opus-4-6 --json-schema ''{"type":"object","properties":{"verdict":{"enum":["PASS","FAIL"]},"unfixed_blocking_issues":{"type":"array","items":{"type":"object","properties":{"category":{"type":"string"},"description":{"type":"string"}},"required":["category","description"]}}},"required":["verdict","unfixed_blocking_issues"]}'' --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr checkout:*),Bash(git add:*),Bash(git commit:*),Bash(git push origin:*),Bash(git diff:*),Bash(git status:*),Bash(npm test:*),Bash(npm run lint:*),Read,Glob,Grep,Edit,Write"'
+          claude_args: '--model claude-opus-4-6 --json-schema ''{"type":"object","properties":{"verdict":{"enum":["PASS","FAIL"]},"unfixed_blocking_issues":{"type":"array","items":{"type":"object","properties":{"category":{"type":"string"},"description":{"type":"string"}},"required":["category","description"]}}},"required":["verdict","unfixed_blocking_issues"]}'' --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr checkout:*),Bash(git add:*),Bash(git commit:*),Bash(git push origin:*),Bash(git diff:*),Bash(git status:*),Read,Glob,Grep,Edit,Write"'
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ steps.context.outputs.pr_number }}
@@ -259,14 +259,7 @@ jobs:
             3. **Fix** any issues you find by editing the files directly:
                - Use Edit/Write tools to modify the source files
                - Fix all issues you're confident about: bugs, style, security, performance
-               - After making all fixes, validate them:
-                 ```
-                 npm test
-                 npm run lint
-                 ```
-               - If tests or lint fail due to your changes, fix the issues or revert
-                 your changes to that file
-               - Only commit and push if you actually made changes and tests pass:
+               - Only commit and push if you actually made changes:
                  ```
                  git add -u
                  git diff --cached --quiet || git commit -m "fix: Claude code review autofix

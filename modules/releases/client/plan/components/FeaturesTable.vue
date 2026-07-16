@@ -115,8 +115,6 @@ const groupedFeatures = computed(() => {
                   :flags="healthByKey[item.data.issueKey].risk ? healthByKey[item.data.issueKey].risk.flags : []"
                   :flagCount="healthByKey[item.data.issueKey].risk ? healthByKey[item.data.issueKey].risk.flags.length : 0"
                   :override="healthByKey[item.data.issueKey].risk ? healthByKey[item.data.issueKey].risk.override : null"
-                  :dor="healthByKey[item.data.issueKey].dor || null"
-                  :dod="healthByKey[item.data.issueKey].dod || null"
                   :planningStatus="healthByKey[item.data.issueKey].planningStatus || ''"
                   variant="full"
                 >

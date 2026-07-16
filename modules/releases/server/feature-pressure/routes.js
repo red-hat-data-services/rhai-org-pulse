@@ -720,7 +720,7 @@ async function fetchAndAnalyze(lookbackMonths, storage) {
   sanitizeInfinity(result)
 
   // Cache
-  storage.writeToStorage(CACHE_KEY, result)
+  await storage.writeToStorage(CACHE_KEY, result)
   console.log('[releases/feature-pressure] Cached analysis (' + features.length + ' features, ' + rfes.length + ' RFEs, ' + componentPressure.length + ' components)')
 
   return result
@@ -730,14 +730,14 @@ async function fetchAndAnalyze(lookbackMonths, storage) {
 // Route registration
 // ---------------------------------------------------------------------------
 
-function registerRoutes(router, context) {
+async function registerRoutes(router, context) {
   var storage = context.storage
   var requireAuth = context.requireAuth
   var requireScope = context.requireScope
 
   var refreshState = { running: false, lastResult: null, startedAt: null, completedAt: null }
 
-  function triggerBackgroundRefresh(lookbackMonths, force) {
+  async function triggerBackgroundRefresh(lookbackMonths, force) {
     if (refreshState.running) return
     if (!force && refreshState.completedAt) {
       var elapsed = Date.now() - new Date(refreshState.completedAt).getTime()
@@ -748,8 +748,8 @@ function registerRoutes(router, context) {
     refreshState.startedAt = new Date().toISOString()
 
     console.log('[releases/feature-pressure] Background refresh started (lookback: ' + lookbackMonths + 'mo)')
-    setImmediate(function () {
-      fetchAndAnalyze(lookbackMonths, storage)
+    setImmediate(async function () {
+      await fetchAndAnalyze(lookbackMonths, storage)
         .then(function (result) {
           refreshState.running = false
           refreshState.completedAt = new Date().toISOString()
@@ -786,8 +786,8 @@ function registerRoutes(router, context) {
    *       202:
    *         description: Data pipeline is running for the first time
    */
-  router.get('/', requireAuth, requireScope('releases:read'), function (req, res) {
-    var data = storage.readFromStorage(CACHE_KEY)
+  router.get('/', requireAuth, requireScope('releases:read'), async function (req, res) {
+    var data = await storage.readFromStorage(CACHE_KEY)
 
     if (data) {
       var cachedAt = data.metadata && data.metadata.generated_at
@@ -869,7 +869,7 @@ function registerRoutes(router, context) {
   // Diagnostics hook
   if (context.registerDiagnostics) {
     context.registerDiagnostics(async function () {
-      var fp = storage.readFromStorage(CACHE_KEY)
+      var fp = await storage.readFromStorage(CACHE_KEY)
       return {
         featurePressure: fp ? {
           generatedAt: fp.metadata && fp.metadata.generated_at,

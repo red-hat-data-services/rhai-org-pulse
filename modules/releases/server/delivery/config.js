@@ -71,8 +71,8 @@ function applyEnvOverrides(config) {
   return config;
 }
 
-function getConfig(readFromStorage) {
-  const saved = readFromStorage('releases/delivery/config.json');
+async function getConfig(readFromStorage) {
+  const saved = await readFromStorage('releases/delivery/config.json');
   let config;
 
   // saved is null when file doesn't exist or was cleared by deleteConfig
@@ -90,7 +90,7 @@ function getConfig(readFromStorage) {
   return config;
 }
 
-function saveConfig(writeToStorage, config) {
+async function saveConfig(writeToStorage, config) {
   const merged = { ...DEFAULT_CONFIG };
 
   const knownKeys = new Set(Object.keys(DEFAULT_CONFIG));
@@ -264,13 +264,13 @@ function saveConfig(writeToStorage, config) {
     merged.commitmentTrackingJql = fragment;
   }
 
-  writeToStorage('releases/delivery/config.json', merged);
+  await writeToStorage('releases/delivery/config.json', merged);
 }
 
-function deleteConfig(writeToStorage) {
+async function deleteConfig(writeToStorage) {
   // Storage API has no delete-file function. Write a tombstone marker that
   // getConfig recognises as "no stored config" so it falls back to env vars.
-  writeToStorage('releases/delivery/config.json', { _deleted: true });
+  await writeToStorage('releases/delivery/config.json', { _deleted: true });
 }
 
 module.exports = { DEFAULT_CONFIG, getConfig, saveConfig, deleteConfig };

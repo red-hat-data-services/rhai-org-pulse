@@ -1,8 +1,10 @@
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useFeatureTracking } from '../composables/useFeatureTracking.js'
+import { useFeatureTrackingFilters } from '../composables/useFeatureTrackingFilters.js'
 import FeatureTrackingTable from '../components/FeatureTrackingTable.vue'
 import FeatureTrackingSettingsPanel from '../components/FeatureTrackingSettingsPanel.vue'
+import HygieneSelect from '../components/hygiene/HygieneSelect.vue'
 import { getApiBase } from '@shared/client/services/api'
 
 const {
@@ -18,7 +20,6 @@ const {
 const selectedVersion = ref(null)
 const refreshing = ref(false)
 const tableRef = ref(null)
-const activeFilter = ref(null)
 const settingsOpen = ref(false)
 const trackingConfig = ref({ releases: {} })
 
@@ -35,73 +36,54 @@ const freezeStatus = computed(() => {
   return today >= featureFreezeDate.value ? 'past' : 'future'
 })
 
-const totalFeatures = computed(() => {
-  var count = 0
-  for (var i = 0; i < groups.value.length; i++) {
-    count += groups.value[i].featureCount || 0
-  }
-  return count
-})
+const {
+  searchQuery,
+  selectedProducts,
+  selectedStatuses,
+  selectedComponents,
+  selectedOwners,
+  activeCardFilter,
 
-const addedCount = computed(() => {
-  var count = 0
-  for (var i = 0; i < groups.value.length; i++) {
-    var features = groups.value[i].features || []
-    for (var j = 0; j < features.length; j++) {
-      if (features[j].scopeChange === 'added') count++
-    }
-  }
-  return count
-})
+  availableProducts,
+  availableStatuses,
+  availableComponents,
+  availableOwners,
 
-const droppedCount = computed(() => {
-  var count = 0
-  for (var i = 0; i < groups.value.length; i++) {
-    var features = groups.value[i].features || []
-    for (var j = 0; j < features.length; j++) {
-      if (features[j].scopeChange === 'dropped') count++
-    }
-  }
-  return count
-})
+  totalFeatures,
+  totalAddedCount,
+  totalDroppedCount,
+  totalBlockedCount,
 
-const blockedCount = computed(() => {
-  var count = 0
-  for (var i = 0; i < groups.value.length; i++) {
-    var features = groups.value[i].features || []
-    for (var j = 0; j < features.length; j++) {
-      if (features[j].isBlocked && features[j].scopeChange !== 'dropped') count++
-    }
-  }
-  return count
-})
+  filteredGroups,
+  filteredFeatureCount,
+  isToolbarFiltered,
+  isFiltered,
+  activeFilterLabels,
 
-function setFilter(type) {
-  if (type === null || activeFilter.value === type) {
-    activeFilter.value = null
-  } else {
-    activeFilter.value = type
+  setCardFilter,
+  removeFilter,
+  clearAllFilters,
+  restoreFilters,
+  resetFilters
+} = useFeatureTrackingFilters(groups, selectedVersion)
+
+function handleCardClick(type) {
+  var counts = { added: totalAddedCount.value, dropped: totalDroppedCount.value, blocked: totalBlockedCount.value }
+  if (counts[type] === 0) return
+  setCardFilter(type)
+  if (activeCardFilter.value === type) {
     nextTick(() => {
       if (tableRef.value) tableRef.value.expandAll()
     })
   }
 }
 
-const filteredGroups = computed(() => {
-  if (!activeFilter.value) return groups.value
-  return groups.value.map(g => {
-    const filtered = (g.features || []).filter(f => {
-      if (activeFilter.value === 'added') return f.scopeChange === 'added'
-      if (activeFilter.value === 'dropped') return f.scopeChange === 'dropped'
-      if (activeFilter.value === 'blocked') return f.isBlocked && f.scopeChange !== 'dropped'
-      return true
-    })
-    return {
-      ...g,
-      features: filtered,
-      featureCount: filtered.filter(f => f.scopeChange !== 'dropped').length
-    }
-  }).filter(g => g.features.length > 0)
+var productOptions = computed(() => {
+  return availableProducts.value.map(p => ({ value: p, label: p.toUpperCase() }))
+})
+
+var statusOptions = computed(() => {
+  return availableStatuses.value.map(s => ({ value: s, label: s }))
 })
 
 function formatDate(dateStr) {
@@ -151,8 +133,12 @@ async function onSettingsSaved(newConfig) {
 }
 
 watch(selectedVersion, async (v) => {
-  activeFilter.value = null
-  if (v) await loadTrackingData(v)
+  resetFilters()
+  if (v) {
+    await loadTrackingData(v)
+    if (selectedVersion.value !== v) return
+    nextTick(() => restoreFilters())
+  }
 })
 
 onMounted(async () => {
@@ -237,13 +223,56 @@ onMounted(async () => {
       </div>
     </div>
 
+    <!-- Filter toolbar -->
+    <div v-if="currentData && !loading" class="flex flex-wrap gap-3 items-center mb-5">
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Search features..."
+        class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+      />
+      <HygieneSelect
+        :modelValue="selectedProducts"
+        :options="productOptions"
+        placeholder="All Products"
+        @update:modelValue="v => selectedProducts = v"
+      />
+      <HygieneSelect
+        :modelValue="selectedStatuses"
+        :options="statusOptions"
+        placeholder="All Statuses"
+        @update:modelValue="v => selectedStatuses = v"
+      />
+      <HygieneSelect
+        :modelValue="selectedComponents"
+        :options="availableComponents"
+        placeholder="All Components"
+        @update:modelValue="v => selectedComponents = v"
+      />
+      <HygieneSelect
+        :modelValue="selectedOwners"
+        :options="availableOwners"
+        placeholder="All Owners"
+        @update:modelValue="v => selectedOwners = v"
+      />
+      <span
+        v-if="isToolbarFiltered"
+        class="text-xs text-gray-500 dark:text-gray-400"
+      >Showing {{ filteredFeatureCount }} of {{ totalFeatures }}</span>
+      <button
+        v-if="isToolbarFiltered"
+        class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+        @click="clearAllFilters"
+      >Clear Filters</button>
+    </div>
+
     <!-- Summary cards -->
     <div v-if="currentData && !loading" class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5">
-      <!-- Total features (click = clear filter) -->
+      <!-- Total features (click = clear card filter) -->
       <div
-        @click="setFilter(null)"
+        @click="setCardFilter(null)"
         class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border px-4 py-3.5 cursor-pointer transition-all duration-150 hover:shadow-md"
-        :class="!activeFilter
+        :class="!activeCardFilter
           ? 'border-indigo-400 dark:border-indigo-500 ring-2 ring-indigo-200 dark:ring-indigo-800 shadow-sm'
           : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600'"
       >
@@ -255,9 +284,11 @@ onMounted(async () => {
             </svg>
           </span>
           <span class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Features</span>
-          <span v-if="activeFilter" class="ml-auto text-[10px] text-indigo-500 dark:text-indigo-400 font-medium">Show all</span>
+          <span v-if="activeCardFilter" class="ml-auto text-[10px] text-indigo-500 dark:text-indigo-400 font-medium">Show all</span>
         </div>
-        <div class="text-2xl font-bold text-gray-900 dark:text-gray-100 ml-7">{{ totalFeatures }}</div>
+        <div class="text-2xl font-bold text-gray-900 dark:text-gray-100 ml-7">
+          {{ totalFeatures }}
+        </div>
       </div>
 
       <!-- Feature Freeze date -->
@@ -278,13 +309,13 @@ onMounted(async () => {
 
       <!-- Late additions -->
       <div
-        @click="addedCount > 0 ? setFilter('added') : undefined"
+        @click="handleCardClick('added')"
         class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border px-4 py-3.5 transition-all duration-150"
         :class="[
-          activeFilter === 'added'
+          activeCardFilter === 'added'
             ? 'border-blue-400 dark:border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800 shadow-sm'
             : 'border-gray-200 dark:border-gray-700',
-          addedCount > 0
+          totalAddedCount > 0
             ? 'cursor-pointer hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600'
             : ''
         ]"
@@ -297,22 +328,22 @@ onMounted(async () => {
             </svg>
           </span>
           <span class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Late Added</span>
-          <svg v-if="activeFilter === 'added'" class="ml-auto w-3.5 h-3.5 text-blue-500 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <svg v-if="activeCardFilter === 'added'" class="ml-auto w-3.5 h-3.5 text-blue-500 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </div>
-        <div class="text-2xl font-bold ml-7" :class="addedCount > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-gray-100'">{{ addedCount }}</div>
+        <div class="text-2xl font-bold ml-7" :class="totalAddedCount > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-gray-100'">{{ totalAddedCount }}</div>
       </div>
 
       <!-- Dropped -->
       <div
-        @click="droppedCount > 0 ? setFilter('dropped') : undefined"
+        @click="handleCardClick('dropped')"
         class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border px-4 py-3.5 transition-all duration-150"
         :class="[
-          activeFilter === 'dropped'
+          activeCardFilter === 'dropped'
             ? 'border-amber-400 dark:border-amber-500 ring-2 ring-amber-200 dark:ring-amber-800 shadow-sm'
             : 'border-gray-200 dark:border-gray-700',
-          droppedCount > 0
+          totalDroppedCount > 0
             ? 'cursor-pointer hover:shadow-md hover:border-amber-300 dark:hover:border-amber-600'
             : ''
         ]"
@@ -325,22 +356,22 @@ onMounted(async () => {
             </svg>
           </span>
           <span class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Dropped</span>
-          <svg v-if="activeFilter === 'dropped'" class="ml-auto w-3.5 h-3.5 text-amber-500 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <svg v-if="activeCardFilter === 'dropped'" class="ml-auto w-3.5 h-3.5 text-amber-500 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </div>
-        <div class="text-2xl font-bold ml-7" :class="droppedCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-gray-100'">{{ droppedCount }}</div>
+        <div class="text-2xl font-bold ml-7" :class="totalDroppedCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-gray-100'">{{ totalDroppedCount }}</div>
       </div>
 
       <!-- Blocked -->
       <div
-        @click="blockedCount > 0 ? setFilter('blocked') : undefined"
+        @click="handleCardClick('blocked')"
         class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border px-4 py-3.5 transition-all duration-150"
         :class="[
-          activeFilter === 'blocked'
+          activeCardFilter === 'blocked'
             ? 'border-red-400 dark:border-red-500 ring-2 ring-red-200 dark:ring-red-800 shadow-sm'
             : 'border-gray-200 dark:border-gray-700',
-          blockedCount > 0
+          totalBlockedCount > 0
             ? 'cursor-pointer hover:shadow-md hover:border-red-300 dark:hover:border-red-600'
             : ''
         ]"
@@ -353,11 +384,11 @@ onMounted(async () => {
             </svg>
           </span>
           <span class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Blocked</span>
-          <svg v-if="activeFilter === 'blocked'" class="ml-auto w-3.5 h-3.5 text-red-500 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <svg v-if="activeCardFilter === 'blocked'" class="ml-auto w-3.5 h-3.5 text-red-500 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </div>
-        <div class="text-2xl font-bold ml-7" :class="blockedCount > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'">{{ blockedCount }}</div>
+        <div class="text-2xl font-bold ml-7" :class="totalBlockedCount > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'">{{ totalBlockedCount }}</div>
       </div>
     </div>
 
@@ -395,26 +426,33 @@ onMounted(async () => {
       <p class="text-xs mt-1">Use the Refresh button to fetch data from Jira.</p>
     </div>
 
-    <!-- Data table (with optional filter indicator) -->
+    <!-- Data table (with active filter chips banner) -->
     <template v-else-if="currentData">
       <div
-        v-if="activeFilter"
-        class="mb-3 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium"
-        :class="{
-          'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300': activeFilter === 'added',
-          'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300': activeFilter === 'dropped',
-          'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300': activeFilter === 'blocked'
-        }"
+        v-if="isFiltered"
+        class="mb-3 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700"
       >
-        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
         </svg>
-        <span>Showing {{ activeFilter === 'added' ? 'late added' : activeFilter }} features only</span>
+        <div class="flex flex-wrap gap-1.5">
+          <span
+            v-for="chip in activeFilterLabels"
+            :key="chip.type"
+            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-500/20 text-primary-700 dark:text-primary-400"
+          >
+            {{ chip.label }}
+            <button
+              @click.stop="removeFilter(chip.type)"
+              class="hover:text-primary-900 dark:hover:text-primary-200 transition-colors"
+            >&times;</button>
+          </span>
+        </div>
         <button
-          @click="setFilter(null)"
-          class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors"
+          @click="clearAllFilters"
+          class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors whitespace-nowrap"
         >
-          Clear filter
+          Clear all
           <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -425,6 +463,8 @@ onMounted(async () => {
         :groups="filteredGroups"
         :portfolioVersion="selectedVersion"
         :featureFreezeDate="featureFreezeDate"
+        :totalUniqueFeatures="totalFeatures"
+        :filteredFeatureCount="isFiltered ? filteredFeatureCount : null"
       />
     </template>
 

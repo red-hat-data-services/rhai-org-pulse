@@ -1,16 +1,16 @@
 const STORAGE_KEY = 'system-health/disconnected/reports.json';
 const MAX_HISTORY = 90;
 
-function readReports(readFromStorage) {
-  const data = readFromStorage(STORAGE_KEY);
+async function readReports(readFromStorage) {
+  const data = await readFromStorage(STORAGE_KEY);
   if (!data || typeof data !== 'object' || !data.repos) {
     return { lastSyncedAt: null, repoCount: 0, repos: {} };
   }
   return data;
 }
 
-function writeReportsAtomic(writeToStorageAtomic, data) {
-  writeToStorageAtomic(STORAGE_KEY, data);
+async function writeReports(writeToStorage, data) {
+  await writeToStorage(STORAGE_KEY, data);
 }
 
 function trimForHistory(report) {
@@ -159,7 +159,7 @@ module.exports = {
   STORAGE_KEY,
   MAX_HISTORY,
   readReports,
-  writeReportsAtomic,
+  writeReports,
   trimForHistory,
   buildLatest,
   toDay,

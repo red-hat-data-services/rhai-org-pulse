@@ -7,9 +7,9 @@ function generateId() {
   return 'audit-' + Date.now().toString(36) + '-' + crypto.randomBytes(4).toString('hex')
 }
 
-function logAudit(readFromStorage, writeToStorage, entry) {
+async function logAudit(readFromStorage, writeToStorage, entry) {
   try {
-    const log = readFromStorage(STORAGE_KEY) || { entries: [] }
+    const log = await readFromStorage(STORAGE_KEY) || { entries: [] }
 
     log.entries.push({
       id: generateId(),
@@ -26,14 +26,14 @@ function logAudit(readFromStorage, writeToStorage, entry) {
       log.entries = log.entries.slice(log.entries.length - MAX_ENTRIES)
     }
 
-    writeToStorage(STORAGE_KEY, log)
+    await writeToStorage(STORAGE_KEY, log)
   } catch (err) {
     console.error('[audit-log] Failed to write audit entry:', err.message)
   }
 }
 
-function getAuditLog(readFromStorage, options) {
-  const log = readFromStorage(STORAGE_KEY) || { entries: [] }
+async function getAuditLog(readFromStorage, options) {
+  const log = await readFromStorage(STORAGE_KEY) || { entries: [] }
   let entries = log.entries
 
   if (options && options.version) {

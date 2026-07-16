@@ -12,10 +12,12 @@ export function useGoogleDrive() {
 
   let popupWindow = null
   let messageListener = null
+  let pickerApiKey = null
 
   // Check connection status on mount
   onMounted(async () => {
     await checkConnectionStatus()
+    await fetchPickerConfig()
     loadPickerApi()
   })
 
@@ -37,8 +39,43 @@ export function useGoogleDrive() {
       const response = await fetch('/api/modules/customer-insights/auth/google/status')
       const data = await response.json()
       connected.value = data.connected
+
+      // If connected, fetch the OAuth token for Picker API
+      if (data.connected) {
+        await fetchOAuthToken()
+      }
     } catch (err) {
       console.error('Error checking Google Drive status:', err)
+    }
+  }
+
+  /**
+   * Fetch OAuth token for Google Picker API
+   */
+  async function fetchOAuthToken() {
+    try {
+      const response = await fetch('/api/modules/customer-insights/auth/google/token')
+      if (response.ok) {
+        const data = await response.json()
+        oauthToken.value = data.accessToken
+      }
+    } catch (err) {
+      console.error('Error fetching OAuth token:', err)
+    }
+  }
+
+  /**
+   * Fetch Picker API key from backend
+   */
+  async function fetchPickerConfig() {
+    try {
+      const response = await fetch('/api/modules/customer-insights/auth/google/picker-config')
+      if (response.ok) {
+        const data = await response.json()
+        pickerApiKey = data.apiKey
+      }
+    } catch (err) {
+      console.error('Error fetching Picker config:', err)
     }
   }
 
@@ -91,7 +128,8 @@ export function useGoogleDrive() {
           connecting.value = false
           window.removeEventListener('message', messageListener)
           messageListener = null
-          resolve()
+          // Fetch OAuth token for Picker
+          fetchOAuthToken().then(resolve).catch(reject)
         } else if (event.data.type === 'google-oauth-error') {
           error.value = event.data.error
           connecting.value = false
@@ -150,8 +188,7 @@ export function useGoogleDrive() {
         return
       }
 
-      const apiKey = import.meta.env.VITE_GOOGLE_PICKER_API_KEY
-      if (!apiKey) {
+      if (!pickerApiKey) {
         reject(new Error('Google Picker API key not configured'))
         return
       }
@@ -161,7 +198,7 @@ export function useGoogleDrive() {
       const picker = new window.google.picker.PickerBuilder()
         .addView(window.google.picker.ViewId.DOCS)
         .setOAuthToken(oauthToken.value)
-        .setDeveloperKey(apiKey)
+        .setDeveloperKey(pickerApiKey)
         .setCallback((data) => {
           if (data.action === window.google.picker.Action.PICKED) {
             const file = data.docs[0]

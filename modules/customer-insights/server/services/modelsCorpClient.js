@@ -15,6 +15,17 @@ function createModelsCorpClient(config) {
     throw new Error('models.corp API key is required')
   }
 
+  // APIcast uses API key as basic auth username
+  // Node.js fetch doesn't allow credentials in URL, so we use Basic Auth header
+  function getAuthHeaders() {
+    // Basic auth with API key as username and empty password
+    const credentials = Buffer.from(`${apiKey}:`).toString('base64')
+    return {
+      'Authorization': `Basic ${credentials}`,
+      'Content-Type': 'application/json'
+    }
+  }
+
   /**
    * Extract customer interaction data from transcript
    * @param {string} transcript - Meeting notes or call transcript
@@ -57,7 +68,7 @@ JSON:`
     const endpoint = `${baseUrl}/v1beta/openai/chat/completions`
 
     try {
-      console.log(`Calling models.corp endpoint: ${endpoint}`)
+      console.log(`Calling models.corp endpoint: ${baseUrl}/v1beta/openai/chat/completions`)
 
       const requestBody = {
         model: modelId,
@@ -68,10 +79,7 @@ JSON:`
 
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(requestBody)
       })
 
@@ -82,6 +90,14 @@ JSON:`
 
       if (!response.ok) {
         console.error(`API error ${response.status}:`, responseText.substring(0, 500))
+
+        if (response.status === 403 && responseText.includes('Authentication')) {
+          throw new Error(
+            'models.corp API authentication failed. The API key may be invalid or expired. ' +
+            'Please contact the platform team to get a valid MODELS_CORP_API_KEY.'
+          )
+        }
+
         throw new Error(`models.corp API returned ${response.status}: ${responseText.substring(0, 200)}`)
       }
 
@@ -103,14 +119,42 @@ JSON:`
         extractedText = extractedText.replace(/^```\n/, '').replace(/\n```$/, '')
       }
 
-      const extracted = JSON.parse(extractedText)
+      let extracted
+      try {
+        extracted = JSON.parse(extractedText)
+      } catch (parseError) {
+        console.error('Failed to parse extraction JSON. Raw text (first 1000 chars):', extractedText.substring(0, 1000))
+        console.error('Parse error:', parseError.message)
+
+        // Try to extract just the JSON object if there's extra text
+        const jsonMatch = extractedText.match(/\{[\s\S]*\}/)
+        if (jsonMatch) {
+          try {
+            extracted = JSON.parse(jsonMatch[0])
+          } catch (retryError) {
+            throw new Error(`AI returned invalid JSON: ${parseError.message}`, { cause: retryError })
+          }
+        } else {
+          throw new Error(`AI returned invalid JSON: ${parseError.message}`, { cause: parseError })
+        }
+      }
 
       return {
         ...extracted,
-        component: 'platform', // Default, user can change
+        component: extracted.component || '',
       }
     } catch (error) {
       console.error('Error extracting from transcript:', error)
+
+      // Better error messages for common issues
+      if (error.cause && error.cause.code === 'ENOTFOUND') {
+        throw new Error(
+          'Cannot reach models.corp API. This requires VPN access to Red Hat internal network. ' +
+          'Please connect to VPN and try again, or extract data manually.',
+          { cause: error }
+        )
+      }
+
       throw error
     }
   }
@@ -131,15 +175,12 @@ JSON:`
         model: modelId,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.3,
-        max_tokens: 8192
+        max_tokens: 16384
       }
 
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(requestBody)
       })
 
@@ -150,6 +191,14 @@ JSON:`
 
       if (!response.ok) {
         console.error(`API error ${response.status}:`, responseText.substring(0, 500))
+
+        if (response.status === 403 && responseText.includes('Authentication')) {
+          throw new Error(
+            'models.corp API authentication failed. The API key may be invalid or expired. ' +
+            'Please contact the platform team to get a valid MODELS_CORP_API_KEY.'
+          )
+        }
+
         throw new Error(`models.corp API returned ${response.status}: ${responseText.substring(0, 200)}`)
       }
 
@@ -161,6 +210,13 @@ JSON:`
         throw new Error('Unexpected response format from models.corp')
       }
 
+      // Check if response was truncated
+      const finishReason = data.choices[0].finish_reason
+      if (finishReason === 'length') {
+        console.warn('Response was truncated due to token limit. Consider reducing prompt size or expected output.')
+        throw new Error('Response truncated - output too large. Try filtering by component or reducing data size.')
+      }
+
       let insightsText = data.choices[0].message.content.trim()
 
       // Remove markdown code blocks if present
@@ -170,17 +226,91 @@ JSON:`
         insightsText = insightsText.replace(/^```\n/, '').replace(/\n```$/, '')
       }
 
-      const insights = JSON.parse(insightsText)
-      return insights
+      try {
+        const insights = JSON.parse(insightsText)
+        return insights
+      } catch (parseError) {
+        console.error('Failed to parse insights JSON. Raw text (first 1000 chars):', insightsText.substring(0, 1000))
+        console.error('Parse error:', parseError.message)
+
+        // Try to extract just the JSON object if there's extra text
+        const jsonMatch = insightsText.match(/\{[\s\S]*\}/)
+        if (jsonMatch) {
+          try {
+            return JSON.parse(jsonMatch[0])
+          } catch {
+            console.error('Retry parse also failed')
+          }
+        }
+
+        throw new Error(`AI returned invalid JSON: ${parseError.message}. Check server logs for details.`, { cause: parseError })
+      }
     } catch (error) {
       console.error('Error generating insights:', error)
+
+      // Better error messages for common issues
+      if (error.cause && error.cause.code === 'ENOTFOUND') {
+        throw new Error(
+          'Cannot reach models.corp API. This requires VPN access to Red Hat internal network. ' +
+          'Please connect to VPN and try again.',
+          { cause: error }
+        )
+      }
+
       throw error
     }
   }
 
+  async function generateText(prompt) {
+    const modelId = 'gemini-2.5-flash'
+    const endpoint = `${baseUrl}/v1beta/openai/chat/completions`
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        model: modelId,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.3,
+        max_tokens: 8192
+      })
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      if (response.status === 403 && text.includes('Authentication')) {
+        throw new Error(
+          'models.corp API authentication failed. The API key may be invalid or expired. ' +
+          'Please contact the platform team to get a valid MODELS_CORP_API_KEY.'
+        )
+      }
+      throw new Error(`models.corp API returned ${response.status}: ${text.substring(0, 200)}`)
+    }
+
+    const data = await response.json()
+    if (!data.choices?.[0]?.message?.content) {
+      throw new Error('Unexpected response format from models.corp')
+    }
+
+    if (data.choices[0].finish_reason === 'length') {
+      console.warn('generateText response was truncated due to token limit')
+    }
+
+    let text = data.choices[0].message.content.trim()
+
+    if (text.startsWith('```markdown')) {
+      text = text.replace(/^```markdown\n/, '').replace(/\n```$/, '')
+    } else if (text.startsWith('```')) {
+      text = text.replace(/^```\n/, '').replace(/\n```$/, '')
+    }
+
+    return text
+  }
+
   return {
     extractFromTranscript,
-    generateInsights
+    generateInsights,
+    generateText
   }
 }
 

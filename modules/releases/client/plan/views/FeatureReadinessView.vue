@@ -5,8 +5,12 @@ import { useReleases } from '../composables/useReleasePlanning'
 import { useRefreshPolling } from '../composables/useRefreshPolling'
 import { apiRequest } from '@shared/client/services/api'
 import FeatureReadinessFilterBar from '../components/FeatureReadinessFilterBar.vue'
-import FeatureReadinessRow from '@shared/client/components/FeatureReadinessRow.vue'
-import FeatureReadinessDrawer from '@shared/client/components/FeatureReadinessDrawer.vue'
+import FeatureReadinessRow from '../components/FeatureReadinessRow.vue'
+import FeatureReadinessDrawer from '../components/FeatureReadinessDrawer.vue'
+import {
+  featureMatchesSharedFilters,
+  exportFeatureReadinessCsv
+} from '../utils/feature-readiness-export.js'
 
 const nav = inject('moduleNav')
 const jiraBaseUrl = 'https://issues.redhat.com/browse'
@@ -61,28 +65,13 @@ const filters = ref({
   component: [],
   priority: [],
   team: [],
+  product: [],
+  fpdorItems: [],
   readiness: null
 })
 
 function matchesFilters(feature) {
-  const f = filters.value
-  if (f.outcome.length) {
-    var featureRocks = feature.bigRock ? feature.bigRock.split(', ') : []
-    if (!featureRocks.some(function(r) { return f.outcome.includes(r) })) return false
-  }
-  if (f.targetVersion.length && !(feature.targetVersions || []).some(function(tv) { return f.targetVersion.includes(tv) })) return false
-  if (f.fixVersion.length && !f.fixVersion.includes(feature.fixVersion)) return false
-  if (f.component.length && !(feature.components || []).some(function(c) { return f.component.includes(c) })) return false
-  if (f.priority.length && !f.priority.includes(feature.priority)) return false
-  if (f.team.length && !f.team.includes(feature.team)) return false
-  if (f.readiness === 'ready' && feature.confidence === 'not-ready') return false
-  if (f.readiness === 'not-ready' && feature.confidence !== 'not-ready') return false
-  if (selectedVersion.value) {
-    if (!(feature.targetVersions || []).some(function(tv) {
-      return tv === selectedVersion.value || tv.indexOf(selectedVersion.value) !== -1 || selectedVersion.value.indexOf(tv) !== -1
-    })) return false
-  }
-  return true
+  return featureMatchesSharedFilters(feature, filters.value, selectedVersion.value, { applyReadiness: true })
 }
 
 const filteredFeatures = computed(() => {
@@ -97,22 +86,7 @@ const filteredFeatures = computed(() => {
 
 const readyCounts = computed(() => {
   var all = pendingReview.value.concat(ready.value).filter(function(f) {
-    const fv = filters.value
-    if (fv.outcome.length) {
-      var countRocks = f.bigRock ? f.bigRock.split(', ') : []
-      if (!countRocks.some(function(r) { return fv.outcome.includes(r) })) return false
-    }
-    if (fv.targetVersion.length && !(f.targetVersions || []).some(function(tv) { return fv.targetVersion.includes(tv) })) return false
-    if (fv.fixVersion.length && !fv.fixVersion.includes(f.fixVersion)) return false
-    if (fv.component.length && !(f.components || []).some(function(c) { return fv.component.includes(c) })) return false
-    if (fv.priority.length && !fv.priority.includes(f.priority)) return false
-    if (fv.team.length && !fv.team.includes(f.team)) return false
-    if (selectedVersion.value) {
-      if (!(f.targetVersions || []).some(function(tv) {
-        return tv === selectedVersion.value || tv.indexOf(selectedVersion.value) !== -1 || selectedVersion.value.indexOf(tv) !== -1
-      })) return false
-    }
-    return true
+    return featureMatchesSharedFilters(f, filters.value, selectedVersion.value, { applyReadiness: false })
   })
   var readyCount = 0
   var notReadyCount = 0
@@ -130,6 +104,10 @@ const releaseOptions = computed(() => {
   }
   return opts
 })
+
+function exportCsv() {
+  exportFeatureReadinessCsv(filteredFeatures.value)
+}
 
 const headers = [
   { id: 'h-num',        label: '#',               scope: 'col' },
@@ -186,6 +164,13 @@ function formatSyncDate(dateStr) {
           class="ml-2 px-3 py-1 text-xs font-medium rounded-md bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           :title="refreshing ? refreshStatus : 'Refresh hygiene data from Jira'"
         >{{ refreshing ? 'Refreshing...' : 'Refresh Hygiene' }}</button>
+        <button
+          type="button"
+          @click="exportCsv"
+          :disabled="filteredFeatures.length === 0"
+          class="px-3 py-1 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          title="Export current filtered view as CSV"
+        >Export CSV</button>
       </div>
     </div>
 
@@ -252,16 +237,12 @@ function formatSyncDate(dateStr) {
                   <p class="font-semibold text-gray-700 dark:text-gray-200 mb-2">Score Rubric</p>
                   <div class="space-y-2 text-gray-600 dark:text-gray-300">
                     <div>
-                      <p class="font-medium text-gray-700 dark:text-gray-200 mb-0.5">When RICE or Rubric present:</p>
-                      <p class="font-mono text-[10px]">RICE/Rubric (30w) + Tier (25w) + Priority (25w) + Target Version (20w)</p>
-                    </div>
-                    <div>
-                      <p class="font-medium text-gray-700 dark:text-gray-200 mb-0.5">When neither present:</p>
-                      <p class="font-mono text-[10px]">Tier (40w) + Priority (35w) + Target Version (25w)</p>
+                      <p class="font-medium text-gray-700 dark:text-gray-200 mb-0.5">Priority Score Formula:</p>
+                      <p class="font-mono text-[10px]">RICE (30w) + Big Rock (30w) + Target Version (25w) + Priority (15w)</p>
                     </div>
                     <div class="pt-1 border-t border-gray-100 dark:border-gray-700">
-                      <p class="font-medium text-gray-700 dark:text-gray-200 mb-0.5">Completeness multiplier:</p>
-                      <p class="font-mono text-[10px]">1 signal = 0.5x &middot; 2 = 0.7x &middot; 3 = 0.85x &middot; 4 = 1.0x</p>
+                      <p class="font-medium text-gray-700 dark:text-gray-200 mb-0.5">Scoring:</p>
+                      <p class="font-mono text-[10px]">Min-max RICE &middot; Positional Big Rock &middot; GA-to-GA version &middot; Jira priority</p>
                     </div>
                   </div>
                 </div>
@@ -291,10 +272,10 @@ function formatSyncDate(dateStr) {
 
           <!-- Rows -->
           <FeatureReadinessRow
-            v-for="(feature, i) in filteredFeatures"
+            v-for="feature in filteredFeatures"
             :key="feature.key"
             :feature="feature"
-            :index="i + 1"
+            :index="feature.rank"
             :jiraBaseUrl="jiraBaseUrl"
             @select="selectedFeature = $event"
             @navigate="navigateToFeature"

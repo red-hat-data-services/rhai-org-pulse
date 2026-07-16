@@ -80,21 +80,103 @@ function processIssue(issue) {
   };
 }
 
-function extractTerminalAt(changelog, pipelineState) {
-  if (!changelog || !changelog.histories) return null;
+function extractPipelineHistory(changelog, pipelineState) {
+  const result = {
+    terminalAt: null,
+    ciFailureCount: 0,
+    reviewRoundCount: 0,
+    wasBlocked: false
+  };
+
+  if (!changelog || !changelog.histories) return result;
+
   const targetLabel = 'jira-' + pipelineState;
-  let latest = null;
+  let latestTerminal = null;
+
   for (const history of changelog.histories) {
     for (const item of history.items) {
       if (item.field !== 'labels') continue;
       const after = item.toString || '';
+
       if (after.includes(targetLabel)) {
         const ts = new Date(history.created).getTime();
-        if (latest === null || ts > latest) latest = ts;
+        if (latestTerminal === null || ts > latestTerminal) latestTerminal = ts;
+      }
+      if (after.includes('jira-autofix-ci-failing')) {
+        result.ciFailureCount++;
+      }
+      if (after.includes('jira-autofix-review')) {
+        result.reviewRoundCount++;
+      }
+      if (after.includes('jira-autofix-blocked')) {
+        result.wasBlocked = true;
       }
     }
   }
-  return latest ? new Date(latest).toISOString() : null;
+
+  result.terminalAt = latestTerminal ? new Date(latestTerminal).toISOString() : null;
+  return result;
+}
+
+function extractTerminalAt(changelog, pipelineState) {
+  return extractPipelineHistory(changelog, pipelineState).terminalAt;
+}
+
+function computeEffortScore(issue) {
+  if (issue.pipelineState !== 'autofix-merged') {
+    return { effortScore: null, effortTier: null };
+  }
+
+  let score = 1;
+
+  if ((issue.ciFailureCount || 0) > 0) score += 1;
+
+  const reviewRounds = issue.reviewRoundCount || 0;
+  if (reviewRounds > 1) score += (reviewRounds - 1);
+
+  if (issue.wasBlocked) score += 2;
+
+  if (issue.terminalAt && issue.created) {
+    const days = (new Date(issue.terminalAt).getTime() - new Date(issue.created).getTime()) / (24 * 60 * 60 * 1000);
+    if (days > 7) score += 1;
+  }
+
+  const priority = issue.priority || '';
+  if (priority === 'Blocker' || priority === 'Critical') score += 2;
+
+  let tier;
+  if (score <= 2) tier = 'Quick Win';
+  else if (score <= 4) tier = 'Standard Fix';
+  else tier = 'Complex Fix';
+
+  return { effortScore: score, effortTier: tier };
+}
+
+function computePriorityBreakdown(issues) {
+  const breakdown = {};
+  for (let i = 0; i < issues.length; i++) {
+    const p = issues[i].priority || 'Undefined';
+    breakdown[p] = (breakdown[p] || 0) + 1;
+  }
+  return breakdown;
+}
+
+function computeMedianTimeToFix(issues) {
+  const days = [];
+  for (let i = 0; i < issues.length; i++) {
+    const issue = issues[i];
+    if (issue.pipelineState !== 'autofix-merged') continue;
+    if (!issue.terminalAt || !issue.created) continue;
+    const d = (new Date(issue.terminalAt).getTime() - new Date(issue.created).getTime()) / (24 * 60 * 60 * 1000);
+    days.push(d);
+  }
+  if (days.length === 0) return null;
+  days.sort(function(a, b) { return a - b; });
+  const mid = Math.floor(days.length / 2);
+  if (days.length % 2 === 0) {
+    return Math.round(((days[mid - 1] + days[mid]) / 2) * 10) / 10;
+  }
+  return Math.round(days[mid] * 10) / 10;
 }
 
 function getLastWeekBounds() {
@@ -108,8 +190,41 @@ function getLastWeekBounds() {
   return { start: lastMonday.getTime(), end: thisMonday.getTime() };
 }
 
-function issueInWindow(issue, windowStart, windowEnd, isLastWeek) {
-  if (isLastWeek && TERMINAL_STATES.has(issue.pipelineState) && issue.terminalAt) {
+function getWindowBounds(timeWindow) {
+  const now = new Date();
+  switch (timeWindow) {
+    case 'week': {
+      const day = now.getUTCDay();
+      const diffToMonday = day === 0 ? 6 : day - 1;
+      const thisMonday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - diffToMonday));
+      return { start: thisMonday.getTime(), end: Date.now(), useTerminalDate: false };
+    }
+    case 'lastWeek': {
+      const bounds = getLastWeekBounds();
+      return { start: bounds.start, end: bounds.end, useTerminalDate: true };
+    }
+    case 'last7':
+      return { start: Date.now() - 7 * 24 * 60 * 60 * 1000, end: Date.now(), useTerminalDate: false };
+    case 'month': {
+      const firstOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+      return { start: firstOfMonth.getTime(), end: Date.now(), useTerminalDate: false };
+    }
+    case 'lastMonth': {
+      const firstOfThisMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+      const firstOfLastMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+      return { start: firstOfLastMonth.getTime(), end: firstOfThisMonth.getTime(), useTerminalDate: true };
+    }
+    case 'last30':
+      return { start: Date.now() - 30 * 24 * 60 * 60 * 1000, end: Date.now(), useTerminalDate: false };
+    case 'last90':
+      return { start: Date.now() - 90 * 24 * 60 * 60 * 1000, end: Date.now(), useTerminalDate: false };
+    default:
+      return { start: Date.now() - 30 * 24 * 60 * 60 * 1000, end: Date.now(), useTerminalDate: false };
+  }
+}
+
+function issueInWindow(issue, windowStart, windowEnd, useTerminalDate) {
+  if (useTerminalDate && TERMINAL_STATES.has(issue.pipelineState) && issue.terminalAt) {
     const t = new Date(issue.terminalAt).getTime();
     return t >= windowStart && t < windowEnd;
   }
@@ -118,24 +233,13 @@ function issueInWindow(issue, windowStart, windowEnd, isLastWeek) {
 }
 
 function computeAutofixMetrics(issues, timeWindow) {
-  const isLastWeek = timeWindow === 'lastWeek';
-  let windowStart, windowEnd;
-
-  if (isLastWeek) {
-    const bounds = getLastWeekBounds();
-    windowStart = bounds.start;
-    windowEnd = bounds.end;
-  } else {
-    const days = timeWindow === 'week' ? 7 : timeWindow === 'month' ? 30 : 90;
-    windowEnd = Date.now();
-    windowStart = windowEnd - days * 24 * 60 * 60 * 1000;
-  }
+  const { start: windowStart, end: windowEnd, useTerminalDate } = getWindowBounds(timeWindow);
 
   const counts = {};
   let windowTotal = 0;
 
   for (const issue of issues) {
-    if (!issueInWindow(issue, windowStart, windowEnd, isLastWeek)) continue;
+    if (!issueInWindow(issue, windowStart, windowEnd, useTerminalDate)) continue;
     windowTotal++;
     counts[issue.pipelineState] = (counts[issue.pipelineState] || 0) + 1;
   }
@@ -174,6 +278,26 @@ function computeAutofixMetrics(issues, timeWindow) {
     ? Math.round((autofixStates.merged / terminalTotal) * 100)
     : 0;
 
+  const priorityBreakdown = computePriorityBreakdown(
+    issues.filter(function(issue) { return issueInWindow(issue, windowStart, windowEnd, useTerminalDate); })
+  );
+
+  const mergedWindowIssues = issues.filter(function(issue) {
+    return issue.pipelineState === 'autofix-merged' && issueInWindow(issue, windowStart, windowEnd, useTerminalDate);
+  });
+
+  const medianTimeToFixDays = computeMedianTimeToFix(mergedWindowIssues);
+
+  const effortBreakdown = { quickWin: 0, standardFix: 0, complexFix: 0 };
+  let totalImpactScore = 0;
+  for (let j = 0; j < mergedWindowIssues.length; j++) {
+    const tier = mergedWindowIssues[j].effortTier;
+    if (tier === 'Quick Win') effortBreakdown.quickWin++;
+    else if (tier === 'Standard Fix') effortBreakdown.standardFix++;
+    else if (tier === 'Complex Fix') effortBreakdown.complexFix++;
+    totalImpactScore += (mergedWindowIssues[j].effortScore || 0);
+  }
+
   return {
     triageTotal,
     triageVerdicts,
@@ -182,7 +306,11 @@ function computeAutofixMetrics(issues, timeWindow) {
     terminalTotal,
     successRate,
     windowTotal,
-    totalIssues: issues.length
+    totalIssues: issues.length,
+    priorityBreakdown,
+    medianTimeToFixDays,
+    effortBreakdown,
+    totalImpactScore
   };
 }
 
@@ -192,12 +320,27 @@ function computeAutofixMetrics(issues, timeWindow) {
 // limitation — Jira labels don't carry timestamps for state transitions.
 // The 'lastWeek' time window mitigates this for terminal states by using
 // terminalAt (from the Jira changelog) instead of created.
+function getTrendWeekCount(timeWindow) {
+  if (timeWindow === 'week' || timeWindow === 'lastWeek' || timeWindow === 'last7') return 4;
+  if (timeWindow === 'month' || timeWindow === 'lastMonth' || timeWindow === 'last30') return 8;
+  return 13;
+}
+
+function getTrendAnchor(timeWindow) {
+  if (timeWindow === 'lastWeek') return getLastWeekBounds().end;
+  if (timeWindow === 'lastMonth') {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).getTime();
+  }
+  return Date.now();
+}
+
 function buildTrendData(issues, timeWindow) {
-  const isLastWeek = timeWindow === 'lastWeek';
-  const weekCounts = (timeWindow === 'week' || isLastWeek) ? 4 : timeWindow === 'month' ? 8 : 13;
+  const { useTerminalDate } = getWindowBounds(timeWindow);
+  const weekCounts = getTrendWeekCount(timeWindow);
   const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
 
-  const anchor = isLastWeek ? getLastWeekBounds().end : Date.now();
+  const anchor = getTrendAnchor(timeWindow);
 
   const buckets = [];
   for (let w = weekCounts - 1; w >= 0; w--) {
@@ -217,7 +360,7 @@ function buildTrendData(issues, timeWindow) {
 
   for (const issue of issues) {
     const state = issue.pipelineState;
-    const useTerminalAt = isLastWeek && TERMINAL_STATES.has(state) && issue.terminalAt;
+    const useTerminalAt = useTerminalDate && TERMINAL_STATES.has(state) && issue.terminalAt;
     const ts = useTerminalAt
       ? new Date(issue.terminalAt).getTime()
       : new Date(issue.created).getTime();
@@ -290,7 +433,11 @@ async function fetchAutofixData(jiraRequest, config) {
       return jiraRequest(
         '/rest/api/3/issue/' + encodeURIComponent(issue.key) + '?expand=changelog&fields=labels'
       ).then(function(detail) {
-        issue.terminalAt = extractTerminalAt(detail.changelog, issue.pipelineState);
+        const history = extractPipelineHistory(detail.changelog, issue.pipelineState);
+        issue.terminalAt = history.terminalAt;
+        issue.ciFailureCount = history.ciFailureCount;
+        issue.reviewRoundCount = history.reviewRoundCount;
+        issue.wasBlocked = history.wasBlocked;
       });
     }));
     for (const r of results) {
@@ -298,6 +445,12 @@ async function fetchAutofixData(jiraRequest, config) {
         console.error('[autofix] changelog fetch failed:', r.reason?.message || r.reason);
       }
     }
+  }
+
+  for (let i = 0; i < processed.length; i++) {
+    const scoring = computeEffortScore(processed[i]);
+    processed[i].effortScore = scoring.effortScore;
+    processed[i].effortTier = scoring.effortTier;
   }
 
   return processed;
@@ -308,7 +461,12 @@ module.exports = {
   processIssue,
   classifyIssue,
   extractTerminalAt,
+  extractPipelineHistory,
+  computeEffortScore,
+  computePriorityBreakdown,
+  computeMedianTimeToFix,
   getLastWeekBounds,
+  getWindowBounds,
   computeAutofixMetrics,
   buildTrendData,
   ALL_PIPELINE_LABELS,

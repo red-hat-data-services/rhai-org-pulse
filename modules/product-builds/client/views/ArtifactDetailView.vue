@@ -1,7 +1,8 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted, inject, defineAsyncComponent } from 'vue'
 import { useArtifactDetail } from '../composables/useArtifacts'
-import { formatDate, envBadgeClass, archBadgeClass, konfluxStateBadgeClass, testStatusBadgeClass, testStatusLabel, formatDuration, getAcceleratorInfo, getCommitUrl } from '../utils/formatting'
+import { formatDate, envBadgeClass, archBadgeClass, konfluxStateBadgeClass, testStatusBadgeClass, testStatusLabel, formatDuration, getAcceleratorInfo, getCommitUrl, getRegistryUrl, getDigestUrl } from '../utils/formatting'
+import ChiBadge from '../components/ChiBadge.vue'
 
 const DependencyGraph = defineAsyncComponent(() => import('../components/DependencyGraph.vue'))
 
@@ -167,14 +168,19 @@ function copyToClipboard(value) {
   setTimeout(() => { copiedValue.value = null }, 1500)
 }
 
-function getDigestUrl(art) {
-  if (!art?.sha_digest || !art?.key) return null
-  if (art.key.startsWith('quay.io/')) {
-    const path = art.key.replace('quay.io/', '').split(':')[0]
-    return `https://quay.io/repository/${path}/manifest/${art.sha_digest}`
+const prodKey = computed(() => {
+  const names = artifact.value?.alternative_names
+  if (!Array.isArray(names)) return null
+  return names.find(n => n.startsWith('registry.redhat.io/')) || null
+})
+
+const allNames = computed(() => {
+  const names = artifact.value?.alternative_names || []
+  if (prodKey.value) {
+    return [artifact.value.key, ...names.filter(n => n !== prodKey.value)]
   }
-  return null
-}
+  return names
+})
 
 function sbomState(art) {
   const links = art?.sbom_links
@@ -303,7 +309,14 @@ const otherLabels = computed(() => {
     <template v-if="artifact">
       <!-- Header -->
       <div>
-        <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100 break-all">{{ artifact.key }}</h1>
+        <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100 break-all">{{ prodKey || artifact.key }}</h1>
+        <div v-if="prodKey" class="flex items-center gap-2 mt-1">
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Production</span>
+          <a v-if="getRegistryUrl(prodKey)" :href="getRegistryUrl(prodKey)" target="_blank" rel="noopener noreferrer" class="text-primary-600 dark:text-blue-400 hover:underline text-sm inline-flex items-center gap-1">
+            View in Red Hat Catalog
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+          </a>
+        </div>
         <div v-if="artifact.series" class="flex flex-wrap items-center gap-3 mt-2 text-sm text-gray-500 dark:text-gray-400">
           <span>Series: <span class="text-gray-900 dark:text-gray-100">{{ artifact.series }}</span></span>
         </div>
@@ -326,6 +339,12 @@ const otherLabels = computed(() => {
                 class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
                 :class="envBadgeClass(env)"
               >{{ env }}</span>
+            </dd>
+          </div>
+          <div v-if="artifact.health_index">
+            <dt class="text-gray-500 dark:text-gray-400">Health Index</dt>
+            <dd class="mt-0.5">
+              <ChiBadge :health-index="artifact.health_index" show-details />
             </dd>
           </div>
           <div v-if="artifact.drop_keys?.length">
@@ -429,6 +448,19 @@ const otherLabels = computed(() => {
           <div v-else-if="isContainerType(artifact) && sbomState(artifact) === 'empty'">
             <dt class="text-gray-500 dark:text-gray-400">Atlas SBOMs</dt>
             <dd class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">No SBOM links available</dd>
+          </div>
+          <div v-if="allNames.length" class="md:col-span-2">
+            <dt class="text-gray-500 dark:text-gray-400">Alternative Names</dt>
+            <dd class="mt-0.5 space-y-1">
+              <div v-for="name in allNames" :key="name" class="flex items-center gap-1.5">
+                <a v-if="getRegistryUrl(name)" :href="getRegistryUrl(name)" target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-primary-600 dark:text-blue-400 hover:underline break-all">{{ name }}</a>
+                <span v-else class="font-mono text-xs text-gray-900 dark:text-gray-100 break-all">{{ name }}</span>
+                <button @click="copyToClipboard(name)" class="shrink-0 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                  <svg v-if="copiedValue === name" class="w-3 h-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                  <svg v-else class="w-3 h-3 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                </button>
+              </div>
+            </dd>
           </div>
         </dl>
       </div>

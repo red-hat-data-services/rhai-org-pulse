@@ -28,5 +28,13 @@ export const reports = [
     label: 'Release Performance',
     description: 'Cross-releases, and competitive comparisons performance dashboard',
     externalUrl: 'https://aidash.app.intlab.redhat.com/'
+  },
+  {
+    id: 'release-readiness',
+    label: 'RHOAI Release Readiness',
+    description: 'RHOAI Release Readiness and risk highlights.',
+    icon: 'Shield',
+    tags: ['Executive', 'Readiness', 'RAG'],
+    component: defineAsyncComponent(() => import('./ReleaseReadinessDirector.vue'))
   }
 ]

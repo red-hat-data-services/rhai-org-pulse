@@ -4,6 +4,9 @@ import { apiRequest } from '@shared/client/services/api'
 import { useAuth } from '@shared/client/composables/useAuth'
 
 const PackageSearchView = defineAsyncComponent(() => import('./PackageSearchView.vue'))
+const NightlyAnalysisView = defineAsyncComponent(() => import('./NightlyAnalysisView.vue'))
+const VersionMapView = defineAsyncComponent(() => import('./VersionMapView.vue'))
+const PackageTrackerView = defineAsyncComponent(() => import('./PackageTrackerView.vue'))
 
 const { isAdmin } = useAuth()
 
@@ -60,7 +63,8 @@ function getInitialTab() {
   const qIdx = hash.indexOf('?')
   if (qIdx !== -1) {
     const params = new URLSearchParams(hash.slice(qIdx + 1))
-    if (params.get('tab') === 'search') return 'search'
+    const tab = params.get('tab')
+    if (tab === 'search' || tab === 'nightly' || tab === 'versions' || tab === 'tracker') return tab
   }
   return 'onboarded'
 }
@@ -364,6 +368,33 @@ onMounted(() => {
           >
             Package Search
           </button>
+          <button
+            @click="activeTab = 'nightly'"
+            class="py-2.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2"
+            :class="activeTab === 'nightly'
+              ? 'border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100'
+              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+          >
+            Nightly Analysis
+          </button>
+          <button
+            @click="activeTab = 'versions'"
+            class="py-2.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2"
+            :class="activeTab === 'versions'
+              ? 'border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100'
+              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+          >
+            Version Map
+          </button>
+          <button
+            @click="activeTab = 'tracker'"
+            class="py-2.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2"
+            :class="activeTab === 'tracker'
+              ? 'border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100'
+              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+          >
+            Tracker
+          </button>
         </nav>
       </div>
 
@@ -479,6 +510,21 @@ onMounted(() => {
       <!-- ==================== PACKAGE SEARCH TAB ==================== -->
       <div v-if="activeTab === 'search'">
         <PackageSearchView />
+      </div>
+
+      <!-- ==================== NIGHTLY ANALYSIS TAB ==================== -->
+      <div v-if="activeTab === 'nightly'">
+        <NightlyAnalysisView />
+      </div>
+
+      <!-- ==================== VERSION MAP TAB ==================== -->
+      <div v-if="activeTab === 'versions'">
+        <VersionMapView />
+      </div>
+
+      <!-- ==================== PACKAGE TRACKER TAB ==================== -->
+      <div v-if="activeTab === 'tracker'">
+        <PackageTrackerView />
       </div>
 
       <!-- ==================== DAILY REPORT TAB ==================== -->

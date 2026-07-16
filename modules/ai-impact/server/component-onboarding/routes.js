@@ -19,7 +19,7 @@ const BULK_CAP = 5000;
  */
 module.exports = function registerComponentOnboardingRoutes(router, context) {
   const { storage, requireAdmin, requireScope } = context;
-  const { readFromStorage, writeToStorageAtomic } = storage;
+  const { readFromStorage, writeToStorage } = storage;
 
   // ─── Static routes first ───
 
@@ -34,8 +34,8 @@ module.exports = function registerComponentOnboardingRoutes(router, context) {
    *       200:
    *         description: Component onboarding data status
    */
-  router.get('/component-onboarding/status', requireAdmin, requireScope('ai-impact:read'), function(req, res) {
-    const data = readComponentOnboarding(readFromStorage);
+  router.get('/component-onboarding/status', requireAdmin, requireScope('ai-impact:read'), async function(req, res) {
+    const data = await readComponentOnboarding(readFromStorage);
     res.json({
       fetchedAt: data.fetchedAt,
       totalComponents: data.totalComponents,
@@ -54,7 +54,7 @@ module.exports = function registerComponentOnboardingRoutes(router, context) {
    *       200:
    *         description: Bulk upsert result
    */
-  router.post('/component-onboarding/bulk', requireAdmin, requireScope('ai-impact:write'), jsonLimit, function(req, res) {
+  router.post('/component-onboarding/bulk', requireAdmin, requireScope('ai-impact:write'), jsonLimit, async function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Component onboarding ingest disabled in demo mode' });
     }
@@ -67,7 +67,7 @@ module.exports = function registerComponentOnboardingRoutes(router, context) {
       return res.status(400).json({ error: `Bulk payload exceeds maximum of ${BULK_CAP} entries` });
     }
 
-    const data = readComponentOnboarding(readFromStorage);
+    const data = await readComponentOnboarding(readFromStorage);
     const counts = { created: 0, updated: 0, unchanged: 0 };
     const errors = [];
 
@@ -90,7 +90,7 @@ module.exports = function registerComponentOnboardingRoutes(router, context) {
     data.fetchedAt = new Date().toISOString();
     data.totalComponents = Object.keys(data.components).length;
 
-    writeComponentOnboardingAtomic(writeToStorageAtomic, data);
+    await writeComponentOnboardingAtomic(writeToStorage, data);
 
     res.json({
       created: counts.created,
@@ -111,11 +111,11 @@ module.exports = function registerComponentOnboardingRoutes(router, context) {
    *       200:
    *         description: Data cleared
    */
-  router.delete('/component-onboarding', requireAdmin, requireScope('ai-impact:write'), function(req, res) {
+  router.delete('/component-onboarding', requireAdmin, requireScope('ai-impact:write'), async function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Component onboarding ingest disabled in demo mode' });
     }
-    writeComponentOnboardingAtomic(writeToStorageAtomic, { fetchedAt: null, totalComponents: 0, components: {} });
+    await writeComponentOnboardingAtomic(writeToStorage, { fetchedAt: null, totalComponents: 0, components: {} });
     res.json({ status: 'cleared' });
   });
 
@@ -129,8 +129,8 @@ module.exports = function registerComponentOnboardingRoutes(router, context) {
    *       200:
    *         description: All component onboarding data with latest projections
    */
-  router.get('/component-onboarding', requireScope('ai-impact:read'), function(req, res) {
-    const data = readComponentOnboarding(readFromStorage);
+  router.get('/component-onboarding', requireScope('ai-impact:read'), async function(req, res) {
+    const data = await readComponentOnboarding(readFromStorage);
     const version = typeof req.query.version === 'string' && req.query.version.trim()
       ? req.query.version.trim()
       : null;
@@ -157,8 +157,8 @@ module.exports = function registerComponentOnboardingRoutes(router, context) {
    *       404:
    *         description: Component not found
    */
-  router.get('/component-onboarding/:key', requireScope('ai-impact:read'), function(req, res) {
-    const data = readComponentOnboarding(readFromStorage);
+  router.get('/component-onboarding/:key', requireScope('ai-impact:read'), async function(req, res) {
+    const data = await readComponentOnboarding(readFromStorage);
     const entry = data.components[req.params.key];
     if (!entry) {
       return res.status(404).json({ error: 'Not found' });

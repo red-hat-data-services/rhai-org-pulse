@@ -18,19 +18,15 @@ const {
 
 describe('normVer', () => {
   it('lowercases version strings', () => {
-    expect(normVer('RHOAI-3.5')).toBe('rhoai-3.5');
+    expect(normVer('RHOAI-3.5')).toBe('rhoai 3 5');
   });
 
-  it('normalises RHOAI_ prefix to rhoai- format', () => {
-    expect(normVer('RHOAI_3_5')).toBe('rhoai-3.5');
-  });
-
-  it('strips .0 from RHOAI_ prefixed versions', () => {
-    expect(normVer('RHOAI_3.0_5')).toBe('rhoai-3.5');
+  it('normalises RHOAI_ prefix via shared normalizer', () => {
+    expect(normVer('RHOAI_3_5')).toBe('rhoai 3 5');
   });
 
   it('trims whitespace', () => {
-    expect(normVer('  rhoai-3.5  ')).toBe('rhoai-3.5');
+    expect(normVer('  rhoai-3.5  ')).toBe('rhoai 3 5');
   });
 
   it('returns null for empty, null, undefined, or "null"/"undefined" strings', () => {
@@ -41,20 +37,17 @@ describe('normVer', () => {
     expect(normVer('undefined')).toBeNull();
   });
 
-  it('leaves already-lowercase versions unchanged', () => {
-    expect(normVer('rhoai-3.5.ea1')).toBe('rhoai-3.5.ea1');
-  });
-
-  it('does not strip .0 from double-digit major versions (RHOAI_10.0_5)', () => {
-    expect(normVer('RHOAI_10.0_5')).toBe('rhoai-10.5');
+  it('normalises EA versions', () => {
+    expect(normVer('rhoai-3.5.ea1')).toBe('rhoai 3 5 ea1');
   });
 
   it('handles lowercase rhoai_ prefix', () => {
-    expect(normVer('rhoai_3_5')).toBe('rhoai-3.5');
+    expect(normVer('rhoai_3_5')).toBe('rhoai 3 5');
   });
 
-  it('handles mixed case rhoai_ prefix', () => {
-    expect(normVer('Rhoai_3_5')).toBe('rhoai-3.5');
+  it('handles RHAISTRAT format', () => {
+    expect(normVer('3.5 EA1 RHOAI RELEASE')).toBe('rhoai 3 5 ea1');
+    expect(normVer('3.5 GA RHOAI RELEASE')).toBe('rhoai 3 5');
   });
 });
 
@@ -72,13 +65,13 @@ describe('parseVersions', () => {
   it('parses comma-separated version strings', () => {
     const result = parseVersions('rhoai-3.5, rhoai-3.5.EA1');
     expect(result.size).toBe(2);
-    expect(result.has('rhoai-3.5')).toBe(true);
-    expect(result.has('rhoai-3.5.ea1')).toBe(true);
+    expect(result.has('rhoai 3 5')).toBe(true);
+    expect(result.has('rhoai 3 5 ea1')).toBe(true);
   });
 
   it('normalises each version', () => {
     const result = parseVersions('RHOAI_3_5');
-    expect(result.has('rhoai-3.5')).toBe(true);
+    expect(result.has('rhoai 3 5')).toBe(true);
   });
 
   it('filters out null results from normalisation', () => {
@@ -177,7 +170,7 @@ describe('normalizeIssue', () => {
   it('extracts target version from array of objects', () => {
     const result = normalizeIssue(makeIssue());
     expect(result.target_version).toBe('rhoai-3.5');
-    expect(result.tv_set.has('rhoai-3.5')).toBe(true);
+    expect(result.tv_set.has('rhoai 3 5')).toBe(true);
   });
 
   it('extracts target version from string', () => {
@@ -193,7 +186,7 @@ describe('normalizeIssue', () => {
   it('extracts fix versions', () => {
     const result = normalizeIssue(makeIssue());
     expect(result.fix_versions).toBe('rhoai-3.5');
-    expect(result.fv_set.has('rhoai-3.5')).toBe(true);
+    expect(result.fv_set.has('rhoai 3 5')).toBe(true);
   });
 
   it('extracts components', () => {
@@ -355,7 +348,7 @@ describe('buildExport', () => {
       { release: 'RHOAI-3.5', category: 'aligned', key: 'X-1', url: '', summary: '', status: '', color_status: '', product_manager: '', assignee: '', team: '', components: [], component: '', target_version: '', fix_versions: '' },
     ];
     const releaseDates = {
-      'rhoai-3.5': { dueDate: '2026-08-20', planningFreezeDate: '2026-06-24' },
+      'rhoai 3 5': { dueDate: '2026-08-20', planningFreezeDate: '2026-06-24' },
     };
     const result = buildExport(classifications, ['RHOAI-3.5'], '2026-01-01T00:00:00Z', [], 'RHAISTRAT', releaseDates);
     const summary = result.executive_summary[0];
@@ -494,14 +487,14 @@ describe('jqlSafePattern', () => {
 
 describe('RHAII version handling', () => {
   it('normVer lowercases RHAII versions with spaces', () => {
-    expect(normVer('RHAII-3.5 EA1')).toBe('rhaii-3.5 ea1');
-    expect(normVer('RHAII-3.5 EA2')).toBe('rhaii-3.5 ea2');
+    expect(normVer('RHAII-3.5 EA1')).toBe('rhaii 3 5 ea1');
+    expect(normVer('RHAII-3.5 EA2')).toBe('rhaii 3 5 ea2');
   });
 
   it('parseVersions handles RHAII versions', () => {
     const result = parseVersions('RHAII-3.5 EA1');
     expect(result.size).toBe(1);
-    expect(result.has('rhaii-3.5 ea1')).toBe(true);
+    expect(result.has('rhaii 3 5 ea1')).toBe(true);
   });
 
   it('classifyFeatures matches RHAII releases correctly', () => {

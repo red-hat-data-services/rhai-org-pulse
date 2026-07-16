@@ -78,18 +78,17 @@ describe('HealthSummaryCards', function() {
     expect(wrapper.text()).toBe('')
   })
 
-  it('renders 4 primary cards with three-gate labels', function() {
+  it('renders 3 primary cards with FPDoR, Strat, and RICE labels', function() {
     var wrapper = mount(HealthSummaryCards, { props: { cardCounts: cardCounts } })
-    expect(wrapper.text()).toContain('DoR Passed')
-    expect(wrapper.text()).toContain('DoD Passed')
+    expect(wrapper.text()).toContain('FPDoR Ready')
     expect(wrapper.text()).toContain('Strategy Signed Off')
     expect(wrapper.text()).toContain('RICE Complete')
+    expect(wrapper.text()).not.toContain('DoR Passed')
+    expect(wrapper.text()).not.toContain('DoD Passed')
   })
 
   it('shows count fractions for primary cards', function() {
     var wrapper = mount(HealthSummaryCards, { props: { cardCounts: cardCounts } })
-    expect(wrapper.text()).toContain('12')
-    expect(wrapper.text()).toContain('8')
     expect(wrapper.text()).toContain('10')
     expect(wrapper.text()).toContain('13')
     expect(wrapper.text()).toContain('/ 15')
@@ -97,10 +96,8 @@ describe('HealthSummaryCards', function() {
 
   it('shows percentage for primary cards', function() {
     var wrapper = mount(HealthSummaryCards, { props: { cardCounts: cardCounts } })
-    expect(wrapper.text()).toContain('80%')  // 12/15
-    expect(wrapper.text()).toContain('53%')  // 8/15
-    expect(wrapper.text()).toContain('67%')  // 10/15
-    expect(wrapper.text()).toContain('87%')  // 13/15
+    expect(wrapper.text()).toContain('67%')  // 10/15 stratSignedOff
+    expect(wrapper.text()).toContain('87%')  // 13/15 riceComplete
   })
 
   it('hides detail cards by default', function() {

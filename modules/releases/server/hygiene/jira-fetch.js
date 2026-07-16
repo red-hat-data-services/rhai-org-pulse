@@ -26,7 +26,8 @@ const CUSTOM_FIELDS = {
   impact: 'customfield_10836',
   confidence: 'customfield_10838',
   effort: 'customfield_10637',
-  riceScore: 'customfield_10864'
+  riceScore: 'customfield_10864',
+  blockedDropdown: 'customfield_10517'
 }
 
 // Fields fetched in Pass 1 for all features
@@ -84,6 +85,15 @@ function serializeField(field) {
   if (field.name) return field.name
   if (field.value) return field.value
   return String(field)
+}
+
+
+function numericField(field) {
+  if (field == null) return null
+  var val = typeof field === 'object' && field !== null ? field.value : field
+  if (val == null) return null
+  var num = Number(val)
+  return isNaN(num) ? null : num
 }
 
 /**
@@ -292,7 +302,7 @@ function transformIssue(rawIssue, rfeMap) {
     docsRequired: serializeField(fields[CUSTOM_FIELDS.docsRequired]),
     targetEnd: fields[CUSTOM_FIELDS.targetEnd] || null,
     riceStatus: computeRiceStatus(fields),
-    riceScore: fields[CUSTOM_FIELDS.riceScore] || null,
+    riceScore: numericField(fields[CUSTOM_FIELDS.riceScore]),
     priority,
     isBlocked,
     blockedBy,
@@ -588,6 +598,7 @@ module.exports = {
   fetchHygieneFeatures,
   transformIssue,
   serializeField,
+  numericField,
   computeRiceStatus,
   extractClonesLinks,
   parseChangelog,

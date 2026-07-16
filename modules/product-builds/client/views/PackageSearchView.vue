@@ -37,12 +37,51 @@ function compareVersionsDesc(a, b) {
 }
 
 const REPO_TYPE_LABELS = {
-  production: 'Production',
-  test: 'Test',
+  production: 'Production Repo',
+  test: 'Test Repo',
   sdists: 'SDists',
-  'sdists-test': 'SDists Test'
+  'sdists-test': 'SDists Test',
+  upstream: 'PyPI'
 }
-const REPO_TYPE_ORDER = ['test', 'production', 'sdists-test', 'sdists']
+const REPO_TYPE_ORDER = ['test', 'production', 'sdists-test', 'sdists', 'upstream']
+
+function formatUploadDate(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (isNaN(d)) return ''
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function relativeTime(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (isNaN(d)) return ''
+  const diff = Date.now() - d.getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  if (days < 30) return `${days}d ago`
+  const months = Math.floor(days / 30)
+  if (months < 12) return `${months}mo ago`
+  return `${Math.floor(months / 12)}y ago`
+}
+
+function newestUploadDate(files) {
+  if (!files?.length) return null
+  let newest = null
+  for (const f of files) {
+    if (f.uploadTime && (!newest || f.uploadTime > newest)) newest = f.uploadTime
+  }
+  return newest
+}
+
+function productVersionLabel(pv) {
+  if (pv === 'upstream-pypi') return 'Upstream PyPI (pypi.org)'
+  return pv
+}
 
 const showVersionDropdown = ref(false)
 const versionInputEdited = ref(false)
@@ -79,6 +118,24 @@ function hideVersionDropdown() {
 const canSubmit = computed(() => !loading.value && packageName.value.trim() && options.value)
 const hasSearched = computed(() => results.value !== null)
 const linkCopied = ref(false)
+
+function clearSearch() {
+  packageName.value = ''
+  packageVersion.value = ''
+  selectedProductVersion.value = ''
+  selectedVariant.value = ''
+  selectedRepoTypes.value = 'default'
+  results.value = null
+  error.value = null
+  expandedVersions.value = new Set()
+  expandedCells.value = new Set()
+  expandedPvs.value = new Set()
+  versionVariantFilter.value = ''
+  versionRepoFilter.value = ''
+  const hash = window.location.hash || ''
+  const basePath = hash.split('?')[0] || '#/product-builds/package-analysis'
+  history.replaceState(null, '', window.location.pathname + window.location.search + basePath + '?tab=search')
+}
 
 function copySearchLink() {
   navigator.clipboard.writeText(window.location.href)
@@ -136,21 +193,37 @@ onMounted(async () => {
   }
 })
 
+const expandedPvs = ref(new Set())
+
+function togglePv(pv) {
+  const next = new Set(expandedPvs.value)
+  if (next.has(pv)) next.delete(pv)
+  else next.add(pv)
+  expandedPvs.value = next
+}
+
+function pvHasFiles(group) {
+  return group.variants.some(v => Object.values(v.repos).some(r => r?.found && r?.files?.length))
+}
+
 async function handleSubmit() {
   if (!canSubmit.value) return
   expandedVersions.value = new Set()
   expandedCells.value = new Set()
+  expandedPvs.value = new Set()
   versionVariantFilter.value = ''
   versionRepoFilter.value = ''
-  pushSearchToUrl()
   await search({
     packageName: packageName.value,
     packageVersion: packageVersion.value,
     productVersion: selectedProductVersion.value,
     variant: selectedVariant.value,
-    repoTypes: selectedRepoTypes.value
+    repoTypes: selectedRepoTypes.value,
+    expandUpstream: true
   })
+  pushSearchToUrl()
 }
+
 
 const expandedVersions = ref(new Set())
 const versionVariantFilter = ref('')
@@ -167,6 +240,19 @@ function toggleVariantFilter(variant) {
 
 function toggleRepoFilter(rt) {
   versionRepoFilter.value = versionRepoFilter.value === rt ? '' : rt
+}
+
+function jumpToPv(pv) {
+  // Single-PV blocks render unconditionally (no <details>), so expandedPvs mutation is only needed for multi-PV
+  if (!expandedPvs.value.has(pv) && internalGroups.value.length > 1) {
+    const next = new Set(expandedPvs.value)
+    next.add(pv)
+    expandedPvs.value = next
+  }
+  nextTick(() => {
+    const el = document.getElementById('pv-block-' + pv)
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  })
 }
 
 function jumpToVersion(version) {
@@ -188,10 +274,29 @@ function toggleVersion(version) {
   expandedVersions.value = next
 }
 
+const processedResults = computed(() => {
+  if (!results.value) return []
+  const raw = results.value.results
+  const internalVersions = new Set()
+  for (const r of raw) {
+    if (r.source === 'upstream' || !r.found || !r.files) continue
+    for (const f of r.files) {
+      if (f.version && f.version !== 'unknown') internalVersions.add(f.version)
+    }
+  }
+  if (internalVersions.size === 0) return raw
+  const maxInternal = [...internalVersions].sort(compareVersionsDesc)[0]
+  return raw.map(r => {
+    if (r.source !== 'upstream' || !r.found || !r.files) return r
+    const newer = r.files.filter(f => f.version && f.version !== 'unknown' && compareVersionsDesc(f.version, maxInternal) < 0)
+    return { ...r, files: newer }
+  })
+})
+
 const versionBreakdown = computed(() => {
   if (!results.value) return []
   const byVersion = {}
-  for (const r of results.value.results) {
+  for (const r of processedResults.value) {
     if (!r.found || !r.files) continue
     for (const f of r.files) {
       if (f.version === 'unknown') continue
@@ -272,9 +377,6 @@ const showVersionBreakdown = computed(() => {
   return versionBreakdown.value.length > 1 || (versionBreakdown.value.length === 1 && !results.value.requested_version)
 })
 
-const isMultiProductSearch = computed(() => {
-  return results.value && !selectedProductVersion.value.trim() && productVersions.value.length > 1
-})
 
 const expandedCells = ref(new Set())
 
@@ -292,17 +394,18 @@ function toggleCell(key) {
 const indexAvailability = computed(() => {
   if (!results.value) return []
   const byPv = {}
-  for (const r of results.value.results) {
+  const rtByPv = {}
+  for (const r of processedResults.value) {
     const variantMap = (byPv[r.product_version] ??= {})
     ;(variantMap[r.variant] ??= {})[r.repo_type] = r
+    ;(rtByPv[r.product_version] ??= new Set()).add(r.repo_type)
   }
-
-  const repoTypes = [...new Set(results.value.results.map(r => r.repo_type))]
-    .sort((a, b) => REPO_TYPE_ORDER.indexOf(a) - REPO_TYPE_ORDER.indexOf(b))
 
   return productVersions.value.map(pv => {
     const variantMap = byPv[pv] || {}
     const variants = Object.keys(variantMap).sort()
+    const repoTypes = [...(rtByPv[pv] || [])]
+      .sort((a, b) => REPO_TYPE_ORDER.indexOf(a) - REPO_TYPE_ORDER.indexOf(b))
     return {
       productVersion: pv,
       repoTypes,
@@ -314,6 +417,28 @@ const indexAvailability = computed(() => {
   })
 })
 
+const upstreamGroup = computed(() => {
+  return indexAvailability.value.find(g => g.productVersion === 'upstream-pypi') || null
+})
+
+const upstreamFiles = computed(() => {
+  if (!upstreamGroup.value) return []
+  const files = []
+  for (const row of upstreamGroup.value.variants) {
+    for (const rt of upstreamGroup.value.repoTypes) {
+      const r = row.repos[rt]
+      if (!r?.found || !r?.files) continue
+      for (const f of r.files) files.push(f)
+    }
+  }
+  files.sort((a, b) => compareVersionsDesc(a.version || 'unknown', b.version || 'unknown'))
+  return files
+})
+
+const internalGroups = computed(() => {
+  return indexAvailability.value.filter(g => g.productVersion !== 'upstream-pypi')
+})
+
 function cellStatus(result) {
   if (!result) return { label: 'N/A', type: 'gray' }
   if (result.error === 'timeout') return { label: 'Timeout', type: 'amber' }
@@ -321,16 +446,23 @@ function cellStatus(result) {
   if (!result.index_exists) return { label: 'No index', type: 'gray' }
   if (!result.found) return { label: 'Not found', type: 'amber' }
   const count = result.files ? result.files.length : 0
-  return { label: `Available (${count} file${count !== 1 ? 's' : ''} found)`, type: 'green' }
+  if (count === 0 && result.source === 'upstream') return { label: 'No newer versions', type: 'gray' }
+  if (count === 0) return { label: 'Not found', type: 'amber' }
+  const suffix = result.source === 'upstream' ? ' newer' : ' found'
+  return { label: `Available (${count} file${count !== 1 ? 's' : ''}${suffix})`, type: 'green' }
 }
 
 const versionMatrix = computed(() => {
-  if (!results.value || !isMultiProductSearch.value) return null
+  if (!results.value) return null
   const pkgVersions = new Set()
-  const prodVersions = [...productVersions.value]
+  const raw = [...productVersions.value]
+  const prodVersions = [
+    ...raw.filter(pv => pv === 'upstream-pypi'),
+    ...raw.filter(pv => pv !== 'upstream-pypi')
+  ]
   const cells = {}
 
-  for (const r of results.value.results) {
+  for (const r of processedResults.value) {
     if (!r.found || !r.files) continue
     for (const f of r.files) {
       if (f.version === 'unknown') continue
@@ -350,6 +482,13 @@ const versionMatrix = computed(() => {
 
   return { pkgVersions: sortedPkgVersions, prodVersions, getCell }
 })
+
+const htmlFallbackIndexes = computed(() => {
+  if (!results.value) return []
+  return processedResults.value
+    .filter(r => r.found && r.format === 'html')
+    .map(r => `${r.product_version}/${r.variant}/${r.repo_type}`)
+})
 </script>
 
 <template>
@@ -368,13 +507,26 @@ const versionMatrix = computed(() => {
               <label class="block text-xs uppercase tracking-wide font-medium text-gray-500 dark:text-gray-400 mb-1">
                 Package Name <span class="text-red-500">*</span>
               </label>
-              <input
-                v-model="packageName"
-                type="text"
-                placeholder="torch, vllm, transformers..."
-                autofocus
-                class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-gray-300 w-full placeholder-gray-400"
-              />
+              <div class="relative">
+                <input
+                  v-model="packageName"
+                  type="text"
+                  placeholder="torch, vllm, transformers..."
+                  autofocus
+                  class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 pr-8 text-sm bg-white dark:bg-gray-800 dark:text-gray-300 w-full placeholder-gray-400"
+                />
+                <button
+                  v-if="packageName || hasSearched"
+                  type="button"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  title="Clear search"
+                  @click="clearSearch"
+                >
+                  <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
             <div class="flex-1 min-w-[140px]">
               <label class="block text-xs uppercase tracking-wide font-medium text-gray-500 dark:text-gray-400 mb-1">
@@ -465,6 +617,7 @@ const versionMatrix = computed(() => {
               </button>
             </div>
           </div>
+
         </form>
       </div>
     </div>
@@ -551,8 +704,18 @@ const versionMatrix = computed(() => {
         </div>
       </div>
 
+      <!-- HTML fallback notice -->
+      <div v-if="htmlFallbackIndexes.length > 0" class="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/10 px-4 py-3 flex items-start gap-2.5">
+        <svg class="w-4 h-4 text-amber-500 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+        </svg>
+        <div class="text-xs text-amber-700 dark:text-amber-300">
+          <span class="font-medium">Upload dates unavailable</span> for {{ htmlFallbackIndexes.length }} index{{ htmlFallbackIndexes.length !== 1 ? 'es' : '' }} — {{ htmlFallbackIndexes.length <= 3 ? htmlFallbackIndexes.join(', ') : htmlFallbackIndexes.slice(0, 3).join(', ') + ' and ' + (htmlFallbackIndexes.length - 3) + ' more' }}. These indexes returned HTML format which does not include date metadata.
+        </div>
+      </div>
+
       <!-- Version × Product Version Matrix -->
-      <details v-if="versionMatrix && versionMatrix.pkgVersions.length > 0" class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden group/matrix">
+      <details v-if="versionMatrix && versionMatrix.pkgVersions.length > 0" open class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden group/matrix">
         <summary class="px-4 py-3 bg-gray-100 dark:bg-gray-700 cursor-pointer flex items-center gap-2 hover:bg-gray-200/80 dark:hover:bg-gray-600 transition-colors">
           <svg class="w-3.5 h-3.5 text-gray-400 transition-transform group-open/matrix:rotate-90 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -570,7 +733,8 @@ const versionMatrix = computed(() => {
                   v-for="pv in versionMatrix.prodVersions"
                   :key="pv"
                   class="px-4 py-3 font-medium text-center whitespace-nowrap"
-                >{{ pv }}</th>
+                  :class="pv === 'upstream-pypi' ? 'text-purple-700 dark:text-purple-300' : ''"
+                >{{ productVersionLabel(pv) }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -592,11 +756,16 @@ const versionMatrix = computed(() => {
                   class="px-4 py-3 text-center"
                 >
                   <template v-for="(cell, ci) in [versionMatrix.getCell(pkgVer, pv)]" :key="ci">
-                    <span
+                    <button
                       v-if="cell"
-                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                      type="button"
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-colors"
+                      :class="pv === 'upstream-pypi'
+                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50'
+                        : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50'"
                       :title="[...cell.variants].join(', ')"
-                    >{{ cell.count }} file{{ cell.count !== 1 ? 's' : '' }}</span>
+                      @click="jumpToPv(pv)"
+                    >{{ cell.count }} file{{ cell.count !== 1 ? 's' : '' }}</button>
                     <span v-else class="text-gray-300 dark:text-gray-600">&mdash;</span>
                   </template>
                 </td>
@@ -606,13 +775,49 @@ const versionMatrix = computed(() => {
         </div>
       </details>
 
-      <!-- Index Availability Tables -->
-      <details v-for="group in indexAvailability" :key="group.productVersion" class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden group/pv" open>
-        <summary class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/40 cursor-pointer flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-          <svg class="w-3.5 h-3.5 text-gray-400 transition-transform group-open/pv:rotate-90 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-          </svg>
-          <span class="text-sm font-medium text-gray-900 dark:text-gray-100">Product Version: {{ group.productVersion }}</span>
+      <!-- Product Version Pills -->
+      <div v-if="internalGroups.length > 1" class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm px-4 py-3">
+        <p class="text-xs uppercase tracking-wide font-medium text-gray-500 dark:text-gray-400 mb-2">Product Versions</p>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="group in internalGroups"
+            :key="'pill-' + group.productVersion"
+            type="button"
+            class="px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer"
+            :class="[
+              pvHasFiles(group)
+                ? expandedPvs.has(group.productVersion)
+                  ? 'bg-green-600 text-white ring-2 ring-green-300 dark:ring-green-700'
+                  : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50'
+                : expandedPvs.has(group.productVersion)
+                  ? 'bg-gray-400 text-white ring-2 ring-gray-300 dark:ring-gray-600 dark:bg-gray-500'
+                  : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+            ]"
+            @click="togglePv(group.productVersion)"
+          >{{ group.productVersion }}</button>
+        </div>
+      </div>
+
+      <!-- Expanded Product Version Blocks -->
+      <template v-for="group in internalGroups" :key="group.productVersion">
+      <details
+        :id="'pv-block-' + group.productVersion"
+        v-if="internalGroups.length === 1 || expandedPvs.has(group.productVersion)"
+        class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden group/pv"
+        open
+      >
+        <summary class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/40 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center justify-between transition-colors">
+          <div class="flex items-center gap-2">
+            <svg class="w-3.5 h-3.5 text-gray-400 transition-transform group-open/pv:rotate-90 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            </svg>
+            <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+              Product Version: {{ group.productVersion }}
+            </span>
+          </div>
+          <button v-if="internalGroups.length > 1" type="button" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" @click.prevent="togglePv(group.productVersion)">
+            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+          </button>
         </summary>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
@@ -640,16 +845,22 @@ const versionMatrix = computed(() => {
                     class="px-4 py-3 text-center"
                   >
                     <template v-for="(s, si) in [cellStatus(row.repos[rt])]" :key="si">
-                      <button
-                        v-if="s.type === 'green'"
-                        type="button"
-                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50 cursor-pointer transition-colors"
-                        @click="toggleCell(cellKey(group.productVersion, row.variant, rt))"
-                      >
-                        <span class="inline-block w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                        {{ s.label }}
-                        <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': expandedCells.has(cellKey(group.productVersion, row.variant, rt)) }" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
-                      </button>
+                      <div v-if="s.type === 'green'" class="flex flex-col items-center gap-0.5">
+                        <button
+                          type="button"
+                          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50 cursor-pointer transition-colors"
+                          @click="toggleCell(cellKey(group.productVersion, row.variant, rt))"
+                        >
+                          <span class="inline-block w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                          {{ s.label }}
+                          <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': expandedCells.has(cellKey(group.productVersion, row.variant, rt)) }" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                        </button>
+                        <template v-for="(uploadDate, _) in [newestUploadDate(row.repos[rt]?.files)]" :key="_">
+                        <span v-if="uploadDate" class="text-[10px] text-gray-400 dark:text-gray-500" :title="relativeTime(uploadDate)">
+                          {{ formatUploadDate(uploadDate) }}
+                        </span>
+                        </template>
+                      </div>
                       <span
                         v-else-if="s.type === 'amber'"
                         class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
@@ -681,22 +892,85 @@ const versionMatrix = computed(() => {
                             class="text-xs text-primary-600 dark:text-primary-400 hover:underline"
                           >Open index &#8599;</a>
                         </div>
-                        <ul>
-                          <li v-for="f in row.repos[rt].files" :key="f.filename" class="py-0.5">
-                            <a
-                              :href="f.url"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              class="text-sm text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:underline"
-                            >{{ f.filename }}</a>
-                            <span v-if="f.platform && f.platform !== 'any'" class="text-gray-400 dark:text-gray-500 text-xs ml-1">{{ f.platform.replace(/^linux_/, '') }}</span>
-                          </li>
-                        </ul>
+                        <table class="w-full text-sm">
+                          <thead>
+                            <tr class="text-left text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                              <th class="py-1 pr-4 font-medium">File</th>
+                              <th class="py-1 pr-4 font-medium w-32">Architecture</th>
+                              <th class="py-1 font-medium w-32">Date</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr v-for="f in row.repos[rt].files" :key="f.filename">
+                              <td class="py-0.5 pr-4">
+                                <a
+                                  :href="f.url"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  class="text-sm text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:underline"
+                                >{{ f.filename }}</a>
+                              </td>
+                              <td class="py-0.5 pr-4 font-mono text-sm text-gray-500 dark:text-gray-400">
+                                {{ f.platform ? f.platform.replace(/^linux_/, '') : 'any' }}
+                              </td>
+                              <td class="py-0.5 text-sm text-gray-500 dark:text-gray-400" :title="f.uploadTime ? relativeTime(f.uploadTime) : ''">
+                                {{ f.uploadTime ? formatUploadDate(f.uploadTime) : '—' }}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </td>
                   </tr>
                 </template>
               </template>
+            </tbody>
+          </table>
+        </div>
+      </details>
+      </template>
+
+      <!-- Upstream PyPI Section -->
+      <details
+        v-if="upstreamFiles.length > 0"
+        id="pv-block-upstream-pypi"
+        class="rounded-xl border border-purple-300 dark:border-purple-700 bg-purple-50/30 dark:bg-purple-900/10 shadow-sm overflow-hidden group/pv"
+        open
+      >
+        <summary class="px-4 py-3 border-b border-purple-200 dark:border-purple-800 bg-purple-50/80 dark:bg-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-900/50 cursor-pointer flex items-center gap-2 transition-colors">
+          <svg class="w-3.5 h-3.5 text-purple-400 transition-transform group-open/pv:rotate-90 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+          </svg>
+          <span class="text-sm font-medium text-purple-700 dark:text-purple-300">Upstream PyPI (pypi.org)</span>
+          <span class="text-xs text-purple-500 dark:text-purple-400">&mdash; {{ upstreamFiles.length }} file{{ upstreamFiles.length !== 1 ? 's' : '' }} newer</span>
+        </summary>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left text-xs uppercase tracking-wide text-purple-600 dark:text-purple-400 border-b border-purple-100 dark:border-purple-800">
+                <th class="px-4 py-3 font-medium">Version</th>
+                <th class="px-4 py-3 font-medium w-32">Architecture</th>
+                <th class="px-4 py-3 font-medium w-32">Release Date</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-purple-100 dark:divide-purple-800">
+              <tr v-for="f in upstreamFiles" :key="f.filename" class="hover:bg-purple-50/80 dark:hover:bg-purple-900/30">
+                <td class="px-4 py-2.5">
+                  <a
+                    :href="f.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-purple-600 dark:hover:text-purple-400 hover:underline"
+                  >{{ f.version || 'unknown' }}</a>
+                  <span class="text-xs text-gray-400 dark:text-gray-500 ml-1.5">{{ f.filename }}</span>
+                </td>
+                <td class="px-4 py-2.5 font-mono text-sm text-gray-600 dark:text-gray-300">
+                  {{ f.platform ? f.platform.replace(/^linux_/, '') : 'any' }}
+                </td>
+                <td class="px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300" :title="f.uploadTime ? relativeTime(f.uploadTime) : ''">
+                  {{ f.uploadTime ? formatUploadDate(f.uploadTime) : '—' }}
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>

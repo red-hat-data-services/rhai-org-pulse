@@ -9,7 +9,8 @@
   "client": {
     "entry": "./client/index.js",
     "navItems": [
-      { "id": "rhaiis", "label": "RHAIIS", "icon": "PackageOpen", "default": true },
+      { "id": "overview", "label": "Overview", "icon": "LayoutDashboard", "default": true },
+      { "id": "rhaiis", "label": "RHAIIS", "icon": "PackageOpen" },
       { "id": "rhel-ai", "label": "RHEL AI", "icon": "PackageOpen" },
       { "id": "base-images", "label": "Base Images", "icon": "PackageOpen" },
       { "id": "builder-images", "label": "Builder Images", "icon": "PackageOpen" },
@@ -27,8 +28,49 @@
     "entry": "./server/index.js"
   },
   "secrets": {
-    "platform": ["jira"],
-    "module": []
+    "platform": ["jira", "gitlab", "google"],
+    "module": [
+      {
+        "key": "NIGHTLY_PIPELINE_GITLAB_TOKEN",
+        "description": "GitLab PAT for nightly pipeline schedule queries (overrides GITLAB_TOKEN)",
+        "required": false
+      },
+      {
+        "key": "NIGHTLY_PIPELINE_GITLAB_BASE_URL",
+        "description": "GitLab instance base URL (defaults to https://gitlab.com)",
+        "required": false
+      },
+      {
+        "key": "NIGHTLY_PIPELINE_GITLAB_PROJECT",
+        "description": "URL-encoded GitLab project path (defaults to redhat%2Frhel-ai%2Frhai%2Fpipeline)",
+        "required": false
+      },
+      {
+        "key": "NIGHTLY_PIPELINE_SCHEDULE_ID",
+        "description": "GitLab pipeline schedule ID (defaults to 4256496)",
+        "required": false
+      },
+      {
+        "key": "NIGHTLY_RCA_GITLAB_PROJECT",
+        "description": "URL-encoded GitLab project path for the failure analyzer (defaults to redhat%2Frhel-ai%2Fagentic-ci%2Fpipeline-failure-analyzer)",
+        "required": false
+      },
+      {
+        "key": "VERSION_MAP_SPREADSHEET_ID",
+        "description": "Google Sheets spreadsheet ID for accelerator variant planning (defaults to the shared planning spreadsheet)",
+        "required": false
+      },
+      {
+        "key": "TRACKER_TARGET_VERSION_FIELD",
+        "description": "JIRA custom field ID for target version (defaults to customfield_10855)",
+        "required": false
+      },
+      {
+        "key": "TRACKER_SIZE_FIELD",
+        "description": "JIRA custom field ID for size (defaults to customfield_10795)",
+        "required": false
+      }
+    ]
   },
   "export": {
     "files": [

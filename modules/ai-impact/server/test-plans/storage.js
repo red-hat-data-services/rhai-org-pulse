@@ -1,16 +1,16 @@
 const STORAGE_KEY = 'ai-impact/test-plans.json';
 const MAX_HISTORY = 20;
 
-function readTestPlans(readFromStorage) {
-  const data = readFromStorage(STORAGE_KEY);
+async function readTestPlans(readFromStorage) {
+  const data = await readFromStorage(STORAGE_KEY);
   if (!data || typeof data !== 'object' || !data.testPlans) {
     return { lastSyncedAt: null, lastJiraSyncAt: null, totalTestPlans: 0, testPlans: {} };
   }
   return data;
 }
 
-function writeTestPlansAtomic(writeToStorageAtomic, data) {
-  writeToStorageAtomic(STORAGE_KEY, data);
+async function writeTestPlansAtomic(writeToStorage, data) {
+  await writeToStorage(STORAGE_KEY, data);
 }
 
 function trimForHistory(testPlan) {

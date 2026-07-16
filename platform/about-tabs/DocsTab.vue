@@ -65,7 +65,7 @@
 
 <script setup>
 import { ExternalLink, Video, Presentation, StickyNote, Play, MessageSquare } from 'lucide-vue-next'
-import { enablementCategories, enablementSections } from '@shared/client/enablement-links.js'
+import { enablementCategories, enablementSections } from '@modules/ai-impact/client/enablement-links.js'
 
 const iconMap = { Video, Presentation, StickyNote, Play, MessageSquare }
 

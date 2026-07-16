@@ -37,6 +37,16 @@ function sortIcon(key) {
 const search = ref('')
 const completionFilter = ref('all')
 const productFilter = ref('all')
+const targetVersionFilter = ref('all')
+
+const targetVersionOptions = computed(() => {
+  const versions = new Set()
+  Object.values(props.components).forEach(c => {
+    if (c.targetVersion) versions.add(c.targetVersion)
+  })
+  return [...versions].sort()
+})
+
 // ── Derived list ──────────────────────────────────────────────────────────────
 const selectedKey = ref(null)
 
@@ -59,8 +69,16 @@ const componentList = computed(() => {
   return Object.values(props.components)
     .filter(c => (c.onboardingMethod || 'automated') === 'automated')
     .filter(c => {
-      if (completionFilter.value !== 'all' && c.completionStatus !== completionFilter.value) return false
+      if (completionFilter.value !== 'all') {
+        const status = c.completionStatus
+        if (completionFilter.value === 'in_queue') {
+          if (status !== 'in_queue' && status !== 'new') return false
+        } else if (status !== completionFilter.value) {
+          return false
+        }
+      }
       if (productFilter.value !== 'all' && c.productContext !== productFilter.value) return false
+      if (targetVersionFilter.value !== 'all' && (c.targetVersion || '') !== targetVersionFilter.value) return false
       if (!q) return true
       return (
         c.key.toLowerCase().includes(q) ||
@@ -139,7 +157,9 @@ function stepsDone(component) {
 function completionStatusLabel(status) {
   switch (status) {
     case 'completed': return 'Completed'
-    case 'in_queue': return 'In Queue'
+    case 'in_queue':
+    case 'new':
+      return 'In Queue'
     case 'in-progress': return 'In Progress'
     default: return status
   }
@@ -150,6 +170,7 @@ function completionStatusBadgeClass(status) {
     case 'completed':
       return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
     case 'in_queue':
+    case 'new':
       return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
     default:
       return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
@@ -159,7 +180,9 @@ function completionStatusBadgeClass(status) {
 function completionStatusDotClass(status) {
   switch (status) {
     case 'completed': return 'bg-green-500'
-    case 'in_queue': return 'bg-blue-500'
+    case 'in_queue':
+    case 'new':
+      return 'bg-blue-500'
     default: return 'bg-amber-500'
   }
 }
@@ -201,6 +224,15 @@ function completionStatusDotClass(status) {
         <option value="all">All products</option>
         <option value="RHOAI">RHOAI</option>
         <option value="ODH">ODH</option>
+      </select>
+
+      <!-- Target Version filter -->
+      <select
+        v-model="targetVersionFilter"
+        class="text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="all">All versions</option>
+        <option v-for="v in targetVersionOptions" :key="v" :value="v">{{ v }}</option>
       </select>
 
       <span class="ml-auto text-xs text-gray-400 dark:text-gray-500">
