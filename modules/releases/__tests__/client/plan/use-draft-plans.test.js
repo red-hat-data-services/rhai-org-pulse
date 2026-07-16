@@ -53,11 +53,18 @@ var FIXTURE = {
   meta: {
     planVersion: '3.6',
     currentUser: 'Admin',
+    isPlanAdmin: true,
     frozenEvents: {},
     finalGaFrozen: false,
     locked: false
   },
-  audit: []
+  audit: [],
+  session: {
+    actor: 'Admin',
+    canImpersonate: true,
+    isPlanAdmin: true,
+    demoMode: true
+  }
 }
 
 function mountComposable() {

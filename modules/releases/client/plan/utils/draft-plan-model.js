@@ -20,6 +20,7 @@ function emptyMeta(planVersion, baseGeneratedAt) {
     planVersion: planVersion || null,
     baseGeneratedAt: baseGeneratedAt || null,
     currentUser: ADMIN,
+    isPlanAdmin: true,
     editorsAllowlist: null,
     frozenEvents: {},
     finalGaFrozen: false,
@@ -27,6 +28,16 @@ function emptyMeta(planVersion, baseGeneratedAt) {
     lockedBy: null,
     lockedAt: null
   }
+}
+
+function namesMatch(a, b) {
+  var left = String(a || '')
+    .trim()
+    .toLowerCase()
+  var right = String(b || '')
+    .trim()
+    .toLowerCase()
+  return left !== '' && left === right
 }
 
 function emptyEditorState(planVersion, baseGeneratedAt) {
@@ -180,13 +191,17 @@ function rowFrozen(row, edits, meta) {
 }
 
 function isAdmin(meta) {
-  return (meta && meta.currentUser) === ADMIN
+  if (!meta) return false
+  if (meta.isPlanAdmin === true) return true
+  if (meta.isPlanAdmin === false) return false
+  // Legacy / demo: "Admin" actor means plan admin
+  return meta.currentUser === ADMIN
 }
 
 function canEditRow(row, edits, meta) {
   if (rowFrozen(row, edits, meta)) return false
   if (isAdmin(meta)) return true
-  return row.assignee === (meta && meta.currentUser)
+  return namesMatch(row.assignee, meta && meta.currentUser)
 }
 
 function familyForFV(row) {
@@ -608,9 +623,11 @@ function unfreezePlan(state, candidates) {
 
 function resetToBase(state, planVersion, baseGeneratedAt) {
   var user = state.meta && state.meta.currentUser ? state.meta.currentUser : ADMIN
+  var wasAdmin = isAdmin(state.meta)
   state.edits = {}
   state.meta = emptyMeta(planVersion, baseGeneratedAt)
   state.meta.currentUser = user
+  state.meta.isPlanAdmin = wasAdmin || user === ADMIN
   state.audit = []
   appendAudit(state.audit, { action: 'reset', detail: 'Reset to base draft' }, user)
   return { ok: true }

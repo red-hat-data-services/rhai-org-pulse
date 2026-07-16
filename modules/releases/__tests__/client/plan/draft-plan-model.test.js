@@ -11,7 +11,9 @@ import {
   capacityCheckForMove,
   emptyEditorState,
   fvTemplate,
-  viewRow
+  viewRow,
+  canEditRow,
+  isAdmin
 } from '../../../client/plan/utils/draft-plan-model.js'
 
 function sampleDraft() {
@@ -195,5 +197,26 @@ describe('draft-plan-model', function() {
     expect(state.meta.finalGaFrozen).toBe(false)
     expect(state.meta.locked).toBe(false)
     expect(effectivePlacement(draft.candidates[1], state.edits)).toBe('Descope')
+  })
+
+  it('binds row edit rights to assignee unless isPlanAdmin', function() {
+    var draft = sampleDraft()
+    var meta = {
+      currentUser: 'Alice',
+      isPlanAdmin: false,
+      frozenEvents: {},
+      finalGaFrozen: false
+    }
+    expect(isAdmin(meta)).toBe(false)
+    expect(canEditRow(draft.candidates[0], {}, meta)).toBe(true)
+    expect(canEditRow(draft.candidates[1], {}, meta)).toBe(false)
+
+    meta.currentUser = 'alice'
+    expect(canEditRow(draft.candidates[0], {}, meta)).toBe(true)
+
+    meta.isPlanAdmin = true
+    meta.currentUser = 'Adam Bellusci'
+    expect(isAdmin(meta)).toBe(true)
+    expect(canEditRow(draft.candidates[1], {}, meta)).toBe(true)
   })
 })

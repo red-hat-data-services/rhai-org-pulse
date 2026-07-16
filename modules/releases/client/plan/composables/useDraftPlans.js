@@ -38,6 +38,7 @@ var availableCycles = ref([])
 var filterEvent = ref('')
 var filterComponent = ref('')
 var filterText = ref('')
+var session = ref(null)
 
 export function useDraftPlans() {
   var candidates = computed(function() {
@@ -192,7 +193,24 @@ export function useDraftPlans() {
         state.meta = Object.assign({}, state.meta, data.meta)
       }
       if (Array.isArray(data.audit)) state.audit = data.audit
-      if (!state.meta.currentUser) state.meta.currentUser = ADMIN
+      if (data.session && typeof data.session === 'object') {
+        session.value = data.session
+      } else {
+        session.value = {
+          actor: state.meta.currentUser || ADMIN,
+          canImpersonate: true,
+          isPlanAdmin: state.meta.isPlanAdmin !== false,
+          demoMode: !!(normalized && normalized.demoMode)
+        }
+      }
+      if (session.value.canImpersonate) {
+        if (!state.meta.currentUser) state.meta.currentUser = ADMIN
+        state.meta.isPlanAdmin =
+          state.meta.currentUser === ADMIN || session.value.isPlanAdmin === true
+      } else {
+        state.meta.currentUser = session.value.actor || state.meta.currentUser || ADMIN
+        state.meta.isPlanAdmin = session.value.isPlanAdmin === true
+      }
       editor.value = state
       dirty.value = false
     } catch (err) {
@@ -327,7 +345,13 @@ export function useDraftPlans() {
   }
 
   function setCurrentUser(user) {
-    editor.value.meta.currentUser = user || ADMIN
+    if (session.value && session.value.canImpersonate === false) {
+      return
+    }
+    var next = user || ADMIN
+    editor.value.meta.currentUser = next
+    editor.value.meta.isPlanAdmin =
+      next === ADMIN || !!(session.value && session.value.isPlanAdmin)
     markDirty()
   }
 
@@ -363,6 +387,7 @@ export function useDraftPlans() {
     assignees,
     counts,
     admin,
+    session,
     finalFrozen,
     eventFrozen: function(ev) {
       return eventFrozen(editor.value.meta, ev)
@@ -404,4 +429,5 @@ export function _resetDraftPlansForTests() {
   filterEvent.value = ''
   filterComponent.value = ''
   filterText.value = ''
+  session.value = null
 }

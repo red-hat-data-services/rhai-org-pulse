@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 const { _setFetch, DATA_PREFIX } = require('../../../server/draft-plans/fetch')
 
@@ -99,10 +99,19 @@ async function callRoute(router, method, path, req = {}) {
 }
 
 describe('draft-plans routes', () => {
+  const prevDemo = process.env.DEMO_MODE
+
   beforeEach(() => {
     vi.clearAllMocks()
     _setFetch(mockFetch)
     vi.resetModules()
+    // Existing editor route tests exercise demo impersonation path
+    process.env.DEMO_MODE = 'true'
+  })
+
+  afterEach(() => {
+    if (prevDemo === undefined) delete process.env.DEMO_MODE
+    else process.env.DEMO_MODE = prevDemo
   })
 
   describe('GET /releases', () => {
@@ -468,6 +477,8 @@ describe('draft-plans routes', () => {
       expect(res._json.draft.candidates.length).toBeGreaterThan(0)
       expect(res._json.edits).toEqual({})
       expect(res._json.meta.planVersion).toBe('3.6')
+      expect(res._json.session).toBeTruthy()
+      expect(res._json.session.canImpersonate).toBe(true)
     })
 
     it('rejects unknown product', async () => {
@@ -521,7 +532,8 @@ describe('draft-plans routes', () => {
           meta: { planVersion: '3.6', currentUser: 'Admin', frozenEvents: {} },
           audit: [{ action: 'decision', detail: 'test' }]
         },
-        user: { displayName: 'Erle' }
+        userEmail: 'admin@test.com',
+        isAdmin: true
       })
 
       expect(res._status).toBe(200)
@@ -529,6 +541,7 @@ describe('draft-plans routes', () => {
       const stored = storage._store[`${DATA_PREFIX}/editor/RHOAI/3.6.json`]
       expect(stored.edits['RHAISTRAT-1'].placement).toBe('EA2')
       expect(stored.audit).toHaveLength(1)
+      expect(stored.meta.isPlanAdmin).toBe(true)
     })
 
     it('rejects unknown product', async () => {
@@ -549,6 +562,54 @@ describe('draft-plans routes', () => {
         body: { meta: {} }
       })
       expect(res._status).toBe(400)
+    })
+
+    it('rejects foreign-row edits and Admin impersonation outside DEMO_MODE', async () => {
+      process.env.DEMO_MODE = 'false'
+      process.env.VITE_DEMO_MODE = 'false'
+      const { router, storage } = await setupRouter({
+        [`${DATA_PREFIX}/drafts/RHOAI/3.6.json`]: {
+          version: '3.6',
+          candidates: [
+            { key: 'F-1', summary: 'Alice feature', basePlacement: 'EA1', assignee: 'Alice', component: 'KubeRay' },
+            { key: 'F-2', summary: 'Owner feature', basePlacement: 'EA1', assignee: 'abellusci', component: 'KubeRay' }
+          ],
+          ceilingsByComponent: { KubeRay: { EA1: 5, EA2: 5, GA: 5 } }
+        }
+      })
+
+      const foreign = await callRoute(router, 'put', '/editor/:version', {
+        params: { version: '3.6' },
+        query: { product: 'RHOAI' },
+        userEmail: 'abellusci@redhat.com',
+        userUid: 'abellusci',
+        isAdmin: false,
+        body: {
+          edits: { 'F-1': { decision: 'descope', placement: null } },
+          meta: { currentUser: 'Admin', frozenEvents: {} },
+          audit: []
+        }
+      })
+      expect(foreign._status).toBe(403)
+
+      const own = await callRoute(router, 'put', '/editor/:version', {
+        params: { version: '3.6' },
+        query: { product: 'RHOAI' },
+        userEmail: 'abellusci@redhat.com',
+        userUid: 'abellusci',
+        isAdmin: false,
+        body: {
+          edits: { 'F-2': { decision: 'move', placement: 'EA2' } },
+          meta: { currentUser: 'Admin', frozenEvents: {} },
+          audit: []
+        }
+      })
+      expect(own._status).toBe(200)
+      expect(own._json.meta.currentUser).toBe('abellusci')
+      expect(own._json.meta.isPlanAdmin).toBe(false)
+      const stored = storage._store[`${DATA_PREFIX}/editor/RHOAI/3.6.json`]
+      expect(stored.meta.currentUser).toBe('abellusci')
+      expect(stored.edits['F-2'].placement).toBe('EA2')
     })
   })
 })

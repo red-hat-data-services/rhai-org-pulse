@@ -57,11 +57,19 @@ var FIXTURE = {
   meta: {
     planVersion: '3.6',
     currentUser: 'Admin',
+    isPlanAdmin: true,
     frozenEvents: {},
     finalGaFrozen: false,
     locked: false
   },
-  audit: []
+  audit: [],
+  session: {
+    actor: 'Admin',
+    email: 'local-dev@redhat.com',
+    canImpersonate: true,
+    isPlanAdmin: true,
+    demoMode: true
+  }
 }
 
 function mountView() {
@@ -113,6 +121,7 @@ describe('DraftPlansView', function() {
     await flushPromises()
 
     expect(wrapper.text()).toContain('RHOAI + RHAII 3.6 Draft Plan')
+    expect(wrapper.text()).toContain('Acting as')
     expect(wrapper.text()).toContain('RHAISTRAT-1')
     expect(wrapper.text()).toContain('Descope')
     expect(wrapper.text()).toContain('Move…')

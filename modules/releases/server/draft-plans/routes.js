@@ -1,6 +1,11 @@
 const { fetchDraftPlans, DATA_PREFIX, DEFAULT_CONFIG, KNOWN_PRODUCTS } = require('./fetch');
 const { logAudit } = require('../planning/audit-log');
 const { normalizeDraft } = require('./normalize');
+const {
+  resolveDraftPlanSession,
+  applySessionToMeta,
+  authorizeEditorSave
+} = require('./acl');
 const fs = require('fs');
 const path = require('path');
 
@@ -25,6 +30,7 @@ function emptyEditorEnvelope(planVersion, baseGeneratedAt) {
       planVersion: planVersion || null,
       baseGeneratedAt: baseGeneratedAt || null,
       currentUser: 'Admin',
+      isPlanAdmin: true,
       editorsAllowlist: null,
       frozenEvents: {},
       finalGaFrozen: false,
@@ -502,12 +508,28 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
       if (Array.isArray(stored.audit)) envelope.audit = stored.audit;
     }
 
+    var session = await resolveDraftPlanSession(req, storage);
+    envelope.meta = applySessionToMeta(
+      envelope.meta,
+      session,
+      session.canImpersonate ? envelope.meta.currentUser : null
+    );
+
     res.json({
       draft: draft,
       ceilingsByComponent: draft.ceilingsByComponent || {},
       edits: envelope.edits,
       meta: envelope.meta,
-      audit: envelope.audit
+      audit: envelope.audit,
+      session: {
+        actor: session.actor,
+        email: session.email,
+        uid: session.uid,
+        rosterMatched: session.rosterMatched,
+        isPlanAdmin: session.isPlanAdmin,
+        canImpersonate: session.canImpersonate,
+        demoMode: session.demoMode
+      }
     });
   });
 
@@ -552,17 +574,32 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
       return res.status(400).json({ error: 'audit must be an array' });
     }
 
+    var session = await resolveDraftPlanSession(req, storage);
+    var editorKey = DATA_PREFIX + '/editor/' + product + '/' + version + '.json';
+    var previous = await storage.readFromStorage(editorKey);
+    if (!previous) previous = emptyEditorEnvelope(version, null);
+
+    var draftRaw = await storage.readFromStorage(DATA_PREFIX + '/drafts/' + product + '/' + version + '.json');
+    var draft = draftRaw ? normalizeDraft(draftRaw) : null;
+    if ((!draft || !draft.candidates || draft.candidates.length === 0) && version === '3.6') {
+      draft = loadDemoFixture();
+    }
+
+    var authz = authorizeEditorSave(session, draft, previous, body);
+    if (!authz.ok) {
+      return res.status(authz.status).json({ error: authz.error });
+    }
+
     var payload = {
       edits: body.edits,
-      meta: body.meta,
+      meta: authz.meta,
       audit: Array.isArray(body.audit) ? body.audit.slice(0, 500) : [],
       savedAt: new Date().toISOString()
     };
 
-    var editorKey = DATA_PREFIX + '/editor/' + product + '/' + version + '.json';
     await storage.writeToStorage(editorKey, payload);
 
-    var user = (req.user && (req.user.displayName || req.user.email || req.user.uid)) || 'unknown';
+    var user = session.actor || req.userEmail || 'unknown';
     await logAudit(storage.readFromStorage.bind(storage), storage.writeToStorage.bind(storage), {
       domain: 'draft-plans',
       version: version,
@@ -572,11 +609,23 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
       details: {
         editCount: Object.keys(payload.edits).length,
         auditCount: payload.audit.length,
-        finalGaFrozen: !!(payload.meta && payload.meta.finalGaFrozen)
+        finalGaFrozen: !!(payload.meta && payload.meta.finalGaFrozen),
+        actor: session.actor,
+        isPlanAdmin: !!payload.meta.isPlanAdmin
       }
     });
 
-    res.json({ status: 'saved', savedAt: payload.savedAt });
+    res.json({
+      status: 'saved',
+      savedAt: payload.savedAt,
+      meta: payload.meta,
+      session: {
+        actor: session.actor,
+        email: session.email,
+        isPlanAdmin: session.isPlanAdmin,
+        canImpersonate: session.canImpersonate
+      }
+    });
   });
 
   // ─── Parameterized routes ──────────────────────────────────────────

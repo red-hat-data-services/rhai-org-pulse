@@ -30,6 +30,7 @@ var {
   assignees,
   counts,
   admin,
+  session,
   finalFrozen,
   eventFrozen,
   loadCycles,
@@ -210,7 +211,10 @@ onMounted(async function() {
       </div>
       <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
         <span v-for="bit in summaryBits" :key="bit.label">{{ bit.label }}</span>
-        <label class="flex items-center gap-1">
+        <label
+          v-if="session && session.canImpersonate"
+          class="flex items-center gap-1"
+        >
           Acting as
           <select
             class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 text-xs"
@@ -220,7 +224,22 @@ onMounted(async function() {
             <option :value="ADMIN">{{ ADMIN }}</option>
             <option v-for="a in assignees" :key="a" :value="a">{{ a }}</option>
           </select>
+          <span class="text-[10px] uppercase tracking-wide text-amber-600 dark:text-amber-400">demo</span>
         </label>
+        <span
+          v-else
+          class="flex items-center gap-1"
+          :title="session && session.email ? session.email : ''"
+        >
+          Signed in as
+          <strong class="text-gray-700 dark:text-gray-200 font-semibold">{{
+            (editor.meta && editor.meta.currentUser) || (session && session.actor) || '—'
+          }}</strong>
+          <span
+            v-if="admin"
+            class="text-[10px] uppercase tracking-wide text-sky-600 dark:text-sky-400"
+          >plan admin</span>
+        </span>
         <button
           type="button"
           class="px-3 py-1 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
