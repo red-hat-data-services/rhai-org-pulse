@@ -1,19 +1,12 @@
 <script setup>
 import { computed, onMounted, onBeforeUnmount } from 'vue'
-import { PLACEMENTS } from '../utils/draft-plan-model.js'
 
 var props = defineProps({
   feature: { type: Object, default: null },
   jiraBaseUrl: { type: String, default: 'https://issues.redhat.com/browse' }
 })
 
-var emit = defineEmits([
-  'close',
-  'move',
-  'descope',
-  'undescope',
-  'approve'
-])
+var emit = defineEmits(['close'])
 
 var open = computed(function() {
   return props.feature !== null
@@ -29,12 +22,6 @@ onMounted(function() {
 onBeforeUnmount(function() {
   window.removeEventListener('keydown', onKey)
 })
-
-function onMoveChange(event) {
-  var placement = event.target.value
-  if (!placement || !props.feature) return
-  emit('move', props.feature.key, placement)
-}
 </script>
 
 <template>
@@ -57,15 +44,13 @@ function onMoveChange(event) {
       >
         <div class="px-4 pt-4 pb-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 shrink-0">
           <div class="flex items-start gap-2">
-            <span class="inline-flex items-center gap-1 shrink-0 mt-0.5">
-              <a
-                :href="jiraBaseUrl + '/' + feature.key"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="font-mono text-xs font-bold text-primary-600 dark:text-blue-400 hover:underline"
-                @click.stop
-              >{{ feature.key }}</a>
-            </span>
+            <a
+              :href="jiraBaseUrl + '/' + feature.key"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-mono text-xs font-bold text-primary-600 dark:text-blue-400 hover:underline shrink-0 mt-0.5"
+              @click.stop
+            >{{ feature.key }}</a>
             <p class="flex-1 text-sm font-semibold text-gray-900 dark:text-gray-100 leading-snug">
               {{ feature.summary || '—' }}
             </p>
@@ -98,9 +83,9 @@ function onMoveChange(event) {
               class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"
             >Frozen</span>
             <span
-              v-if="!feature.editable"
-              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
-            >Read-only</span>
+              v-if="feature.ready"
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
+            >{{ feature.ready }}</span>
           </div>
         </div>
 
@@ -109,80 +94,55 @@ function onMoveChange(event) {
             <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">
               Placement
             </p>
-            <dl class="grid grid-cols-[7rem_1fr] gap-x-3 gap-y-2 text-xs">
+            <dl class="grid grid-cols-[7.5rem_1fr] gap-x-3 gap-y-2 text-xs">
               <dt class="text-gray-400 dark:text-gray-500">Base</dt>
               <dd class="text-gray-700 dark:text-gray-300">{{ feature.basePlacement }}</dd>
               <dt class="text-gray-400 dark:text-gray-500">Effective</dt>
               <dd class="text-gray-900 dark:text-gray-100 font-semibold">{{ feature.event }}</dd>
+              <dt class="text-gray-400 dark:text-gray-500">Decision</dt>
+              <dd class="text-gray-700 dark:text-gray-300">{{ feature.decision || 'unset (keep)' }}</dd>
+              <dt class="text-gray-400 dark:text-gray-500">Current TV</dt>
+              <dd class="text-gray-700 dark:text-gray-300">{{ feature.currentTV || '—' }}</dd>
+              <dt class="text-gray-400 dark:text-gray-500">Proposed FV</dt>
+              <dd class="font-mono text-gray-700 dark:text-gray-300">{{ feature.proposedFixVersion || '—' }}</dd>
+            </dl>
+          </section>
+
+          <section class="px-4 py-4">
+            <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">
+              Ownership
+            </p>
+            <dl class="grid grid-cols-[7.5rem_1fr] gap-x-3 gap-y-2 text-xs">
               <dt class="text-gray-400 dark:text-gray-500">Product</dt>
               <dd class="text-gray-700 dark:text-gray-300">{{ feature.productFamily || '—' }}</dd>
               <dt class="text-gray-400 dark:text-gray-500">Component</dt>
               <dd class="text-gray-700 dark:text-gray-300">{{ feature.component || '—' }}</dd>
               <dt class="text-gray-400 dark:text-gray-500">Assignee</dt>
               <dd class="text-gray-700 dark:text-gray-300">{{ feature.assignee || '—' }}</dd>
-              <dt class="text-gray-400 dark:text-gray-500">Ready</dt>
-              <dd class="text-gray-700 dark:text-gray-300">{{ feature.ready || '—' }}</dd>
+              <dt class="text-gray-400 dark:text-gray-500">Priority</dt>
+              <dd class="text-gray-700 dark:text-gray-300">{{ feature.priority || '—' }}</dd>
+              <dt class="text-gray-400 dark:text-gray-500">Status</dt>
+              <dd class="text-gray-700 dark:text-gray-300">{{ feature.status || '—' }}</dd>
+            </dl>
+          </section>
+
+          <section class="px-4 py-4">
+            <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">
+              Packer / capacity
+            </p>
+            <dl class="grid grid-cols-[7.5rem_1fr] gap-x-3 gap-y-2 text-xs">
               <dt class="text-gray-400 dark:text-gray-500">Place reason</dt>
               <dd class="text-gray-700 dark:text-gray-300 break-all">{{ feature.placeReason || '—' }}</dd>
               <dt class="text-gray-400 dark:text-gray-500">Capacity src</dt>
               <dd class="text-gray-700 dark:text-gray-300">{{ feature.capacitySource || '—' }}</dd>
-              <dt class="text-gray-400 dark:text-gray-500">Proposed FV</dt>
-              <dd class="font-mono text-gray-700 dark:text-gray-300">{{ feature.proposedFixVersion || '—' }}</dd>
+              <dt class="text-gray-400 dark:text-gray-500">Cycle budget</dt>
+              <dd class="text-gray-700 dark:text-gray-300 tabular-nums">{{ feature.cycleBudget != null ? feature.cycleBudget : '—' }}</dd>
+              <dt class="text-gray-400 dark:text-gray-500">Rank</dt>
+              <dd class="text-gray-700 dark:text-gray-300 tabular-nums">{{ feature.rank != null ? feature.rank : '—' }}</dd>
             </dl>
-          </section>
-
-          <section class="px-4 py-4 space-y-3">
-            <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">
-              Red-pen actions
+            <p class="mt-3 text-[11px] text-gray-400 dark:text-gray-500">
+              Use Move / Descope / Approve in the table row. This panel is details only.
             </p>
-            <p class="text-[11px] text-gray-500 dark:text-gray-400">
-              Keep is implicit — leave placement unchanged. Move / Descope write a decision overlay.
-            </p>
-
-            <label class="block text-xs text-gray-500 dark:text-gray-400">
-              Move to
-              <select
-                class="mt-1 block w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5 text-gray-900 dark:text-gray-100 disabled:opacity-50"
-                :disabled="!feature.editable || feature.decision === 'descope'"
-                :value="feature.decision === 'descope' ? '' : (feature.event === 'Descope' ? '' : feature.event)"
-                @change="onMoveChange"
-              >
-                <option disabled value="">Select placement…</option>
-                <option v-for="p in PLACEMENTS" :key="p" :value="p">{{ p }}</option>
-              </select>
-            </label>
-
-            <div class="flex flex-wrap gap-2">
-              <button
-                v-if="feature.decision !== 'descope'"
-                type="button"
-                class="px-3 py-1.5 text-xs font-medium rounded-md border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
-                :disabled="!feature.editable"
-                @click="emit('descope', feature.key)"
-              >
-                Descope
-              </button>
-              <button
-                v-else
-                type="button"
-                class="px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
-                :disabled="!feature.editable"
-                @click="emit('undescope', feature.key)"
-              >
-                Undo descope
-              </button>
-            </div>
-
-            <label class="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-200">
-              <input
-                type="checkbox"
-                class="rounded border-gray-300 dark:border-gray-600"
-                :checked="feature.approved"
-                :disabled="!feature.editable || feature.decision === 'descope'"
-                @change="emit('approve', feature.key, $event.target.checked)"
-              />
-              Owner approve (commitment)
-            </label>
           </section>
         </div>
       </aside>

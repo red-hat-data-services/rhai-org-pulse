@@ -81,11 +81,13 @@ var headers = [
   { id: 'h-title', label: 'Title' },
   { id: 'h-base', label: 'Base' },
   { id: 'h-place', label: 'Placement' },
+  { id: 'h-move', label: 'Move' },
+  { id: 'h-descope', label: 'Descope' },
+  { id: 'h-approve', label: 'Approve' },
   { id: 'h-product', label: 'Product' },
   { id: 'h-comp', label: 'Component' },
   { id: 'h-assignee', label: 'Assignee' },
   { id: 'h-ready', label: 'Ready' },
-  { id: 'h-approved', label: 'Approved' },
   { id: 'h-frozen', label: 'Frozen' }
 ]
 
@@ -316,7 +318,7 @@ onMounted(async function() {
       v-if="draft && draft.demoMode"
       class="mx-4 mt-3 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-2 text-sm text-amber-800 dark:text-amber-300"
     >
-      Demo fixture. Click a row for Move / Descope / Approve. Freeze controls stay in the toolbar above.
+      Demo fixture. Move / Descope / Approve stay in the table. Click a row for feature details.
     </div>
 
     <div
@@ -359,7 +361,12 @@ onMounted(async function() {
             :feature="row"
             :index="idx + 1"
             :jira-base-url="jiraBaseUrl"
+            :placements="PLACEMENTS"
             @select="onSelectFeature"
+            @move="onMove"
+            @descope="descopeFeature"
+            @undescope="undescopeFeature"
+            @approve="approveFeature"
           />
 
           <tr v-if="!loading && !draft" role="row">
@@ -382,7 +389,7 @@ onMounted(async function() {
     >
       <span v-if="draft.generatedAt">Generated {{ formatTs(draft.generatedAt) }}</span>
       <span v-if="activeCycleMeta && activeCycleMeta.source"> · source: {{ activeCycleMeta.source }}</span>
-      <span> · click a row to edit placement</span>
+      <span> · click a row for details</span>
       <span v-if="editor.audit.length"> · {{ editor.audit.length }} audit entries</span>
     </div>
 
@@ -390,10 +397,6 @@ onMounted(async function() {
       :feature="selectedFeature"
       :jira-base-url="jiraBaseUrl"
       @close="selectedFeatureKey = null"
-      @move="onMove"
-      @descope="descopeFeature"
-      @undescope="undescopeFeature"
-      @approve="approveFeature"
     />
 
     <div

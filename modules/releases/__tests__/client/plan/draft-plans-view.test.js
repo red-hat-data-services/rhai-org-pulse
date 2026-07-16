@@ -108,52 +108,34 @@ describe('DraftPlansView', function() {
     confirmSpy.mockRestore()
   })
 
-  it('loads demo draft with 1-n style cycle header and scannable rows', async function() {
+  it('keeps red-pen controls in the table and details in the drawer', async function() {
     var wrapper = mountView()
     await flushPromises()
 
     expect(wrapper.text()).toContain('RHOAI + RHAII 3.6 Draft Plan')
-    expect(wrapper.text()).toContain('Release cycle')
-    expect(wrapper.text()).toContain('All (RHOAI + RHAII)')
     expect(wrapper.text()).toContain('RHAISTRAT-1')
-    expect(wrapper.text()).toContain('RHAISTRAT-2')
-    expect(wrapper.text()).not.toContain('Move to')
-    wrapper.unmount()
-  })
-
-  it('opens drawer on row click with red-pen actions', async function() {
-    var wrapper = mountView()
-    await flushPromises()
-
-    var row = wrapper.findAll('tbody tr').find(function(tr) {
-      return tr.text().includes('RHAISTRAT-2')
-    })
-    expect(row).toBeTruthy()
-    await row.trigger('click')
-    await flushPromises()
-
-    expect(wrapper.text()).toContain('Red-pen actions')
-    expect(wrapper.text()).toContain('Move to')
     expect(wrapper.text()).toContain('Descope')
-    expect(wrapper.text()).toContain('Owner approve')
+    expect(wrapper.text()).toContain('Move…')
+
+    var titleCell = wrapper.findAll('td').find(function(td) {
+      return td.text().includes('Below cut feature')
+    })
+    await titleCell.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Packer / capacity')
+    expect(wrapper.text()).toContain('Place reason')
+    expect(wrapper.text()).not.toContain('Red-pen actions')
+    expect(wrapper.text()).not.toContain('Owner approve')
     wrapper.unmount()
   })
 
-  it('shows capacity dialog when drawer move exceeds ceiling', async function() {
+  it('shows capacity dialog on over-ceiling Move from the table', async function() {
     var wrapper = mountView()
     await flushPromises()
 
-    var row = wrapper.findAll('tbody tr').find(function(tr) {
-      return tr.text().includes('RHAISTRAT-2')
-    })
-    await row.trigger('click')
-    await flushPromises()
-
-    expect(wrapper.text()).toContain('Red-pen actions')
-    var moveSelect = wrapper.findAll('select').find(function(s) {
-      return s.html().indexOf('Select placement') !== -1
-    })
-    expect(moveSelect).toBeTruthy()
+    var moveSelect = wrapper.find('select[aria-label="Move RHAISTRAT-2"]')
+    expect(moveSelect.exists()).toBe(true)
     await moveSelect.setValue('EA1')
     await flushPromises()
 
