@@ -125,6 +125,13 @@ module.exports = function registerComponentOnboardingRoutes(router, context) {
    *   get:
    *     summary: Get all component onboarding data
    *     tags: [AI Impact - Component Onboarding]
+   *     parameters:
+   *       - in: query
+   *         name: version
+   *         required: false
+   *         schema:
+   *           type: string
+   *         description: Filter results by targetVersion (exact match).
    *     responses:
    *       200:
    *         description: All component onboarding data with latest projections

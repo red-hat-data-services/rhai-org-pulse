@@ -26,6 +26,11 @@ const ONBOARDING_STEP_KEYS = [
 function deriveCompletionStatus(status, completionStatus, context) {
   const normalized = typeof status === 'string' ? status.trim().toLowerCase() : '';
 
+  // Never downgrade an explicit completed state during read-time projection.
+  if (completionStatus === 'completed') {
+    return 'completed';
+  }
+
   if (normalized === 'new') {
     return 'in_queue';
   }
@@ -202,6 +207,11 @@ function validateComponentOnboarding(body) {
     errors.push('contextPath must be a string');
   }
 
+  // statusCategory: optional string or null (e.g. "Done")
+  if (body.statusCategory !== undefined && body.statusCategory !== null && typeof body.statusCategory !== 'string') {
+    errors.push('statusCategory must be a string or null');
+  }
+
   // targetVersion: optional string (Jira customfield_10855, e.g. "rhoai-3.6")
   if (body.targetVersion !== undefined && body.targetVersion !== null && typeof body.targetVersion !== 'string') {
     errors.push('targetVersion must be a string or null');
@@ -224,6 +234,7 @@ function validateComponentOnboarding(body) {
       }),
       productContext: body.productContext,
       targetVersion: body.targetVersion?.trim() || null,
+      statusCategory: body.statusCategory || null,
       syncedAt: body.syncedAt,
       componentName: body.componentName || '',
       repoUrl: body.repoUrl || '',
