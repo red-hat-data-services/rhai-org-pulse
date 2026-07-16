@@ -602,10 +602,10 @@ module.exports = function registerRoutes(router, context) {
 
   /**
    * @openapi
-   * /api/modules/upstream-pulse/orgs/{githubOrg}/strategy:
+   * /api/modules/upstream-pulse/orgs/{githubOrg}:
    *   patch:
    *     tags: [Upstream Pulse]
-   *     summary: Update strategic classification for a GitHub organization
+   *     summary: Update an organization's settings
    *     parameters:
    *       - in: path
    *         name: githubOrg
@@ -614,15 +614,15 @@ module.exports = function registerRoutes(router, context) {
    *           type: string
    *     responses:
    *       200:
-   *         description: Updated strategy classification
+   *         description: Updated organization
    *       403:
    *         description: Not available in demo mode or insufficient permissions
    */
-  router.patch('/orgs/:githubOrg/strategy', requireUpstreamAdmin, requireScope('upstream-pulse:write'), async function(req, res) {
+  router.patch('/orgs/:githubOrg', requireUpstreamAdmin, requireScope('upstream-pulse:write'), async function(req, res) {
     try {
       if (DEMO_MODE) return res.status(403).json({ error: 'Not available in demo mode' });
       var data = await proxyMutatingRequest(
-        '/api/orgs/' + encodeURIComponent(req.params.githubOrg) + '/strategy',
+        '/api/orgs/' + encodeURIComponent(req.params.githubOrg),
         req.body, req, 'PATCH'
       );
       // Invalidate orgs and dashboard cache
@@ -631,6 +631,32 @@ module.exports = function registerRoutes(router, context) {
           responseCache.delete(key);
         }
       }
+      res.json(data);
+    } catch (err) {
+      handleProxyError(res, err);
+    }
+  });
+
+  router.post('/orgs', requireUpstreamAdmin, requireScope('upstream-pulse:write'), async function(req, res) {
+    try {
+      if (DEMO_MODE) return res.status(403).json({ error: 'Not available in demo mode' });
+      var data = await proxyMutatingRequest('/api/orgs', req.body, req);
+      // Invalidate orgs and dashboard cache
+      for (var key of responseCache.keys()) {
+        if (key.startsWith('/api/orgs') || key.startsWith('/api/metrics/dashboard') || key.startsWith('/api/projects')) {
+          responseCache.delete(key);
+        }
+      }
+      res.json(data);
+    } catch (err) {
+      handleProxyError(res, err);
+    }
+  });
+
+  router.get('/org-info', requireUpstreamAdmin, requireScope('upstream-pulse:write'), async function(req, res) {
+    try {
+      if (DEMO_MODE) return res.json({ login: req.query.org, name: req.query.org, type: 'Organization', publicRepos: 0 });
+      var data = await proxyAdminGet('/api/github/org-info', { org: req.query.org }, req);
       res.json(data);
     } catch (err) {
       handleProxyError(res, err);
