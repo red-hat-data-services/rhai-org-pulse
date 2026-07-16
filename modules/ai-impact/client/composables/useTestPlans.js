@@ -55,6 +55,19 @@ async function loadTestPlanDetail(key) {
 
 watch(timeWindow, () => loadTestPlans())
 
+export function _resetForTesting() {
+  testPlans.value = {}
+  testPlanMeta.value = { lastSyncedAt: null, totalTestPlans: 0 }
+  metrics.value = null
+  trendData.value = []
+  breakdown.value = []
+  reviewStatus.value = null
+  testPlanLoading.value = false
+  testPlanError.value = null
+  detailCache.value = {}
+  hasFetched = true
+}
+
 export function useTestPlans(tw) {
   if (tw) {
     timeWindow.value = tw.value || tw

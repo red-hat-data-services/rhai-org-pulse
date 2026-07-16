@@ -69,8 +69,8 @@ defineProps({
       <!-- Total Features -->
       <div class="space-y-1">
         <p class="text-sm text-gray-500 dark:text-gray-400">Total Features</p>
-        <span class="text-3xl font-bold dark:text-gray-100">{{ metrics.windowTotal }}</span>
-        <p class="text-xs text-gray-400 dark:text-gray-500">{{ metrics.totalFeatures }} all time</p>
+        <span class="text-3xl font-bold dark:text-gray-100">{{ metrics.totalFeatures }}</span>
+        <p class="text-xs text-gray-400 dark:text-gray-500">{{ metrics.windowTotal }} this period</p>
       </div>
 
       <!-- Trend Status -->

@@ -226,7 +226,24 @@ module.exports = function registerFeatureRoutes(router, context) {
 
   const VALID_TIME_WINDOWS = ['week', 'month', '3months'];
 
-  // GET /features — list all features with computed metrics
+  /**
+   * @openapi
+   * /api/modules/ai-impact/features:
+   *   get:
+   *     summary: List all features with computed metrics
+   *     tags: [AI Impact - Features]
+   *     parameters:
+   *       - in: query
+   *         name: timeWindow
+   *         schema:
+   *           type: string
+   *           enum: [week, month, 3months]
+   *           default: month
+   *         description: Time window for metric computation
+   *     responses:
+   *       200:
+   *         description: All features with latest scores and trend metrics
+   */
   router.get('/features', requireScope('ai-impact:read'), async function(req, res) {
     const timeWindow = VALID_TIME_WINDOWS.includes(req.query.timeWindow)
       ? req.query.timeWindow
