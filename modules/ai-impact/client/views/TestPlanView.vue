@@ -14,12 +14,12 @@ const searchQuery = ref('')
 const verdictFilter = ref('all')
 const sortBy = ref('default')
 const chartExpanded = ref(true)
-const timeWindow = ref('month')
 
 const {
   testPlans, testPlanMeta, metrics, trendData, breakdown, reviewStatus,
-  testPlanLoading, testPlanError, loadTestPlans, loadTestPlanDetail
-} = useTestPlans(timeWindow)
+  testPlanLoading, testPlanError, loadTestPlans, loadTestPlanDetail,
+  timeWindow
+} = useTestPlans()
 
 // Load RFE data only for jiraHost (used by detail panel links)
 const rfeTimeWindow = ref('month')

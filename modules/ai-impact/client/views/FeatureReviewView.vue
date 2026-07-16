@@ -18,12 +18,12 @@ const priorityFilter = ref('all')
 const humanReviewFilter = ref('all')
 const sortBy = ref('default')
 const chartExpanded = ref(true)
-const timeWindow = ref('month')
 
 const {
   features, featureMeta, metrics, trendData, breakdown, reviewStatus,
-  featureLoading, featureError, loadFeatures, loadFeatureDetail
-} = useFeatures(timeWindow)
+  featureLoading, featureError, loadFeatures, loadFeatureDetail,
+  timeWindow
+} = useFeatures()
 
 // Load RFE data only for jiraHost (used by detail panel links)
 const rfeTimeWindow = ref('month')
