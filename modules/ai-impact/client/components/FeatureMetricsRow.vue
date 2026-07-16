@@ -1,66 +1,93 @@
 <script setup>
-import { computed } from 'vue'
+import { getTrendClass, formatFrictionChange } from '../utils/format-helpers.js'
 
-const props = defineProps({
-  features: { type: Object, default: () => ({}) }
-})
-
-const featureList = computed(() => Object.values(props.features))
-
-const totalFeatures = computed(() => featureList.value.length)
-
-const approvalRate = computed(() => {
-  if (totalFeatures.value === 0) return 0
-  const approved = featureList.value.filter(f => f.recommendation === 'approve').length
-  return Math.round((approved / totalFeatures.value) * 100)
-})
-
-const avgScore = computed(() => {
-  if (totalFeatures.value === 0) return 0
-  const sum = featureList.value.reduce((acc, f) => acc + (f.scores?.total || 0), 0)
-  return (sum / totalFeatures.value).toFixed(1)
-})
-
-const needsActionCount = computed(() => {
-  return featureList.value.filter(f => f.humanReviewStatus === 'needs-review' || f.humanReviewStatus === 'awaiting-review').length
-})
-
-const signedOffCount = computed(() => {
-  return featureList.value.filter(f => f.humanReviewStatus === 'approved').length
+defineProps({
+  metrics: {
+    type: Object,
+    default: null
+  },
+  reviewStatus: {
+    type: Object,
+    default: null
+  }
 })
 </script>
 
 <template>
-  <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-    <div class="grid gap-6 grid-cols-2 lg:grid-cols-5">
+  <div v-if="metrics" class="p-6 border-b border-gray-200 dark:border-gray-700">
+    <div class="grid gap-6 grid-cols-2 lg:grid-cols-4">
+      <!-- Features Processed via AI -->
+      <div class="space-y-1">
+        <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+          <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+          </svg>
+          Features Processed via AI
+        </p>
+        <div class="flex items-baseline gap-2">
+          <span class="text-3xl font-bold dark:text-gray-100">{{ metrics.windowTotal }}</span>
+          <span class="text-sm flex items-center gap-1" :class="getTrendClass(metrics.trend)">
+            <svg v-if="metrics.trend === 'growing'" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+            <svg v-else-if="metrics.trend === 'declining'" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+            </svg>
+            <svg v-else class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+            </svg>
+            {{ metrics.priorWindowTotal }} prev period
+          </span>
+        </div>
+        <p class="text-xs text-gray-400 dark:text-gray-500">
+          {{ metrics.approvalRate }}% approval rate
+        </p>
+      </div>
+
+      <!-- Needs Attention -->
+      <div class="space-y-1">
+        <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+          <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          Needs Attention
+        </p>
+        <div class="flex items-baseline gap-2">
+          <span class="text-3xl font-bold dark:text-gray-100">{{ metrics.needsAttentionCount }}</span>
+          <span v-if="metrics.priorNeedsAttentionCount != null" class="text-xs text-gray-400 dark:text-gray-500">
+            {{ metrics.priorNeedsAttentionCount }} prev period
+          </span>
+        </div>
+        <p v-if="reviewStatus" class="text-xs text-gray-400 dark:text-gray-500">
+          {{ reviewStatus.awaitingSignoffPct }}% awaiting sign-off
+          <span class="ml-1">{{ formatFrictionChange(reviewStatus.awaitingSignoffChange) }}</span>
+        </p>
+      </div>
+
+      <!-- Total Features -->
       <div class="space-y-1">
         <p class="text-sm text-gray-500 dark:text-gray-400">Total Features</p>
-        <span class="text-3xl font-bold dark:text-gray-100">{{ totalFeatures }}</span>
+        <span class="text-3xl font-bold dark:text-gray-100">{{ metrics.totalFeatures }}</span>
+        <p class="text-xs text-gray-400 dark:text-gray-500">{{ metrics.windowTotal }} this period</p>
       </div>
 
+      <!-- Trend Status -->
       <div class="space-y-1">
-        <p class="text-sm text-gray-500 dark:text-gray-400">Approval Rate</p>
-        <span class="text-3xl font-bold dark:text-gray-100">{{ approvalRate }}%</span>
-      </div>
-
-      <div class="space-y-1">
-        <p class="text-sm text-gray-500 dark:text-gray-400">Avg Score</p>
-        <span class="text-3xl font-bold dark:text-gray-100">{{ avgScore }}</span>
-        <p class="text-xs text-gray-400 dark:text-gray-500">out of 8</p>
-      </div>
-
-      <div class="space-y-1">
-        <p class="text-sm text-gray-500 dark:text-gray-400">Needs Action</p>
-        <span class="text-3xl font-bold" :class="needsActionCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'dark:text-gray-100'">
-          {{ needsActionCount }}
-        </span>
-      </div>
-
-      <div class="space-y-1">
-        <p class="text-sm text-gray-500 dark:text-gray-400">Signed Off</p>
-        <span class="text-3xl font-bold" :class="signedOffCount > 0 ? 'text-green-600 dark:text-green-400' : 'dark:text-gray-100'">
-          {{ signedOffCount }}
-        </span>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Trend Status</p>
+        <div class="flex items-center gap-2">
+          <svg v-if="metrics.trend === 'growing'" class="h-5 w-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          </svg>
+          <svg v-else-if="metrics.trend === 'declining'" class="h-5 w-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+          </svg>
+          <svg v-else class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+          </svg>
+          <span class="text-lg font-semibold capitalize dark:text-gray-100">{{ metrics.trend }}</span>
+        </div>
       </div>
     </div>
   </div>

@@ -1,79 +1,93 @@
 <script setup>
-import { computed } from 'vue'
+import { getTrendClass, formatFrictionChange } from '../utils/format-helpers.js'
 
-const props = defineProps({
-  testPlans: { type: Object, default: () => ({}) }
-})
-
-const planList = computed(() => Object.values(props.testPlans))
-
-const stats = computed(() => {
-  let sum = 0, ready = 0, revise = 0, rework = 0, autoRevised = 0
-  for (const p of planList.value) {
-    sum += (p.score || 0)
-    if (p.verdict === 'Ready') ready++
-    else if (p.verdict === 'Revise') revise++
-    else if (p.verdict === 'Rework') rework++
-    if (p.autoRevised) autoRevised++
-  }
-  const total = planList.value.length
-  return {
-    total,
-    avg: total ? (sum / total).toFixed(1) : 0,
-    passRate: total ? Math.round((ready / total) * 100) : 0,
-    ready,
-    revise,
-    rework,
-    autoRevised
+defineProps({
+  metrics: {
+    type: Object,
+    default: null
+  },
+  reviewStatus: {
+    type: Object,
+    default: null
   }
 })
 </script>
 
 <template>
-  <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-    <div class="grid gap-6 grid-cols-2 lg:grid-cols-7">
+  <div v-if="metrics" class="p-6 border-b border-gray-200 dark:border-gray-700">
+    <div class="grid gap-6 grid-cols-2 lg:grid-cols-4">
+      <!-- Plans Processed -->
+      <div class="space-y-1">
+        <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+          <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+          </svg>
+          Plans Processed via AI
+        </p>
+        <div class="flex items-baseline gap-2">
+          <span class="text-3xl font-bold dark:text-gray-100">{{ metrics.windowTotal }}</span>
+          <span class="text-sm flex items-center gap-1" :class="getTrendClass(metrics.trend)">
+            <svg v-if="metrics.trend === 'growing'" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+            <svg v-else-if="metrics.trend === 'declining'" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+            </svg>
+            <svg v-else class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+            </svg>
+            {{ metrics.priorWindowTotal }} prev period
+          </span>
+        </div>
+        <p class="text-xs text-gray-400 dark:text-gray-500">
+          {{ metrics.passRate }}% pass rate
+        </p>
+      </div>
+
+      <!-- Auto-Revised -->
+      <div class="space-y-1">
+        <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+          <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+          </svg>
+          Auto-Revised
+        </p>
+        <div class="flex items-baseline gap-2">
+          <span class="text-3xl font-bold dark:text-gray-100">{{ metrics.autoRevisedCount }}</span>
+          <span v-if="metrics.priorAutoRevisedCount != null" class="text-xs text-gray-400 dark:text-gray-500">
+            {{ metrics.priorAutoRevisedCount }} prev period
+          </span>
+        </div>
+        <p v-if="reviewStatus" class="text-xs text-gray-400 dark:text-gray-500">
+          {{ reviewStatus.awaitingSignoffPct }}% awaiting sign-off
+          <span class="ml-1">{{ formatFrictionChange(reviewStatus.awaitingSignoffChange) }}</span>
+        </p>
+      </div>
+
+      <!-- Total Plans -->
       <div class="space-y-1">
         <p class="text-sm text-gray-500 dark:text-gray-400">Total Plans</p>
-        <span class="text-3xl font-bold dark:text-gray-100">{{ stats.total }}</span>
+        <span class="text-3xl font-bold dark:text-gray-100">{{ metrics.totalPlans }}</span>
+        <p class="text-xs text-gray-400 dark:text-gray-500">{{ metrics.windowTotal }} this period</p>
       </div>
 
+      <!-- Trend Status -->
       <div class="space-y-1">
-        <p class="text-sm text-gray-500 dark:text-gray-400">Pass Rate</p>
-        <span class="text-3xl font-bold dark:text-gray-100">{{ stats.passRate }}%</span>
-      </div>
-
-      <div class="space-y-1">
-        <p class="text-sm text-gray-500 dark:text-gray-400">Avg Score</p>
-        <span class="text-3xl font-bold dark:text-gray-100">{{ stats.avg }}</span>
-        <p class="text-xs text-gray-400 dark:text-gray-500">out of 10</p>
-      </div>
-
-      <div class="space-y-1">
-        <p class="text-sm text-gray-500 dark:text-gray-400">Ready</p>
-        <span class="text-3xl font-bold" :class="stats.ready > 0 ? 'text-green-600 dark:text-green-400' : 'dark:text-gray-100'">
-          {{ stats.ready }}
-        </span>
-      </div>
-
-      <div class="space-y-1">
-        <p class="text-sm text-gray-500 dark:text-gray-400">Revise</p>
-        <span class="text-3xl font-bold" :class="stats.revise > 0 ? 'text-amber-600 dark:text-amber-400' : 'dark:text-gray-100'">
-          {{ stats.revise }}
-        </span>
-      </div>
-
-      <div class="space-y-1">
-        <p class="text-sm text-gray-500 dark:text-gray-400">Rework</p>
-        <span class="text-3xl font-bold" :class="stats.rework > 0 ? 'text-red-600 dark:text-red-400' : 'dark:text-gray-100'">
-          {{ stats.rework }}
-        </span>
-      </div>
-
-      <div class="space-y-1">
-        <p class="text-sm text-gray-500 dark:text-gray-400">Auto-revised</p>
-        <span class="text-3xl font-bold" :class="stats.autoRevised > 0 ? 'text-blue-600 dark:text-blue-400' : 'dark:text-gray-100'">
-          {{ stats.autoRevised }}
-        </span>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Trend Status</p>
+        <div class="flex items-center gap-2">
+          <svg v-if="metrics.trend === 'growing'" class="h-5 w-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          </svg>
+          <svg v-else-if="metrics.trend === 'declining'" class="h-5 w-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+          </svg>
+          <svg v-else class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+          </svg>
+          <span class="text-lg font-semibold capitalize dark:text-gray-100">{{ metrics.trend }}</span>
+        </div>
       </div>
     </div>
   </div>

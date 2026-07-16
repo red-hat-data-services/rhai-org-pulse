@@ -8,6 +8,8 @@ const {
   countHistoryEntries
 } = require('./storage');
 const { syncTestPlansFromJira, acquireLock, releaseLock } = require('./jira-sync');
+const { computeTestPlanMetrics } = require('./metrics');
+const { getConfig } = require('../config');
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 const jsonLimit = express.json({ limit: '10mb' });
@@ -218,19 +220,44 @@ module.exports = function registerTestPlanRoutes(router, context) {
     res.json({ status: 'cleared' });
   });
 
+  const VALID_TIME_WINDOWS = ['week', 'month', '3months'];
+
   /**
    * @openapi
    * /api/modules/ai-impact/test-plans:
    *   get:
-   *     summary: List all test plans (slim projection)
+   *     summary: List all test plans with computed metrics
    *     tags: [AI Impact - Test Plans]
+   *     parameters:
+   *       - in: query
+   *         name: timeWindow
+   *         schema:
+   *           type: string
+   *           enum: [week, month, 3months]
+   *           default: month
+   *         description: Time window for metric computation
    *     responses:
    *       200:
-   *         description: All test plans with latest scores
+   *         description: All test plans with latest scores and trend metrics
    */
   router.get('/test-plans', requireScope('ai-impact:read'), async function(req, res) {
+    const timeWindow = VALID_TIME_WINDOWS.includes(req.query.timeWindow)
+      ? req.query.timeWindow
+      : 'month';
+
     const data = await readTestPlans(readFromStorage);
-    res.json(getLatestProjection(data));
+    const projection = getLatestProjection(data);
+    const plans = Object.values(projection.testPlans);
+    const config = await getConfig(readFromStorage);
+    const { metrics, trendData, breakdown, reviewStatus } = computeTestPlanMetrics(plans, timeWindow, config);
+
+    res.json({
+      ...projection,
+      metrics,
+      trendData,
+      breakdown,
+      reviewStatus
+    });
   });
 
   // ─── 2. Parameterized routes AFTER ───
