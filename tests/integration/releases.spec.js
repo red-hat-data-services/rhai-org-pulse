@@ -343,6 +343,110 @@ test.describe('Releases PM Hub @releases', () => {
 });
 
 /**
+ * Draft Plans (Plan tab)
+ *
+ * Verify the Draft Plans red-pen view loads under Plan (tab + deep link),
+ * shows the release-cycle chrome and candidate table (demo fixture), and that
+ * the cycles / editor APIs respond. Skips freeze/approve matrix coverage.
+ */
+test.describe('Releases Draft Plans @releases', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('should show Draft Plans tab under Plan and load draft table', async ({ page }) => {
+    await page.goto('/#/releases/plan');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const draftPlansTab = page.locator('button', { hasText: 'Draft Plans' });
+    await expect(draftPlansTab).toBeVisible();
+
+    await draftPlansTab.click();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.getByText('Release cycle', { exact: true }).first()).toBeVisible();
+    await expect(page.locator('h2', { hasText: /Draft Plan/ })).toBeVisible();
+
+    const table = page.locator('table[role="table"]');
+    await expect(table).toBeVisible();
+
+    const dataRows = page.locator('tbody tr[role="row"]');
+    await expect(dataRows.first()).toBeVisible({ timeout: 15000 });
+    expect(await dataRows.count()).toBeGreaterThan(0);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('Draft Plans deep link loads with candidates', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=draft-plans');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.getByText('Release cycle', { exact: true }).first()).toBeVisible();
+    await expect(page.locator('h2', { hasText: /Draft Plan/ })).toBeVisible();
+
+    const keyHeader = page.locator('thead th', { hasText: 'Key' });
+    await expect(keyHeader.first()).toBeVisible();
+
+    const dataRows = page.locator('tbody tr[role="row"]');
+    await expect(dataRows.first()).toBeVisible({ timeout: 15000 });
+    expect(await dataRows.count()).toBeGreaterThan(0);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('clicking a Draft Plans row opens the feature detail drawer', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=draft-plans');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const dataRows = page.locator('tbody tr[role="row"]');
+    await expect(dataRows.first()).toBeVisible({ timeout: 15000 });
+
+    // Click title cell (opens drawer; avoids Jira key link navigation)
+    await dataRows.first().locator('td').nth(2).click();
+    await page.waitForTimeout(500);
+
+    const drawer = page.locator('[role="complementary"][aria-label="Draft plan feature detail"]');
+    await expect(drawer).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('draft-plans cycles and editor APIs return demo candidates', async ({ request }) => {
+    const cyclesRes = await request.get('/api/modules/releases/draft-plans/cycles?product=RHOAI');
+    if (cyclesRes.status() === 403) {
+      test.skip();
+      return;
+    }
+    expect(cyclesRes.ok()).toBe(true);
+    const cyclesBody = await cyclesRes.json();
+    expect(cyclesBody).toHaveProperty('product', 'RHOAI');
+    expect(cyclesBody).toHaveProperty('cycles');
+    expect(Array.isArray(cyclesBody.cycles)).toBe(true);
+    expect(cyclesBody.cycles.length).toBeGreaterThan(0);
+
+    const editorRes = await request.get('/api/modules/releases/draft-plans/editor/3.6?product=RHOAI');
+    if (editorRes.status() === 403) {
+      test.skip();
+      return;
+    }
+    expect(editorRes.ok()).toBe(true);
+    const editorBody = await editorRes.json();
+    expect(editorBody).toHaveProperty('draft');
+    expect(editorBody.draft).toHaveProperty('candidates');
+    expect(Array.isArray(editorBody.draft.candidates)).toBe(true);
+    expect(editorBody.draft.candidates.length).toBeGreaterThan(0);
+  });
+});
+
+/**
  * Unified Feature Store — AI Review endpoints
  *
  * Verify that the releases execution store serves feature data with aiReview
