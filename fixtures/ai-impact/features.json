@@ -1,5 +1,5 @@
 {
-  "lastSyncedAt": "2026-04-20T06:00:00Z",
+  "lastSyncedAt": "2026-07-15T00:00:00Z",
   "totalFeatures": 12,
   "features": {
     "RHAISTRAT-1168": {
@@ -13,23 +13,47 @@
         "recommendation": "approve",
         "needsAttention": false,
         "humanReviewStatus": "approved",
-        "scores": { "feasibility": 2, "testability": 1, "scope": 2, "architecture": 2, "total": 7 },
-        "reviewers": { "feasibility": "approve", "testability": "revise", "scope": "approve", "architecture": "approve" },
-        "components": ["Platform Core"],
-        "labels": ["strat-creator-auto-created", "strat-creator-rubric-pass", "tech-reviewed", "strat-creator-human-sign-off"],
-        "runId": "20260419-013035",
-        "runTimestamp": "2026-04-19T01:30:35Z",
-        "reviewedAt": "2026-04-19T01:30:35Z",
+        "scores": {
+          "feasibility": 2,
+          "testability": 1,
+          "scope": 2,
+          "architecture": 2,
+          "total": 7
+        },
+        "reviewers": {
+          "feasibility": "approve",
+          "testability": "revise",
+          "scope": "approve",
+          "architecture": "approve"
+        },
+        "components": [
+          "Platform Core"
+        ],
+        "labels": [
+          "strat-creator-auto-created",
+          "strat-creator-rubric-pass",
+          "tech-reviewed",
+          "strat-creator-human-sign-off"
+        ],
+        "runId": "20260714-013035",
+        "runTimestamp": "2026-07-14T00:00:00Z",
+        "reviewedAt": "2026-07-14T00:00:00Z",
         "approvedBy": "Alice Chen",
-        "approvedAt": "2026-04-20T03:00:00Z"
+        "approvedAt": "2026-07-15T00:00:00Z"
       },
       "history": [
         {
-          "scores": { "feasibility": 1, "testability": 1, "scope": 2, "architecture": 1, "total": 5 },
+          "scores": {
+            "feasibility": 1,
+            "testability": 1,
+            "scope": 2,
+            "architecture": 1,
+            "total": 5
+          },
           "recommendation": "revise",
           "needsAttention": true,
           "humanReviewStatus": "awaiting-review",
-          "reviewedAt": "2026-04-12T01:30:00Z"
+          "reviewedAt": "2026-07-07T00:00:00Z"
         }
       ]
     },
@@ -44,13 +68,30 @@
         "recommendation": "approve",
         "needsAttention": false,
         "humanReviewStatus": "awaiting-review",
-        "scores": { "feasibility": 2, "testability": 2, "scope": 2, "architecture": 2, "total": 8 },
-        "reviewers": { "feasibility": "approve", "testability": "approve", "scope": "approve", "architecture": "approve" },
-        "components": ["Platform Core"],
-        "labels": ["strat-creator-auto-created", "strat-creator-rubric-pass", "tech-reviewed"],
-        "runId": "20260419-013035",
-        "runTimestamp": "2026-04-19T01:30:35Z",
-        "reviewedAt": "2026-04-19T01:30:35Z"
+        "scores": {
+          "feasibility": 2,
+          "testability": 2,
+          "scope": 2,
+          "architecture": 2,
+          "total": 8
+        },
+        "reviewers": {
+          "feasibility": "approve",
+          "testability": "approve",
+          "scope": "approve",
+          "architecture": "approve"
+        },
+        "components": [
+          "Platform Core"
+        ],
+        "labels": [
+          "strat-creator-auto-created",
+          "strat-creator-rubric-pass",
+          "tech-reviewed"
+        ],
+        "runId": "20260709-013035",
+        "runTimestamp": "2026-07-09T00:00:00Z",
+        "reviewedAt": "2026-07-09T00:00:00Z"
       },
       "history": []
     },
@@ -65,21 +106,43 @@
         "recommendation": "revise",
         "needsAttention": true,
         "humanReviewStatus": "needs-review",
-        "scores": { "feasibility": 1, "testability": 1, "scope": 1, "architecture": 2, "total": 5 },
-        "reviewers": { "feasibility": "revise", "testability": "revise", "scope": "revise", "architecture": "approve" },
-        "components": ["ML Models"],
-        "labels": ["strat-creator-auto-created", "strat-creator-needs-attention"],
-        "runId": "20260419-013035",
-        "runTimestamp": "2026-04-19T01:30:35Z",
-        "reviewedAt": "2026-04-19T01:30:35Z"
+        "scores": {
+          "feasibility": 1,
+          "testability": 1,
+          "scope": 1,
+          "architecture": 2,
+          "total": 5
+        },
+        "reviewers": {
+          "feasibility": "revise",
+          "testability": "revise",
+          "scope": "revise",
+          "architecture": "approve"
+        },
+        "components": [
+          "ML Models"
+        ],
+        "labels": [
+          "strat-creator-auto-created",
+          "strat-creator-needs-attention"
+        ],
+        "runId": "20260704-013035",
+        "runTimestamp": "2026-07-04T00:00:00Z",
+        "reviewedAt": "2026-07-04T00:00:00Z"
       },
       "history": [
         {
-          "scores": { "feasibility": 0, "testability": 1, "scope": 1, "architecture": 1, "total": 3 },
+          "scores": {
+            "feasibility": 0,
+            "testability": 1,
+            "scope": 1,
+            "architecture": 1,
+            "total": 3
+          },
           "recommendation": "reject",
           "needsAttention": true,
           "humanReviewStatus": "awaiting-review",
-          "reviewedAt": "2026-04-12T01:30:00Z"
+          "reviewedAt": "2026-06-27T00:00:00Z"
         }
       ]
     },
@@ -94,13 +157,29 @@
         "recommendation": "approve",
         "needsAttention": false,
         "humanReviewStatus": "awaiting-review",
-        "scores": { "feasibility": 2, "testability": 2, "scope": 1, "architecture": 2, "total": 7 },
-        "reviewers": { "feasibility": "approve", "testability": "approve", "scope": "revise", "architecture": "approve" },
-        "components": ["ML Models"],
-        "labels": ["strat-creator-auto-created", "strat-creator-rubric-pass"],
-        "runId": "20260419-013035",
-        "runTimestamp": "2026-04-19T01:30:35Z",
-        "reviewedAt": "2026-04-19T01:30:35Z"
+        "scores": {
+          "feasibility": 2,
+          "testability": 2,
+          "scope": 1,
+          "architecture": 2,
+          "total": 7
+        },
+        "reviewers": {
+          "feasibility": "approve",
+          "testability": "approve",
+          "scope": "revise",
+          "architecture": "approve"
+        },
+        "components": [
+          "ML Models"
+        ],
+        "labels": [
+          "strat-creator-auto-created",
+          "strat-creator-rubric-pass"
+        ],
+        "runId": "20260629-013035",
+        "runTimestamp": "2026-06-29T00:00:00Z",
+        "reviewedAt": "2026-06-29T00:00:00Z"
       },
       "history": []
     },
@@ -115,13 +194,29 @@
         "recommendation": "reject",
         "needsAttention": true,
         "humanReviewStatus": "awaiting-review",
-        "scores": { "feasibility": 0, "testability": 1, "scope": 0, "architecture": 1, "total": 2 },
-        "reviewers": { "feasibility": "reject", "testability": "revise", "scope": "reject", "architecture": "revise" },
-        "components": ["ML Models"],
-        "labels": ["strat-creator-auto-created", "strat-creator-rubric-fail"],
-        "runId": "20260419-013035",
-        "runTimestamp": "2026-04-19T01:30:35Z",
-        "reviewedAt": "2026-04-19T01:30:35Z"
+        "scores": {
+          "feasibility": 0,
+          "testability": 1,
+          "scope": 0,
+          "architecture": 1,
+          "total": 2
+        },
+        "reviewers": {
+          "feasibility": "reject",
+          "testability": "revise",
+          "scope": "reject",
+          "architecture": "revise"
+        },
+        "components": [
+          "ML Models"
+        ],
+        "labels": [
+          "strat-creator-auto-created",
+          "strat-creator-rubric-fail"
+        ],
+        "runId": "20260624-013035",
+        "runTimestamp": "2026-06-24T00:00:00Z",
+        "reviewedAt": "2026-06-24T00:00:00Z"
       },
       "history": []
     },
@@ -136,15 +231,33 @@
         "recommendation": "approve",
         "needsAttention": false,
         "humanReviewStatus": "approved",
-        "scores": { "feasibility": 2, "testability": 2, "scope": 2, "architecture": 2, "total": 8 },
-        "reviewers": { "feasibility": "approve", "testability": "approve", "scope": "approve", "architecture": "approve" },
-        "components": ["Platform Dashboard"],
-        "labels": ["strat-creator-auto-created", "strat-creator-rubric-pass", "tech-reviewed", "strat-creator-human-sign-off"],
-        "runId": "20260418-060000",
-        "runTimestamp": "2026-04-18T06:00:00Z",
-        "reviewedAt": "2026-04-18T06:00:00Z",
+        "scores": {
+          "feasibility": 2,
+          "testability": 2,
+          "scope": 2,
+          "architecture": 2,
+          "total": 8
+        },
+        "reviewers": {
+          "feasibility": "approve",
+          "testability": "approve",
+          "scope": "approve",
+          "architecture": "approve"
+        },
+        "components": [
+          "Platform Dashboard"
+        ],
+        "labels": [
+          "strat-creator-auto-created",
+          "strat-creator-rubric-pass",
+          "tech-reviewed",
+          "strat-creator-human-sign-off"
+        ],
+        "runId": "20260619-013035",
+        "runTimestamp": "2026-06-19T00:00:00Z",
+        "reviewedAt": "2026-06-19T00:00:00Z",
         "approvedBy": "Bob Smith",
-        "approvedAt": "2026-04-19T10:00:00Z"
+        "approvedAt": "2026-06-20T00:00:00Z"
       },
       "history": []
     },
@@ -159,13 +272,28 @@
         "recommendation": "revise",
         "needsAttention": false,
         "humanReviewStatus": "awaiting-review",
-        "scores": { "feasibility": 2, "testability": 1, "scope": 1, "architecture": 1, "total": 5 },
-        "reviewers": { "feasibility": "approve", "testability": "revise", "scope": "revise", "architecture": "revise" },
-        "components": ["Data Pipelines"],
-        "labels": ["strat-creator-auto-created"],
-        "runId": "20260418-060000",
-        "runTimestamp": "2026-04-18T06:00:00Z",
-        "reviewedAt": "2026-04-18T06:00:00Z"
+        "scores": {
+          "feasibility": 2,
+          "testability": 1,
+          "scope": 1,
+          "architecture": 1,
+          "total": 5
+        },
+        "reviewers": {
+          "feasibility": "approve",
+          "testability": "revise",
+          "scope": "revise",
+          "architecture": "revise"
+        },
+        "components": [
+          "Data Pipelines"
+        ],
+        "labels": [
+          "strat-creator-auto-created"
+        ],
+        "runId": "20260614-013035",
+        "runTimestamp": "2026-06-14T00:00:00Z",
+        "reviewedAt": "2026-06-14T00:00:00Z"
       },
       "history": []
     },
@@ -180,13 +308,30 @@
         "recommendation": "approve",
         "needsAttention": false,
         "humanReviewStatus": "awaiting-review",
-        "scores": { "feasibility": 2, "testability": 2, "scope": 2, "architecture": 1, "total": 7 },
-        "reviewers": { "feasibility": "approve", "testability": "approve", "scope": "approve", "architecture": "revise" },
-        "components": ["Platform Core"],
-        "labels": ["strat-creator-auto-created", "strat-creator-rubric-pass", "tech-reviewed"],
-        "runId": "20260418-060000",
-        "runTimestamp": "2026-04-18T06:00:00Z",
-        "reviewedAt": "2026-04-18T06:00:00Z"
+        "scores": {
+          "feasibility": 2,
+          "testability": 2,
+          "scope": 2,
+          "architecture": 1,
+          "total": 7
+        },
+        "reviewers": {
+          "feasibility": "approve",
+          "testability": "approve",
+          "scope": "approve",
+          "architecture": "revise"
+        },
+        "components": [
+          "Platform Core"
+        ],
+        "labels": [
+          "strat-creator-auto-created",
+          "strat-creator-rubric-pass",
+          "tech-reviewed"
+        ],
+        "runId": "20260609-013035",
+        "runTimestamp": "2026-06-09T00:00:00Z",
+        "reviewedAt": "2026-06-09T00:00:00Z"
       },
       "history": []
     },
@@ -201,13 +346,30 @@
         "recommendation": "revise",
         "needsAttention": true,
         "humanReviewStatus": "needs-review",
-        "scores": { "feasibility": 1, "testability": 0, "scope": 2, "architecture": 1, "total": 4 },
-        "reviewers": { "feasibility": "revise", "testability": "reject", "scope": "approve", "architecture": "revise" },
-        "components": ["Platform Core", "Infrastructure Services"],
-        "labels": ["strat-creator-auto-created", "strat-creator-needs-attention"],
-        "runId": "20260418-060000",
-        "runTimestamp": "2026-04-18T06:00:00Z",
-        "reviewedAt": "2026-04-18T06:00:00Z"
+        "scores": {
+          "feasibility": 1,
+          "testability": 0,
+          "scope": 2,
+          "architecture": 1,
+          "total": 4
+        },
+        "reviewers": {
+          "feasibility": "revise",
+          "testability": "reject",
+          "scope": "approve",
+          "architecture": "revise"
+        },
+        "components": [
+          "Platform Core",
+          "Infrastructure Services"
+        ],
+        "labels": [
+          "strat-creator-auto-created",
+          "strat-creator-needs-attention"
+        ],
+        "runId": "20260604-013035",
+        "runTimestamp": "2026-06-04T00:00:00Z",
+        "reviewedAt": "2026-06-04T00:00:00Z"
       },
       "history": []
     },
@@ -222,13 +384,30 @@
         "recommendation": "approve",
         "needsAttention": false,
         "humanReviewStatus": "awaiting-review",
-        "scores": { "feasibility": 2, "testability": 2, "scope": 1, "architecture": 2, "total": 7 },
-        "reviewers": { "feasibility": "approve", "testability": "approve", "scope": "revise", "architecture": "approve" },
-        "components": ["ML Models", "Platform Core"],
-        "labels": ["strat-creator-auto-created", "strat-creator-rubric-pass"],
-        "runId": "20260417-060000",
-        "runTimestamp": "2026-04-17T06:00:00Z",
-        "reviewedAt": "2026-04-17T06:00:00Z"
+        "scores": {
+          "feasibility": 2,
+          "testability": 2,
+          "scope": 1,
+          "architecture": 2,
+          "total": 7
+        },
+        "reviewers": {
+          "feasibility": "approve",
+          "testability": "approve",
+          "scope": "revise",
+          "architecture": "approve"
+        },
+        "components": [
+          "ML Models",
+          "Platform Core"
+        ],
+        "labels": [
+          "strat-creator-auto-created",
+          "strat-creator-rubric-pass"
+        ],
+        "runId": "20260530-013035",
+        "runTimestamp": "2026-05-30T00:00:00Z",
+        "reviewedAt": "2026-05-30T00:00:00Z"
       },
       "history": []
     },
@@ -243,21 +422,43 @@
         "recommendation": "reject",
         "needsAttention": true,
         "humanReviewStatus": "awaiting-review",
-        "scores": { "feasibility": 1, "testability": 0, "scope": 0, "architecture": 0, "total": 1 },
-        "reviewers": { "feasibility": "revise", "testability": "reject", "scope": "reject", "architecture": "reject" },
-        "components": ["Infrastructure Services"],
-        "labels": ["strat-creator-auto-created", "strat-creator-rubric-fail"],
-        "runId": "20260417-060000",
-        "runTimestamp": "2026-04-17T06:00:00Z",
-        "reviewedAt": "2026-04-17T06:00:00Z"
+        "scores": {
+          "feasibility": 1,
+          "testability": 0,
+          "scope": 0,
+          "architecture": 0,
+          "total": 1
+        },
+        "reviewers": {
+          "feasibility": "revise",
+          "testability": "reject",
+          "scope": "reject",
+          "architecture": "reject"
+        },
+        "components": [
+          "Infrastructure Services"
+        ],
+        "labels": [
+          "strat-creator-auto-created",
+          "strat-creator-rubric-fail"
+        ],
+        "runId": "20260525-013035",
+        "runTimestamp": "2026-05-25T00:00:00Z",
+        "reviewedAt": "2026-05-25T00:00:00Z"
       },
       "history": [
         {
-          "scores": { "feasibility": 0, "testability": 0, "scope": 0, "architecture": 0, "total": 0 },
+          "scores": {
+            "feasibility": 0,
+            "testability": 0,
+            "scope": 0,
+            "architecture": 0,
+            "total": 0
+          },
           "recommendation": "reject",
           "needsAttention": true,
           "humanReviewStatus": "awaiting-review",
-          "reviewedAt": "2026-04-10T06:00:00Z"
+          "reviewedAt": "2026-05-18T00:00:00Z"
         }
       ]
     },
@@ -272,15 +473,33 @@
         "recommendation": "approve",
         "needsAttention": false,
         "humanReviewStatus": "approved",
-        "scores": { "feasibility": 2, "testability": 1, "scope": 2, "architecture": 2, "total": 7 },
-        "reviewers": { "feasibility": "approve", "testability": "revise", "scope": "approve", "architecture": "approve" },
-        "components": ["ML Models"],
-        "labels": ["strat-creator-auto-created", "strat-creator-rubric-pass", "tech-reviewed", "strat-creator-human-sign-off"],
-        "runId": "20260419-013035",
-        "runTimestamp": "2026-04-19T01:30:35Z",
-        "reviewedAt": "2026-04-19T01:30:35Z",
+        "scores": {
+          "feasibility": 2,
+          "testability": 1,
+          "scope": 2,
+          "architecture": 2,
+          "total": 7
+        },
+        "reviewers": {
+          "feasibility": "approve",
+          "testability": "revise",
+          "scope": "approve",
+          "architecture": "approve"
+        },
+        "components": [
+          "ML Models"
+        ],
+        "labels": [
+          "strat-creator-auto-created",
+          "strat-creator-rubric-pass",
+          "tech-reviewed",
+          "strat-creator-human-sign-off"
+        ],
+        "runId": "20260519-013035",
+        "runTimestamp": "2026-05-19T00:00:00Z",
+        "reviewedAt": "2026-05-19T00:00:00Z",
         "approvedBy": "Frank Johnson",
-        "approvedAt": "2026-04-20T08:00:00Z"
+        "approvedAt": "2026-05-20T00:00:00Z"
       },
       "history": []
     }

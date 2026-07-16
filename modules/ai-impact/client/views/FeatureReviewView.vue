@@ -17,14 +17,17 @@ const recommendationFilter = ref('all')
 const priorityFilter = ref('all')
 const humanReviewFilter = ref('all')
 const sortBy = ref('default')
+const chartExpanded = ref(true)
+const timeWindow = ref('month')
 
-const { features, featureMeta, featureLoading, featureError, loadFeatures, loadFeatureDetail } = useFeatures()
-
-loadFeatures()
+const {
+  features, featureMeta, metrics, trendData, breakdown, reviewStatus,
+  featureLoading, featureError, loadFeatures, loadFeatureDetail
+} = useFeatures(timeWindow)
 
 // Load RFE data only for jiraHost (used by detail panel links)
-const timeWindow = ref('month')
-const { rfeData } = useAIImpact(timeWindow)
+const rfeTimeWindow = ref('month')
+const { rfeData } = useAIImpact(rfeTimeWindow)
 
 function handleRetry() {
   loadFeatures()
@@ -32,7 +35,6 @@ function handleRetry() {
 
 function handleSelectFeature(feature) {
   if (feature) {
-    // Navigate to the consolidated Feature Traffic Feature page
     crossNavigate('releases', 'feature-detail', {
       key: feature.key,
       fromFeatureReview: '1'
@@ -87,12 +89,20 @@ watch(() => Object.keys(features.value).length, () => {
       :error="featureError"
       :features="features"
       :featureMeta="featureMeta"
+      :metrics="metrics"
+      :trendData="trendData"
+      :breakdown="breakdown"
+      :reviewStatus="reviewStatus"
+      :timeWindow="timeWindow"
+      :chartExpanded="chartExpanded"
       :searchQuery="searchQuery"
       :recommendationFilter="recommendationFilter"
       :priorityFilter="priorityFilter"
       :humanReviewFilter="humanReviewFilter"
       :sortBy="sortBy"
       :selectedFeature="selectedFeature"
+      @update:timeWindow="timeWindow = $event"
+      @update:chartExpanded="chartExpanded = $event"
       @update:searchQuery="searchQuery = $event"
       @update:recommendationFilter="recommendationFilter = $event"
       @update:priorityFilter="priorityFilter = $event"
