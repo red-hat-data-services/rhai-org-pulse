@@ -153,6 +153,30 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
     await storage.writeToStorage(DATA_PREFIX + '/config.json', config);
   }
 
+
+  // Rate limiter for editor saves (per-user). Satisfies CodeQL js/missing-rate-limiting
+  // on authorizeEditorSave while allowing interactive red-pen editing.
+  const EDITOR_SAVE_RATE_MAX = 60;
+  const EDITOR_SAVE_RATE_WINDOW_MS = 60 * 1000;
+  const editorSaveRateCounts = new Map();
+
+  function editorSaveRateLimit(req, res, next) {
+    var email = req.userEmail || 'anonymous';
+    var now = Date.now();
+    var entry = editorSaveRateCounts.get(email);
+    if (!entry || now - entry.windowStart >= EDITOR_SAVE_RATE_WINDOW_MS) {
+      editorSaveRateCounts.set(email, { windowStart: now, count: 1 });
+      return next();
+    }
+    entry.count++;
+    if (entry.count > EDITOR_SAVE_RATE_MAX) {
+      res.set('Retry-After', '60');
+      return res.status(429).json({ error: 'Rate limit exceeded. Try again later.' });
+    }
+    return next();
+  }
+
+
   function validateConfig(input) {
     if (input.gitlabBaseUrl !== undefined) {
       if (typeof input.gitlabBaseUrl !== 'string' || !input.gitlabBaseUrl.startsWith('https://')) {
@@ -552,8 +576,12 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
    *         description: Editor state saved
    *       400:
    *         description: Invalid version format, unknown product, or missing required fields
+   *       403:
+   *         description: Forbidden by draft-plan ACL
+   *       429:
+   *         description: Rate limit exceeded
    */
-  router.put('/editor/:version', requireAuth, requireScope('releases:write'), async function(req, res) {
+  router.put('/editor/:version', requireAuth, requireScope('releases:write'), editorSaveRateLimit, async function(req, res) {
     var version = req.params.version;
     if (!VERSION_RE.test(version)) {
       return res.status(400).json({ error: 'Invalid version format' });

@@ -58,7 +58,9 @@ function makeRes() {
   const res = {
     _status: 200,
     _json: null,
+    _headers: {},
     status(code) { res._status = code; return res },
+    set(key, value) { res._headers[key] = value; return res },
     json(data) { res._json = data; return res }
   }
   return res
@@ -91,10 +93,27 @@ async function callRoute(router, method, path, req = {}) {
   const handlers = routes[path]
   if (!handlers) throw new Error(`No route registered for ${method.toUpperCase()} ${path}`)
 
-  const finalHandler = handlers[handlers.length - 1]
   const res = makeRes()
   const fullReq = { query: {}, params: {}, body: {}, ...req }
-  await finalHandler(fullReq, res)
+  let idx = 0
+
+  async function run() {
+    while (idx < handlers.length) {
+      const handler = handlers[idx++]
+      let advanced = false
+      const maybePromise = handler(fullReq, res, function next(err) {
+        if (err) throw err
+        advanced = true
+      })
+      if (maybePromise && typeof maybePromise.then === 'function') {
+        await maybePromise
+      }
+      // Terminal handler (no next call) ends the chain
+      if (!advanced) break
+    }
+  }
+
+  await run()
   return res
 }
 
@@ -610,6 +629,27 @@ describe('draft-plans routes', () => {
       const stored = storage._store[`${DATA_PREFIX}/editor/RHOAI/3.6.json`]
       expect(stored.meta.currentUser).toBe('abellusci')
       expect(stored.edits['F-2'].placement).toBe('EA2')
+    })
+
+    it('rate-limits excessive editor saves', async () => {
+      const { router } = await setupRouter()
+      const req = {
+        params: { version: '3.6' },
+        query: { product: 'RHOAI' },
+        userEmail: 'rate-limit@test.com',
+        isAdmin: true,
+        body: {
+          edits: {},
+          meta: { planVersion: '3.6', currentUser: 'Admin', frozenEvents: {} },
+          audit: []
+        }
+      }
+      let last = null
+      for (let i = 0; i < 61; i++) {
+        last = await callRoute(router, 'put', '/editor/:version', req)
+      }
+      expect(last._status).toBe(429)
+      expect(last._json.error).toMatch(/Rate limit exceeded/)
     })
   })
 })
