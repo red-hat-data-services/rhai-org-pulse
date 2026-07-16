@@ -59,9 +59,19 @@ function makeRes() {
     _status: 200,
     _json: null,
     _headers: {},
+    headersSent: false,
+    writableEnded: false,
     status(code) { res._status = code; return res },
     set(key, value) { res._headers[key] = value; return res },
-    json(data) { res._json = data; return res }
+    setHeader(key, value) { res._headers[key] = value; return res },
+    getHeader(key) { return res._headers[key] },
+    json(data) { res._json = data; res.headersSent = true; return res },
+    send(data) {
+      res._json = typeof data === 'string' ? { error: data } : data
+      res.headersSent = true
+      res.writableEnded = true
+      return res
+    }
   }
   return res
 }

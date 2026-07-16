@@ -10,7 +10,7 @@ FROM quay.io/org-pulse/org-pulse-core-backend:${CORE_TAG}
 USER 0
 
 # Install AI Eng-specific runtime dependencies not in core
-RUN npm install --no-save @octokit/rest js-yaml
+RUN npm install --no-save @octokit/rest js-yaml express-rate-limit
 
 # Add all non-core modules (core image already has team-tracker)
 COPY modules/ ./modules/

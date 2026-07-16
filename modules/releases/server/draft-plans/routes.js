@@ -6,6 +6,7 @@ const {
   applySessionToMeta,
   authorizeEditorSave
 } = require('./acl');
+const rateLimit = require('express-rate-limit');
 const fs = require('fs');
 const path = require('path');
 
@@ -154,27 +155,20 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
   }
 
 
-  // Rate limiter for editor saves (per-user). Satisfies CodeQL js/missing-rate-limiting
-  // on authorizeEditorSave while allowing interactive red-pen editing.
-  const EDITOR_SAVE_RATE_MAX = 60;
-  const EDITOR_SAVE_RATE_WINDOW_MS = 60 * 1000;
-  const editorSaveRateCounts = new Map();
-
-  function editorSaveRateLimit(req, res, next) {
-    var email = req.userEmail || 'anonymous';
-    var now = Date.now();
-    var entry = editorSaveRateCounts.get(email);
-    if (!entry || now - entry.windowStart >= EDITOR_SAVE_RATE_WINDOW_MS) {
-      editorSaveRateCounts.set(email, { windowStart: now, count: 1 });
-      return next();
+  // express-rate-limit is recognized by CodeQL js/missing-rate-limiting (custom
+  // Map middleware is not). Per-user key keeps interactive red-pen editing usable.
+  const editorSaveRateLimit = rateLimit({
+    windowMs: 60 * 1000,
+    max: 60,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: function(req) {
+      return req.userEmail || 'anonymous';
+    },
+    handler: function(req, res) {
+      res.status(429).json({ error: 'Rate limit exceeded. Try again later.' });
     }
-    entry.count++;
-    if (entry.count > EDITOR_SAVE_RATE_MAX) {
-      res.set('Retry-After', '60');
-      return res.status(429).json({ error: 'Rate limit exceeded. Try again later.' });
-    }
-    return next();
-  }
+  });
 
 
   function validateConfig(input) {
