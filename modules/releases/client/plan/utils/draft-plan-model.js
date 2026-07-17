@@ -347,6 +347,18 @@ function auditEntriesEqual(a, b) {
   )
 }
 
+const AUDIT_DISPLAY_CAP = 80
+
+function formatAuditDetail(entry) {
+  if (!entry) return ''
+  if (entry.detail) return entry.detail
+  var parts = []
+  if (entry.key) parts.push(entry.key)
+  if (entry.from != null) parts.push(entry.from + ' → ' + entry.to)
+  if (entry.action) parts.push(entry.action)
+  return parts.filter(Boolean).join(' · ')
+}
+
 function appendAudit(audit, entry, actor) {
   var next = {
     ts: new Date().toISOString(),
@@ -731,7 +743,9 @@ export {
   capacityCheckForMove,
   componentLoad,
   cycleLoad,
+  AUDIT_DISPLAY_CAP,
   appendAudit,
+  formatAuditDetail,
   viewRow,
   applyMove,
   applyDescope,

@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useDraftPlans } from '../composables/useDraftPlans'
 import DraftPlanRow from '../components/DraftPlanRow.vue'
 import DraftPlanDrawer from '../components/DraftPlanDrawer.vue'
+import DraftPlanAuditPanel from '../components/DraftPlanAuditPanel.vue'
 
 var jiraBaseUrl = 'https://issues.redhat.com/browse'
 
@@ -439,8 +440,78 @@ onMounted(async function() {
       {{ error }}
     </div>
 
-    <!-- Dense table -->
-    <div class="overflow-x-auto">
+    <!-- Table + sticky audit panel (mirrors red-pen panel-grid) -->
+    <div
+      v-if="draft"
+      class="xl:grid xl:grid-cols-[minmax(0,1fr)_260px] xl:gap-3 xl:items-start xl:px-4 xl:pb-3"
+    >
+      <div class="min-w-0">
+        <div class="overflow-x-auto">
+          <table role="table" class="w-full text-xs">
+            <thead role="rowgroup" class="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-200 dark:border-gray-700">
+              <tr role="row">
+                <th
+                  v-for="header in headers"
+                  :key="header.id"
+                  role="columnheader"
+                  scope="col"
+                  class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+                  :class="header.id === 'h-num' ? 'px-2 text-center w-8' : ''"
+                >
+                  {{ header.label }}
+                </th>
+              </tr>
+            </thead>
+            <tbody role="rowgroup">
+              <template v-if="loading && filteredRows.length === 0">
+                <tr v-for="i in 5" :key="'skel-' + i" role="row" class="border-b border-gray-100 dark:border-gray-800">
+                  <td v-for="j in headers.length" :key="j" class="px-3 py-3">
+                    <div class="h-3 rounded animate-pulse bg-gray-200 dark:bg-gray-700" :class="j === 3 ? 'w-24' : 'w-16'" />
+                  </td>
+                </tr>
+              </template>
+
+              <DraftPlanRow
+                v-for="(row, idx) in filteredRows"
+                :key="row.key"
+                :feature="row"
+                :index="idx + 1"
+                :jira-base-url="jiraBaseUrl"
+                :placements="PLACEMENTS"
+                @select="onSelectFeature"
+                @move="onMove"
+                @descope="descopeFeature"
+                @undescope="undescopeFeature"
+                @approve="approveFeature"
+              />
+
+              <tr v-if="!loading && !draft" role="row">
+                <td :colspan="headers.length" class="px-4 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
+                  No draft plan loaded
+                </td>
+              </tr>
+              <tr v-else-if="!loading && filteredRows.length === 0" role="row">
+                <td :colspan="headers.length" class="px-4 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
+                  No features match filters
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div
+          class="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900"
+        >
+          <span v-if="draft.generatedAt">Generated {{ formatTs(draft.generatedAt) }}</span>
+          <span v-if="activeCycleMeta && activeCycleMeta.source"> · source: {{ activeCycleMeta.source }}</span>
+          <span> · click a row for details</span>
+        </div>
+      </div>
+
+      <DraftPlanAuditPanel :audit="editor.audit" />
+    </div>
+
+    <div v-else class="overflow-x-auto">
       <table role="table" class="w-full text-xs">
         <thead role="rowgroup" class="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-200 dark:border-gray-700">
           <tr role="row">
@@ -457,50 +528,13 @@ onMounted(async function() {
           </tr>
         </thead>
         <tbody role="rowgroup">
-          <template v-if="loading && filteredRows.length === 0">
-            <tr v-for="i in 5" :key="'skel-' + i" role="row" class="border-b border-gray-100 dark:border-gray-800">
-              <td v-for="j in headers.length" :key="j" class="px-3 py-3">
-                <div class="h-3 rounded animate-pulse bg-gray-200 dark:bg-gray-700" :class="j === 3 ? 'w-24' : 'w-16'" />
-              </td>
-            </tr>
-          </template>
-
-          <DraftPlanRow
-            v-for="(row, idx) in filteredRows"
-            :key="row.key"
-            :feature="row"
-            :index="idx + 1"
-            :jira-base-url="jiraBaseUrl"
-            :placements="PLACEMENTS"
-            @select="onSelectFeature"
-            @move="onMove"
-            @descope="descopeFeature"
-            @undescope="undescopeFeature"
-            @approve="approveFeature"
-          />
-
-          <tr v-if="!loading && !draft" role="row">
+          <tr role="row">
             <td :colspan="headers.length" class="px-4 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
               No draft plan loaded
             </td>
           </tr>
-          <tr v-else-if="!loading && filteredRows.length === 0" role="row">
-            <td :colspan="headers.length" class="px-4 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
-              No features match filters
-            </td>
-          </tr>
         </tbody>
       </table>
-    </div>
-
-    <div
-      v-if="draft"
-      class="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900"
-    >
-      <span v-if="draft.generatedAt">Generated {{ formatTs(draft.generatedAt) }}</span>
-      <span v-if="activeCycleMeta && activeCycleMeta.source"> · source: {{ activeCycleMeta.source }}</span>
-      <span> · click a row for details</span>
-      <span v-if="editor.audit.length"> · {{ editor.audit.length }} audit entries</span>
     </div>
 
     <DraftPlanDrawer
