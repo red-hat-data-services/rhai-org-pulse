@@ -546,7 +546,9 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
         rosterMatched: session.rosterMatched,
         isPlanAdmin: session.isPlanAdmin,
         canImpersonate: session.canImpersonate,
-        demoMode: session.demoMode
+        demoMode: session.demoMode,
+        planAdminNames: session.planAdminNames || [],
+        planAdminEmails: session.planAdminEmails || []
       }
     });
   });
@@ -645,7 +647,9 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
         actor: session.actor,
         email: session.email,
         isPlanAdmin: session.isPlanAdmin,
-        canImpersonate: session.canImpersonate
+        canImpersonate: session.canImpersonate,
+        planAdminNames: session.planAdminNames || [],
+        planAdminEmails: session.planAdminEmails || []
       }
     });
   });

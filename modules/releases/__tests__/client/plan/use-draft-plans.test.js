@@ -27,6 +27,7 @@ var FIXTURE = {
         basePlacement: 'EA1',
         component: 'KubeRay',
         assignee: 'Alice',
+        pm: 'Pat Manager',
         productFamily: 'RHOAI',
         cycleBudget: 1,
         ready: 'Plan-ready',
@@ -39,6 +40,7 @@ var FIXTURE = {
         basePlacement: 'Below cut',
         component: 'KubeRay',
         assignee: 'Bob',
+        pm: '—',
         productFamily: 'RHOAI',
         cycleBudget: 1,
         ready: 'Not ready',
@@ -60,9 +62,12 @@ var FIXTURE = {
   },
   audit: [],
   session: {
-    actor: 'Admin',
+    // Plan admin is allowlist-only (emarion@redhat.com / trozell@redhat.com);
+    // simulate a real allowlisted actor rather than the legacy "Admin" sentinel.
+    actor: 'Emarion',
     canImpersonate: true,
     isPlanAdmin: true,
+    planAdminNames: ['Emarion', 'Tiffany Rozell'],
     demoMode: true
   }
 }
@@ -120,6 +125,26 @@ describe('useDraftPlans', function() {
     expect(api.viewRows.value).toHaveLength(2)
     expect(api.counts.value.EA1).toBe(1)
     expect(api.dirty.value).toBe(false)
+
+    // Top-level summary bar counts (unaffected by filters, unlike "showing")
+    expect(api.summary.value.candidates).toBe(2)
+    expect(api.summary.value.showing).toBe(2)
+    expect(api.summary.value.ea1).toBe(1)
+    expect(api.summary.value.belowCut).toBe(1)
+    expect(api.summary.value.scheduled).toBe(1)
+  })
+
+  it('summary.showing tracks filters while other stats stay at the full scope', async function() {
+    var api = mountComposable()
+    await api.loadEditor('3.6')
+    await flushPromises()
+
+    api.filterEvent.value = 'Below cut'
+    await nextTick()
+
+    expect(api.summary.value.showing).toBe(1)
+    expect(api.summary.value.candidates).toBe(2)
+    expect(api.summary.value.ea1).toBe(1)
   })
 
   it('loads available cycles and labels both products by default', async function() {
@@ -145,6 +170,84 @@ describe('useDraftPlans', function() {
 
     api.filterEvent.value = ''
     api.filterText.value = 'scheduled'
+    await nextTick()
+    expect(api.filteredRows.value).toHaveLength(1)
+    expect(api.filteredRows.value[0].key).toBe('RHAISTRAT-1')
+  })
+
+  it('Acting-as only changes permissions, never hides rows', async function() {
+    var api = mountComposable()
+    await api.loadEditor('3.6')
+    await flushPromises()
+
+    // Plan admin (default after load) sees the full product-scoped table
+    expect(api.editor.value.meta.currentUser).toBe('Emarion')
+    expect(api.admin.value).toBe(true)
+    expect(api.filteredRows.value).toHaveLength(2)
+    expect(api.filteredRows.value.every(function(r) { return r.editable })).toBe(true)
+    expect(api.actorOptions.value).toEqual(
+      expect.arrayContaining(['Alice', 'Bob', 'Pat Manager'])
+    )
+
+    // Acting as a non-admin assignee: full table still visible, but only
+    // the owned row (assignee match) is editable.
+    api.setCurrentUser('Alice')
+    await nextTick()
+    expect(api.editor.value.meta.currentUser).toBe('Alice')
+    expect(api.admin.value).toBe(false)
+    expect(api.filteredRows.value.map(function(r) { return r.key })).toEqual(
+      ['RHAISTRAT-1', 'RHAISTRAT-2']
+    )
+    expect(api.summary.value.showing).toBe(2)
+    expect(api.summary.value.candidates).toBe(2)
+    expect(api.filteredRows.value.find(function(r) { return r.key === 'RHAISTRAT-1' }).editable).toBe(true)
+    expect(api.filteredRows.value.find(function(r) { return r.key === 'RHAISTRAT-2' }).editable).toBe(false)
+
+    // Acting as a non-admin PM: PM match also owns the row and unlocks editing
+    api.setCurrentUser('Pat Manager')
+    await nextTick()
+    expect(api.filteredRows.value.map(function(r) { return r.key })).toEqual(
+      ['RHAISTRAT-1', 'RHAISTRAT-2']
+    )
+    expect(api.filteredRows.value.find(function(r) { return r.key === 'RHAISTRAT-1' }).editable).toBe(true)
+    expect(api.filteredRows.value.find(function(r) { return r.key === 'RHAISTRAT-2' }).editable).toBe(false)
+
+    // Acting as a different assignee: rows still all visible, ownership flips
+    api.setCurrentUser('Bob')
+    await nextTick()
+    expect(api.filteredRows.value.map(function(r) { return r.key })).toEqual(
+      ['RHAISTRAT-1', 'RHAISTRAT-2']
+    )
+    expect(api.viewRows.value.find(function(r) { return r.key === 'RHAISTRAT-1' }).editable).toBe(false)
+    expect(api.viewRows.value.find(function(r) { return r.key === 'RHAISTRAT-2' }).editable).toBe(true)
+
+    // Back to plan admin → full edit powers restored for every row
+    api.setCurrentUser('Emarion')
+    await nextTick()
+    expect(api.admin.value).toBe(true)
+    expect(api.filteredRows.value).toHaveLength(2)
+    expect(api.filteredRows.value.every(function(r) { return r.editable })).toBe(true)
+  })
+
+  it('filters by scheduled and decision specials (red-pen parity)', async function() {
+    var api = mountComposable()
+    await api.loadEditor('3.6')
+    await flushPromises()
+
+    api.filterEvent.value = '__scheduled__'
+    await nextTick()
+    expect(api.filteredRows.value).toHaveLength(1)
+    expect(api.filteredRows.value[0].key).toBe('RHAISTRAT-1')
+
+    api.filterEvent.value = ''
+    api.filterDecision.value = 'unset'
+    await nextTick()
+    expect(api.filteredRows.value.length).toBeGreaterThan(0)
+
+    api.approveFeature('RHAISTRAT-1', true)
+    await nextTick()
+    api.filterDecision.value = ''
+    api.filterEvent.value = '__approved__'
     await nextTick()
     expect(api.filteredRows.value).toHaveLength(1)
     expect(api.filteredRows.value[0].key).toBe('RHAISTRAT-1')

@@ -33,8 +33,9 @@ function onMoveChange(feature, event) {
 <template>
   <tr
     role="row"
-    class="border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
+    class="border-b border-gray-100 dark:border-gray-800 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
     :class="{
+      'bg-white dark:bg-gray-900': !feature.approved,
       'bg-emerald-50/80 dark:bg-emerald-900/20': feature.approved,
       'opacity-70': feature.frozen
     }"
@@ -69,7 +70,7 @@ function onMoveChange(feature, event) {
     <td class="px-2 py-2.5 whitespace-nowrap" @click.stop>
       <select
         class="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-xs px-1 py-0.5 max-w-[7.5rem] disabled:opacity-50"
-        :disabled="!feature.editable || feature.decision === 'descope'"
+        :disabled="feature.decision === 'descope' ? !feature.canUndescope : !feature.editable"
         :value="feature.decision === 'descope' ? '' : (feature.event === 'Descope' ? '' : feature.event)"
         :aria-label="'Move ' + feature.key"
         @change="onMoveChange(feature, $event)"
@@ -89,10 +90,11 @@ function onMoveChange(feature, event) {
       <button
         v-else
         type="button"
-        class="text-xs text-gray-600 dark:text-gray-300 hover:underline disabled:opacity-40"
-        :disabled="!feature.editable"
+        class="text-xs font-semibold text-primary-600 dark:text-blue-400 hover:underline disabled:opacity-40"
+        :disabled="!feature.canUndescope"
+        :title="feature.canUndescope ? 'Restore to base placement' : 'Locked after Final GA freeze'"
         @click="emit('undescope', feature.key)"
-      >Undo</button>
+      >Undo descope</button>
     </td>
     <td class="px-2 py-2.5 text-center" @click.stop>
       <input
@@ -103,6 +105,12 @@ function onMoveChange(feature, event) {
         @change="emit('approve', feature.key, $event.target.checked)"
       />
     </td>
+    <td
+      class="px-3 py-2.5 max-w-[10rem] text-xs text-gray-700 dark:text-gray-300 cursor-pointer"
+      @click="emit('select', feature)"
+    >
+      <span class="line-clamp-2" :title="feature.bigRock || ''">{{ feature.bigRock || '—' }}</span>
+    </td>
     <td class="px-3 py-2.5 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300 cursor-pointer" @click="emit('select', feature)">
       {{ feature.productFamily || '—' }}
     </td>
@@ -111,6 +119,9 @@ function onMoveChange(feature, event) {
     </td>
     <td class="px-3 py-2.5 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300 cursor-pointer" @click="emit('select', feature)">
       {{ feature.assignee || '—' }}
+    </td>
+    <td class="px-3 py-2.5 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300 cursor-pointer" @click="emit('select', feature)">
+      {{ feature.pm || '—' }}
     </td>
     <td class="px-3 py-2.5 whitespace-nowrap cursor-pointer" @click="emit('select', feature)">
       <span

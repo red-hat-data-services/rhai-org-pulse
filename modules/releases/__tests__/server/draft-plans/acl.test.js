@@ -38,6 +38,18 @@ describe('draft-plans acl', function() {
           uid: 'alice',
           name: 'Alice',
           email: 'alice@redhat.com'
+        },
+        {
+          uid: 'emarion',
+          name: 'Emarion',
+          email: 'emarion@redhat.com',
+          jiraDisplayName: 'Emarion'
+        },
+        {
+          uid: 'trozell',
+          name: 'Tiffany Rozell',
+          email: 'trozell@redhat.com',
+          jiraDisplayName: 'Tiffany Rozell'
         }
       ]
     })
@@ -67,19 +79,32 @@ describe('draft-plans acl', function() {
     expect(session.canImpersonate).toBe(false)
   })
 
-  it('grants plan admin for platform admin or planning-manager', async function() {
-    var admin = await resolveDraftPlanSession(
+  it('grants plan admin only for allowlisted emails (not platform admin)', async function() {
+    var platformOnly = await resolveDraftPlanSession(
       { userEmail: 'alice@redhat.com', isAdmin: true },
       makeStorage()
     )
-    expect(admin.isPlanAdmin).toBe(true)
-    expect(admin.canImpersonate).toBe(false)
+    expect(platformOnly.isPlanAdmin).toBe(false)
 
-    var pm = await resolveDraftPlanSession(
+    var planningMgr = await resolveDraftPlanSession(
       { userEmail: 'alice@redhat.com', isPlanningManager: true },
       makeStorage()
     )
-    expect(pm.isPlanAdmin).toBe(true)
+    expect(planningMgr.isPlanAdmin).toBe(false)
+
+    var allowlisted = await resolveDraftPlanSession(
+      { userEmail: 'emarion@redhat.com', isAdmin: false },
+      makeStorage()
+    )
+    expect(allowlisted.isPlanAdmin).toBe(true)
+    expect(allowlisted.planAdminNames).toContain('Tiffany Rozell')
+    expect(allowlisted.planAdminNames).toContain('Emarion')
+
+    var tiffany = await resolveDraftPlanSession(
+      { userEmail: 'trozell@redhat.com' },
+      makeStorage()
+    )
+    expect(tiffany.isPlanAdmin).toBe(true)
   })
 
   it('allows impersonation only in DEMO_MODE', async function() {
@@ -95,7 +120,8 @@ describe('draft-plans acl', function() {
     var session = {
       actor: 'Adam Bellusci',
       isPlanAdmin: false,
-      canImpersonate: false
+      canImpersonate: false,
+      planAdminNames: ['Emarion', 'Tiffany Rozell']
     }
     var meta = applySessionToMeta(
       { currentUser: 'Admin', isPlanAdmin: true, frozenEvents: {} },
@@ -106,17 +132,37 @@ describe('draft-plans acl', function() {
     expect(meta.isPlanAdmin).toBe(false)
   })
 
+  it('demo impersonation grants admin only for plan-admin names', function() {
+    var session = {
+      actor: 'Adam Bellusci',
+      isPlanAdmin: false,
+      canImpersonate: true,
+      planAdminNames: ['Emarion', 'Tiffany Rozell']
+    }
+    var asTiffany = applySessionToMeta({ frozenEvents: {} }, session, 'Tiffany Rozell')
+    expect(asTiffany.currentUser).toBe('Tiffany Rozell')
+    expect(asTiffany.isPlanAdmin).toBe(true)
+
+    var asOwner = applySessionToMeta({ frozenEvents: {} }, session, 'Adam Bellusci')
+    expect(asOwner.isPlanAdmin).toBe(false)
+
+    var asLegacyAdmin = applySessionToMeta({ frozenEvents: {} }, session, 'Admin')
+    expect(asLegacyAdmin.isPlanAdmin).toBe(false)
+  })
+
   it('rejects non-owner feature edits', function() {
     var session = {
       email: 'abellusci@redhat.com',
       actor: 'Adam Bellusci',
       isPlanAdmin: false,
-      canImpersonate: false
+      canImpersonate: false,
+      planAdminNames: ['Emarion', 'Tiffany Rozell']
     }
     var draft = {
       candidates: [
-        { key: 'F-1', assignee: 'Alice', basePlacement: 'EA1' },
-        { key: 'F-2', assignee: 'Adam Bellusci', basePlacement: 'EA1' }
+        { key: 'F-1', assignee: 'Alice', pm: 'Jenny Yi', basePlacement: 'EA1' },
+        { key: 'F-2', assignee: 'Adam Bellusci', basePlacement: 'EA1' },
+        { key: 'F-3', assignee: 'Bob', pm: 'Adam Bellusci', basePlacement: 'EA1' }
       ]
     }
     var denied = authorizeEditorSave(
@@ -142,6 +188,17 @@ describe('draft-plans acl', function() {
     )
     expect(allowed.ok).toBe(true)
     expect(allowed.meta.currentUser).toBe('Adam Bellusci')
+
+    var asPm = authorizeEditorSave(
+      session,
+      draft,
+      { edits: {}, meta: { frozenEvents: {} } },
+      {
+        edits: { 'F-3': { decision: 'descope', placement: null } },
+        meta: { frozenEvents: {} }
+      }
+    )
+    expect(asPm.ok).toBe(true)
   })
 
   it('rejects freeze changes for non-admins', function() {
@@ -149,7 +206,8 @@ describe('draft-plans acl', function() {
       email: 'abellusci@redhat.com',
       actor: 'Adam Bellusci',
       isPlanAdmin: false,
-      canImpersonate: false
+      canImpersonate: false,
+      planAdminNames: ['Emarion', 'Tiffany Rozell']
     }
     var result = authorizeEditorSave(
       session,

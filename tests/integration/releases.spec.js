@@ -393,6 +393,7 @@ test.describe('Releases Draft Plans @releases', () => {
 
     const keyHeader = page.locator('thead th', { hasText: 'Key' });
     await expect(keyHeader.first()).toBeVisible();
+    await expect(page.locator('thead th', { hasText: 'Big Rock' }).first()).toBeVisible();
 
     const dataRows = page.locator('tbody tr[role="row"]');
     await expect(dataRows.first()).toBeVisible({ timeout: 15000 });
@@ -415,6 +416,9 @@ test.describe('Releases Draft Plans @releases', () => {
 
     const drawer = page.locator('[role="complementary"][aria-label="Draft plan feature detail"]');
     await expect(drawer).toBeVisible();
+    await expect(drawer.getByText('Strategy', { exact: true })).toBeVisible();
+    await expect(drawer.getByText('Big Rock', { exact: true })).toBeVisible();
+    await expect(drawer.getByText('Outcome', { exact: true })).toBeVisible();
 
     expect(page.errors).toHaveLength(0);
   });

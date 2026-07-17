@@ -110,6 +110,34 @@ onBeforeUnmount(function() {
 
           <section class="px-4 py-4">
             <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">
+              Strategy
+            </p>
+            <dl class="grid grid-cols-[7.5rem_1fr] gap-x-3 gap-y-2 text-xs">
+              <dt class="text-gray-400 dark:text-gray-500">Big Rock</dt>
+              <dd class="text-gray-900 dark:text-gray-100 font-medium">
+                {{ feature.bigRock || '—' }}
+                <span
+                  v-if="feature.bigRockPriority != null"
+                  class="ml-1 text-gray-400 dark:text-gray-500 font-normal"
+                >(#{{ feature.bigRockPriority }})</span>
+              </dd>
+              <dt class="text-gray-400 dark:text-gray-500">Outcome</dt>
+              <dd class="text-gray-700 dark:text-gray-300">
+                <a
+                  v-if="feature.outcomeKey"
+                  :href="jiraBaseUrl + '/' + feature.outcomeKey"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="font-mono text-primary-600 dark:text-blue-400 hover:underline"
+                  @click.stop
+                >{{ feature.outcomeKey }}</a>
+                <span v-else>—</span>
+              </dd>
+            </dl>
+          </section>
+
+          <section class="px-4 py-4">
+            <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">
               Ownership
             </p>
             <dl class="grid grid-cols-[7.5rem_1fr] gap-x-3 gap-y-2 text-xs">
@@ -119,6 +147,8 @@ onBeforeUnmount(function() {
               <dd class="text-gray-700 dark:text-gray-300">{{ feature.component || '—' }}</dd>
               <dt class="text-gray-400 dark:text-gray-500">Assignee</dt>
               <dd class="text-gray-700 dark:text-gray-300">{{ feature.assignee || '—' }}</dd>
+              <dt class="text-gray-400 dark:text-gray-500">PM</dt>
+              <dd class="text-gray-700 dark:text-gray-300">{{ feature.pm || '—' }}</dd>
               <dt class="text-gray-400 dark:text-gray-500">Priority</dt>
               <dd class="text-gray-700 dark:text-gray-300">{{ feature.priority || '—' }}</dd>
               <dt class="text-gray-400 dark:text-gray-500">Status</dt>

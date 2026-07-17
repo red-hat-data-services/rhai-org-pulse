@@ -2,10 +2,18 @@
  * Draft Plans identity + ACL.
  * Production: actor is the signed-in user (roster-resolved); no impersonation.
  * DEMO_MODE: keep Acting-as impersonation for local review.
+ * Plan admin (freeze / Final GA / reset): allowlisted emails only.
  */
 
 const roster = require('../../../../shared/server/roster')
 const { DATA_PREFIX } = require('./fetch')
+const {
+  loadAdminEmails,
+  isPlanAdminEmail,
+  isPlanAdminName,
+  resolvePlanAdminNames,
+  namesMatch
+} = require('./plan-admins')
 
 var getAllPeopleImpl = roster.getAllPeople
 
@@ -22,10 +30,6 @@ function normalizeName(value) {
   return String(value || '')
     .trim()
     .toLowerCase()
-}
-
-function namesMatch(a, b) {
-  return normalizeName(a) === normalizeName(b) && normalizeName(a) !== ''
 }
 
 function actorNameFromPerson(person) {
@@ -49,6 +53,14 @@ function findPerson(people, email, uid) {
   return null
 }
 
+async function loadDraftPlansConfig(storage) {
+  try {
+    return await storage.readFromStorage(DATA_PREFIX + '/config.json')
+  } catch {
+    return null
+  }
+}
+
 /**
  * Resolve the signed-in actor for Draft Plans.
  * @param {object} req
@@ -70,22 +82,11 @@ async function resolveDraftPlanSession(req, storage) {
   if (!actor && email) actor = email.split('@')[0]
   if (!actor) actor = 'unknown'
 
-  var isPlanAdmin = !!(req.isAdmin || req.isPlanningManager)
-  // Optional config allowlist (emails), stored next to draft-plans config
-  try {
-    var cfg = await storage.readFromStorage(DATA_PREFIX + '/config.json')
-    var allow = cfg && Array.isArray(cfg.planAdminEmails) ? cfg.planAdminEmails : null
-    if (allow && email) {
-      for (var a = 0; a < allow.length; a++) {
-        if (String(allow[a] || '').toLowerCase() === email) {
-          isPlanAdmin = true
-          break
-        }
-      }
-    }
-  } catch {
-    // ignore
-  }
+  var cfg = await loadDraftPlansConfig(storage)
+  var planAdminEmails = loadAdminEmails(cfg)
+  var planAdminNames = resolvePlanAdminNames(planAdminEmails, people)
+  // Draft Plans admin is allowlist-only (not general platform ADMIN_EMAILS).
+  var isPlanAdmin = isPlanAdminEmail(email, planAdminEmails)
 
   return {
     email: email,
@@ -94,16 +95,24 @@ async function resolveDraftPlanSession(req, storage) {
     rosterMatched: !!person,
     isPlanAdmin: isPlanAdmin,
     canImpersonate: demo,
-    demoMode: demo
+    demoMode: demo,
+    planAdminEmails: planAdminEmails,
+    planAdminNames: planAdminNames
   }
 }
 
 function applySessionToMeta(meta, session, requestedUser) {
   var next = Object.assign({}, meta || {})
+  var adminNames = (session && session.planAdminNames) || []
   if (session.canImpersonate) {
-    var user = requestedUser || next.currentUser || 'Admin'
+    var user = requestedUser || next.currentUser || session.actor
     next.currentUser = user
-    next.isPlanAdmin = user === 'Admin' || session.isPlanAdmin === true
+    // Impersonating a designated plan-admin name → admin.
+    // Impersonating yourself while session is plan admin → admin.
+    // Generic "Admin" no longer grants rights.
+    next.isPlanAdmin =
+      isPlanAdminName(user, adminNames) ||
+      (namesMatch(user, session.actor) && session.isPlanAdmin === true)
   } else {
     next.currentUser = session.actor
     next.isPlanAdmin = session.isPlanAdmin
@@ -175,11 +184,14 @@ function authorizeEditorSave(session, draft, previousEnvelope, payload) {
       if (!row) {
         return { ok: false, status: 403, error: 'Cannot edit unknown feature ' + key }
       }
-      if (!namesMatch(row.assignee, meta.currentUser)) {
+      var owns =
+        namesMatch(row.assignee, meta.currentUser) || namesMatch(row.pm, meta.currentUser)
+      if (!owns) {
         return {
           ok: false,
           status: 403,
-          error: 'You can only edit features assigned to you (' + meta.currentUser + ')'
+          error:
+            'You can only edit features where you are assignee or PM (' + meta.currentUser + ')'
         }
       }
     }
@@ -191,6 +203,7 @@ function authorizeEditorSave(session, draft, previousEnvelope, payload) {
 module.exports = {
   isDemoMode,
   namesMatch,
+  normalizeName,
   resolveDraftPlanSession,
   applySessionToMeta,
   authorizeEditorSave,

@@ -16,6 +16,7 @@ import {
   finalGaFreeze,
   resetToBase,
   loadBarsByComponent,
+  summaryCounts,
   isAdmin,
   isFinalFrozen,
   eventFrozen
@@ -36,7 +37,14 @@ var selectedVersion = ref('3.6')
 var availableProducts = ref(['RHOAI', 'RHAII'])
 var availableCycles = ref([])
 var filterEvent = ref('')
+var filterDecision = ref('')
+var filterPriority = ref('')
 var filterComponent = ref('')
+var filterAssignee = ref('')
+var filterFamily = ref('')
+var filterReady = ref('')
+var filterBigRock = ref('')
+var filterPm = ref('')
 var filterText = ref('')
 var session = ref(null)
 
@@ -85,15 +93,63 @@ export function useDraftPlans() {
 
   var filteredRows = computed(function() {
     var q = String(filterText.value || '').trim().toLowerCase()
+    var ev = filterEvent.value
+    var decision = filterDecision.value
+    // Acting-as only changes permissions (see canEditRow/ownsRow in
+    // draft-plan-model.js) — it never hides rows. Everyone sees the full
+    // product-scoped table; only per-row editability differs.
     return productScopedRows.value.filter(function(row) {
-      if (filterEvent.value && row.event !== filterEvent.value) return false
+      if (ev === '__scheduled__') {
+        if (!(row.event === 'EA1' || row.event === 'EA2' || row.event === 'GA')) return false
+      } else if (ev === '__changed__') {
+        if (!row.changed) return false
+      } else if (ev === '__approved__') {
+        if (!row.approved) return false
+      } else if (ev && row.event !== ev) {
+        return false
+      }
+
+      if (decision === 'unset') {
+        if (row.decision && row.decision !== 'unset') return false
+      } else if (decision && row.decision !== decision) {
+        return false
+      }
+
+      if (filterPriority.value && row.priority !== filterPriority.value) return false
       if (filterComponent.value && row.component !== filterComponent.value) return false
+      if (filterAssignee.value && row.assignee !== filterAssignee.value) return false
+      if (filterFamily.value && row.productFamily !== filterFamily.value) return false
+      if (filterReady.value && row.ready !== filterReady.value) return false
+      if (filterBigRock.value === '__none__') {
+        if (row.bigRock) return false
+      } else if (filterBigRock.value && row.bigRock !== filterBigRock.value) {
+        return false
+      }
+      if (filterPm.value === '__none__') {
+        if (row.pm && row.pm !== '—') return false
+      } else if (filterPm.value && row.pm !== filterPm.value) {
+        return false
+      }
+
       if (!q) return true
-      return (
-        String(row.key).toLowerCase().indexOf(q) !== -1 ||
-        String(row.summary).toLowerCase().indexOf(q) !== -1 ||
-        String(row.assignee).toLowerCase().indexOf(q) !== -1
-      )
+      var hay = [
+        row.key,
+        row.summary,
+        row.component,
+        row.assignee,
+        row.pm,
+        row.bigRock,
+        row.outcomeKey,
+        row.currentTV,
+        row.ready,
+        row.priority,
+        row.event,
+        row.productFamily,
+        row.proposedFixVersion,
+        row.decision,
+        String(row.cycleBudget)
+      ].join(' ').toLowerCase()
+      return hay.indexOf(q) !== -1
     })
   })
 
@@ -115,6 +171,82 @@ export function useDraftPlans() {
     return Object.keys(set).sort()
   })
 
+  var priorities = computed(function() {
+    var set = {}
+    var list = productScopedRows.value
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].priority) set[list[i].priority] = true
+    }
+    return Object.keys(set).sort()
+  })
+
+  var bigRocks = computed(function() {
+    var set = {}
+    var list = productScopedRows.value
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].bigRock) set[list[i].bigRock] = true
+    }
+    return Object.keys(set).sort()
+  })
+
+  var pms = computed(function() {
+    var set = {}
+    var list = productScopedRows.value
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].pm && list[i].pm !== '—') set[list[i].pm] = true
+    }
+    return Object.keys(set).sort()
+  })
+
+  var planAdminNames = computed(function() {
+    var fromSession =
+      session.value && Array.isArray(session.value.planAdminNames)
+        ? session.value.planAdminNames
+        : []
+    if (fromSession.length) return fromSession.slice()
+    // Fallback when session has not loaded yet (matches server defaults)
+    return ['Emarion', 'Tiffany Rozell']
+  })
+
+  /** Acting-as options: assignees ∪ PMs (plan admins listed separately in the view). */
+  var actorOptions = computed(function() {
+    var adminSet = {}
+    var admins = planAdminNames.value
+    for (var a = 0; a < admins.length; a++) {
+      adminSet[String(admins[a] || '').toLowerCase()] = true
+    }
+    var set = {}
+    var list = productScopedRows.value
+    for (var i = 0; i < list.length; i++) {
+      var row = list[i]
+      if (row.assignee && row.assignee !== '—') set[row.assignee] = true
+      if (row.pm && row.pm !== '—') set[row.pm] = true
+    }
+    return Object.keys(set)
+      .filter(function(name) {
+        return !adminSet[String(name).toLowerCase()]
+      })
+      .sort()
+  })
+
+  function nameIsPlanAdmin(name) {
+    var names = planAdminNames.value
+    var target = String(name || '')
+      .trim()
+      .toLowerCase()
+    if (!target) return false
+    for (var i = 0; i < names.length; i++) {
+      if (
+        String(names[i] || '')
+          .trim()
+          .toLowerCase() === target
+      ) {
+        return true
+      }
+    }
+    return false
+  }
+
   var counts = computed(function() {
     var c = { EA1: 0, EA2: 0, GA: 0, 'Below cut': 0, Descope: 0 }
     var rows = productScopedRows.value
@@ -123,6 +255,14 @@ export function useDraftPlans() {
       if (c[ev] != null) c[ev] += 1
     }
     return c
+  })
+
+  // Top-level stat bar (mirrors red-pen editor): all counts except "showing" are
+  // computed over the product-scoped set, unaffected by event/component/search filters.
+  var summary = computed(function() {
+    var s = summaryCounts(productScopedRows.value)
+    s.showing = filteredRows.value.length
+    return s
   })
 
   var admin = computed(function() {
@@ -204,11 +344,25 @@ export function useDraftPlans() {
         }
       }
       if (session.value.canImpersonate) {
-        if (!state.meta.currentUser) state.meta.currentUser = ADMIN
+        var admins = session.value.planAdminNames || planAdminNames.value
+        if (
+          !state.meta.currentUser ||
+          state.meta.currentUser === ADMIN ||
+          state.meta.currentUser === 'Admin'
+        ) {
+          state.meta.currentUser =
+            (session.value.isPlanAdmin && session.value.actor) ||
+            admins[0] ||
+            session.value.actor ||
+            'Emarion'
+        }
         state.meta.isPlanAdmin =
-          state.meta.currentUser === ADMIN || session.value.isPlanAdmin === true
+          nameIsPlanAdmin(state.meta.currentUser) ||
+          (String(state.meta.currentUser || '').toLowerCase() ===
+            String(session.value.actor || '').toLowerCase() &&
+            session.value.isPlanAdmin === true)
       } else {
-        state.meta.currentUser = session.value.actor || state.meta.currentUser || ADMIN
+        state.meta.currentUser = session.value.actor || state.meta.currentUser || 'unknown'
         state.meta.isPlanAdmin = session.value.isPlanAdmin === true
       }
       editor.value = state
@@ -348,10 +502,19 @@ export function useDraftPlans() {
     if (session.value && session.value.canImpersonate === false) {
       return
     }
-    var next = user || ADMIN
+    var admins = planAdminNames.value
+    var next =
+      user ||
+      (session.value && session.value.isPlanAdmin && session.value.actor) ||
+      (admins && admins[0]) ||
+      (session.value && session.value.actor) ||
+      'Emarion'
     editor.value.meta.currentUser = next
     editor.value.meta.isPlanAdmin =
-      next === ADMIN || !!(session.value && session.value.isPlanAdmin)
+      nameIsPlanAdmin(next) ||
+      (session.value &&
+        String(next).toLowerCase() === String(session.value.actor || '').toLowerCase() &&
+        session.value.isPlanAdmin === true)
     markDirty()
   }
 
@@ -377,7 +540,14 @@ export function useDraftPlans() {
     cycleLabel,
     activeCycleMeta,
     filterEvent,
+    filterDecision,
+    filterPriority,
     filterComponent,
+    filterAssignee,
+    filterFamily,
+    filterReady,
+    filterBigRock,
+    filterPm,
     filterText,
     candidates,
     viewRows,
@@ -385,7 +555,13 @@ export function useDraftPlans() {
     filteredRows,
     components,
     assignees,
+    priorities,
+    bigRocks,
+    pms,
+    actorOptions,
+    planAdminNames,
     counts,
+    summary,
     admin,
     session,
     finalFrozen,
@@ -427,7 +603,14 @@ export function _resetDraftPlansForTests() {
   availableProducts.value = ['RHOAI', 'RHAII']
   availableCycles.value = []
   filterEvent.value = ''
+  filterDecision.value = ''
+  filterPriority.value = ''
   filterComponent.value = ''
+  filterAssignee.value = ''
+  filterFamily.value = ''
+  filterReady.value = ''
+  filterBigRock.value = ''
+  filterPm.value = ''
   filterText.value = ''
   session.value = null
 }

@@ -7,7 +7,6 @@ import DraftPlanDrawer from '../components/DraftPlanDrawer.vue'
 var jiraBaseUrl = 'https://issues.redhat.com/browse'
 
 var {
-  ADMIN,
   PLACEMENTS,
   draft,
   editor,
@@ -23,12 +22,24 @@ var {
   cycleLabel,
   activeCycleMeta,
   filterEvent,
+  filterDecision,
+  filterPriority,
   filterComponent,
+  filterAssignee,
+  filterFamily,
+  filterReady,
+  filterBigRock,
+  filterPm,
   filterText,
   filteredRows,
   components,
   assignees,
-  counts,
+  priorities,
+  bigRocks,
+  pms,
+  actorOptions,
+  planAdminNames,
+  summary,
   admin,
   session,
   finalFrozen,
@@ -85,21 +96,28 @@ var headers = [
   { id: 'h-move', label: 'Move' },
   { id: 'h-descope', label: 'Descope' },
   { id: 'h-approve', label: 'Approve' },
+  { id: 'h-bigrock', label: 'Big Rock' },
   { id: 'h-product', label: 'Product' },
   { id: 'h-comp', label: 'Component' },
   { id: 'h-assignee', label: 'Assignee' },
+  { id: 'h-pm', label: 'PM' },
   { id: 'h-ready', label: 'Ready' },
   { id: 'h-frozen', label: 'Frozen' }
 ]
 
-var summaryBits = computed(function() {
+// Top-level summary bar — mirrors the standalone red-pen editor's stat cards.
+var summaryStats = computed(function() {
+  var s = summary.value
   return [
-    { label: filteredRows.value.length + ' features' },
-    { label: (counts.value.EA1 || 0) + ' EA1', tone: 'sky' },
-    { label: (counts.value.EA2 || 0) + ' EA2', tone: 'sky' },
-    { label: (counts.value.GA || 0) + ' GA', tone: 'sky' },
-    { label: (counts.value['Below cut'] || 0) + ' below cut', tone: 'amber' },
-    { label: (counts.value.Descope || 0) + ' descope', tone: 'red' }
+    { id: 'showing', label: 'Showing', value: s.showing },
+    { id: 'candidates', label: 'Candidates', value: s.candidates },
+    { id: 'scheduled', label: 'Scheduled', value: s.scheduled },
+    { id: 'ea1', label: 'EA1', value: s.ea1 },
+    { id: 'ea2', label: 'EA2', value: s.ea2 },
+    { id: 'ga', label: 'GA', value: s.ga },
+    { id: 'below-cut', label: 'Below cut', value: s.belowCut },
+    { id: 'descoped', label: 'Descoped', value: s.descoped },
+    { id: 'approved', label: 'Approved', value: s.approved }
   ]
 })
 
@@ -210,7 +228,6 @@ onMounted(async function() {
         </label>
       </div>
       <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-        <span v-for="bit in summaryBits" :key="bit.label">{{ bit.label }}</span>
         <label
           v-if="session && session.canImpersonate"
           class="flex items-center gap-1"
@@ -221,8 +238,10 @@ onMounted(async function() {
             :value="editor.meta.currentUser"
             @change="setCurrentUser($event.target.value)"
           >
-            <option :value="ADMIN">{{ ADMIN }}</option>
-            <option v-for="a in assignees" :key="a" :value="a">{{ a }}</option>
+            <option v-for="a in planAdminNames" :key="'admin-' + a" :value="a">
+              {{ a }} (plan admin)
+            </option>
+            <option v-for="a in actorOptions" :key="a" :value="a">{{ a }}</option>
           </select>
           <span class="text-[10px] uppercase tracking-wide text-amber-600 dark:text-amber-400">demo</span>
         </label>
@@ -253,6 +272,18 @@ onMounted(async function() {
           @click="persist"
         >{{ saving ? 'Saving…' : dirty ? 'Save*' : 'Save' }}</button>
         <span v-if="dirty" class="text-amber-600 dark:text-amber-400">Unsaved</span>
+      </div>
+    </div>
+
+    <!-- Summary bar (mirrors red-pen editor stat cards) -->
+    <div
+      class="flex flex-wrap items-center gap-x-5 gap-y-1 px-4 py-2 bg-gray-50 dark:bg-gray-800/40 border-b border-gray-200 dark:border-gray-700"
+      role="group"
+      aria-label="Draft plan summary"
+    >
+      <div v-for="stat in summaryStats" :key="stat.id" class="flex items-baseline gap-1.5">
+        <strong class="text-sm font-semibold text-gray-900 dark:text-gray-100 tabular-nums">{{ stat.value }}</strong>
+        <span class="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ stat.label }}</span>
       </div>
     </div>
 
@@ -306,30 +337,90 @@ onMounted(async function() {
       <span v-if="finalFrozen" class="text-xs font-medium text-red-600 dark:text-red-400">Plan locked</span>
     </div>
 
-    <!-- Filter strip -->
+    <!-- Filter strip (parity with red-pen editor) -->
     <div class="flex flex-wrap items-end gap-3 px-4 py-2 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-      <label class="text-xs text-gray-500 dark:text-gray-400">
-        Event
-        <select v-model="filterEvent" class="mt-0.5 block rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5">
-          <option value="">All</option>
-          <option v-for="p in filterPlacements" :key="p" :value="p">{{ p }}</option>
-        </select>
-      </label>
-      <label class="text-xs text-gray-500 dark:text-gray-400">
-        Component
-        <select v-model="filterComponent" class="mt-0.5 block rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5">
-          <option value="">All</option>
-          <option v-for="c in components" :key="c" :value="c">{{ c }}</option>
-        </select>
-      </label>
       <label class="text-xs text-gray-500 dark:text-gray-400 flex-1 min-w-[12rem]">
         Search
         <input
           v-model="filterText"
           type="search"
-          placeholder="Key, summary, assignee…"
+          placeholder="Key, summary, rock, PM…"
           class="mt-0.5 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5"
         />
+      </label>
+      <label class="text-xs text-gray-500 dark:text-gray-400">
+        Placement
+        <select v-model="filterEvent" class="mt-0.5 block rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5 max-w-[11rem]">
+          <option value="">All</option>
+          <option value="__scheduled__">Scheduled (EA1/EA2/GA)</option>
+          <option v-for="p in filterPlacements" :key="p" :value="p">{{ p }}</option>
+          <option value="__changed__">Changed</option>
+          <option value="__approved__">Approved</option>
+        </select>
+      </label>
+      <label class="text-xs text-gray-500 dark:text-gray-400">
+        Decision
+        <select v-model="filterDecision" class="mt-0.5 block rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5">
+          <option value="">All</option>
+          <option value="unset">Implicit keep</option>
+          <option value="move">Move</option>
+          <option value="descope">Descope</option>
+        </select>
+      </label>
+      <label class="text-xs text-gray-500 dark:text-gray-400">
+        Priority
+        <select v-model="filterPriority" class="mt-0.5 block rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5">
+          <option value="">All</option>
+          <option v-for="p in priorities" :key="p" :value="p">{{ p }}</option>
+        </select>
+      </label>
+      <label class="text-xs text-gray-500 dark:text-gray-400">
+        Component
+        <select v-model="filterComponent" class="mt-0.5 block rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5 max-w-[12rem]">
+          <option value="">All</option>
+          <option v-for="c in components" :key="c" :value="c">{{ c }}</option>
+        </select>
+      </label>
+      <label class="text-xs text-gray-500 dark:text-gray-400">
+        Assignee
+        <select v-model="filterAssignee" class="mt-0.5 block rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5 max-w-[11rem]">
+          <option value="">All</option>
+          <option v-for="a in assignees" :key="a" :value="a">{{ a }}</option>
+        </select>
+      </label>
+      <label class="text-xs text-gray-500 dark:text-gray-400">
+        PM
+        <select v-model="filterPm" class="mt-0.5 block rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5 max-w-[11rem]">
+          <option value="">All</option>
+          <option value="__none__">Unassigned</option>
+          <option v-for="p in pms" :key="p" :value="p">{{ p }}</option>
+        </select>
+      </label>
+      <label class="text-xs text-gray-500 dark:text-gray-400">
+        Family
+        <select v-model="filterFamily" class="mt-0.5 block rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5">
+          <option value="">All</option>
+          <option value="RHOAI">RHOAI</option>
+          <option value="RHAII">RHAII</option>
+          <option value="Unknown">Unknown</option>
+        </select>
+      </label>
+      <label class="text-xs text-gray-500 dark:text-gray-400">
+        Big Rock
+        <select v-model="filterBigRock" class="mt-0.5 block rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5 max-w-[12rem]">
+          <option value="">All</option>
+          <option value="__none__">Unmatched</option>
+          <option v-for="r in bigRocks" :key="r" :value="r">{{ r }}</option>
+        </select>
+      </label>
+      <label class="text-xs text-gray-500 dark:text-gray-400">
+        Ready
+        <select v-model="filterReady" class="mt-0.5 block rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1.5">
+          <option value="">All</option>
+          <option value="Plan-ready">Plan-ready</option>
+          <option value="Partial">Partial</option>
+          <option value="Not ready">Not ready</option>
+        </select>
       </label>
     </div>
 
