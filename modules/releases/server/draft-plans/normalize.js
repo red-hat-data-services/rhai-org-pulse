@@ -21,6 +21,12 @@ function normalizeCandidate(row) {
     priority: row.priority || '',
     component: component,
     assignee: row.assignee || '—',
+    pm: row.pm || '—',
+    bigRock: row.bigRock || '',
+    bigRockPriority: row.bigRockPriority != null && row.bigRockPriority !== ''
+      ? Number(row.bigRockPriority)
+      : null,
+    outcomeKey: row.outcomeKey || '',
     currentTV: row.currentTV || '',
     targetVersions: Array.isArray(row.targetVersions) ? row.targetVersions : [],
     productFamily: row.productFamily || 'RHOAI',

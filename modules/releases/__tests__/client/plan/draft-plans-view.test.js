@@ -64,10 +64,13 @@ var FIXTURE = {
   },
   audit: [],
   session: {
-    actor: 'Admin',
-    email: 'local-dev@redhat.com',
+    // Plan admin is allowlist-only (emarion@redhat.com / trozell@redhat.com);
+    // simulate a real allowlisted actor rather than the legacy "Admin" sentinel.
+    actor: 'Emarion',
+    email: 'emarion@redhat.com',
     canImpersonate: true,
     isPlanAdmin: true,
+    planAdminNames: ['Emarion', 'Tiffany Rozell'],
     demoMode: true
   }
 }
@@ -125,6 +128,19 @@ describe('DraftPlansView', function() {
     expect(wrapper.text()).toContain('RHAISTRAT-1')
     expect(wrapper.text()).toContain('Descope')
     expect(wrapper.text()).toContain('Move…')
+
+    // Top-level summary bar (mirrors red-pen editor stat cards)
+    var summaryBar = wrapper.find('[aria-label="Draft plan summary"]')
+    expect(summaryBar.exists()).toBe(true)
+    expect(summaryBar.text()).toContain('Showing')
+    expect(summaryBar.text()).toContain('Candidates')
+    expect(summaryBar.text()).toContain('Scheduled')
+    expect(summaryBar.text()).toContain('EA1')
+    expect(summaryBar.text()).toContain('EA2')
+    expect(summaryBar.text()).toContain('GA')
+    expect(summaryBar.text()).toContain('Below cut')
+    expect(summaryBar.text()).toContain('Descoped')
+    expect(summaryBar.text()).toContain('Approved')
 
     var titleCell = wrapper.findAll('td').find(function(td) {
       return td.text().includes('Below cut feature')

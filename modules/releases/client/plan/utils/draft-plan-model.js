@@ -114,6 +114,12 @@ function normalizeCandidate(row) {
     priority: row.priority || '',
     component: component,
     assignee: row.assignee || '—',
+    pm: row.pm || '—',
+    bigRock: row.bigRock || '',
+    bigRockPriority: row.bigRockPriority != null && row.bigRockPriority !== ''
+      ? Number(row.bigRockPriority)
+      : null,
+    outcomeKey: row.outcomeKey || '',
     currentTV: row.currentTV || '',
     targetVersions: Array.isArray(row.targetVersions) ? row.targetVersions : [],
     productFamily: row.productFamily || 'RHOAI',
@@ -192,16 +198,27 @@ function rowFrozen(row, edits, meta) {
 
 function isAdmin(meta) {
   if (!meta) return false
-  if (meta.isPlanAdmin === true) return true
-  if (meta.isPlanAdmin === false) return false
-  // Legacy / demo: "Admin" actor means plan admin
-  return meta.currentUser === ADMIN
+  return meta.isPlanAdmin === true
+}
+
+function ownsRow(row, user) {
+  return namesMatch(row && row.assignee, user) || namesMatch(row && row.pm, user)
 }
 
 function canEditRow(row, edits, meta) {
   if (rowFrozen(row, edits, meta)) return false
   if (isAdmin(meta)) return true
-  return namesMatch(row.assignee, meta && meta.currentUser)
+  return ownsRow(row, meta && meta.currentUser)
+}
+
+/**
+ * Descope stays reversible until Final GA / plan lock.
+ * Event freezes must not block Undo (descoped rows leave EA1/EA2/GA).
+ */
+function canReverseDescope(row, edits, meta) {
+  if (isFinalFrozen(meta)) return false
+  if (isAdmin(meta)) return true
+  return ownsRow(row, meta && meta.currentUser)
 }
 
 function familyForFV(row) {
@@ -357,7 +374,8 @@ function viewRow(base, edits, meta) {
     changed: isChanged(base, edits),
     frozen: rowFrozen(base, edits, meta),
     proposedFixVersion: proposedFV(base, edits),
-    editable: canEditRow(base, edits, meta)
+    editable: canEditRow(base, edits, meta),
+    canUndescope: canReverseDescope(base, edits, meta)
   })
 }
 
@@ -365,7 +383,12 @@ function applyMove(state, candidates, ceilings, row, placement, opts) {
   opts = opts || {}
   var edits = state.edits
   var meta = state.meta
-  if (!canEditRow(row, edits, meta)) return { ok: false, reason: 'forbidden' }
+  // Moving off Descope is a reverse-descope until Final GA freeze
+  if (effectiveDecision(row, edits) === 'descope') {
+    if (!canReverseDescope(row, edits, meta)) return { ok: false, reason: 'forbidden' }
+  } else if (!canEditRow(row, edits, meta)) {
+    return { ok: false, reason: 'forbidden' }
+  }
 
   var prevPlacement = effectivePlacement(row, edits)
   var prevDecision = effectiveDecision(row, edits)
@@ -460,7 +483,7 @@ function applyDescope(state, row) {
 function clearDescope(state, row) {
   var edits = state.edits
   var meta = state.meta
-  if (!canEditRow(row, edits, meta)) return { ok: false, reason: 'forbidden' }
+  if (!canReverseDescope(row, edits, meta)) return { ok: false, reason: 'forbidden' }
   var e = getEdit(edits, row.key)
   if (!e || e.decision !== 'descope') return { ok: true, noop: true }
   e.decision = null
@@ -627,10 +650,37 @@ function resetToBase(state, planVersion, baseGeneratedAt) {
   state.edits = {}
   state.meta = emptyMeta(planVersion, baseGeneratedAt)
   state.meta.currentUser = user
-  state.meta.isPlanAdmin = wasAdmin || user === ADMIN
+  state.meta.isPlanAdmin = wasAdmin
   state.audit = []
   appendAudit(state.audit, { action: 'reset', detail: 'Reset to base draft' }, user)
   return { ok: true }
+}
+
+/**
+ * Top-level summary counts, mirroring the red-pen editor's stat bar
+ * (Candidates / Scheduled / EA1 / EA2 / GA / Below cut / Descoped / Approved).
+ * `rows` should be view rows (post viewRow()) scoped to the active product filter,
+ * but BEFORE the event/component/search filters — matches editor semantics where
+ * only "Showing" reflects the search/filter result.
+ */
+function summaryCounts(rows) {
+  var byEvent = { EA1: 0, EA2: 0, GA: 0, 'Below cut': 0, Descope: 0 }
+  var approved = 0
+  for (var i = 0; i < rows.length; i++) {
+    var ev = rows[i].event
+    if (byEvent[ev] != null) byEvent[ev] += 1
+    if (rows[i].approved) approved += 1
+  }
+  return {
+    candidates: rows.length,
+    scheduled: byEvent.EA1 + byEvent.EA2 + byEvent.GA,
+    ea1: byEvent.EA1,
+    ea2: byEvent.EA2,
+    ga: byEvent.GA,
+    belowCut: byEvent['Below cut'],
+    descoped: byEvent.Descope,
+    approved: approved
+  }
 }
 
 function loadBarsByComponent(candidates, edits, ceilings, eventName) {
@@ -670,6 +720,8 @@ export {
   isChanged,
   rowFrozen,
   canEditRow,
+  canReverseDescope,
+  ownsRow,
   isAdmin,
   isFinalFrozen,
   eventFrozen,
@@ -691,5 +743,6 @@ export {
   finalGaFreeze,
   resetToBase,
   loadBarsByComponent,
+  summaryCounts,
   isScheduled
 }

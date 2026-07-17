@@ -4,6 +4,7 @@ import {
   effectivePlacement,
   applyMove,
   applyDescope,
+  clearDescope,
   freezeEvent,
   unfreezeEvent,
   unfreezePlan,
@@ -13,7 +14,9 @@ import {
   fvTemplate,
   viewRow,
   canEditRow,
-  isAdmin
+  isAdmin,
+  setApproved,
+  summaryCounts
 } from '../../../client/plan/utils/draft-plan-model.js'
 
 function sampleDraft() {
@@ -199,8 +202,35 @@ describe('draft-plan-model', function() {
     expect(effectivePlacement(draft.candidates[1], state.edits)).toBe('Descope')
   })
 
-  it('binds row edit rights to assignee unless isPlanAdmin', function() {
+  it('descope is reversible until Final GA freeze', function() {
     var draft = sampleDraft()
+    var state = emptyEditorState('3.6', draft.generatedAt)
+    var below = draft.candidates[1]
+    applyDescope(state, below)
+    expect(viewRow(below, state.edits, state.meta).canUndescope).toBe(true)
+
+    var undone = clearDescope(state, below)
+    expect(undone.ok).toBe(true)
+    expect(effectivePlacement(below, state.edits)).toBe(below.basePlacement)
+
+    applyDescope(state, below)
+    applyMove(state, draft.candidates, draft.ceilingsByComponent, draft.candidates[0], 'GA', {
+      skipCapacity: true,
+      capacityOverride: true
+    })
+    finalGaFreeze(state, draft.candidates)
+    expect(viewRow(below, state.edits, state.meta).canUndescope).toBe(false)
+    expect(clearDescope(state, below).ok).toBe(false)
+
+    unfreezePlan(state, draft.candidates)
+    expect(viewRow(below, state.edits, state.meta).canUndescope).toBe(true)
+    expect(clearDescope(state, below).ok).toBe(true)
+    expect(effectivePlacement(below, state.edits)).toBe(below.basePlacement)
+  })
+
+  it('binds row edit rights to assignee or PM unless isPlanAdmin', function() {
+    var draft = sampleDraft()
+    draft.candidates[0].pm = 'Pat Manager'
     var meta = {
       currentUser: 'Alice',
       isPlanAdmin: false,
@@ -214,9 +244,40 @@ describe('draft-plan-model', function() {
     meta.currentUser = 'alice'
     expect(canEditRow(draft.candidates[0], {}, meta)).toBe(true)
 
+    meta.currentUser = 'Pat Manager'
+    expect(canEditRow(draft.candidates[0], {}, meta)).toBe(true)
+    expect(canEditRow(draft.candidates[1], {}, meta)).toBe(false)
+
     meta.isPlanAdmin = true
     meta.currentUser = 'Adam Bellusci'
     expect(isAdmin(meta)).toBe(true)
     expect(canEditRow(draft.candidates[1], {}, meta)).toBe(true)
+  })
+
+  it('summaryCounts mirrors the red-pen editor stat bar', function() {
+    var draft = sampleDraft()
+    var state = emptyEditorState('3.6', draft.generatedAt)
+
+    // A-1 EA1 (base), A-2 Below cut -> move to GA (override), B-1 Below cut -> descope + approve A-1
+    applyMove(state, draft.candidates, draft.ceilingsByComponent, draft.candidates[1], 'GA', {
+      skipCapacity: true,
+      capacityOverride: true
+    })
+    applyDescope(state, draft.candidates[2])
+    setApproved(state, draft.candidates[0], true)
+
+    var rows = draft.candidates.map(function(row) {
+      return viewRow(row, state.edits, state.meta)
+    })
+    var stats = summaryCounts(rows)
+
+    expect(stats.candidates).toBe(3)
+    expect(stats.scheduled).toBe(2) // A-1 EA1 + A-2 GA
+    expect(stats.ea1).toBe(1)
+    expect(stats.ea2).toBe(0)
+    expect(stats.ga).toBe(1)
+    expect(stats.belowCut).toBe(0)
+    expect(stats.descoped).toBe(1)
+    expect(stats.approved).toBe(1)
   })
 })
