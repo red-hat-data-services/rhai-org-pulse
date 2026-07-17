@@ -485,12 +485,7 @@ onMounted(async function() {
                 @approve="approveFeature"
               />
 
-              <tr v-if="!loading && !draft" role="row">
-                <td :colspan="headers.length" class="px-4 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
-                  No draft plan loaded
-                </td>
-              </tr>
-              <tr v-else-if="!loading && filteredRows.length === 0" role="row">
+              <tr v-if="!loading && filteredRows.length === 0" role="row">
                 <td :colspan="headers.length" class="px-4 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
                   No features match filters
                 </td>
@@ -528,7 +523,14 @@ onMounted(async function() {
           </tr>
         </thead>
         <tbody role="rowgroup">
-          <tr role="row">
+          <template v-if="loading">
+            <tr v-for="i in 5" :key="'skel-' + i" role="row" class="border-b border-gray-100 dark:border-gray-800">
+              <td v-for="j in headers.length" :key="j" class="px-3 py-3">
+                <div class="h-3 rounded animate-pulse bg-gray-200 dark:bg-gray-700" :class="j === 3 ? 'w-24' : 'w-16'" />
+              </td>
+            </tr>
+          </template>
+          <tr v-else role="row">
             <td :colspan="headers.length" class="px-4 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
               No draft plan loaded
             </td>
