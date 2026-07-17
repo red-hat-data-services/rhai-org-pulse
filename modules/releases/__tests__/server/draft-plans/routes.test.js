@@ -558,11 +558,12 @@ describe('draft-plans routes', () => {
         query: { product: 'RHOAI' },
         body: {
           edits: { 'RHAISTRAT-1': { decision: 'move', placement: 'EA2' } },
-          meta: { planVersion: '3.6', currentUser: 'Admin', frozenEvents: {} },
+          meta: { planVersion: '3.6', currentUser: 'Emarion', frozenEvents: {} },
           audit: [{ action: 'decision', detail: 'test' }]
         },
-        userEmail: 'admin@test.com',
-        isAdmin: true
+        // Plan admin is allowlist-only (emarion@redhat.com / trozell@redhat.com);
+        // platform isAdmin alone must not grant it.
+        userEmail: 'emarion@redhat.com'
       })
 
       expect(res._status).toBe(200)
@@ -646,11 +647,12 @@ describe('draft-plans routes', () => {
       const req = {
         params: { version: '3.6' },
         query: { product: 'RHOAI' },
+        // No freeze/reset/foreign-row edits here, so plan-admin status is irrelevant;
+        // any allowlisted or non-allowlisted email works for exercising the rate limiter.
         userEmail: 'rate-limit@test.com',
-        isAdmin: true,
         body: {
           edits: {},
-          meta: { planVersion: '3.6', currentUser: 'Admin', frozenEvents: {} },
+          meta: { planVersion: '3.6', currentUser: 'Rate Limit Tester', frozenEvents: {} },
           audit: []
         }
       }
