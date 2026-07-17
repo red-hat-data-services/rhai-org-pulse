@@ -190,6 +190,68 @@ describe('DraftPlansView', function() {
     wrapper.unmount()
   })
 
+  it('renders sticky audit panel with entries and empty state', async function() {
+    mockApiRequest.mockImplementation(function(path) {
+      if (String(path).indexOf('/cycles') !== -1) {
+        return Promise.resolve({
+          product: 'RHOAI',
+          products: ['RHOAI', 'RHAII'],
+          defaultVersion: '3.6',
+          cycles: [{ version: '3.6', label: 'RHOAI 3.6', source: 'demo', demoMode: true }]
+        })
+      }
+      var data = JSON.parse(JSON.stringify(FIXTURE))
+      data.audit = [
+        {
+          ts: '2026-07-17T13:27:56.082Z',
+          actor: 'Admin',
+          action: 'unfreeze_event',
+          detail: 'Unfreeze EA1 (admin)'
+        }
+      ]
+      return Promise.resolve(data)
+    })
+
+    var wrapper = mountView()
+    await flushPromises()
+
+    var panel = wrapper.find('[aria-label="Draft plan audit log"]')
+    expect(panel.exists()).toBe(true)
+    expect(panel.text()).toContain('Audit')
+    expect(panel.text()).toContain('(1)')
+    expect(panel.text()).toContain('Unfreeze EA1 (admin)')
+    expect(panel.text()).toContain('Admin')
+    expect(wrapper.find('[data-testid="draft-plan-audit-list"]').exists()).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('shows audit empty state before any edits', async function() {
+    var wrapper = mountView()
+    await flushPromises()
+
+    var panel = wrapper.find('[aria-label="Draft plan audit log"]')
+    expect(panel.exists()).toBe(true)
+    expect(panel.text()).toContain('No changes yet.')
+    expect(panel.text()).toContain('(0)')
+    wrapper.unmount()
+  })
+
+  it('appends audit entries after freeze action', async function() {
+    var wrapper = mountView()
+    await flushPromises()
+
+    var freezeBtn = wrapper.findAll('button').find(function(b) {
+      return b.text() === 'Freeze EA1'
+    })
+    await freezeBtn.trigger('click')
+    await flushPromises()
+
+    var panel = wrapper.find('[aria-label="Draft plan audit log"]')
+    expect(panel.text()).toMatch(/Freeze EA1/)
+    expect(panel.text()).not.toContain('No changes yet.')
+    wrapper.unmount()
+  })
+
   it('shows empty state when load fails', async function() {
     mockApiRequest.mockImplementation(function(path) {
       if (String(path).indexOf('/cycles') !== -1) {

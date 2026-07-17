@@ -16,7 +16,8 @@ import {
   canEditRow,
   isAdmin,
   setApproved,
-  summaryCounts
+  summaryCounts,
+  formatAuditDetail
 } from '../../../client/plan/utils/draft-plan-model.js'
 
 function sampleDraft() {
@@ -279,5 +280,16 @@ describe('draft-plan-model', function() {
     expect(stats.belowCut).toBe(0)
     expect(stats.descoped).toBe(1)
     expect(stats.approved).toBe(1)
+  })
+
+  it('formatAuditDetail prefers detail and falls back to key/from/to/action', function() {
+    expect(formatAuditDetail({ detail: 'Freeze EA1 (admin)' })).toBe('Freeze EA1 (admin)')
+    expect(formatAuditDetail({
+      key: 'A-1',
+      from: 'Below cut',
+      to: 'EA1',
+      action: 'decision'
+    })).toBe('A-1 · Below cut → EA1 · decision')
+    expect(formatAuditDetail({ action: 'reset' })).toBe('reset')
   })
 })
