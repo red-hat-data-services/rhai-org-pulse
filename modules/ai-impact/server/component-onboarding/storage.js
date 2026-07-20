@@ -86,8 +86,13 @@ function projectComponent(entry) {
     productContext: latest.productContext,
     targetVersion: latest.targetVersion || null,
     componentName: latest.componentName,
+    repoUrl: latest.repoUrl || '',
+    branch: latest.branch || '',
+    dockerfilePath: latest.dockerfilePath || '',
+    isOperator: latest.isOperator || false,
     linkedFeatures: latest.linkedFeatures,
     featureTitles: latest.featureTitles || {},
+    labels: latest.labels || [],
     onboardingSteps: latest.onboardingSteps,
     created: latest.created,
     resolution: latest.resolution || null,
@@ -96,6 +101,7 @@ function projectComponent(entry) {
     onboardingMethod: latest.onboardingMethod || 'automated',
     firstCommentDate: latest.firstCommentDate || null,
     contextPath: latest.contextPath || '',
+    statusCategory: latest.statusCategory || null,
     syncedAt: latest.syncedAt
   };
 }
