@@ -312,7 +312,8 @@ test.describe('AI Impact Build & Release @ai-impact', () => {
   });
 
   test('target version dropdown appears and filters correctly', async ({ page }) => {
-    const versionSelect = page.locator('select').filter({ hasText: 'All versions' });
+    // Page header and table each have an "All versions" select; use the header filter.
+    const versionSelect = page.locator('select').filter({ hasText: 'All versions' }).first();
     await expect(versionSelect).toBeVisible();
 
     const options = await versionSelect.locator('option').allTextContents();
