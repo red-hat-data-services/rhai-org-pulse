@@ -850,3 +850,102 @@ test.describe('Releases Release Readiness @releases', () => {
     expect(body).not.toHaveProperty('director_summary');
   });
 });
+
+/**
+ * Release Blockers (Deliver tab)
+ *
+ * Verify the Release Blockers sub-tab is visible and clickable in the Deliver
+ * view, the API returns the expected response shape, and the view renders
+ * summary cards, tables, and the version input.
+ */
+test.describe('Releases Blockers @releases', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('Release Blockers tab is visible and clickable in Deliver view', async ({ page }) => {
+    await page.goto('/#/releases/deliver');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    var blockerTab = page.locator('button', { hasText: 'Release Blockers' });
+    await expect(blockerTab).toBeVisible();
+
+    await blockerTab.click();
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('Release Blockers view loads without errors via deep link', async ({ page }) => {
+    await page.goto('/#/releases/deliver?tab=release-blockers');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    var mainContent = page.locator('main, [role="main"], .min-h-screen').first();
+    await expect(mainContent).toBeVisible();
+
+    // Version input or summary cards should be visible (depends on whether analysis data is cached)
+    var hasInput = await page.locator('input[placeholder*="rhoai"]').count() > 0;
+    var hasCards = await page.locator('text=TOTAL BLOCKERS').count() > 0;
+    expect(hasInput || hasCards).toBe(true);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('Release Blockers view renders summary cards for a version', async ({ page }) => {
+    // Use version param to load data directly via URL
+    await page.goto('/#/releases/deliver?tab=release-blockers&version=3.5');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.locator('text=TOTAL BLOCKERS').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=PROPOSED').first()).toBeVisible();
+    await expect(page.locator('text=APPROVED').first()).toBeVisible();
+    await expect(page.locator('text=REJECTED').first()).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('blockers API returns expected response shape', async ({ request }) => {
+    var res = await request.get('/api/modules/releases/delivery/blockers/3.5');
+    expect(res.ok()).toBe(true);
+    var body = await res.json();
+
+    expect(body).toHaveProperty('releaseNumber', '3.5');
+    expect(body).toHaveProperty('fetchedAt');
+    expect(body).toHaveProperty('summary');
+    expect(body.summary).toHaveProperty('proposed');
+    expect(body.summary).toHaveProperty('approved');
+    expect(body.summary).toHaveProperty('rejected');
+    expect(body.summary).toHaveProperty('noStatus');
+    expect(body.summary).toHaveProperty('total');
+
+    expect(body).toHaveProperty('timing');
+    expect(body.timing).toHaveProperty('proposedBeforeCodeFreeze');
+    expect(body.timing).toHaveProperty('proposedAfterCodeFreeze');
+
+    expect(body).toHaveProperty('aging');
+    expect(body.aging).toHaveProperty('proposalToDecision');
+    expect(body.aging.proposalToDecision).toHaveProperty('avg');
+    expect(body.aging.proposalToDecision).toHaveProperty('count');
+    expect(body.aging).toHaveProperty('approvalToResolution');
+    expect(body.aging).toHaveProperty('byStatus');
+
+    expect(body).toHaveProperty('blockers');
+    expect(Array.isArray(body.blockers)).toBe(true);
+    expect(body).toHaveProperty('criticalMonitoring');
+    expect(Array.isArray(body.criticalMonitoring)).toBe(true);
+  });
+
+  test('blockers API rejects invalid release number', async ({ request }) => {
+    var res = await request.get('/api/modules/releases/delivery/blockers/; DROP TABLE');
+    expect(res.status()).toBe(400);
+    var body = await res.json();
+    expect(body).toHaveProperty('error');
+  });
+});
