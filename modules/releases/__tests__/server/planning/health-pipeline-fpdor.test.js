@@ -252,6 +252,29 @@ describe('FPDoR in health pipeline', function() {
     expect(rtItem.pass).toBe(true)
   })
 
+  it('bridges releaseType from execution detail when candidates cache is stale', async function() {
+    var candidatesData = makeCandidatesCache([
+      {
+        issueKey: 'T-1', summary: 'F1', status: 'In Progress',
+        components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1,
+        phase: ''
+      }
+    ])
+    candidatesData['releases/execution/index.json'] = {
+      features: [{ key: 'T-1', summary: 'F1', status: 'In Progress' }],
+      rfes: []
+    }
+    candidatesData['releases/execution/features/T-1.json'] = {
+      key: 'T-1', summary: 'F1', status: 'In Progress',
+      releaseType: 'General Availability'
+    }
+    var storage = makeStorage(candidatesData)
+    var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
+    var items = result.features[0].fpdor.items
+    var rtItem = items.find(function(i) { return i.name === 'Release Type' })
+    expect(rtItem.pass).toBe(true)
+  })
+
   it('passes documentation and UXD as separate items when components present', async function() {
     var storage = makeStorage(makeCandidatesCache([
       {

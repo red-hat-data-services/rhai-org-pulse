@@ -661,9 +661,11 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
 
   console.log('[health] Found ' + features.length + ' features for version ' + version + ' phase ' + phaseKey)
 
-  // Step 1b: Enrich epicCount + scores from execution index
+  // Step 1b: Enrich from execution index and detail files
   // mapCandidateToHealthFeature() does not map epicCount; source it from execution index.
-  // Also bridge aiReview.scores from feature detail files so FPDoR rubric items can be evaluated.
+  // Also bridge fields from execution detail files (refreshed independently with latest
+  // Jira data) so FPDoR checks evaluate against up-to-date values even when the
+  // candidates cache is stale.
   var execIndex = await loadIndex(readFromStorage)
   if (execIndex && execIndex.features) {
     var execByKey = {}
@@ -678,10 +680,15 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
       if (execFeature && typeof execFeature.completionPct === 'number') {
         features[fi].completionPct = execFeature.completionPct
       }
-      if (execFeature && !features[fi].scores) {
+      if (execFeature) {
         var execDetail = await loadFeatureDetail(readFromStorage, features[fi].key)
-        if (execDetail && execDetail.aiReview && execDetail.aiReview.scores) {
-          features[fi].scores = execDetail.aiReview.scores
+        if (execDetail) {
+          if (!features[fi].scores && execDetail.aiReview && execDetail.aiReview.scores) {
+            features[fi].scores = execDetail.aiReview.scores
+          }
+          if (execDetail.releaseType) {
+            features[fi].releaseType = execDetail.releaseType
+          }
         }
       }
     }
