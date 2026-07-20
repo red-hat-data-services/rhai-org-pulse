@@ -70,12 +70,7 @@ const componentList = computed(() => {
     .filter(c => (c.onboardingMethod || 'automated') === 'automated')
     .filter(c => {
       if (completionFilter.value !== 'all') {
-        const status = c.completionStatus
-        if (completionFilter.value === 'in_queue') {
-          if (status !== 'in_queue' && status !== 'new') return false
-        } else if (status !== completionFilter.value) {
-          return false
-        }
+        if (c.completionStatus !== completionFilter.value) return false
       }
       if (productFilter.value !== 'all' && c.productContext !== productFilter.value) return false
       if (targetVersionFilter.value !== 'all' && (c.targetVersion || '') !== targetVersionFilter.value) return false
@@ -158,7 +153,6 @@ function completionStatusLabel(status) {
   switch (status) {
     case 'completed': return 'Completed'
     case 'in_queue':
-    case 'new':
       return 'In Queue'
     case 'in-progress': return 'In Progress'
     default: return status
@@ -170,7 +164,6 @@ function completionStatusBadgeClass(status) {
     case 'completed':
       return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
     case 'in_queue':
-    case 'new':
       return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
     default:
       return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
@@ -181,7 +174,6 @@ function completionStatusDotClass(status) {
   switch (status) {
     case 'completed': return 'bg-green-500'
     case 'in_queue':
-    case 'new':
       return 'bg-blue-500'
     default: return 'bg-amber-500'
   }

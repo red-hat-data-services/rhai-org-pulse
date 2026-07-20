@@ -74,7 +74,7 @@ const automatedList = computed(() => componentList.value.filter(c => (c.onboardi
 const statusChartData = computed(() => {
   const completed = automatedList.value.filter(c => c.completionStatus === 'completed').length
   const inProgress = automatedList.value.filter(c => c.completionStatus === 'in-progress').length
-  const inQueue = automatedList.value.filter(c => c.completionStatus === 'in_queue' || c.completionStatus === 'new').length
+  const inQueue = automatedList.value.filter(c => c.completionStatus === 'in_queue').length
   return {
     labels: ['Completed', 'In Progress', 'In Queue'],
     datasets: [{
@@ -97,10 +97,10 @@ const statusChartOptions = computed(() => ({
 const productChartData = computed(() => {
   const rhoaiCompleted = automatedList.value.filter(c => c.productContext === 'RHOAI' && c.completionStatus === 'completed').length
   const rhoaiInProgress = automatedList.value.filter(c => c.productContext === 'RHOAI' && c.completionStatus === 'in-progress').length
-  const rhoaiInQueue = automatedList.value.filter(c => c.productContext === 'RHOAI' && (c.completionStatus === 'in_queue' || c.completionStatus === 'new')).length
+  const rhoaiInQueue = automatedList.value.filter(c => c.productContext === 'RHOAI' && c.completionStatus === 'in_queue').length
   const odhCompleted = automatedList.value.filter(c => c.productContext === 'ODH' && c.completionStatus === 'completed').length
   const odhInProgress = automatedList.value.filter(c => c.productContext === 'ODH' && c.completionStatus === 'in-progress').length
-  const odhInQueue = automatedList.value.filter(c => c.productContext === 'ODH' && (c.completionStatus === 'in_queue' || c.completionStatus === 'new')).length
+  const odhInQueue = automatedList.value.filter(c => c.productContext === 'ODH' && c.completionStatus === 'in_queue').length
   return {
     labels: ['RHOAI', 'ODH'],
     datasets: [
@@ -177,7 +177,7 @@ const featureChartData = computed(() => {
       }
       if (comp.completionStatus === 'completed') {
         featureMap[feat].completed++
-      } else if (comp.completionStatus === 'in_queue' || comp.completionStatus === 'new') {
+      } else if (comp.completionStatus === 'in_queue') {
         featureMap[feat].inQueue++
       } else {
         featureMap[feat].inProgress++
