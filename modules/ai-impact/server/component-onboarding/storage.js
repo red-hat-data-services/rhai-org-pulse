@@ -72,6 +72,8 @@ function upsertComponent(data, key, component) {
 
 function projectComponent(entry) {
   const latest = entry.latest;
+  // Re-derive from the latest stored Jira status so the bucket always matches
+  // current status (New→in_queue, Resolved→completed, else in-progress).
   return {
     key: latest.key,
     summary: latest.summary,

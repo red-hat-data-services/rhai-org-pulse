@@ -20,42 +20,47 @@ const ONBOARDING_STEP_KEYS = [
 ];
 
 /**
- * Derive dashboard completion status from Jira ticket fields.
- * Jira "New" tickets are shown as in_queue in the UI.
+ * Derive dashboard completion status from the current Jira status (+ completion signals).
+ * Always follow the latest status — do not keep a stale in_queue/completed from storage
+ * after the ticket has moved on.
+ *
+ * Mapping:
+ *   New            → in_queue
+ *   Resolved/Closed/Done/Cancelled, or Done resolution/category, or completed label → completed
+ *   anything else  → in-progress
+ *
+ * Legacy stored "new" is only used as a fallback when status is missing.
  */
 function deriveCompletionStatus(status, completionStatus, context) {
   const normalized = typeof status === 'string' ? status.trim().toLowerCase() : '';
-
-  // Never downgrade an explicit completed state during read-time projection.
-  if (completionStatus === 'completed') {
-    return 'completed';
-  }
 
   if (normalized === 'new') {
     return 'in_queue';
   }
 
-  if (context) {
-    const labels = context.labels || [];
-    const resolution = context.resolution || null;
-    const statusCategory = context.statusCategory || null;
+  const labels = context?.labels || [];
+  const resolution = context?.resolution || null;
+  const statusCategory = context?.statusCategory || null;
 
-    if (labels.includes('component-onboarding-completed')) {
-      return 'completed';
-    }
-    if (resolution === 'Done' || statusCategory === 'Done') {
-      return 'completed';
-    }
-    if (normalized === 'resolved' || normalized === 'closed' || normalized === 'done' || normalized === 'cancelled') {
-      return 'completed';
-    }
-    if (completionStatus === 'in_queue' || completionStatus === 'new') {
-      return 'in_queue';
-    }
+  if (labels.includes('component-onboarding-completed')) {
+    return 'completed';
+  }
+  if (resolution === 'Done' || statusCategory === 'Done') {
+    return 'completed';
+  }
+  if (normalized === 'resolved' || normalized === 'closed' || normalized === 'done' || normalized === 'cancelled') {
+    return 'completed';
+  }
+
+  // Status is present and not New / not completed → in progress (ignore stale stored bucket)
+  if (normalized) {
     return 'in-progress';
   }
 
-  return completionStatus;
+  // No usable status: fall back to stored value (normalize legacy "new")
+  if (completionStatus === 'new') return 'in_queue';
+  if (VALID_COMPLETION_STATUSES.includes(completionStatus)) return completionStatus;
+  return 'in-progress';
 }
 
 /**
