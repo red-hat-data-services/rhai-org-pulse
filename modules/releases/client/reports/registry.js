@@ -36,5 +36,13 @@ export const reports = [
     icon: 'Shield',
     tags: ['Executive', 'Readiness', 'RAG'],
     component: defineAsyncComponent(() => import('./ReleaseReadinessDirector.vue'))
+  },
+  {
+    id: 'cve-sustaining',
+    label: 'RHOAI Sustaining (CVEs)',
+    description: 'Open CVE tracking across RHOAI components and versions — due dates, assignee workload, VEX justifications, and trends.',
+    icon: 'ShieldAlert',
+    tags: ['Security', 'CVE', 'Sustaining'],
+    component: defineAsyncComponent(() => import('./CveSustainingReport.vue'))
   }
 ]

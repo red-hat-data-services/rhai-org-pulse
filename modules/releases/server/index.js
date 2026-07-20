@@ -18,6 +18,7 @@ const registerFeaturePressureRoutes = require('./feature-pressure/routes');
 const registerPmHubRoutes = require('./pm-hub/routes');
 const registerDraftPlanRoutes = require('./draft-plans/routes');
 const registerReleaseReadinessRoutes = require('./release-readiness/routes');
+const registerCveSustainingRoutes = require('./cve-sustaining/routes');
 const { getAuditLog } = require('./planning/audit-log');
 
 /**
@@ -307,6 +308,16 @@ module.exports = async function registerRoutes(router, context) {
     requireScope
   });
   router.use('/release-readiness', releaseReadinessRouter);
+
+  // CVE Sustaining sub-router (mounted at /api/modules/releases/cve-sustaining/)
+  const cveSustainingRouter = express.Router();
+  registerCveSustainingRoutes(cveSustainingRouter, {
+    storage,
+    requireAuth,
+    requireScope,
+    jira
+  });
+  router.use('/cve-sustaining', cveSustainingRouter);
 
   // ─── Unified Audit Routes ───
 
