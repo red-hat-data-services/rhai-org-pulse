@@ -1,186 +1,157 @@
 ---
 repository: "opendatahub-io/guardrails-detectors"
-overall_score: 4.6
+overall_score: 4.0
 scorecard:
   - dimension: "Unit Tests"
-    score: 7.5
-    status: "Good test-to-code ratio (1.47:1) with pytest, fixtures, and parametrized tests; no coverage enforcement"
+    score: 7.0
+    status: "Good test-to-code ratio with 16 test files covering all 3 detector components using pytest"
   - dimension: "Integration/E2E"
-    score: 3.5
-    status: "TestClient-based lightweight integration tests only; no E2E, contract, or deployment tests"
+    score: 4.0
+    status: "FastAPI TestClient integration tests exist but no E2E, no cluster testing, no multi-version"
   - dimension: "Build Integration"
     score: 2.0
-    status: "No PR-time Docker builds, no Konflux/Tekton pipeline, no manifest validation"
+    status: "No PR-time Docker builds, no Konflux simulation, no Makefile, no deployment validation"
   - dimension: "Image Testing"
-    score: 2.5
-    status: "Multi-stage Dockerfiles on UBI9 base but no CI image builds, no runtime validation, no multi-arch"
-  - dimension: "Coverage Tracking"
     score: 3.0
-    status: "pytest-cov generates terminal output only; no codecov integration or coverage thresholds"
+    status: "3 Dockerfiles with multi-stage UBI9 builds but no runtime validation or HEALTHCHECK"
+  - dimension: "Coverage Tracking"
+    score: 4.0
+    status: "pytest-cov generates reports in CI but no thresholds, no codecov integration, no PR gates"
   - dimension: "CI/CD Automation"
-    score: 6.5
-    status: "Path-filtered workflows, shared composite action, Trivy scanning, Mergify branch sync; no concurrency control"
+    score: 6.0
+    status: "3 PR-triggered test workflows with path filtering and caching but no concurrency control"
+  - dimension: "Static Analysis"
+    score: 2.0
+    status: "No linting config, no pre-commit hooks, no Dependabot/Renovate, clean FIPS posture"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no test automation guidance for AI agents"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory — zero AI agent guidance"
 critical_gaps:
-  - title: "No container image builds or runtime validation in CI"
-    impact: "Image build failures and runtime regressions are not caught until deployment"
+  - title: "No PR-time Docker image build validation"
+    impact: "Dockerfile syntax errors and dependency issues discovered only after merge in Konflux"
     severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "No coverage enforcement or PR coverage reporting"
-    impact: "Coverage can silently degrade without anyone noticing; no gate prevents merging uncovered code"
+    effort: "4-8 hours"
+  - title: "No linting or static analysis configuration"
+    impact: "Code style inconsistencies and potential bugs not caught before merge"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No E2E or integration tests against live detector endpoints"
-    impact: "API contract regressions, startup failures, and multi-component interactions are untested"
+  - title: "No coverage thresholds or PR reporting"
+    impact: "Coverage can silently regress with no enforcement or visibility on PRs"
     severity: "HIGH"
-    effort: "16-24 hours"
-  - title: "No linting configuration or pre-commit hooks file"
-    impact: "Code style drift, potential bugs from unchecked patterns, inconsistent formatting"
-    severity: "MEDIUM"
     effort: "2-4 hours"
-  - title: "No dependency update automation (Dependabot/Renovate)"
-    impact: "Vulnerable or outdated dependencies accumulate silently"
+  - title: "No Dependabot or Renovate for dependency management"
+    impact: "Vulnerable or outdated dependencies not automatically flagged"
     severity: "MEDIUM"
     effort: "1-2 hours"
+  - title: "No concurrency control in CI workflows"
+    impact: "Redundant CI runs on rapid pushes waste resources"
+    severity: "MEDIUM"
+    effort: "1 hour"
 quick_wins:
-  - title: "Add codecov integration with PR coverage comments"
-    effort: "2-3 hours"
-    impact: "Visible coverage tracking on every PR, coverage trend monitoring, prevent regressions"
-  - title: "Add ruff linting and pre-commit config"
-    effort: "2-3 hours"
-    impact: "Consistent code style, early bug detection, auto-formatting"
-  - title: "Enable Dependabot for Python dependency updates"
+  - title: "Add ruff linter configuration"
+    effort: "1-2 hours"
+    impact: "Catch style issues, unused imports, and common Python bugs automatically"
+  - title: "Enable Dependabot for pip ecosystem"
     effort: "30 minutes"
-    impact: "Automated security patches and dependency freshness"
-  - title: "Add concurrency control to PR workflows"
+    impact: "Automated security alerts and dependency update PRs"
+  - title: "Add concurrency control to test workflows"
     effort: "30 minutes"
-    impact: "Cancel stale CI runs on new pushes, saving CI resources"
-  - title: "Add Docker image build step to test workflows"
-    effort: "3-4 hours"
-    impact: "Catch Dockerfile issues and missing dependencies before merge"
+    impact: "Cancel redundant CI runs on rapid pushes, save compute"
+  - title: "Create .pre-commit-config.yaml"
+    effort: "1 hour"
+    impact: "Enforce code quality checks before commits — CI already checks for it"
+  - title: "Add codecov integration with thresholds"
+    effort: "2 hours"
+    impact: "Prevent coverage regression with PR-level enforcement"
 recommendations:
   priority_0:
-    - "Add codecov integration with coverage threshold enforcement (e.g., 80% minimum, no decrease allowed)"
-    - "Add Docker image build validation to PR workflows for all three detector images"
-    - "Create .pre-commit-config.yaml with ruff, mypy, and basic hooks (trailing whitespace, YAML lint)"
+    - "Add PR-time Docker image build validation for all 3 Dockerfiles to catch build issues before merge"
+    - "Configure ruff or flake8 linting with CI enforcement to catch code quality issues"
+    - "Add coverage thresholds (e.g., 70% minimum) and codecov PR reporting"
   priority_1:
-    - "Implement E2E tests that build images and verify detector API endpoints respond correctly"
-    - "Add contract tests to validate the Guardrails Orchestrator API spec compliance"
-    - "Create agent rules (.claude/rules/) for unit test, integration test, and API test patterns"
-    - "Add mypy type checking with strict mode for the common and built_in modules"
+    - "Add Dependabot configuration for pip, docker, and github-actions ecosystems"
+    - "Create .pre-commit-config.yaml with ruff, trailing whitespace, and YAML checks"
+    - "Add container runtime validation tests using testcontainers or direct docker run"
+    - "Add E2E tests that build and run containers, hitting actual HTTP endpoints"
   priority_2:
-    - "Add multi-architecture image builds (amd64/arm64) for broader deployment support"
-    - "Implement performance regression tests with locust (already a dev dependency)"
-    - "Add CodeQL/Semgrep SAST analysis alongside Trivy"
-    - "Add SBOM generation and image signing for supply chain security"
+    - "Create CLAUDE.md with test creation rules and coding standards"
+    - "Add HEALTHCHECK directives to all Dockerfiles"
+    - "Add multi-architecture build support (amd64/arm64)"
+    - "Add concurrency control to all CI workflows"
+    - "Add mypy type checking for Python source"
 ---
 
 # Quality Analysis: guardrails-detectors
 
+**Repository**: [opendatahub-io/guardrails-detectors](https://github.com/opendatahub-io/guardrails-detectors)
+**Jira**: RHOAIENG / AI Safety (midstream tier)
+**Language**: Python 3.11+ | **Framework**: FastAPI + pytest
+**Type**: Microservice collection — detector algorithms for FMS Guardrails Orchestrator
+**Analysis Date**: 2026-07-20
+
 ## Executive Summary
-- **Overall Score: 4.6/10**
-- **Repository Type**: Python microservice collection (FastAPI) for AI guardrails detection
-- **Primary Language**: Python 3.11+
-- **Components**: 3 detector types (built-in regex/filetype, HuggingFace model-based, LLM Judge)
-- **Key Strengths**: Well-structured unit tests with good test-to-code ratio (1.47:1), comprehensive security scanning with Trivy, shared CI composite action for DRY workflows
-- **Critical Gaps**: No container image builds in CI, no coverage enforcement, no E2E tests, no linting configuration, no agent rules
-- **Agent Rules Status**: Missing
+
+- **Overall Score: 4.0/10**
+- **Key Strengths**: Solid unit test coverage with 16 test files across all 3 detector components (builtIn, huggingface, llm_judge). Good test-to-code ratio (1.49:1 by lines). UBI9 base images with multi-stage Docker builds. Effective path-filtered CI with pip caching.
+- **Critical Gaps**: No static analysis or linting. No PR-time Docker build validation. No coverage enforcement. No dependency management automation. No agent rules.
+- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory.
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 7.5/10 | Good test-to-code ratio (1.47:1) with pytest, fixtures, and parametrized tests |
-| Integration/E2E | 3.5/10 | TestClient-based lightweight integration tests only; no E2E |
-| **Build Integration** | **2.0/10** | **No PR-time Docker builds, no Konflux/Tekton pipeline** |
-| Image Testing | 2.5/10 | Multi-stage Dockerfiles on UBI9 but no CI builds or runtime validation |
-| Coverage Tracking | 3.0/10 | Terminal-only coverage output; no codecov or thresholds |
-| CI/CD Automation | 6.5/10 | Path-filtered workflows, shared composite action, Trivy, Mergify |
-| Agent Rules | 0.0/10 | No .claude/ directory, no CLAUDE.md, no test guidance |
+| Dimension | Weight | Score | Status |
+|-----------|--------|-------|--------|
+| Unit Tests | 15% | 7.0/10 | Good test-to-code ratio with pytest, fixtures, parametrize |
+| Integration/E2E | 20% | 4.0/10 | FastAPI TestClient only — no real E2E or cluster testing |
+| Build Integration | 15% | 2.0/10 | No PR-time Docker builds, no Konflux simulation |
+| Image Testing | 10% | 3.0/10 | Multi-stage UBI9 builds but no runtime validation |
+| Coverage Tracking | 10% | 4.0/10 | pytest-cov in CI but no thresholds or PR reporting |
+| CI/CD Automation | 15% | 6.0/10 | Path-filtered test workflows with caching, no concurrency control |
+| Static Analysis | 10% | 2.0/10 | No linting, no pre-commit hooks, no Dependabot |
+| Agent Rules | 5% | 0.0/10 | No agent rules or AI guidance |
+| **Overall** | **100%** | **4.0/10** | **Significant gaps across build, analysis, and tooling** |
 
 ## Critical Gaps
 
-### 1. No Container Image Builds or Runtime Validation in CI
-- **Impact**: Image build failures and runtime regressions are not caught until deployment. Dockerfile issues (missing dependencies, broken COPY paths, etc.) can slip through.
+### 1. No PR-Time Docker Image Build Validation
 - **Severity**: HIGH
-- **Effort**: 8-12 hours
-- **Details**: Three Dockerfiles exist (`Dockerfile.hf`, `Dockerfile.judge`, `Dockerfile.builtIn`) but none are built or validated in any CI workflow. The HF detector workflow verifies model loading but not within a container context.
+- **Impact**: The repo has 3 Dockerfiles (`Dockerfile.hf`, `Dockerfile.judge`, `Dockerfile.builtIn`) but none are built or validated in PR workflows. Dockerfile syntax errors, broken dependency installs, or missing files are only discovered after merge when Konflux builds fail.
+- **Effort**: 4-8 hours
+- **Recommendation**: Add a CI job that runs `docker build` (or `podman build`) for each Dockerfile on every PR.
 
-### 2. No Coverage Enforcement or PR Reporting
-- **Impact**: Coverage can silently degrade. No gate prevents merging code that reduces overall coverage.
+### 2. No Linting or Static Analysis
 - **Severity**: HIGH
+- **Impact**: No ruff, flake8, mypy, or any Python linter is configured. The CI composite action (`test-setup/action.yaml`) checks for `.pre-commit-config.yaml` but the file doesn't exist, so linting silently passes. Code style inconsistencies and potential bugs go undetected.
 - **Effort**: 2-4 hours
-- **Details**: All three test workflows use `--cov` and `--cov-report=term-missing`, but output goes only to the CI log. No codecov/coveralls integration, no coverage comments on PRs, and no minimum thresholds.
+- **Recommendation**: Add `ruff.toml` configuration and a pre-commit config. The CI infrastructure already supports pre-commit — just add the config file.
 
-### 3. No E2E or Integration Tests Against Live Endpoints
-- **Impact**: API contract regressions, startup failures, and multi-component interactions are untested. The built-in tests use FastAPI's `TestClient` (in-process), which is good but doesn't exercise the full server lifecycle.
+### 3. No Coverage Thresholds or PR Reporting
 - **Severity**: HIGH
-- **Effort**: 16-24 hours
-- **Details**: No tests spin up actual detector services and send HTTP requests. No tests validate the KServe InferenceService integration path. The `locust` performance testing library is in dev dependencies but no load tests exist.
-
-### 4. No Linting Configuration or Pre-Commit Hooks
-- **Impact**: Code style drift, inconsistent formatting, potential bugs from unchecked anti-patterns.
-- **Severity**: MEDIUM
+- **Impact**: Coverage is generated via `pytest-cov` in all 3 test workflows (`--cov --cov-report=term-missing`) but there are no minimum thresholds and no PR comments. Coverage can regress silently.
 - **Effort**: 2-4 hours
-- **Details**: The CI composite action references `.pre-commit-config.yaml` but the file does not exist in the repository. The pre-commit step runs with `continue-on-error: true`, so failures are silently ignored. No `ruff.toml`, `flake8`, `pylint`, or `mypy` configuration exists.
+- **Recommendation**: Add `--cov-fail-under=70` to pytest commands and integrate codecov-action for PR reporting.
 
-### 5. No Dependency Update Automation
-- **Impact**: Vulnerable or outdated dependencies accumulate silently. Pinned versions (e.g., `torch==2.11.0`, `transformers==4.57.3`) will become stale.
+### 4. No Dependency Management Automation
 - **Severity**: MEDIUM
+- **Impact**: No `.github/dependabot.yml` or Renovate config. Vulnerable or outdated dependencies in `pyproject.toml` are not automatically flagged.
 - **Effort**: 1-2 hours
-- **Details**: No Dependabot or Renovate configuration. Dependencies are pinned in `pyproject.toml` which is good for reproducibility but requires manual updates.
+
+### 5. No Concurrency Control in CI Workflows
+- **Severity**: MEDIUM
+- **Impact**: Rapid pushes to a PR branch trigger duplicate CI runs. No `concurrency:` blocks to cancel superseded runs.
+- **Effort**: 30 minutes
 
 ## Quick Wins
 
-### 1. Add Codecov Integration (2-3 hours)
-Generate XML coverage reports and upload to Codecov for PR-level coverage tracking.
-```yaml
-# Add to each test workflow after the pytest step:
-- name: Upload coverage
-  uses: codecov/codecov-action@v4
-  with:
-    flags: ${{ matrix.component || 'builtin' }}
-    fail_ci_if_error: false
-```
-Add `--cov-report=xml` to pytest commands. Create `.codecov.yml`:
-```yaml
-coverage:
-  status:
-    project:
-      default:
-        target: 80%
-    patch:
-      default:
-        target: 90%
-```
-
-### 2. Add Ruff Linting and Pre-Commit Config (2-3 hours)
-Create `.pre-commit-config.yaml` (currently referenced but missing):
-```yaml
-repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.0
-    hooks:
-      - id: ruff
-        args: [--fix]
-      - id: ruff-format
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
-    hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
-      - id: check-added-large-files
-```
-
-### 3. Enable Dependabot (30 minutes)
+### 1. Enable Dependabot (30 minutes)
 Create `.github/dependabot.yml`:
 ```yaml
 version: 2
 updates:
   - package-ecosystem: "pip"
+    directory: "/detectors"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
     directory: "/detectors"
     schedule:
       interval: "weekly"
@@ -190,282 +161,290 @@ updates:
       interval: "weekly"
 ```
 
-### 4. Add Concurrency Control (30 minutes)
-Add to each PR workflow:
+### 2. Add Concurrency Control (30 minutes)
+Add to each test workflow:
 ```yaml
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 ```
 
-### 5. Add Docker Image Build to Test Workflows (3-4 hours)
-Add a job that builds all three detector images on PR:
+### 3. Create .pre-commit-config.yaml (1 hour)
 ```yaml
-build-images:
-  runs-on: ubuntu-latest
-  strategy:
-    matrix:
-      include:
-        - name: builtin
-          dockerfile: detectors/Dockerfile.builtIn
-        - name: huggingface
-          dockerfile: detectors/Dockerfile.hf
-        - name: llm-judge
-          dockerfile: detectors/Dockerfile.judge
-  steps:
-    - uses: actions/checkout@v4
-    - name: Build image
-      run: docker build -f ${{ matrix.dockerfile }} -t test-${{ matrix.name }}:pr detectors/
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.0
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+```
+
+### 4. Add Coverage Thresholds (1 hour)
+Add `--cov-fail-under=70` to each pytest command in CI workflows and add a `.coveragerc`:
+```ini
+[run]
+source = detectors
+omit = tests/*
+
+[report]
+fail_under = 70
+show_missing = true
+```
+
+### 5. Add ruff Configuration (1 hour)
+Create `ruff.toml`:
+```toml
+target-version = "py311"
+line-length = 120
+
+[lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
 ```
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
+
+**Score: 7.0/10**
+
+| Metric | Value |
+|--------|-------|
+| Test files | 16 |
+| Source files | 13 |
+| Test-to-code ratio (files) | 1.23:1 |
+| Test lines | 3,087 |
+| Source lines | 2,071 |
+| Test-to-code ratio (lines) | 1.49:1 |
+| Framework | pytest 8.3.2 |
+| Coverage tool | pytest-cov |
+
+**Strengths**:
+- Tests well-organized by component: `tests/detectors/builtIn/` (4 files), `tests/detectors/huggingface/` (10 files), `tests/detectors/llm_judge/` (2 files)
+- Good use of `@pytest.mark.parametrize` for data-driven tests (e.g., regex pattern matching)
+- Shared conftest.py with autouse fixtures for path setup and Prometheus directory management
+- HF detector tests use dummy models checked into the repo for reproducible tests
+- Method-level test granularity (e.g., `test_method_get_probabilities.py`, `test_method_parse_output.py`)
+- FastAPI TestClient used for HTTP endpoint testing
+- Mock-based testing for external dependencies (vllm_judge)
+
+**Gaps**:
+- No test isolation markers (`pytest.mark.slow`, `pytest.mark.integration`)
+- No parallel test execution configured
+
+### Integration/E2E Tests
+
+**Score: 4.0/10**
+
+**What exists**:
+- `test_client_integration.py` — FastAPI TestClient tests for HF detector lifespan, including startup, request handling, state leakage, and cleanup
+- `test_performance.py` — Concurrency and batch processing tests for LLM Judge detector
+- All integration tests use in-process TestClient, not actual HTTP calls
+
+**What's missing**:
+- No `e2e/` or `integration/` directory
+- No container-level E2E tests (build image → start container → send request → verify response)
+- No multi-version testing (e.g., testing with different Python versions or dependency versions)
+- No cluster setup (Kind/Minikube) for Kubernetes deployment validation
+- No tests for the KServe deployment manifests in `detectors/huggingface/deploy/`
+
+### Build Integration
+
+**Score: 2.0/10**
+
+**What exists**:
+- 3 Dockerfiles: `Dockerfile.hf`, `Dockerfile.judge`, `Dockerfile.builtIn`
+- All use multi-stage builds with UBI9 base
+- Build commands documented in README
+
+**What's missing**:
+- No PR-triggered Docker builds in any workflow
+- No Makefile with build/test targets
+- No Konflux build simulation
+- No `docker build --dry-run` or equivalent validation
+- No image startup testing
+- No Kustomize overlay validation (despite KServe deploy manifests existing)
+- No `kubectl apply --dry-run` for deployment manifests
+
+### Image Testing
+
+**Score: 3.0/10**
+
+**What exists**:
+- Multi-stage Docker builds for all 3 detector types
+- UBI9 base images (`registry.access.redhat.com/ubi9/python-312:latest`) — FIPS-capable
+- Appropriate EXPOSE directives
+- USER 1001 (non-root) in HF Dockerfile
+
+**What's missing**:
+- No HEALTHCHECK directives in any Dockerfile
+- No container runtime validation tests
+- No testcontainers usage
+- No `.dockerignore` file
+- No multi-architecture support (no `--platform`, no `docker buildx`)
+- No image size optimization beyond multi-stage builds
+- `Dockerfile.judge` and `Dockerfile.builtIn` don't set a non-root USER
+
+### Coverage Tracking
+
+**Score: 4.0/10**
+
+**What exists**:
+- `pytest-cov>=4.0` in dev dependencies
+- All 3 CI workflows run pytest with `--cov=detectors.<component>` and `--cov-report=term-missing`
+- tox.ini configured with `--cov=detectors --cov-report=term-missing`
+- `coverage==7.6.1` pinned in dev dependencies
+
+**What's missing**:
+- No `.codecov.yml` or `codecov.yml`
+- No coverage thresholds (`--cov-fail-under` not used)
+- No PR coverage reporting (no codecov-action or coverage comment bot)
+- No `.coveragerc` configuration
+- No coverage gates in CI — tests pass regardless of coverage level
+
+### CI/CD Automation
+
+**Score: 6.0/10**
 
 **Workflow Inventory** (6 workflows):
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `test-builtin-detectors.yaml` | PR/push (path-filtered) | Unit tests for built-in detectors |
-| `test-huggingface-runtime.yaml` | PR/push (path-filtered) | Unit tests for HF detector + model loading |
-| `test-llm-judge.yaml` | PR/push (path-filtered) | Unit tests for LLM Judge detector |
-| `security-scan.yaml` | PR/push/schedule/dispatch | Trivy filesystem + config scanning |
-| `sync-branch-incubation.yaml` | Push to main | Sync main → incubation |
-| `sync-branch-stable.yaml` | Push to incubation | Sync incubation → stable |
+| `test-builtin-detectors.yaml` | PR + push (path-filtered) | Built-in detector unit tests |
+| `test-huggingface-runtime.yaml` | PR + push (path-filtered) | HF runtime unit tests + model loading |
+| `test-llm-judge.yaml` | PR + push (path-filtered) | LLM Judge unit tests + init verification |
+| `security-scan.yaml` | PR + push + schedule + dispatch | Trivy vulnerability scanning |
+| `sync-branch-incubation.yaml` | push to main | Sync main → incubation |
+| `sync-branch-stable.yaml` | push to incubation | Sync incubation → stable |
 
 **Strengths**:
 - Path-filtered triggers avoid unnecessary CI runs
-- Shared composite action (`.github/actions/test-setup/action.yaml`) keeps workflows DRY
-- Pip caching based on `pyproject.toml` hash
-- Multi-branch strategy (main → incubation → stable) with automated sync via Mergify and sync workflows
-- Security scanning runs on PRs, pushes, weekly schedule, and manual dispatch
+- Shared composite action (`.github/actions/test-setup/`) for DRY setup
+- Pip caching via `actions/cache@v4` with hash-based keys
+- Timeout-minutes set on long-running jobs (HF: 20min, LLM Judge: 15min)
+- Mergify for automated branch sync (`main → incubation → stable`)
+- Weekly scheduled security scans
 
 **Gaps**:
-- No concurrency control — stale PR runs are not cancelled
-- Single Python version (3.11) — no matrix testing across versions
-- No image build validation in any workflow
-- Pre-commit step has `continue-on-error: true` and no `.pre-commit-config.yaml` exists
-- No test result publishing (JUnit XML, etc.)
+- No `concurrency:` blocks — duplicate runs on rapid pushes
+- No test parallelization (no matrix splitting, no pytest-xdist)
+- Single Python version in matrix (only 3.11) — no multi-version testing
+- No required status checks configuration visible
 
-### Test Coverage
+### Static Analysis
 
-**Test Inventory** (16 test files, ~3041 lines):
+**Score: 2.0/10**
 
-| Component | Test Files | Lines | Key Patterns |
-|-----------|-----------|-------|-------------|
-| Built-in | 4 files | 1,068 | FastAPI TestClient, parametrized regex/filetype tests |
-| HuggingFace | 10 files | 1,251 | Method-level unit tests, dummy models, model loading |
-| LLM Judge | 2 files | 722 | Async mocking, vllm_judge integration, content + generation analysis |
+#### Linting
+- **No linting configuration**: No ruff.toml, .flake8, mypy.ini, or any Python linter config
+- The CI composite action checks for `.pre-commit-config.yaml` and runs pre-commit if found, but the file doesn't exist — linting silently skips with `continue-on-error: true`
+- No type annotations enforcement despite Python 3.11+ target
 
-**Test-to-Code Ratio**: 3,041 test lines / 2,071 source lines = **1.47:1** (excellent)
+#### FIPS Compatibility
+- **Clean posture**: No FIPS-problematic crypto imports found (`hashlib.md5`, `Crypto.Cipher.*`, etc.)
+- **UBI9 base images**: All Dockerfiles use `registry.access.redhat.com/ubi9/python-312:latest` (FIPS-capable)
+- No Go code, so FIPS build tags not applicable
+- Overall: FIPS-ready from a base image perspective
 
-**Strengths**:
-- Well-organized tests mirroring source structure
-- Extensive use of `@pytest.mark.parametrize` for input variations (regex patterns, credit card numbers, etc.)
-- Good fixture usage (TestClient, mock judge, prometheus cleanup)
-- HuggingFace tests use dummy models for isolated, reproducible testing
-- LLM Judge tests properly mock async vllm_judge dependency
-- Error handling tests (invalid regex, missing env vars, unreachable URLs)
+#### Dependency Alerts
+- **No Dependabot**: No `.github/dependabot.yml` file
+- **No Renovate**: No `renovate.json`, `.renovaterc`, or `.renovaterc.json`
+- Dependencies are pinned in `pyproject.toml` (e.g., `fastapi==0.136.3`, `torch==2.11.0`) but updates are manual-only
 
-**Gaps**:
-- No E2E tests that exercise full server lifecycle
-- No contract tests validating API schema compliance with FMS Guardrails Orchestrator
-- No tests for Dockerfile builds or container startup
-- Coverage reported to terminal only — not tracked over time
-- No performance tests despite `locust` being a dev dependency
-- `conftest.py` uses `sys.path` manipulation instead of proper package installation
+### Agent Rules
 
-### Code Quality
+**Score: 0.0/10**
 
-**Current State**:
-- **Linting**: No linting configuration found (no ruff, flake8, pylint, eslint)
-- **Type Checking**: No mypy or pyright configuration; some type hints used in LLM Judge tests
-- **Pre-commit**: Referenced in CI composite action but `.pre-commit-config.yaml` does not exist
-- **Static Analysis**: Trivy filesystem scanning covers vulnerabilities and secrets, but no SAST (CodeQL, Semgrep, Bandit)
-- **Formatting**: No formatter configured (no black, ruff-format, yapf)
+- No `CLAUDE.md` or `AGENTS.md` in repository root
+- No `.claude/` directory
+- No `.claude/rules/` test creation rules
+- No `.claude/skills/` custom skills
+- No test automation guidance for AI agents
 
-**Project Configuration**:
-- `pyproject.toml` with well-structured optional dependencies per component
-- `tox.ini` for local test execution
-- Clean `.gitignore` covering common Python artifacts
-- Apache 2.0 license
-
-### Container Images
-
-**Dockerfiles** (3 files):
-
-| Image | Base | Stages | Port | Workers |
-|-------|------|--------|------|---------|
-| `Dockerfile.hf` | UBI9 Python 3.12 | 3 (base → builder → final) | 8000 | 1 |
-| `Dockerfile.judge` | UBI9 Python 3.12 | 3 (base → builder → final) | 8000 | 4 |
-| `Dockerfile.builtIn` | UBI9 Python 3.12 | 3 (base → builder → final) | 8080 | 4 |
-
-**Strengths**:
-- Red Hat UBI9 base images (production-ready, supported)
-- Multi-stage builds for smaller final images
-- Prometheus multiprocessing directory setup
-- Non-root user for HF detector (USER 1001)
-
-**Gaps**:
-- No image builds in CI — Dockerfile issues caught only at deployment time
-- No runtime validation (healthcheck, startup test)
-- No multi-architecture support (no `--platform` or buildx)
-- No SBOM generation
-- No image signing/attestation (cosign, sigstore)
-- No vulnerability scanning of built images (only filesystem scanning via Trivy)
-- `Dockerfile.judge` does not set USER (runs as root by default)
-- CACHEBUST ARG pattern is non-standard and could be replaced with `--no-cache` flag
-
-### Security
-
-**Strengths**:
-- Comprehensive Trivy scanning:
-  - Filesystem vulnerability scanning per component
-  - Configuration scanning for misconfigurations
-  - Repository-wide scanning
-  - Secret detection enabled
-- SARIF upload to GitHub Security tab
-- Weekly scheduled scans (Monday 2 AM UTC)
-- Manual dispatch trigger for on-demand scanning
-- Scan artifacts retained for 30 days
-
-**Gaps**:
-- No CodeQL or SAST for source code analysis
-- No dependency scanning automation (Dependabot/Renovate)
-- No image vulnerability scanning (only filesystem)
-- No `.gitleaks.toml` configuration
-- Security scan `exit-code: '0'` means vulnerabilities don't fail the build
-- No security policy file (`SECURITY.md`)
-
-### Agent Rules (Agentic Flow Quality)
-
-- **Status**: Missing
-- **Coverage**: No test types have rules
-- **Quality**: N/A
-- **Gaps**: Everything — no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
-- **Recommendation**: Generate test creation rules with `/test-rules-generator` covering:
-  - Unit test patterns for FastAPI endpoints
-  - Mock patterns for async vllm_judge
-  - Dummy model testing patterns for HuggingFace
-  - Integration test patterns with TestClient
+**Recommendation**: Generate test creation rules using `/test-rules-generator` to provide AI agents with framework-specific testing patterns for pytest, FastAPI TestClient, and mock patterns used in this repo.
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add codecov integration with coverage enforcement**
-   - Upload XML coverage from all three test workflows
-   - Set minimum threshold (80% project, 90% patch)
-   - Add coverage comments to PRs
-   - Effort: 2-4 hours
-
-2. **Add Docker image build validation to PR workflows**
-   - Build all three detector images on every PR
-   - Add basic startup/healthcheck validation
-   - Effort: 4-6 hours
-
-3. **Create `.pre-commit-config.yaml`**
-   - Currently referenced but missing from the repository
-   - Add ruff (linting + formatting), trailing whitespace, YAML validation
-   - Remove `continue-on-error: true` from CI pre-commit step
-   - Effort: 2-3 hours
+1. **Add PR-time Docker build validation** — Add a workflow that builds all 3 Dockerfiles on PRs to catch build failures before merge. This is the most impactful gap.
+2. **Configure Python linting** — Add ruff configuration and enforce in CI. The infrastructure (composite action with pre-commit support) is already there; only the config file is missing.
+3. **Add coverage thresholds** — Add `--cov-fail-under=70` to pytest commands and integrate codecov for PR reporting.
 
 ### Priority 1 (High Value)
 
-4. **Implement E2E tests for detector API endpoints**
-   - Build detector images in CI, start containers, send HTTP requests
-   - Validate API responses against the Guardrails Orchestrator detector API spec
-   - Test startup, healthcheck, shutdown lifecycle
-   - Effort: 16-24 hours
-
-5. **Add mypy type checking**
-   - Start with `common/` and `built_in/` modules (simpler dependencies)
-   - Gradually extend to `huggingface/` and `llm_judge/`
-   - Add to CI workflows
-   - Effort: 4-8 hours
-
-6. **Create agent rules for test automation**
-   - `.claude/rules/unit-tests.md` — pytest patterns, fixtures, parametrize usage
-   - `.claude/rules/integration-tests.md` — TestClient patterns, mock strategies
-   - `.claude/rules/api-tests.md` — API schema validation, response format checks
-   - Effort: 4-6 hours
-
-7. **Add Dependabot for dependency management**
-   - Pip ecosystem for `detectors/pyproject.toml`
-   - GitHub Actions ecosystem for workflow dependencies
-   - Effort: 30 minutes
+4. **Add Dependabot** — Enable for pip, docker, and github-actions ecosystems.
+5. **Create .pre-commit-config.yaml** — Add ruff, trailing-whitespace, check-yaml, and check-added-large-files hooks.
+6. **Add container E2E tests** — Build container images and run basic health checks (HTTP GET on health endpoint) in CI.
+7. **Add concurrency control** — Add `concurrency:` blocks to all test workflows.
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add performance regression testing with locust**
-   - `locust` is already a dev dependency but unused
-   - Create load test scenarios for each detector type
-   - Effort: 8-12 hours
-
-9. **Add multi-architecture image builds**
-   - Support amd64 and arm64 for broader deployment scenarios
-   - Use Docker buildx or Podman multi-arch builds
-   - Effort: 4-6 hours
-
-10. **Add CodeQL/Semgrep SAST**
-    - Complement Trivy with source code analysis
-    - Detect injection vulnerabilities, unsafe deserialization, etc.
-    - Effort: 2-4 hours
-
-11. **Add SBOM generation and image signing**
-    - Syft for SBOM, cosign for signing
-    - Supply chain security compliance
-    - Effort: 4-6 hours
-
-12. **Expand Python version testing matrix**
-    - Test on 3.11 and 3.12 (pyproject.toml requires >=3.11, Dockerfiles use 3.12)
-    - Effort: 1-2 hours
+8. **Create CLAUDE.md** — Document test patterns, coding standards, and quality expectations for AI agents.
+9. **Add HEALTHCHECK** — Add HEALTHCHECK directives to all 3 Dockerfiles.
+10. **Add multi-arch support** — Enable `docker buildx` for amd64/arm64 builds.
+11. **Add mypy** — Enable type checking for Python source.
+12. **Add .dockerignore** — Exclude test files, docs, and .git from Docker build context.
 
 ## Comparison to Gold Standards
 
-| Dimension | guardrails-detectors | odh-dashboard | notebooks | kserve |
-|-----------|---------------------|---------------|-----------|--------|
-| Unit Tests | 7.5 - Good ratio, pytest | 9.0 - Jest, comprehensive | 7.0 - Script-based | 9.0 - Go testing, envtest |
-| Integration/E2E | 3.5 - TestClient only | 9.0 - Cypress, Playwright | 8.0 - Multi-layer | 9.0 - Multi-version |
-| Build Integration | 2.0 - None | 7.0 - Module Federation | 8.0 - Image builds | 8.0 - Operator builds |
-| Image Testing | 2.5 - Dockerfiles only | 6.0 - Basic builds | 9.0 - 5-layer validation | 7.0 - KServe runtime |
-| Coverage | 3.0 - Terminal only | 8.0 - Codecov enforced | 5.0 - Basic | 9.0 - Thresholds |
-| CI/CD | 6.5 - Good basics | 9.0 - Comprehensive | 8.0 - Multi-stage | 9.0 - Well-automated |
-| Agent Rules | 0.0 - None | 8.0 - Comprehensive | 2.0 - Minimal | 3.0 - Basic |
+| Practice | guardrails-detectors | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
+|----------|---------------------|---------------------|------------------|---------------|
+| Unit test ratio | 1.49:1 (lines) | >1.5:1 | N/A | >1.5:1 |
+| Integration/E2E | TestClient only | Multi-layer + contract | 5-layer validation | envtest + E2E |
+| Coverage enforcement | None | Codecov with thresholds | Threshold gates | Codecov + gates |
+| PR Docker builds | None | Image build + test | Multi-image pipeline | Image validation |
+| Linting | None | ESLint + strict TS | Linting + format | golangci-lint |
+| Pre-commit | None | Enforced | Enforced | Enforced |
+| Dependency alerts | None | Dependabot | Dependabot | Dependabot |
+| FIPS readiness | UBI9 base (good) | UBI base | UBI + FIPS tags | UBI + boringcrypto |
+| Agent rules | None | Comprehensive | Present | Present |
+| CI concurrency | None | Controlled | Controlled | Controlled |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/test-builtin-detectors.yaml` — Built-in detector unit tests
-- `.github/workflows/test-huggingface-runtime.yaml` — HF detector unit tests
-- `.github/workflows/test-llm-judge.yaml` — LLM Judge unit tests
+- `.github/workflows/test-builtin-detectors.yaml` — Built-in detector tests
+- `.github/workflows/test-huggingface-runtime.yaml` — HF runtime tests
+- `.github/workflows/test-llm-judge.yaml` — LLM Judge tests
 - `.github/workflows/security-scan.yaml` — Trivy security scanning
-- `.github/workflows/sync-branch-incubation.yaml` — Branch sync main → incubation
-- `.github/workflows/sync-branch-stable.yaml` — Branch sync incubation → stable
-- `.github/actions/test-setup/action.yaml` — Shared test setup composite action
-- `.mergify.yml` — Backport rules (main → incubation → stable)
-- `.github/pull.yml` — Upstream sync from trustyai-explainability
-
-### Testing
-- `tests/conftest.py` — Shared fixtures (sys.path, Prometheus dir)
-- `tests/detectors/builtIn/` — 4 test files (regex, filetype, custom, metrics)
-- `tests/detectors/huggingface/` — 10 test files (method-level + integration)
-- `tests/detectors/llm_judge/` — 2 test files (detector + performance)
-- `tests/dummy_models/` — HuggingFace dummy models for isolated testing
-- `tox.ini` — Local test execution configuration
+- `.github/workflows/sync-branch-incubation.yaml` — Branch sync main→incubation
+- `.github/workflows/sync-branch-stable.yaml` — Branch sync incubation→stable
+- `.github/actions/test-setup/action.yaml` — Shared CI setup composite action
 
 ### Source Code
-- `detectors/pyproject.toml` — Package configuration and dependencies
-- `detectors/common/` — Shared code (scheme, instrumented detector, app base)
-- `detectors/built_in/` — Built-in detector implementations (regex, filetype, custom)
-- `detectors/huggingface/` — HuggingFace model-based detector
-- `detectors/llm_judge/` — LLM Judge detector (vllm_judge integration)
+- `detectors/pyproject.toml` — Project dependencies and config
+- `detectors/built_in/` — Built-in detector source (regex, file type, custom)
+- `detectors/huggingface/` — HuggingFace detector source
+- `detectors/llm_judge/` — LLM Judge detector source
+- `detectors/common/` — Shared code (app base, scheme, instrumentation)
+
+### Tests
+- `tests/conftest.py` — Shared fixtures
+- `tests/detectors/builtIn/` — 4 test files for built-in detectors
+- `tests/detectors/huggingface/` — 10 test files for HF detector
+- `tests/detectors/llm_judge/` — 2 test files for LLM Judge
+- `tests/dummy_models/` — Test model fixtures (BERT, GPT2)
 
 ### Container Images
-- `detectors/Dockerfile.hf` — HuggingFace detector image
-- `detectors/Dockerfile.judge` — LLM Judge detector image
-- `detectors/Dockerfile.builtIn` — Built-in detectors image
+- `detectors/Dockerfile.hf` — HuggingFace detector image (UBI9)
+- `detectors/Dockerfile.judge` — LLM Judge detector image (UBI9)
+- `detectors/Dockerfile.builtIn` — Built-in detector image (UBI9)
+- `detectors/huggingface/deploy/` — KServe deployment manifests
 
-### Deployment
-- `detectors/huggingface/deploy/` — KServe InferenceService manifests
-- `detectors/llm_judge/deploy/` — KServe ServingRuntime manifests
+### Configuration (Missing)
+- `.codecov.yml` — NOT PRESENT
+- `.pre-commit-config.yaml` — NOT PRESENT
+- `.github/dependabot.yml` — NOT PRESENT
+- `ruff.toml` / `.flake8` / `mypy.ini` — NOT PRESENT
+- `CLAUDE.md` / `AGENTS.md` — NOT PRESENT
+- `.dockerignore` — NOT PRESENT
+- `Makefile` — NOT PRESENT

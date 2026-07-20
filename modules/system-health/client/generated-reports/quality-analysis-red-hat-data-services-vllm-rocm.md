@@ -1,154 +1,144 @@
 ---
 repository: "red-hat-data-services/vllm-rocm"
-overall_score: 1.6
+overall_score: 2.3
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No source code or test files present — build-wrapper repo only"
+    status: "No source code or test files — thin Dockerfile wrapper repo"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests — repo contains only a Dockerfile and Tekton pipeline"
+    status: "No integration or E2E test infrastructure"
   - dimension: "Build Integration"
-    score: 4.0
-    status: "Konflux PR build via Tekton with Clair scan and preflight checks, but no runtime validation"
+    score: 6.0
+    status: "Tekton PipelineRun for Konflux PR builds with cancel-in-progress"
   - dimension: "Image Testing"
-    score: 2.0
-    status: "Image builds via Konflux pipeline; no startup, runtime, or functional validation"
+    score: 3.0
+    status: "Single Dockerfile from UBI base, no runtime validation or health checks"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling — no source code to cover"
+    status: "No coverage configuration — no tests to measure"
   - dimension: "CI/CD Automation"
     score: 4.0
-    status: "Tekton PipelineRun for PR builds with cancel-in-progress; no GitHub Actions or periodic jobs"
+    status: "Tekton PR pipeline with label/comment triggers, no GitHub workflows"
+  - dimension: "Static Analysis"
+    score: 5.0
+    status: "Comprehensive pre-commit config inherited from upstream, but no repo source to lint"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, .claude/ directory, or agent rules of any kind"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
   - title: "No container image runtime validation"
-    impact: "Image may build successfully but fail at startup — broken entrypoint, missing Python modules, or incompatible ROCm libraries not detected until deployment"
+    impact: "Image startup failures, broken entrypoints, or missing dependencies not caught until deployment"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "No smoke test or health-check validation"
-    impact: "vLLM gRPC adapter may not start or respond correctly; discovered only in staging/production"
+  - title: "No smoke test for built image"
+    impact: "Konflux builds produce an image but never verify it starts or responds on expected ports"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No vulnerability scanning beyond Clair"
-    impact: "Clair scans OS packages but misses Python dependency CVEs (pip packages in the base image)"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No .dockerignore file"
-    impact: "Build context may include unnecessary files (.git, docs), increasing build time and image layer sizes"
+  - title: "skip-checks: true in Tekton pipeline"
+    impact: "Quality gates bypassed — image checks and validations are skipped on every PR build"
     severity: "MEDIUM"
-    effort: "0.5 hours"
-  - title: "skip-checks: true in Tekton PipelineRun"
-    impact: "Enterprise Contract and other Konflux validation checks are skipped on PR builds"
-    severity: "MEDIUM"
-    effort: "2-4 hours"
-  - title: "No base image pinning or digest verification"
-    impact: "Dockerfile uses a tag-based base image (registry.redhat.io/rhaiis/vllm-rocm-rhel9:3.2.1) without digest pinning — builds are not fully reproducible"
+    effort: "1-2 hours"
+  - title: "No Dependabot or Renovate for Dockerfile base image updates"
+    impact: "Base image version (RHAIIS_VERSION) requires manual tracking for security and compatibility updates"
     severity: "MEDIUM"
     effort: "1-2 hours"
 quick_wins:
-  - title: "Add a .dockerignore file"
-    effort: "0.5 hours"
-    impact: "Faster builds, smaller build context, avoids leaking .git metadata"
-  - title: "Add container startup smoke test to Tekton pipeline"
+  - title: "Add a container smoke test step to the Tekton pipeline"
     effort: "4-6 hours"
-    impact: "Catch broken entrypoint, missing modules, or ROCm library issues before merge"
-  - title: "Pin base image by digest"
-    effort: "1 hour"
-    impact: "Reproducible builds — prevents silent base image changes from breaking downstream"
-  - title: "Add Trivy scanning for Python dependencies"
-    effort: "2-3 hours"
-    impact: "Detect CVEs in pip packages that Clair's OS-level scan misses"
-  - title: "Create a basic CLAUDE.md with repo context"
-    effort: "1 hour"
-    impact: "AI agents and new contributors understand this is a build-wrapper repo, not a source repo"
+    impact: "Validates image starts and vllm_tgis_adapter entrypoint responds before merging"
+  - title: "Enable Dependabot for Dockerfile base image tracking"
+    effort: "1-2 hours"
+    impact: "Automated PRs when registry.redhat.io/rhaiis/vllm-rocm-rhel9 releases new versions"
+  - title: "Add HEALTHCHECK to Dockerfile"
+    effort: "30 minutes"
+    impact: "Container orchestrators can detect unhealthy instances and restart automatically"
+  - title: "Create basic CLAUDE.md with repo context and build instructions"
+    effort: "1-2 hours"
+    impact: "AI agents understand this is a thin wrapper repo and produce appropriate contributions"
+  - title: "Remove skip-checks: true or add justification comment"
+    effort: "30 minutes"
+    impact: "Enables Konflux quality gates on PR builds"
 recommendations:
   priority_0:
-    - "Add container runtime validation — build the image, start it, verify vllm_tgis_adapter responds on gRPC port 8033"
-    - "Add Python dependency vulnerability scanning (Trivy or Grype) alongside existing Clair scan"
+    - "Add container image runtime validation — verify the built image starts and the vllm_tgis_adapter entrypoint is functional"
+    - "Evaluate whether skip-checks: true is intentional or a leftover; re-enable checks if possible"
   priority_1:
-    - "Enable Enterprise Contract checks (remove skip-checks: true) or document why they are skipped"
-    - "Add base image digest pinning and Renovate/Dependabot for automated base image updates"
-    - "Add a Tekton task to verify the ENTRYPOINT runs without GPU (--help or dry-run mode)"
+    - "Add a .dockerignore to exclude .git/ and other unneeded files from build context"
+    - "Add Dependabot configuration for Dockerfile base image version tracking"
+    - "Add HEALTHCHECK instruction to Dockerfile.konflux.rocm"
   priority_2:
-    - "Create CLAUDE.md documenting repo purpose, relationship to upstream vllm, and Konflux build process"
-    - "Add SBOM generation and image signing/attestation"
-    - "Consider adding a periodic reconciliation job to detect drift between this repo and konflux-central"
+    - "Create CLAUDE.md documenting this repo's role as a downstream Dockerfile wrapper"
+    - "Consider adding a Makefile or script for local image builds to aid development"
+    - "Add a .github/CODEOWNERS file for build/Dockerfile review assignment"
 ---
 
-# Quality Analysis: vllm-rocm
+# Quality Analysis: red-hat-data-services/vllm-rocm
 
 ## Executive Summary
 
-- **Overall Score: 1.6/10**
-- **Repository Type**: Konflux build-wrapper (not a source code repository)
-- **Primary Language**: Dockerfile / YAML (Tekton)
-- **Key Strengths**: Existing Konflux pipeline with Clair scanning and ecosystem cert preflight checks; pre-commit config inherited from upstream vLLM (though no source code to lint)
-- **Critical Gaps**: No runtime validation of the built container image; no smoke tests; no Python dependency scanning; Konflux checks skipped on PRs
-- **Agent Rules Status**: Missing — no CLAUDE.md, .claude/ directory, or any agent configuration
+- **Overall Score: 2.3/10**
+- **Repository Type**: Thin downstream Dockerfile wrapper (Konflux build configuration)
+- **Primary Language**: None (Dockerfile + YAML only)
+- **Jira**: RHOAIENG / llm-d (downstream tier)
+- **Key Strengths**: Tekton Konflux pipeline with PR triggers, UBI-based image (FIPS-capable), comprehensive upstream pre-commit config
+- **Critical Gaps**: No image runtime validation, no smoke tests, quality checks skipped in pipeline, no dependency tracking
+- **Agent Rules Status**: Missing
 
-## Context
+### Context
 
-This repository is a **minimal Konflux build wrapper** for the AMD ROCm variant of vLLM. It contains:
-
-- **1 Dockerfile** (`Dockerfile.konflux.rocm`) — 25 lines, builds on top of `registry.redhat.io/rhaiis/vllm-rocm-rhel9`
-- **1 Tekton PipelineRun** (`.tekton/vllm-rocm-pull-request.yaml`) — auto-synced from `konflux-central`
-- **1 pre-commit config** (`.pre-commit-config.yaml`) — inherited from upstream vLLM, but no source code to validate
-- **README.md and LICENSE** — upstream vLLM documentation
-
-The actual vLLM source code, tests, and CI/CD live in the upstream `vllm-project/vllm` repository. This repo's sole purpose is to build and publish a Red Hat-branded ROCm container image through the Konflux pipeline.
+This repository is a **thin downstream wrapper** — it contains only a single-stage Dockerfile (`Dockerfile.konflux.rocm`) that builds from the Red Hat AI Inference Service base image (`registry.redhat.io/rhaiis/vllm-rocm-rhel9`). All actual vLLM source code, tests, and development tooling live upstream in `vllm-project/vllm`. The low overall score reflects the wrapper nature of the repo, but several meaningful improvements are still possible within its scope.
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 0/10 | No source code or test files present |
-| Integration/E2E | 0/10 | No integration or E2E tests |
-| **Build Integration** | **4/10** | **Konflux PR build with Clair scan, but no runtime validation** |
-| Image Testing | 2/10 | Image builds but no startup/functional validation |
-| Coverage Tracking | 0/10 | No coverage tooling (no source to cover) |
-| CI/CD Automation | 4/10 | Tekton PipelineRun with cancel-in-progress; no periodic jobs |
-| Agent Rules | 0/10 | No agent configuration of any kind |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 0/10 | 15% | 0.00 | No source code or test files |
+| Integration/E2E | 0/10 | 20% | 0.00 | No integration or E2E test infrastructure |
+| Build Integration | 6/10 | 15% | 0.90 | Tekton PR pipeline with Konflux integration |
+| Image Testing | 3/10 | 10% | 0.30 | Single Dockerfile, no runtime validation |
+| Coverage Tracking | 0/10 | 10% | 0.00 | No coverage configuration |
+| CI/CD Automation | 4/10 | 15% | 0.60 | Tekton pipeline, no GitHub workflows |
+| Static Analysis | 5/10 | 10% | 0.50 | Pre-commit config present but unused |
+| Agent Rules | 0/10 | 5% | 0.00 | No agent configuration |
+| **Overall** | **2.3/10** | **100%** | **2.30** | |
 
 ## Critical Gaps
 
 ### 1. No Container Image Runtime Validation
-- **Impact**: The image may build successfully but fail at startup due to broken entrypoint, missing Python modules, or incompatible ROCm libraries. These failures are only discovered when the image is deployed to a real cluster.
+- **Impact**: Image startup failures, broken entrypoints, or missing Python modules not caught until deployment
 - **Severity**: HIGH
 - **Effort**: 4-8 hours
-- **Details**: The Dockerfile sets `ENTRYPOINT ["python3", "-m", "vllm_tgis_adapter", "--uvicorn-log-level=warning"]` but there is no test that actually starts the container and verifies the process launches without errors.
+- **Details**: The Tekton pipeline builds the image but never runs it. The entrypoint (`python3 -m vllm_tgis_adapter --uvicorn-log-level=warning`) is never validated. If the base image changes and breaks the adapter module, it will only be discovered in production.
 
-### 2. No Smoke Test or Health-Check Validation
-- **Impact**: The vLLM gRPC adapter may not start or respond correctly. Without a GPU, a dry-run or `--help` validation could still catch import errors, missing dependencies, or configuration issues.
+### 2. No Smoke Test for Built Image
+- **Impact**: Konflux produces images that are never verified as functional
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
+- **Details**: After the build step, there is no pipeline task that pulls the built image, starts a container, and verifies the gRPC (port 8033) and HTTP (port 8000) endpoints respond. A basic health-check task would catch most regression scenarios.
 
-### 3. No Python Dependency Vulnerability Scanning
-- **Impact**: Clair scans OS-level packages in the container image but does not analyze Python pip packages. The base image (`vllm-rocm-rhel9`) bundles dozens of Python dependencies (torch, transformers, etc.) that may have known CVEs.
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-
-### 4. skip-checks: true in Tekton PipelineRun
-- **Impact**: Enterprise Contract and other Konflux validation checks are explicitly skipped on PR builds. This means compliance and policy gates are not enforced until post-merge.
-- **Severity**: MEDIUM
-- **Effort**: 2-4 hours
-- **Location**: `.tekton/vllm-rocm-pull-request.yaml:49-50`
-
-### 5. No .dockerignore File
-- **Impact**: Build context includes `.git/` and other unnecessary files, increasing build time and potentially leaking metadata.
-- **Severity**: MEDIUM
-- **Effort**: 0.5 hours
-
-### 6. No Base Image Digest Pinning
-- **Impact**: The Dockerfile uses `registry.redhat.io/rhaiis/vllm-rocm-rhel9:${RHAIIS_VERSION}` — a mutable tag. If the tag is re-published with different content, builds become non-reproducible.
+### 3. skip-checks: true in Tekton Pipeline
+- **Impact**: Quality gates in the Konflux pipeline are bypassed on every PR build
 - **Severity**: MEDIUM
 - **Effort**: 1-2 hours
+- **Details**: `.tekton/vllm-rocm-pull-request.yaml` has `skip-checks: true`. This disables Konflux quality validation tasks. While this may be intentional for build speed, it means the pipeline provides no quality signal beyond "the image built successfully."
+
+### 4. No Dependency Update Automation
+- **Impact**: The `RHAIIS_VERSION=3.2.1` build arg in the Dockerfile must be manually tracked and updated
+- **Severity**: MEDIUM
+- **Effort**: 1-2 hours
+- **Details**: No Dependabot or Renovate configuration exists to track updates to the base image version or any other dependencies.
 
 ## Quick Wins
 
-### 1. Add a .dockerignore file (0.5 hours)
+### 1. Add HEALTHCHECK to Dockerfile (30 minutes)
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+  CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+```
+This enables container orchestrators to detect unhealthy vLLM instances.
+
+### 2. Add .dockerignore (15 minutes)
 ```
 .git
 .tekton
@@ -156,181 +146,185 @@ The actual vLLM source code, tests, and CI/CD live in the upstream `vllm-project
 README.md
 LICENSE
 ```
+Reduces build context size and prevents unnecessary files from entering the image layer.
 
-### 2. Pin base image by digest (1 hour)
-```dockerfile
-# Before
-FROM registry.redhat.io/rhaiis/vllm-rocm-rhel9:${RHAIIS_VERSION} as vllm-grpc-adapter
-
-# After (example digest)
-FROM registry.redhat.io/rhaiis/vllm-rocm-rhel9:${RHAIIS_VERSION}@sha256:abc123... as vllm-grpc-adapter
-```
-
-### 3. Add container startup smoke test (4-6 hours)
-Add a Tekton task that runs the built image with a basic health check:
+### 3. Enable Dependabot for Dockerfile (1-2 hours)
+Create `.github/dependabot.yml`:
 ```yaml
-- name: smoke-test
-  image: $(params.output-image)
-  command: ["python3", "-m", "vllm_tgis_adapter", "--help"]
-  # Or: verify the process starts and responds on port 8033
+version: 2
+updates:
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
 ```
 
-### 4. Add Trivy Python dependency scanning (2-3 hours)
-Add a Tekton task using Trivy to scan Python packages:
-```yaml
-- name: trivy-python-scan
-  image: aquasec/trivy:latest
-  command: ["trivy", "image", "--vuln-type", "library", "$(params.output-image)"]
-```
-
-### 5. Create CLAUDE.md (1 hour)
+### 4. Create Basic CLAUDE.md (1-2 hours)
 ```markdown
 # vllm-rocm
 
-Build-wrapper repository for the AMD ROCm variant of vLLM.
+Downstream Dockerfile wrapper for vLLM ROCm builds.
 
-## Purpose
-This repo builds `odh-vllm-rocm-rhel9` container images via Konflux.
-It does NOT contain vLLM source code — that lives in vllm-project/vllm.
+## Repository Structure
+- `Dockerfile.konflux.rocm` — Konflux build Dockerfile (single-stage from RHAIIS base)
+- `.tekton/` — Tekton PipelineRun for PR builds
+- `.pre-commit-config.yaml` — Inherited from upstream vllm-project/vllm
 
-## Files
-- `Dockerfile.konflux.rocm` — Single-layer image on top of rhaiis/vllm-rocm-rhel9
-- `.tekton/` — Auto-synced from konflux-central (do not edit directly)
+## Build
+```bash
+podman build -f Dockerfile.konflux.rocm -t vllm-rocm:local .
 ```
+
+## Upstream
+All vLLM source code lives at https://github.com/vllm-project/vllm
+```
+
+### 5. Review skip-checks Setting (30 minutes)
+Evaluate whether `skip-checks: true` in the Tekton PipelineRun is still needed. If it was added to work around an early pipeline issue, removing it re-enables Konflux quality gates.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
+- **Score: 0/10**
+- No Python source files exist in this repository
+- No test files (`test_*.py`, `*_test.py`) found
+- No `pytest.ini`, `pyproject.toml`, or test configuration
+- This is expected for a thin Dockerfile wrapper — all tests live upstream in `vllm-project/vllm`
 
-**Pipeline Structure:**
-- **Trigger**: PR builds via Tekton PipelinesAsCode — triggered by `/build-rocm` comment or `kfbuild-all`/`kfbuild-rocm` labels
-- **Pipeline**: References `konflux-central` multi-arch container build pipeline
-- **Timeouts**: 8h pipeline / 4h per task (appropriate for large image builds)
-- **Concurrency**: `cancel-in-progress: true` — correctly cancels stale builds
-- **Architecture**: `linux-extra-fast/amd64` only (no multi-arch despite multi-arch pipeline)
-- **Auto-sync**: Tekton files auto-synced from `konflux-central` — correct separation of concerns
+### Integration/E2E Tests
+- **Score: 0/10**
+- No `e2e/`, `integration/`, or `test/` directories
+- No cluster setup (Kind, Minikube, envtest)
+- No multi-version testing
+- No test scenario coverage for the built image
 
-**Pipeline Tasks (from PipelineRun spec):**
-- `ecosystem-cert-preflight-checks` — with 8 CPU / 16Gi memory requests
-- `clair-scan` — OS-level vulnerability scanning with 8 CPU / 16Gi memory requests
-- **Missing**: No runtime validation, no Python dependency scanning, no SBOM generation
+### Build Integration
+- **Score: 6/10**
+- **Strengths**:
+  - Tekton PipelineRun configured for Konflux builds (`.tekton/vllm-rocm-pull-request.yaml`)
+  - PR-triggered via `pipelinesascode.tekton.dev/on-event: "[pull_request]"`
+  - Also supports label triggers (`kfbuild-all`, `kfbuild-rocm`) and comment triggers (`/build-rocm`)
+  - `cancel-in-progress: "true"` prevents redundant builds
+  - Uses centralized pipeline from `red-hat-data-services/konflux-central.git`
+  - Build platform specified: `linux-extra-fast/amd64`
+  - Generous timeouts: 8h pipeline, 4h per task (appropriate for large image builds)
+  - Cert preflight and Clair scan tasks have explicit resource requests/limits
+- **Weaknesses**:
+  - `skip-checks: true` bypasses Konflux quality gates
+  - No image startup validation after build
+  - No kustomize/kubectl dry-run validation
+  - No integration testing of the built image with a model
 
-**Gaps:**
-- No periodic/nightly build jobs
-- No push-triggered builds (only PR)
-- `skip-checks: true` disables Enterprise Contract validation
-- `hermetic: false` — builds are not hermetic (can fetch from internet during build)
+### Image Testing
+- **Score: 3/10**
+- **Strengths**:
+  - `Dockerfile.konflux.rocm` is present and functional
+  - Uses UBI-based image from Red Hat registry (FIPS-capable)
+  - Runs as non-root user (`USER 2000`) — good security practice
+  - Clear entrypoint: `python3 -m vllm_tgis_adapter --uvicorn-log-level=warning`
+  - Proper OCI labels (name, component, description, license)
+  - Configurable build arg for version pinning (`RHAIIS_VERSION=3.2.1`)
+- **Weaknesses**:
+  - Single-stage build (no build/runtime separation, though appropriate for this use case)
+  - No `HEALTHCHECK` instruction
+  - No `.dockerignore` file
+  - No runtime validation or testcontainers usage
+  - No multi-architecture manifest (builds amd64 only per pipeline config)
+  - No docker-compose test configuration
 
-### Test Coverage
+### Coverage Tracking
+- **Score: 0/10**
+- No `.codecov.yml` or `codecov.yml`
+- No `.coveragerc`
+- No coverage reporting in CI
+- No tests exist to measure coverage
+- N/A for a Dockerfile-only repository
 
-**No tests exist in this repository.** This is expected for a build-wrapper repo, but it means:
-- No validation that the built image actually works
-- No regression testing when the base image version is bumped
-- No contract testing between this image and downstream consumers (KServe, etc.)
+### CI/CD Automation
+- **Score: 4/10**
+- **Strengths**:
+  - Tekton PipelineRun for Konflux builds
+  - PaC (Pipelines as Code) annotations for automated triggering
+  - Concurrency control via `cancel-in-progress`
+  - Multiple trigger mechanisms (PR event, labels, comments)
+  - Centralized pipeline reference from `red-hat-data-services/konflux-central.git`
+- **Weaknesses**:
+  - No `.github/workflows/` directory — zero GitHub Actions
+  - No periodic/scheduled builds
+  - No test automation in any CI pipeline
+  - No caching strategy visible (may be handled by centralized pipeline)
+  - No matrix strategy for multi-version testing
+  - No notifications configured for build failures (`enable-slack-failure-notification: "false"`)
 
-### Code Quality
+### Static Analysis
 
-**Pre-commit Config:**
-The `.pre-commit-config.yaml` is inherited from upstream vLLM and includes 20+ hooks:
-- yapf (Python formatting)
-- ruff (Python linting)
-- isort (import sorting)
-- clang-format (C++/CUDA)
-- mypy (type checking, multiple Python versions)
-- shellcheck, typos, pymarkdown
-- SPDX header checks, pickle import restrictions
-- Signed-off-by commit enforcement
+#### Linting
+- **Pre-commit configuration**: Comprehensive `.pre-commit-config.yaml` inherited from upstream vLLM
+  - **Formatters**: yapf, ruff-format, isort, clang-format
+  - **Linters**: ruff, mypy (multi-Python-version), shellcheck, actionlint
+  - **Validators**: typos, pymarkdown, SPDX header check, pickle import check, triton import check, config validation
+  - **Other**: signoff-commit, filename space check, Dockerfile graph update
+- **Practical impact**: Since this repo has no Python/C++ source code, these hooks have nothing to run on. The config is likely carried over from the upstream fork and is not actively used.
+- No `ruff.toml` or standalone linting config
+- No `mypy.ini` standalone config (mypy is run via pre-commit hooks)
 
-**However**, this config is effectively dead code in this repo since there are no Python, C++, or shell files to lint. It appears to have been copied from upstream vLLM rather than being tailored for this build-wrapper repo.
+#### FIPS Compatibility
+- **Base image**: `registry.redhat.io/rhaiis/vllm-rocm-rhel9` — UBI-based, FIPS-capable
+- No non-FIPS crypto imports (no Python source in repo)
+- No FIPS build tags needed (no Go code)
+- FIPS posture is inherited entirely from the base image
 
-### Container Images
+#### Dependency Alerts
+- No `.github/dependabot.yml`
+- No `renovate.json`, `.renovaterc`, or `.renovaterc.json`
+- The `RHAIIS_VERSION` build arg is the primary dependency and must be updated manually
 
-**Dockerfile Analysis (`Dockerfile.konflux.rocm`):**
-- **Base**: `registry.redhat.io/rhaiis/vllm-rocm-rhel9:${RHAIIS_VERSION}` (RHAIIS 3.2.1)
-- **Build stages**: Single FROM (no multi-stage build — appropriate since it's just adding config on top of a pre-built base)
-- **User**: Runs as UID 2000 (non-root — good practice)
-- **Entrypoint**: `python3 -m vllm_tgis_adapter --uvicorn-log-level=warning`
-- **Labels**: Comprehensive Red Hat labels (name, component, description, license)
-- **Environment**: Configures gRPC port (8033), HTTP port (8000), and disables logprob suppression during speculative decoding
-
-**Strengths:**
-- Non-root user
-- Proper Red Hat labeling
-- Minimal layer on top of certified base image
-
-**Weaknesses:**
-- No HEALTHCHECK instruction
-- No digest pinning for base image
-- No .dockerignore
-- ARG default may go stale if not updated with base image releases
-
-### Security
-
-**Present:**
-- Clair vulnerability scanning in Tekton pipeline
-- Ecosystem cert preflight checks
-- Non-root container user (UID 2000)
-- Base image from Red Hat certified registry
-
-**Missing:**
-- No Trivy/Grype scanning for Python dependencies
-- No SBOM generation
-- No image signing or attestation
-- No secret detection (Gitleaks/TruffleHog)
-- No CodeQL or SAST (no source code to analyze)
-- Enterprise Contract checks explicitly skipped (`skip-checks: true`)
-
-### Agent Rules (Agentic Flow Quality)
-
+### Agent Rules
+- **Score: 0/10**
 - **Status**: Missing
-- **Coverage**: None — no CLAUDE.md, AGENTS.md, .claude/ directory, or any agent rules
-- **Quality**: N/A
-- **Gaps**: No documentation explaining the repo's purpose, relationship to upstream vLLM, or how Konflux builds work
-- **Recommendation**: Create a minimal CLAUDE.md explaining this is a build-wrapper repo; agent rules for test creation are less relevant here, but rules for Dockerfile best practices and Tekton pipeline modifications would be valuable
+- No `CLAUDE.md` or `AGENTS.md` in the repository root
+- No `.claude/` directory
+- No `.claude/rules/` or `.claude/skills/`
+- No testing documentation that would guide AI agents
+- **Recommendation**: Create a minimal `CLAUDE.md` explaining the repo's role as a downstream Dockerfile wrapper, build instructions, and the relationship to upstream vLLM
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Add container runtime validation** — After building the image in the Tekton pipeline, start the container and verify the entrypoint launches successfully (even without a GPU, `--help` or import validation can catch dependency issues)
-2. **Add Python dependency vulnerability scanning** — Clair only scans OS packages; add Trivy or Grype to scan pip packages in the base image for CVEs
+1. **Add container image smoke test to Tekton pipeline** — After the build step, add a task that starts the built image and verifies the entrypoint responds on ports 8000 (HTTP) and 8033 (gRPC). This is the single highest-impact improvement for this repo.
+2. **Evaluate and document `skip-checks: true`** — Either re-enable Konflux quality checks or add a comment explaining why they are intentionally skipped.
 
 ### Priority 1 (High Value)
-1. **Enable Enterprise Contract checks** — Remove `skip-checks: true` or document a clear justification for skipping (e.g., tracked in a Jira issue with a plan to enable)
-2. **Pin base image by digest** — Use `@sha256:...` to ensure reproducible builds; automate updates with Renovate or Dependabot
-3. **Add a Dockerfile HEALTHCHECK** — Define a health check for container orchestrators to use
-4. **Add .dockerignore** — Exclude .git, .tekton, docs from build context
+3. **Add `HEALTHCHECK` instruction to Dockerfile** — Enables orchestrators to detect unhealthy containers.
+4. **Add `.github/dependabot.yml`** for Dockerfile base image version tracking.
+5. **Add `.dockerignore`** to reduce build context and prevent leaking `.git/` into image layers.
+6. **Enable Slack failure notifications** — Change `enable-slack-failure-notification` to `"true"` so build failures are visible to the team.
 
 ### Priority 2 (Nice-to-Have)
-1. **Create CLAUDE.md** — Document repo purpose, relationship to upstream vLLM, and Konflux build process for AI agents and contributors
-2. **Add SBOM generation** — Generate Software Bill of Materials for supply chain transparency
-3. **Add image signing/attestation** — Sign images with cosign for supply chain security
-4. **Add periodic reconciliation job** — Detect drift between this repo's Dockerfile and what's expected by konflux-central
-5. **Clean up pre-commit config** — Remove hooks that reference files not present in this repo (Python, C++, shell) to avoid confusion
+7. **Create `CLAUDE.md`** with repo context, build instructions, and upstream relationship.
+8. **Add a `Makefile`** with `build`, `run`, and `test` targets for local development.
+9. **Consider multi-arch builds** — The pipeline currently builds only `linux-extra-fast/amd64`. If ROCm images are needed on other architectures, add `linux/arm64`.
+10. **Prune `.pre-commit-config.yaml`** — The current config is copied from upstream vLLM and references files/directories that don't exist in this repo. Either remove it or trim it to only hooks relevant to Dockerfile and YAML linting.
 
 ## Comparison to Gold Standards
 
 | Capability | vllm-rocm | odh-dashboard | notebooks | kserve |
-|-----------|-----------|---------------|-----------|--------|
-| Unit Tests | None | Comprehensive (Jest) | Per-image | Extensive (Go) |
-| Integration Tests | None | Contract + API tests | Import validation | envtest + Kind |
-| E2E Tests | None | Cypress + Playwright | 5-layer validation | Multi-version |
-| Image Build Validation | Konflux only | PR-time build | Multi-arch PR | PR-time build |
-| Image Runtime Validation | **None** | Startup checks | Import + startup | Deployment test |
-| Coverage Tracking | None | Codecov enforced | Per-notebook | Codecov |
-| Vulnerability Scanning | Clair only | Trivy + Clair | Trivy | Trivy + CodeQL |
-| SBOM | None | Generated | Generated | Generated |
-| Agent Rules | **None** | Comprehensive | Partial | Partial |
-| Pre-commit | Present (upstream) | Present | Present | Present |
-
-**Key Observation**: The gap between vllm-rocm and gold standards is expected — this is a build-wrapper repo, not a source repo. However, even build-wrapper repos should validate that the built image works correctly. The notebooks repo is the closest analogue (image-building focus) and demonstrates 5-layer validation that vllm-rocm completely lacks.
+|---|---|---|---|---|
+| Unit Tests | None | Comprehensive Jest/React | N/A (image-focused) | Extensive Go tests |
+| Integration/E2E | None | Cypress E2E | Image validation suite | Multi-version E2E |
+| Build Integration | Tekton PR builds | PR Docker builds + tests | Multi-layer image CI | Operator deploy tests |
+| Image Testing | No runtime validation | N/A | 5-layer validation | Image startup checks |
+| Coverage Tracking | None | Codecov with thresholds | N/A | Codecov enforced |
+| CI/CD Automation | Tekton only | GitHub Actions + Prow | GitHub Actions | GitHub Actions + Prow |
+| Static Analysis | Pre-commit (unused) | ESLint + TypeScript strict | Hadolint | golangci-lint |
+| Agent Rules | None | CLAUDE.md + rules | None | None |
 
 ## File Paths Reference
 
 | File | Purpose |
-|------|---------|
-| `Dockerfile.konflux.rocm` | Container image definition (25 lines) |
-| `.tekton/vllm-rocm-pull-request.yaml` | Konflux PR build pipeline (auto-synced) |
-| `.tekton/README.md` | Instructions for modifying Tekton files |
-| `.pre-commit-config.yaml` | Upstream vLLM pre-commit hooks (not applicable to this repo) |
-| `README.md` | Upstream vLLM documentation |
-| `LICENSE` | Apache 2.0 license |
+|---|---|
+| `Dockerfile.konflux.rocm` | Single-stage Dockerfile from RHAIIS base image |
+| `.tekton/vllm-rocm-pull-request.yaml` | Tekton PipelineRun for Konflux PR builds |
+| `.pre-commit-config.yaml` | Pre-commit hooks (inherited from upstream vLLM) |
+| `README.md` | Upstream vLLM project README |
+| `LICENSE` | Apache 2.0 + Commons Clause license |

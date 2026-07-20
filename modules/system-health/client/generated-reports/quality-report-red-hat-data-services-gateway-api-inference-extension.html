@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:52 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 06:59 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/gateway-api-inference-extension</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="158.336136"
+                                stroke-dashoffset="197.92016999999996"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.2</div>
+                        <div class="score-value">6.5</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Strong coverage with 146 test files, 0.88 test-to-source LOC ratio, 74/104 packages covered</div>
+                            <div class="scorecard-status">Strong test suite with 128 pkg test files, table-driven tests, t.Parallel() usage</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Comprehensive integration suite with envtest, E2E on Kind/GKE, and conformance tests</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">Well-structured integration and E2E suites with Kind support and conformance tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">CRD validation and helm verification on PRs but no PR-time container image build or Konflux simulation</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Image build in Makefile, CRD validation on PR, but no PR-time Konflux simulation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Multi-stage distroless Dockerfiles but no image startup validation or container scanning in CI</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.5/10</div>
+                            <div class="scorecard-status">Multi-stage Dockerfiles but no runtime validation, no HEALTHCHECK, non-UBI base images</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Local coverprofile generated but no Codecov/Coveralls integration or enforcement</div>
+                            <div class="scorecard-status">Local coverprofile generation but no Codecov integration or PR coverage reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">PR lint/CRD validation automated, E2E is workflow_dispatch only, no periodic CI on this fork</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
+                            <div class="scorecard-status">PR-triggered CRD validation and linting, but E2E tests are comment-triggered only</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">Comprehensive golangci-lint with 22 linters, Dependabot configured, custom KAL linter</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, .claude/ directory, or agent test automation guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory present</div>
                         </div>
                     </div>
                 </div>
@@ -411,51 +416,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No coverage tracking or enforcement</div>
-                            <p>Coverage regressions go undetected; no visibility into per-PR coverage delta</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No container security scanning (Trivy, Snyk, CodeQL)</div>
-                            <p>Vulnerable dependencies and container images ship without detection</p>
+                            <div class="item-description">No coverage tracking integration (Codecov/Coveralls)</div>
+                            <p>Coverage regressions go undetected on PRs; no visibility into test coverage trends</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">E2E tests not automated on PRs</div>
-                            <p>Integration regressions only caught via manual workflow_dispatch on GKE</p>
+                            <div class="item-description">E2E tests not automated on PR — comment-triggered only</div>
+                            <p>E2E regressions can merge without detection; relies on manual /run-gke-* comments</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">8-16 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No container runtime validation or health checks</div>
+                            <p>Image startup failures and runtime issues not caught until deployment</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No PR-time container image build validation</div>
-                            <p>Dockerfile breakages discovered only after merge in Prow/CloudBuild</p>
+                            <div class="item-description">Non-UBI base images (distroless, python:slim) — not FIPS-capable</div>
+                            <p>Cannot run in FIPS-enforced environments without base image changes</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">30 packages lack unit tests</div>
-                            <p>Config, observability, request handling, and framework interface packages untested</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">16-24 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card low">
-                            <div class="item-description">No agent rules for AI-assisted development</div>
-                            <p>AI-generated PRs lack project-specific test patterns and quality gates</p>
+                            <div class="item-description">math/rand usage in 10+ production files (non-cryptographic but FIPS audit flag)</div>
+                            <p>While math/rand is acceptable for non-security contexts, its widespread use may trigger FIPS audit findings</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -472,43 +469,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Codecov integration with coverage thresholds</div>
-                            <p>Immediate visibility into coverage trends and per-PR delta reporting</p>
+                            <div class="item-description">Add Codecov integration with PR coverage reporting</div>
+                            <p>Automatic coverage tracking, PR comments showing coverage delta, threshold enforcement</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to PR workflow</div>
-                            <p>Block PRs with critical/high CVEs in container images</p>
+                            <div class="item-description">Add HEALTHCHECK to Dockerfiles</div>
+                            <p>Container orchestrators can detect unhealthy containers; improves deployment reliability</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL/gosec SAST workflow</div>
-                            <p>Automated detection of security vulnerabilities in Go source code</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add PR-time Docker image build step</div>
-                            <p>Catch Dockerfile build failures before merge</p>
+                            <div class="item-description">Create basic CLAUDE.md with test creation guidance</div>
+                            <p>AI agents can generate tests consistent with project patterns (table-driven, envtest, Ginkgo)</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Generate agent rules with /test-rules-generator</div>
-                            <p>Standardize AI-generated test quality and consistency</p>
+                            <div class="item-description">Add timeout-minutes to all CI workflows</div>
+                            <p>Prevents stuck jobs from consuming CI resources indefinitely</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">30 minutes</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add concurrency control to PR workflows</div>
+                            <p>Cancels superseded runs, saves CI resources</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                     </ul>
@@ -525,15 +522,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Integrate Codecov with coverage thresholds to prevent regression below current baseline</li><li>Add Trivy/Snyk container scanning and CodeQL SAST to PR workflows</li><li>Automate lightweight E2E tests on PRs (Kind-based subset, not full GKE)</li></ul>
+                            <ul><li>Add Codecov integration with .codecov.yml and coverage threshold enforcement (e.g., 60% minimum)</li><li>Add concurrency control and timeout-minutes to all GitHub Actions workflows</li><li>Implement HEALTHCHECK in Dockerfiles and add readiness/liveness probes to K8s manifests</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add PR-time Docker image build and startup validation step</li><li>Fill unit test gaps in 30 untested packages (config, observability, request)</li><li>Add Dependabot/Renovate for automated dependency updates</li><li>Create comprehensive agent rules (.claude/rules/) for test automation guidance</li></ul>
+                            <ul><li>Automate E2E tests to run on PR (at least a smoke suite) instead of comment-triggered only</li><li>Add PR-time Konflux build simulation to catch downstream build failures before merge</li><li>Switch to UBI-based images for FIPS compatibility in downstream builds</li><li>Create comprehensive CLAUDE.md / .claude/rules/ for test automation guidance</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add pre-commit hooks for fmt, vet, and lint enforcement locally</li><li>Implement chaos/resilience testing for the ext-proc scheduling path</li><li>Add contract tests for the model server protocol interface</li><li>Set up periodic fuzz testing for protobuf/gRPC handlers</li></ul>
+                            <ul><li>Add pre-commit hooks for linting and formatting</li><li>Expand conformance test coverage beyond the current 13 test scenarios</li><li>Add container image startup validation tests</li></ul>
                         </div>
                     </div>
                 </div>

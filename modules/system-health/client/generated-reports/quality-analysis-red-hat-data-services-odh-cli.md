@@ -1,432 +1,526 @@
 ---
 repository: "red-hat-data-services/odh-cli"
-overall_score: 7.9
+overall_score: 6.6
 scorecard:
   - dimension: "Unit Tests"
     score: 9.0
-    status: "Exceptional test coverage — 186 test files, 60K test lines vs 44K source lines (1.37:1 ratio)"
+    status: "Outstanding test-to-code ratio (1.37:1 lines), 202 test files across 81 packages with modern Go patterns"
   - dimension: "Integration/E2E"
-    score: 5.0
-    status: "One integration test file; no E2E tests against real clusters or CLI invocations"
-  - dimension: "Build Integration"
-    score: 7.5
-    status: "Konflux PR builds via Tekton (multi-arch, hermetic), but no PR-time unit test execution in Konflux"
-  - dimension: "Image Testing"
-    score: 5.0
-    status: "Multi-arch Dockerfile with layer caching; no image startup or runtime validation tests"
-  - dimension: "Coverage Tracking"
     score: 4.0
-    status: "Coverage file generated (coverage.out) but no codecov/coveralls integration or threshold enforcement"
+    status: "Only 1 integration test file; command tests use mocked K8s clients, no real cluster validation"
+  - dimension: "Build Integration"
+    score: 8.0
+    status: "Tekton/Konflux PR pipelines with hermetic multi-arch builds; GoReleaser for binaries"
+  - dimension: "Image Testing"
+    score: 6.0
+    status: "Multi-stage UBI9 Dockerfiles with multi-arch support; no runtime validation or .dockerignore"
+  - dimension: "Coverage Tracking"
+    score: 3.0
+    status: "Coverage profile generated but not uploaded, no thresholds, no PR reporting"
   - dimension: "CI/CD Automation"
-    score: 7.5
-    status: "GitHub Actions CI + Tekton Konflux pipelines; GoReleaser for releases; lacks parallel test/lint jobs"
+    score: 7.0
+    status: "Single CI workflow with concurrency control and release automation; missing timeouts and matrix testing"
+  - dimension: "Static Analysis"
+    score: 9.0
+    status: "golangci-lint v2 with default:all, pre-commit hooks, Dependabot + Renovate, FIPS-clean source"
   - dimension: "Agent Rules"
-    score: 8.5
-    status: "Excellent AGENTS.md, comprehensive docs, one custom skill; missing .claude/rules/ for test creation patterns"
+    score: 8.0
+    status: "Comprehensive AGENTS.md, custom lint-check skill, 16 docs files with detailed testing/coding guidelines"
 critical_gaps:
   - title: "No coverage tracking or enforcement"
-    impact: "Coverage regressions go undetected; no PR-level coverage gates"
+    impact: "Coverage generated locally but never uploaded, reported, or enforced — regressions go undetected"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No container image runtime validation"
-    impact: "Image startup or entrypoint failures discovered only at deployment time"
+  - title: "Minimal integration/E2E testing"
+    impact: "CLI commands tested only with mocked K8s clients; real cluster interactions untested"
     severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "Minimal integration/E2E test coverage"
-    impact: "End-to-end CLI flows untested; cross-command regressions not caught"
-    severity: "HIGH"
-    effort: "12-20 hours"
-  - title: "No security scanning in CI (Trivy/CodeQL/gosec)"
-    impact: "Vulnerabilities in dependencies or source code not caught before merge"
+    effort: "16-24 hours"
+  - title: "No CI job timeouts"
+    impact: "Hung tests can block PR queues indefinitely"
     severity: "MEDIUM"
-    effort: "2-4 hours"
-  - title: "CI runs test and lint sequentially in single job"
-    impact: "Longer feedback loop; lint failures block test results and vice versa"
-    severity: "LOW"
-    effort: "1-2 hours"
+    effort: "1 hour"
+  - title: "Missing .dockerignore"
+    impact: "Unnecessary files included in Docker build context, increasing build time and image surface area"
+    severity: "MEDIUM"
+    effort: "1 hour"
 quick_wins:
-  - title: "Add codecov integration to CI"
+  - title: "Add Codecov integration with threshold enforcement"
     effort: "2-3 hours"
-    impact: "PR-level coverage reporting and threshold enforcement; immediate visibility into coverage trends"
-  - title: "Add govulncheck to CI workflow"
-    effort: "1 hour"
-    impact: "Automatic vulnerability detection on every PR — make vulncheck target already exists"
-  - title: "Split CI into parallel test and lint jobs"
-    effort: "1 hour"
-    impact: "Faster CI feedback — test and lint run concurrently instead of sequentially"
-  - title: "Add basic container smoke test"
+    impact: "Automated coverage reporting on PRs, threshold gates prevent regression"
+  - title: "Add .dockerignore"
+    effort: "30 minutes"
+    impact: "Reduce build context size, faster builds, smaller attack surface"
+  - title: "Add timeout-minutes to CI jobs"
+    effort: "30 minutes"
+    impact: "Prevent hung jobs from blocking the PR queue"
+  - title: "Add Docker ecosystem to Dependabot"
+    effort: "30 minutes"
+    impact: "Automated alerts for base image vulnerabilities"
+  - title: "Create .claude/rules/ directory with test rules"
     effort: "2-3 hours"
-    impact: "Catch entrypoint and binary issues before deployment with a simple 'version' check"
-  - title: "Create .claude/rules/ test creation guidelines"
-    effort: "2-3 hours"
-    impact: "Standardize AI-assisted test generation with the project's specific conventions (Gomega, no Ginkgo, etc.)"
+    impact: "Move testing guidance from docs into agent-consumable rules for better AI-assisted development"
 recommendations:
   priority_0:
-    - "Add codecov/coveralls integration with coverage threshold enforcement (e.g., 70% minimum, no regression on PRs)"
-    - "Add security scanning to CI — govulncheck (already has Makefile target), CodeQL or gosec for SAST"
+    - "Add Codecov integration with coverage threshold enforcement (80% project, 70% patch)"
+    - "Add timeout-minutes to all CI jobs (15 min unit tests, 30 min builds)"
   priority_1:
-    - "Build out integration/E2E test suite for CLI commands (status, lint, migrate, backup, deps)"
-    - "Add container image smoke test (build image, run 'version' command, verify exit code)"
-    - "Create .claude/rules/ directory with unit-tests.md, integration-tests.md, and lint-check-tests.md"
+    - "Create integration test suite with real K8s cluster (Kind) for core CLI commands"
+    - "Add .dockerignore to exclude .git, docs, tests from Docker build context"
+    - "Add Docker ecosystem to Dependabot configuration"
+    - "Add container image startup validation in CI (build + run + verify exit code)"
   priority_2:
-    - "Add Trivy container scanning to CI or Tekton pipeline"
-    - "Add cross-platform CLI testing (linux/darwin/windows) via GoReleaser or CI matrix"
-    - "Implement benchmark regression testing for performance-sensitive lint checks"
+    - "Add Go version matrix testing in CI (current + previous minor)"
+    - "Create .claude/rules/ with test creation rules extracted from docs/testing.md"
+    - "Add Dockerfile HEALTHCHECK instruction for runtime validation"
+    - "Add cross-platform CLI testing (Linux, macOS, Windows) in CI"
 ---
 
-# Quality Analysis: odh-cli
+# Quality Analysis: red-hat-data-services/odh-cli
 
 ## Executive Summary
-
-- **Overall Score: 7.9/10**
-- **Repository Type**: Go CLI tool (kubectl plugin) for OpenShift AI / Open Data Hub
-- **Primary Language**: Go 1.26
-- **Framework**: Cobra CLI with Kubernetes client-go
-- **Key Strengths**: Outstanding unit test coverage (186 test files, 1.37:1 test-to-code ratio), comprehensive developer documentation and agent guidelines, strong linting configuration (golangci-lint v2 with `default: all`), multi-arch Konflux builds, well-structured codebase
-- **Critical Gaps**: No coverage tracking/enforcement, no security scanning in CI, minimal integration/E2E tests, no container runtime validation
-- **Agent Rules Status**: Present and high quality — comprehensive AGENTS.md, testing/quality docs, one custom skill; missing `.claude/rules/` directory for test creation patterns
+- Overall Score: 6.6/10
+- Key Strengths: Outstanding unit test coverage (1.37:1 test-to-code ratio), best-in-class static analysis (golangci-lint v2 default:all), comprehensive agent rules and developer documentation, FIPS-clean source with strictfipsruntime builds
+- Critical Gaps: No coverage tracking or enforcement, minimal integration/E2E testing against real clusters, missing CI timeouts
+- Agent Rules Status: Strong (AGENTS.md + .claude/skills/ + 16 docs files)
+- Tier: Downstream (RHOAIENG / AI Core Platform)
 
 ## Quality Scorecard
-
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 9.0/10 | Exceptional: 186 test files, 60K test lines, strong patterns (Gomega, subtests, export_test, internal_test) |
-| Integration/E2E | 5.0/10 | Weak: only 1 integration test file, no E2E CLI tests |
-| **Build Integration** | **7.5/10** | **Konflux Tekton PR builds (multi-arch, hermetic), but no unit test execution in Konflux pipeline** |
-| Image Testing | 5.0/10 | Multi-arch Dockerfile, layer caching, FIPS support; no runtime validation |
-| Coverage Tracking | 4.0/10 | coverage.out generated locally; no CI reporting, no thresholds |
-| CI/CD Automation | 7.5/10 | GitHub Actions + Tekton + GoReleaser; sequential jobs, no caching |
-| Agent Rules | 8.5/10 | Comprehensive AGENTS.md, 9 docs, 1 custom skill; missing .claude/rules/ |
+| Dimension | Score | Weight | Status |
+|-----------|-------|--------|--------|
+| Unit Tests | 9/10 | 15% | Outstanding test-to-code ratio (1.37:1 lines), 202 test files, modern Go patterns |
+| Integration/E2E | 4/10 | 20% | Only 1 integration test; command tests use mocked K8s clients |
+| Build Integration | 8/10 | 15% | Tekton/Konflux PR pipelines, hermetic multi-arch builds, GoReleaser |
+| Image Testing | 6/10 | 10% | Multi-stage UBI9, multi-arch; no runtime validation or .dockerignore |
+| Coverage Tracking | 3/10 | 10% | Coverage profile generated but not uploaded, no thresholds |
+| CI/CD Automation | 7/10 | 15% | Single CI workflow with concurrency; missing timeouts and matrix |
+| Static Analysis | 9/10 | 10% | golangci-lint v2 default:all, pre-commit, Dependabot + Renovate, FIPS-clean |
+| Agent Rules | 8/10 | 5% | AGENTS.md, custom skill, 16 docs files with testing/coding guidelines |
 
 ## Critical Gaps
 
-### 1. No Coverage Tracking or Enforcement
-- **Impact**: Coverage regressions silently slip through PRs; no visibility into coverage trends
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: `make test` generates `coverage.out` but it's never uploaded or analyzed. No codecov.yml, no coveralls config, no CI step to process coverage data. PRs can reduce test coverage without any signal.
+1. **No coverage tracking or enforcement**
+   - Impact: Coverage profile (`coverage.out`) is generated by `make test` but never uploaded to Codecov/Coveralls, never reported on PRs, and never enforced by thresholds. Coverage regressions go undetected.
+   - Severity: HIGH
+   - Effort: 2-4 hours
 
-### 2. No Container Image Runtime Validation
-- **Impact**: Broken entrypoint, missing dependencies, or binary incompatibility discovered only at deployment
-- **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: The Dockerfile builds a multi-stage image with `kubectl`, `oc`, and `rhai-cli`, but no CI step verifies the resulting image actually starts and responds to commands. Given the multi-arch cross-compilation with FIPS support, this is especially risky.
+2. **Minimal integration/E2E testing**
+   - Impact: Only 1 integration test file (`tests/integration/lint/diagnostic_cr_test.go`). All command tests use mocked K8s clients via `fake.NewClientBuilder()`. Real cluster interactions (API discovery, CRD listing, pod logs, event watching) are never tested. Bugs in K8s API interaction patterns are only caught in production or manual testing.
+   - Severity: HIGH
+   - Effort: 16-24 hours
 
-### 3. Minimal Integration/E2E Test Coverage
-- **Impact**: End-to-end CLI workflows untested; cross-command regressions not caught
-- **Severity**: HIGH
-- **Effort**: 12-20 hours
-- **Details**: Only 1 integration test file exists (`tests/integration/lint/diagnostic_cr_test.go`). No E2E tests for critical CLI commands like `status`, `migrate`, `backup`, `deps`, or `components`. All testing is at the unit level with mocked Kubernetes clients.
+3. **No CI job timeouts**
+   - Impact: Hung tests or builds can block the PR queue indefinitely. No `timeout-minutes` set on any job in `ci.yml`.
+   - Severity: MEDIUM
+   - Effort: 1 hour
 
-### 4. No Security Scanning in CI
-- **Impact**: Known vulnerabilities in Go dependencies and source code not caught before merge
-- **Severity**: MEDIUM
-- **Effort**: 2-4 hours
-- **Details**: `govulncheck` exists as a Makefile target but isn't run in CI. No CodeQL, gosec, Semgrep, or Trivy scanning configured. Dependabot updates dependencies but doesn't catch source-code vulnerabilities.
-
-### 5. CI Jobs Run Sequentially
-- **Impact**: Slower feedback loop — lint failures block test results
-- **Severity**: LOW
-- **Effort**: 1-2 hours
-- **Details**: The `test` job runs `make test` then `make lint` sequentially. Splitting into parallel jobs would halve CI time and provide independent failure signals.
+4. **Missing .dockerignore**
+   - Impact: The entire repository (including `.git/`, `docs/`, test files, `go.sum`) is sent as Docker build context, increasing build time and image surface area unnecessarily.
+   - Severity: MEDIUM
+   - Effort: 1 hour
 
 ## Quick Wins
 
-### 1. Add Codecov Integration (2-3 hours)
-Add coverage upload to the CI workflow and create a `codecov.yml`:
+1. **Add Codecov integration with threshold enforcement**
+   - Effort: 2-3 hours
+   - Impact: Automated coverage reporting on PRs, threshold gates prevent coverage regression
+   - Implementation:
+   ```yaml
+   # .codecov.yml
+   coverage:
+     status:
+       project:
+         default:
+           target: 80%
+           threshold: 2%
+       patch:
+         default:
+           target: 70%
+   ```
+   ```yaml
+   # Add to .github/workflows/ci.yml test job:
+   - name: Upload coverage
+     uses: codecov/codecov-action@v5
+     with:
+       files: ./coverage.out
+       flags: unittests
+       fail_ci_if_error: true
+   ```
 
-```yaml
-# Add to .github/workflows/ci.yml after 'Run tests'
-- name: Upload coverage
-  uses: codecov/codecov-action@v5
-  with:
-    files: coverage.out
-    fail_ci_if_error: true
-```
+2. **Add .dockerignore**
+   - Effort: 30 minutes
+   - Impact: Reduce build context size, faster builds
+   - Implementation:
+   ```
+   # .dockerignore
+   .git
+   .github
+   .claude
+   .tekton
+   .goreleaser.yml
+   .pre-commit-config.yaml
+   docs/
+   tests/
+   tools/
+   *.md
+   !README.md
+   ```
 
-```yaml
-# codecov.yml
-coverage:
-  status:
-    project:
-      default:
-        target: 70%
-    patch:
-      default:
-        target: 80%
-```
+3. **Add timeout-minutes to CI jobs**
+   - Effort: 30 minutes
+   - Impact: Prevent hung jobs from blocking the PR queue
+   - Implementation:
+   ```yaml
+   jobs:
+     test:
+       runs-on: ubuntu-latest
+       timeout-minutes: 15
+   ```
 
-### 2. Add govulncheck to CI (1 hour)
-```yaml
-- name: Run vulnerability check
-  run: make vulncheck
-```
+4. **Add Docker ecosystem to Dependabot**
+   - Effort: 30 minutes
+   - Impact: Automated alerts for base image vulnerabilities
+   - Implementation:
+   ```yaml
+   # Add to .github/dependabot.yml
+   - package-ecosystem: "docker"
+     directory: "/"
+     schedule:
+       interval: "weekly"
+   ```
 
-### 3. Split CI into Parallel Jobs (1 hour)
-```yaml
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
-        with: { go-version-file: go.mod }
-      - run: make test
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
-        with: { go-version-file: go.mod }
-      - run: make lint
-```
-
-### 4. Add Container Smoke Test (2-3 hours)
-```yaml
-  image-smoke:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - uses: actions/checkout@v6
-      - name: Build image
-        run: docker build -t odh-cli:test .
-      - name: Verify binary
-        run: docker run --rm odh-cli:test version
-```
-
-### 5. Create .claude/rules/ Test Guidelines (2-3 hours)
-Generate rules from existing test patterns using `/test-rules-generator` to codify the project's specific conventions (Gomega without Ginkgo, package-level test constants, HaveField/MatchFields, testify/mock, etc.).
+5. **Create .claude/rules/ directory with test rules**
+   - Effort: 2-3 hours
+   - Impact: Move testing guidance from docs into agent-consumable rules for better AI-assisted development
+   - Implementation: Extract key rules from `docs/testing.md` and `AGENTS.md` into `.claude/rules/unit-tests.md` and `.claude/rules/integration-tests.md`
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**GitHub Actions (`.github/workflows/ci.yml`)**:
-- Single workflow triggered on PR, push to main, and release events
-- Concurrency control with `cancel-in-progress: true` — good
-- No Go module caching (relies on `setup-go` built-in cache)
-- Test and lint run sequentially in one job — could be parallelized
-- Release flow: GoReleaser for binaries + container image push
+**Status: Excellent (9/10)**
 
-**Tekton/Konflux (`.tekton/`)**:
-- Two pipeline configs: manual-trigger and label/comment-trigger
-- Multi-arch builds: `linux/x86_64`, `linux-m2xlarge/arm64`, `linux/ppc64le`
-- Hermetic builds with RPM and Go module prefetching
-- Source image generation enabled
-- Image expiry: 5 days for PR builds
-- Uses centralized `konflux-central` pipeline definitions
+The repository has outstanding unit test coverage with modern Go testing patterns.
 
-**Release Automation**:
-- GoReleaser v2 for cross-platform binaries (linux/darwin/windows, amd64/arm64)
-- SHA256 checksums generated
-- Container images built and pushed on release events
-- Dev images pushed on main branch pushes
+**Metrics:**
+- Source files: 302 (non-test `.go` files)
+- Test files: 202 (`*_test.go`)
+- File ratio: 67% (excellent)
+- Source lines: 49,536
+- Test lines: 67,731
+- Line ratio: 1.37:1 (tests exceed source code — outstanding)
+- Packages with tests: 81/112 (72%)
+- `t.Run()` subtests: 927 occurrences
+- `t.Context()` (Go 1.24+): 1,094 occurrences
+- `HaveField`/`MatchFields` struct assertions: 564 occurrences
+- Benchmark tests: 3 (executor_bench_test.go)
+- Mock framework: testify/mock, centralized in `pkg/util/test/mocks/`
 
-**Dependency Management**:
-- Dependabot: daily gomod updates + weekly GitHub Actions updates
-- Renovate: extends `red-hat-data-services/konflux-central` config
-- Both running — potentially redundant but provides defense in depth
+**Strengths:**
+- Exhaustive command testing across all packages (`pkg/backup/`, `pkg/api/`, `pkg/lint/`, `pkg/deps/`, `pkg/components/`, `pkg/mcp/`, `pkg/migrate/`, etc.)
+- Strong use of subtests with `t.Run()` and `t.Context()` (modern Go 1.24+ patterns)
+- Struct assertions use Gomega `HaveField`/`MatchFields` (not individual field assertions)
+- Centralized mock organization in `pkg/util/test/mocks/`
+- Both external (`_test` package suffix) and internal test packages used appropriately
+- Benchmark tests for lint check executor performance
+- Test data as package-level constants (enforced by convention in `docs/testing.md`)
+- Parallel test execution with `t.Parallel()` in some packages
 
-### Test Coverage
+**Gaps:**
+- Not all packages have test files (81/112 = 72%)
+- `t.Parallel()` usage is inconsistent — present in some packages but not universally adopted
+- 234 uses of `context.Background()` in tests vs 1,094 uses of `t.Context()` — migration in progress
 
-**Strengths**:
-- **186 test files** covering virtually every package
-- **60,160 lines of test code** vs. 43,871 lines of source code — **1.37:1 ratio** (excellent)
-- Consistent patterns: Gomega matchers, `t.Run()` subtests, `t.Context()` (Go 1.24+)
-- Well-organized mock infrastructure in `pkg/util/test/mocks/`
-- `export_test.go` files for testing unexported functions — proper Go testing idiom
-- `_internal_test.go` files for white-box testing — thorough approach
-- Benchmark tests present (`pkg/lint/check/executor_bench_test.go`)
+### Integration/E2E Tests
 
-**Weaknesses**:
-- Only **1 integration test file** (`tests/integration/lint/diagnostic_cr_test.go`)
-- No E2E tests for CLI command execution
-- No coverage reporting or enforcement
-- No cross-platform testing
-- `coverage.out` generated but never uploaded or analyzed
+**Status: Weak (4/10)**
 
-**Package Coverage** (by test file presence):
-| Package | Has Tests | Notes |
-|---------|-----------|-------|
-| pkg/api | Yes | command_test.go |
-| pkg/backup | Yes | Multiple test files + pipeline/ subpackage |
-| pkg/cmd | Yes | wait_test.go |
-| pkg/components | Yes | 8 test files, comprehensive |
-| pkg/deps | Yes | 9 test files including stdin tests |
-| pkg/events | Yes | 4 test files |
-| pkg/get | Yes | command_test.go |
-| pkg/lint | Yes | 30+ test files across checks/, check/ |
-| pkg/logs | Yes | command_test.go + internal test |
-| pkg/mcp | Yes | 3 test files |
-| pkg/migrate | Yes | 30+ test files across actions/ |
-| pkg/output | Yes | envelope_test.go |
-| pkg/printer | Yes | table, yaml, json renderers |
-| pkg/resources | Yes | types, component CRs |
-| pkg/schema | Yes | embed_test.go |
-| pkg/status | Yes | 6 test files |
-| pkg/util | Yes | 10+ test files across subpackages |
+Only 1 integration test file exists. All command tests use mocked Kubernetes clients.
 
-### Code Quality
+**Current State:**
+- `tests/integration/lint/diagnostic_cr_test.go` — end-to-end diagnostic CR execution test using fake dynamic client
+- No real cluster tests (no Kind, Minikube, or envtest setup)
+- No E2E directory
+- No multi-version testing
+- All `pkg/*/command_test.go` files test with `fake.NewClientBuilder()` — these are effectively unit tests with mocked infrastructure
 
-**Linting** (`.golangci.yml`):
-- golangci-lint **v2** with `default: all` — industry-leading configuration
-- Only 15 linters explicitly disabled (well-justified with comments)
-- Revive with `enable-all-rules: true` and selective disables
-- Formatters: `gci`, `gofmt`, `goimports` with custom import ordering
-- Test-specific exclusions for acceptable patterns (dupl, funlen, goconst)
-- `max-issues-per-linter: 0` — no cap on reported issues
+**For a CLI tool, the following are untested with real clusters:**
+- API discovery and resource listing
+- Pod log streaming
+- Event watching
+- CRD validation
+- Backup/restore operations
+- kubectl plugin integration
+- Cross-version compatibility (different K8s/OCP versions)
 
-**Pre-commit Hooks** (`.pre-commit-config.yaml`):
-- Standard hooks: trailing-whitespace, end-of-file, YAML validation, merge conflict detection
-- Local hooks: `go fmt`, `go vet`, `golangci-lint`
-- `go test` on pre-push stage — good separation of fast/slow checks
+**Recommendations:**
+1. Create a Kind-based integration test suite for core commands (`lint`, `status`, `backup`, `deps`)
+2. Test against multiple OCP versions (4.16, 4.17) in CI
+3. Test kubectl plugin discovery (`kubectl odh` invocation)
+4. Test container image startup and basic command execution
 
-**Static Analysis**:
-- `govulncheck` available as Makefile target but **not in CI**
-- No SAST tools (CodeQL, gosec, Semgrep)
-- No secret detection (Gitleaks, TruffleHog)
+### Build Integration
 
-### Container Images
+**Status: Strong (8/10)**
 
-**Dockerfile** (development):
-- Multi-stage build with UBI9 go-toolset builder
-- `--platform=$BUILDPLATFORM` for native builder, cross-compilation via `TARGETOS`/`TARGETARCH`
-- FIPS support: `CGO_ENABLED=1`, `GOEXPERIMENT=strictfipsruntime`
-- Layer caching: go.mod/go.sum copied first
-- Multi-arch: amd64, arm64, ppc64le
-- Runtime: UBI9 with kubectl and oc installed
-- Backup directory with sticky bit for arbitrary UIDs
+The repository has comprehensive build infrastructure with both GitHub Actions CI and Tekton/Konflux pipelines.
 
-**Dockerfile.konflux** (production):
-- Pinned base image digest for reproducibility
-- Uses `registry.redhat.io/openshift4/ose-cli-rhel9:v4.21.0` — includes oc/kubectl
-- Red Hat container labels for compliance
-- Simpler runtime stage (no manual kubectl/oc installation)
+**Strengths:**
+- **Tekton/Konflux PR pipelines**: `.tekton/odh-cli-pull-request.yaml` triggers on PR events (comment `/build-konflux` or label `kfbuild-odh-cli`)
+- **Hermetic builds**: `hermetic: true` in Konflux pipeline
+- **Multi-arch**: Builds for `linux/x86_64`, `linux-m2xlarge/arm64`, `linux/ppc64le`
+- **Source image**: `build-source-image: true` for supply chain traceability
+- **Konflux Dockerfile**: `Dockerfile.konflux` with pinned image digest (`@sha256:...`)
+- **GoReleaser**: Automated binary releases for linux/darwin/windows (amd64/arm64)
+- **Prefetch**: RPM and gomod prefetching for hermetic builds
+- **PR-time CI**: Tests and linting run on every PR via GitHub Actions
 
-**Gaps**:
-- No image startup validation in CI
-- No Trivy/Snyk scanning
-- No SBOM generation
-- No image signing/attestation (likely handled by Konflux pipeline)
+**Gaps:**
+- GitHub Actions CI does not build Docker images on PRs (only on push to main and releases)
+- No Kustomize or manifest validation (not applicable — CLI tool, not operator)
+- Konflux builds triggered by comment/label, not automatically on every PR
 
-### Security
+### Image Testing
 
-**Present**:
-- Dependabot for Go module vulnerability alerts
-- `govulncheck` Makefile target
-- Hermetic Konflux builds (supply chain protection)
-- Source image generation for auditability
-- FIPS compliance support
+**Status: Adequate (6/10)**
 
-**Missing**:
-- No SAST (CodeQL/gosec) in CI
-- No container scanning (Trivy/Snyk) in CI
-- No secret detection
-- `govulncheck` not integrated into CI workflow
-- No security policy (SECURITY.md)
+**Strengths:**
+- Multi-stage Dockerfiles (builder + runtime) for both standard and Konflux builds
+- UBI9 base images:
+  - `Dockerfile`: `registry.access.redhat.com/ubi9/go-toolset:1.26` (builder) + `registry.access.redhat.com/ubi9/ubi:latest` (runtime)
+  - `Dockerfile.konflux`: Same builder + `registry.redhat.io/openshift4/ose-cli-rhel9:v4.21.0` (runtime)
+- Multi-architecture cross-compilation (`TARGETOS`, `TARGETARCH`, `BUILDPLATFORM`)
+- Support for amd64, arm64, ppc64le
+- Proper entrypoint configuration
+- kubectl and oc CLI tools installed in standard Dockerfile
 
-### Agent Rules (Agentic Flow Quality)
+**Gaps:**
+- No `.dockerignore` — entire repo sent as build context
+- No `HEALTHCHECK` in Dockerfiles
+- No runtime validation tests (startup, basic command execution)
+- No Testcontainers usage
+- Konflux Dockerfile runtime image is not the same as the standard Dockerfile (ose-cli-rhel9 vs ubi9) — potential behavioral differences
 
-**Status**: Present and high quality
+### Coverage Tracking
 
-**What Exists**:
-- **AGENTS.md** (root): Comprehensive 82-line guide covering build commands, test guidelines, debug workflow, and required reading list
-- **9 documentation files** in `docs/`:
-  - `agent.md` — agent-specific guidelines
-  - `testing.md` — detailed test framework conventions (Gomega, mocks, struct assertions)
-  - `quality.md` — continuous quality verification practices
-  - `code-review.md` — code review guidelines
-  - `design.md` — architecture and design patterns
-  - `development.md` — development workflow hub
-  - `coding/conventions.md`, `coding/patterns.md`, `coding/formatting.md`
-- **1 custom skill**: `.claude/skills/lint-check/SKILL.md` (635 lines — comprehensive lint check creation guide)
-- **ADR**: `docs/adr/0001-cli-architecture.md`
-- **Domain docs**: `docs/lint/architecture.md`, `docs/lint/writing-checks.md`, `docs/extensibility.md`
+**Status: Weak (3/10)**
 
-**Quality Assessment**:
-- Conventions are specific and actionable (e.g., "use `HaveField`/`MatchFields`, NEVER individual field assertions")
-- Framework choices documented with rationale (Gomega without Ginkgo, testify/mock)
-- Mock organization rules with explicit directory structure
-- Build commands explicitly documented with "NEVER use directly" warnings
-- Go 1.24+ features encouraged (`t.Context()`)
+**Current State:**
+- `make test` generates `coverage.out` via `go test -coverprofile=coverage.out ./...`
+- No `.codecov.yml` or `codecov.yml` configuration file
+- No coverage upload step in CI (`ci.yml`)
+- No coverage threshold enforcement
+- No PR coverage reporting
+- No coverage badge in README
+- Coverage file exists only locally — never persisted or analyzed
 
-**Gaps**:
-- No `.claude/rules/` directory (rules are embedded in docs instead)
-- No test-creation rules that can be auto-loaded by Claude Code
-- No rules for integration test or E2E test creation
-- Custom skill focused on lint checks only — no general test creation skill
+**Impact:**
+Coverage regressions are invisible. There is no way to know the current coverage percentage or track trends over time. The 1.37:1 test-to-code ratio suggests coverage is likely high, but without measurement, it's unverifiable.
+
+**Recommendations:**
+1. Add `.codecov.yml` with 80% project target and 70% patch target
+2. Add `codecov/codecov-action` step to CI workflow after `make test`
+3. Add coverage badge to README
+4. Consider per-package coverage targets for critical packages
+
+### CI/CD Automation
+
+**Status: Good (7/10)**
+
+**Strengths:**
+- Single consolidated CI workflow (`ci.yml`) covering tests, linting, dev images, release images, and binary releases
+- Proper trigger configuration: PR + push to main + release events
+- Concurrency control with `cancel-in-progress: true`
+- Go module caching via `actions/setup-go@v6` (built-in cache)
+- Separate release pipeline with GoReleaser for cross-platform binaries
+- Dev image published automatically on push to main
+- Tekton pipelines supplement CI for Konflux builds
+- All CI actions at latest versions (v6)
+
+**Gaps:**
+- No `timeout-minutes` on any job — hung tests block the queue
+- No matrix strategy for Go versions (only tests against `go.mod` version)
+- No explicit caching beyond `setup-go` built-in (e.g., no Docker layer cache)
+- No workflow status badges in README
+- CI does not build Docker images on PRs (relies on Konflux for that)
+- No scheduled/cron jobs for periodic checks
+
+**Recommendations:**
+- Add `timeout-minutes: 15` to test job, `timeout-minutes: 30` to container jobs
+- Add Go version matrix (current + previous minor) for compatibility testing
+- Add workflow status badge to README
+
+### Static Analysis
+
+**Status: Excellent (9/10)**
+
+#### Linting
+
+**Configuration:** golangci-lint v2 with `default: all` — the most aggressive configuration that enables ALL linters and only disables a targeted few.
+
+**Disabled linters (22 disabled/excluded from ALL):**
+- `wsl`, `wsl_v5`, `noinlineerr`, `varnamelen`, `exhaustruct`, `ireturn`, `depguard`, `err113`, `paralleltest`, `funcorder`, `funlen`, `nilerr`, `nilnil`, `lll`, `gocritic`
+- Additional exclusions for test files: `forcetypeassert`, `mnd`, `maintidx`, `nestif`, `dupl`, `goconst`, `intrange`, `rangeint`, `revive`, `unparam`
+- `revive` enabled with `enable-all-rules` and targeted rule disables
+
+**Formatters:** `gci`, `gofmt`, `goimports` with custom import ordering
+
+**Lint timeout:** 10 minutes
+
+**Strengths:**
+- `default: all` is the gold standard for golangci-lint v2 configuration
+- Revive with `enable-all-rules` and carefully documented disable reasons
+- Lint issues: `max-issues-per-linter: 0`, `max-same-issues: 0` (no suppression)
+- Separate `make lint/fix` for auto-fixable issues
+
+#### Pre-commit Hooks
+
+**Configured hooks:**
+1. `trailing-whitespace` — general hygiene
+2. `end-of-file-fixer` — general hygiene
+3. `check-yaml` (with `--allow-multiple-documents`) — YAML validation
+4. `check-merge-conflict` — prevent merge conflicts
+5. `go-fmt` → `make fmt` — code formatting
+6. `go-vet` → `go vet ./...` — static analysis
+7. `golangci-lint` → `make lint` — full lint suite
+8. `go-unit-tests` → `make test` (pre-push stage) — run tests before push
+
+#### FIPS Compatibility
+
+**Status: Clean (No Issues Found)**
+
+- **Source code scan**: No non-FIPS crypto imports found (`crypto/md5`, `crypto/des`, `crypto/rc4`, `math/rand` — all clean)
+- **Build configuration**: `GOEXPERIMENT=strictfipsruntime` and `-tags strictfipsruntime` in both Dockerfiles
+- **Makefile**: Documents FIPS build recipe (`make build CGO_ENABLED=1 GOEXPERIMENT=strictfipsruntime`)
+- **Base images**: UBI9 (FIPS-capable) — `registry.access.redhat.com/ubi9/go-toolset` and `registry.access.redhat.com/ubi9/ubi`
+- **Downstream**: `Dockerfile.konflux` uses `registry.redhat.io/openshift4/ose-cli-rhel9` (FIPS-certified)
+
+#### Dependency Alerts
+
+**Status: Well-configured**
+
+- **Dependabot** (`.github/dependabot.yml`):
+  - `gomod`: Daily at 07:00 UTC, 10 PR limit
+  - `github-actions`: Weekly (Monday), 5 PR limit
+  - Missing: `docker` ecosystem
+- **Renovate** (`.github/renovate.json`):
+  - Extends `red-hat-data-services/konflux-central` default config
+  - Provides additional update automation
+
+#### Vulnerability Scanning
+
+- `govulncheck` available via `make vulncheck` Makefile target
+- Not integrated into CI (manual execution only)
+
+### Agent Rules
+
+**Status: Strong (8/10)**
+
+**Existing Agent Rules:**
+- `AGENTS.md` (root) — comprehensive development guidelines including:
+  - Project overview and architecture
+  - Build and run commands (with critical warnings about `make` usage)
+  - Test guidelines (framework, patterns, mocks)
+  - Debug and troubleshooting guidance
+  - Required reading list (13 documents)
+- `.claude/skills/lint-check/SKILL.md` — detailed skill for creating lint checks with templates, validation builders, condition API, and common pitfalls
+
+**Documentation Suite (16 files):**
+- `docs/agent.md` — agent-specific instructions
+- `docs/testing.md` — comprehensive testing guidelines (framework, patterns, mocks, struct assertions)
+- `docs/quality.md` — quality verification steps
+- `docs/code-review.md` — code review standards
+- `docs/development.md` — development workflow hub
+- `docs/design.md` — architecture and design decisions
+- `docs/setup.md` — setup instructions
+- `docs/extensibility.md` — extension patterns
+- `docs/coding/conventions.md` — coding standards
+- `docs/coding/patterns.md` — code patterns
+- `docs/coding/formatting.md` — formatting rules
+- `docs/lint/architecture.md` — lint system architecture
+- `docs/lint/writing-checks.md` — lint check creation guide
+- `docs/usage.md` — CLI usage
+- `docs/migrate/implementation-plan.md` — migration planning
+- `docs/adr/0001-cli-architecture.md` — architecture decision record
+
+**Gaps:**
+- No `.claude/rules/` directory — rules are in `AGENTS.md` and `docs/` instead of the conventional location
+- No `CLAUDE.md` (uses `AGENTS.md` instead)
+- Custom skill exists only for lint checks — no skills for general test creation, PR workflows, etc.
+
+**Recommendations:**
+- Create `.claude/rules/unit-tests.md` and `.claude/rules/integration-tests.md` extracted from `docs/testing.md`
+- These are minor organizational improvements — the content is already comprehensive
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-
-1. **Add coverage tracking and enforcement**
-   - Integrate codecov with the CI workflow
-   - Set minimum thresholds (70% project, 80% patch)
-   - Block PRs that reduce coverage
-
-2. **Add security scanning to CI**
-   - Add `make vulncheck` to CI workflow (1 hour — target already exists)
-   - Add CodeQL or gosec for SAST scanning
-   - Consider Trivy for container image scanning
+- Add Codecov integration with coverage threshold enforcement (80% project, 70% patch)
+- Add `timeout-minutes` to all CI jobs (15 min test, 30 min container builds)
 
 ### Priority 1 (High Value)
-
-3. **Build integration/E2E test suite**
-   - Test CLI command execution end-to-end (build binary, invoke commands)
-   - Add integration tests for `status`, `lint`, `migrate`, `backup`, `deps`
-   - Test error paths and cross-command interactions
-   - Consider using `testscript` for CLI golden-file testing
-
-4. **Add container image smoke test**
-   - Build image in CI, run `version` command
-   - Verify kubectl/oc availability in container
-   - Test with different architectures if feasible
-
-5. **Create .claude/rules/ directory**
-   - `unit-tests.md` — Gomega conventions, mock patterns, test data as constants
-   - `integration-tests.md` — fake client setup, export_test patterns
-   - `lint-check-tests.md` — lint check testing patterns (already in skill, surface as rules)
+- Create integration test suite with Kind cluster for core CLI commands (`lint`, `status`, `backup`, `deps`)
+- Add `.dockerignore` to exclude `.git/`, `docs/`, `tests/`, `tools/` from Docker build context
+- Add `docker` ecosystem to Dependabot configuration
+- Add container image startup validation (build image, run `rhai-cli version`, verify exit code)
+- Integrate `govulncheck` into CI pipeline
 
 ### Priority 2 (Nice-to-Have)
-
-6. **Add Trivy container scanning** to CI or Tekton pipeline
-7. **Cross-platform CLI testing** via CI matrix (linux/darwin/windows)
-8. **Benchmark regression testing** for lint check executor performance
-9. **Add SECURITY.md** with vulnerability reporting process
-10. **Consolidate Dependabot + Renovate** — both running may cause duplicate PRs
+- Add Go version matrix testing in CI (current + previous minor)
+- Create `.claude/rules/` directory with test creation rules
+- Add `HEALTHCHECK` instruction to Dockerfiles
+- Add cross-platform CLI testing (Linux, macOS, Windows) via GoReleaser or matrix
+- Add workflow status badges to README
+- Increase `t.Parallel()` adoption across all test packages
+- Migrate remaining `context.Background()` usage in tests to `t.Context()`
 
 ## Comparison to Gold Standards
 
-| Dimension | odh-cli | odh-dashboard | notebooks | kserve |
-|-----------|---------|---------------|-----------|--------|
-| Unit Tests | 9.0 — 1.37:1 ratio | 9.0 — Multi-layer | 6.0 — Varies | 8.0 — Strong |
-| Integration/E2E | 5.0 — 1 file | 9.0 — Cypress + contract | 7.0 — Image validation | 9.0 — envtest + E2E |
-| Build Integration | 7.5 — Konflux PR | 7.0 — CI builds | 8.0 — Image pipeline | 7.0 — CI builds |
-| Image Testing | 5.0 — No validation | 6.0 — Basic | 9.0 — 5-layer validation | 6.0 — Basic |
-| Coverage Tracking | 4.0 — Local only | 8.0 — Codecov enforced | 5.0 — Limited | 8.0 — Codecov enforced |
-| CI/CD Automation | 7.5 — GHA + Tekton | 9.0 — Comprehensive | 8.0 — Multi-stage | 9.0 — Well-organized |
-| Agent Rules | 8.5 — Excellent docs | 8.0 — Rules + docs | 3.0 — Minimal | 4.0 — Limited |
-| **Overall** | **7.9** | **8.5** | **7.0** | **8.0** |
+| Dimension | odh-cli | odh-dashboard | notebooks | kserve | Gap |
+|-----------|---------|---------------|-----------|--------|-----|
+| Unit Tests | 9/10 | 9/10 | 8/10 | 8/10 | +1 (Outstanding ratio) |
+| Integration/E2E | 4/10 | 10/10 | 7/10 | 9/10 | -6 (No cluster tests) |
+| Build Integration | 8/10 | 9/10 | 8/10 | 4/10 | -1 (Strong Konflux) |
+| Image Testing | 6/10 | 7/10 | 10/10 | 6/10 | -4 (No runtime tests) |
+| Coverage Tracking | 3/10 | 9/10 | 8/10 | 8/10 | -6 (Not configured) |
+| CI/CD Automation | 7/10 | 9/10 | 8/10 | 9/10 | -2 (Missing timeouts) |
+| Static Analysis | 9/10 | 9/10 | 8/10 | 7/10 | 0 (Matches gold standard) |
+| Agent Rules | 8/10 | 8/10 | 6/10 | 2/10 | 0 (Strong documentation) |
+
+**Key Takeaways:**
+- **Biggest gaps**: Coverage Tracking (3/10 vs 9/10 in odh-dashboard) and Integration/E2E (4/10 vs 10/10 in odh-dashboard)
+- **Standout strength**: Unit testing (9/10 — best test-to-code ratio in the fleet) and Static Analysis (9/10 — golangci-lint v2 default:all is the gold standard)
+- **FIPS compliance**: Clean — no non-FIPS crypto in source, strictfipsruntime enabled, UBI9 base images
+- **Agent rules**: Among the best in the fleet — comprehensive AGENTS.md, custom skills, extensive documentation
 
 ## File Paths Reference
 
-| Category | File | Notes |
-|----------|------|-------|
-| CI/CD | `.github/workflows/ci.yml` | GitHub Actions: test, lint, build, release |
-| Tekton | `.tekton/odh-cli-pull-request.yaml` | Konflux PR build (multi-arch, hermetic) |
-| Tekton | `.tekton/odh-cli.yaml` | Konflux manual/label-triggered build |
-| Linting | `.golangci.yml` | golangci-lint v2, default: all |
-| Pre-commit | `.pre-commit-config.yaml` | fmt, vet, lint, test (pre-push) |
-| Build | `Makefile` | 15 targets including vulncheck |
-| Build | `Dockerfile` | Multi-arch, FIPS, UBI9 |
-| Build | `Dockerfile.konflux` | Production, pinned digest, Red Hat labels |
-| Release | `.goreleaser.yml` | Cross-platform binary releases |
-| Deps | `.github/dependabot.yml` | Daily gomod + weekly actions |
-| Deps | `.github/renovate.json` | Extends konflux-central config |
-| Agent | `AGENTS.md` | Comprehensive agent guidelines |
-| Agent | `.claude/skills/lint-check/SKILL.md` | 635-line lint check creation skill |
-| Testing | `docs/testing.md` | Test framework conventions |
-| Quality | `docs/quality.md` | Quality verification workflow |
-| Integration | `tests/integration/lint/diagnostic_cr_test.go` | Only integration test |
+### CI/CD
+- `.github/workflows/ci.yml` — Consolidated CI workflow (test, lint, image, release)
+- `.tekton/odh-cli-pull-request.yaml` — Konflux PR pipeline (multi-arch hermetic build)
+- `.tekton/odh-cli.yaml` — Konflux push pipeline
+- `Makefile` — Build, test, lint, publish targets
+- `.goreleaser.yml` — Cross-platform binary release configuration
+
+### Testing
+- `pkg/*/command_test.go` — Command unit tests (mocked K8s clients)
+- `pkg/*_internal_test.go` — Internal package tests
+- `tests/integration/lint/diagnostic_cr_test.go` — Integration test
+- `pkg/lint/check/executor_bench_test.go` — Benchmark tests
+- `pkg/util/test/mocks/` — Centralized mock implementations
+
+### Static Analysis
+- `.golangci.yml` — golangci-lint v2 configuration (default: all)
+- `.pre-commit-config.yaml` — Pre-commit hooks (fmt, vet, lint, test)
+- `.github/dependabot.yml` — Dependabot (gomod daily, github-actions weekly)
+- `.github/renovate.json` — Renovate (extends konflux-central defaults)
+
+### Container Images
+- `Dockerfile` — Standard multi-arch build (UBI9)
+- `Dockerfile.konflux` — Konflux hermetic build (pinned digests)
+
+### Agent Rules
+- `AGENTS.md` — Agent development guidelines
+- `.claude/skills/lint-check/SKILL.md` — Lint check creation skill
+- `docs/testing.md` — Testing guidelines
+- `docs/coding/conventions.md` — Coding conventions
+- `docs/quality.md` — Quality verification

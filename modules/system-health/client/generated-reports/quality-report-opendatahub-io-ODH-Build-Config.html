@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:18 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 04:25 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/ODH-Build-Config</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="350.60144399999996"
+                                stroke-dashoffset="390.18547799999993"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">3.8</div>
+                        <div class="score-value">3.1</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No unit tests — repo is configuration/manifests only, no application code</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No test files; config repo lacks YAML validation or schema tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Enterprise Contract integration tests via Konflux, no functional E2E</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">Enterprise Contract integration test only; no functional validation of generated bundles/catalogs</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Tekton Konflux pipelines for PR and push builds with centralized pipeline refs</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Strong Konflux/Tekton PR and push builds for bundle and FBC fragment; CEL-based smart triggering</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">OLM scorecard tests for bundle validation; no runtime image testing</div>
+                            <div class="scorecard-status">Two Dockerfiles (bundle FROM scratch, catalog FROM ose-operator-registry); no runtime validation or multi-arch for bundle</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tracking — not applicable for a config-only repo</div>
+                            <div class="scorecard-status">No coverage tooling; no YAML validation metrics</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">7 GitHub Actions workflows + 4 Tekton pipelines; Mergify auto-merge; scheduled sync</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">7 GHA workflows plus 4 Tekton pipelines; Mergify auto-merge; but no concurrency control, no caching, nightly triggers commented out</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No YAML linting, no schema validation, no Dependabot/Renovate, no pre-commit hooks; FIPS explicitly skipped in FBC builds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +416,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No YAML/manifest validation on PRs</div>
-                            <p>Malformed CRDs, CSVs, or catalog entries can merge and break downstream operator installs</p>
+                            <div class="item-description">No YAML schema validation or content tests</div>
+                            <p>Malformed CRDs, incorrect image references, or broken patch files are not caught until Konflux build or runtime</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No OLM bundle validation in CI</div>
-                            <p>Bundle validation relies solely on scorecard config but is never executed in any workflow</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No security scanning on container images</div>
-                            <p>Vulnerabilities in base images (ose-operator-registry) not detected before release</p>
+                            <div class="item-description">FIPS checks explicitly skipped in FBC catalog builds</div>
+                            <p>FBC fragment builds skip FIPS validation (skip-fips: true), potentially producing non-compliant catalog images</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Catalog integrity not validated</div>
-                            <p>FBC catalog.yaml changes can introduce broken channel graphs or missing upgrade edges</p>
+                            <div class="item-description">No dependency update automation (Dependabot/Renovate)</div>
+                            <p>GitHub Actions pinned to old versions (e.g., actions/checkout@v4 unpinned, getsentry/action-github-app-token@v2); no automated base image updates</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No Kustomize/manifest generation validation</div>
-                            <p>Processed bundle output correctness not verified before commit</p>
+                            <div class="item-description">No concurrency control in GitHub Actions workflows</div>
+                            <p>Multiple bundle-sync or process runs can execute simultaneously, causing race conditions on commit/push steps</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">6-8 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No functional validation of generated bundle/catalog content</div>
+                            <p>Processed bundles and catalogs are committed and pushed without verifying OLM validity, CRD schema correctness, or related image resolvability</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">12-16 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,32 +469,40 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add yamllint and kubeconform validation to PR workflow</div>
-                            <p>Catch malformed YAML and invalid Kubernetes manifests before merge</p>
+                            <div class="item-description">Add Dependabot for GitHub Actions version updates</div>
+                            <p>Automated PRs for GHA action version bumps; improved security posture</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to Tekton PR pipeline</div>
-                            <p>Detect known CVEs in catalog base image before release</p>
+                            <div class="item-description">Add concurrency blocks to GitHub Actions workflows</div>
+                            <p>Prevent race conditions from parallel workflow runs on the same branch</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add operator-sdk bundle validate step to CI</div>
-                            <p>Validate OLM bundle structure, annotations, and CSV correctness automatically</p>
+                            <div class="item-description">Add YAML linting with yamllint in CI</div>
+                            <p>Catch YAML syntax errors in manifests, patches, and configs before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create CLAUDE.md with contribution and review guidelines</div>
-                            <p>Enable AI agents to understand repo conventions and review changes correctly</p>
+                            <div class="item-description">Enable FIPS checks on FBC catalog builds</div>
+                            <p>Remove skip-fips: true from Tekton pipeline configs to enforce FIPS compliance</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create basic CLAUDE.md with contribution guidelines</div>
+                            <p>Guide AI agents on repo structure, naming conventions, and patch file format</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
@@ -509,15 +522,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add YAML schema validation (kubeconform) for all CRD and CSV manifests on every PR</li><li>Run operator-sdk bundle validate in CI to catch OLM packaging errors before merge</li><li>Add container image vulnerability scanning (Trivy) to Tekton PR pipelines</li></ul>
+                            <ul><li>Add YAML schema validation tests for CRD manifests, CSV patches, and build-config.yaml</li><li>Remove skip-fips: true and skip-checks: true from FBC Tekton pipeline configurations</li><li>Add functional validation that generated bundles pass opm validate before commit</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add opm validate for FBC catalog integrity checks on catalog changes</li><li>Implement diff-based validation for bundle-patch.yaml and csv-patch.yaml processing</li><li>Add Enterprise Contract checks to ODH (not just RHOAI) pipelines</li><li>Create CLAUDE.md with repo conventions and manifest editing rules</li></ul>
+                            <ul><li>Enable Dependabot for github-actions ecosystem with weekly schedule</li><li>Add concurrency control to all GitHub Actions workflows to prevent race conditions</li><li>Add yamllint CI step for all YAML/YML files with appropriate configuration</li><li>Create pre-commit hooks for YAML validation and trailing whitespace</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SBOM generation to bundle and catalog image builds</li><li>Implement catalog upgrade-path testing (can OLM resolve the channel graph?)</li><li>Add Mergify configuration validation (currently two mergify.yml files exist)</li><li>Add image signing/attestation for bundle and catalog images</li></ul>
+                            <ul><li>Add agent rules (.claude/rules/) documenting patch file format and build-config structure</li><li>Add bundle-to-catalog end-to-end validation workflow on PRs</li><li>Implement multi-arch build validation for operator bundle images</li></ul>
                         </div>
                     </div>
                 </div>

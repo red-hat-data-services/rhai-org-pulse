@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:30 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 05:30 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/rest-proxy</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="373.220892"
+                                stroke-dashoffset="344.946582"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">3.4</div>
+                        <div class="score-value">3.9</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Tests cover core marshaling logic but only 2 of 4 source files tested; no coverage for bytes.go or main.go</div>
+                            <div class="scorecard-status">Core marshaling logic tested, but missing coverage for main.go, bytes.go, and error paths</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No integration or E2E tests; core gRPC-to-REST proxy function untested end-to-end</div>
+                            <div class="scorecard-status">No integration or E2E tests — no gRPC server testing, no cluster-based validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">PR builds dev Docker image and runs tests inside it; no Konflux simulation or runtime validation</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">PR builds Docker image with multi-arch support, but no Konflux simulation or runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Multi-arch builds with UBI9 base; no vulnerability scanning, SBOM, or runtime validation</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Good multi-stage Dockerfile with UBI base, but no runtime testing or health checks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">Coverage profile generated locally via Makefile but not uploaded or tracked; no thresholds</div>
+                            <div class="scorecard-status">Cover profile generated locally but not reported, tracked, or enforced</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Test and build workflows on PRs, but missing concurrency control, timeouts, and modern actions</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
                             <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">4 workflows covering test/build/security/release with GHA caching; outdated action versions</div>
+                            <div class="scorecard-status">golangci-lint v2 with pre-commit hooks, but no Dependabot/Renovate for dependency alerts</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules for test creation</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory — zero AI agent guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +416,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No integration or E2E tests for the gRPC-to-REST proxy</div>
-                            <p>Core proxy functionality (HTTP-to-gRPC translation, TLS, error handling) is completely untested in a realistic environment</p>
+                            <div class="item-description">No integration or E2E tests</div>
+                            <p>gRPC-to-REST proxy translation is never validated end-to-end; regressions in protocol handling go undetected until production</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container vulnerability scanning</div>
-                            <p>Security vulnerabilities in base images and dependencies go undetected until production</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
                             <div class="item-description">No coverage tracking or enforcement</div>
-                            <p>Test coverage can silently regress; no visibility into untested code paths</p>
+                            <p>Coverage profile is generated but never uploaded or gated — PRs can silently reduce coverage</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No tests for main.go (server startup, TLS, env var parsing)</div>
-                            <p>Configuration errors, TLS misconfigurations, and startup failures not caught until deployment</p>
+                            <div class="item-description">No dependency alert configuration</div>
+                            <p>Vulnerable dependencies (e.g., grpc, protobuf) are not flagged automatically — relies on manual monitoring</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Outdated GitHub Action versions (v2/v3)</div>
-                            <p>Missing security patches and features; Node.js 16 deprecation warnings</p>
+                            <div class="item-description">Missing FIPS build tags</div>
+                            <p>While UBI base images are used and no non-FIPS crypto imports were found, no FIPS build tags are present for formal compliance</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,43 +461,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to PR and push workflows</div>
-                            <p>Early detection of CVEs in base images and dependencies</p>
+                            <div class="item-description">Add Dependabot configuration for Go modules and Docker</div>
+                            <p>Automated dependency update PRs with security alert integration</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Integrate codecov for coverage tracking</div>
-                            <p>Visibility into test coverage with PR comments and enforcement thresholds</p>
+                            <div class="item-description">Add Codecov integration to test workflow</div>
+                            <p>PR coverage reporting and threshold enforcement</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Update GitHub Action versions to latest (v4)</div>
-                            <p>Fix Node.js deprecation warnings and get latest security patches</p>
+                            <div class="item-description">Add concurrency control and timeouts to CI workflows</div>
+                            <p>Prevent stale PR runs and reduce CI resource waste</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add concurrency control to CI workflows</div>
-                            <p>Cancel stale PR runs to save CI resources</p>
+                            <div class="item-description">Create basic CLAUDE.md with test patterns</div>
+                            <p>AI agents can generate consistent, framework-appropriate tests</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Dependabot or Renovate for dependency updates</div>
-                            <p>Automated PRs for dependency security updates</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add integration tests that start the REST proxy against a mock gRPC server and validate end-to-end request/response flow</li><li>Add container vulnerability scanning (Trivy) to PR and push workflows</li><li>Integrate codecov with coverage thresholds to prevent regression</li></ul>
+                            <ul><li>Add gRPC integration tests with a real gRPC server to validate end-to-end proxy behavior</li><li>Add Codecov integration with coverage threshold enforcement (e.g., 70% minimum)</li><li>Configure Dependabot for gomod and docker ecosystems</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add unit tests for main.go (env var parsing, TLS configuration, server startup)</li><li>Add unit tests for bytes.go (splitRawBytes, unmarshalBytesJson edge cases)</li><li>Create agent rules for test creation patterns (.claude/rules/)</li><li>Update all GitHub Action versions to v4</li></ul>
+                            <ul><li>Add container image startup and health check validation tests</li><li>Add FIPS build tags and boringcrypto configuration for formal compliance</li><li>Add unit tests for bytes.go parsing logic and main.go error handling</li><li>Create CLAUDE.md with Go testing patterns and project-specific guidance</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SBOM generation for container images</li><li>Add image signing/attestation (cosign)</li><li>Add performance/load testing for proxy throughput</li><li>Add Dependabot configuration for automated dependency updates</li></ul>
+                            <ul><li>Add concurrency control to all CI workflows</li><li>Update GitHub Actions to latest versions (checkout@v4, etc.)</li><li>Add HEALTHCHECK instruction to Dockerfile</li><li>Implement test parallelization with t.Parallel() and subtests</li></ul>
                         </div>
                     </div>
                 </div>

@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:35 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 05:07 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/spark-operator</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#28a745"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="101.78751600000001"
+                                stroke-dashoffset="107.44237800000002"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">8.2</div>
+                        <div class="score-value">8.1</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">60 test files, strong controller/webhook coverage with Ginkgo + testify</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">69 test files across 140 source files (0.49 ratio); Go testing + Ginkgo + envtest; coverprofile generation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Multi-version E2E matrix (K8s v1.32-v1.35), dual deploy methods (Helm + Kustomize), Kueue integration tests</div>
+                            <div class="scorecard-status">3 E2E suites (Helm, Kustomize, Module); K8s v1.24-v1.35 matrix; operator-chaos; drift detection</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">PR-time Docker builds, Kustomize lint &amp; drift detection, Tekton/Konflux pipelines configured</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">PR-triggered build + E2E; Kustomize build validation tests; Helm ct install; CRD drift check</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Multi-stage Docker builds, Kind-loaded image validation, but no container runtime scanning</div>
+                            <div class="scorecard-status">Multi-stage Dockerfile; multi-arch (amd64/arm64); UBI-based ODH image; health probes verified in tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Codecov with separate unit/e2e flags, auto-threshold enforcement on PRs</div>
+                            <div class="scorecard-status">Codecov with project/patch targets; separate unit and e2e-kustomize flags; 1% threshold</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">19 workflows, concurrency control, path-filtered triggers, reusable workflows</div>
+                            <div class="scorecard-status">24 workflows; 16 with concurrency control; matrix multi-version + multi-method; comprehensive release automation</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">golangci-lint v2 with 7+ linters; shfmt + shellcheck; Dependabot 4 ecosystems; crypto/md5 FIPS concern</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Comprehensive CLAUDE.md with project structure, build, test, and lint docs; no .claude/rules/</div>
+                            <div class="scorecard-status">Comprehensive CLAUDE.md with project structure, build, test, deploy docs; no .claude/rules/ for test patterns</div>
                         </div>
                     </div>
                 </div>
@@ -411,27 +416,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No container image vulnerability scanning</div>
-                            <p>CVEs in base images or dependencies may reach production undetected</p>
+                            <div class="item-description">Non-FIPS-compliant crypto/md5 usage in production code</div>
+                            <p>FIPS-mandated environments will reject binaries using MD5; compliance audit failure</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No SAST/CodeQL workflow</div>
-                            <p>Go-specific security patterns (SQL injection, path traversal) not checked</p>
+                            <div class="item-description">No FIPS build tags or BoringCrypto configuration</div>
+                            <p>Cannot produce FIPS-validated builds for regulated deployments</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">8-16 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Pre-commit hooks limited to Helm docs only</div>
-                            <p>Linting and formatting checks only run in CI, not at commit time</p>
+                            <div class="item-description">No explicit Konflux build simulation on PRs</div>
+                            <p>Build failures may be discovered only post-merge in Konflux pipeline</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -448,35 +453,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to PR workflow</div>
-                            <p>Catch CVEs in base Spark images and Go dependencies before merge</p>
+                            <div class="item-description">Replace crypto/md5 with crypto/sha256 in sparkapplication.go</div>
+                            <p>Eliminates the only non-FIPS-compliant crypto import in production code</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL analysis workflow</div>
-                            <p>Automated Go security pattern detection on every PR</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Expand pre-commit hooks with golangci-lint and gitleaks</div>
-                            <p>Shift lint and secret detection left to developer workstations</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create .claude/rules/ for test pattern guidance</div>
-                            <p>Improve AI-generated test quality with repo-specific patterns</p>
+                            <div class="item-description">Add .claude/rules/ with test creation patterns for unit and E2E tests</div>
+                            <p>AI-generated tests follow established Ginkgo/envtest conventions consistently</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add timeout-minutes to all PR-triggered workflows</div>
+                            <p>Prevents stuck workflows from consuming runner time indefinitely</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -493,15 +490,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add container image vulnerability scanning (Trivy) to PR and push workflows</li><li>Add CodeQL or gosec SAST workflow for Go security analysis</li></ul>
+                            <ul><li>Replace crypto/md5 with crypto/sha256 in pkg/util/sparkapplication.go for FIPS compliance</li><li>Add FIPS build tags (CGO_ENABLED=1, -tags=strictfipsruntime or GOEXPERIMENT=boringcrypto) for regulated builds</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Expand pre-commit hooks with golangci-lint, go-fmt, and gitleaks</li><li>Add container runtime validation (image startup + health check in Kind)</li><li>Create .claude/rules/ directory with unit-test, e2e-test, and webhook-test rules</li></ul>
+                            <ul><li>Add Konflux build simulation to PR workflow to catch build issues before merge</li><li>Create .claude/rules/ with specific test creation patterns for Ginkgo E2E and envtest unit tests</li><li>Add container runtime startup validation (image boots, health endpoints respond)</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SBOM generation for container images</li><li>Add image signing/attestation with cosign</li><li>Add performance regression tests for reconciliation loops</li></ul>
+                            <ul><li>Add test parallelism (t.Parallel()) to unit tests where safe to reduce CI time</li><li>Add Testcontainers-based image validation for operator container</li><li>Increase golangci-lint linter count (add errcheck, gocritic, gosimple, stylecheck)</li></ul>
                         </div>
                     </div>
                 </div>

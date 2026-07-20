@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 03:48 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 05:22 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/caikit-nlp-client</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="175.30072199999995"
+                                stroke-dashoffset="214.88475599999998"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">6.9</div>
+                        <div class="score-value">6.2</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Good test coverage with pytest, mocked + real caikit modes, TLS/mTLS parametrization</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Strong pytest suite with 1.3:1 test-to-code ratio and multi-connection-type coverage</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Docker Compose integration tests with real caikit-tgis-serving, weekly CI schedule</div>
+                            <div class="scorecard-status">Docker-based integration tests against real caikit+tgis containers with TLS/mTLS</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">No PR-time build validation, no container image builds, library-only PyPI release</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Nox build + twine check for package validation; no PR-time container build</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No Dockerfile or container image for the library itself; relies on downstream images</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">No Dockerfile for library itself; docker-compose only for test dependencies</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Codecov integration with 50% fail_under threshold, branch coverage, per-Python-version reporting</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Codecov integration with branch coverage, but low 50% threshold</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Well-structured workflows with concurrency control, multi-Python matrix, nox automation</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Well-organized workflows with concurrency and matrix testing, missing caching</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Comprehensive setup with ruff, mypy, bandit, pre-commit hooks, and Dependabot</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, .claude/ directory, or agent rules present</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory present</div>
                         </div>
                     </div>
                 </div>
@@ -410,36 +415,36 @@
                 <div class="section-content">
                     <ul class="items-list">
                         
+                        <li class="item-card medium">
+                            <div class="item-description">No agent rules for AI-assisted development</div>
+                            <p>AI agents cannot follow project-specific testing patterns or conventions</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
                         <li class="item-card high">
-                            <div class="item-description">No SAST or dependency vulnerability scanning in CI</div>
-                            <p>Security vulnerabilities in dependencies (protobuf, grpcio, requests) not detected until downstream</p>
+                            <div class="item-description">Low coverage threshold (50%)</div>
+                            <p>Significant untested code paths can be merged without detection</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No container image or build integration testing</div>
-                            <p>Library packaging issues (missing files, broken imports) only found by downstream consumers</p>
+                            <div class="item-description">No dependency caching in CI workflows</div>
+                            <p>Slower CI runs and unnecessary network traffic for pip/nox downloads</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Coverage threshold at 50% is too low</div>
-                            <p>Significant portions of code can go untested without failing CI</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card low">
-                            <div class="item-description">No agent rules for AI-assisted development</div>
-                            <p>AI agents cannot follow project conventions when generating tests or code</p>
+                            <div class="item-description">No container image for library distribution</div>
+                            <p>No image testing dimension applicable; downstream consumers cannot validate container runtime</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">N/A</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +461,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL or Snyk scanning workflow</div>
-                            <p>Automated detection of security vulnerabilities in code and dependencies</p>
+                            <div class="item-description">Raise coverage threshold from 50% to 70%+</div>
+                            <p>Catches regressions in test coverage before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Raise coverage threshold to 70-80%</div>
-                            <p>Enforce higher test standards, catch regressions earlier</p>
+                            <div class="item-description">Add pip caching to CI workflows</div>
+                            <p>Faster CI runs, reduced dependency download time</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add pip install validation step to PR workflow</div>
-                            <p>Catch packaging/import issues before merge</p>
+                            <div class="item-description">Create basic CLAUDE.md with test patterns and conventions</div>
+                            <p>Improve AI-generated test quality and consistency</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Generate CLAUDE.md with test creation rules</div>
-                            <p>Enable AI agents to follow project testing patterns</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +498,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add dependency vulnerability scanning (CodeQL, Snyk, or Dependabot security alerts)</li><li>Add pip install + import validation step to PR workflow to catch packaging issues</li></ul>
+                            <ul><li>Raise coverage fail_under from 50% to at least 70% and set Codecov target to a fixed value</li><li>Add pip/nox dependency caching to CI workflows to reduce build times</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Raise coverage fail_under from 50% to 70-80%</li><li>Add missing gRPC client tests for embedding, sentence_similarity, rerank methods</li><li>Create CLAUDE.md and .claude/rules/ for test automation guidance</li></ul>
+                            <ul><li>Create CLAUDE.md with project conventions, test patterns, and contribution guidelines</li><li>Add multi-version integration testing (test against multiple caikit-nlp versions)</li><li>Add grpc client embedding/rerank tests (currently only HTTP client has these)</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add type-checking enforcement (mypy strict mode) to prevent runtime type errors</li><li>Add Python 3.12 to test matrix</li><li>Add contract tests to validate gRPC/HTTP API compatibility with caikit-nlp server</li></ul>
+                            <ul><li>Add performance benchmarking for gRPC vs HTTP client response times</li><li>Add contract tests to validate against caikit-nlp API schema changes</li></ul>
                         </div>
                     </div>
                 </div>

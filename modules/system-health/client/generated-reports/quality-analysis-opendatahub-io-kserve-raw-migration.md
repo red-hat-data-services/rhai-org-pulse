@@ -1,350 +1,398 @@
 ---
 repository: "opendatahub-io/kserve-raw-migration"
-overall_score: 1.4
+overall_score: 0.5
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No tests of any kind exist in the repository"
+    status: "No test files of any kind exist in the repository"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests; script requires live OpenShift cluster to validate"
+    status: "No integration or E2E test suites present"
   - dimension: "Build Integration"
     score: 0.0
-    status: "No CI/CD workflows, no build validation, no PR checks"
+    status: "No CI/CD workflows, no Makefile, no build automation"
   - dimension: "Image Testing"
     score: 0.0
-    status: "No container images built or tested; repository is a bash script tool"
+    status: "No container images (Dockerfile/Containerfile) in the repository"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling of any kind"
+    status: "No coverage configuration or tooling"
   - dimension: "CI/CD Automation"
+    score: 0.0
+    status: "No .github/workflows/, Makefile, Jenkinsfile, or any CI/CD configuration"
+  - dimension: "Static Analysis"
     score: 1.0
-    status: "No workflows exist; OWNERS file provides basic review governance"
+    status: "No linting, no FIPS checks, no dependency alerts; script has basic validation"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No .claude directory, no CLAUDE.md, no agent rules"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
-  - title: "Zero CI/CD pipeline"
-    impact: "No automated checks on PRs — broken scripts can be merged without any validation"
+  - title: "No CI/CD automation at all"
+    impact: "Changes to the conversion script are merged without any automated validation, risking regressions and broken behavior"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "No tests at all"
-    impact: "Bash script has ~1060 lines of complex logic with no test coverage; regressions go undetected"
+  - title: "No tests for a 1000+ line Bash script"
+    impact: "No confidence that the script handles edge cases correctly; errors found only by users in production"
     severity: "HIGH"
     effort: "16-24 hours"
-  - title: "No linting or static analysis"
-    impact: "Shell script bugs (quoting issues, unset variables, command injection) are not caught"
+  - title: "No static analysis or linting"
+    impact: "Shell script bugs (quoting, globbing, unset variables) go undetected until runtime failures"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No security scanning"
-    impact: "Script handles RBAC, secrets, and service account tokens with no security review automation"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No agent rules or test automation guidance"
-    impact: "AI-assisted contributions have no guardrails or standards to follow"
+  - title: "No PR review automation"
+    impact: "No automated checks on PRs; all quality depends on manual human review"
     severity: "MEDIUM"
-    effort: "2-3 hours"
+    effort: "2-4 hours"
 quick_wins:
   - title: "Add ShellCheck linting via GitHub Actions"
     effort: "1-2 hours"
-    impact: "Catches common bash pitfalls (unquoted variables, missing error handling, syntax issues)"
+    impact: "Catches common Bash bugs (quoting issues, unused variables, unreachable code) on every PR"
+  - title: "Add a basic GitHub Actions CI workflow"
+    effort: "1-2 hours"
+    impact: "Establishes PR-triggered validation pipeline foundation"
   - title: "Add BATS (Bash Automated Testing System) unit tests"
-    effort: "4-6 hours"
-    impact: "Test argument parsing, helper functions, and transformation logic in isolation"
-  - title: "Add basic PR workflow with ShellCheck + BATS"
-    effort: "2-3 hours"
-    impact: "Prevents broken scripts from being merged; establishes quality baseline"
-  - title: "Add pre-commit hooks for shell formatting"
-    effort: "1 hour"
-    impact: "Consistent script formatting with shfmt; catches issues before commit"
+    effort: "4-8 hours"
+    impact: "Validates argument parsing, error handling, and transformation logic without a live cluster"
+  - title: "Create CLAUDE.md with contribution and testing guidance"
+    effort: "1-2 hours"
+    impact: "Guides AI agents and contributors on how to safely modify the script"
 recommendations:
   priority_0:
-    - "Create GitHub Actions CI workflow with ShellCheck static analysis on every PR"
-    - "Add BATS unit tests for argument parsing, helper functions, and YAML transformations"
-    - "Add shellcheck directives or fix all existing warnings in convert.sh"
+    - "Add a GitHub Actions workflow with ShellCheck linting on every PR"
+    - "Create unit tests using BATS for argument parsing, validation, and YAML transformation logic"
+    - "Add integration tests that mock oc/yq/jq commands to validate the full conversion flow"
   priority_1:
-    - "Add integration tests using mock oc/yq/jq commands for end-to-end workflow validation"
-    - "Add Gitleaks or TruffleHog secret scanning to prevent accidental credential commits"
-    - "Create CLAUDE.md with testing standards and contribution guidelines"
+    - "Add Dependabot configuration for GitHub Actions version pinning"
+    - "Create CLAUDE.md with testing patterns and contribution guidelines"
+    - "Add pre-commit hooks with ShellCheck and shell formatting (shfmt)"
   priority_2:
-    - "Add BATS integration tests with stubbed OpenShift API responses"
-    - "Add script versioning and release workflow"
-    - "Create agent rules for test creation patterns (.claude/rules/)"
+    - "Add E2E tests against a Kind/Minikube cluster with KServe installed"
+    - "Add Containerfile for a portable execution environment"
+    - "Add coverage tracking for shell scripts using kcov or bashcov"
 ---
 
 # Quality Analysis: kserve-raw-migration
 
 ## Executive Summary
 
-- **Overall Score: 1.4/10**
-- **Repository Type**: Bash utility script (single-file tool)
-- **Primary Language**: Bash/Shell
-- **Purpose**: Converts KServe InferenceServices from serverless (Knative) to raw (Kubernetes native) deployment mode on OpenShift AI
-- **JIRA Ticket**: RHOAIENG-33168
+- **Overall Score: 0.5/10**
+- **Repository Type**: Shell script tool (Bash)
+- **Primary Language**: Bash
+- **Jira**: RHOAIENG / Serving Orchestration (midstream tier)
+- **Key Strengths**: Well-documented README, comprehensive help text in script, good internal error handling and validation logic
+- **Critical Gaps**: Zero quality infrastructure — no CI/CD, no tests, no linting, no coverage, no agent rules
+- **Agent Rules Status**: Missing
 
-### Key Strengths
-- Well-documented README with architecture diagrams, usage examples, and troubleshooting
-- Comprehensive error handling within the script itself (prerequisite checks, permission validation, rollback)
-- OWNERS file provides basic governance with approvers and reviewers defined
-- Clean argument parsing with help/version flags
-- Structured file preservation with user-interactive prompts
+The `kserve-raw-migration` repository contains a single Bash script (`convert.sh`, ~1060 lines) that converts KServe InferenceServices from serverless (Knative) to raw (Kubernetes native) deployment mode. While the script itself demonstrates good coding practices internally (argument parsing, validation, colored output, cleanup traps), the repository has **no quality infrastructure whatsoever** — no CI/CD workflows, no tests, no static analysis, no coverage tracking, and no agent rules.
 
-### Critical Gaps
-- **Zero CI/CD**: No GitHub Actions workflows, no automated checks on PRs
-- **Zero Tests**: No unit, integration, or E2E tests for a ~1060-line bash script
-- **No Linting**: No ShellCheck, no shfmt, no static analysis
-- **No Security Scanning**: Script handles RBAC, secrets, and tokens with no automated security checks
-- **No Agent Rules**: No `.claude/` directory or AI-assisted development guidance
-
-### Agent Rules Status: **Missing**
+This represents a critical risk for a tool that directly manipulates production Kubernetes resources (InferenceServices, ServingRuntimes, ServiceAccounts, Roles, RoleBindings, and Secrets).
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 0/10 | No tests of any kind exist |
-| Integration/E2E | 0/10 | No integration or E2E tests |
-| **Build Integration** | **0/10** | **No CI/CD, no build validation** |
-| Image Testing | 0/10 | N/A — no container images built |
-| Coverage Tracking | 0/10 | No coverage tooling |
-| CI/CD Automation | 1/10 | OWNERS file only; no workflows |
-| Agent Rules | 0/10 | No .claude directory or CLAUDE.md |
+| Dimension | Score | Weight | Status |
+|-----------|-------|--------|--------|
+| Unit Tests | 0/10 | 15% | No test files of any kind |
+| Integration/E2E | 0/10 | 20% | No integration or E2E test suites |
+| Build Integration | 0/10 | 15% | No CI/CD, Makefile, or build automation |
+| Image Testing | 0/10 | 10% | No container images in the repository |
+| Coverage Tracking | 0/10 | 10% | No coverage configuration |
+| CI/CD Automation | 0/10 | 15% | No workflows of any kind |
+| Static Analysis | 1/10 | 10% | No linting; script has internal validation |
+| Agent Rules | 0/10 | 5% | No CLAUDE.md, AGENTS.md, or .claude/ |
+| **Overall** | **0.5/10** | **100%** | **Critical quality infrastructure gaps** |
 
 ## Critical Gaps
 
-### 1. Zero CI/CD Pipeline
-- **Impact**: Any change can be merged without automated validation — broken scripts, syntax errors, and regressions go undetected
+### 1. No CI/CD Automation At All
+- **Impact**: Changes to the conversion script are merged without any automated validation. Regressions, syntax errors, and broken logic reach users without any gate.
 - **Severity**: HIGH
 - **Effort**: 4-8 hours
-- **Details**: The repository has no `.github/workflows/` directory. No checks run on pull requests. The only governance is the OWNERS file requiring approver review, but reviewers have no automated tooling to assist them.
+- **Detail**: The repository has no `.github/workflows/` directory, no `Makefile`, no `Jenkinsfile`, and no CI configuration of any kind. Every PR is reviewed purely by humans with no automated feedback.
 
-### 2. No Tests for ~1060 Lines of Complex Bash
-- **Impact**: The script performs critical operations (YAML transformations, RBAC manipulation, secret creation) with zero test coverage. Regressions in any of these operations go undetected until production use.
+### 2. No Tests for a 1000+ Line Bash Script
+- **Impact**: The script manipulates production Kubernetes resources (InferenceServices, ServingRuntimes, RBAC resources, Secrets). Without tests, there is no confidence that edge cases are handled correctly. Users discover bugs in production.
 - **Severity**: HIGH
 - **Effort**: 16-24 hours
-- **Details**: The script contains:
-  - Complex argument parsing (~60 lines)
-  - YAML transformation logic using yq (~100 lines)
-  - Resource discovery via ownerReferences (~70 lines)
-  - Authentication resource processing (~200 lines)
-  - Error handling and validation (~100 lines)
-  - None of these are tested.
+- **Detail**: The `convert.sh` script is approximately 1060 lines and handles complex operations including YAML transformation with `yq`, RBAC resource creation, owner reference management, and interactive prompts. None of these are tested.
 
 ### 3. No Static Analysis or Linting
-- **Impact**: Common bash pitfalls (unquoted variables, missing error handling, command injection vectors) are not caught
+- **Impact**: Common Bash pitfalls — unquoted variables, word splitting, globbing, unreachable code — go undetected until runtime.
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Details**: No ShellCheck integration. The script uses `set -x` for debugging but does not use `set -euo pipefail` at the top level. Several patterns could benefit from ShellCheck warnings (e.g., unquoted `$NAMESPACE` in some places, `echo -e` portability).
+- **Detail**: No ShellCheck configuration, no `.pre-commit-config.yaml`, no linting of any kind. For a Bash-only repository, ShellCheck is the minimum standard.
 
-### 4. No Security Scanning
-- **Impact**: Script handles RBAC roles, service account tokens, and Kubernetes secrets — security vulnerabilities in the transformation logic could lead to privilege escalation or credential exposure
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: No Gitleaks, TruffleHog, or CodeQL integration. The `sample_curl.sh` file contains a hardcoded endpoint URL and references a token variable, but no scanning prevents accidental secret commits.
-
-### 5. No Agent Rules
-- **Impact**: AI-assisted contributions have no guidelines for testing standards, code patterns, or quality expectations
+### 4. No PR Review Automation
+- **Impact**: All quality depends entirely on manual human review. No guardrails prevent broken scripts from being merged.
 - **Severity**: MEDIUM
-- **Effort**: 2-3 hours
+- **Effort**: 2-4 hours
 
 ## Quick Wins
 
 ### 1. Add ShellCheck Linting via GitHub Actions (1-2 hours)
-- **Impact**: Catches common bash pitfalls automatically on every PR
-- **Implementation**:
+
+Create `.github/workflows/lint.yml`:
+
 ```yaml
-# .github/workflows/lint.yml
 name: Lint
-on: [pull_request]
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
 jobs:
   shellcheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: ShellCheck
-        uses: ludeeus/action-shellcheck@master
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@2.0.0
         with:
           scandir: '.'
           severity: warning
 ```
 
-### 2. Add BATS Unit Tests (4-6 hours)
-- **Impact**: Test argument parsing, helper functions, and transformation logic in isolation
-- **Implementation**:
+### 2. Add a Basic GitHub Actions CI Workflow (1-2 hours)
+
+Create `.github/workflows/ci.yml` that runs ShellCheck plus basic syntax validation:
+
+```yaml
+name: CI
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Bash syntax
+        run: bash -n convert.sh
+      - name: Check script is executable
+        run: test -x convert.sh
+      - name: Verify help output
+        run: ./convert.sh --help
+      - name: Verify version output
+        run: ./convert.sh --version
+```
+
+### 3. Add BATS Unit Tests (4-8 hours)
+
+Install [BATS](https://github.com/bats-core/bats-core) and create `test/convert.bats`:
+
 ```bash
-# test/convert_test.bats
 #!/usr/bin/env bats
 
-setup() {
-  source convert.sh --source-only 2>/dev/null || true
-}
-
-@test "parse_arguments sets INFERENCE_SERVICE with -i flag" {
-  parse_arguments -i my-model
-  [ "$INFERENCE_SERVICE" = "my-model" ]
-}
-
-@test "parse_arguments sets NAMESPACE with -n flag" {
-  parse_arguments -n my-ns -i my-model
-  [ "$NAMESPACE" = "my-ns" ]
-}
-
-@test "show_help exits with 0" {
-  run parse_arguments --help
+@test "shows help with --help flag" {
+  run ./convert.sh --help
   [ "$status" -eq 0 ]
+  [[ "$output" == *"KServe InferenceService Raw Deployment Converter"* ]]
+}
+
+@test "shows version with --version flag" {
+  run ./convert.sh --version
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"1.0.0"* ]]
+}
+
+@test "fails without arguments" {
+  run ./convert.sh
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"No arguments provided"* ]]
+}
+
+@test "fails with unknown option" {
+  run ./convert.sh --unknown
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"Unknown option"* ]]
+}
+
+@test "requires inference-service name" {
+  run ./convert.sh -n test-ns
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"required"* ]]
 }
 ```
 
-### 3. Add Basic PR Workflow (2-3 hours)
-- **Impact**: Establishes quality baseline; prevents broken scripts from merge
-```yaml
-# .github/workflows/ci.yml
-name: CI
-on: [pull_request]
-jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ludeeus/action-shellcheck@master
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install BATS
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y bats
-      - name: Run tests
-        run: bats test/
-```
+### 4. Create CLAUDE.md (1-2 hours)
 
-### 4. Add Pre-commit Hooks (1 hour)
-- **Impact**: Consistent formatting and lint checks before every commit
-```yaml
-# .pre-commit-config.yaml
-repos:
-  - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.9.0.6
-    hooks:
-      - id: shellcheck
-  - repo: https://github.com/scop/pre-commit-shfmt
-    rev: v3.7.0-4
-    hooks:
-      - id: shfmt
+```markdown
+# kserve-raw-migration
+
+## Overview
+Bash script tool for converting KServe InferenceServices from serverless to raw deployment mode.
+
+## Testing
+- Run ShellCheck: `shellcheck convert.sh`
+- Run BATS tests: `bats test/`
+- Validate syntax: `bash -n convert.sh`
+
+## Conventions
+- All functions use snake_case
+- User-facing output uses colored log_* helper functions
+- Error handling uses trap for cleanup on ERR
+- Interactive prompts have 30-second timeouts
 ```
 
 ## Detailed Findings
 
-### CI/CD Pipeline
-- **Workflows**: None. No `.github/workflows/` directory exists.
-- **PR Checks**: None. PRs are reviewed manually with no automated validation.
-- **Build Process**: N/A — no container images or compiled artifacts.
-- **Concurrency Control**: N/A.
-- **Caching**: N/A.
-- **Governance**: OWNERS file defines 13 approvers and 12 reviewers, providing basic review governance through Prow/Tide.
+### Unit Tests
+**Score: 0/10**
 
-### Test Coverage
-- **Unit Tests**: None. Zero test files in the repository.
-- **Integration Tests**: None. The script can only be tested against a live OpenShift cluster.
-- **E2E Tests**: None. No automated end-to-end validation.
-- **Test-to-Code Ratio**: 0:1 (0 test files / 2 source files)
-- **Coverage Tracking**: None. No codecov, coveralls, or any coverage tooling.
-- **Frameworks**: None in use. BATS (Bash Automated Testing System) would be the appropriate framework.
+No test files exist in the repository. There are no `*_test.*`, `*.spec.*`, `*.bats`, or any other test files. The repository has no test framework configured.
 
-### Code Quality
-- **Linting**: No ShellCheck or shfmt configuration.
-- **Pre-commit Hooks**: None. No `.pre-commit-config.yaml`.
-- **Static Analysis**: None. No SAST tools configured.
-- **Code Style**: The script is well-structured with functions, colored output, and consistent patterns — but this is not enforced by any tooling.
-- **Error Handling**: The script has comprehensive internal error handling:
-  - Prerequisite checks (oc, yq, jq availability)
-  - Authentication validation (oc login check)
-  - Permission validation (RBAC can-i checks)
-  - Resource existence validation
-  - Interactive namespace confirmation
-  - Trap-based cleanup on ERR
+**Files analyzed**: None found.
 
-### Container Images
-- N/A — This repository does not build container images. It is a bash utility that operates on an existing OpenShift cluster.
+**Recommendation**: Add BATS (Bash Automated Testing System) tests covering:
+- Argument parsing (`parse_arguments` function)
+- Help and version output
+- Namespace detection (`get_current_namespace`)
+- Error handling for missing prerequisites
+- YAML transformation logic (can be tested with mock `yq` output)
 
-### Security
-- **Container Scanning**: N/A (no images)
-- **SAST/CodeQL**: Not configured
-- **Dependency Scanning**: N/A (bash script with no dependency manager)
-- **Secret Detection**: Not configured. `sample_curl.sh` references `$TOKEN` variable. No Gitleaks or TruffleHog to prevent accidental credential commits.
-- **Notable**: The script handles sensitive operations (creating ServiceAccounts, Roles, RoleBindings, Secrets) — the transformation logic should be audited for correctness to prevent privilege escalation or credential leakage.
+### Integration/E2E Tests
+**Score: 0/10**
 
-### Agent Rules (Agentic Flow Quality)
-- **Status**: Missing
-- **Coverage**: No test type rules exist
-- **Quality**: N/A
-- **Gaps**: 
-  - No `CLAUDE.md` in repository root
-  - No `.claude/` directory
-  - No `.claude/rules/` for test creation rules
-  - No testing documentation beyond README troubleshooting section
-- **Recommendation**: Generate test rules with `/test-rules-generator` covering BATS patterns, ShellCheck directives, and mock-based integration testing
+No integration or E2E tests exist. The script operates against live OpenShift clusters with `oc` commands, but there are no automated tests that validate the full conversion workflow, even with mocked cluster commands.
+
+**Recommendation**: Create integration tests that:
+- Mock `oc`, `yq`, and `jq` commands
+- Validate the complete conversion flow with sample YAML fixtures
+- Test authentication resource handling (ServiceAccount, Role, RoleBinding, Secret)
+- Test edge cases (missing resources, permission failures, timeout scenarios)
 
 ### Build Integration
-- **PR Build Validation**: None — no PR workflows exist
-- **Integration Testing**: None — no cluster-based testing
-- **Manifest Generation**: N/A — script generates YAML at runtime, not build time
-- **Cross-Component Build**: N/A — single-script repository
+**Score: 0/10**
+
+No build process exists. The repository is a standalone Bash script with no compilation, bundling, or image-building steps. There is no `Makefile`, no `Dockerfile`, and no build targets.
+
+**Recommendation**: While this repository doesn't require a traditional build, it would benefit from:
+- A `Makefile` with `test`, `lint`, and `check` targets
+- Optionally, a `Containerfile` to package the script with its dependencies (`oc`, `yq`, `jq`) for portable execution
+
+### Image Testing
+**Score: 0/10**
+
+No container images are built or tested. There are no `Dockerfile` or `Containerfile` files.
+
+**Note**: This dimension has limited applicability for a pure shell script repository. However, packaging the tool as a container image with pre-installed dependencies (`oc`, `yq`, `jq`) would improve usability and enable image testing.
+
+### Coverage Tracking
+**Score: 0/10**
+
+No coverage configuration exists. No `.codecov.yml`, no `kcov` configuration, no coverage reporting of any kind.
+
+**Recommendation**: After adding BATS tests, consider adding shell script coverage with `kcov`:
+```bash
+kcov --include-path=. coverage/ bats test/
+```
+
+### CI/CD Automation
+**Score: 0/10**
+
+No CI/CD automation exists. The repository has no `.github/workflows/` directory and no CI configuration files of any kind.
+
+**Files checked**:
+- `.github/workflows/` - Does not exist
+- `Makefile` - Does not exist
+- `Jenkinsfile` - Does not exist
+- `.gitlab-ci.yml` - Does not exist
+- `Taskfile.yml` - Does not exist
+
+**Recommendation**: At minimum, add a GitHub Actions workflow that:
+1. Runs ShellCheck on all `.sh` files
+2. Validates Bash syntax with `bash -n`
+3. Runs BATS tests (once added)
+4. Checks script executability
+
+### Static Analysis
+**Score: 1/10**
+
+No static analysis configuration exists. No ShellCheck configuration, no pre-commit hooks, no linting of any kind. No Dependabot or Renovate configuration.
+
+The single point is awarded because the script itself contains internal validation logic (prerequisite checking, parameter validation, permission checking) — though this is runtime validation, not static analysis.
+
+#### Linting
+- No `.shellcheckrc` or ShellCheck configuration
+- No `shfmt` configuration for formatting
+- No pre-commit hooks
+
+#### FIPS Compatibility
+- Not applicable: The script delegates cryptographic operations to `oc`, `yq`, and `jq` — it does not perform any cryptographic operations itself.
+
+#### Dependency Alerts
+- No `.github/dependabot.yml` — no automated dependency alerting
+- No `renovate.json` or `.renovaterc`
+- Note: The script depends on external tools (`oc`, `yq`, `jq`) but has no mechanism to track or update these dependency requirements
+
+### Agent Rules
+**Score: 0/10**
+
+No agent rules exist in the repository.
+
+- **Status**: Missing
+- **CLAUDE.md**: Not present
+- **AGENTS.md**: Not present
+- **.claude/ directory**: Not present
+- **.claude/rules/**: Not present
+- **Coverage**: No test types have rules
+- **Quality**: N/A
+- **Gaps**: Everything — no agent guidance of any kind
+- **Recommendation**: Generate agent rules with `/test-rules-generator` to guide AI agents on testing patterns for Bash scripts
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Create GitHub Actions CI workflow** with ShellCheck static analysis running on every PR. This is the single highest-impact improvement — it catches bugs with zero ongoing effort.
-2. **Add BATS unit tests** for argument parsing, helper functions (logging, namespace detection), and YAML transformation logic. Focus on testing `parse_arguments`, `get_current_namespace`, `check_prerequisites`, and the yq transformation commands.
-3. **Run ShellCheck on convert.sh** and fix or suppress all warnings. Add `#!/bin/bash` shellcheck directives where needed.
+1. **Add GitHub Actions CI with ShellCheck** — Catches Bash bugs on every PR. This is the single highest-ROI improvement. (2-4 hours)
+2. **Add BATS unit tests for argument parsing and validation** — The `parse_arguments`, `validate_parameters`, `check_prerequisites`, and `check_permissions` functions can be tested without a live cluster. (8-12 hours)
+3. **Add integration tests with mocked oc/yq/jq** — Validate the full conversion flow with fixture YAML files and mock commands. (8-12 hours)
 
 ### Priority 1 (High Value)
-4. **Add integration tests using mock commands**. Create stub scripts for `oc`, `yq`, and `jq` that return canned responses, then test the full conversion workflow end-to-end without requiring a live cluster.
-5. **Add Gitleaks secret scanning** to the PR workflow to prevent accidental credential commits (important given the script handles tokens and secrets).
-6. **Create CLAUDE.md** with contribution guidelines, testing standards (BATS, ShellCheck), and instructions for running tests locally.
+4. **Create a Makefile with test/lint/check targets** — Standardize how contributors run tests and linting. (2-3 hours)
+5. **Add `.github/dependabot.yml`** — At minimum for GitHub Actions version pinning. (1 hour)
+6. **Create CLAUDE.md** — Guide AI agents and contributors on the script's structure, testing approach, and conventions. (2-3 hours)
+7. **Add pre-commit hooks** — ShellCheck + shfmt for consistent formatting. (1-2 hours)
 
 ### Priority 2 (Nice-to-Have)
-7. **Add BATS integration tests** with stubbed OpenShift API responses to validate the full conversion pipeline.
-8. **Add script versioning** — the script has `SCRIPT_VERSION="1.0.0"` but no release workflow or changelog.
-9. **Create agent rules** (`.claude/rules/`) for bash test patterns, ShellCheck best practices, and BATS conventions.
-10. **Add `set -euo pipefail`** at the top of the script for stricter error handling.
+8. **Add a Containerfile** — Package the script with `oc`, `yq`, and `jq` for portable execution. (4-6 hours)
+9. **Add E2E tests with Kind + KServe** — Full integration testing against a real KServe cluster. (16-24 hours)
+10. **Add shell coverage tracking with kcov** — Track which code paths are exercised by tests. (2-4 hours)
 
 ## Comparison to Gold Standards
 
-| Dimension | kserve-raw-migration | odh-dashboard | notebooks | kserve |
-|-----------|---------------------|---------------|-----------|--------|
-| Unit Tests | 0/10 | 9/10 | 7/10 | 8/10 |
-| Integration/E2E | 0/10 | 9/10 | 8/10 | 9/10 |
-| Build Integration | 0/10 | 8/10 | 7/10 | 7/10 |
-| Image Testing | N/A | 7/10 | 9/10 | 7/10 |
-| Coverage Tracking | 0/10 | 8/10 | 6/10 | 8/10 |
-| CI/CD Automation | 1/10 | 9/10 | 8/10 | 9/10 |
-| Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
-| **Overall** | **1.4/10** | **8.3/10** | **6.9/10** | **7.1/10** |
-
-### Key Gaps vs. Gold Standards
-- **odh-dashboard**: Has multi-layer testing (unit, integration, E2E, contract), comprehensive CI/CD with 10+ workflows, codecov enforcement, and detailed agent rules. kserve-raw-migration has none of these.
-- **notebooks**: Has 5-layer image validation, multi-architecture support, and security scanning. While image testing is N/A for this repo, the CI/CD patterns are transferable.
-- **kserve**: Has coverage enforcement, multi-version testing, and envtest-based integration tests. The testing patterns for yq/oc commands could be adapted using BATS.
+| Practice | kserve-raw-migration | odh-dashboard | notebooks | kserve |
+|----------|---------------------|---------------|-----------|--------|
+| Unit Tests | None | Comprehensive Jest/Vitest | Python tests | Go tests + envtest |
+| Integration/E2E | None | Cypress E2E + contract tests | Multi-layer validation | Ginkgo E2E suite |
+| Build Integration | None | PR Docker builds | Multi-arch CI builds | PR-triggered builds |
+| Image Testing | None | Container validation | 5-layer image validation | Runtime validation |
+| Coverage Tracking | None | Codecov enforcement | Coverage reporting | Codecov with thresholds |
+| CI/CD Automation | None | 20+ workflows | Matrix CI | Comprehensive workflows |
+| Static Analysis | None (1/10) | ESLint + TypeScript strict | Linting + FIPS | golangci-lint |
+| Agent Rules | None | CLAUDE.md + .claude/rules/ | Basic rules | N/A |
 
 ## File Paths Reference
 
+### Repository Contents (Complete)
 | File | Purpose |
 |------|---------|
-| `convert.sh` | Main conversion script (~1060 lines) |
-| `sample_curl.sh` | Sample curl command for testing converted models |
+| `convert.sh` | Main conversion script (~1060 lines, Bash) |
 | `README.md` | Comprehensive documentation |
-| `OWNERS` | Review governance (13 approvers, 12 reviewers) |
-| `LICENSE` | Apache License 2.0 |
+| `sample_curl.sh` | Example curl command for testing converted models |
+| `OWNERS` | Kubernetes OWNERS file (approvers/reviewers) |
+| `LICENSE` | Apache 2.0 license |
 
-### Missing Configuration Files
-- `.github/workflows/*.yml` — No CI/CD workflows
-- `*_test.*` — No test files
-- `.golangci.yaml` / `.eslintrc` — N/A (bash project)
-- `.pre-commit-config.yaml` — No pre-commit hooks
-- `.codecov.yml` — No coverage configuration
-- `.gitleaks.toml` — No secret detection
-- `.trivyignore` — No vulnerability scanning
-- `Dockerfile` / `Containerfile` — No container images
-- `CLAUDE.md` / `.claude/` — No agent rules
+### Missing Quality Files
+| File | Status |
+|------|--------|
+| `.github/workflows/` | Missing — no CI/CD |
+| `test/` | Missing — no tests |
+| `Makefile` | Missing — no build targets |
+| `Dockerfile` / `Containerfile` | Missing — no container packaging |
+| `.shellcheckrc` | Missing — no ShellCheck config |
+| `.pre-commit-config.yaml` | Missing — no pre-commit hooks |
+| `.github/dependabot.yml` | Missing — no dependency alerts |
+| `.codecov.yml` | Missing — no coverage config |
+| `CLAUDE.md` | Missing — no agent rules |
+| `.claude/` | Missing — no agent configuration |

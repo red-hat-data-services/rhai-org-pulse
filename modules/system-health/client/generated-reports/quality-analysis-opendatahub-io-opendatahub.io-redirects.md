@@ -1,279 +1,272 @@
 ---
 repository: "opendatahub-io/opendatahub.io-redirects"
-overall_score: 2.1
+overall_score: 1.4
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No tests of any kind — zero test files in the repository"
+    status: "No test files exist — zero test coverage"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E testing; no redirect validation"
+    status: "No integration or E2E tests of any kind"
   - dimension: "Build Integration"
     score: 2.0
-    status: "GitLab CI builds Jekyll site but no PR-time validation or build checks"
+    status: "GitLab CI builds Jekyll site but no validation beyond build success"
   - dimension: "Image Testing"
     score: 0.0
-    status: "No container images — static site deployed via GitLab Pages"
+    status: "No container images — not applicable for a static Jekyll site"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tracking — no code to cover"
+    status: "No coverage tooling configured"
   - dimension: "CI/CD Automation"
     score: 3.0
-    status: "Minimal GitLab CI with build+deploy; outdated Ruby 2.3 base image"
+    status: "Minimal GitLab CI with build/deploy stages; uses outdated Ruby 2.3 image"
+  - dimension: "Static Analysis"
+    score: 1.0
+    status: "No linting, no dependency alerts, no pre-commit hooks"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, .claude/ directory, or agent rules"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
-  - title: "Outdated and insecure Ruby 2.3 base image"
-    impact: "Ruby 2.3 reached EOL in March 2019 — known security vulnerabilities in the build environment"
+  - title: "Outdated Ruby 2.3 base image in CI"
+    impact: "Ruby 2.3 reached EOL in March 2019 — severe security risk and gem compatibility issues"
     severity: "HIGH"
     effort: "1-2 hours"
-  - title: "Outdated Jekyll 3.8.5 and dependencies with known CVEs"
-    impact: "kramdown 1.17 has CVE-2020-14001; all gems are 5+ years behind"
+  - title: "No redirect validation tests"
+    impact: "Broken redirects go undetected until users hit 404s on the live site"
+    severity: "HIGH"
+    effort: "2-4 hours"
+  - title: "No dependency management or alerts"
+    impact: "Outdated gems with known vulnerabilities are never flagged"
+    severity: "MEDIUM"
+    effort: "1-2 hours"
+  - title: "No GitHub Actions CI (repo is on GitHub, CI is on GitLab)"
+    impact: "PRs on GitHub have no status checks — no build validation before merge"
     severity: "HIGH"
     effort: "2-3 hours"
-  - title: "No redirect validation tests"
-    impact: "Broken redirects could silently fail with no detection mechanism"
-    severity: "MEDIUM"
-    effort: "2-4 hours"
-  - title: "No branch protection or PR workflow"
-    impact: "No CI runs on non-master branches validate changes before merge"
-    severity: "MEDIUM"
-    effort: "1-2 hours"
 quick_wins:
-  - title: "Upgrade Ruby base image from 2.3 to 3.2+"
+  - title: "Update CI base image from Ruby 2.3 to Ruby 3.x"
+    effort: "30 minutes"
+    impact: "Eliminate EOL runtime risk and unblock modern gem versions"
+  - title: "Add Dependabot for Bundler ecosystem"
+    effort: "30 minutes"
+    impact: "Automated security alerts for gem dependencies"
+  - title: "Add a GitHub Actions workflow mirroring GitLab CI"
     effort: "1-2 hours"
-    impact: "Eliminate known security vulnerabilities in the build pipeline"
-  - title: "Pin and update Gemfile.lock dependencies"
+    impact: "PR status checks on the platform where the repo actually lives"
+  - title: "Add HTML-proofer to validate redirects post-build"
     effort: "1-2 hours"
-    impact: "Resolve kramdown CVE-2020-14001 and other known vulnerabilities"
-  - title: "Add a simple HTML link-checker CI step"
-    effort: "1-2 hours"
-    impact: "Validate that redirect URLs are reachable and respond with 200"
-  - title: "Evaluate migrating to a simpler redirect mechanism"
-    effort: "2-4 hours"
-    impact: "Replace entire Jekyll site with a lightweight nginx/Caddy config or DNS-level redirect"
+    impact: "Catch broken redirect URLs before deploy"
 recommendations:
   priority_0:
-    - "Upgrade Ruby base image from 2.3 (EOL 2019) to 3.2+ to eliminate build-environment CVEs"
-    - "Update all gem dependencies — kramdown 1.17 has CVE-2020-14001 (arbitrary code execution)"
+    - "Update Ruby base image from EOL 2.3 to a supported 3.x release"
+    - "Add GitHub Actions CI workflow with Jekyll build + redirect validation"
   priority_1:
-    - "Add redirect validation test that curls the target URL and checks HTTP 200/301"
-    - "Evaluate whether this entire repo can be replaced by a DNS CNAME or nginx redirect rule"
+    - "Add html-proofer or custom redirect validation to CI"
+    - "Enable Dependabot for bundler ecosystem"
   priority_2:
-    - "Add CLAUDE.md with contribution guidelines"
-    - "Move CI to GitHub Actions if the repo is primarily hosted on GitHub"
+    - "Add basic CLAUDE.md with repo purpose and contribution guidelines"
+    - "Consider archiving this repo if redirects can be handled at the DNS/CDN level"
 ---
 
 # Quality Analysis: opendatahub.io-redirects
 
 ## Executive Summary
-- **Overall Score: 2.1/10**
-- **Repository Type**: Static Jekyll site serving as a URL redirect
-- **Primary Language**: HTML/SCSS (Jekyll templates, Ruby build)
-- **Purpose**: Redirects all traffic from the old opendatahub.io domain to `https://opendatahub.io`
-- **Key Strengths**: Functional CI/CD pipeline that builds and deploys via GitLab Pages
-- **Critical Gaps**: Severely outdated dependencies (Ruby 2.3 EOL, kramdown CVE), zero tests, no security scanning
-- **Agent Rules Status**: Missing — no CLAUDE.md, .claude/ directory, or agent configuration
+- **Overall Score: 1.4/10**
+- **Repository Type**: Static website (Jekyll) — URL redirect handler
+- **Primary Language**: HTML/SCSS/Ruby (Jekyll)
+- **Jira**: RHOAIENG / Documentation (midstream tier)
+- **Key Strengths**: Simple, single-purpose design; functional GitLab CI pipeline with build/deploy stages
+- **Critical Gaps**: No tests of any kind, EOL Ruby 2.3 runtime, no GitHub CI despite being hosted on GitHub, no dependency alerts
+- **Agent Rules Status**: Missing
 
-## Repository Overview
+## Context
 
-This is an extremely minimal repository (21 non-git files) containing a Jekyll static site whose sole purpose is redirecting visitors to `https://opendatahub.io`. The entire site consists of:
-
-- `index.html` — meta-refresh redirect to opendatahub.io
-- `404.html` — also redirects to opendatahub.io
-- `_layouts/redirect.html` — redirect template with meta-refresh + JavaScript fallback
-- `feed.xml` — RSS feed (likely vestigial from the Jekyll template)
-- `acme-challenge` — Let's Encrypt ACME challenge response
-- SCSS styling (519 lines, likely unused since all pages redirect)
-
-The repository is hosted on GitHub but CI/CD runs on GitLab CI.
+This repository is an extremely minimal Jekyll site (21 files, ~950 lines total) whose sole purpose is to redirect old `opendatahub.io` URLs to the current site. The `index.html` does a meta-refresh redirect to `https://opendatahub.io`. Given its narrow scope, many quality dimensions (image testing, coverage tracking) are genuinely not applicable. However, even for a redirect service, basic CI hygiene and redirect validation are important.
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 0/10 | No tests of any kind |
-| Integration/E2E | 0/10 | No redirect validation |
-| **Build Integration** | **2/10** | **Minimal GitLab CI build only** |
-| Image Testing | 0/10 | N/A — static site, no containers |
-| Coverage Tracking | 0/10 | No code to cover |
-| CI/CD Automation | 3/10 | Outdated GitLab CI pipeline |
-| Agent Rules | 0/10 | No agent configuration |
+| Dimension | Weight | Score | Status |
+|-----------|--------|-------|--------|
+| Unit Tests | 15% | 0.0/10 | No test files exist |
+| Integration/E2E | 20% | 0.0/10 | No integration or E2E tests |
+| Build Integration | 15% | 2.0/10 | GitLab CI builds site but no validation |
+| Image Testing | 10% | 0.0/10 | N/A — no container images |
+| Coverage Tracking | 10% | 0.0/10 | No coverage tooling |
+| CI/CD Automation | 15% | 3.0/10 | Minimal GitLab CI; outdated base image |
+| Static Analysis | 10% | 1.0/10 | No linting, no dependency alerts |
+| Agent Rules | 5% | 0.0/10 | No agent rules present |
+
+**Weighted Overall: 1.4/10**
 
 ## Critical Gaps
 
-### 1. Outdated and Insecure Ruby 2.3 Base Image
-- **Impact**: Ruby 2.3 reached End of Life in March 2019. The `image: ruby:2.3` in `.gitlab-ci.yml` exposes the build environment to multiple known CVEs.
+### 1. Outdated Ruby 2.3 Base Image in CI
 - **Severity**: HIGH
+- **Impact**: Ruby 2.3 reached EOL in March 2019. This means no security patches for over 7 years, potential gem incompatibilities, and exposure to known CVEs in the Ruby runtime.
 - **Effort**: 1-2 hours
-- **Fix**: Change `.gitlab-ci.yml` to `image: ruby:3.2` or newer.
+- **File**: `.gitlab-ci.yml:1` — `image: ruby:2.3`
 
-### 2. Outdated Jekyll and Dependencies with Known CVEs
-- **Impact**: The Gemfile.lock pins Jekyll 3.8.5, kramdown 1.17, and other gems from 2019. kramdown 1.17 is affected by **CVE-2020-14001** (arbitrary code execution via crafted kramdown documents). While this specific site processes no user content, the vulnerability exists in the build toolchain.
+### 2. No Redirect Validation Tests
 - **Severity**: HIGH
-- **Effort**: 2-3 hours
-- **Details**:
-  - `kramdown 1.17.0` → CVE-2020-14001
-  - `addressable 2.6.0` → outdated
-  - `jekyll 3.8.5` → multiple minor versions behind
-  - `rouge 3.3.0` → outdated
-  - Bundler 1.16.2 → current is 2.x
-
-### 3. No Redirect Validation Tests
-- **Impact**: If the redirect URL changes or the template breaks, there is no automated check to detect the failure. A broken redirect would silently serve a non-redirecting page.
-- **Severity**: MEDIUM
+- **Impact**: The entire purpose of this repository is URL redirection. Without any tests, broken redirects (malformed URLs, missing pages, incorrect targets) are invisible until real users encounter them. For a redirect service, this is the functional equivalent of shipping code with zero test coverage.
 - **Effort**: 2-4 hours
+- **Recommendation**: Add `html-proofer` gem to validate all redirect URLs resolve correctly after Jekyll build
 
-### 4. No Branch Protection or PR Validation
-- **Impact**: The GitLab CI `test` job runs on non-master branches but only builds Jekyll — it doesn't validate the redirect actually works. There's no evidence of branch protection rules.
+### 3. No GitHub Actions CI
+- **Severity**: HIGH
+- **Impact**: The repository lives on GitHub but CI runs on GitLab (`.gitlab-ci.yml`). GitHub PRs have zero status checks — anyone can merge changes without a build passing. This is a silent gap that defeats the purpose of code review.
+- **Effort**: 2-3 hours
+
+### 4. No Dependency Management
 - **Severity**: MEDIUM
-- **Effort**: 1-2 hours
+- **Impact**: No Dependabot or Renovate configuration. The `Gemfile.lock` pins gem versions but there's no automated alerting when dependencies have known vulnerabilities.
+- **Effort**: 30 minutes
 
 ## Quick Wins
 
-### 1. Upgrade Ruby Base Image (1-2 hours)
-Update `.gitlab-ci.yml`:
+### 1. Update Ruby Base Image (30 minutes)
+Replace `image: ruby:2.3` with `image: ruby:3.3` in `.gitlab-ci.yml`. Test locally with `bundle exec jekyll build` first.
+
 ```yaml
-image: ruby:3.2
+# .gitlab-ci.yml
+image: ruby:3.3
 ```
 
-### 2. Update Gem Dependencies (1-2 hours)
-```bash
-bundle update
-```
-This resolves kramdown CVE-2020-14001 and brings all dependencies to supported versions.
+### 2. Add Dependabot for Bundler (30 minutes)
+Create `.github/dependabot.yml`:
 
-### 3. Add Simple Redirect Validation (1-2 hours)
-Add to `.gitlab-ci.yml`:
 ```yaml
-validate-redirect:
-  stage: test
-  script:
-    - bundle install
-    - bundle exec jekyll build -d test
-    - grep -q 'url=https://opendatahub.io' test/index.html
-    - grep -q 'url=https://opendatahub.io' test/404.html
-  except:
-    - master
+version: 2
+updates:
+  - package-ecosystem: "bundler"
+    directory: "/"
+    schedule:
+      interval: "weekly"
 ```
 
-### 4. Evaluate Replacing the Entire Repo (2-4 hours)
-A full Jekyll site with SCSS, layouts, and build pipeline is significant overhead for what amounts to an HTTP redirect. Consider:
-- **DNS-level redirect**: CNAME or HTTP redirect at the DNS provider
-- **Nginx/Caddy config**: Single-line redirect rule
-- **GitHub Pages redirect**: A single `index.html` with no build step
+### 3. Add GitHub Actions CI (1-2 hours)
+Create `.github/workflows/build.yml`:
+
+```yaml
+name: Build
+on:
+  pull_request:
+    branches: [master]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+      - run: bundle exec jekyll build -d _site
+```
+
+### 4. Add Redirect Validation (1-2 hours)
+Add `html-proofer` to the Gemfile and CI:
+
+```ruby
+# Gemfile
+group :test do
+  gem 'html-proofer'
+end
+```
+
+```yaml
+# In CI script
+- bundle exec htmlproofer _site --check-html --allow-hash-href
+```
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
+- **Score**: 0.0/10
+- **Finding**: Zero test files in the repository. No `*_test.*`, `*.spec.*`, or `test_*` files.
+- **Context**: For a pure redirect site this is somewhat understandable, but even a simple smoke test verifying the generated HTML contains correct redirect URLs would add value.
 
-**Configuration**: `.gitlab-ci.yml` (GitLab CI)
+### Integration/E2E Tests
+- **Score**: 0.0/10
+- **Finding**: No integration test directory (`e2e/`, `integration/`, `test/`). No test frameworks referenced in `Gemfile`.
+- **Recommendation**: At minimum, validate that `bundle exec jekyll build` produces an `index.html` with the correct redirect target.
 
-| Aspect | Finding |
-|--------|---------|
-| Base image | `ruby:2.3` (EOL March 2019) |
-| Build tool | Jekyll 3.8.5 via Bundler |
-| Test stage | Builds site to `test/` directory on non-master branches |
-| Deploy stage | Builds to `public/` and deploys via GitLab Pages on master |
-| Caching | None — `bundle install` runs fresh every build |
-| Concurrency | No control |
-| Artifacts | Build output only |
+### Build Integration
+- **Score**: 2.0/10
+- **Finding**: GitLab CI has a `test` stage that runs `bundle exec jekyll build -d test`, which validates that Jekyll can build the site. However:
+  - No validation of the built output (redirect correctness, HTML validity)
+  - No PR-time checks on GitHub where the repo is actually hosted
+  - The `test` stage runs on all non-master branches, which is good
+  - The `pages` stage deploys on master, which is appropriate
+- **Files analyzed**: `.gitlab-ci.yml`
 
-**Gaps**:
-- No dependency caching (`bundle cache` not used)
-- No build time optimization
-- No notification on failure
-- No status badges (README references badges but they may not render on GitHub)
+### Image Testing
+- **Score**: 0.0/10
+- **Finding**: Not applicable. This is a static Jekyll site with no Dockerfile or container images. The site is deployed via GitLab Pages, not as a container.
 
-### Test Coverage
+### Coverage Tracking
+- **Score**: 0.0/10
+- **Finding**: No coverage configuration (`.codecov.yml`, `.coveragerc`, etc.). Since there are no tests, there's nothing to measure coverage against.
 
-**Finding**: Zero test files exist in the repository.
+### CI/CD Automation
+- **Score**: 3.0/10
+- **Positive findings**:
+  - GitLab CI pipeline exists with proper stage separation (test vs. deploy)
+  - Branch filtering: test runs on non-master, deploy runs on master only
+  - Artifacts are correctly configured for GitLab Pages
+- **Negative findings**:
+  - Base image `ruby:2.3` is EOL since March 2019 (7+ years ago)
+  - No concurrency control
+  - No caching (every build does full `bundle install`)
+  - No timeout configuration
+  - No GitHub Actions despite repo being on GitHub
+  - No test parallelization (not needed at this scale)
+- **Files analyzed**: `.gitlab-ci.yml`
 
-There are no:
-- Unit tests
-- Integration tests
-- E2E tests
-- Smoke tests
-- Link validation tests
-- Redirect validation tests
+### Static Analysis
+- **Score**: 1.0/10
+- **Finding**: No linting configuration of any kind:
+  - No `.rubocop.yml` for Ruby style
+  - No HTML linting
+  - No SCSS linting
+  - No `.pre-commit-config.yaml`
+  - No `.github/dependabot.yml` or `renovate.json`
+- **FIPS Compatibility**: Not applicable — no cryptographic operations
+- **Dependency Alerts**: Absent. No Dependabot or Renovate configured.
 
-For a redirect-only site, the minimum viable test would be:
-1. Build the Jekyll site
-2. Verify `index.html` contains the correct redirect URL
-3. Optionally: HTTP request to the target URL to verify it responds
-
-### Code Quality
-
-| Tool | Present |
-|------|---------|
-| Linter | None |
-| Pre-commit hooks | None |
-| Static analysis | None |
-| Code formatter | None |
-| EditorConfig | None |
-
-Given the repository's minimal size (21 files, ~600 lines of SCSS), the absence of linting tools is proportional. However, the `.ruby-version` file specifies Ruby 2.3.7, which should be updated.
-
-### Container Images
-
-Not applicable — this is a static site deployed via GitLab Pages. No Dockerfiles or container configurations exist.
-
-### Security
-
-| Check | Status |
-|-------|--------|
-| Dependency scanning | Not configured |
-| SAST/CodeQL | Not configured |
-| Secret detection | Not configured |
-| Vulnerability scanning | Not configured |
-| ACME challenge | Present (Let's Encrypt) — **expiration status unknown** |
-
-**Critical finding**: The ACME challenge file contains a raw challenge token that may be expired. If TLS certificate renewal is handled this way, it should be automated.
-
-**Dependency vulnerabilities**:
-- `kramdown 1.17.0`: **CVE-2020-14001** — arbitrary code execution
-- `ruby 2.3.7`: Multiple CVEs (EOL since 2019)
-- All gems are 5+ years out of date
-
-### Agent Rules (Agentic Flow Quality)
-
-- **Status**: Missing
-- **Coverage**: None — no `.claude/` directory, `CLAUDE.md`, or `AGENTS.md`
-- **Quality**: N/A
-- **Gaps**: Everything — no agent configuration exists
-- **Recommendation**: For a repo this simple, a basic `CLAUDE.md` with contribution guidelines would suffice. Full agent rules are disproportionate.
+### Agent Rules
+- **Score**: 0.0/10
+- **Finding**: No `CLAUDE.md`, `AGENTS.md`, or `.claude/` directory. No test automation guidance for AI agents.
+- **Recommendation**: Given the repo's simplicity, a basic `CLAUDE.md` describing the repo's purpose and how to test changes locally would be sufficient.
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Upgrade Ruby base image** from 2.3 (EOL 2019) to 3.2+ to eliminate build-environment CVEs
-2. **Update all gem dependencies** — kramdown 1.17 has CVE-2020-14001 (arbitrary code execution)
+1. **Update Ruby base image** from EOL `ruby:2.3` to `ruby:3.3` in `.gitlab-ci.yml`
+2. **Add GitHub Actions CI** so PRs on GitHub get build status checks
 
 ### Priority 1 (High Value)
-1. **Add redirect validation** in CI to verify the output HTML contains the correct redirect URL
-2. **Evaluate replacing the entire repository** with a DNS-level redirect or a single static HTML file — the Jekyll build pipeline is significant overhead for a 301 redirect
-3. **Add dependency caching** to GitLab CI to speed up builds
+1. **Add `html-proofer`** to validate redirect URLs and HTML correctness post-build
+2. **Enable Dependabot** for the bundler ecosystem to get automated vulnerability alerts
+3. **Add bundle caching** to GitLab CI to speed up builds
 
 ### Priority 2 (Nice-to-Have)
-1. **Add a basic CLAUDE.md** with repository purpose and contribution guidelines
-2. **Remove vestigial files** — `feed.xml`, SCSS styles, and unused layouts serve no purpose for a redirect-only site
-3. **Verify ACME challenge status** — the static challenge file may need rotation or replacement with automated cert renewal
+1. **Add a basic `CLAUDE.md`** with repo purpose, local dev instructions, and contribution guidelines
+2. **Consider archiving** — if redirects can be handled at the DNS/CDN level (e.g., Cloudflare Page Rules, nginx config), this entire repository may be unnecessary
+3. **Update `Gemfile.lock`** — current lock file may have stale dependencies
 
 ## Comparison to Gold Standards
 
-| Dimension | This Repo | odh-dashboard | notebooks | Best Practice |
-|-----------|-----------|---------------|-----------|---------------|
-| Unit Tests | None | Comprehensive Jest | Per-notebook | Proportional to code |
-| Integration/E2E | None | Cypress + Playwright | Multi-layer | At least smoke tests |
-| Build Integration | Basic | PR-time validation | Multi-arch | PR validation |
-| Image Testing | N/A | Container validation | 5-layer validation | Runtime checks |
-| Coverage | None | Codecov enforced | Coverage tracked | Threshold enforcement |
-| CI/CD | Minimal GitLab CI | GitHub Actions matrix | Comprehensive | Modern, cached |
-| Agent Rules | None | Comprehensive | Basic | At minimum CLAUDE.md |
-| Security | None | SAST + scanning | Trivy + Snyk | Dependency scanning |
-
-**Context**: This repository's simplicity means most gold-standard practices are disproportionate. However, the dependency security issues and lack of any validation are gaps regardless of repo size.
+| Practice | This Repo | odh-dashboard | notebooks | kserve |
+|----------|-----------|---------------|-----------|--------|
+| Unit Tests | None | Comprehensive Jest/Vitest | Moderate | Strong Go testing |
+| Integration/E2E | None | Cypress + contract tests | 5-layer validation | Multi-version E2E |
+| Build Integration | Jekyll build only | PR Docker builds | Multi-arch builds | Konflux simulation |
+| Image Testing | N/A | Container validation | Testcontainers | Runtime checks |
+| Coverage Tracking | None | Codecov enforced | Moderate | Threshold enforcement |
+| CI/CD Automation | Minimal GitLab CI | Comprehensive GHA | Full GHA suite | Multi-workflow GHA |
+| Static Analysis | None | ESLint + strict TS | Moderate | golangci-lint |
+| Agent Rules | None | Comprehensive | Basic | Moderate |
 
 ## File Paths Reference
 
@@ -281,14 +274,14 @@ Not applicable — this is a static site deployed via GitLab Pages. No Dockerfil
 |------|---------|
 | `.gitlab-ci.yml` | CI/CD pipeline (build + deploy) |
 | `_config.yml` | Jekyll configuration |
-| `Gemfile` / `Gemfile.lock` | Ruby dependencies |
 | `index.html` | Main redirect page |
-| `404.html` | Error page (also redirects) |
-| `_layouts/redirect.html` | Redirect template |
-| `_layouts/default.html` | Default layout (likely unused) |
-| `_layouts/page.html` | Page layout (likely unused) |
-| `feed.xml` | RSS feed (vestigial) |
-| `acme-challenge` | Let's Encrypt ACME response |
-| `.ruby-version` | Ruby version pin (2.3.7) |
-| `css/main.scss` | Stylesheet (likely unused) |
-| `_sass/*.scss` | SCSS partials (likely unused) |
+| `_layouts/redirect.html` | Redirect page template |
+| `Gemfile` | Ruby dependencies |
+| `Gemfile.lock` | Pinned dependency versions |
+| `.gitignore` | Git ignore rules |
+| `_sass/` | SCSS stylesheets (3 files) |
+| `_layouts/` | Jekyll layout templates (3 files) |
+
+## Summary
+
+This repository scores 1.4/10, which is expected given its extremely narrow scope as a URL redirect service. The most actionable improvements are updating the EOL Ruby runtime (critical security concern), adding GitHub Actions CI (the repo is on GitHub but CI is on GitLab), and enabling Dependabot. The team should also consider whether this redirect function could be handled more simply at the infrastructure level (DNS/CDN), potentially allowing this repository to be archived.

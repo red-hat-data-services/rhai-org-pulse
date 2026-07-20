@@ -1,397 +1,398 @@
 ---
 repository: "opendatahub-io/odh-gitops"
-overall_score: 7.2
+overall_score: 6.6
 scorecard:
   - dimension: "Unit Tests"
-    score: 6.5
-    status: "Helm snapshot tests (27 snapshots across 6 charts) serve as unit-level regression tests; no traditional unit tests (Go/Python) since repo is config-only"
+    score: 6.0
+    status: "Helm snapshot tests cover 30+ configurations across 7 charts, but no shell script testing"
   - dimension: "Integration/E2E"
-    score: 8.5
-    status: "Excellent E2E coverage: Tekton pipelines provision real OCP clusters for Kustomize and Helm validation; GitHub Actions XKS E2E with Kind clusters across 3 cloud providers"
+    score: 8.0
+    status: "Kind cluster E2E with multi-provider matrix plus Tekton-based OCP cluster validation via EaaS"
   - dimension: "Build Integration"
-    score: 7.5
-    status: "Strong PR-time static validation (YAML lint, kustomize build, kube-linter); Tekton cluster-validation runs on real OCP for Kustomize PRs; Helm chart validation with Kind E2E"
+    score: 8.0
+    status: "PR-time YAML lint, Kustomize build, kube-linter, Helm lint, chart-testing, and real cluster validation"
   - dimension: "Image Testing"
-    score: 2.0
-    status: "No container image builds or testing in this repo (config/GitOps only); no Dockerfile or Containerfile present"
+    score: 5.0
+    status: "Not applicable — GitOps/Helm chart repo with no container image builds"
   - dimension: "Coverage Tracking"
-    score: 3.0
-    status: "No coverage tracking tools (codecov, coveralls); snapshot test coverage is implicit but not measured or enforced"
+    score: 2.0
+    status: "No coverage tracking; snapshot tests provide change-level coverage but no metrics"
   - dimension: "CI/CD Automation"
-    score: 8.5
-    status: "Well-structured CI: 4 GitHub Actions workflows + 3 Tekton PipelineRuns; automated bundle updates with daily schedule; PR summary reporting"
+    score: 8.0
+    status: "4 GitHub Actions workflows + 3 Tekton pipelines with path-based triggers and scheduled automation"
+  - dimension: "Static Analysis"
+    score: 6.0
+    status: "yamllint, kube-linter, helm lint, chart-testing configured; missing Dependabot and pre-commit hooks"
   - dimension: "Agent Rules"
     score: 8.0
-    status: "Comprehensive AGENTS.md, CLAUDE.md, and 4 context-specific .rules/ files covering Kustomize and Helm chart patterns; no .claude/ directory but .rules/ is well-structured"
+    status: "Comprehensive AGENTS.md with 4 path-scoped rules covering all chart and Kustomize patterns"
 critical_gaps:
-  - title: "No security scanning in CI"
-    impact: "Kubernetes manifest vulnerabilities and misconfigurations beyond kube-linter checks not detected; no SAST/CodeQL, no secret detection (Gitleaks), no dependency scanning"
-    severity: "HIGH"
+  - title: "No Dependabot or Renovate for dependency alerts"
+    impact: "Tool version pins (kustomize, kube-linter, yamllint, yq, helm-docs) can become stale with known vulnerabilities"
+    severity: "MEDIUM"
+    effort: "1-2 hours"
+  - title: "No shell script testing or linting"
+    impact: "11 shell scripts in scripts/ and charts/ handle critical operations (verify-dependencies, verify-helm-chart, chart-snapshots) with no automated tests or shellcheck"
+    severity: "MEDIUM"
     effort: "4-6 hours"
-  - title: "No coverage tracking or enforcement"
-    impact: "Cannot measure what percentage of Helm values/configurations are exercised by snapshot tests; no visibility into untested paths"
-    severity: "MEDIUM"
-    effort: "4-8 hours"
-  - title: "OCP 4.20 cluster validation disabled"
-    impact: "No forward-version testing against upcoming OCP releases; potential breakage discovered late"
-    severity: "MEDIUM"
-    effort: "2-4 hours"
-  - title: "No pre-commit hooks"
-    impact: "Developers may push YAML formatting issues or invalid manifests that fail in CI but could have been caught locally"
+  - title: "No coverage tracking for snapshot tests"
+    impact: "No visibility into which Helm template paths or Kustomize overlays are exercised by existing tests"
     severity: "LOW"
-    effort: "1-2 hours"
-quick_wins:
-  - title: "Add pre-commit hooks for YAML lint and kube-linter"
-    effort: "1-2 hours"
-    impact: "Catch formatting and best-practice issues locally before push, reducing CI failures"
-  - title: "Add Gitleaks secret detection to PR workflow"
-    effort: "1-2 hours"
-    impact: "Prevent accidental commit of secrets (pull secrets, kubeconfig fragments) in manifest files"
-  - title: "Enable OCP 4.20 Tekton validation"
-    effort: "1-2 hours"
-    impact: "Forward-compatibility testing against next OCP version"
-  - title: "Add Kubescape or Polaris security scanning"
+    effort: "4-6 hours"
+  - title: "OCP 4.20 Tekton validation disabled"
+    impact: "Forward compatibility with next OCP version is not being validated on PRs"
+    severity: "MEDIUM"
     effort: "2-3 hours"
-    impact: "Deeper Kubernetes security posture analysis beyond kube-linter's focused checks"
+quick_wins:
+  - title: "Enable Dependabot for GitHub Actions and Go modules"
+    effort: "1-2 hours"
+    impact: "Automated security and version updates for CI dependencies and tooling"
+  - title: "Add shellcheck to CI validation"
+    effort: "2-3 hours"
+    impact: "Catch shell script bugs before they reach production verification scripts"
+  - title: "Add pre-commit hooks for yamllint and shellcheck"
+    effort: "1-2 hours"
+    impact: "Shift-left lint failures to developer workstations"
 recommendations:
   priority_0:
-    - "Add security scanning (Gitleaks, Kubescape/Polaris) to PR workflows to catch secrets and broader Kubernetes security misconfigurations"
-    - "Enable OCP 4.20 cluster validation pipeline to ensure forward compatibility"
+    - "Enable Dependabot for github-actions and gomod ecosystems"
+    - "Add shellcheck validation for all scripts in CI"
   priority_1:
-    - "Add pre-commit hooks (.pre-commit-config.yaml) with yamllint, kube-linter, and helm lint"
-    - "Implement snapshot test coverage measurement to track what values/configurations are exercised"
-    - "Add ShellCheck validation for the 18 shell scripts to catch bash issues"
+    - "Enable OCP 4.20 Tekton validation pipeline when version is confirmed"
+    - "Add negative snapshot tests (invalid values, missing required fields) to catch schema validation gaps"
+    - "Add pre-commit hooks (yamllint, shellcheck, helm-docs) via .pre-commit-config.yaml"
   priority_2:
-    - "Add Helm chart schema validation tests (validate values.schema.json against values.yaml)"
-    - "Consider adding conftest/OPA policy tests for Kustomize outputs"
-    - "Add chart upgrade/rollback testing to verify Helm release lifecycle"
+    - "Consider adding bats-core tests for critical shell scripts (verify-dependencies.sh, verify-helm-chart.sh)"
+    - "Add Helm schema validation tests for values.schema.json completeness"
+    - "Track snapshot coverage metrics (how many value combinations are tested vs total possible)"
 ---
 
 # Quality Analysis: odh-gitops
 
 ## Executive Summary
 
-- **Overall Score: 7.2/10**
-- **Repository Type**: GitOps/Infrastructure configuration repository (Kustomize + Helm charts)
-- **Primary Languages**: YAML (268 files), Shell (18 scripts)
-- **Frameworks**: Kustomize, Helm, Tekton Pipelines, GitHub Actions
-- **Key Strengths**: Excellent E2E testing with real OCP cluster provisioning, comprehensive Helm snapshot tests, strong agent rules documentation, well-organized CI/CD
-- **Critical Gaps**: No security scanning, no coverage tracking, no pre-commit hooks
-- **Agent Rules Status**: Present and comprehensive (AGENTS.md + 4 .rules/ files)
+- **Overall Score: 6.6/10**
+- **Repository Type**: GitOps/Helm charts repository (YAML, Shell, Helm templates)
+- **Jira Component**: AI Core Platform (RHOAIENG)
+- **Tier**: Midstream
+
+**Key Strengths**: Excellent E2E testing with real cluster validation (both Kind and OCP via EaaS), comprehensive Helm snapshot testing across 30+ configurations, well-structured CI with both GitHub Actions and Tekton pipelines, and strong agent rules with path-scoped guidance.
+
+**Critical Gaps**: No dependency alert configuration (Dependabot/Renovate), no shell script testing or linting (shellcheck), and no coverage tracking. Image testing is N/A for this repo type.
+
+**Agent Rules Status**: Present and comprehensive — AGENTS.md with build commands and conventions, plus 4 path-scoped `.rules/` files covering Helm and Kustomize patterns.
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 6.5/10 | Helm snapshot tests (27 snapshots) serve as unit-level regression; no traditional unit tests |
-| Integration/E2E | 8.5/10 | Tekton pipelines + Kind E2E across 3 cloud providers on real OCP clusters |
-| **Build Integration** | **7.5/10** | **Strong PR-time static validation + cluster-level validation via Tekton** |
-| Image Testing | 2.0/10 | Not applicable - config-only repo with no container images |
-| Coverage Tracking | 3.0/10 | No coverage measurement or enforcement |
-| CI/CD Automation | 8.5/10 | 4 GH Actions workflows + 3 Tekton PipelineRuns; daily automated bundle updates |
-| Agent Rules | 8.0/10 | AGENTS.md + CLAUDE.md + 4 .rules/ files with detailed patterns |
+| Dimension | Score | Weight | Status |
+|-----------|-------|--------|--------|
+| Unit Tests | 6.0/10 | 15% | Helm snapshot tests cover 30+ configurations across 7 charts, but no shell script testing |
+| Integration/E2E | 8.0/10 | 20% | Kind cluster E2E with multi-provider matrix plus Tekton-based OCP cluster validation via EaaS |
+| Build Integration | 8.0/10 | 15% | PR-time YAML lint, Kustomize build, kube-linter, Helm lint, chart-testing, and real cluster validation |
+| Image Testing | 5.0/10 | 10% | Not applicable — GitOps/Helm chart repo with no container image builds |
+| Coverage Tracking | 2.0/10 | 10% | No coverage tracking; snapshot tests provide change-level coverage but no metrics |
+| CI/CD Automation | 8.0/10 | 15% | 4 GitHub Actions workflows + 3 Tekton pipelines with path-based triggers and scheduled automation |
+| Static Analysis | 6.0/10 | 10% | yamllint, kube-linter, helm lint, chart-testing configured; missing Dependabot and pre-commit hooks |
+| Agent Rules | 8.0/10 | 5% | Comprehensive AGENTS.md with 4 path-scoped rules covering all chart and Kustomize patterns |
 
 ## Critical Gaps
 
-### 1. No Security Scanning in CI
-- **Impact**: Kubernetes manifests may contain security misconfigurations beyond kube-linter's 7 focused checks (privileged containers, cluster-admin bindings, latest tags, etc.). No secret detection means pull secrets or kubeconfig fragments could be accidentally committed.
-- **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: The repo has kube-linter with custom CEL checks, but lacks:
-  - Gitleaks/TruffleHog for secret detection
-  - Kubescape/Polaris for broader K8s security posture analysis
-  - CodeQL/SAST (not critical for config repos but good practice)
-  - Dependency scanning for Helm chart dependencies
+1. **No Dependabot or Renovate for dependency alerts**
+   - Impact: Tool version pins (kustomize v5.8.0, kube-linter v0.7.6, yamllint 1.37.1, yq v4.49.2, helm-docs v1.14.2) and GitHub Actions (actions/checkout, azure/setup-helm, etc.) can become stale with known CVEs
+   - Severity: MEDIUM
+   - Effort: 1-2 hours
 
-### 2. No Coverage Tracking or Enforcement
-- **Impact**: 27 Helm snapshot tests exist, but there's no way to measure which values paths, configurations, and conditional branches are actually exercised. New features could ship without test coverage.
-- **Severity**: MEDIUM
-- **Effort**: 4-8 hours
+2. **No shell script testing or linting (shellcheck)**
+   - Impact: 11 shell scripts handle critical production operations — `verify-dependencies.sh` (300+ lines), `verify-helm-chart.sh`, `chart-snapshots.sh`, `update-rhoai-version.sh`, etc. — with no automated static analysis or unit tests
+   - Severity: MEDIUM
+   - Effort: 4-6 hours
 
-### 3. OCP 4.20 Cluster Validation Disabled
-- **Impact**: The `.tekton/cluster-validation-ocp-4.20.yaml` exists but its CEL trigger expressions are commented out. No forward-version compatibility testing against OCP 4.20.
-- **Severity**: MEDIUM
-- **Effort**: 2-4 hours (uncomment and verify pipeline works)
+3. **No coverage tracking for snapshot tests**
+   - Impact: No visibility into which Helm template paths, helper functions, or conditional branches are exercised by existing snapshot configurations
+   - Severity: LOW
+   - Effort: 4-6 hours
 
-### 4. No Pre-commit Hooks
-- **Impact**: Contributors must rely on CI to catch YAML formatting, kustomize build failures, and lint issues. Local development loop is slower.
-- **Severity**: LOW
-- **Effort**: 1-2 hours
+4. **OCP 4.20 Tekton validation pipeline disabled**
+   - Impact: Forward compatibility with next OCP version is not being validated on PRs; issues discovered late
+   - Severity: MEDIUM
+   - Effort: 2-3 hours (enable when OCP 4.20 support is confirmed)
 
 ## Quick Wins
 
-### 1. Add Pre-commit Hooks (1-2 hours)
-Create `.pre-commit-config.yaml`:
-```yaml
-repos:
-  - repo: https://github.com/adrienverge/yamllint
-    rev: v1.37.1
-    hooks:
-      - id: yamllint
-        args: [-c, .yamllint.yaml]
-  - repo: https://github.com/gruntwork-io/pre-commit
-    rev: v0.1.23
-    hooks:
-      - id: helmlint
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.18.0
-    hooks:
-      - id: gitleaks
-```
+1. **Enable Dependabot for GitHub Actions and Go modules** (1-2 hours)
+   - Impact: Automated security updates for CI action pins and Go tooling versions
+   - Implementation:
+   ```yaml
+   # .github/dependabot.yml
+   version: 2
+   updates:
+     - package-ecosystem: "github-actions"
+       directory: "/"
+       schedule:
+         interval: "weekly"
+     - package-ecosystem: "gomod"
+       directory: "/"
+       schedule:
+         interval: "weekly"
+   ```
 
-### 2. Add Gitleaks Secret Detection (1-2 hours)
-Add to `.github/workflows/testing.yaml`:
-```yaml
-- name: Gitleaks secret detection
-  uses: gitleaks/gitleaks-action@v2
-  env:
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-```
+2. **Add shellcheck to CI validation** (2-3 hours)
+   - Impact: Catch shell script bugs (unquoted variables, incorrect error handling) before they reach production
+   - Implementation: Add shellcheck step to `testing.yaml` workflow:
+   ```yaml
+   - name: Run shellcheck
+     run: |
+       find scripts/ charts/ -name '*.sh' -exec shellcheck {} +
+   ```
 
-### 3. Enable OCP 4.20 Validation (1-2 hours)
-Uncomment the CEL expression in `.tekton/cluster-validation-ocp-4.20.yaml` to enable forward-compatibility testing.
-
-### 4. Add ShellCheck for Scripts (1-2 hours)
-Add shell script linting to PR workflow:
-```yaml
-- name: ShellCheck
-  uses: ludeeus/action-shellcheck@master
-  with:
-    scandir: './scripts'
-```
+3. **Add pre-commit hooks** (1-2 hours)
+   - Impact: Shift-left lint failures to developer workstations
+   - Implementation:
+   ```yaml
+   # .pre-commit-config.yaml
+   repos:
+     - repo: https://github.com/adrienverge/yamllint
+       rev: v1.37.1
+       hooks:
+         - id: yamllint
+           args: [-c, .yamllint.yaml]
+     - repo: https://github.com/koalaman/shellcheck-precommit
+       rev: v0.10.0
+       hooks:
+         - id: shellcheck
+   ```
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflow Inventory (4 GitHub Actions + 3 Tekton PipelineRuns)**:
+**Snapshot Testing System (Strong)**:
+- Custom `chart-snapshots.sh` script with `snapshot-config.yaml` for declarative test configuration
+- **rhai-on-openshift-chart**: 9 snapshot configurations (default, skip-crd-check-odh, skip-crd-check-rhoai, all-components-managed, install-with-helm-dependencies, inference-only, profile-with-customization, enable-llm-d-wva, with-rhcl-config)
+- **rhai-on-xks-chart**: 19 snapshot configurations covering Azure, CoreWeave, AWS, plus TLS, pull secrets, gateway, routes, and MaaS variations
+- **5 dependency charts**: Each with default snapshot tests (cert-manager, gateway-api, lws, sail, rhcl)
+- Version redaction in snapshots prevents spurious diffs
+- Integrated into CI via `make chart-test` in `helm.yaml` workflow
 
+**Gaps**:
+- No tests for shell scripts (`scripts/*.sh`) which contain critical verification logic
+- No negative test cases (invalid values, missing required fields)
+- No parameterized testing of Helm helper functions (shouldInstall, componentDSCConfig, etc.)
+
+### Integration/E2E Tests
+
+**Kind Cluster E2E (Excellent)**:
+- `rhai-on-xks-chart-test.yaml` workflow provisions Kind clusters for Helm chart testing
+- Matrix strategy across 3 cloud providers: Azure, CoreWeave, AWS
+- **Install tests**: Full chart installation with 30-minute timeout, verification via Makefile targets
+- **Upgrade tests**: Install previous version (v3.4.2 from registry), upgrade to current PR version, verify — catches breaking upgrade paths
+- Authorization controls for external contributors (require `run-xks-e2e` label)
+- Failure diagnostics: Dumps custom resource YAML on failure for debugging
+
+**Tekton/Konflux Cluster Validation (Excellent)**:
+- Provisions ephemeral OCP clusters via HyperShift AWS (EaaS)
+- **OCP 4.19 validation**: Active on PRs, validates kustomize dependencies
+- **OCP 4.20 validation**: Defined but disabled pending version confirmation
+- **Helm chart validation on OCP 4.19**: Triggered for `charts/rhai-on-openshift-chart/` changes
+- Full pipeline: cluster provisioning → kubeconfig retrieval → git clone → make apply-and-verify-dependencies or helm-install-verify
+- Supports custom OLM catalog images and channels for operator installation
+
+**Dependency Verification (Strong)**:
+- `verify-dependencies.sh`: Checks 11+ operators (cert-manager, kueue, COO, OpenTelemetry, LWS, JobSet, Tempo, KEDA, RHCL, NFD, GPU operator, RHODS/ODH operator)
+- Waits for Subscription CSV to reach "Succeeded" phase
+- Validates pod readiness with label selectors
+- Custom checks per operator (e.g., cert-manager pods, KEDA components, RHCL sub-pods)
+
+### Build Integration
+
+**PR-Time Validation (Strong)**:
+- `testing.yaml` runs on every PR:
+  1. YAML syntax validation via yamllint
+  2. Kustomize build validation for all kustomization.yaml files
+  3. Best practices linting via kube-linter on rendered manifests
+  4. Summary table in GitHub Actions step summary
+- `helm.yaml` runs on PR changes to `charts/`:
+  1. `helm lint` for all charts
+  2. `ct lint` (chart-testing) with config
+  3. Snapshot tests via `make chart-test`
+  4. Docs generation check (helm-docs must be current)
+
+**Makefile Targets (Comprehensive)**:
+- `validate-all`: Runs yaml, kustomize, and lint validation
+- `chart-test`: Snapshot testing for all or specific charts
+- `helm-install-verify`: Multi-step Helm install with operator verification
+- `helm-upgrade-verify-xks`: Upgrade testing from previous release
+- `dry-run`: Client-side dry-run for kustomize builds
+
+### Image Testing
+
+Not applicable to this repository. `odh-gitops` is a GitOps configuration repo containing Kustomize overlays, Helm charts, and deployment scripts — it does not build container images. The score reflects a neutral baseline rather than a deficiency.
+
+### Coverage Tracking
+
+No coverage tracking is configured. This is partially expected given the repo type (YAML/Helm/Shell), but opportunities exist:
+- Helm template path coverage (which conditionals are exercised by snapshot tests)
+- Kustomize overlay coverage (which patches are tested)
+- Shell script code path coverage via bashcov or similar tools
+
+### CI/CD Automation
+
+**GitHub Actions Workflows**:
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `testing.yaml` | PR + push to main | YAML lint, kustomize build validation, kube-linter |
-| `helm.yaml` | PR (charts/** paths) | Helm lint, chart-testing (ct), snapshot tests, docs freshness |
-| `rhai-on-xks-chart-test.yaml` | PR (label-gated) + push | Kind cluster E2E for XKS chart across Azure/CoreWeave/AWS |
-| `update-rhai-xks-bundle.yaml` | Daily schedule + dispatch | Automated bundle update from rhods-operator, creates PR |
-| `cluster-validation-ocp-4.19.yaml` (Tekton) | PR (Kustomize files) | Provisions ephemeral OCP 4.19 HyperShift cluster, runs apply-and-verify |
-| `cluster-validation-ocp-4.20.yaml` (Tekton) | **DISABLED** | Same as above for OCP 4.20 (commented out) |
-| `helm-chart-validation-ocp-4.19.yaml` (Tekton) | PR (OCP chart files) | Provisions OCP 4.19, installs via Helm, verifies DSC readiness |
+| `testing.yaml` | PR, push (main), dispatch | YAML lint + Kustomize build + kube-linter |
+| `helm.yaml` | PR to charts/, dispatch | Helm lint + chart-testing + snapshots + docs check |
+| `rhai-on-xks-chart-test.yaml` | PR/push to xks-chart | Kind cluster E2E with 3-provider matrix + upgrade testing |
+| `update-rhai-xks-bundle.yaml` | Daily 6am UTC + dispatch | Auto-update XKS bundle from rhods-operator, create PR |
 
-**Strengths**:
-- Excellent path-scoped triggers (Kustomize changes trigger cluster validation, Helm changes trigger chart testing)
-- Tekton pipelines use Konflux EaaS for real ephemeral OCP cluster provisioning
-- Automated daily bundle updates with auto-created PRs including E2E labels
-- Good validation summary generation with GitHub step summaries
-- Pinned action versions with commit SHAs for security
+**Tekton Pipelines (Konflux)**:
+| Pipeline | Trigger | Purpose |
+|----------|---------|---------|
+| `cluster-validation-ocp-4.19` | PR (non-chart, non-docs) | OCP 4.19 kustomize validation on ephemeral cluster |
+| `cluster-validation-ocp-4.20` | Disabled | OCP 4.20 validation (pending) |
+| `helm-chart-validation-ocp-4.19` | PR to OCP chart | Helm install + verify on real OCP cluster |
 
-**Gaps**:
-- No concurrency control on PR workflows (testing.yaml and helm.yaml)
-- No caching of tools (kustomize, kube-linter, yamllint downloaded every run)
-- OCP 4.20 validation disabled
+**Automation Features**:
+- Concurrency control in bundle update workflow (`cancel-in-progress: true`)
+- Path-based triggering (avoids unnecessary CI runs for docs-only changes)
+- Automated PR creation for bundle updates via `peter-evans/create-pull-request`
+- Comment-based triggers for Tekton (`/validate-dependencies`, `/validate-helm-chart`)
+- Authorization gates for external contributors on E2E tests
 
-### Test Coverage
+### Static Analysis
 
-**Snapshot Tests (27 total)**:
+#### Linting
 
-| Chart | Snapshots | Test Variations |
-|-------|-----------|-----------------|
-| rhai-on-openshift-chart | 9 | default, skip-crd-check (odh/rhoai), all-components-managed, helm-deps, inference-only, profile-customization, llm-d-wva, rhcl-config |
-| rhai-on-xks-chart | 14 | Azure/CoreWeave/AWS variants, pull-secret, gateway-hostname, TLS-disabled, BYO-issuer, namespaced-issuer, allowed-routes, related-images, custom-namespace |
-| dependencies (4 charts) | 4 | Default snapshots for cert-manager, gateway-api, lws-operator, sail-operator |
+**YAML Linting (Good)**:
+- `.yamllint.yaml` configured with sensible rules: 2-space indent, 180 char line length, truthy values allowed
+- Excludes `bin/`, `.git/`, `docs/`, `scripts/`, `.github/`, `.claude/`, `charts/`
+- Integrated into CI via `make validate-yaml`
 
-**Testing Approach**:
-- Snapshot testing via custom `chart-snapshots.sh` script (generate + compare)
-- Helm version redaction in snapshots to avoid false diffs
-- Centralized config in `scripts/snapshot-config.yaml`
-- Real cluster E2E via Tekton and Kind clusters
+**Kubernetes Linting (Good)**:
+- `.kube-linter.yaml` with explicit control (no auto-defaults):
+  - Security checks: privileged-container, privileged-ports, cluster-admin-role-binding, wildcard-in-rules, unsafe-proc-mount, unsafe-sysctls, latest-tag
+  - Custom CEL check for system group bindings in ClusterRoleBindings
+- Runs on kustomize-rendered output in CI
 
-**Strengths**:
-- Good coverage of Helm chart variations (14 XKS snapshots covering all cloud providers + configuration combos)
-- E2E validates real operator installation, CRD creation, DSC readiness
-- Dependency verification script checks CSV phase + pod readiness for 12 operators
-- Custom kube-linter CEL check for system group bindings
+**Helm Linting (Good)**:
+- `helm lint` for all charts
+- `ct lint` with chart-testing config (`ct.yaml`)
+- Lint configuration (`lintconf.yaml`) with detailed YAML style rules
+- Schema validation enabled
 
-**Gaps**:
-- No unit tests for shell scripts (18 scripts, some complex like `verify-dependencies.sh`)
-- No negative testing (invalid values, missing required fields)
-- No Helm upgrade/rollback testing
-- No values.schema.json validation testing
+#### FIPS Compatibility
 
-### Code Quality
+Not applicable — this is a GitOps repo with no compiled code. FIPS compliance for deployed operators is handled by the respective operator repos.
 
-**Linting & Static Analysis**:
-- yamllint with `.yamllint.yaml` (2-space indent, 180-char lines, truthy warnings)
-- kube-linter with `.kube-linter.yaml` (7 security checks + custom CEL rule)
-- Helm chart-testing (ct) with lint and schema validation
-- Helm docs generation check (ensures api-docs.md is up-to-date)
+#### Dependency Alerts
 
-**Strengths**:
-- Custom kube-linter configuration focused on security-critical checks
-- CEL-based custom check for system group bindings in ClusterRoleBindings
-- Chart-testing integration with dedicated lint configuration
-- JSON Schema validation for both Helm charts (824 + 407 lines)
+**Missing**: No `.github/dependabot.yml` or Renovate configuration. The repo pins multiple tool versions in `Makefile` and GitHub Action versions in workflows — these should be automatically updated.
 
-**Gaps**:
-- No ShellCheck for 18 shell scripts
-- No pre-commit hooks
-- kube-linter's `validate-lint` target uses `continue-on-error: true` in CI (non-blocking)
-- yamllint excludes charts/, .github/, scripts/ directories
-
-### Container Images
-
-**Not Applicable**: This is a GitOps/configuration repository. It does not build or ship container images. It references images in Helm values but does not build them. Score reflects this reality - the dimension is weighted lower for this repo type.
-
-### Security
-
-**Current Practices**:
-- Pinned GitHub Action versions using commit SHAs (not tags)
-- kube-linter checks: privileged-container, privileged-ports, cluster-admin-role-binding, wildcard-in-rules, unsafe-proc-mount, unsafe-sysctls, latest-tag
-- Custom CEL rule blocking system group bindings
-- Permissions scoped to `contents: read` where applicable
-- PR template requires Jira link and cluster testing confirmation
-
-**Gaps**:
-- No secret detection (Gitleaks/TruffleHog)
-- No broader Kubernetes security posture scanning (Kubescape/Polaris/Datree)
-- No dependency scanning for Helm chart dependencies
-- No SBOM generation for configuration artifacts
-
-### Agent Rules (Agentic Flow Quality)
+### Agent Rules
 
 **Status**: Present and comprehensive
 
-**Files**:
-- `AGENTS.md` - Detailed repo architecture, build/test commands, conventions, key examples (47 lines)
-- `CLAUDE.md` - Points to AGENTS.md (1 line)
-- `.rules/kustomize.md` - Path-scoped rules for Kustomize components/dependencies/configurations
-- `.rules/helm-ocp-chart.md` - Detailed OCP Helm chart patterns (helpers, templates, profiles, validation)
-- `.rules/helm-xks-chart.md` - XKS chart structure, cloud provider patterns, image updates
-- `.rules/helm-dep-charts.md` - Dependency chart patterns (bundle extraction, CRDs, snapshots)
+**CLAUDE.md**: Minimal, defers to `AGENTS.md` via `@AGENTS.md`
 
-**Quality Assessment**:
-- Rules are path-scoped with `paths:` frontmatter for context-sensitive activation
-- Include specific file examples to follow ("Follow `templates/dependencies/cert-manager/operator.yaml` pattern")
-- Validation commands provided for each area
-- Key helper functions documented with purpose
+**AGENTS.md (Strong)**:
+- Build & test command reference
+- Commit conventions (conventional format with Jira links)
+- YAML coding standards (2 spaces, 180 char max)
+- Kustomize and Helm conventions
+- Architecture overview with key directories
+- Pattern files to reference before writing code
+
+**.claude/rules/ → .rules/ (Excellent)**:
+- **4 path-scoped rule files** with `paths:` frontmatter for targeted guidance:
+  - `kustomize.md` — Component/overlay patterns, validation commands
+  - `helm-ocp-chart.md` — OpenShift chart helpers, dependency/component addition procedures, profile creation
+  - `helm-xks-chart.md` — XKS chart cloud provider patterns, CR lifecycle, helper documentation
+  - `helm-dep-charts.md` — Dependency chart structure, update procedures, validation
+- Rules are actionable with specific file paths, helper function names, and step-by-step procedures
+- Framework-specific (Helm, Kustomize, Kubernetes)
+- Up-to-date with current repository structure
 
 **Gaps**:
-- No `.claude/` directory structure (uses `.rules/` instead - acceptable)
-- No testing-specific rules (e.g., how to write new snapshot test cases)
-- No troubleshooting rules for common CI failures
-- No rules for Tekton pipeline modifications
+- No test creation rules (how to add new snapshot configurations)
+- No CI/pipeline rules (how to add new workflows or Tekton pipelines)
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add security scanning to PR workflows**
-   - Add Gitleaks for secret detection
-   - Add Kubescape or Polaris for Kubernetes security posture analysis
-   - These complement the existing kube-linter checks which cover only 7 specific patterns
+1. **Enable Dependabot** — Create `.github/dependabot.yml` covering `github-actions` and `gomod` ecosystems. Pin-based tool versions in `Makefile` (kustomize, kube-linter, yamllint, yq) should be tracked as well.
 
-2. **Enable OCP 4.20 cluster validation**
-   - Uncomment the CEL trigger in `.tekton/cluster-validation-ocp-4.20.yaml`
-   - Ensures forward compatibility as OCP 4.20 GA approaches
+2. **Add shellcheck to CI** — Add a shellcheck validation step to `testing.yaml` for all `scripts/*.sh` and chart scripts. These scripts handle critical operations (dependency verification, cluster validation, snapshot testing).
 
 ### Priority 1 (High Value)
 
-3. **Add pre-commit hooks**
-   - Configure `.pre-commit-config.yaml` with yamllint, helm lint, gitleaks
-   - Catch issues before push, reducing CI feedback loop
+3. **Enable OCP 4.20 Tekton pipeline** when version support is confirmed — uncomment the CEL expression trigger in `.tekton/cluster-validation-ocp-4.20.yaml`.
 
-4. **Add ShellCheck validation**
-   - 18 shell scripts with no static analysis
-   - Several complex scripts (verify-dependencies.sh: 243 lines, chart-snapshots.sh: 312 lines)
-   - Add as GitHub Actions step or pre-commit hook
+4. **Add negative snapshot test cases** — Test invalid value combinations (e.g., no cloud provider enabled, multiple cloud providers enabled, missing required fields) to verify `values.schema.json` catches errors.
 
-5. **Implement snapshot coverage measurement**
-   - Track which values.yaml paths are exercised by snapshot tests
-   - Identify uncovered conditional branches in Helm templates
-   - Consider `helm template --debug` output analysis
+5. **Add pre-commit hooks** — Configure `.pre-commit-config.yaml` with yamllint and shellcheck hooks to catch issues before commit.
 
-6. **Add caching to GitHub Actions workflows**
-   - Cache tools (kustomize, kube-linter, yamllint, yq) across runs
-   - Use `actions/cache` with bin/ directory as key
+6. **Add test creation rules** — Add `.rules/testing.md` with guidance on adding new snapshot configurations, updating `scripts/snapshot-config.yaml`, and the E2E test pattern.
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Add concurrency control to PR workflows**
-   ```yaml
-   concurrency:
-     group: ${{ github.workflow }}-${{ github.ref }}
-     cancel-in-progress: true
-   ```
+7. **Add bats-core tests for shell scripts** — Critical scripts like `verify-dependencies.sh` (300+ lines with complex wait loops) would benefit from unit testing of individual functions.
 
-8. **Add negative testing for Helm charts**
-   - Test invalid values combinations (e.g., multiple cloud providers enabled)
-   - Validate error messages from `validateCloudProvider` helper
-   - Test with missing required values
+8. **Add Helm schema completeness tests** — Verify that `values.schema.json` covers all keys in `values.yaml` and that required fields are properly enforced.
 
-9. **Add Helm upgrade testing**
-   - Verify chart can be upgraded from previous version
-   - Test rollback scenarios
-   - Important for production Helm releases
-
-10. **Add agent rules for testing patterns**
-    - Document how to add new snapshot test cases
-    - Include Tekton pipeline modification guidance
-    - Add troubleshooting guidance for common CI failures
-
-11. **Consider conftest/OPA policy tests**
-    - Add policy-as-code tests for kustomize build outputs
-    - Enforce organizational policies (naming conventions, label requirements)
+9. **Track snapshot coverage metrics** — Catalog which Helm helper conditionals and template branches are exercised by current snapshots to identify untested paths.
 
 ## Comparison to Gold Standards
 
-| Dimension | odh-gitops | odh-dashboard | notebooks | kserve |
-|-----------|-----------|---------------|-----------|--------|
-| Unit Tests | 6.5 (snapshot tests) | 9.0 (Jest + RTL) | 7.0 (pytest) | 9.0 (Go testing) |
-| Integration/E2E | 8.5 (real OCP clusters) | 8.5 (Cypress + contract) | 8.0 (multi-image E2E) | 9.0 (envtest + Kind) |
-| Build Integration | 7.5 (Tekton + GHA) | 7.0 (webpack + build) | 6.0 (image builds) | 7.0 (make + Go build) |
-| Image Testing | 2.0 (N/A - config repo) | 5.0 (basic) | 9.0 (5-layer validation) | 6.0 (basic) |
-| Coverage Tracking | 3.0 (none) | 8.0 (codecov + Jest) | 5.0 (partial) | 8.0 (codecov enforced) |
-| CI/CD Automation | 8.5 (excellent) | 9.0 (comprehensive) | 7.0 (good) | 8.5 (strong) |
-| Agent Rules | 8.0 (detailed .rules/) | 9.0 (gold standard) | 3.0 (minimal) | 4.0 (basic) |
-| **Overall** | **7.2** | **8.5** | **7.0** | **8.0** |
+| Practice | odh-gitops | odh-dashboard (Gold) | notebooks (Gold) | Industry Best |
+|----------|-----------|---------------------|-------------------|---------------|
+| Unit/Snapshot Tests | 30+ Helm snapshots | Jest + Cypress | Image layer tests | Framework-specific |
+| E2E Testing | Kind + OCP clusters | Cypress + API | Multi-arch runtime | Real cluster validation |
+| Build Integration | YAML/Kustomize/Helm lint | TypeScript + Webpack | Multi-layer Docker | PR-time build validation |
+| Coverage Tracking | None | Codecov enforced | Image validation | Threshold enforcement |
+| CI Workflows | 4 GHA + 3 Tekton | 10+ workflows | 5-layer pipeline | PR + periodic |
+| Static Analysis | yamllint + kube-linter | ESLint + TypeScript strict | ruff + mypy | Multi-tool lint |
+| Dependency Alerts | None | Dependabot configured | Dependabot configured | Dependabot/Renovate |
+| Agent Rules | Excellent (4 scoped rules) | Comprehensive | Moderate | Present + actionable |
 
-**Note**: Image Testing is weighted lower for odh-gitops since it's a configuration repository, not a code repository that builds container images. The effective weighted score accounts for this.
+**Relative to its repo type (GitOps/Helm)**, odh-gitops performs well. The E2E testing with real OCP clusters via Tekton/EaaS is notably strong. The main gaps (Dependabot, shellcheck, pre-commit hooks) are low-effort, high-impact improvements.
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/testing.yaml` - Kustomize validation (YAML lint, kustomize build, kube-linter)
-- `.github/workflows/helm.yaml` - Helm chart validation (lint, chart-testing, snapshots, docs)
-- `.github/workflows/rhai-on-xks-chart-test.yaml` - XKS chart E2E with Kind (Azure/CoreWeave/AWS)
-- `.github/workflows/update-rhai-xks-bundle.yaml` - Daily automated bundle update
-- `.tekton/cluster-validation-ocp-4.19.yaml` - Tekton: Kustomize validation on OCP 4.19
-- `.tekton/cluster-validation-ocp-4.20.yaml` - Tekton: Kustomize validation on OCP 4.20 (DISABLED)
-- `.tekton/helm-chart-validation-ocp-4.19.yaml` - Tekton: Helm chart validation on OCP 4.19
-- `.tekton/pipelines/cluster-validation-pipeline.yaml` - Shared Tekton pipeline definition
+- `.github/workflows/testing.yaml` — PR validation (YAML lint, Kustomize, kube-linter)
+- `.github/workflows/helm.yaml` — Helm chart validation (lint, chart-testing, snapshots)
+- `.github/workflows/rhai-on-xks-chart-test.yaml` — XKS chart E2E (Kind + 3 providers)
+- `.github/workflows/update-rhai-xks-bundle.yaml` — Automated bundle update
+- `.tekton/cluster-validation-ocp-4.19.yaml` — OCP 4.19 cluster validation
+- `.tekton/cluster-validation-ocp-4.20.yaml` — OCP 4.20 cluster validation (disabled)
+- `.tekton/helm-chart-validation-ocp-4.19.yaml` — Helm chart OCP validation
+- `.tekton/pipelines/cluster-validation-pipeline.yaml` — Shared Tekton pipeline definition
 
 ### Testing
-- `scripts/chart-snapshots.sh` - Helm snapshot test runner (generate + compare)
-- `scripts/snapshot-config.yaml` - Snapshot test configuration (27 test cases)
-- `charts/*/test/snapshots/*.snap.yaml` - Snapshot test files
-- `scripts/verify-dependencies.sh` - Operator dependency verification (12 operators)
-- `scripts/verify-helm-chart.sh` - Helm chart installation verification
+- `scripts/chart-snapshots.sh` — Snapshot generation and testing engine
+- `scripts/snapshot-config.yaml` — Snapshot test configuration (30+ test cases)
+- `charts/rhai-on-openshift-chart/test/snapshots/` — OCP chart snapshots (9 files)
+- `charts/rhai-on-xks-chart/test/snapshots/` — XKS chart snapshots (19 files)
+- `scripts/verify-dependencies.sh` — Operator dependency verification (11+ operators)
+- `scripts/verify-helm-chart.sh` — Helm release and DSC verification
 
-### Code Quality
-- `.yamllint.yaml` - YAML lint configuration
-- `.kube-linter.yaml` - Kubernetes manifest linting (7 checks + custom CEL)
-- `.github/configs/ct.yaml` - Chart-testing configuration
-- `.github/configs/lintconf.yaml` - Chart-testing YAML lint rules
-- `charts/rhai-on-openshift-chart/values.schema.json` - OCP chart JSON Schema (824 lines)
-- `charts/rhai-on-xks-chart/values.schema.json` - XKS chart JSON Schema (407 lines)
+### Static Analysis
+- `.yamllint.yaml` — YAML lint configuration
+- `.kube-linter.yaml` — Kubernetes manifest lint configuration
+- `.github/configs/ct.yaml` — Chart-testing configuration
+- `.github/configs/lintconf.yaml` — Chart lint rules
+- `Makefile` — Build and validation targets
 
 ### Agent Rules
-- `AGENTS.md` - Repository architecture, commands, conventions
-- `CLAUDE.md` - Points to AGENTS.md
-- `.rules/kustomize.md` - Kustomize patterns (path-scoped: components/dependencies/configurations)
-- `.rules/helm-ocp-chart.md` - OCP Helm chart patterns
-- `.rules/helm-xks-chart.md` - XKS Helm chart patterns
-- `.rules/helm-dep-charts.md` - Dependency chart patterns
+- `CLAUDE.md` — Defers to AGENTS.md
+- `AGENTS.md` — Build commands, conventions, architecture overview
+- `.rules/kustomize.md` — Kustomize patterns (paths: components/, dependencies/, configurations/)
+- `.rules/helm-ocp-chart.md` — OpenShift chart patterns (paths: charts/rhai-on-openshift-chart/)
+- `.rules/helm-xks-chart.md` — XKS chart patterns (paths: charts/rhai-on-xks-chart/)
+- `.rules/helm-dep-charts.md` — Dependency chart patterns (paths: charts/dependencies/)
 
-### Key Scripts
-- `scripts/wait-for-crds.sh` - CRD readiness polling
-- `scripts/install-catalog-source.sh` - OLM CatalogSource setup
-- `scripts/prepare-authorino-tls.sh` - Authorino TLS configuration
-- `scripts/extract-olm-bundle.sh` - OLM bundle extraction utility
+### Helm Charts
+- `charts/rhai-on-openshift-chart/Chart.yaml` — OCP chart (v3.4.0)
+- `charts/rhai-on-xks-chart/Chart.yaml` — XKS chart (v3.5.0-ea.2)
+- `charts/dependencies/*/Chart.yaml` — 5 dependency charts (cert-manager, gateway-api, lws, rhcl, sail)

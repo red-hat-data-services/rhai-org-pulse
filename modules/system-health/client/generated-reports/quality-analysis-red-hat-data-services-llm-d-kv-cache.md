@@ -4,446 +4,433 @@ overall_score: 6.4
 scorecard:
   - dimension: "Unit Tests"
     score: 8.0
-    status: "Strong Go + Python test suites with testify, testcontainers, and pytest; 87% test-to-source LOC ratio in Go"
+    status: "Strong Go + Python test suites with 0.62 test-to-code ratio, testify, pytest, benchmarks"
   - dimension: "Integration/E2E"
     score: 7.0
-    status: "Testcontainers-based E2E for UDS tokenizer, Go integration tests, Kind-based deployment script; some CI triggers disabled"
+    status: "Testcontainers-based E2E, integration tests, PR-triggered, but no multi-version K8s testing"
   - dimension: "Build Integration"
-    score: 5.0
-    status: "Tekton/Konflux pipeline exists but is label/comment-triggered, not automatic; no PR-time image build validation in GitHub CI"
+    score: 7.0
+    status: "Konflux PR pipeline, Docker builds on PR, kustomize deploy, smoke test stage in Dockerfile.konflux"
   - dimension: "Image Testing"
-    score: 6.0
-    status: "Smoke test stage in Konflux Dockerfile; no runtime validation in PR CI; Trivy only on release"
+    score: 7.0
+    status: "Multi-stage builds, multi-arch (amd64/arm64), testcontainers E2E, UBI9 base, smoke test stage"
   - dimension: "Coverage Tracking"
-    score: 2.0
-    status: "No codecov/coveralls integration; no coverage thresholds; no PR coverage reporting"
+    score: 1.0
+    status: "No coverage tooling — no codecov, no --coverprofile, no coverage reporting or thresholds"
   - dimension: "CI/CD Automation"
-    score: 6.0
-    status: "Core test workflow active on PRs; lint, examples, and UDS tokenizer CI disabled (target main_2); nightly race detector; good caching"
+    score: 7.0
+    status: "11 workflows with good caching, nightly race detector, but lint/examples disabled on PRs"
+  - dimension: "Static Analysis"
+    score: 8.0
+    status: "40+ golangci-lint rules, ruff for Python, pre-commit hooks, Dependabot + Renovate"
   - dimension: "Agent Rules"
     score: 1.0
-    status: "No CLAUDE.md, .claude/ directory, or agent rules; Copilot setup present but no test guidance"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory — no AI agent test guidance"
 critical_gaps:
-  - title: "No code coverage tracking or enforcement"
-    impact: "Cannot measure or enforce test coverage; regressions go undetected; no visibility into untested code paths"
+  - title: "No coverage tracking or enforcement"
+    impact: "Test coverage regressions go undetected; no visibility into untested code paths"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "Lint workflow disabled on main branch PRs"
-    impact: "Go linting (golangci-lint with 35+ linters), Python linting (ruff), and pre-commit checks do not run on PRs; code quality issues slip through"
+  - title: "Lint and examples workflows disabled on PRs"
+    impact: "ci-lint.yaml and ci-examples.yaml trigger on 'main_2' branch — linting does not gate PRs"
     severity: "HIGH"
-    effort: "1 hour"
-  - title: "No PR-time security scanning (Trivy only on release)"
-    impact: "Vulnerabilities in dependencies and container images are not detected until after release; shifts security left too late"
-    severity: "HIGH"
-    effort: "2-3 hours"
-  - title: "No CodeQL/SAST or secret detection in CI"
-    impact: "Static application security testing gaps; potential code-level vulnerabilities and leaked secrets not caught"
-    severity: "HIGH"
-    effort: "3-4 hours"
-  - title: "Several CI workflows disabled (target non-existent main_2 branch)"
-    impact: "Lint, examples verification, and UDS tokenizer integration tests do not run; reduces CI safety net"
-    severity: "MEDIUM"
-    effort: "30 minutes"
-quick_wins:
-  - title: "Fix disabled CI workflows by changing main_2 to main"
-    effort: "30 minutes"
-    impact: "Re-enables lint checks, example verification, and UDS tokenizer integration tests on PRs"
-  - title: "Add Trivy scanning to PR CI workflow"
     effort: "1-2 hours"
-    impact: "Catches container vulnerability issues before merge, not just at release time"
-  - title: "Add codecov integration with coverage generation"
-    effort: "4-6 hours"
-    impact: "Visibility into test coverage with PR-level enforcement and trend tracking"
-  - title: "Add CodeQL SAST workflow"
-    effort: "2-3 hours"
-    impact: "Automated detection of code-level security vulnerabilities in Go and Python"
-  - title: "Create basic agent rules for test patterns"
+  - title: "No AI agent rules for test automation"
+    impact: "AI-generated tests lack project-specific patterns, framework guidance, and quality gates"
+    severity: "MEDIUM"
     effort: "3-4 hours"
-    impact: "Consistent AI-generated test quality using existing testify/testcontainers/pytest patterns"
+quick_wins:
+  - title: "Add codecov integration with coverage thresholds"
+    effort: "4-6 hours"
+    impact: "Automated coverage tracking, PR-level reporting, regression prevention"
+  - title: "Fix ci-lint.yaml branch filter from 'main_2' to 'main'"
+    effort: "30 minutes"
+    impact: "Re-enables linting as a PR gate — currently bypassed entirely"
+  - title: "Generate agent rules with /test-rules-generator"
+    effort: "2-3 hours"
+    impact: "Consistent AI-generated tests following project patterns"
+  - title: "Add HEALTHCHECK to Dockerfiles"
+    effort: "1 hour"
+    impact: "Container orchestrators can detect unhealthy containers"
 recommendations:
   priority_0:
-    - "Fix ci-lint.yaml, ci-examples.yaml, and ci-uds-tokenizer.yaml to trigger on 'main' instead of 'main_2'"
-    - "Add codecov integration with coverage generation (go test -coverprofile, pytest --cov) and minimum threshold enforcement"
-    - "Add Trivy container scanning to PR CI workflow, not just release pipeline"
+    - "Add Go coverage generation (--coverprofile) to unit-test target and integrate with codecov"
+    - "Fix ci-lint.yaml and ci-examples.yaml to trigger on 'main' branch PRs instead of 'main_2'"
   priority_1:
-    - "Add CodeQL workflow for Go and Python static analysis"
-    - "Add secret detection (gitleaks or trufflehog) to PR workflow"
-    - "Create .claude/rules/ directory with test creation rules (unit-tests.md, integration-tests.md, e2e-tests.md)"
-    - "Add concurrency control to ci-test.yaml to cancel redundant runs"
+    - "Add Python coverage with pytest-cov for kv_connectors and uds_tokenizer tests"
+    - "Create CLAUDE.md with test automation rules for Go (testify, testcontainers) and Python (pytest)"
+    - "Add HEALTHCHECK instructions to Dockerfiles for runtime health detection"
+    - "Add concurrency controls to PR workflows to cancel superseded runs"
   priority_2:
-    - "Add performance regression benchmarking to CI (benchmark tests already exist but don't run in CI)"
-    - "Create contract tests for gRPC API boundaries"
-    - "Add SBOM generation to container build process"
-    - "Enable markdownlint in pre-commit (currently commented out)"
+    - "Add multi-K8s-version testing matrix for integration tests"
+    - "Add kustomize build --dry-run validation in CI"
+    - "Add FIPS build tags (GOEXPERIMENT=boringcrypto) for production Go binary"
+    - "Add performance regression testing gates using existing benchmark infrastructure"
 ---
 
 # Quality Analysis: llm-d-kv-cache
 
+**Repository**: [red-hat-data-services/llm-d-kv-cache](https://github.com/red-hat-data-services/llm-d-kv-cache)
+**Jira**: INFERENG / llm-d (downstream)
+**Type**: Go library + Python connectors (KV cache management for LLM inference)
+**Primary Languages**: Go (52 source files), Python (38 source files)
+**Analysis Date**: 2026-07-20
+
 ## Executive Summary
 
 - **Overall Score: 6.4/10**
-- **Repository Type**: Go library/service with Python connectors for LLM KV cache management
-- **Languages**: Go (84 files, 10.6K LOC source), Python (61 files, 6.3K LOC source)
-- **Key Strengths**: Excellent test-to-code ratio (~87% in Go, ~71% in Python), well-structured test hierarchy (unit/integration/e2e/benchmark/profiling), strong linting config (35+ Go linters, ruff for Python), pre-commit hooks, Testcontainers for E2E, nightly race detector, multi-arch builds, Tekton/Konflux downstream pipeline
-- **Critical Gaps**: No coverage tracking/enforcement, lint CI disabled (targets `main_2`), no PR-time security scanning, no SAST/secret detection, no agent rules
-- **Agent Rules Status**: Missing
+- **Key Strengths**: Strong unit testing with excellent test-to-code ratio (0.62), comprehensive static analysis (40+ golangci-lint rules), E2E tests with testcontainers, Konflux PR integration, both Dependabot and Renovate configured
+- **Critical Gaps**: Zero coverage tracking/enforcement, linting workflows disabled on PRs (trigger on `main_2` instead of `main`), no AI agent rules
+- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 8.0/10 | Strong Go + Python test suites with testify, testcontainers, and pytest |
-| Integration/E2E | 7.0/10 | Testcontainers-based E2E, Go integration tests, Kind deployment script |
-| **Build Integration** | **5.0/10** | **Tekton/Konflux exists but label-triggered; no automatic PR image validation** |
-| Image Testing | 6.0/10 | Smoke test stage in Konflux Dockerfile; Trivy only on release |
-| Coverage Tracking | 2.0/10 | No codecov, no thresholds, no PR coverage reporting |
-| CI/CD Automation | 6.0/10 | Core tests active; lint + 2 other workflows disabled; good caching |
-| Agent Rules | 1.0/10 | No test automation guidance for AI agents |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 8.0/10 | 15% | 1.20 | Strong Go + Python test suites with 0.62 test-to-code ratio |
+| Integration/E2E | 7.0/10 | 20% | 1.40 | Testcontainers E2E, integration tests, PR-triggered |
+| Build Integration | 7.0/10 | 15% | 1.05 | Konflux PR pipeline, Docker builds on PR, kustomize |
+| Image Testing | 7.0/10 | 10% | 0.70 | Multi-stage, multi-arch, testcontainers, UBI9 base |
+| Coverage Tracking | 1.0/10 | 10% | 0.10 | No coverage tooling at all |
+| CI/CD Automation | 7.0/10 | 15% | 1.05 | 11 workflows, good caching, lint disabled on PRs |
+| Static Analysis | 8.0/10 | 10% | 0.80 | 40+ linters, ruff, pre-commit, Dependabot + Renovate |
+| Agent Rules | 1.0/10 | 5% | 0.05 | No agent rules present |
+| **Overall** | **6.4/10** | **100%** | **6.35** | |
 
 ## Critical Gaps
 
-### 1. No Code Coverage Tracking or Enforcement
-- **Impact**: Cannot measure or enforce test coverage; regressions go undetected; no visibility into untested code paths
+### 1. No Coverage Tracking or Enforcement
+- **Impact**: Test coverage regressions go completely undetected; no visibility into untested code paths in either Go or Python components
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: Despite having excellent test-to-code ratios (87% Go, 71% Python), there is no codecov/coveralls integration, no `go test -coverprofile` in CI, no `pytest --cov` configuration, and no coverage thresholds. This means the team has no data on which code paths are actually tested.
+- **Details**: No `.codecov.yml`, no `--coverprofile` in Makefile, no `pytest-cov` usage. The Makefile `unit-test-uds` target runs `go test -v ./pkg/...` without coverage flags. Python tests via `pytest` also lack coverage collection.
 
-### 2. Lint Workflow Disabled on PRs
-- **Impact**: The comprehensive golangci-lint configuration (35+ linters including gosec, gocritic, staticcheck) and ruff Python linting do not run on PRs
+### 2. Lint and Examples Workflows Disabled on PRs
+- **Impact**: The `ci-lint.yaml` and `ci-examples.yaml` workflows trigger on `main_2` branch instead of `main`, meaning golangci-lint, pre-commit hooks, and example verification do not run as PR gates
 - **Severity**: HIGH
-- **Effort**: 1 hour (change `main_2` to `main` in ci-lint.yaml)
-- **Details**: `ci-lint.yaml` triggers on PRs to `main_2` branch, which appears to not exist. The `.golangci.yml` is well-configured with 35+ linters, gocritic, gosec, and formatters (gofumpt, goimports) — but none of this runs on PRs.
+- **Effort**: 1-2 hours (branch filter fix)
+- **Details**: Both workflows have `on: pull_request: branches: [main_2]` — this appears to be an intentional disable or misconfiguration. The lint checks only run locally or via pre-commit, but are not enforced in CI.
 
-### 3. No PR-Time Security Scanning
-- **Impact**: Vulnerabilities in dependencies and container images are only detected at release time, not during development
-- **Severity**: HIGH
-- **Effort**: 2-3 hours
-- **Details**: Trivy scanning exists as a reusable action (`.github/actions/trivy-scan/action.yml`) but is only invoked in `ci-release.yaml` (on tag push). No scanning runs during PR review.
-
-### 4. No SAST or Secret Detection
-- **Impact**: No automated detection of code-level security vulnerabilities or leaked secrets
-- **Severity**: HIGH
-- **Effort**: 3-4 hours
-- **Details**: No CodeQL configuration, no gosec CI job (though gosec is enabled in golangci-lint — which is disabled), no gitleaks/trufflehog, no Semgrep.
-
-### 5. Multiple CI Workflows Disabled
-- **Impact**: Reduces the CI safety net significantly
+### 3. No AI Agent Rules
+- **Impact**: AI-assisted test generation lacks project-specific patterns, framework guidance, and quality gates
 - **Severity**: MEDIUM
-- **Effort**: 30 minutes
-- **Details**: Three workflows target the non-existent `main_2` branch:
-  - `ci-lint.yaml` — All linting and pre-commit checks
-  - `ci-examples.yaml` — Example verification
-  - `ci-uds-tokenizer.yaml` — UDS tokenizer integration tests
+- **Effort**: 3-4 hours
+- **Details**: No `CLAUDE.md`, `AGENTS.md`, or `.claude/` directory. The `copilot-setup-steps.yml` configures GitHub Copilot but provides no test creation guidance.
 
 ## Quick Wins
 
-### 1. Fix Disabled CI Workflows (30 minutes)
-Change `main_2` to `main` in three workflow files:
-- `.github/workflows/ci-lint.yaml`
-- `.github/workflows/ci-examples.yaml`
-- `.github/workflows/ci-uds-tokenizer.yaml`
-
-This immediately re-enables linting, example verification, and UDS tokenizer integration tests on PRs.
-
-### 2. Add Trivy Scanning to PR Workflow (1-2 hours)
-The Trivy action already exists at `.github/actions/trivy-scan/action.yml`. Add a job to `ci-test.yaml` that builds the image and scans it:
-
+### 1. Fix CI Lint Branch Filter (30 minutes)
+Change `ci-lint.yaml` and `ci-examples.yaml` to trigger on `main` instead of `main_2`:
 ```yaml
-security-scan:
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v6
-    - name: Build image
-      run: docker build -t llm-d-kv-cache:pr-scan .
-    - name: Run Trivy scan
-      uses: ./.github/actions/trivy-scan
-      with:
-        image: llm-d-kv-cache:pr-scan
-```
-
-### 3. Add Codecov Integration (4-6 hours)
-Add coverage generation to test commands and integrate with Codecov:
-
-```yaml
-# In ci-test.yaml unit-test job
-- name: Run unit tests with coverage
-  run: go test -coverprofile=coverage.out -covermode=atomic ./pkg/...
-- name: Upload coverage
-  uses: codecov/codecov-action@v4
-  with:
-    files: coverage.out
-    fail_ci_if_error: true
-```
-
-### 4. Add CodeQL Workflow (2-3 hours)
-```yaml
-name: CodeQL
 on:
   pull_request:
-    branches: [main]
-  schedule:
-    - cron: '0 8 * * 1'
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        language: [go, python]
-    steps:
-      - uses: actions/checkout@v6
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: ${{ matrix.language }}
-      - uses: github/codeql-action/autobuild@v3
-      - uses: github/codeql-action/analyze@v3
+    branches:
+      - main
+      - dev
 ```
 
-### 5. Create Agent Rules (3-4 hours)
-Create `.claude/rules/` with test patterns matching existing framework usage (testify assertions, testcontainers patterns, pytest fixtures).
+### 2. Add Go Coverage to Unit Tests (2-3 hours)
+Update Makefile `unit-test-uds` target:
+```makefile
+unit-test-uds: check-go download-zmq
+	@go test -v -coverprofile=coverage.out ./pkg/...
+	@go tool cover -func=coverage.out
+```
+
+### 3. Add Codecov Integration (2-3 hours)
+Add to `ci-test.yaml` after unit tests:
+```yaml
+      - name: Upload coverage
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage.out
+          fail_ci_if_error: false
+```
+
+Create `.codecov.yml`:
+```yaml
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 2%
+    patch:
+      default:
+        target: 80%
+```
+
+### 4. Generate Agent Rules (2-3 hours)
+Run `/test-rules-generator` to create `.claude/rules/` with:
+- Go unit test patterns (testify, t.Helper, t.Cleanup)
+- Go E2E patterns (testcontainers, ginkgo suites)
+- Python pytest patterns (conftest fixtures, parametrize)
+- Benchmark test patterns
+
+### 5. Add HEALTHCHECK to Dockerfiles (1 hour)
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD wget -qO- http://localhost:8082/healthz || exit 1
+```
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
+**Score: 8.0/10**
 
-**Workflow Inventory** (31 files in `.github/workflows/`):
+**Go Unit Tests (32 test files / 52 source files = 0.62 ratio)**:
+- Framework: Go stdlib `testing` + `github.com/stretchr/testify` (require/assert)
+- Good test isolation patterns: `t.Helper()`, `t.Cleanup()`
+- Benchmark tests: 9 benchmark functions covering ZMQ subscriber throughput, index operations, adapter parsing
+- Package coverage across: `pkg/kvcache/`, `pkg/kvevents/`, `pkg/tokenization/`, `pkg/telemetry/`, `pkg/utils/`
+- Export tests for black-box testing (`export_test.go`)
+- Internal tests for white-box testing (`cost_aware_memory_internal_test.go`)
 
-| Workflow | Trigger | Status |
-|----------|---------|--------|
-| `ci-test.yaml` | PR to main/dev | ACTIVE |
-| `ci-pvc-evictor.yaml` | PR (pvc_evictor paths) | ACTIVE |
-| `ci-signed-commits.yaml` | pull_request_target | ACTIVE |
-| `ci-nightly-race.yaml` | Cron (daily 06:00 UTC) | ACTIVE |
-| `ci-release.yaml` | Tag push / release | ACTIVE |
-| `ci-wheels.yaml` | Tag push / dispatch | ACTIVE |
-| `ci-lint.yaml` | PR to **main_2** | DISABLED |
-| `ci-examples.yaml` | PR to **main_2** | DISABLED |
-| `ci-uds-tokenizer.yaml` | PR to **main_2** | DISABLED |
-| `prow-github.yml` | Issue comments | ACTIVE |
-| `prow-pr-automerge.yml` | Various | ACTIVE |
-| Various housekeeping | Various | ACTIVE |
+**Python Tests (19 test files)**:
+- Framework: pytest with conftest.py fixtures
+- `kv_connectors/llmd_fs_backend/tests/` — 6 unit test files + performance tests
+- `kv_connectors/pvc_evictor/tests/` — 4 unit test files
+- `services/uds_tokenizer/tests/` — 2 integration test files
+- Performance test suite: `test_throughput.py`, `test_stress.py`
 
-**Strengths**:
-- Good caching strategy (apt dependencies, Go modules, Docker layer caching with GHA)
-- Nightly race detector with Go `-race` flag
-- Multi-architecture builds (amd64 + arm64) for CUDA wheels and release images
-- Tekton/Konflux pipeline for downstream RHOAI builds with hermetic builds
-- Signed commit enforcement
-- Dependabot + Renovate for dependency updates
-- Mergify for automated PR comments on pre-commit failure
-- Prow-style labels and commands via reusable workflows
+**Strengths**: Excellent test-to-code ratio, well-structured test hierarchy, both black-box and white-box testing patterns.
+**Gaps**: No coverage measurement, no test isolation via `t.Parallel()`.
 
-**Weaknesses**:
-- No concurrency control on PR workflows (redundant runs not cancelled)
-- Three critical workflows disabled by targeting `main_2`
-- No coverage generation or reporting in any workflow
-- No PR-time security scanning
+### Integration/E2E Tests
+**Score: 7.0/10**
 
-### Test Coverage
+**Integration Tests**:
+- `tests/integration/kv_events_test.go` — component wiring test verifying Pool + SubscriberManager integration
+- Tests subscriber lifecycle: add, remove, update, shutdown
 
-**Go Tests (32 files, 9,170 LOC)**:
-- **Framework**: `testify` (assert/require), `testcontainers-go`
-- **Unit tests**: Strong coverage in `pkg/kvcache/`, `pkg/kvevents/`, `pkg/tokenization/`, `pkg/telemetry/`
-- **Integration tests**: `tests/integration/kv_events_test.go` — Pool + SubscriberManager integration
-- **E2E tests**: `tests/e2e/uds_tokenizer/` — Container-based testing with testcontainers
-- **Benchmark tests**: 3 benchmark files (`zmq_subscriber_bench_test.go`, `vllm_adapter_bench_test.go`, `index_benchmark_test.go`)
-- **Profiling**: `tests/profiling/kv_cache_index/` with dedicated README
+**E2E Tests**:
+- `tests/e2e/uds_tokenizer/` — 3 test files using testcontainers
+- Uses `testcontainers-go` to launch UDS tokenizer Docker container
+- Tests tokenization, special tokens, chat templates, multi-model switching
+- Container health check waiting strategy with 120s deadline
+- Docker image built on PR via `ci-test.yaml`
 
-**Python Tests (15 files, 4,443 LOC)**:
-- **Framework**: `pytest`
-- **FS Backend tests**: Unit tests for fs_backend, gds_backend, hma, obj_backend, priority_queue, spec
-- **PVC Evictor tests**: Unit tests for activator, crawler, deleter, folder_cleaner
-- **Performance tests**: Stress tests and throughput tests
-- **UDS Tokenizer**: Integration and renderer tests
+**Benchmarks/Profiling**:
+- `tests/profiling/kv_cache_index/` — index benchmark tests for in-memory, Redis, and cost-aware backends
+- ZMQ subscriber throughput benchmarks
+- vLLM adapter decode/parse benchmarks
 
-**Test-to-Source Ratios**:
-- Go: 9,170 test LOC / 10,595 source LOC = **87%** (excellent)
-- Python: 4,443 test LOC / 6,273 source LOC = **71%** (good)
+**Nightly Race Detector**:
+- `ci-nightly-race.yaml` — runs `make unit-test-race` with `-race` flag daily at 06:00 UTC
 
-**Test Hierarchy**:
-```
-tests/
-├── e2e/uds_tokenizer/       # Container-based E2E
-├── integration/              # Component integration
-├── profiling/                # Benchmark + profiling
-└── kind-vllm-cpu.sh          # Kind cluster deployment test
-```
+**Gaps**: No multi-version K8s testing, no Kind/Minikube cluster tests in CI (script exists locally at `tests/kind-vllm-cpu.sh`).
 
-### Code Quality
+### Build Integration
+**Score: 7.0/10**
 
-**Go Linting** (`.golangci.yml` — v2 format):
-- 35+ linters enabled (well-curated selection)
-- Includes security linters: `gosec`
-- Includes style enforcement: `gocritic`, `revive`, `varnamelen`
-- Includes correctness: `errcheck`, `staticcheck`, `govet`
-- Line length limit: 130
-- Formatters: `gofumpt`, `goimports`
-- Generated file exclusions (protobuf)
-- **Issue**: Not running on PRs due to disabled workflow
+**PR Build Validation**:
+- `ci-test.yaml` builds UDS tokenizer Docker image on PRs using `docker/build-push-action` with GHA cache
+- `.tekton/odh-llm-d-kv-cache-pull-request.yaml` — Konflux PR pipeline with hermetic builds, multi-arch (x86_64, arm64)
+- Go binary builds validated via `go build ./pkg/...` in unit test targets
+- Konflux pipeline builds `Dockerfile.konflux` with pip prefetch for hermetic resolution
 
-**Python Linting** (`ruff.toml`):
-- Target Python 3.12
-- Select rules: pycodestyle (E), pyflakes (F), pyupgrade (UP), bugbear (B), simplify (SIM), isort (I)
-- Docstring code formatting enabled
-- Generated file exclusions (protobuf)
+**Kustomize/Deploy**:
+- `deploy/kustomization.yaml` — kustomize manifests with StatefulSet, Service, ConfigMap
+- Uses envsubst for variable substitution
+- Makefile has `deploy` and `undeploy` targets using `kustomize build deploy | envsubst | kubectl apply`
+- No kustomize validation in CI (no `--dry-run` or build checks)
 
-**Pre-commit Hooks** (`.pre-commit-config.yaml`):
-- `ruff-check` with auto-fix and GitHub output format
-- `ruff-format` for Python formatting
-- `typos` for spell checking
-- `clang-format` for C++/CUDA files
-- `actionlint` for GitHub Actions validation
-- `pip-compile` via uv for requirements pinning
-- **Missing**: markdownlint (commented out)
+**Smoke Test Stage**:
+- `Dockerfile.konflux` includes a `test` stage that validates critical Python imports:
+  ```dockerfile
+  FROM runtime AS test
+  RUN python -c "from tokenizer_service.renderer import RendererService; ..."
+  ```
 
-### Container Images
+**Gaps**: No kustomize build validation in CI, no operator integration testing.
 
-**Dockerfiles** (5 files):
-1. `Dockerfile` — Main Go service (multi-stage: golang builder → UBI9 runtime)
-2. `services/uds_tokenizer/Dockerfile` — UDS tokenizer Python service
-3. `services/uds_tokenizer/Dockerfile.konflux` — Konflux variant with smoke test stage
-4. `kv_connectors/llmd_fs_backend/Dockerfile.dev` — FS backend development image
-5. `kv_connectors/llmd_fs_backend/Dockerfile.wheel` — CUDA wheel builder
+### Image Testing
+**Score: 7.0/10**
 
-**Strengths**:
-- Multi-stage builds for size optimization
-- Non-root user (65532:65532) in production images
-- UBI base images for compliance
-- **Konflux Dockerfile includes smoke test stage** (validates critical imports)
+**Dockerfiles (7 total)**:
+- `Dockerfile` — Go binary: multi-stage (golang:1.24 builder + UBI9 runtime), non-root user (65532)
+- `services/uds_tokenizer/Dockerfile` — Python: multi-stage (python:3.12-slim), non-root user
+- `services/uds_tokenizer/Dockerfile.konflux` — Python: multi-stage (aipcc base images), smoke test stage, Red Hat labels
+- `kv_connectors/pvc_evictor/Dockerfile` — Python single-stage
+- `kv_connectors/llmd_fs_backend/Dockerfile.dev` — CUDA dev environment
+- `kv_connectors/llmd_fs_backend/Dockerfile.wheel` — CUDA wheel builder with auditwheel repair
 - `.dockerignore` present
-- Multi-architecture support (amd64 + arm64)
 
-**Weaknesses**:
-- No runtime validation testing (just import smoke test)
-- No health check in main Dockerfile
-- No SBOM generation
-- No image signing/attestation in GitHub CI
+**Multi-Architecture**:
+- Release workflows build `linux/amd64,linux/arm64`
+- Wheel builds use matrix strategy for amd64/arm64
+- Docker buildx used for multi-platform builds
 
-### Security
+**Container Testing**:
+- E2E tests use `testcontainers-go` for runtime validation
+- `Dockerfile.konflux` smoke test stage validates imports
+- Health check port exposed but no `HEALTHCHECK` instruction
 
-**Current State**:
-- Trivy scanning: Present but only on release (`ci-release.yaml`)
-- gosec linter: Enabled in golangci-lint but not running (disabled CI)
-- Dependabot: Configured for gomod, GitHub Actions, and Docker
-- Renovate: Configured via shared config from `red-hat-data-services/konflux-central`
-- Signed commits: Enforced via reusable workflow
-- Hermetic builds: Enabled in Tekton/Konflux pipeline
+**Gaps**: No HEALTHCHECK in any Dockerfile, no readiness/liveness probe definitions in K8s manifests checked in CI.
+
+### Coverage Tracking
+**Score: 1.0/10**
+
+**Completely absent**:
+- No `.codecov.yml` or `codecov.yml`
+- No `--coverprofile` in Go test commands
+- No `pytest-cov` in Python test dependencies
+- No coverage thresholds or enforcement
+- No PR coverage reporting
+
+This is the single largest quality gap in the repository.
+
+### CI/CD Automation
+**Score: 7.0/10**
+
+**Workflow Inventory (11 workflows)**:
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `ci-test.yaml` | PR (main, dev) | Unit + E2E tests |
+| `ci-lint.yaml` | PR (main_2) | Linting — **DISABLED on main** |
+| `ci-examples.yaml` | PR (main_2) | Example verification — **DISABLED on main** |
+| `ci-nightly-race.yaml` | Schedule (daily) | Race detector |
+| `ci-dev-uds-tokenizer.yaml` | Push (main, release-*) | Dev image build + push |
+| `ci-uds-tokenizer.yaml` | PR (main_2) | UDS tokenizer tests — **DISABLED on main** |
+| `ci-pvc-evictor.yaml` | PR + Push (path-filtered) | PVC evictor pytest |
+| `ci-wheels.yaml` | Tag push | CUDA wheel builds |
+| `ci-release.yaml` | Tag push + Release | Release image build |
+| `ci-release-uds-tokenizer.yaml` | Tag push + Release | UDS tokenizer release image |
+| `ci-signed-commits.yaml` | PR target | Signed commit verification |
+
+**Caching**:
+- Apt package caching for system dependencies
+- Go module caching via `actions/setup-go` cache
+- Docker build caching via GitHub Actions cache (`cache-from: type=gha`)
 
 **Missing**:
-- No CodeQL/SAST in CI
-- No secret detection (gitleaks, trufflehog)
-- No dependency vulnerability scanning on PRs
-- No `.trivyignore` or `.gitleaks.toml` configuration
+- Lint, examples, and UDS tokenizer CI workflows trigger on `main_2` branch — effectively disabled
+- No concurrency controls on most PR workflows (only `ci-pages-index.yaml` has `concurrency:`)
+- No timeout-minutes on most jobs (only `ci-nightly-race.yaml`)
+- No test parallelization or matrix strategy for unit tests
 
-### Agent Rules (Agentic Flow Quality)
+### Static Analysis
+**Score: 8.0/10**
 
-- **Status**: Missing
-- **Coverage**: No test automation guidance for AI agents
-- **Quality**: N/A
-- **Gaps**:
-  - No `CLAUDE.md` or `AGENTS.md`
-  - No `.claude/` directory
-  - No `.claude/rules/` for test creation guidance
-  - No `.claude/skills/` for custom automation
-  - Copilot setup workflow exists but provides no test guidance
-- **Recommendation**: Generate missing rules with `/test-rules-generator` covering:
-  - Go unit tests (testify patterns, table-driven tests)
-  - Go integration tests (testcontainers patterns)
-  - Go E2E tests (container-based testing)
-  - Python unit tests (pytest patterns, fixtures)
-  - Benchmark tests (Go benchmark conventions)
+**Go Linting** (`.golangci.yml` v2):
+- 40+ linters enabled including: errcheck, govet, staticcheck, gosec, gocritic, revive, varnamelen, tparallel
+- Formatters: gofumpt, goimports
+- Strict exclusion for generated files (protobuf, third_party)
+- Custom settings for errcheck (type assertions, blank identifiers), gocritic (all tags), lll (130 chars)
+
+**Python Linting** (`ruff.toml`):
+- Target: Python 3.12, line-length 120
+- Rules: E (pycodestyle), F (pyflakes), UP (pyupgrade), B (flake8-bugbear), SIM (simplify), I (isort), G (logging-format)
+- Docstring code formatting enabled
+
+**Pre-commit Hooks** (`.pre-commit-config.yaml`):
+- ruff-check + ruff-format (Python)
+- typos (spell checking)
+- clang-format (C++/CUDA)
+- actionlint (GitHub Actions validation)
+- pip-compile (dependency pinning)
+- Default stages: pre-commit (local) + manual (CI)
+
+**Dependency Management**:
+- `.github/dependabot.yml` — 5 ecosystem configs: gomod (root + examples), github-actions, docker (root + services)
+- `.github/renovate.json` — extends from `red-hat-data-services/konflux-central`
+- Dependabot groups: kubernetes packages, general Go dependencies
+- Auto-merge policies via `mergify.yml`
+
+**FIPS Compatibility**:
+- Main Dockerfile uses `registry.access.redhat.com/ubi9/ubi:latest` (FIPS-capable)
+- No non-compliant crypto imports detected (only `math/rand/v2` in benchmark — acceptable)
+- No FIPS build tags (`-tags=fips`, `GOEXPERIMENT=boringcrypto`) configured
+- Konflux Dockerfile uses `quay.io/aipcc/base-images/cpu:3.4` (Red Hat base)
+
+### Agent Rules
+**Score: 1.0/10**
+
+- No `CLAUDE.md` or `AGENTS.md` in repository root
+- No `.claude/` directory or rules
+- `copilot-setup-steps.yml` configures GitHub Copilot workspace but provides no test creation guidance
+- No testing documentation that could serve as agent guidance
+
+**Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
+- Go unit test patterns (testify assertions, t.Helper/t.Cleanup, table-driven tests)
+- Go E2E patterns (testcontainers, ginkgo suite structure)
+- Python pytest patterns (conftest fixtures, parametrize, tmpdir)
+- Benchmark test patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-
-1. **Fix disabled CI workflows** — Change `main_2` to `main` in `ci-lint.yaml`, `ci-examples.yaml`, `ci-uds-tokenizer.yaml`. This immediately restores 35+ Go linters, Python linting, pre-commit checks, example verification, and UDS integration tests on PRs.
-
-2. **Add coverage tracking** — Add `go test -coverprofile` and `pytest --cov`, integrate with Codecov, set minimum thresholds (start at current coverage, ratchet up). The excellent test ratio suggests coverage is good but unmeasured.
-
-3. **Add PR-time Trivy scanning** — Reuse the existing `.github/actions/trivy-scan/action.yml` in the PR workflow. Currently vulnerabilities are only caught at release time.
+1. **Add coverage tracking**: Add `--coverprofile=coverage.out` to Go test targets and `pytest-cov` to Python test deps. Integrate with codecov for PR reporting and threshold enforcement.
+2. **Fix CI lint/examples branch filters**: Change `main_2` to `main` in `ci-lint.yaml`, `ci-examples.yaml`, and `ci-uds-tokenizer.yaml` to restore linting as a PR gate.
 
 ### Priority 1 (High Value)
-
-4. **Add CodeQL SAST workflow** — GitHub's free SAST for Go and Python. Catches security vulnerabilities that unit tests miss.
-
-5. **Add secret detection** — Add gitleaks pre-commit hook and CI workflow. Prevents credential leaks.
-
-6. **Create agent rules** — Build `.claude/rules/` with patterns matching existing test frameworks (testify, testcontainers, pytest). Use `/test-rules-generator` to bootstrap.
-
-7. **Add concurrency control** — Add `concurrency: { group: ${{ github.ref }}, cancel-in-progress: true }` to PR workflows to avoid redundant test runs.
+3. **Create agent rules**: Add `CLAUDE.md` with test automation guidance for Go (testify, testcontainers) and Python (pytest, conftest patterns).
+4. **Add concurrency controls**: Add `concurrency: { group: ${{ github.workflow }}-${{ github.ref }}, cancel-in-progress: true }` to PR-triggered workflows.
+5. **Add HEALTHCHECK to Dockerfiles**: Enable container health detection for orchestrators.
+6. **Add timeout-minutes**: Set timeouts on all CI jobs to prevent hung workflows.
 
 ### Priority 2 (Nice-to-Have)
-
-8. **Run benchmarks in CI** — Three benchmark test files exist but don't run in CI. Add periodic benchmark regression tracking.
-
-9. **Contract tests for gRPC** — The gRPC API boundary between Go client and Python server lacks contract tests. The protobuf definitions are generated but not validated in CI.
-
-10. **SBOM generation** — Add SBOM generation to container builds for supply chain transparency.
-
-11. **Enable markdownlint** — Currently commented out in `.pre-commit-config.yaml`. Uncomment and configure.
+7. **Add kustomize validation in CI**: Run `kustomize build deploy --dry-run` as a PR check.
+8. **Add FIPS build configuration**: Add `GOEXPERIMENT=boringcrypto` or `-tags=fips` for production builds.
+9. **Add multi-K8s-version testing**: Use matrix strategy to test against multiple K8s versions.
+10. **Add performance regression gates**: Use existing benchmark infrastructure to detect performance regressions on PRs.
+11. **Enable t.Parallel()**: Add parallel test execution for independent unit tests to speed up CI.
 
 ## Comparison to Gold Standards
 
-| Dimension | llm-d-kv-cache | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
-|-----------|---------------|----------------------|-------------------|---------------|
-| Unit Tests | 8/10 | 9/10 | 7/10 | 9/10 |
-| Integration/E2E | 7/10 | 9/10 | 8/10 | 9/10 |
-| Build Integration | 5/10 | 8/10 | 7/10 | 8/10 |
-| Image Testing | 6/10 | 7/10 | 9/10 | 7/10 |
-| Coverage Tracking | 2/10 | 9/10 | 5/10 | 9/10 |
-| CI/CD Automation | 6/10 | 9/10 | 8/10 | 9/10 |
-| Agent Rules | 1/10 | 9/10 | 3/10 | 2/10 |
-| **Overall** | **6.4/10** | **8.8/10** | **7.0/10** | **8.0/10** |
-
-**Key differentiators from gold standards**:
-- **odh-dashboard**: Has multi-layer testing, contract tests, comprehensive CI/CD, coverage enforcement, and extensive agent rules
-- **notebooks**: Has 5-layer image validation, multi-architecture testing, security scanning at PR time
-- **kserve**: Has coverage enforcement, multi-version testing, comprehensive E2E with Kind clusters
+| Dimension | llm-d-kv-cache | odh-dashboard | notebooks | kserve |
+|-----------|---------------|---------------|-----------|--------|
+| Unit Tests | 8.0 — Strong ratio, testify | 9.0 — Multi-layer | 7.0 — Focused | 8.0 — Comprehensive |
+| Integration/E2E | 7.0 — Testcontainers | 9.0 — Contract + E2E | 8.0 — Multi-version | 9.0 — Multi-K8s |
+| Build Integration | 7.0 — Konflux PR | 8.0 — Full pipeline | 9.0 — 5-layer | 7.0 — Standard |
+| Image Testing | 7.0 — Multi-arch, smoke | 7.0 — Basic | 9.0 — Gold standard | 6.0 — Basic |
+| Coverage | 1.0 — None | 8.0 — Codecov + gates | 6.0 — Basic | 8.0 — Enforced |
+| CI/CD | 7.0 — Good but lint disabled | 9.0 — Comprehensive | 8.0 — Multi-stage | 8.0 — Well-organized |
+| Static Analysis | 8.0 — 40+ linters | 8.0 — ESLint strict | 7.0 — Standard | 7.0 — golangci |
+| Agent Rules | 1.0 — None | 8.0 — Comprehensive | 3.0 — Basic | 2.0 — Minimal |
+| **Overall** | **6.4** | **8.5** | **7.5** | **7.0** |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/ci-test.yaml` — Main test workflow (unit + E2E)
-- `.github/workflows/ci-lint.yaml` — Linting (DISABLED)
-- `.github/workflows/ci-nightly-race.yaml` — Nightly race detector
-- `.github/workflows/ci-release.yaml` — Release build + Trivy
-- `.github/workflows/ci-wheels.yaml` — CUDA wheel builds
-- `.github/workflows/ci-pvc-evictor.yaml` — PVC evictor tests
-- `.github/actions/trivy-scan/action.yml` — Reusable Trivy action
-- `.github/actions/docker-build-and-push/action.yml` — Reusable Docker build
-- `.tekton/odh-llm-d-kv-cache-pull-request.yaml` — Konflux/Tekton pipeline
+- `.github/workflows/ci-test.yaml` — Unit + E2E tests (PR-triggered)
+- `.github/workflows/ci-lint.yaml` — Linting (disabled: triggers on `main_2`)
+- `.github/workflows/ci-examples.yaml` — Examples verification (disabled: triggers on `main_2`)
+- `.github/workflows/ci-nightly-race.yaml` — Race detector (scheduled daily)
+- `.github/workflows/ci-pvc-evictor.yaml` — PVC evictor tests (PR-triggered, path-filtered)
+- `.github/workflows/ci-wheels.yaml` — CUDA wheel builds (tag-triggered)
+- `.github/workflows/ci-release.yaml` — Release image build
+- `.tekton/odh-llm-d-kv-cache-pull-request.yaml` — Konflux PR pipeline
 
 ### Testing
-- `pkg/kvcache/kvblock/*_test.go` — Core KV block unit tests
-- `pkg/kvevents/*_test.go` — KV events unit tests
-- `pkg/tokenization/*_test.go` — Tokenization unit tests
-- `tests/integration/kv_events_test.go` — Integration tests
-- `tests/e2e/uds_tokenizer/` — E2E tests (testcontainers)
-- `tests/profiling/` — Benchmark/profiling tests
-- `kv_connectors/llmd_fs_backend/tests/` — FS backend Python tests
-- `kv_connectors/pvc_evictor/tests/` — PVC evictor Python tests
-- `services/uds_tokenizer/tests/` — UDS tokenizer Python tests
+- `pkg/kvcache/kvblock/*_test.go` — KV block index, scorer, memory tests
+- `pkg/kvevents/*_test.go` — ZMQ subscriber, pool, adapter tests
+- `pkg/tokenization/*_test.go` — UDS tokenizer, pool tests
+- `tests/integration/kv_events_test.go` — Integration test
+- `tests/e2e/uds_tokenizer/` — E2E tests with testcontainers
+- `tests/profiling/` — Benchmark tests
+- `kv_connectors/llmd_fs_backend/tests/` — Python unit + performance tests
+- `kv_connectors/pvc_evictor/tests/` — Python unit tests
+- `services/uds_tokenizer/tests/` — Python integration tests
 
-### Code Quality
-- `.golangci.yml` — Go linting (35+ linters, v2 format)
-- `ruff.toml` — Python linting
-- `.pre-commit-config.yaml` — Pre-commit hooks (ruff, typos, clang-format, actionlint, pip-compile)
-- `_typos.toml` — Typo checker config
-- `.clang-format` — C++/CUDA formatting
+### Static Analysis
+- `.golangci.yml` — Go linter config (v2, 40+ rules)
+- `ruff.toml` — Python linter config
+- `.pre-commit-config.yaml` — Pre-commit hooks (ruff, typos, clang-format, actionlint)
+- `.github/dependabot.yml` — Dependency alerts (5 ecosystem configs)
+- `.github/renovate.json` — Renovate config (extends konflux-central)
 
 ### Container Images
-- `Dockerfile` — Main Go service
-- `services/uds_tokenizer/Dockerfile` — UDS tokenizer
-- `services/uds_tokenizer/Dockerfile.konflux` — Konflux variant (with smoke test)
-- `kv_connectors/llmd_fs_backend/Dockerfile.dev` — FS backend dev
+- `Dockerfile` — Go binary (UBI9 base, multi-stage)
+- `services/uds_tokenizer/Dockerfile` — Python service (multi-stage)
+- `services/uds_tokenizer/Dockerfile.konflux` — Konflux build with smoke test
+- `kv_connectors/pvc_evictor/Dockerfile` — PVC evictor
+- `kv_connectors/llmd_fs_backend/Dockerfile.dev` — CUDA dev environment
 - `kv_connectors/llmd_fs_backend/Dockerfile.wheel` — CUDA wheel builder
-
-### Dependencies
-- `.github/dependabot.yml` — Dependabot (gomod, actions, docker)
-- `.github/renovate.json` — Renovate (Konflux-central shared config)
-- `.github/mergify.yml` — Mergify rules
+- `.dockerignore` — Docker build exclusions
 
 ### Deployment
-- `deploy/` — Kustomize deployment manifests
+- `deploy/kustomization.yaml` — Kustomize manifests
+- `deploy/common/statefulset.yaml` — StatefulSet definition
 - `vllm-setup-helm/` — Helm chart for vLLM setup
-- `tests/kind-vllm-cpu.sh` — Kind cluster deployment script

@@ -1,488 +1,462 @@
 ---
 repository: "opendatahub-io/kube-authkit"
-overall_score: 6.9
+overall_score: 5.8
 scorecard:
   - dimension: "Unit Tests"
     score: 8.5
-    status: "185+ unit tests with 2:1 test-to-code ratio, well-organized fixtures, all strategies covered"
+    status: "Strong test suite with 231 test functions across 12 files, excellent fixtures and markers"
   - dimension: "Integration/E2E"
     score: 7.0
-    status: "46 integration tests with mock OAuth server; Docker Compose E2E setup exists but not automated in CI"
+    status: "Dedicated integration tests with mock OAuth server and docker-compose, no multi-version K8s testing"
   - dimension: "Build Integration"
-    score: 5.0
-    status: "Package build validation only in publish workflow; mypy removed; no PR-time type checking"
+    score: 3.0
+    status: "No PR-time build validation, no package build verification in PR workflows"
   - dimension: "Image Testing"
-    score: 4.0
-    status: "Library project - Dockerfile.test for test execution only; no production container artifact"
+    score: 3.0
+    status: "Dockerfile.test exists for test runner only, no production image, no multi-arch support"
   - dimension: "Coverage Tracking"
-    score: 7.0
-    status: "Codecov upload in CI with 70% threshold; no .codecov.yml for PR blocking/commenting"
+    score: 7.5
+    status: "pytest-cov with 70% threshold enforcement, Codecov integration, dedicated coverage-check job"
   - dimension: "CI/CD Automation"
     score: 7.0
-    status: "4 workflows, multi-Python/multi-OS matrix; no concurrency control or dependency caching"
+    status: "4 workflows with matrix testing (3 Python x 2 OS), minimum-version testing, but no caching or concurrency control"
+  - dimension: "Static Analysis"
+    score: 5.5
+    status: "Ruff with 7 rule sets and pip-audit, but no Dependabot/Renovate or pre-commit hooks"
   - dimension: "Agent Rules"
-    score: 1.0
-    status: "No .claude/ directory, CLAUDE.md, or agent rules of any kind"
+    score: 0.0
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
-  - title: "No static type checking in CI"
-    impact: "Type errors only caught at runtime; mypy was previously present but removed"
-    severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "E2E tests not automated in CI"
-    impact: "Docker Compose E2E with Keycloak exists but never runs automatically; regressions in real OIDC flows go undetected"
-    severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "No SAST/security scanning in CI"
-    impact: "Bandit and CodeQL mentioned in docs but not present in workflows; security issues in auth code undetected"
+  - title: "No PR-time package build validation"
+    impact: "Build failures (e.g., missing package data, incorrect entry points) discovered only at publish time"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "Documentation-CI mismatch"
-    impact: "CONTRIBUTING.md and workflow README reference mypy, Black, and Bandit but none run in CI; contributors get incorrect guidance"
+  - title: "No dependency update automation (Dependabot/Renovate)"
+    impact: "Stale dependencies with potential security vulnerabilities go undetected until manual review"
+    severity: "HIGH"
+    effort: "1-2 hours"
+  - title: "No agent rules for AI-assisted development"
+    impact: "AI agents lack project-specific testing and contribution guidance, reducing code quality"
     severity: "MEDIUM"
     effort: "2-3 hours"
-  - title: "No agent rules for test automation"
-    impact: "AI agents cannot generate tests following project conventions; inconsistent AI-generated contributions"
+  - title: "Coverage threshold set at 70% — below gold standard"
+    impact: "Significant portions of code may lack test coverage, increasing regression risk"
     severity: "MEDIUM"
-    effort: "3-4 hours"
+    effort: "4-8 hours"
 quick_wins:
+  - title: "Add .github/dependabot.yml for pip ecosystem"
+    effort: "30 minutes"
+    impact: "Automated security alerts and dependency update PRs"
   - title: "Add concurrency control to CI workflows"
     effort: "30 minutes"
-    impact: "Prevent redundant CI runs on rapid pushes, save CI minutes"
-  - title: "Add uv cache to CI workflows"
-    effort: "30 minutes"
-    impact: "Reduce CI execution time by caching Python dependencies"
-  - title: "Add Bandit security scanning to lint workflow"
+    impact: "Cancel redundant workflow runs on force-push, saving CI minutes"
+  - title: "Add pip/uv caching to CI workflows"
     effort: "1 hour"
-    impact: "Catch security issues in authentication code before merge"
-  - title: "Create .codecov.yml with PR status checks"
+    impact: "Faster CI runs by caching Python dependencies"
+  - title: "Create basic CLAUDE.md with testing guidance"
+    effort: "1-2 hours"
+    impact: "Consistent AI-assisted test generation following project patterns"
+  - title: "Add python -m build step to PR workflow"
     effort: "1 hour"
-    impact: "Block PRs that decrease coverage; get inline coverage annotations"
-  - title: "Raise coverage threshold from 70% to 80%"
-    effort: "30 minutes"
-    impact: "Prevent coverage regression as codebase grows"
-  - title: "Add pre-commit hooks with Ruff"
-    effort: "1 hour"
-    impact: "Catch lint/format issues before push, reduce CI failures"
+    impact: "Catch packaging issues before merge"
 recommendations:
   priority_0:
-    - "Re-enable mypy type checking in CI - critical for an authentication library where type safety prevents security bugs"
-    - "Add Bandit SAST scanning to lint workflow - currently referenced in docs but not enforced"
-    - "Automate E2E tests in CI using Docker Compose service containers"
+    - "Add PR-time package build validation (python -m build + twine check) to test.yml workflow"
+    - "Enable Dependabot for pip ecosystem with weekly update schedule"
   priority_1:
-    - "Add CodeQL or Semgrep for deeper static analysis of authentication flows"
-    - "Create .codecov.yml with PR status checks and coverage diff requirements"
-    - "Add concurrency control and dependency caching to all workflows"
-    - "Fix documentation-CI mismatch in CONTRIBUTING.md and workflow README"
+    - "Raise coverage threshold from 70% to 80% and add per-module coverage targets"
+    - "Add concurrency control and dependency caching to all CI workflows"
+    - "Create CLAUDE.md with testing patterns, architecture overview, and contribution guidelines"
   priority_2:
-    - "Create comprehensive agent rules (.claude/rules/) for test patterns"
-    - "Add pre-commit hooks with Ruff, mypy, and Bandit"
-    - "Add Gitleaks or TruffleHog for secret detection in CI"
-    - "Add wheel install testing in PR workflow to catch packaging issues"
+    - "Add pre-commit hooks for ruff linting and formatting"
+    - "Add type checking with mypy to CI pipeline"
+    - "Add E2E test job using docker-compose.test.yml to CI"
 ---
 
 # Quality Analysis: kube-authkit
 
 ## Executive Summary
 
-- **Overall Score: 6.9/10**
-- **Repository Type**: Python library (PyPI package)
-- **Primary Language**: Python 3.10+
-- **Framework**: Kubernetes client library with OAuth/OIDC authentication
-- **Version**: 0.4.0 (4 releases)
-- **Contributors**: 1 (Saad Zaher)
-- **License**: Apache-2.0
+- **Overall Score: 5.8/10**
+- **Repository**: [opendatahub-io/kube-authkit](https://github.com/opendatahub-io/kube-authkit)
+- **Type**: Python Library (Kubernetes Authentication Toolkit)
+- **Language**: Python 3.10+
+- **Framework**: pytest, hatchling build system
+- **RHOAI Component**: AI Core Platform (midstream)
+- **Jira Project**: RHOAIENG
 
-**Key Strengths**: Excellent test-to-code ratio (2.07:1) with 231 tests, well-organized unit/integration test separation, mock OAuth server for realistic testing, Docker Compose E2E infrastructure, multi-Python/multi-OS CI matrix, Codecov integration, trusted PyPI publishing.
+### Key Strengths
+- Excellent unit test suite with 231 test functions and a 3:1 test-to-source file ratio
+- Well-structured test organization with separate unit, integration, and E2E layers
+- Mock OAuth server for self-contained integration testing
+- Coverage enforcement with Codecov integration
+- Multi-platform (Ubuntu + macOS) and multi-version (Python 3.10-3.12) CI matrix
 
-**Critical Gaps**: No static type checking in CI (mypy removed), E2E tests not automated, SAST tools mentioned in docs but absent from CI, no agent rules, documentation-CI mismatch.
+### Critical Gaps
+- No PR-time build validation — packaging issues caught only at release
+- No Dependabot or Renovate for automated dependency updates
+- No agent rules (CLAUDE.md / .claude/) for AI-assisted development
+- Coverage threshold at 70% is below gold standard (80-90%)
 
-**Agent Rules Status**: Missing - No `.claude/` directory, `CLAUDE.md`, or `AGENTS.md` exist.
+### Agent Rules Status: Missing
+No `CLAUDE.md`, `AGENTS.md`, or `.claude/` directory found.
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 8.5/10 | 185+ unit tests, 2:1 test-to-code ratio, comprehensive fixtures |
-| Integration/E2E | 7.0/10 | 46 integration tests with mock OAuth; E2E setup exists but not in CI |
-| **Build Integration** | **5.0/10** | **Package build only in publish workflow; no mypy, no PR-time validation** |
-| Image Testing | 4.0/10 | Library project; Dockerfile.test for testing only |
-| Coverage Tracking | 7.0/10 | Codecov upload, 70% threshold; no .codecov.yml |
-| CI/CD Automation | 7.0/10 | 4 workflows, matrix testing; no caching or concurrency |
-| Agent Rules | 1.0/10 | None exist |
+| Dimension | Score | Weight | Status |
+|-----------|-------|--------|--------|
+| Unit Tests | 8.5/10 | 15% | Strong test suite with 231 test functions across 12 files |
+| Integration/E2E | 7.0/10 | 20% | Mock OAuth server + docker-compose, no multi-version K8s testing |
+| Build Integration | 3.0/10 | 15% | No PR-time build validation or package verification |
+| Image Testing | 3.0/10 | 10% | Test-only Dockerfile, no production image |
+| Coverage Tracking | 7.5/10 | 10% | 70% threshold with Codecov, dedicated CI job |
+| CI/CD Automation | 7.0/10 | 15% | 4 workflows, matrix strategy, no caching/concurrency |
+| Static Analysis | 5.5/10 | 10% | Ruff + pip-audit, missing Dependabot and pre-commit |
+| Agent Rules | 0.0/10 | 5% | No agent rules present |
+| **Overall** | **5.8/10** | **100%** | |
 
 ## Critical Gaps
 
-### 1. No Static Type Checking in CI
+### 1. No PR-time package build validation
+- **Impact**: Build failures (missing package data, incorrect entry points, broken dependencies) are only discovered when a release is cut. The `publish.yml` workflow builds and tests before publishing, but this happens *after* the release tag is created — too late to catch issues in review.
 - **Severity**: HIGH
-- **Impact**: Type errors in an authentication library can lead to security vulnerabilities (wrong types passed to crypto/token functions). Mypy was previously present but explicitly removed (commit `603fabf`).
-- **Effort**: 4-6 hours (re-enable, fix existing type errors, add to CI)
-- **Evidence**: `pyproject.toml` has no `[tool.mypy]` section; `lint.yml` only runs Ruff
-
-### 2. E2E Tests Not Automated in CI
-- **Severity**: HIGH
-- **Impact**: `docker-compose.test.yml` provides a full E2E environment (Keycloak + mock K8s API) but never runs in CI. Real OIDC flows (authorization code, device code, token refresh against a live provider) are only testable locally.
-- **Effort**: 8-12 hours (add Docker service containers to GitHub Actions, configure Keycloak realm/client setup)
-- **Evidence**: Only `test.yml` runs in CI with unit + integration (mock server only); no workflow references `docker-compose.test.yml`
-
-### 3. No SAST/Security Scanning in CI
-- **Severity**: HIGH
-- **Impact**: For an authentication library handling tokens, OAuth flows, and TLS, SAST is critical. The workflow README and CONTRIBUTING.md reference Bandit but it's not in any workflow.
 - **Effort**: 2-4 hours
-- **Evidence**: `lint.yml` has only `ruff` and `pip-audit` jobs; no `bandit`, no CodeQL workflow
+- **Recommendation**: Add `python -m build` and `twine check dist/*` steps to the PR test workflow
 
-### 4. Documentation-CI Mismatch
-- **Severity**: MEDIUM
-- **Impact**: CONTRIBUTING.md tells contributors to run `black`, `mypy`, and `bandit` locally, but CI doesn't enforce any of these. The workflow README claims lint workflow includes mypy, Bandit, and Black checks.
-- **Effort**: 2-3 hours (either add the tools to CI or update docs)
-- **Evidence**: `CONTRIBUTING.md` lines: "black for code formatting", "mypy for type checking", "bandit for security scanning"; `.github/workflows/README.md` lists "mypy: Type checking", "Bandit: Security scanning", "Black: Format verification" - none are in `lint.yml`
+### 2. No dependency update automation
+- **Impact**: Dependencies like `kubernetes`, `requests`, `PyJWT`, and `urllib3` may become stale with known vulnerabilities. While `pip-audit` catches known CVEs at lint time, it doesn't generate update PRs.
+- **Severity**: HIGH
+- **Effort**: 1-2 hours
+- **Recommendation**: Add `.github/dependabot.yml` covering `pip` and `github-actions` ecosystems
 
-### 5. No Agent Rules
+### 3. No agent rules for AI-assisted development
+- **Impact**: AI code generation tools (Claude Code, GitHub Copilot) lack guidance on project test patterns, fixture usage, marker conventions, and architectural decisions. This leads to inconsistent contributions.
 - **Severity**: MEDIUM
-- **Impact**: No guidance for AI agents contributing to the project. Test patterns, authentication strategy conventions, and fixture usage are undocumented for automated tooling.
-- **Effort**: 3-4 hours
-- **Evidence**: No `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
+- **Effort**: 2-3 hours
+- **Recommendation**: Generate rules with `/test-rules-generator` and create `CLAUDE.md`
+
+### 4. Coverage threshold at 70%
+- **Impact**: The 70% minimum allows significant portions of authentication logic to remain untested. For a security-sensitive authentication library, this is below industry standards.
+- **Severity**: MEDIUM
+- **Effort**: 4-8 hours
+- **Recommendation**: Raise to 80% incrementally, add per-module targets for strategies/
 
 ## Quick Wins
 
-### 1. Add Concurrency Control to Workflows (30 minutes)
+### 1. Add Dependabot configuration (30 minutes)
 ```yaml
-# Add to each workflow
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ci"
+```
+
+### 2. Add concurrency control to workflows (30 minutes)
+```yaml
+# Add to test.yml and lint.yml
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 ```
-**Impact**: Prevents redundant CI runs when pushing multiple commits in quick succession.
 
-### 2. Add uv Cache to CI (30 minutes)
+### 3. Add dependency caching (1 hour)
 ```yaml
-- name: Cache uv
+# Add after setup-python step
+- name: Cache uv packages
   uses: actions/cache@v4
   with:
     path: ~/.cache/uv
     key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml') }}
+    restore-keys: |
+      ${{ runner.os }}-uv-
 ```
-**Impact**: Reduces CI time by avoiding repeated dependency downloads.
 
-### 3. Add Bandit to Lint Workflow (1 hour)
+### 4. Add PR build validation (1 hour)
 ```yaml
-security-scan:
-  name: Security scan with Bandit
+# Add to test.yml as new job
+build-check:
+  name: Verify package builds
   runs-on: ubuntu-latest
   steps:
     - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - uses: actions/setup-python@v5
       with:
         python-version: "3.12"
-    - name: Install Bandit
-      run: pip install bandit
-    - name: Run Bandit
-      run: bandit -r src/ -c pyproject.toml
+    - run: pip install build twine
+    - run: python -m build
+    - run: twine check dist/*
 ```
-**Impact**: Catches common security issues in authentication code (hardcoded passwords, insecure SSL, weak crypto).
 
-### 4. Create .codecov.yml (1 hour)
-```yaml
-coverage:
-  status:
-    project:
-      default:
-        target: 75%
-        threshold: 2%
-    patch:
-      default:
-        target: 80%
-comment:
-  layout: "diff, flags, files"
-  behavior: default
-```
-**Impact**: PR-level coverage checks with inline annotations. Prevents coverage regressions.
-
-### 5. Raise Coverage Threshold to 80% (30 minutes)
-Change `--cov-fail-under=70` to `--cov-fail-under=80` in `pyproject.toml` and `test.yml`.
-**Impact**: With a 2:1 test-to-code ratio, 80% should already be met. Raises the floor.
-
-### 6. Add Pre-commit Hooks (1 hour)
-```yaml
-# .pre-commit-config.yaml
-repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.0
-    hooks:
-      - id: ruff
-        args: [--fix]
-      - id: ruff-format
-```
-**Impact**: Catches lint and formatting issues before push.
+### 5. Create basic CLAUDE.md (1-2 hours)
+Use `/test-rules-generator` to analyze existing patterns and generate a `CLAUDE.md` with testing conventions, fixture patterns, and marker usage guidance.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflows (4 total):**
+**Score: 8.5/10**
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `test.yml` | push/PR to main | Unit + integration tests, coverage, Codecov |
-| `lint.yml` | push/PR to main | Ruff lint/format, pip-audit |
-| `publish.yml` | release published | Build, test, publish to PyPI |
-| `release.yml` | tag push (v*) | Create GitHub release with changelog |
+The unit test suite is comprehensive and well-organized:
 
-**Strengths:**
-- Matrix testing: Python 3.10/3.11/3.12 on Ubuntu + macOS (6 combinations)
-- Minimum version testing job validates compatibility
-- Separate coverage-check job enforces 70% threshold
-- Trusted publishing via OIDC (no API tokens stored)
-- Tests run before publish as a gate
+- **12 test files** covering all source modules
+- **231 test functions** total across unit and integration tests
+- **Test-to-source ratio**: 12 test files to 8 source files (1.5:1 file ratio)
+- **Line ratio**: ~4,900 test lines vs ~2,280 source lines (~2.1:1)
 
-**Gaps:**
-- No concurrency control on any workflow
-- No dependency caching (uv installs from scratch each time)
-- No workflow for auto-merging dependabot PRs
-- No scheduled/periodic test runs (e.g., nightly against latest deps)
-- Branch patterns (`feat/*`, `fix/*`) in push triggers - good but could add `release/*`
-
-### Test Coverage
-
-**Statistics:**
-- Source code: 2,369 lines across 10 files
-- Test code: 4,898 lines across 16 files (including conftest, mock server)
-- Test-to-code ratio: **2.07:1** (excellent)
-- Total test functions: **231**
-- Unit tests: ~185 functions
-- Integration tests: ~46 functions
-
-**Unit Test Breakdown:**
-
-| Module | Tests | Source Lines | Coverage |
-|--------|-------|-------------|----------|
-| `test_oidc.py` | 43 | 643 | High |
-| `test_factory.py` | 40 | 279 | High |
-| `test_config.py` | 29 | 263 | High |
-| `test_openshift.py` | 26 | 476 | Good |
-| `test_kubeconfig.py` | 21 | 194 | High |
-| `test_incluster.py` | 20 | 201 | High |
-| `test_base.py` | 6 | 130 | Moderate |
-
-**Integration Test Breakdown:**
-
-| Module | Tests | Purpose |
-|--------|-------|---------|
-| `test_openshift_integration.py` | 11 | OpenShift OAuth with mock server |
-| `test_incluster_integration.py` | 10 | In-cluster auth with mock SA files |
-| `test_oidc_integration.py` | 9 | OIDC flows with mock OAuth server |
-| `test_factory_integration.py` | 9 | Auto-detect factory with mock env |
-| `test_kubeconfig_integration.py` | 7 | Kubeconfig loading with temp files |
-
-**Test Infrastructure Quality:**
-- Mock OAuth server (`mock_oauth_server.py`, 419 lines) implements full OIDC discovery, auth code flow with PKCE, device code flow, and token refresh
-- Well-designed fixtures in `conftest.py` (225 lines) with mock kubeconfig, service account, env vars, and OAuth config
-- Proper pytest markers (`unit`, `integration`, `e2e`, `slow`) with CI filtering
-- Docker Compose E2E with Keycloak and mock K8s API (not automated in CI)
-
-**Strengths:**
-- Every source module has corresponding unit and integration test files
-- Mock OAuth server is production-quality for testing auth flows
-- Test fixtures are reusable and well-documented with docstrings
-- Markers properly separate test levels
-
-**Gaps:**
-- E2E marker defined but no E2E tests exist in the test suite
-- `test_base.py` has only 6 tests for 130 lines of source (lowest ratio)
-- Coverage threshold at 70% is low for a security-sensitive library
-- No property-based testing (Hypothesis) for token parsing edge cases
-- No fuzz testing for OIDC/OAuth input handling
-
-### Code Quality
-
-**Configured Tools:**
-- **Ruff** (in CI): E, W, F, I, B, C4, UP rule sets enabled. Line length 100. Python 3.10 target.
-- **pip-audit** (in CI): Dependency vulnerability scanning
-
-**Missing Tools (referenced in docs but absent from CI):**
-- **mypy**: Removed in commit `603fabf`. No type checking runs anywhere.
-- **Black**: Referenced in CONTRIBUTING.md but not in CI. Ruff format handles this.
-- **Bandit**: Referenced in docs but not in CI. Critical for auth code.
-- **Pre-commit hooks**: No `.pre-commit-config.yaml`
-- **Secret detection**: No Gitleaks or TruffleHog
-
-**Ruff Configuration (pyproject.toml):**
-```toml
-[tool.ruff.lint]
-select = ["E", "W", "F", "I", "B", "C4", "UP"]
-ignore = ["E501"]
+**Test organization**:
 ```
-Good selection of rules. Missing: `S` (flake8-bandit), `PT` (flake8-pytest-style), `SIM` (flake8-simplify), `TCH` (flake8-type-checking).
+tests/
+├── conftest.py              (225 lines - shared fixtures)
+├── mock_oauth_server.py     (419 lines - mock OAuth/OIDC server)
+├── test_config.py           (281 lines, 29 tests)
+├── test_factory.py          (518 lines, 40 tests)
+├── strategies/
+│   ├── test_base.py         (81 lines, 6 tests)
+│   ├── test_incluster.py    (357 lines, 20 tests)
+│   ├── test_kubeconfig.py   (346 lines, 21 tests)
+│   ├── test_oidc.py         (1181 lines, 43 tests)
+│   └── test_openshift.py    (475 lines, 26 tests)
+└── integration/
+    ├── test_factory_integration.py   (156 lines, 9 tests)
+    ├── test_incluster_integration.py (145 lines, 10 tests)
+    ├── test_kubeconfig_integration.py(137 lines, 7 tests)
+    ├── test_oidc_integration.py      (355 lines, 9 tests)
+    └── test_openshift_integration.py (220 lines, 11 tests)
+```
 
-### Container Images
+**Strengths**:
+- Excellent use of pytest fixtures (`mock_kubeconfig`, `mock_service_account`, `mock_env_vars`, `mock_oidc_env`)
+- Proper test markers (`unit`, `integration`, `e2e`, `slow`)
+- Good test isolation — environment variables cleared between tests
+- Class-based grouping for related tests (e.g., `TestOIDCStrategyAvailability`)
+- Comprehensive error case testing
 
-This is a **Python library** published to PyPI, not a container-based project. Container analysis is limited:
+**Gaps**:
+- No `@pytest.mark.unit` applied to unit test functions (only `integration` marker actively used)
+- Test documentation (TESTING.md) references old package name `openshift_ai_auth` instead of `kube_authkit`
 
-- `Dockerfile.test`: Used for running integration tests in a container. Installs dependencies and runs pytest. Note: references old package name `openshift_ai_auth` in coverage path.
-- `docker-compose.test.yml`: Three-service E2E setup (Keycloak, mock K8s API, test runner). Well-designed but not used in CI.
-- No production Dockerfile (correct - this is a pip-installable library)
-- No container scanning needed for the library itself
+### Integration/E2E Tests
 
-### Security
+**Score: 7.0/10**
 
-**Present:**
-- pip-audit dependency scanning in CI
-- Trusted publishing via OIDC (no API tokens in repo)
-- TLS verification enabled by default in library
-- Sensitive data excluded from logs (per README)
-- `.gitignore` properly excludes tokens, keys, certificates, secrets
+**Strengths**:
+- Dedicated `tests/integration/` directory with 5 test files (46 tests)
+- Mock OAuth server (`mock_oauth_server.py`, 419 lines) implements OIDC discovery, auth code flow, device code flow, and token refresh
+- `docker-compose.test.yml` provides Keycloak + mock K8s API for full E2E testing
+- Test markers properly separate unit from integration tests
+- CI runs integration tests separately with `pytest -m integration`
 
-**Missing:**
-- No SAST (Bandit, CodeQL, Semgrep)
-- No secret detection (Gitleaks, TruffleHog)
-- No dependency update automation (Dependabot/Renovate)
-- No security policy (`SECURITY.md`)
-- No signed releases or attestations
+**Gaps**:
+- No multi-version Kubernetes/OpenShift testing (only tests against mock API)
+- Docker-compose E2E tests not integrated into CI (only runs locally)
+- No envtest or Kind cluster setup for real K8s API testing
+- No contract tests for the kubernetes client API boundary
 
-**Risk Assessment**: For an authentication library handling OAuth tokens, OIDC flows, and Kubernetes credentials, the absence of SAST is a significant gap. Bandit would catch common Python security anti-patterns (assert in production, insecure SSL contexts, hardcoded passwords).
+### Build Integration
 
-### Agent Rules (Agentic Flow Quality)
+**Score: 3.0/10**
+
+**Strengths**:
+- `publish.yml` does build + test before publishing to PyPI
+- Uses hatchling build system with proper wheel configuration
+- `twine check` validates package metadata at publish time
+
+**Gaps**:
+- No PR-time build validation — `python -m build` only runs in publish workflow
+- No wheel installation testing (install from built wheel and verify imports)
+- No entry point validation
+- Package build failures only discovered at release tag time
+
+### Image Testing
+
+**Score: 3.0/10**
+
+**Strengths**:
+- `Dockerfile.test` exists for running tests in containers
+- Uses `python:3.11-slim` base image
+- `docker-compose.test.yml` provides multi-service test environment
+
+**Gaps**:
+- No production Dockerfile (this is a library, not a deployed service — score reflects limited applicability)
+- No multi-architecture support
+- `Dockerfile.test` references old package name in `--cov=src/openshift_ai_auth`
+- No container health checks in test runner service
+- Docker-based testing not integrated into CI
+
+### Coverage Tracking
+
+**Score: 7.5/10**
+
+**Strengths**:
+- `pytest-cov` configured in `pyproject.toml` with `--cov-fail-under=70`
+- Codecov integration via `codecov/codecov-action@v4` in CI
+- Dedicated `coverage-check` job in test workflow
+- XML and term-missing report formats
+- Coverage runs in both unit and integration test phases with `--cov-append`
+
+**Gaps**:
+- 70% threshold is below gold standard (80-90% for auth libraries)
+- No per-module coverage targets (strategies/ should have higher coverage)
+- No coverage badge in README
+- TESTING.md claims 90% minimum but pyproject.toml enforces 70%
+- No PR comment with coverage delta
+
+### CI/CD Automation
+
+**Score: 7.0/10**
+
+**Workflow inventory**:
+
+| Workflow | Triggers | Purpose |
+|----------|----------|---------|
+| `test.yml` | push (main, feat/*, fix/*), PR, dispatch | Unit + integration tests, coverage |
+| `lint.yml` | push (main, feat/*, fix/*), PR, dispatch | Ruff linting + pip-audit |
+| `publish.yml` | release published | Build, test, publish to PyPI |
+| `release.yml` | tag push (v*.*.*) | Create GitHub Release with changelog |
+
+**Strengths**:
+- Matrix testing: 3 Python versions (3.10, 3.11, 3.12) x 2 OS (ubuntu, macos)
+- Minimum version testing job validates against oldest supported dependencies
+- `fail-fast: false` ensures all matrix entries complete
+- Separate lint and test workflows for clear failure signals
+- `pip-audit` for known vulnerability detection
+- PyPI trusted publishing (no API token needed)
+
+**Gaps**:
+- No concurrency control — duplicate runs on rapid pushes waste CI minutes
+- No dependency caching — every run installs from scratch
+- No timeout-minutes set on jobs
+- No test parallelization (pytest-xdist not configured)
+- Docker-compose E2E tests not in CI
+
+### Static Analysis
+
+**Score: 5.5/10**
+
+#### Linting
+
+**Ruff configuration** (in `pyproject.toml`):
+- Line length: 100
+- Target: Python 3.10
+- Rule sets enabled: E (pycodestyle errors), W (warnings), F (pyflakes), I (isort), B (flake8-bugbear), C4 (comprehensions), UP (pyupgrade)
+- Format checking in CI (`ruff format --check`)
+
+**Strengths**:
+- 7 ruff rule sets provide good coverage
+- Both `ruff check` and `ruff format` enforced in CI
+- `pip-audit` catches known vulnerabilities in dependencies
+
+**Gaps**:
+- No type checking (mypy/pyright) — TESTING.md mentions mypy but it's not in CI
+- No pre-commit hooks (`.pre-commit-config.yaml` absent)
+
+#### FIPS Compatibility
+
+- `hashlib.sha256` used in `strategies/oidc.py` and `strategies/openshift.py` for PKCE code challenge
+- SHA-256 is FIPS-compliant — no issues found
+- No non-FIPS crypto usage (md5, des, rc4) detected
+- Base image for test Dockerfile is `python:3.11-slim` (Debian-based, not UBI) — acceptable for test-only use
+
+#### Dependency Alerts
+
+- **Dependabot**: NOT configured — no `.github/dependabot.yml`
+- **Renovate**: NOT configured — no `renovate.json` or `.renovaterc`
+- `pip-audit` runs in lint workflow but only detects, doesn't create update PRs
+
+### Agent Rules
+
+**Score: 0.0/10**
 
 - **Status**: Missing
-- **Coverage**: None - no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
-- **Quality**: N/A
-- **Gaps**:
-  - No test creation rules (unit-tests.md, integration-tests.md)
-  - No coding conventions for AI agents
-  - No fixture usage guidelines
-  - No mock OAuth server usage documentation for agents
-  - No strategy pattern guidelines for new authentication methods
+- **Coverage**: None — no agent rules present
+- **CLAUDE.md**: Not found
+- **AGENTS.md**: Not found
+- **.claude/ directory**: Not found
 - **Recommendation**: Generate rules with `/test-rules-generator` covering:
-  - Unit test patterns (pytest fixtures, marker usage)
+  - Unit test patterns (pytest fixtures, markers, mocking conventions)
   - Integration test patterns (mock OAuth server usage)
-  - Authentication strategy implementation pattern
-  - Exception hierarchy and error handling conventions
+  - Architecture overview (strategy pattern, factory, config)
+  - Code style (ruff rules, line length, import order)
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Re-enable mypy type checking in CI**
-   - Add `[tool.mypy]` to `pyproject.toml` with strict mode
-   - Add mypy job to `lint.yml`
-   - Fix any existing type errors
-   - For an auth library, type safety directly prevents security bugs (e.g., passing `str` where `bytes` expected in JWT handling)
+1. **Add PR-time package build validation** — Add a `build-check` job to `test.yml` that runs `python -m build` and `twine check dist/*` on every PR. This catches packaging issues before merge instead of at release time. (2-4 hours)
 
-2. **Add Bandit SAST to CI**
-   - Add Bandit job to `lint.yml`
-   - Configure `[tool.bandit]` in `pyproject.toml`
-   - Scan `src/` directory for security anti-patterns
-   - Consider adding Ruff's `S` (flake8-bandit) rules as well
-
-3. **Automate E2E tests in CI**
-   - Add GitHub Actions service containers for Keycloak
-   - Run `docker-compose.test.yml` in a CI job (weekly or nightly)
-   - Test real OIDC flows end-to-end
+2. **Enable Dependabot** — Add `.github/dependabot.yml` covering `pip` and `github-actions` ecosystems with weekly schedule. This is the single highest-ROI change for security posture. (30 minutes)
 
 ### Priority 1 (High Value)
 
-4. **Fix documentation-CI mismatch**
-   - Update CONTRIBUTING.md to reflect actual CI tools (Ruff instead of Black, no mypy currently)
-   - Update workflow README to match actual workflow jobs
-   - Or: add the missing tools to CI (preferred)
+3. **Add concurrency control and caching** — Add `concurrency:` blocks to test and lint workflows, and cache uv/pip dependencies. Reduces CI cost and time. (1-2 hours)
 
-5. **Add CodeQL workflow**
-   - GitHub-native, zero-config for Python
-   - Catches OIDC/OAuth-specific issues (open redirect, SSRF in discovery)
+4. **Raise coverage threshold** — Increment from 70% to 80%, with a stretch goal of 85%. Add per-module minimums for `strategies/` (security-sensitive code). (4-8 hours)
 
-6. **Add concurrency control and caching**
-   - Add `concurrency` to all workflows
-   - Add uv/pip cache
-   - Reduce CI time and cost
-
-7. **Create .codecov.yml**
-   - Enable PR status checks
-   - Set patch coverage target (80%)
-   - Enable inline annotations
-
-8. **Raise coverage threshold to 80%**
-   - Current 2:1 test-to-code ratio suggests 80%+ is achievable
-   - 70% is too low for a security-sensitive library
+5. **Create CLAUDE.md and agent rules** — Document testing conventions, fixture patterns, architecture (strategy pattern), and contribution guidelines. Use `/test-rules-generator` for automated generation. (2-3 hours)
 
 ### Priority 2 (Nice-to-Have)
 
-9. **Create agent rules**
-   - `.claude/rules/unit-tests.md` with pytest patterns and fixture usage
-   - `.claude/rules/integration-tests.md` with mock OAuth server patterns
-   - `CLAUDE.md` with project conventions and architecture
+6. **Add pre-commit hooks** — Create `.pre-commit-config.yaml` with ruff, ruff-format, and trailing whitespace checks. (1 hour)
 
-10. **Add pre-commit hooks**
-    - Ruff check + format, Bandit, mypy
-    - Catch issues before push
+7. **Add mypy type checking to CI** — TESTING.md already references mypy but it's not in the pipeline. Add `mypy src/kube_authkit --ignore-missing-imports` to lint workflow. (2-3 hours)
 
-11. **Add Dependabot/Renovate**
-    - Automate dependency updates
-    - Especially important for `kubernetes`, `PyJWT`, and `requests` security patches
+8. **Integrate docker-compose E2E tests in CI** — Add a CI job that runs `docker-compose -f docker-compose.test.yml run test-runner` for full E2E validation. (4-6 hours)
 
-12. **Add SECURITY.md**
-    - Responsible disclosure process
-    - Security contact information
-    - Supported versions
-
-13. **Add property-based testing (Hypothesis)**
-    - Fuzz token parsing, config validation, URL handling
-    - Important for edge cases in OIDC discovery URLs and JWT parsing
-
-14. **Fix Dockerfile.test package name**
-    - References `openshift_ai_auth` instead of `kube_authkit` in coverage path
+9. **Fix stale references** — TESTING.md and Dockerfile.test reference old package name `openshift_ai_auth` instead of `kube_authkit`. (30 minutes)
 
 ## Comparison to Gold Standards
 
 | Dimension | kube-authkit | odh-dashboard | notebooks | kserve |
-|-----------|-------------|---------------|-----------|--------|
-| Unit Tests | 8.5 - 231 tests, 2:1 ratio | 9.5 - Multi-layer | 7.0 | 9.0 |
-| Integration/E2E | 7.0 - Mock OAuth, no CI E2E | 9.0 - Contract tests | 8.0 | 9.5 |
-| Build Integration | 5.0 - Publish-only build | 8.0 - Multi-mode | 7.0 | 8.0 |
-| Coverage | 7.0 - 70% threshold, Codecov | 9.0 - Enforcement | 6.0 | 9.0 |
-| CI/CD | 7.0 - Matrix, no caching | 9.0 - Full pipeline | 8.0 | 9.0 |
-| Security | 4.0 - pip-audit only | 8.0 - SAST + scanning | 7.0 | 8.0 |
-| Agent Rules | 1.0 - None | 9.0 - Comprehensive | 3.0 | 2.0 |
+|-----------|:---:|:---:|:---:|:---:|
+| Unit Tests | 8.5 | 9.0 | 7.0 | 9.0 |
+| Integration/E2E | 7.0 | 9.0 | 8.0 | 9.5 |
+| Build Integration | 3.0 | 8.0 | 7.0 | 7.0 |
+| Image Testing | 3.0 | 7.0 | 9.5 | 7.0 |
+| Coverage Tracking | 7.5 | 9.0 | 6.0 | 9.0 |
+| CI/CD Automation | 7.0 | 9.0 | 8.0 | 9.0 |
+| Static Analysis | 5.5 | 8.0 | 6.0 | 8.0 |
+| Agent Rules | 0.0 | 8.0 | 3.0 | 2.0 |
+| **Overall** | **5.8** | **8.6** | **7.1** | **8.0** |
 
-**Key Differentiators from Gold Standards:**
-- kube-authkit's test-to-code ratio (2.07:1) is among the highest
-- Mock OAuth server quality is excellent for the domain
-- Missing: SAST, type checking, E2E automation, agent rules
-- The library has good bones but needs CI hardening for security-sensitive code
+**Key differentiators vs. gold standards**:
+- Missing Dependabot/Renovate (all gold standards have it)
+- No PR-time build validation (odh-dashboard and kserve verify builds on PR)
+- No agent rules (odh-dashboard has comprehensive CLAUDE.md + .claude/rules/)
+- Lower coverage threshold (kserve enforces 80%+)
+- Strong unit test suite is on par with gold standards
 
 ## File Paths Reference
 
-### CI/CD
-- `.github/workflows/test.yml` - Unit/integration tests, coverage
-- `.github/workflows/lint.yml` - Ruff linting, pip-audit
-- `.github/workflows/publish.yml` - PyPI publishing
-- `.github/workflows/release.yml` - GitHub release creation
-- `.github/workflows/README.md` - Workflow documentation
-
-### Source Code
-- `src/kube_authkit/__init__.py` - Public API
-- `src/kube_authkit/config.py` - AuthConfig class
-- `src/kube_authkit/factory.py` - Strategy factory
-- `src/kube_authkit/exceptions.py` - Exception hierarchy
-- `src/kube_authkit/strategies/base.py` - Base strategy
-- `src/kube_authkit/strategies/kubeconfig.py` - KubeConfig auth
-- `src/kube_authkit/strategies/incluster.py` - In-cluster auth
-- `src/kube_authkit/strategies/oidc.py` - OIDC auth (643 lines)
-- `src/kube_authkit/strategies/openshift.py` - OpenShift OAuth
-
-### Testing
-- `tests/conftest.py` - Shared fixtures
-- `tests/mock_oauth_server.py` - Mock OAuth/OIDC server
-- `tests/strategies/` - Unit tests per strategy
-- `tests/integration/` - Integration tests per strategy
-- `Dockerfile.test` - Containerized test runner
-- `docker-compose.test.yml` - E2E test environment
-
-### Configuration
-- `pyproject.toml` - Project config, deps, tool config
-- `.gitignore` - Comprehensive ignore patterns
-
-### Documentation
-- `README.md` - Usage and API docs
-- `TESTING.md` - Comprehensive testing guide
-- `CONTRIBUTING.md` - Contribution guidelines
-- `PUBLISHING.md` - Release/publish process
+| Category | File | Status |
+|----------|------|--------|
+| Project config | `pyproject.toml` | Present |
+| CI - Tests | `.github/workflows/test.yml` | Present |
+| CI - Lint | `.github/workflows/lint.yml` | Present |
+| CI - Publish | `.github/workflows/publish.yml` | Present |
+| CI - Release | `.github/workflows/release.yml` | Present |
+| Test config | `pyproject.toml` [tool.pytest] | Present |
+| Test fixtures | `tests/conftest.py` | Present |
+| Mock server | `tests/mock_oauth_server.py` | Present |
+| Docker test | `Dockerfile.test` | Present |
+| Docker compose | `docker-compose.test.yml` | Present |
+| Testing docs | `TESTING.md` | Present |
+| Ruff config | `pyproject.toml` [tool.ruff] | Present |
+| Coverage config | `pyproject.toml` [tool.pytest] | Present |
+| Dependabot | `.github/dependabot.yml` | **MISSING** |
+| Pre-commit | `.pre-commit-config.yaml` | **MISSING** |
+| Codecov config | `.codecov.yml` | **MISSING** (uses defaults) |
+| Agent rules | `CLAUDE.md` | **MISSING** |
+| Agent rules | `.claude/rules/` | **MISSING** |

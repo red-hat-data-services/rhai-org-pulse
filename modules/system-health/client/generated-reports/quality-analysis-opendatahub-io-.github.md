@@ -1,393 +1,297 @@
 ---
 repository: "opendatahub-io/.github"
-overall_score: 2.8
+overall_score: 0.2
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "N/A — No source code in this repository"
+    status: "Not applicable — no source code in this org-level meta-repository"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "N/A — No source code in this repository"
+    status: "Not applicable — no source code or testable components"
   - dimension: "Build Integration"
     score: 0.0
-    status: "N/A — No build artifacts produced"
+    status: "Not applicable — no build artifacts or container images"
   - dimension: "Image Testing"
     score: 0.0
-    status: "N/A — No container images"
+    status: "Not applicable — no Dockerfiles or container images"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "N/A — No source code to measure"
+    status: "Not applicable — no code to measure coverage against"
   - dimension: "CI/CD Automation"
-    score: 3.0
-    status: "No workflows; missed opportunity for org-wide reusable workflows"
+    score: 1.0
+    status: "PR and issue templates present but no CI/CD workflows to validate them"
+  - dimension: "Static Analysis"
+    score: 0.0
+    status: "No YAML or markdown linting configured for the templates"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, .claude/ directory, or agent configuration"
-  - dimension: "Community Health"
-    score: 6.0
-    status: "Basic templates present but incomplete coverage"
-  - dimension: "Template Quality"
-    score: 5.0
-    status: "Functional templates with room for standardization"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
-  - title: "No reusable GitHub Actions workflows"
-    impact: "Each repo duplicates CI/CD configuration instead of inheriting org-wide standards"
-    severity: "HIGH"
-    effort: "16-24 hours"
-  - title: "No organization-wide CODEOWNERS or security policy"
-    impact: "No default SECURITY.md, CODEOWNERS, or CONTRIBUTING.md inherited by child repos"
-    severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No org-level agent rules or testing standards"
-    impact: "AI-assisted development has no org-wide quality guidance"
+  - title: "No CI/CD workflows to validate templates"
+    impact: "Broken YAML in issue templates or malformed markdown in PR template could go undetected until users file issues"
     severity: "MEDIUM"
-    effort: "8-12 hours"
-  - title: "PR template lacks test type checklist"
-    impact: "Contributors not prompted to verify test coverage by type (unit, integration, e2e)"
-    severity: "MEDIUM"
-    effort: "1-2 hours"
-  - title: "Issue templates missing triage automation"
-    impact: "No auto-labeling or routing for bug reports and feature requests"
-    severity: "MEDIUM"
-    effort: "4-6 hours"
-quick_wins:
-  - title: "Add SECURITY.md with vulnerability disclosure process"
-    effort: "1-2 hours"
-    impact: "Establishes org-wide security reporting across all repos"
-  - title: "Add CONTRIBUTING.md with testing requirements"
     effort: "2-3 hours"
-    impact: "Sets quality bar for all contributions across the org"
-  - title: "Enhance PR template with structured test checklist"
+  - title: "No YAML schema validation for issue templates"
+    impact: "Invalid YAML form fields may cause GitHub to silently fall back to blank issue, degrading contributor experience"
+    severity: "MEDIUM"
+    effort: "1-2 hours"
+  - title: "Bug report template has stale OpenShift version options"
+    impact: "Version dropdown lists 'OpenStack', 'OKD', 'CodeReady Containers' — none are OCP version numbers; contributors cannot specify their actual version"
+    severity: "HIGH"
     effort: "1 hour"
-    impact: "Forces contributors to consider all test dimensions before merging"
-  - title: "Add FUNDING.yml for sponsorship visibility"
+quick_wins:
+  - title: "Update bug report template OpenShift version dropdown"
     effort: "30 minutes"
-    impact: "Standard GitHub community health file for open source projects"
-  - title: "Add CODE_OF_CONDUCT.md"
-    effort: "30 minutes"
-    impact: "Standard community health file expected by contributors"
+    impact: "Fix misleading version selector so contributors can accurately report their environment"
+  - title: "Add a GitHub Actions workflow to lint YAML and markdown"
+    effort: "1-2 hours"
+    impact: "Catch template syntax errors before they reach production"
+  - title: "Add CLAUDE.md with contribution guidelines for AI-assisted edits"
+    effort: "1 hour"
+    impact: "Guide AI agents making changes to org-level templates"
 recommendations:
   priority_0:
-    - "Create reusable GitHub Actions workflows (.github/workflows/) for linting, testing, and security scanning that child repos can inherit"
-    - "Add SECURITY.md with coordinated vulnerability disclosure process"
-    - "Add CONTRIBUTING.md that mandates test coverage expectations for all ODH repos"
+    - "Fix the bug report template: the 'OpenShift Version' dropdown does not list actual OCP versions — it conflates platforms (OpenStack, OKD, CRC) with versions"
+    - "Add a CI workflow to validate YAML schema of issue templates on every PR"
   priority_1:
-    - "Create org-level .claude/rules/ with testing standards for AI-assisted development"
-    - "Enhance PR template to include structured test verification checklist"
-    - "Add workflow_call reusable workflows for common CI patterns (Go test, Python lint, container scan)"
+    - "Add markdown linting (markdownlint) to validate PR template formatting"
+    - "Add a CODEOWNERS file to ensure template changes are reviewed by the right team"
+    - "Consider adding a CONTRIBUTING.md at the org level"
   priority_2:
-    - "Add FUNDING.yml and CODE_OF_CONDUCT.md for community health completeness"
-    - "Create issue template for security vulnerability reports"
-    - "Add auto-labeling workflow for issue triage"
+    - "Add CLAUDE.md with guidelines for maintaining org-level templates"
+    - "Add a SECURITY.md or security policy for the organization"
+    - "Consider adding default labels configuration (.github/labels.yml with a label sync action)"
 ---
 
 # Quality Analysis: opendatahub-io/.github
 
 ## Executive Summary
 
-- **Overall Score: 2.8/10**
-- **Repository Type**: GitHub organization-level community health repository (not a code repo)
-- **Primary Language**: YAML / Markdown (templates and configuration only)
-- **License**: Apache 2.0
+- **Overall Score: 0.2/10**
+- **Repository Type**: GitHub organization-level meta-repository (community health files)
+- **Jira Component**: Build and Release (RHOAIENG)
+- **Tier**: Midstream
+- **Key Strengths**: Provides org-wide PR template and structured issue templates using YAML forms
+- **Critical Gaps**: No CI/CD workflows, no static analysis, stale template content
+- **Agent Rules Status**: Missing
 
-### Key Strengths
-- Issue templates use modern YAML-based forms with validation
-- PR template includes basic merge criteria checklist
-- Organization profile page provides useful onboarding links
-
-### Critical Gaps
-- **No reusable workflows** — Massive missed opportunity; this repo should be the central hub for org-wide CI/CD standards
-- **Missing community health files** — No SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md, or CODEOWNERS
-- **No agent rules** — No .claude/ directory or AI-assisted development guidance
-- **PR template lacks test coverage prompts** — No structured checklist for test types
-
-### Agent Rules Status: Missing
-No CLAUDE.md, .claude/ directory, or agent configuration exists. For an org-level repo, this is a missed opportunity to define org-wide testing standards that AI agents could inherit.
+**Important Context**: This is a `.github` special repository that provides default community health files (issue templates, PR template, org profile) for the entire `opendatahub-io` GitHub organization. It contains **no source code**, so most quality dimensions (unit tests, integration tests, build integration, image testing, coverage) are structurally not applicable. The score reflects this — it is not a commentary on engineering quality but rather on the limited scope of this repository.
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | N/A | No source code in this repository |
-| Integration/E2E | N/A | No source code in this repository |
-| Build Integration | N/A | No build artifacts produced |
-| Image Testing | N/A | No container images |
-| Coverage Tracking | N/A | No source code to measure |
-| CI/CD Automation | 3/10 | No workflows; missed opportunity for org-wide reusable workflows |
-| Agent Rules | 0/10 | No CLAUDE.md, .claude/ directory, or agent configuration |
-| Community Health | 6/10 | Basic templates present but incomplete coverage |
-| Template Quality | 5/10 | Functional templates with room for standardization |
+| Dimension | Weight | Score | Status |
+|-----------|--------|-------|--------|
+| Unit Tests | 15% | 0.0/10 | N/A — no source code |
+| Integration/E2E | 20% | 0.0/10 | N/A — no testable components |
+| Build Integration | 15% | 0.0/10 | N/A — no build artifacts |
+| Image Testing | 10% | 0.0/10 | N/A — no container images |
+| Coverage Tracking | 10% | 0.0/10 | N/A — no code to cover |
+| CI/CD Automation | 15% | 1.0/10 | Templates exist but no workflows |
+| Static Analysis | 10% | 0.0/10 | No linting configured |
+| Agent Rules | 5% | 0.0/10 | No agent rules present |
 
-> **Note**: Standard code quality dimensions (unit tests, integration, image testing, coverage) are not applicable to this repository since it contains no source code. The overall score reflects what this repository *should* provide as an org-level .github repo — primarily reusable workflows, community health files, and quality standards.
+**Weighted Overall: 0.2/10**
+
+## Repository Contents
+
+This repository contains exactly 4 non-license files:
+
+| File | Purpose |
+|------|---------|
+| `PULL_REQUEST_TEMPLATE.md` | Default PR template for all org repos |
+| `ISSUE_TEMPLATE/bug_report.yaml` | Structured bug report form |
+| `ISSUE_TEMPLATE/feature_request.yaml` | Structured feature request form |
+| `profile/README.md` | Organization profile page on GitHub |
 
 ## Critical Gaps
 
-### 1. No Reusable GitHub Actions Workflows
-- **Impact**: Each of the 50+ opendatahub-io repos duplicates CI/CD configuration instead of inheriting org-wide standards
+### 1. Bug Report Template Has Stale/Misleading Version Dropdown
 - **Severity**: HIGH
-- **Effort**: 16-24 hours
-- **Details**: The `.github` repository is the ideal location for [reusable workflows](https://docs.github.com/en/actions/using-workflows/reusing-workflows) that child repos can call with `uses: opendatahub-io/.github/.github/workflows/lint.yml@main`. This would standardize linting, testing, security scanning, and container image building across the entire organization.
+- **Impact**: The "OpenShift Version" dropdown lists platforms (`OpenStack`, `OKD`, `CodeReady Containers`, `Other`) rather than actual OCP version numbers. Contributors cannot accurately specify which OCP version they're running. "CodeReady Containers" was renamed to "Red Hat OpenShift Local" in 2022.
+- **Effort**: 30 minutes
+- **File**: `ISSUE_TEMPLATE/bug_report.yaml:48-58`
 
-### 2. Missing SECURITY.md
-- **Impact**: No organization-wide vulnerability disclosure process; contributors don't know how to report security issues
-- **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: A default SECURITY.md would be inherited by every repo in the org that doesn't define its own. This is a GitHub community health file requirement.
-
-### 3. Missing CONTRIBUTING.md
-- **Impact**: No org-wide contribution standards; quality bar varies across repos
-- **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: Should define testing expectations, code review standards, and quality gates that apply across the organization.
-
-### 4. PR Template Lacks Structured Test Checklist
-- **Impact**: Contributors not prompted to verify test coverage by type
+### 2. No CI/CD Workflows
 - **Severity**: MEDIUM
+- **Impact**: No automated validation of YAML template syntax or markdown formatting. A broken issue template could silently fail, causing GitHub to fall back to a blank issue form.
+- **Effort**: 2-3 hours
+
+### 3. No YAML Schema Validation
+- **Severity**: MEDIUM
+- **Impact**: Issue templates use GitHub's YAML form schema, but there's no validation that the templates conform to the schema. Invalid fields or missing required attributes could break the issue creation flow.
 - **Effort**: 1-2 hours
-- **Details**: Current PR template has a generic "How Has This Been Tested?" textarea. Should include checkboxes for unit tests, integration tests, e2e tests, and manual verification.
-
-### 5. No Organization-Level Agent Rules
-- **Impact**: AI-assisted development has no quality guardrails at the org level
-- **Severity**: MEDIUM
-- **Effort**: 8-12 hours
 
 ## Quick Wins
 
-### 1. Enhance PR Template with Test Checklist (1 hour)
-**Current**:
-```markdown
-## How Has This Been Tested?
-<!--- Please describe in detail how you tested your changes. -->
-```
+### 1. Fix the OpenShift Version Dropdown (30 minutes)
+Update `ISSUE_TEMPLATE/bug_report.yaml` to list actual OCP versions or use a free-text input:
 
-**Recommended**:
-```markdown
-## Testing Checklist
-- [ ] Unit tests added/updated
-- [ ] Integration tests added/updated (if applicable)
-- [ ] E2E tests added/updated (if applicable)
-- [ ] Manual testing performed
-- [ ] No test changes needed (explain why):
-
-### Test Details
-<!--- Describe what tests you ran and their results -->
-```
-
-### 2. Add SECURITY.md (1-2 hours)
-Create a `SECURITY.md` with:
-- Supported versions
-- Vulnerability reporting process (private security advisory or email)
-- Expected response timeline
-- Disclosure policy
-
-### 3. Add CONTRIBUTING.md (2-3 hours)
-Define org-wide standards for:
-- Test coverage expectations
-- PR review requirements
-- Code quality standards
-- Commit message format
-
-### 4. Add CODE_OF_CONDUCT.md (30 minutes)
-Adopt the Contributor Covenant or Red Hat's code of conduct.
-
-### 5. Add FUNDING.yml (30 minutes)
 ```yaml
-github: opendatahub-io
+- type: input
+  id: openshift-version
+  attributes:
+    label: OpenShift Version
+    description: What version of OpenShift are you running? (e.g., 4.14, 4.15, 4.16)
+    placeholder: "e.g., 4.16.3"
+  validations:
+    required: true
 ```
+
+### 2. Add YAML/Markdown Linting Workflow (1-2 hours)
+
+Create `.github/workflows/lint.yml`:
+
+```yaml
+name: Lint Templates
+on:
+  pull_request:
+    paths:
+      - '**.md'
+      - '**.yaml'
+      - '**.yml'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint YAML
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: .
+      - name: Lint Markdown
+        uses: DavidAnson/markdownlint-cli2-action@v19
+```
+
+### 3. Add CLAUDE.md (1 hour)
+Add basic agent rules to guide AI-assisted contributions to org-level templates.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
-**Score: 3/10**
+### Unit Tests
+**Score: 0.0/10 — Not Applicable**
 
-The repository contains **zero** GitHub Actions workflows. For an organization-level `.github` repo, this represents a major missed opportunity. This repo should serve as the central hub for:
+This repository contains no source code. There are no programming language files, no test files, and no test frameworks. This dimension is structurally not applicable for an org-level meta-repository.
 
-- **Reusable workflows** (`workflow_call`) for common CI patterns
-- **Composite actions** for shared build steps
-- **Organization-wide workflow defaults**
+### Integration/E2E Tests
+**Score: 0.0/10 — Not Applicable**
+
+No testable components exist. The repository contains only YAML and Markdown files serving as GitHub templates. No integration or E2E testing infrastructure is present or needed.
+
+### Build Integration
+**Score: 0.0/10 — Not Applicable**
+
+No build system exists. There are no Makefiles, Dockerfiles, Containerfiles, or build scripts. The repository produces no build artifacts.
+
+### Image Testing
+**Score: 0.0/10 — Not Applicable**
+
+No container images are built from this repository. No Dockerfiles or Containerfiles are present.
+
+### Coverage Tracking
+**Score: 0.0/10 — Not Applicable**
+
+No source code exists to measure coverage against. No `.codecov.yml` or coverage configuration is present.
+
+### CI/CD Automation
+**Score: 1.0/10**
+
+**What exists:**
+- `PULL_REQUEST_TEMPLATE.md` — provides a default PR template with a testing checklist for the entire org. This is a positive contribution to org-wide quality process.
+- `ISSUE_TEMPLATE/bug_report.yaml` — structured bug report form with environment fields (OpenShift version, infrastructure, browser)
+- `ISSUE_TEMPLATE/feature_request.yaml` — structured feature request form
 
 **What's missing:**
-| Workflow Type | Purpose | Benefit |
-|---|---|---|
-| `lint.yml` | Reusable linting workflow | Consistent code quality across repos |
-| `test.yml` | Reusable test runner | Standardized test execution |
-| `security-scan.yml` | Trivy/CodeQL scanning | Org-wide security baseline |
-| `container-build.yml` | Image build + push | Consistent container practices |
-| `label-sync.yml` | Org-wide label standards | Consistent issue triage |
+- No `.github/workflows/` directory — zero CI/CD workflows
+- No automated validation of template syntax
+- No markdown or YAML linting
+- No PR checks of any kind
 
-### Test Coverage
-**Score: N/A**
+**PR Template Analysis:**
+The PR template enforces three merge criteria:
+1. Squashed commits with meaningful messages
+2. Testing instructions in PR body
+3. Manual developer testing verification
 
-No source code exists in this repository. No tests are applicable.
+This is a solid minimal checklist, but it's entirely manual — no automated enforcement.
 
-### Code Quality
-**Score: N/A**
+**Issue Template Analysis:**
+- Bug report uses YAML forms (modern GitHub feature) with structured fields
+- Feature request is well-structured with description, problem context, alternatives, and additional context
+- Bug report has a stale OpenShift version dropdown (lists platforms, not versions)
 
-No source code to lint or analyze.
+### Static Analysis
 
-### Container Images
-**Score: N/A**
+**Score: 0.0/10**
 
-No Dockerfiles or container configurations.
+#### Linting
+No linting configuration exists for any file type. Given this repo contains only YAML and Markdown, relevant linters would be:
+- `yamllint` for YAML validation
+- `markdownlint` for Markdown formatting
+- GitHub issue template schema validation
 
-### Security
-**Score: 2/10**
+#### FIPS Compatibility
+Not applicable — no source code or cryptographic operations.
 
-- No SECURITY.md (vulnerability disclosure process)
-- No CodeQL configuration
-- No Dependabot configuration
-- No secret scanning configuration
-- No branch protection rules documented
+#### Dependency Alerts
+No `.github/dependabot.yml` or `renovate.json` present. Not strictly needed since there are no code dependencies, but Dependabot could track GitHub Actions versions if workflows were added.
 
-### Community Health Files
+### Agent Rules
 
-| File | Status | Notes |
-|------|--------|-------|
-| `LICENSE` | Present | Apache 2.0 |
-| `PULL_REQUEST_TEMPLATE.md` | Present | Basic; needs test checklist |
-| `ISSUE_TEMPLATE/bug_report.yaml` | Present | YAML form with validation |
-| `ISSUE_TEMPLATE/feature_request.yaml` | Present | YAML form with validation |
-| `profile/README.md` | Present | Org overview with links |
-| `SECURITY.md` | **Missing** | No vulnerability disclosure process |
-| `CONTRIBUTING.md` | **Missing** | No contribution guidelines |
-| `CODE_OF_CONDUCT.md` | **Missing** | No code of conduct |
-| `CODEOWNERS` | **Missing** | No default code owners |
-| `FUNDING.yml` | **Missing** | No funding configuration |
-| `SUPPORT.md` | **Missing** | No support documentation |
-
-### Issue Templates Analysis
-
-**Bug Report** (`bug_report.yaml`):
-- Uses modern YAML form format
-- Includes OpenShift version dropdown
-- Includes infrastructure dropdown (Baremetal, OSP, RHV, AWS)
-- Browser selection for UI bugs
-- Log output field with shell rendering
-- Workaround field
-- Labels: `kind/bug`
-- **Gap**: No severity/priority field; no component selector
-
-**Feature Request** (`feature_request.yaml`):
-- Uses YAML form format
-- Labels: `kind/enhancement`, `feature`, `untriaged`
-- Has problem-relation field and alternatives section
-- **Gap**: No acceptance criteria template; no prioritization guidance
-
-**Missing Templates**:
-- Security vulnerability report (should use private reporting)
-- Documentation improvement
-- Release/version-specific issue
-
-### PR Template Analysis
-
-**Current content** (`PULL_REQUEST_TEMPLATE.md`):
-- Description section
-- Testing description (free-text)
-- Merge criteria checklist (squash, testing instructions, manual testing)
-
-**Gaps**:
-- No structured test type checklist (unit/integration/e2e)
-- No link to contributing guidelines
-- No Jira/issue linking requirement
-- No breaking change notification
-- No documentation update checkbox
-- No reviewer assignment guidance
-
-### Agent Rules (Agentic Flow Quality)
-**Score: 0/10**
+**Score: 0.0/10**
 
 - **Status**: Missing
-- **Coverage**: No agent rules exist
+- **CLAUDE.md**: Not present
+- **AGENTS.md**: Not present
+- **.claude/ directory**: Not present
+- **Coverage**: No test type rules (no tests exist)
 - **Quality**: N/A
-- **Gaps**: No CLAUDE.md, no .claude/ directory, no rules for test creation, no AI development standards
-- **Recommendation**: Create org-level `.claude/rules/` with testing standards that can serve as a template for child repos. Use `/test-rules-generator` on the most mature repos (odh-dashboard, kserve) and consolidate patterns here.
+- **Gaps**: Complete absence of agent rules
+- **Recommendation**: Add a basic `CLAUDE.md` explaining this repo's purpose (org-level templates) and guidelines for modifying templates (e.g., test YAML forms locally, update version dropdowns, maintain consistency across templates)
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Create reusable GitHub Actions workflows**
-   - `lint.yml` — Go/Python/TypeScript linting with `workflow_call`
-   - `test.yml` — Reusable test runner
-   - `security-scan.yml` — Trivy + CodeQL
-   - `container-build.yml` — Standard image build + push
-   - This eliminates CI/CD duplication across 50+ repos
+1. **Fix the bug report template's OpenShift version dropdown** — The dropdown conflates platforms with versions and uses outdated terminology ("CodeReady Containers" → "Red Hat OpenShift Local"). Replace with a free-text input or update options to current OCP versions.
 
-2. **Add SECURITY.md**
-   - Vulnerability disclosure process
-   - Security contact information
-   - Response timeline commitments
-   - Supported version matrix
-
-3. **Add CONTRIBUTING.md**
-   - Test coverage expectations (mandatory for all PRs)
-   - Code review standards
-   - Quality gates before merge
+2. **Add a CI workflow to validate YAML and Markdown** — Even minimal linting would catch syntax errors in templates before they affect the entire org's issue/PR workflow.
 
 ### Priority 1 (High Value)
 
-4. **Enhance PR template with structured test checklist**
-   - Add checkboxes for unit, integration, e2e, manual testing
-   - Add breaking change notification
-   - Add documentation update checkbox
-   - Link to contributing guidelines
+3. **Add a CODEOWNERS file** — Ensure template changes are reviewed by the Build and Release team or community governance leads.
 
-5. **Create org-level agent rules (.claude/rules/)**
-   - Define testing standards for AI-assisted development
-   - Unit test patterns for Go operators, Python ML code, TypeScript frontends
-   - Integration test requirements
-   - Quality gates and checklists
+4. **Add a CONTRIBUTING.md** — Provide org-level contribution guidelines that all repos inherit by default.
 
-6. **Add issue template for security vulnerabilities**
-   - Use GitHub's private vulnerability reporting feature
-   - Or create a template that redirects to private channels
+5. **Add markdown linting** — Validate PR template formatting consistency.
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Add CODE_OF_CONDUCT.md**
-   - Adopt Contributor Covenant or Red Hat standard
+6. **Add CLAUDE.md** — Guide AI agents on how to properly maintain org-level templates.
 
-8. **Add Dependabot configuration**
-   - Organization-wide dependency update settings
+7. **Add a SECURITY.md** — Provide org-level security reporting guidelines.
 
-9. **Add auto-labeling workflow**
-   - Triage incoming issues automatically
-   - Route bugs vs. features to appropriate teams
+8. **Add default labels configuration** — Use a label sync action to standardize labels across the org.
 
-10. **Add label sync workflow**
-    - Standardize labels across all repos
-    - Enforce consistent triage categories
+9. **Consider adding a FUNDING.yml** — If the project accepts sponsorship or has funding links.
 
 ## Comparison to Gold Standards
 
-| Capability | opendatahub-io/.github | odh-dashboard | notebooks | Best Practice |
-|---|---|---|---|---|
-| Reusable workflows | None | N/A (uses own) | N/A (uses own) | Org-level reusable workflows |
-| Issue templates | 2 YAML forms | Custom | Custom | 4+ templates (bug, feature, security, docs) |
-| PR template | Basic | Structured | Basic | Structured with test checklist |
-| SECURITY.md | Missing | Present | Missing | Required for open source |
-| CONTRIBUTING.md | Missing | Present | Present | Required for open source |
-| CODE_OF_CONDUCT.md | Missing | Missing | Missing | Recommended |
-| Agent rules | Missing | Present (.claude/) | Missing | Org-level standards |
-| Org profile | Present | N/A | N/A | Present with links |
+| Feature | .github (This Repo) | odh-dashboard | notebooks | Best Practice |
+|---------|---------------------|---------------|-----------|---------------|
+| PR Template | Basic checklist | Comprehensive with automated checks | Present | Automated enforcement |
+| Issue Templates | YAML forms (2 templates) | Multiple specialized templates | Present | Schema-validated YAML forms |
+| CI/CD Workflows | None | 20+ workflows | 10+ workflows | At minimum lint/validate |
+| Static Analysis | None | ESLint, TypeScript strict | Linting present | YAML + Markdown linting |
+| Agent Rules | None | CLAUDE.md + .claude/rules/ | None | CLAUDE.md with guidelines |
+| CODEOWNERS | None | Present | Present | Required for shared repos |
 
 ## File Paths Reference
 
-| File | Purpose |
-|------|---------|
-| `PULL_REQUEST_TEMPLATE.md` | Default PR template for all org repos |
-| `ISSUE_TEMPLATE/bug_report.yaml` | Bug report issue form |
-| `ISSUE_TEMPLATE/feature_request.yaml` | Feature request issue form |
-| `profile/README.md` | Organization profile page |
-| `LICENSE` | Apache 2.0 license |
-
-## Summary
-
-The `opendatahub-io/.github` repository is significantly underutilized. As the organization-level defaults repo, it should serve as the central hub for:
-
-1. **Reusable CI/CD workflows** — Eliminate duplication across 50+ repos
-2. **Community health files** — SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md
-3. **Quality standards** — Testing requirements, PR review standards
-4. **Agent development rules** — Org-wide AI development quality guardrails
-
-Currently it only provides basic issue and PR templates plus an organization profile. Investing 30-40 hours to build out this repo would have multiplicative impact across the entire opendatahub-io organization.
+| File | Purpose | Issues Found |
+|------|---------|-------------|
+| `PULL_REQUEST_TEMPLATE.md` | Default org-wide PR template | Manual-only checklist, no automated enforcement |
+| `ISSUE_TEMPLATE/bug_report.yaml` | Bug report form | Stale OpenShift version dropdown, outdated platform names |
+| `ISSUE_TEMPLATE/feature_request.yaml` | Feature request form | Well-structured, no issues found |
+| `profile/README.md` | Org profile page | Adequate, links to community resources |
+| `LICENSE` | Apache 2.0 license | No issues |

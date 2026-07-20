@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:25 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 04:33 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/opendatahub.io-redirects</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="446.73409799999996"
+                                stroke-dashoffset="486.31813199999993"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">2.1</div>
+                        <div class="score-value">1.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No tests of any kind — zero test files in the repository</div>
+                            <div class="scorecard-status">No test files exist — zero test coverage</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E testing; no redirect validation</div>
+                            <div class="scorecard-status">No integration or E2E tests of any kind</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">GitLab CI builds Jekyll site but no PR-time validation or build checks</div>
+                            <div class="scorecard-status">GitLab CI builds Jekyll site but no validation beyond build success</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No container images — static site deployed via GitLab Pages</div>
+                            <div class="scorecard-status">No container images — not applicable for a static Jekyll site</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tracking — no code to cover</div>
+                            <div class="scorecard-status">No coverage tooling configured</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Minimal GitLab CI with build+deploy; outdated Ruby 2.3 base image</div>
+                            <div class="scorecard-status">Minimal GitLab CI with build/deploy stages; uses outdated Ruby 2.3 image</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No linting, no dependency alerts, no pre-commit hooks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, .claude/ directory, or agent rules</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +416,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Outdated and insecure Ruby 2.3 base image</div>
-                            <p>Ruby 2.3 reached EOL in March 2019 — known security vulnerabilities in the build environment</p>
+                            <div class="item-description">Outdated Ruby 2.3 base image in CI</div>
+                            <p>Ruby 2.3 reached EOL in March 2019 — severe security risk and gem compatibility issues</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Outdated Jekyll 3.8.5 and dependencies with known CVEs</div>
-                            <p>kramdown 1.17 has CVE-2020-14001; all gems are 5+ years behind</p>
+                            <div class="item-description">No redirect validation tests</div>
+                            <p>Broken redirects go undetected until users hit 404s on the live site</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No redirect validation tests</div>
-                            <p>Broken redirects could silently fail with no detection mechanism</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No branch protection or PR workflow</div>
-                            <p>No CI runs on non-master branches validate changes before merge</p>
+                            <div class="item-description">No dependency management or alerts</div>
+                            <p>Outdated gems with known vulnerabilities are never flagged</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No GitHub Actions CI (repo is on GitHub, CI is on GitLab)</div>
+                            <p>PRs on GitHub have no status checks — no build validation before merge</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +461,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Upgrade Ruby base image from 2.3 to 3.2+</div>
-                            <p>Eliminate known security vulnerabilities in the build pipeline</p>
+                            <div class="item-description">Update CI base image from Ruby 2.3 to Ruby 3.x</div>
+                            <p>Eliminate EOL runtime risk and unblock modern gem versions</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">30 minutes</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add Dependabot for Bundler ecosystem</div>
+                            <p>Automated security alerts for gem dependencies</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">30 minutes</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add a GitHub Actions workflow mirroring GitLab CI</div>
+                            <p>PR status checks on the platform where the repo actually lives</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Pin and update Gemfile.lock dependencies</div>
-                            <p>Resolve kramdown CVE-2020-14001 and other known vulnerabilities</p>
+                            <div class="item-description">Add HTML-proofer to validate redirects post-build</div>
+                            <p>Catch broken redirect URLs before deploy</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add a simple HTML link-checker CI step</div>
-                            <p>Validate that redirect URLs are reachable and respond with 200</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Evaluate migrating to a simpler redirect mechanism</div>
-                            <p>Replace entire Jekyll site with a lightweight nginx/Caddy config or DNS-level redirect</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Upgrade Ruby base image from 2.3 (EOL 2019) to 3.2+ to eliminate build-environment CVEs</li><li>Update all gem dependencies — kramdown 1.17 has CVE-2020-14001 (arbitrary code execution)</li></ul>
+                            <ul><li>Update Ruby base image from EOL 2.3 to a supported 3.x release</li><li>Add GitHub Actions CI workflow with Jekyll build + redirect validation</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add redirect validation test that curls the target URL and checks HTTP 200/301</li><li>Evaluate whether this entire repo can be replaced by a DNS CNAME or nginx redirect rule</li></ul>
+                            <ul><li>Add html-proofer or custom redirect validation to CI</li><li>Enable Dependabot for bundler ecosystem</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add CLAUDE.md with contribution guidelines</li><li>Move CI to GitHub Actions if the repo is primarily hosted on GitHub</li></ul>
+                            <ul><li>Add basic CLAUDE.md with repo purpose and contribution guidelines</li><li>Consider archiving this repo if redirects can be handled at the DNS/CDN level</li></ul>
                         </div>
                     </div>
                 </div>

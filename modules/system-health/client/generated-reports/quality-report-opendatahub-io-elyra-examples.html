@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 03:54 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 05:42 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/elyra-examples</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="429.76951199999996"
+                                stroke-dashoffset="480.66326999999995"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">2.4</div>
+                        <div class="score-value">1.5</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Only 3 test files covering connector sub-packages; no tests for pipeline scripts or notebooks</div>
+                            <div class="scorecard-status">3 pytest test files for catalog connectors only; tests not executed in CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E tests exist; no pipeline execution validation</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No integration or E2E test suites; component test dirs contain only sample data</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No PR-time image build or Konflux simulation; Dockerfiles use deprecated Python 3.7</div>
+                            <div class="scorecard-status">No PR-time build validation; Dockerfiles exist but are never built in CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">4 Dockerfiles present but no runtime validation, no multi-arch, no startup tests</div>
+                            <div class="scorecard-status">4 single-stage Dockerfiles using outdated python:3.7-alpine; no runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tooling, no codecov integration, no coverage thresholds</div>
+                            <div class="scorecard-status">No coverage tooling, thresholds, or PR reporting configured</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">Single workflow runs linting only; no test execution, no security scans, outdated Python matrix</div>
+                            <div class="scorecard-status">Single workflow runs linting only; outdated Python matrix and action versions</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">flake8 configured with nbqa for notebooks; no Dependabot, pre-commit, or type checking</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
                         </div>
                     </div>
                 </div>
@@ -411,51 +416,51 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">CI only runs linting - no tests execute on PR</div>
-                            <p>Regressions in connector logic go undetected until manual testing; broken code can merge freely</p>
+                            <div class="item-description">Tests exist but are never executed in CI</div>
+                            <p>3 connector test suites with pytest are defined but the CI workflow only runs linting — regressions go undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No integration or E2E testing</div>
+                            <p>Pipeline definitions and notebook examples are never validated end-to-end; broken examples shipped to users</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
                             <div class="item-description">No coverage tracking or enforcement</div>
-                            <p>No visibility into what code is tested; test coverage can silently degrade</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No security scanning (Trivy, CodeQL, Snyk, Gitleaks)</div>
-                            <p>Vulnerability in dependencies or code not caught; supply chain risk</p>
+                            <p>No visibility into what code is tested; no gates to prevent coverage regression</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Dockerfiles use Python 3.7 (EOL since June 2023)</div>
-                            <p>Running on unsupported Python; no security patches; incompatible with modern libraries</p>
+                            <div class="item-description">Dockerfiles use outdated base images (python:3.7-alpine)</div>
+                            <p>Python 3.7 reached EOL Jan 2023; alpine base is not FIPS-capable; potential security vulnerabilities</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No integration or E2E tests for pipeline examples</div>
-                            <p>Pipeline examples may be broken without anyone knowing; user experience degrades</p>
+                            <div class="item-description">No PR-time build validation for container images</div>
+                            <p>Dockerfile changes not validated until manual testing; broken images can be merged</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-16 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">Repository appears unmaintained (last commit June 2023)</div>
-                            <p>Stale examples mislead users; dependency versions drift and become vulnerable</p>
+                        <li class="item-card medium">
+                            <div class="item-description">CI uses outdated GitHub Actions (checkout@v2, setup-python@v1)</div>
+                            <p>Missing security fixes and features from newer action versions; deprecated Node.js runtimes</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">Ongoing</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -473,42 +478,42 @@
                         
                         <li class="item-card ">
                             <div class="item-description">Add pytest execution to CI workflow</div>
-                            <p>The 3 existing connector test suites will run on every PR, catching regressions</p>
+                            <p>Immediately validate 3 existing connector test suites on every PR</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Enable Dependabot for dependency alerts</div>
+                            <p>Automated security and dependency updates with PR generation</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Update GitHub Actions versions (checkout@v2 -&gt; v4, setup-python@v1 -&gt; v5)</div>
-                            <p>Fix deprecation warnings, improve CI reliability and speed</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Update Python matrix to 3.9-3.12 (drop EOL 3.7, 3.8)</div>
-                            <p>Test on supported Python versions; unblock modern dependency versions</p>
+                            <div class="item-description">Update GitHub Actions to current versions</div>
+                            <p>Fix deprecation warnings and security improvements (checkout@v4, setup-python@v5)</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning workflow</div>
-                            <p>Detect known CVEs in base images and dependencies</p>
+                            <div class="item-description">Add codecov integration with pytest-cov</div>
+                            <p>Coverage visibility and PR reporting for connector packages</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add basic codecov integration</div>
-                            <p>Get visibility into test coverage across the connector packages</p>
+                            <div class="item-description">Update Python matrix to supported versions (3.10-3.12)</div>
+                            <p>Test against actively supported Python versions; drop EOL 3.7/3.8</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -525,15 +530,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Run existing pytest tests in CI - 3 test files exist but are never executed in the workflow</li><li>Update Dockerfiles from Python 3.7 to 3.11+ to address EOL security risk</li><li>Update GitHub Actions to current versions (checkout@v4, setup-python@v5)</li></ul>
+                            <ul><li>Run existing pytest suites in CI — the tests exist but are never executed in the workflow</li><li>Update Dockerfile base images from python:3.7-alpine to UBI-based or python:3.12-slim</li><li>Add coverage tracking with pytest-cov and codecov integration</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add codecov integration with coverage reporting on PRs</li><li>Add Trivy or Snyk scanning for container images and Python dependencies</li><li>Add notebook validation tests (nbval or similar) to verify example notebooks execute</li><li>Add pre-commit hooks for consistent code quality enforcement</li></ul>
+                            <ul><li>Add notebook validation tests that verify .ipynb files execute without errors</li><li>Add pipeline definition validation that checks .pipeline files parse correctly</li><li>Enable Dependabot for pip ecosystem dependency updates</li><li>Add pre-commit hooks for consistent local and CI linting</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Create comprehensive agent rules (.claude/rules/) for test automation guidance</li><li>Add pipeline execution smoke tests against a local KFP or Airflow environment</li><li>Modernize project config (migrate from setup.py to pyproject.toml)</li><li>Add CODEOWNERS file for review assignment</li></ul>
+                            <ul><li>Create CLAUDE.md with test creation and contribution guidelines</li><li>Add container image build validation in PR workflow</li><li>Add multi-architecture Docker builds for KFP components</li><li>Modernize linting from flake8 to ruff for better performance and broader checks</li></ul>
                         </div>
                     </div>
                 </div>

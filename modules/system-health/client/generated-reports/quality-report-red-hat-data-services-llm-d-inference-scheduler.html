@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 05:01 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 08:11 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/llm-d-inference-scheduler</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#28a745"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="67.85834399999993"
+                                stroke-dashoffset="96.13265399999995"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">8.8</div>
+                        <div class="score-value">8.3</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">237 test files, 74K lines of test code (1.24x test-to-code ratio), race detection, Ginkgo/Gomega + testify</div>
+                            <div class="scorecard-status">237 test files / 380 source files (62% ratio). Go testing + testify + Ginkgo/Gomega. Race detection enabled. Comprehensive plugin-level coverage.</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Hermetic integration (envtest), 8-matrix E2E suites in Kind, disruption testing, multi-image orchestration</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
+                            <div class="scorecard-status">Extensive E2E with Kind clusters, hermetic integration via envtest, multi-suite matrix (traffic, metrics, disruption, extended, PD variants). Ginkgo label-filtered parallel suites.</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">PR builds images and runs E2E in Kind; Konflux Tekton pipelines exist but no PR-time Konflux simulation</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">PR-time Docker image builds for EPP, sidecar, builder. Tekton/Konflux pipelines for downstream. Helm chart verification. No PR-time Konflux simulation in GH Actions.</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Trivy HIGH/CRITICAL gate, multi-arch (AMD64+ARM64), distroless nonroot base, SARIF upload</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">Multi-stage builds, distroless base (upstream) and UBI9 (Konflux). E2E loads and runs built images in Kind. No standalone container health/startup tests.</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Custom regression gate (2% tolerance), baseline per branch, GitHub Step Summary integration</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Per-component coverprofile (epp.out, sidecar.out). Coverage comparison against main baseline with regression detection. Coverage gate enforced on PRs. No external dashboard (Codecov).</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">21 workflows, path filtering, concurrency control, Go caching, signed commits, Dependabot+Renovate</div>
+                            <div class="scorecard-status">21 workflows. PR-triggered tests, lint, build, dependency review, signed commits. Concurrency control with cancel-in-progress. Go module and build caching. Matrix strategy for E2E suites. Path-based change filtering.</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">golangci-lint v2 with 22+ linters. typos checker. govulncheck. Dependabot (gomod, actions, docker) + Renovate for Konflux. Pre-commit hooks. math/rand usage in non-crypto context (minor FIPS note). Konflux sidecar uses -tags strictfipsruntime.</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Comprehensive AGENTS.md with operating rules, code style, and logging conventions; missing .claude/rules/ for test patterns</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Comprehensive AGENTS.md covering operating rules, code style, logging conventions, Git workflow, PR standards. Gemini settings.json present. No .claude/rules/ directory but AGENTS.md is thorough and actionable.</div>
                         </div>
                     </div>
                 </div>
@@ -411,27 +416,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card medium">
-                            <div class="item-description">No PR-time Konflux build simulation</div>
-                            <p>Konflux-specific build issues (UBI base, CGO_ENABLED=1, pinned digests) only discovered post-merge in Tekton pipelines</p>
+                            <div class="item-description">No external coverage dashboard (Codecov/Coveralls)</div>
+                            <p>Coverage trends over time not visible to contributors. PR coverage comments not generated automatically.</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No SBOM generation or image signing</div>
-                            <p>Supply chain compliance gap; no attestation for image provenance</p>
+                            <div class="item-description">math/rand usage in scheduling plugins without FIPS review</div>
+                            <p>9 files import math/rand. While used for non-crypto purposes (scheduling randomization), FIPS audits may flag these. Upstream EPP Dockerfile uses CGO_ENABLED=0 without FIPS tags.</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card low">
-                            <div class="item-description">No explicit coverage threshold</div>
-                            <p>Regression gate catches drops but doesn&#x27;t enforce a minimum floor (e.g., 60%+)</p>
+                            <div class="item-description">No standalone container runtime validation</div>
+                            <p>Built images are tested only via E2E Kind deployment. No isolated container startup/health check tests.</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -448,35 +453,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add minimum coverage threshold to compare-coverage.sh</div>
-                            <p>Prevent slow coverage erosion by enforcing a baseline floor</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1 hour</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Cosign image signing to release workflow</div>
-                            <p>Supply chain attestation for all released images</p>
+                            <div class="item-description">Add Codecov integration for PR coverage comments and trend tracking</div>
+                            <p>Coverage profiles already generated; just add codecov-action upload step and .codecov.yml thresholds</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create .claude/rules/ with test pattern docs</div>
-                            <p>Improve AI-generated test quality and consistency with existing patterns</p>
+                            <div class="item-description">Add .claude/rules/ directory with test-specific rules</div>
+                            <p>AGENTS.md is excellent for general guidance; dedicated test rules would help AI agents generate framework-correct tests (Ginkgo vs testify patterns, label conventions)</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add secret detection (gitleaks) to CI</div>
-                            <p>Catch accidental secret commits before merge</p>
+                            <div class="item-description">Add container startup smoke test to CI</div>
+                            <p>docker run + health endpoint check after image build would catch startup failures before E2E</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -493,15 +490,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add PR-time validation of Konflux Dockerfiles (build Dockerfile.epp.konflux and Dockerfile.sidecar.konflux on PRs)</li><li>Add Cosign image signing and SBOM generation to the release pipeline</li></ul>
+                            <ul><li>Add Codecov integration with .codecov.yml and coverage-action upload to make coverage trends visible and enforce thresholds in PRs</li><li>Review math/rand usage in scheduling plugins for FIPS compliance documentation; consider crypto/rand or document non-crypto context explicitly</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Set a minimum coverage threshold (e.g., 60%) in addition to the regression gate</li><li>Create .claude/rules/ directory with test creation patterns (unit, integration, e2e, benchmark)</li><li>Add gitleaks or TruffleHog for secret detection in PRs</li></ul>
+                            <ul><li>Add container startup validation step in ci-pr-checks.yaml after image build (docker run --rm + health probe check)</li><li>Create .claude/rules/ directory with test pattern rules (when to use Ginkgo vs testify, label conventions, hermetic vs cluster test patterns)</li><li>Add FIPS build tags to upstream EPP Dockerfile (currently only Konflux sidecar has -tags strictfipsruntime)</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add CodeQL or Semgrep SAST scanning for deeper code security analysis</li><li>Implement contract testing for the plugin framework interfaces</li><li>Add load/stress testing for the scheduling and routing hot paths</li></ul>
+                            <ul><li>Add benchmarking regression detection in CI (beyond the existing tokenizer benchmark)</li><li>Consider adding contract tests for the plugin interface boundaries</li><li>Add coverage badge to README.md for visibility</li></ul>
                         </div>
                     </div>
                 </div>

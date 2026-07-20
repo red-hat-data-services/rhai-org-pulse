@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:11 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 05:17 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/mlflow-go</h2>
         </header>
 
@@ -365,37 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Excellent unit test coverage with 149+ test functions, table-driven tests, httptest mocks, and race detector enabled</div>
+                            <div class="scorecard-status">Strong unit test coverage with table-driven tests and httptest mocking</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Strong integration suite testing against live MLflow (SQLite + PostgreSQL + midstream), build-tag isolation, CI-automated lifecycle</div>
+                            <div class="scorecard-status">Comprehensive integration suite with SQLite, PostgreSQL, and midstream workspace testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No Dockerfile, no PR-time image build, no Konflux simulation, no container validation</div>
+                            <div class="scorecard-status">No Dockerfile, no PR-time image builds, no Konflux simulation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">Pure Go library - no container images built or tested; no runtime image validation</div>
+                            <div class="scorecard-status">No container images built or tested — pure Go SDK library</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No coverage file generation, no codecov/coveralls integration, no coverage thresholds or PR reporting</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No coverage generation, no codecov integration, no coverage gates</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Single well-structured workflow with lint/unit/integration jobs; missing concurrency control, caching, and coverage upload</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
+                            <div class="scorecard-status">Good workflow structure with 5 parallel jobs but lacks caching, concurrency control, and timeout guards</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Strong golangci-lint v2 config with 7 extra linters; missing Dependabot, pre-commit hooks, and FIPS build tags</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No .claude directory, no CLAUDE.md, no agent rules; .gitignore actively excludes them</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory present</div>
                         </div>
                     </div>
                 </div>
@@ -411,8 +416,8 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No test coverage tracking or enforcement</div>
-                            <p>Cannot measure or enforce minimum coverage; regressions go undetected</p>
+                            <div class="item-description">No code coverage tracking or enforcement</div>
+                            <p>Cannot measure test quality, regressions go undetected, no PR-level coverage feedback</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
@@ -420,34 +425,26 @@
                         </li>
                         <li class="item-card medium">
                             <div class="item-description">No container image or build integration testing</div>
-                            <p>If project ever ships as a container (e.g., sidecar, gRPC bridge), no validation infrastructure exists</p>
+                            <p>When this SDK is packaged into container images downstream, build failures are discovered post-merge</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No security scanning in CI</div>
-                            <p>Dependency vulnerabilities, secret leaks, and SAST issues not detected before merge</p>
+                            <div class="item-description">No Dependabot or Renovate for dependency management</div>
+                            <p>Dependency vulnerabilities and Go module updates require manual monitoring</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No agent rules for AI-assisted development</div>
-                            <p>AI agents generate inconsistent tests; no guidance on project patterns, naming, or frameworks</p>
+                            <div class="item-description">No agent rules for AI-assisted test creation</div>
+                            <p>AI agents lack guidance on test patterns, frameworks, and conventions specific to this project</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">3-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card low">
-                            <div class="item-description">CI workflow lacks concurrency control</div>
-                            <p>Multiple PR pushes can run redundant CI jobs, wasting resources</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">30 minutes</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,40 +461,32 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add coverage generation and upload to codecov</div>
-                            <p>Instant visibility into coverage trends and per-PR delta reporting</p>
+                            <div class="item-description">Add --coverprofile to unit test target and integrate Codecov</div>
+                            <p>Immediate visibility into test coverage with PR-level reporting and threshold enforcement</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add go-vuln-check or Trivy scanning to CI</div>
-                            <p>Detect known vulnerabilities in Go dependencies before merge</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add concurrency control to CI workflow</div>
-                            <p>Cancel stale CI runs when a new push arrives on the same PR</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Dependabot or Renovate for dependency updates</div>
-                            <p>Automated security patches and dependency freshness</p>
+                            <div class="item-description">Enable Dependabot for Go modules</div>
+                            <p>Automated PRs for dependency updates and security patches</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Generate CLAUDE.md and .claude/rules/ for test patterns</div>
-                            <p>Consistent AI-generated tests that follow project conventions</p>
+                            <div class="item-description">Add CI concurrency control and caching</div>
+                            <p>Faster CI runs, prevent duplicate workflow runs on force-pushes</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Generate CLAUDE.md with test creation rules</div>
+                            <p>AI agents can consistently generate tests matching project conventions</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -517,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add coverage generation (-coverprofile) and upload to Codecov with thresholds</li><li>Add govulncheck or Trivy to CI for dependency vulnerability scanning</li><li>Add gosec as a standalone CI step (currently only via golangci-lint with G104 excluded)</li></ul>
+                            <ul><li>Add coverage generation (--coverprofile) and Codecov integration with minimum threshold (e.g., 70%)</li><li>Enable Dependabot for gomod and GitHub Actions ecosystems</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add concurrency control and Go module caching to CI workflow</li><li>Create .claude/rules/ with unit-test and integration-test patterns from existing code</li><li>Add Dependabot/Renovate for automated dependency updates</li><li>Add pre-commit hooks for fmt/vet/lint local enforcement</li></ul>
+                            <ul><li>Add CI caching (actions/cache for Go modules), concurrency control, and timeout-minutes on all jobs</li><li>Create CLAUDE.md and .claude/rules/ with unit test and integration test creation guidelines</li><li>Add pre-commit hooks for gofmt, go vet, and go mod tidy</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add benchmarks for HTTP client and protobuf serialization paths</li><li>Add fuzz testing for template substitution and error parsing</li><li>Create Dockerfile for potential sidecar/bridge deployment scenarios</li><li>Add CodeQL or Semgrep for deeper SAST coverage</li></ul>
+                            <ul><li>Add Dockerfile for SDK development container (optional for library projects)</li><li>Add FIPS build tags and boringcrypto support in CI for Red Hat downstream compatibility</li><li>Add race detector and fuzz testing targets for security-sensitive code paths</li></ul>
                         </div>
                     </div>
                 </div>

@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:31 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 04:50 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/runbooks</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="486.31813199999993"
+                                stroke-dashoffset="559.831338"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">1.4</div>
+                        <div class="score-value">0.1</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,42 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No code or tests — documentation-only repository</div>
+                            <div class="scorecard-status">N/A — documentation-only repository with no source code</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E testing infrastructure</div>
+                            <div class="scorecard-status">N/A — no code or services to integration-test</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No build process — no Dockerfiles, Makefiles, or build scripts</div>
+                            <div class="scorecard-status">N/A — no build artifacts; purely Markdown content</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No container images built from this repository</div>
+                            <div class="scorecard-status">N/A — no container images produced</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tooling — no code to measure</div>
+                            <div class="scorecard-status">N/A — no code to measure coverage against</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No CI/CD workflows — no .github/workflows/, Makefile, or CI config</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No CI/CD workflows exist — no markdown linting, link checking, or spell checking</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">OWNERS files provide review governance but no automated linting or link validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, .claude/, or agent rules present</div>
-                        </div>
-                        <div class="scorecard-item">
-                            <h3>Documentation Quality</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Template exists but only one component covered; no validation</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
                         </div>
                     </div>
                 </div>
@@ -416,35 +416,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No CI/CD pipeline for content validation</div>
-                            <p>Runbook quality is entirely dependent on human review — broken links, invalid shell commands, and formatting errors go undetected</p>
+                            <div class="item-description">No CI/CD workflows at all</div>
+                            <p>Broken links, formatting errors, and inconsistencies are only caught by human review</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Minimal component coverage — only Kueue</div>
-                            <p>Most ODH components (KServe, Dashboard, Model Mesh, TrustyAI, CodeFlare, etc.) have no runbooks</p>
+                            <div class="item-description">No markdown linting or link validation</div>
+                            <p>Runbook quality degrades silently as content grows; dead links can mislead operators during incidents</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">40+ hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No automated linting or link validation</div>
-                            <p>Markdown syntax errors, broken oc commands, and stale references accumulate silently</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
+                        <li class="item-card high">
+                            <div class="item-description">Only one component (Kueue) has runbooks</div>
+                            <p>Most RHOAI alerts have no documented response procedures</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">Ongoing — team-by-team contribution</span>
+                            </div>
+                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">No structured metadata in runbooks</div>
-                            <p>Cannot programmatically index, search, or integrate runbooks into alerting systems</p>
+                            <div class="item-description">No spell checking or prose linting</div>
+                            <p>Inconsistent language and typos erode trust in operational documentation</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -461,35 +461,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add markdownlint CI workflow</div>
-                            <p>Catches formatting issues, enforces consistent runbook structure</p>
+                            <div class="item-description">Add a GitHub Actions workflow for markdownlint + link checking</div>
+                            <p>Catches broken formatting and dead links on every PR automatically</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add link checker GitHub Action</div>
-                            <p>Detects broken links and stale references automatically on PRs</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1 hour</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add CODEOWNERS file</div>
-                            <p>Ensures correct reviewers are auto-assigned for new component runbooks</p>
+                            <div class="item-description">Add .github/dependabot.yml for GitHub Actions version pinning</div>
+                            <p>Keeps future CI workflow dependencies up to date</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add shellcheck validation for embedded scripts</div>
-                            <p>Validates that oc/kubectl commands in runbooks are syntactically correct</p>
+                            <div class="item-description">Add a CLAUDE.md with runbook authoring guidelines</div>
+                            <p>Enables AI-assisted runbook creation that follows the template standard</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add a CODEOWNERS file to auto-assign reviewers per component</div>
+                            <p>Ensures the right team reviews runbooks for their alerts</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -506,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Implement a basic CI workflow with markdownlint and link checking to prevent quality regressions</li><li>Create a content coverage plan to onboard runbooks for critical ODH components (KServe, Dashboard, Model Controller, TrustyAI)</li></ul>
+                            <ul><li>Create a CI workflow with markdownlint, markdown-link-check, and optional spell checking to catch errors before merge</li><li>Expand runbook coverage beyond Kueue — prioritize components with critical alerts (operator, dashboard, model serving)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add YAML frontmatter to runbooks for structured metadata (severity, component, alert name) enabling programmatic integration</li><li>Integrate runbook links into Prometheus AlertManager annotations so alerts link directly to remediation steps</li><li>Add a PR template enforcing the runbook template structure</li></ul>
+                            <ul><li>Add a CLAUDE.md or AGENTS.md with runbook authoring rules referencing the existing template.md structure</li><li>Add pre-commit hooks for local markdown linting before push</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Create agent rules (.claude/rules/) for generating consistent runbooks</li><li>Add shellcheck or bats validation for embedded shell scripts</li><li>Add a table of contents / index page generated from frontmatter</li></ul>
+                            <ul><li>Consider adding a runbook index/table of contents (auto-generated from file structure)</li><li>Add Vale prose linting for consistent terminology across runbooks</li></ul>
                         </div>
                     </div>
                 </div>

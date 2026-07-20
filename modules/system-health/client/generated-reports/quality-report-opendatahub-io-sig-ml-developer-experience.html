@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:33 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 04:49 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/sig-ml-developer-experience</h2>
         </header>
 
@@ -365,32 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No source code or test files present; repository is documentation-only</div>
+                            <div class="scorecard-status">No code exists — documentation/governance repository only</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E tests; no executable code to test</div>
+                            <div class="scorecard-status">No code exists — no integration or E2E tests applicable</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No build system, Makefile, or Dockerfile present</div>
+                            <div class="scorecard-status">No build artifacts, Dockerfiles, or CI workflows</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No container images; no Dockerfile or Containerfile</div>
+                            <div class="scorecard-status">No container images produced by this repository</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tooling; no code to measure</div>
+                            <div class="scorecard-status">No code to cover — no coverage tooling configured</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No .github/workflows, no CI/CD configuration of any kind</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No CI/CD workflows; OWNERS file provides basic review governance</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No linting, no dependency alerts, no pre-commit hooks; OWNERS file is only governance mechanism</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
@@ -410,27 +415,27 @@
                 <div class="section-content">
                     <ul class="items-list">
                         
+                        <li class="item-card medium">
+                            <div class="item-description">Repository is documentation-only with no automation</div>
+                            <p>No CI/CD means no automated validation of markdown, links, or governance docs</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
                         <li class="item-card low">
-                            <div class="item-description">Repository is a documentation-only SIG charter with no source code</div>
-                            <p>Quality analysis dimensions do not apply; repository serves a governance purpose only</p>
+                            <div class="item-description">No link validation or markdown linting</div>
+                            <p>Broken links and formatting issues go undetected; charter references external URLs that may drift</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">N/A</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No CI/CD pipeline for documentation validation</div>
-                            <p>Broken links, stale content, and formatting errors go undetected</p>
+                        <li class="item-card low">
+                            <div class="item-description">Stale content risk — no scheduled checks</div>
+                            <p>SIG charter references and meeting links may become outdated without periodic validation</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Repository appears inactive (last commit September 2023)</div>
-                            <p>Charter and governance docs may be out of date; SIG may be dormant</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag severity-low">LOW</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
@@ -448,24 +453,24 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add a link-checker GitHub Action</div>
-                            <p>Catch broken links in README and charter documentation automatically</p>
+                            <div class="item-description">Add a markdown linting workflow with markdownlint</div>
+                            <p>Ensures consistent formatting across all documentation files</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add a markdown linting workflow</div>
-                            <p>Enforce consistent formatting across all documentation files</p>
+                            <div class="item-description">Add a link checker GitHub Action</div>
+                            <p>Catches broken external references in charter and README automatically</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Archive the repository if the SIG is dormant</div>
-                            <p>Signal to contributors that this SIG is no longer active; reduce confusion</p>
+                            <div class="item-description">Add Dependabot for GitHub Actions (once workflows exist)</div>
+                            <p>Keeps any future CI dependencies up to date</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
@@ -485,15 +490,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Determine if this SIG is still active; if not, archive the repository</li><li>If active, consolidate governance docs into opendatahub-community repo to reduce repo sprawl</li></ul>
+                            <ul><li>Consider whether this repository should be archived or consolidated into opendatahub-io/opendatahub-community, where the SIG charter already lives</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add a GitHub Actions workflow for link checking (lychee or markdown-link-check)</li><li>Add markdownlint CI to enforce documentation standards</li></ul>
+                            <ul><li>If kept active, add a basic CI workflow for markdown lint and link checking</li><li>Add a CODEOWNERS file or enhance OWNERS for GitHub-native review enforcement</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add CODEOWNERS file for automatic review assignment</li><li>Consider adding meeting notes or wiki content directly to the repo for discoverability</li></ul>
+                            <ul><li>Add agent rules (CLAUDE.md) to guide documentation contributions</li><li>Add a periodic stale-content check workflow</li></ul>
                         </div>
                     </div>
                 </div>

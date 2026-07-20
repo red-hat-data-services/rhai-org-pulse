@@ -1,340 +1,311 @@
 ---
 repository: "opendatahub-io/kserve-migration"
-overall_score: 1.2
+overall_score: 0.0
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No test files exist — zero unit test coverage"
+    status: "No source code or test files present — repository is an empty placeholder"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E test infrastructure"
+    status: "No integration or E2E tests — repository contains only a LICENSE file"
   - dimension: "Build Integration"
     score: 0.0
-    status: "No build pipeline, no Dockerfile, no Makefile"
+    status: "No build configuration, Dockerfiles, or Makefiles present"
   - dimension: "Image Testing"
     score: 0.0
-    status: "No container images built or tested"
+    status: "No container images or Dockerfiles — repository is empty"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling of any kind"
+    status: "No coverage configuration — no code to cover"
   - dimension: "CI/CD Automation"
-    score: 1.0
-    status: "No CI/CD workflows — no .github/workflows directory"
+    score: 0.0
+    status: "No CI/CD workflows or automation — .github/workflows/ does not exist"
+  - dimension: "Static Analysis"
+    score: 0.0
+    status: "No linting, FIPS checks, or dependency alert configuration"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude directory, no agent rules"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory present"
 critical_gaps:
-  - title: "No tests of any kind"
-    impact: "1,060-line shell script has zero automated validation — regressions ship silently"
+  - title: "Repository is an empty placeholder"
+    impact: "No source code, tests, CI/CD, or any quality infrastructure exists — the repository cannot serve its intended purpose of supporting KServe migration for Serving Orchestration"
     severity: "HIGH"
-    effort: "8-16 hours"
-  - title: "No CI/CD pipeline"
-    impact: "No PR checks, no linting, no shellcheck — contributors get zero feedback"
+    effort: "Varies — depends on scope of migration tooling to be developed"
+  - title: "No CI/CD workflows"
+    impact: "When code is added, there will be no automated testing, building, or quality gates"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No ShellCheck linting"
-    impact: "Shell script bugs (quoting, globbing, error handling) go undetected"
+    effort: "4-8 hours to set up initial CI/CD"
+  - title: "No test infrastructure"
+    impact: "No test framework, coverage tracking, or quality enforcement exists for future development"
     severity: "HIGH"
-    effort: "1-2 hours"
-  - title: "Main branch has no code"
-    impact: "Default branch contains only LICENSE — all work is in unmerged branches"
-    severity: "HIGH"
-    effort: "1 hour"
-  - title: "No security scanning"
-    impact: "Hardcoded paths, potential injection via unquoted variables, no secret detection"
+    effort: "4-8 hours to set up initial test framework"
+  - title: "No static analysis or dependency management"
+    impact: "No linting, FIPS compliance checks, or automated dependency updates configured"
     severity: "MEDIUM"
     effort: "2-4 hours"
-  - title: "No agent rules for AI-assisted development"
-    impact: "AI agents have no guidance on testing patterns or contribution standards"
-    severity: "LOW"
-    effort: "2-3 hours"
 quick_wins:
-  - title: "Merge add-initial-files branch to main"
-    effort: "30 minutes"
-    impact: "Makes the actual code accessible on the default branch"
-  - title: "Add ShellCheck CI workflow"
-    effort: "1-2 hours"
-    impact: "Catches shell scripting bugs automatically on every PR"
-  - title: "Add BATS test suite for convert.sh"
-    effort: "4-8 hours"
-    impact: "Validates core migration logic — argument parsing, prerequisite checks, YAML transforms"
-  - title: "Add pre-commit hooks for shell linting"
+  - title: "Add a README.md describing the repository's purpose and roadmap"
     effort: "1 hour"
-    impact: "Catches formatting and linting issues before commit"
+    impact: "Provides context for contributors about the migration tooling goals and architecture"
+  - title: "Set up .github/dependabot.yml when code is added"
+    effort: "1 hour"
+    impact: "Automated dependency security and update management from day one"
+  - title: "Create CLAUDE.md with development and testing guidelines"
+    effort: "1-2 hours"
+    impact: "Guide AI-assisted development with consistent patterns from the start"
+  - title: "Add a basic CI workflow skeleton (.github/workflows/ci.yml)"
+    effort: "2 hours"
+    impact: "Establishes quality gates before any code is merged"
 recommendations:
   priority_0:
-    - "Merge feature branches to main — default branch has no code"
-    - "Add ShellCheck linting as a GitHub Actions workflow on PRs"
-    - "Create BATS (Bash Automated Testing System) tests for convert.sh"
+    - "Determine whether this repository is actively needed or should be archived — it has been empty since its initial commit"
+    - "If active, establish the project structure with source code, build configuration, and a README"
+    - "Set up CI/CD workflows with PR-triggered tests and builds before merging any code"
   priority_1:
-    - "Add integration tests that mock oc/yq/jq commands and validate transform logic"
-    - "Add README, OWNERS, and convert.sh to main branch"
-    - "Implement error-handling tests (missing prerequisites, permission failures, invalid input)"
+    - "Add comprehensive test infrastructure (unit + integration) alongside the first source code"
+    - "Configure coverage tracking with enforcement thresholds from the start"
+    - "Set up static analysis (linting, FIPS compliance checks) appropriate for the chosen language"
   priority_2:
-    - "Add agent rules (.claude/rules/) for shell test patterns"
-    - "Add security scanning (gitleaks for hardcoded paths/tokens)"
-    - "Create a Makefile with test/lint/check targets"
+    - "Create agent rules (.claude/rules/) for test automation guidance"
+    - "Add pre-commit hooks for code quality enforcement"
+    - "Document migration patterns and testing strategies in project docs"
 ---
 
 # Quality Analysis: kserve-migration
 
+**Repository**: [opendatahub-io/kserve-migration](https://github.com/opendatahub-io/kserve-migration)
+**Component**: Serving Orchestration (RHOAIENG)
+**Tier**: Midstream
+**Analysis Date**: 2026-07-20
+
 ## Executive Summary
 
-- **Overall Score: 1.2/10**
-- **Repository Type**: Shell script tool (Bash CLI utility)
-- **Primary Language**: Bash (1,060 lines in `convert.sh`)
-- **Purpose**: Converts KServe InferenceServices from serverless to raw deployment mode on OpenShift AI
-- **Agent Rules Status**: Missing — no CLAUDE.md, no `.claude/` directory
-
-The `kserve-migration` repository is in a very early stage of development. The **main branch contains only a LICENSE file** — all actual code lives in an unmerged branch (`add-initial-files`). There are **zero tests, zero CI/CD workflows, zero linting**, and **zero coverage tracking**. The repository has a well-written 1,060-line Bash script with good internal error handling (trap, validation functions), but no external quality infrastructure surrounds it.
-
-### Key Strengths
-- Well-structured shell script with 14+ named functions
-- Built-in prerequisite checking (`check_prerequisites`, `check_permissions`)
-- Error trap with cleanup on ERR
-- Comprehensive README with architecture diagram, usage examples, and prerequisites
-- OWNERS file defined (in a separate unmerged branch)
-
-### Critical Gaps
-- **Zero tests** — no BATS, shunit2, or any shell test framework
-- **Zero CI/CD** — no `.github/workflows/` directory at all
-- **Main branch is empty** — only LICENSE, all code in unmerged branches
-- **No linting** — no ShellCheck, no `.editorconfig`
-- **No security scanning** — hardcoded paths in `sample_curl.sh`, no secret detection
+- **Overall Score: 0.0/10**
+- **Repository Status**: Empty placeholder — contains only a single initial commit with an Apache 2.0 LICENSE file
+- **Key Finding**: This repository has no source code, no tests, no CI/CD, no build configuration, and no documentation beyond the license. It appears to be a reserved/placeholder repository for KServe migration tooling that has not yet been developed.
+- **Critical Decision Needed**: Determine whether this repository should be actively developed or archived.
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 0/10 | No test files exist — zero unit test coverage |
-| Integration/E2E | 0/10 | No integration or E2E test infrastructure |
-| **Build Integration** | **0/10** | **No build pipeline, no Dockerfile, no Makefile** |
-| Image Testing | 0/10 | No container images built or tested (N/A for this repo) |
-| Coverage Tracking | 0/10 | No coverage tooling of any kind |
-| CI/CD Automation | 1/10 | No CI/CD workflows — no .github/workflows directory |
-| Agent Rules | 0/10 | No CLAUDE.md, no .claude directory, no agent rules |
-
-*CI/CD scored 1/10 rather than 0 because the OWNERS file (governance) exists in a branch.*
+| Dimension | Weight | Score | Status |
+|-----------|--------|-------|--------|
+| Unit Tests | 15% | 0.0/10 | No source code or test files present |
+| Integration/E2E | 20% | 0.0/10 | No integration or E2E tests |
+| Build Integration | 15% | 0.0/10 | No build configuration or Dockerfiles |
+| Image Testing | 10% | 0.0/10 | No container images or Dockerfiles |
+| Coverage Tracking | 10% | 0.0/10 | No coverage configuration |
+| CI/CD Automation | 15% | 0.0/10 | No CI/CD workflows |
+| Static Analysis | 10% | 0.0/10 | No linting or analysis tools configured |
+| Agent Rules | 5% | 0.0/10 | No CLAUDE.md or agent configuration |
+| **Overall** | **100%** | **0.0/10** | **Empty placeholder repository** |
 
 ## Critical Gaps
 
-### 1. No Tests of Any Kind
-- **Impact**: The 1,060-line shell script has zero automated validation — regressions ship silently
+### 1. Repository Is an Empty Placeholder
+- **Impact**: No source code, tests, CI/CD, or any quality infrastructure exists. The repository cannot serve its intended purpose of supporting KServe migration for the Serving Orchestration component.
 - **Severity**: HIGH
-- **Effort**: 8-16 hours
-- **Details**: `convert.sh` has 14+ functions including argument parsing, namespace validation, prerequisite checks, YAML transformation, and OpenShift resource creation. None of these are tested. The script handles authentication, RBAC, and resource ownership — all complex logic that needs test coverage.
+- **Effort**: Varies — depends on scope of migration tooling to be developed
+- **Details**: The repository contains exactly one commit (`8e12b35 Initial commit`) with a single file (LICENSE). There is no README, no source code, no configuration files.
 
-### 2. No CI/CD Pipeline
-- **Impact**: No PR checks, no linting, no shellcheck — contributors get zero automated feedback
+### 2. No CI/CD Workflows
+- **Impact**: When code is eventually added, there will be no automated testing, building, or quality gates in place.
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: There is no `.github/workflows/` directory. PRs can be merged with syntax errors, broken logic, or security issues without any automated checks.
+- **Effort**: 4-8 hours to set up initial CI/CD
 
-### 3. No ShellCheck Linting
-- **Impact**: Shell script bugs (quoting, globbing, error handling) go undetected
+### 3. No Test Infrastructure
+- **Impact**: No test framework, coverage tracking, or quality enforcement exists for future development.
 - **Severity**: HIGH
-- **Effort**: 1-2 hours
-- **Details**: A 1,060-line Bash script without ShellCheck is a risk vector for quoting issues, unintended globbing, and variable expansion bugs that can cause data loss in production OpenShift environments.
+- **Effort**: 4-8 hours to set up initial test framework
 
-### 4. Main Branch Has No Code
-- **Impact**: Default branch contains only LICENSE — visitors/contributors see an empty repository
-- **Severity**: HIGH
-- **Effort**: 1 hour
-- **Details**: All actual content (README.md, convert.sh, sample_curl.sh) lives in the `add-initial-files` branch. The `andresllh-patch-1` branch has the OWNERS file. Neither has been merged to main.
-
-### 5. No Security Scanning
-- **Impact**: Hardcoded paths (`/home/allausas/Downloads/request_dog.json`), potential injection via unquoted variables
+### 4. No Static Analysis or Dependency Management
+- **Impact**: No linting, FIPS compliance checks, or automated dependency updates configured.
 - **Severity**: MEDIUM
 - **Effort**: 2-4 hours
-- **Details**: `sample_curl.sh` contains a hardcoded home directory path. The main script uses `oc` commands constructed from user input without validation against injection patterns.
 
 ## Quick Wins
 
-### 1. Merge Feature Branches to Main
-- **Effort**: 30 minutes
-- **Impact**: Makes the repository functional — visitors can actually see and use the code
-- **Implementation**: Merge `add-initial-files` and `andresllh-patch-1` branches
+### 1. Add a README.md (1 hour)
+- **Impact**: Provides context for contributors about the migration tooling goals and architecture
+- **Implementation**: Create a README explaining the repository's purpose, roadmap, and relationship to `opendatahub-io/kserve`
 
-### 2. Add ShellCheck CI Workflow
-- **Effort**: 1-2 hours
-- **Impact**: Catches shell scripting bugs automatically on every PR
+### 2. Set Up Dependabot When Code Is Added (1 hour)
+- **Impact**: Automated dependency security and update management from day one
 - **Implementation**:
 ```yaml
-# .github/workflows/lint.yml
-name: Lint
-on: [pull_request]
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: "gomod"  # or appropriate ecosystem
+    directory: "/"
+    schedule:
+      interval: "weekly"
+```
+
+### 3. Create CLAUDE.md (1-2 hours)
+- **Impact**: Guide AI-assisted development with consistent patterns from the start
+- **Implementation**: Add development guidelines, testing patterns, and contribution standards
+
+### 4. Add a Basic CI Workflow Skeleton (2 hours)
+- **Impact**: Establishes quality gates before any code is merged
+- **Implementation**:
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
 jobs:
-  shellcheck:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: ShellCheck
-        uses: ludeeus/action-shellcheck@master
-        with:
-          scandir: '.'
-```
-
-### 3. Add BATS Test Suite
-- **Effort**: 4-8 hours
-- **Impact**: Validates core migration logic — argument parsing, prerequisite checks, YAML transforms
-- **Implementation**:
-```bash
-# test/convert.bats
-#!/usr/bin/env bats
-
-@test "show_help outputs usage information" {
-  run ./convert.sh --help
-  [ "$status" -eq 0 ]
-  [[ "$output" == *"USAGE"* ]]
-}
-
-@test "fails without required --inference-service argument" {
-  run ./convert.sh
-  [ "$status" -ne 0 ]
-  [[ "$output" == *"inference-service"* ]]
-}
-
-@test "show_version outputs version number" {
-  run ./convert.sh --version
-  [ "$status" -eq 0 ]
-  [[ "$output" == *"1.0.0"* ]]
-}
-```
-
-### 4. Add Pre-commit Hooks
-- **Effort**: 1 hour
-- **Impact**: Catches formatting and linting issues before commit
-- **Implementation**:
-```yaml
-# .pre-commit-config.yaml
-repos:
-  - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.10.0.1
-    hooks:
-      - id: shellcheck
-  - repo: https://github.com/scop/pre-commit-shfmt
-    rev: v3.8.0-1
-    hooks:
-      - id: shfmt
+      - name: Run tests
+        run: make test
 ```
 
 ## Detailed Findings
 
-### CI/CD Pipeline
-- **Workflows**: None — no `.github/workflows/` directory exists
-- **PR Checks**: None — PRs have zero automated validation
-- **Periodic Jobs**: None
-- **Caching**: N/A
-- **Concurrency Control**: N/A
-- **Build Process**: No Makefile, no build automation
+### Unit Tests
+**Score: 0.0/10**
 
-### Test Coverage
-- **Unit Tests**: 0 test files found across all branches
-- **Test Framework**: None configured (BATS, shunit2, shellspec would be appropriate)
-- **Integration Tests**: None — no mock infrastructure for `oc`, `yq`, `jq` commands
-- **E2E Tests**: None — no cluster-based validation
-- **Test-to-Code Ratio**: 0:1,060 (zero tests vs. 1,060 lines of script)
-- **Coverage Tracking**: None — no codecov, no coverage reports
+No source code exists in the repository. There are no test files (`*_test.go`, `*.spec.ts`, `*_test.py`, etc.), no testing framework configuration, and no test-to-code ratio to calculate.
 
-### Code Quality
-- **Linting**: No ShellCheck configuration (`.shellcheckrc` missing)
-- **Formatting**: No `shfmt` configuration
-- **Pre-commit Hooks**: None — no `.pre-commit-config.yaml`
-- **Static Analysis**: None
-- **Editor Config**: No `.editorconfig`
+- **Test files**: 0
+- **Source files**: 0
+- **Test-to-code ratio**: N/A
+- **Framework**: None detected
 
-### Script Quality (Internal)
-The script itself is reasonably well-structured:
-- 14+ named functions with clear responsibilities
-- Color-coded output (RED/GREEN/YELLOW/BLUE)
-- `trap cleanup ERR` for error handling
-- `check_prerequisites()` validates `oc`, `yq`, `jq` availability
-- `check_permissions()` validates RBAC before operations
-- `validate_parameters()` checks required arguments
-- `confirm_namespace()` interactive prompt for safety
-- Structured file organization for exports
+### Integration/E2E Tests
+**Score: 0.0/10**
 
-### Container Images
-- **N/A** — This repository does not build container images
-- The script operates *on* container-based InferenceServices but is not itself containerized
-- No Dockerfile or Containerfile present
+No `e2e/`, `integration/`, `test/e2e/`, or `tests/integration/` directories exist. No cluster setup (Kind, Minikube, envtest) or multi-version testing configuration found.
 
-### Security
-- **Secret Detection**: None — no gitleaks, no truffleHog
-- **Hardcoded Values**: `sample_curl.sh` contains `/home/allausas/Downloads/request_dog.json` — a hardcoded user home directory
-- **Input Validation**: The script validates parameters exist but does not sanitize against injection
-- **SAST**: None — no CodeQL, no semgrep
-- **Dependency Scanning**: N/A (no external dependencies beyond `oc`, `yq`, `jq`)
+- **E2E directories**: None
+- **Integration directories**: None
+- **Cluster setup**: None
+- **Multi-version testing**: None
 
-### Agent Rules (Agentic Flow Quality)
+### Build Integration
+**Score: 0.0/10**
+
+No build configuration exists. No Makefile, no Docker build steps in CI, no Kustomize overlays, no operator manifest validation.
+
+- **PR build validation**: None
+- **Makefile**: Not present
+- **Kustomize**: Not present
+- **Operator manifests**: Not present
+
+### Image Testing
+**Score: 0.0/10**
+
+No Dockerfile, Containerfile, docker-compose.yml, or .dockerignore present. No container image building or testing infrastructure.
+
+- **Dockerfiles**: 0
+- **Multi-stage builds**: N/A
+- **Base images**: N/A
+- **Multi-arch support**: None
+- **Runtime validation**: None
+
+### Coverage Tracking
+**Score: 0.0/10**
+
+No coverage configuration files (`.codecov.yml`, `.coveragerc`, etc.) exist. No coverage flags in CI (no CI exists). No coverage thresholds or PR reporting.
+
+- **Codecov config**: Not present
+- **Coverage thresholds**: None
+- **PR reporting**: None
+- **Coverage generation**: None
+
+### CI/CD Automation
+**Score: 0.0/10**
+
+No `.github/workflows/` directory exists. No CI/CD automation of any kind.
+
+- **Workflows**: 0
+- **PR-triggered**: None
+- **Periodic/scheduled**: None
+- **Concurrency control**: None
+- **Caching**: None
+- **Parallelization**: None
+
+### Static Analysis
+**Score: 0.0/10**
+
+#### Linting
+No linting configuration detected. No `.golangci.yaml`, `.eslintrc`, `ruff.toml`, `.flake8`, or `mypy.ini`.
+
+#### FIPS Compatibility
+No source code to scan for FIPS compliance. No build tags, no GOEXPERIMENT settings, no Dockerfile base images to evaluate.
+
+#### Dependency Alerts
+No `.github/dependabot.yml` or `renovate.json` present.
+
+#### Pre-commit Hooks
+No `.pre-commit-config.yaml` present.
+
+### Agent Rules
+**Score: 0.0/10**
+
 - **Status**: Missing
 - **CLAUDE.md**: Not present
-- **`.claude/` directory**: Not present
-- **`.claude/rules/`**: Not present
+- **AGENTS.md**: Not present
+- **.claude/ directory**: Not present
+- **.claude/rules/**: Not present
 - **Coverage**: No test type rules exist
 - **Quality**: N/A
-- **Gaps**: Everything — no agent rules, no test automation guidance, no contribution standards for AI agents
-- **Recommendation**: Generate rules with `/test-rules-generator` covering BATS test patterns, shell script testing conventions, and mock strategies for CLI tools
+- **Recommendation**: When code is added, generate rules with `/test-rules-generator`
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Merge feature branches to main** — The default branch contains only a LICENSE file. Merge `add-initial-files` (convert.sh + README) and `andresllh-patch-1` (OWNERS) to main immediately.
-2. **Add ShellCheck linting as a GitHub Actions workflow** — A 1,060-line shell script without linting is a significant risk, especially since it operates on production OpenShift resources.
-3. **Create BATS test suite** — Start with argument parsing, prerequisite checks, and help/version output. Expand to mock-based tests for YAML transformation logic.
+1. **Determine repository status** — This repository has been empty since its initial commit. Decide whether it should be actively developed for KServe migration tooling or archived. An empty repository in the `opendatahub-io` org without a README creates confusion about its purpose.
+2. **If active, establish project structure** — Add source code, build configuration, README, and basic CI/CD before merging any code contributions.
+3. **Set up CI/CD workflows** with PR-triggered tests and builds before merging any code.
 
 ### Priority 1 (High Value)
-4. **Add integration tests with mocked `oc`/`yq`/`jq` commands** — Create stub binaries that return known outputs to test the transformation pipeline end-to-end without requiring a live cluster.
-5. **Add error-handling tests** — Validate behavior when prerequisites are missing, permissions are insufficient, or the InferenceService doesn't exist.
-6. **Remove hardcoded paths** — Replace `/home/allausas/Downloads/request_dog.json` in `sample_curl.sh` with a relative path or placeholder.
+1. **Add comprehensive test infrastructure** alongside the first source code — don't wait until after initial development.
+2. **Configure coverage tracking** with enforcement thresholds from the start (easier than retrofitting).
+3. **Set up static analysis** (linting, FIPS compliance checks) appropriate for the chosen language from day one.
 
 ### Priority 2 (Nice-to-Have)
-7. **Add agent rules** — Create `.claude/rules/` with shell testing patterns (BATS conventions, mock strategies, test organization).
-8. **Add security scanning** — Configure gitleaks for secret/path detection.
-9. **Create a Makefile** — Add `test`, `lint`, `check`, and `help` targets for developer convenience.
-10. **Add `.editorconfig`** — Enforce consistent formatting (tabs vs spaces, line endings) for shell scripts.
+1. **Create agent rules** (`.claude/rules/`) for test automation guidance.
+2. **Add pre-commit hooks** for code quality enforcement.
+3. **Document migration patterns** and testing strategies in project docs.
 
 ## Comparison to Gold Standards
 
-| Dimension | kserve-migration | odh-dashboard | notebooks | kserve |
-|-----------|-----------------|---------------|-----------|--------|
-| Unit Tests | 0/10 — None | 9/10 — Jest + RTL | 7/10 — Python tests | 8/10 — Go testing |
-| Integration/E2E | 0/10 — None | 9/10 — Cypress + contract | 8/10 — Multi-layer | 9/10 — E2E suite |
-| Build Integration | 0/10 — None | 7/10 — PR builds | 8/10 — Image validation | 7/10 — Build checks |
-| Image Testing | 0/10 — N/A | 6/10 — Basic | 9/10 — 5-layer | 7/10 — Runtime tests |
-| Coverage Tracking | 0/10 — None | 8/10 — Codecov | 6/10 — Basic | 8/10 — Enforcement |
-| CI/CD Automation | 1/10 — OWNERS only | 9/10 — Comprehensive | 8/10 — Multi-workflow | 9/10 — Well-organized |
-| Agent Rules | 0/10 — None | 7/10 — Rules present | 3/10 — Minimal | 2/10 — Basic |
+| Aspect | kserve-migration | odh-dashboard | notebooks | kserve |
+|--------|-----------------|---------------|-----------|--------|
+| Unit Tests | None (empty repo) | Comprehensive (Jest, Cypress) | Present | Extensive (Go) |
+| Integration/E2E | None | Multi-layer | 5-layer validation | Multi-version |
+| Build Integration | None | PR builds validated | Image builds | Operator builds |
+| Image Testing | None | N/A | Best-in-class | Present |
+| Coverage | None | Enforced | Present | Enforced (Codecov) |
+| CI/CD | None | Comprehensive | Comprehensive | Well-organized |
+| Static Analysis | None | ESLint + TypeScript strict | Present | golangci-lint |
+| Agent Rules | None | Comprehensive | Partial | None |
 
 ## File Paths Reference
 
-### Repository Structure (main branch)
-```
-kserve-migration/
-└── LICENSE                          # Apache 2.0 (only file on main)
-```
+| Category | Files Found |
+|----------|------------|
+| Source Code | None |
+| Test Files | None |
+| CI/CD Workflows | None |
+| Dockerfiles | None |
+| Coverage Config | None |
+| Linting Config | None |
+| Agent Rules | None |
+| License | `LICENSE` (Apache 2.0) |
 
-### Repository Structure (add-initial-files branch)
-```
-kserve-migration/
-├── LICENSE                          # Apache 2.0
-├── README.md                        # 419 lines — comprehensive documentation
-├── convert.sh                       # 1,060 lines — main migration script
-└── sample_curl.sh                   # 5 lines — example API call
-```
+## Notes
 
-### Repository Structure (andresllh-patch-1 branch)
-```
-kserve-migration/
-├── LICENSE
-└── OWNERS                           # Approvers and reviewers list
-```
-
-### Key Functions in convert.sh
-- `show_help()` — Usage documentation
-- `check_prerequisites()` — Validates oc, yq, jq availability
-- `check_permissions()` — Validates RBAC permissions
-- `validate_parameters()` — Argument validation
-- `confirm_namespace()` — Interactive namespace confirmation
-- `find_service_account_secrets()` — Secret discovery for auth migration
-- `main()` — Orchestration with cleanup trap
+- **Repository**: `opendatahub-io/kserve-migration`
+- **Jira Project**: RHOAIENG
+- **Jira Component**: Serving Orchestration
+- **Tier**: Midstream
+- **Single commit**: `8e12b35 Initial commit` — only contains LICENSE file
+- **Branch**: `main` (single branch)
+- **Recommendation**: Archive this repository if no development is planned, or bootstrap it with a proper project skeleton if migration tooling is needed.

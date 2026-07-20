@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:08 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 06:23 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/llm-d-playbooks</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="463.69868399999996"
+                                stroke-dashoffset="503.28271799999993"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">1.8</div>
+                        <div class="score-value">1.1</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,33 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No unit tests exist anywhere in the repository</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No unit tests; no YAML schema validation or kustomize build tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">Validation steps described in docs but no automated test scripts exist</div>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">Manual smoke-test.yaml and benchmark scripts exist but nothing is automated</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CI/CD pipelines, no build automation, no PR validation</div>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">Well-structured kustomize overlays (36 files) but no CI validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No container images built or tested by this repository</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No images built; referenced container images are not validated</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tooling configured</div>
+                            <div class="scorecard-status">No coverage tracking — no code to instrument</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No .github/workflows/, no Makefile, no CI configuration of any kind</div>
+                            <div class="scorecard-status">Zero CI/CD — no GitHub Actions, no GitLab CI, no Jenkinsfile</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No yamllint, no shellcheck, no Dependabot/Renovate, no pre-commit hooks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
@@ -411,40 +416,32 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Zero CI/CD pipeline — no automated quality gates</div>
-                            <p>Any contributor can merge broken YAML manifests, invalid Kustomize overlays, or non-functional scripts without any automated check</p>
+                            <div class="item-description">No CI/CD automation at all</div>
+                            <p>Kustomize manifests, shell scripts, and Python generators are never validated on PRs — broken YAML or invalid K8s resources merge silently</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No linting or validation for Kubernetes manifests</div>
-                            <p>Invalid YAML, missing required fields, or schema violations in Kustomize/K8s manifests go undetected until cluster apply time</p>
+                            <div class="item-description">No automated manifest validation</div>
+                            <p>36 kustomization.yaml files with base/overlay patterns are never built or validated in CI — kustomize build failures are only discovered at deploy time</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">No tests for Python benchmark generators</div>
-                            <p>Regressions in kv-cache-prompt-generator.py, prefix-cache-generator.py, or heterogeneous-workload-generator.py are only caught manually</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
-                            </div>
-                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">Shell scripts contain hardcoded URLs and credentials</div>
-                            <p>bench-all.sh contains a hardcoded AWS ELB URL; scripts lack input validation and error handling</p>
+                            <div class="item-description">No linting for shell scripts or YAML</div>
+                            <p>423-line discover-gpu-nic-topology.sh and 116-line debug-nics.sh have no shellcheck validation; YAML manifests have no schema validation</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No secret scanning or dependency vulnerability checks</div>
-                            <p>Hardcoded endpoints or leaked credentials in scripts go undetected</p>
+                            <div class="item-description">No dependency management automation</div>
+                            <p>requirements.txt pins guidellm==0.3.1 but no Dependabot/Renovate to flag outdated or vulnerable dependencies</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
@@ -464,40 +461,32 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add GitHub Actions workflow for YAML/Kustomize validation</div>
-                            <p>Catches invalid manifests before merge; validates all 38 YAML files on every PR</p>
+                            <div class="item-description">Add GitHub Actions workflow for kustomize build validation</div>
+                            <p>Validates all 36 kustomize overlays build successfully on every PR, catching broken manifests before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add markdownlint for documentation quality</div>
-                            <p>Ensures consistent formatting across 18 markdown files that form the entire user-facing content</p>
+                            <div class="item-description">Add yamllint and shellcheck CI checks</div>
+                            <p>Catches YAML syntax errors and shell script bugs automatically; prevents broken manifests and scripts from merging</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add pytest for the 3 Python generators (678 lines of code)</div>
-                            <p>Validates prompt generation logic, word count assertions, and CSV output format</p>
+                            <div class="item-description">Enable Dependabot for pip ecosystem</div>
+                            <p>Automated alerts for outdated/vulnerable Python dependencies (pandas, guidellm)</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add shellcheck for the 4 shell scripts</div>
-                            <p>Catches quoting issues, undefined variables, and portability problems in bench-all.sh and generate-all.sh</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1 hour</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add pre-commit hooks for YAML + markdown + Python</div>
-                            <p>Enforces basic quality locally before push</p>
+                            <div class="item-description">Add CLAUDE.md with playbook contribution guidelines</div>
+                            <p>Guides AI agents to follow kustomize patterns, naming conventions, and manifest structure when contributing</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
@@ -517,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Create a minimal GitHub Actions CI pipeline with YAML lint, Kustomize build validation, and Python syntax checks</li><li>Add kubeconform or kubeval to validate all Kubernetes manifests against their CRD schemas</li><li>Remove hardcoded AWS ELB URL from bench-all.sh and parameterize all external endpoints</li></ul>
+                            <ul><li>Create a PR-triggered GitHub Actions workflow that runs `kustomize build` on every overlay to validate manifest correctness</li><li>Add yamllint configuration and CI step to validate all YAML files against Kubernetes schemas</li><li>Add shellcheck CI step for all .sh scripts (discover-gpu-nic-topology.sh, debug-nics.sh, bench-all.sh, generate-all.sh)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Write pytest test suite for the 3 Python generators covering edge cases (zero replicas, cache overflow, etc.)</li><li>Add Kustomize build CI step that runs `kustomize build` on all overlay directories to catch reference errors</li><li>Create CLAUDE.md or AGENTS.md with contribution guidelines and test expectations</li></ul>
+                            <ul><li>Add kubeval or kubeconform validation to verify generated manifests against Kubernetes API schemas</li><li>Add a smoke-test CI job that validates kustomize overlays produce valid LLMInferenceService, Gateway, and HardwareProfile resources</li><li>Enable Dependabot for pip and GitHub Actions ecosystems</li><li>Add pre-commit hooks (.pre-commit-config.yaml) for yamllint, shellcheck, and trailing whitespace</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add link checker for markdown documentation to catch broken internal/external links</li><li>Add Grafana dashboard JSON schema validation</li><li>Add CODEOWNERS file to enforce review requirements</li></ul>
+                            <ul><li>Create CLAUDE.md with kustomize patterns, overlay naming conventions, and contribution guidelines</li><li>Add Python linting (ruff) for the test-data-generator scripts</li><li>Add unit tests for Python data generators (prefix-cache-generator.py, kv-cache-prompt-generator.py, heterogeneous-workload-generator.py)</li><li>Consider adding a CI job that does a dry-run deployment to a Kind cluster to validate full deployment flow</li></ul>
                         </div>
                     </div>
                 </div>

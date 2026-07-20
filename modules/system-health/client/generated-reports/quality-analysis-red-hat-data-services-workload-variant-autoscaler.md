@@ -1,450 +1,476 @@
 ---
 repository: "red-hat-data-services/workload-variant-autoscaler"
-overall_score: 7.7
+overall_score: 8.2
 scorecard:
   - dimension: "Unit Tests"
     score: 9.0
-    status: "Excellent test-to-code ratio (1.55:1 LOC), Ginkgo/Gomega + testify, envtest for controller tests"
+    status: "130 unit test files, 48K test LOC vs 32K source LOC (1.51x), Ginkgo/Gomega + testify + envtest"
   - dimension: "Integration/E2E"
     score: 9.0
-    status: "Outstanding E2E on Kind (emulated GPU) + OpenShift (real GPU), smoke/full/multi-controller suites"
+    status: "12 E2E test files with Kind cluster, smoke + full split, OpenShift E2E, fixture builders"
   - dimension: "Build Integration"
-    score: 8.0
-    status: "PR checks build binary + Docker image + kustomize overlays; Konflux pipeline for production"
+    score: 9.0
+    status: "PR-time Docker build, kustomize overlay validation, Tekton/Konflux multi-arch pipelines"
   - dimension: "Image Testing"
     score: 7.0
-    status: "Trivy on main/release, multi-arch (amd64+arm64), distroless + UBI9; no PR-time scan or SBOM"
+    status: "Multi-stage builds, SHA-pinned bases, hadolint, probes defined; no explicit container runtime tests"
   - dimension: "Coverage Tracking"
     score: 3.0
-    status: "Generates cover.out but no codecov/coveralls integration, no PR reporting, no enforcement"
+    status: "coverprofile generated but no codecov, no thresholds, no PR reporting"
   - dimension: "CI/CD Automation"
     score: 9.0
-    status: "17+ workflows, concurrency control, doc-only skip, /ok-to-test for forks, Dependabot"
+    status: "18+ workflows, concurrency control, code-change detection, timeout enforcement, Tekton pipelines"
+  - dimension: "Static Analysis"
+    score: 9.0
+    status: "golangci-lint with 22+ linters, pre-commit hooks, Dependabot + Renovate, FIPS-compliant Konflux build"
   - dimension: "Agent Rules"
-    score: 8.0
-    status: "CLAUDE.md + AGENTS.md, 4 custom agents, pr-review skill, GitHub agentic workflows"
+    score: 9.0
+    status: "Comprehensive AGENTS.md, 4 custom agent reviewers, PR review skill with confidence scoring"
 critical_gaps:
   - title: "No coverage tracking or enforcement"
-    impact: "Cannot detect test coverage regressions on PRs; coverage quality is invisible"
+    impact: "Coverage regressions go undetected; no visibility into test health per PR"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No PR-time container vulnerability scanning"
-    impact: "New dependency vulnerabilities only caught after merge to main"
-    severity: "HIGH"
-    effort: "1-2 hours"
-  - title: "No SAST/CodeQL integration"
-    impact: "Static security analysis gaps — no automated detection of injection, race conditions, or unsafe patterns"
+    effort: "4-6 hours"
+  - title: "No container runtime validation outside E2E"
+    impact: "Image startup or dependency issues only caught during full E2E runs, not fast-feedback build stage"
     severity: "MEDIUM"
-    effort: "2-3 hours"
-  - title: "No secret detection (Gitleaks/TruffleHog)"
-    impact: "Accidental secret commits not caught by CI"
-    severity: "MEDIUM"
-    effort: "1-2 hours"
+    effort: "4-6 hours"
 quick_wins:
-  - title: "Add Codecov integration with PR coverage reporting"
+  - title: "Add codecov integration with PR reporting"
     effort: "2-4 hours"
-    impact: "Instant visibility into coverage changes on every PR; can enforce minimum thresholds"
-  - title: "Add Trivy scanning to ci-pr-checks workflow"
-    effort: "1 hour"
-    impact: "Catch container vulnerabilities before merge, not after"
-  - title: "Add CodeQL workflow for Go SAST"
-    effort: "1-2 hours"
-    impact: "Automated detection of security issues via GitHub's free CodeQL scanning"
-  - title: "Add Gitleaks pre-commit hook and CI check"
-    effort: "1 hour"
-    impact: "Prevent accidental secret leaks in commits"
+    impact: "Immediate coverage visibility on every PR; coverage gates prevent regressions"
+  - title: "Add test creation agent rules to .claude/rules/"
+    effort: "2-3 hours"
+    impact: "AI-generated tests follow project conventions (Ginkgo suites, envtest patterns, fixture builders)"
+  - title: "Add container startup smoke test in CI"
+    effort: "2-3 hours"
+    impact: "Catch image startup failures in seconds rather than waiting for full E2E"
 recommendations:
   priority_0:
-    - "Add Codecov integration: upload cover.out from ci-pr-checks, configure .codecov.yml with thresholds"
-    - "Add Trivy scanning to PR workflow (reuse existing .github/actions/trivy-scan composite action)"
+    - "Integrate codecov with coverage thresholds (e.g., 70% minimum) and PR delta reporting"
+    - "Upload cover.out from `make test` to codecov in ci-pr-checks workflow"
   priority_1:
-    - "Enable CodeQL analysis for Go code via .github/workflows/codeql.yml"
-    - "Add Gitleaks secret detection to pre-commit hooks and CI"
-    - "Add SBOM generation (Syft/Trivy) to release pipeline"
-    - "Create .claude/rules/ directory with test pattern rules for unit, integration, and E2E tests"
+    - "Add a lightweight container runtime test (docker run --entrypoint /manager --help) in PR workflow"
+    - "Create .claude/rules/ with test creation patterns for unit tests (Ginkgo suites, envtest setup, fixture builders)"
+    - "Add multi-version Kubernetes testing via matrix strategy in E2E workflows"
   priority_2:
-    - "Add image signing/attestation (cosign) to release pipeline"
-    - "Add benchmark regression tracking to nightly CI"
-    - "Consider contract testing between WVA controller and GAIE/KEDA APIs"
+    - "Increase t.Parallel() usage across unit tests (currently only 4 calls) for faster test runs"
+    - "Add benchmark regression testing in CI (compare against baseline metrics)"
 ---
 
 # Quality Analysis: workload-variant-autoscaler
 
 ## Executive Summary
 
-- **Overall Score: 7.7/10**
-- **Repository Type**: Go Kubernetes Operator (GPU-aware autoscaler for LLM inference)
-- **Primary Language**: Go 1.25, using controller-runtime, Ginkgo/Gomega, envtest
-- **Key Strengths**: Outstanding E2E testing infrastructure across Kind and OpenShift, excellent test-to-code ratio (1.55:1), mature CI/CD with 17+ GitHub Actions workflows, comprehensive agent rules
-- **Critical Gaps**: No coverage tracking/enforcement, no PR-time vulnerability scanning, no SAST/CodeQL
-- **Agent Rules Status**: Strong — CLAUDE.md + AGENTS.md with Go coding standards, 4 custom Claude agents, pr-review skill, GitHub agentic workflows
+- **Overall Score: 8.2/10** - This is an exceptionally well-engineered repository
+- **Repository**: red-hat-data-services/workload-variant-autoscaler (downstream, INFERENG/llm-d)
+- **Type**: Kubernetes Controller (GPU-aware autoscaler for LLM inference workloads)
+- **Language**: Go 1.25
+- **Frameworks**: controller-runtime, Ginkgo/Gomega, testify, envtest
+
+**Key Strengths:**
+- Outstanding test-to-code ratio (1.51x LOC), with 130 unit test files and 12 E2E test files
+- Comprehensive CI pipeline with PR-triggered smoke + full E2E on Kind, plus OpenShift E2E
+- Excellent build integration: PR-time Docker builds, kustomize overlay validation, Tekton/Konflux multi-arch pipelines
+- Best-in-class agent rules: 4 custom AI reviewer agents with confidence scoring and a PR review skill
+- FIPS-compliant Konflux build with `GOEXPERIMENT=strictfipsruntime`, UBI9 bases, and `CGO_ENABLED=1`
+
+**Critical Gap:**
+- **Coverage tracking is the single significant gap** — `cover.out` is generated by `make test` but never uploaded, tracked, or enforced. No codecov integration, no thresholds, no PR reporting.
+
+**Agent Rules Status**: Present and comprehensive
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 9.0/10 | Excellent test-to-code ratio (1.55:1 LOC), Ginkgo/Gomega + testify, envtest for controller tests |
-| Integration/E2E | 9.0/10 | Outstanding E2E on Kind (emulated GPU) + OpenShift (real GPU), smoke/full/multi-controller suites |
-| **Build Integration** | **8.0/10** | **PR checks build binary + Docker image + kustomize overlays; Konflux pipeline for production** |
-| Image Testing | 7.0/10 | Trivy on main/release, multi-arch (amd64+arm64), distroless + UBI9; no PR-time scan or SBOM |
-| Coverage Tracking | 3.0/10 | Generates cover.out but no codecov/coveralls integration, no PR reporting, no enforcement |
-| CI/CD Automation | 9.0/10 | 17+ workflows, concurrency control, doc-only skip, /ok-to-test for forks, Dependabot |
-| Agent Rules | 8.0/10 | CLAUDE.md + AGENTS.md, 4 custom agents, pr-review skill, GitHub agentic workflows |
+| Dimension | Score | Weight | Status |
+|-----------|-------|--------|--------|
+| Unit Tests | 9/10 | 15% | 130 test files, 48K test LOC, Ginkgo + testify + envtest |
+| Integration/E2E | 9/10 | 20% | 12 E2E tests, Kind cluster, smoke/full split, OpenShift E2E |
+| Build Integration | 9/10 | 15% | PR Docker build, kustomize validation, Tekton/Konflux multi-arch |
+| Image Testing | 7/10 | 10% | Multi-stage, SHA-pinned, hadolint, probes; no runtime test |
+| Coverage Tracking | 3/10 | 10% | coverprofile generated but not tracked/enforced |
+| CI/CD Automation | 9/10 | 15% | 18+ workflows, concurrency, code-change detection, timeouts |
+| Static Analysis | 9/10 | 10% | 22+ linters, pre-commit, Dependabot + Renovate, FIPS |
+| Agent Rules | 9/10 | 5% | AGENTS.md, 4 agent reviewers, PR review skill |
 
 ## Critical Gaps
 
 ### 1. No Coverage Tracking or Enforcement
-- **Impact**: Cannot detect test coverage regressions on PRs; coverage quality is invisible to reviewers
+- **Impact**: Coverage regressions go undetected; no visibility into test health per PR
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: The Makefile generates `cover.out` via `go test -coverprofile`, but no coverage service (Codecov, Coveralls) is integrated. PRs have no coverage delta reporting. No minimum coverage thresholds exist.
-- **Current State**: `make test` generates `cover.out` but it is never uploaded or analyzed
+- **Effort**: 4-6 hours
+- **Details**: `make test` generates `cover.out` via `--coverprofile`, but the file is never uploaded to codecov or any tracking service. No `.codecov.yml` exists. No coverage thresholds are enforced. PRs can reduce coverage without any signal.
+- **Fix**: Add codecov-action to the `lint-and-test` job in `ci-pr-checks.yaml`, create `.codecov.yml` with a minimum threshold (e.g., 70%), and enable PR comment reporting.
 
-### 2. No PR-Time Container Vulnerability Scanning
-- **Impact**: New dependency vulnerabilities are only caught after merge to main (in `ci-main-image.yaml` and `ci-release.yaml`)
-- **Severity**: HIGH
-- **Effort**: 1-2 hours
-- **Details**: The `.github/actions/trivy-scan` composite action exists and is used in main/release workflows, but the `ci-pr-checks.yaml` workflow builds the image without scanning it. Fork PRs build locally but skip scanning entirely.
-
-### 3. No SAST/CodeQL Integration
-- **Impact**: No automated static security analysis for Go code — injection patterns, race conditions, unsafe memory operations go undetected
+### 2. No Container Runtime Validation Outside E2E
+- **Impact**: Image startup or dependency issues only caught during 60-90 minute E2E runs
 - **Severity**: MEDIUM
-- **Effort**: 2-3 hours
-- **Details**: No `.github/workflows/codeql.yml` or equivalent SAST tool (gosec, Semgrep) configured
-
-### 4. No Secret Detection
-- **Impact**: Accidental credential/token commits could reach the repository without automated detection
-- **Severity**: MEDIUM
-- **Effort**: 1-2 hours
-- **Details**: Pre-commit hooks exist for file hygiene, shell linting, and Dockerfile linting, but Gitleaks or TruffleHog is not configured
+- **Effort**: 4-6 hours
+- **Details**: While the PR workflow builds the Docker image and the E2E tests deploy it to Kind, there is no fast-feedback container smoke test (e.g., `docker run --entrypoint /manager -- --help`) that would catch missing dependencies or binary issues in seconds rather than minutes.
 
 ## Quick Wins
 
 ### 1. Add Codecov Integration (2-4 hours)
-Upload the already-generated `cover.out` to Codecov from the `ci-pr-checks.yaml` workflow.
+Add the following to the `lint-and-test` job in `.github/workflows/ci-pr-checks.yaml`:
 
 ```yaml
-# Add to ci-pr-checks.yaml after "Run make test" step
-- name: Upload coverage to Codecov
-  uses: codecov/codecov-action@v5
-  with:
-    files: cover.out
-    fail_ci_if_error: false
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: cover.out
+          fail_ci_if_error: false
 ```
 
-Add `.codecov.yml`:
+Create `.codecov.yml`:
 ```yaml
 coverage:
   status:
     project:
       default:
-        target: auto
+        target: 70%
         threshold: 2%
     patch:
       default:
-        target: 70%
+        target: 80%
+comment:
+  layout: "reach,diff,flags,files"
+  behavior: default
 ```
 
-### 2. Add Trivy Scanning to PR Workflow (1 hour)
-Reuse the existing composite action in `ci-pr-checks.yaml`:
+### 2. Add Test Creation Agent Rules (2-3 hours)
+Create `.claude/rules/unit-tests.md` and `.claude/rules/e2e-tests.md` with project-specific patterns:
+- Unit tests: Ginkgo `Describe/It` structure, `BeforeEach` setup, `envtest.Environment` for controller tests
+- E2E tests: fixture builders (`infra_builder.go`, `workload_builder.go`), Gomega matchers, `Eventually`/`Consistently` for async assertions
+- Test helpers in `test/utils/`
 
+### 3. Add Container Startup Smoke Test (2-3 hours)
+Add a step after the Docker build in `ci-pr-checks.yaml`:
 ```yaml
-# Add after "Build WVA image locally" step in e2e-tests-smoke
-- name: Run Trivy scan
-  uses: ./.github/actions/trivy-scan
-  with:
-    image: ${{ steps.build-image.outputs.image }}
-```
-
-### 3. Add CodeQL for Go (1-2 hours)
-```yaml
-# .github/workflows/codeql.yml
-name: CodeQL Analysis
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  schedule:
-    - cron: '0 6 * * 1'
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-    steps:
-      - uses: actions/checkout@v6
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: go
-      - uses: github/codeql-action/autobuild@v3
-      - uses: github/codeql-action/analyze@v3
-```
-
-### 4. Add Gitleaks Secret Detection (1 hour)
-Add to `.pre-commit-config.yaml`:
-```yaml
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.24.3
-    hooks:
-      - id: gitleaks
+      - name: Smoke test container
+        run: |
+          docker run --rm ${{ steps.build-image.outputs.image }} --help || \
+            echo "Warning: Container startup check failed"
 ```
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflow Inventory** (17+ workflows):
+**Score: 9/10**
+
+Outstanding unit test coverage:
+
+| Metric | Value |
+|--------|-------|
+| Source files (non-test `.go`) | 172 |
+| Unit test files (`*_test.go`, excl. e2e) | 130 |
+| Test-to-source file ratio | 0.76 |
+| Source LOC | 32,167 |
+| Test LOC | 48,618 |
+| Test-to-source LOC ratio | 1.51x |
+| Testing frameworks | Go testing, Ginkgo/Gomega, testify |
+| envtest suites | 2 (saturation engine, controller indexers) |
+| Ginkgo suites | 10+ |
+| t.Parallel() calls | 4 |
+
+**Strengths:**
+- Test coverage spans all major packages: `internal/actuator`, `internal/collector`, `internal/config`, `internal/controller`, `internal/coordinator`, `internal/datastore`, `internal/discovery`, `internal/engines/*`, `internal/metrics`, `internal/utils`, `pkg/analyzer`, `pkg/config`, `pkg/core`, `pkg/manager`, `pkg/solver`
+- Multiple testing patterns: table-driven tests, Ginkgo BDD suites, envtest integration
+- Test helpers organized in `test/utils/` (unit utils, pod scraping helpers, logging, feature gates, debug helpers)
+
+**Areas for improvement:**
+- Only 4 `t.Parallel()` calls across all unit tests — increasing parallelism would speed up `make test`
+- No table-driven test generation or fuzzing visible
+
+### Integration/E2E Tests
+
+**Score: 9/10**
+
+Comprehensive E2E test suite with real cluster validation:
+
+| Metric | Value |
+|--------|-------|
+| E2E test files | 12 |
+| E2E fixture files | 8 |
+| Test scenarios | throughput, saturation_v2, scale_from_zero, pod_scraping, multi_controller, sglang_backend, annotation_discovery, limiter, operational_dashboard, smoke_keda |
+| Cluster setup | Kind (multi-node with emulated GPUs) |
+| CI triggers | Smoke: every PR, Full: every PR with code changes |
+| OpenShift E2E | Separate workflow with /ok-to-test gating |
+
+**Strengths:**
+- **Smoke + Full split**: Smoke tests (60 min timeout) run on every PR; full suite (90 min timeout) runs when code changes detected
+- **Kind cluster with GPU emulation**: `deploy/kind-emulator/setup.sh` creates multi-node clusters with emulated GPU labels
+- **Fixture builder pattern**: Reusable test fixtures (`infra_builder.go`, `workload_builder.go`, `model_service_builder.go`, `scaled_object_builder.go`, `sglang_emulator_builder.go`)
+- **OpenShift E2E** (617 lines): Fork PR gating via `/ok-to-test`, configurable parameters (model_id, accelerator_type, request_rate)
+- **Code change detection**: Skips CI for docs-only PRs using `dorny/paths-filter`
+
+**Areas for improvement:**
+- No multi-version Kubernetes testing (single K8s version per run)
+- No contract tests for API boundaries
+
+### Build Integration
+
+**Score: 9/10**
+
+Excellent build integration pipeline:
+
+**PR-time validation:**
+- `make build` runs on every PR (lint-and-test job)
+- Docker image built locally on PR (`deploy/ci-pr-checks/build-wva-image-local.sh`)
+- Kustomize overlay validation: 3 overlays verified (`cluster-scoped/kubernetes`, `namespace-scoped/openshift`, `namespace-scoped/kubernetes`)
+
+**Tekton/Konflux pipelines:**
+- PR pipeline: triggers on `/build-konflux` comment or `kfbuild-*` labels, builds multi-arch (x86_64 + arm64), hermetic builds with gomod prefetch, 8h timeout
+- Push pipeline: triggered on push to main, publishes `odh-stable` tag
+- Both use `Dockerfile.konflux` with FIPS runtime
+
+**Strengths:**
+- Multi-arch support via Tekton build-platforms
+- Hermetic Konflux builds with prefetch
+- SHA-pinned base images in both Dockerfiles
+- Kustomize overlay validation catches manifest errors pre-merge
+- Manifest sync workflow to kserve repo
+
+### Image Testing
+
+**Score: 7/10**
+
+Good image practices with room for runtime validation:
+
+| Feature | Dockerfile (upstream) | Dockerfile.konflux (downstream) |
+|---------|----------------------|-------------------------------|
+| Multi-stage build | Yes | Yes |
+| Base image | distroless/static:nonroot | UBI9/ubi-minimal |
+| SHA-pinned | Yes | Yes |
+| Non-root user | 65532:65532 | 65532:65532 |
+| FIPS runtime | No (CGO_ENABLED=0) | Yes (GOEXPERIMENT=strictfipsruntime, CGO_ENABLED=1) |
+| OCI labels | Yes | Yes (Red Hat labels) |
+| License file | No | Yes (LICENSE copied) |
+
+**Additional image practices:**
+- `.dockerignore` present and configured
+- Hadolint in pre-commit hooks (`--failure-threshold error`)
+- Readiness/liveness probes defined in `config/base/manager/deployment.yaml`
+- Multi-arch via Tekton (x86_64 + arm64)
+
+**Missing:**
+- No explicit container runtime smoke test (e.g., `docker run --help`)
+- No testcontainers usage
+- No HEALTHCHECK instruction in Dockerfiles (relies on K8s probes)
+
+### Coverage Tracking
+
+**Score: 3/10**
+
+Coverage is generated but not tracked:
+
+| Feature | Status |
+|---------|--------|
+| Coverage generation | `--coverprofile cover.out` in Makefile |
+| `.codecov.yml` | Missing |
+| Codecov integration | Missing |
+| Coverage thresholds | None |
+| PR coverage reporting | None |
+| Coverage gate enforcement | None |
+
+The `make test` target generates `cover.out`, but this file is neither uploaded to any service nor checked against thresholds. This is the single largest quality gap in the repository.
+
+### CI/CD Automation
+
+**Score: 9/10**
+
+Highly organized CI with multiple safety nets:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `ci-pr-checks.yaml` | PR, issue_comment, dispatch | Lint, test, build, kustomize, E2E smoke/full on Kind |
-| `ci-e2e-openshift.yaml` | PR, issue_comment, dispatch | E2E on real OpenShift cluster with GPUs |
-| `ci-main-image.yaml` | push to main | Build + push multi-arch image + Trivy scan |
-| `ci-release.yaml` | tag/release | Build + push versioned image + Trivy scan |
-| `helm-release.yaml` | release/dispatch | Build image + package + publish Helm chart to GHCR |
-| `ci-signed-commits.yaml` | PR | Enforce signed commits |
-| `ci-doc-only-status.yaml` | PR | Skip tests for doc-only PRs |
-| `labeler.yaml` | PR | Auto-label PRs |
-| `stale.yaml` / `unstale.yaml` | schedule | Manage stale issues/PRs |
-| `prow-*.yml` | PR events | Prow-compatible automerge and label management |
-| `assign-docs-pr.yml` | PR | Auto-assign docs PRs |
-| `copilot-setup-steps.yml` | — | GitHub Copilot agent setup |
+| ci-pr-checks.yaml | PR to main/dev | Lint, test, kustomize build, E2E smoke + full |
+| ci-e2e-openshift.yaml | PR + /ok-to-test | OpenShift E2E on real cluster |
+| ci-main-image.yaml | Push to main | Build and push image |
+| ci-release.yaml | Release | Release automation |
+| ci-signed-commits.yaml | PR | Verify commit signatures |
+| assign-docs-pr.yml | PR | Auto-assign docs PRs |
+| labeler.yaml | PR | Auto-label by paths |
+| prow-github.yml | Various | Prow integration |
+| prow-pr-automerge.yml | PR | Auto-merge approved PRs |
+| stale/unstale.yaml | Schedule | Issue/PR lifecycle |
+| sync-manifests-to-kserve.yml | Push | Sync manifests downstream |
+| disconnected-readiness.yml | PR | Disconnected environment check |
+| Tekton PR pipeline | Comment/label | Konflux build validation |
+| Tekton push pipeline | Push to main | Konflux production build |
 
-**Strengths**:
-- Sophisticated concurrency control with PR-number grouping and comment-isolation
-- Smart doc-only detection via `dorny/paths-filter` to skip unnecessary test runs
-- `/ok-to-test` and `/retest` comment triggers for fork PRs with permission gating
-- Status reporting back to fork PRs via commit status API
-- Parallel runners enabled in golangci-lint configuration
-- PR-number-scoped namespaces for OpenShift E2E to avoid conflicts
+**Strengths:**
+- Concurrency control on 4 key workflows (avoids resource conflicts)
+- Code-change detection skips CI for docs-only PRs
+- Timeout enforcement (60 min smoke, 90 min full)
+- Go module cache via `actions/setup-go` with `cache-dependency-path`
+- Fork PR security via `/ok-to-test` gating on OpenShift E2E
+- Tekton pipeline with cancel-in-progress for PRs
 
-**Tekton/Konflux Pipelines**:
-- `.tekton/workload-variant-autoscaler-controller-pull-request.yaml` — PR pipeline using Konflux multi-arch container build
-- `.tekton/workload-variant-autoscaler-controller-push.yaml` — Push pipeline
-- Hermetic builds with Go module prefetching
-- Multi-arch: `linux/x86_64` + `linux-m2xlarge/arm64`
-- Uses `Dockerfile.konflux` with UBI9 base and FIPS-compatible build
+**Areas for improvement:**
+- No explicit caching configuration beyond Go setup action
+- No matrix strategy for multi-version testing
 
-### Test Coverage
+### Static Analysis
 
-**Test Metrics**:
-- Source files: 169 Go files (~32,171 lines)
-- Test files: 134 Go files (~49,923 lines)
-- **Test-to-code ratio: 1.55:1** (outstanding — more test code than source code)
+**Score: 9/10**
 
-**Unit Test Coverage** (Ginkgo/Gomega + testify):
-- `pkg/core/` — 6 test files (accelerator, allocation, model, server, serviceclass, system)
-- `pkg/solver/` — 3 test files (greedy, optimizer, solver)
-- `pkg/analyzer/` — 3 test files (queueanalyzer, queuemodel, utils)
-- `pkg/config/` — 1 test file
-- `pkg/manager/` — 1 test file
-- `internal/controller/` — 8 test files (controller, predicates, handler, configmap, indexers)
-- `internal/engines/saturation/` — 12+ test files (engine, thresholds, optimization, events, population)
-- `internal/engines/pipeline/` — 3+ test files (type_inventory, optimizer_equivalence)
-- `internal/engines/scalefromzero/` — 2 test files
-- `internal/actuator/` — 2 test files
-- `internal/metrics/` — 11 test files (replica, pipeline_stage, optimization, enforcer, etc.)
-- `internal/utils/` — 7 test files (variant, tls, prometheus, accelerator)
-- `internal/coordinator/` — 2 test files
-- `internal/datastore/` — 1 test file
-- `internal/discovery/` — 1 test file
-- `internal/saturation/` — 1 test file
-- `internal/interfaces/` — 2 test files
-- `internal/annotations/` — 1 test file
-- `api/v1alpha1/` — 1 test file (CRD types)
-- `test/chart/` — 1 test file (Helm chart validation)
-
-**Controller Tests with envtest**:
-- `internal/controller/suite_test.go` uses `envtest` for realistic API server testing
-- `internal/actuator/suite_test.go` uses envtest
-- `internal/engines/saturation/suite_test.go` uses envtest
-
-**E2E Testing Infrastructure** (outstanding):
-
-| Suite | Environment | Scope | Trigger |
-|-------|-------------|-------|---------|
-| Smoke | Kind + emulated GPU | Infrastructure readiness, VA lifecycle, error handling | Every PR automatically |
-| Full | Kind + emulated GPU | All smoke + saturation, throughput, scale-from-zero, pod scraping, multi-controller | Same-repo PR or `/ok-to-test` |
-| OpenShift | Real OpenShift + GPU | Full E2E with real vLLM model serving on H100/A100 GPUs | `/ok-to-test` on PRs |
-| Multi-controller | Kind | Dual namespace-scoped controller isolation | Part of full suite |
-
-E2E tests support both scaler backends (Prometheus Adapter HPA and KEDA ScaledObject).
-
-**Benchmark Infrastructure**:
-- `test/benchmark/scenarios/` — benchmark workload profiles
-- `hack/benchmark/` — benchmark tooling
-- Integration with `llm-d-benchmark` CLI for GPU workload testing
-
-### Code Quality
-
-**Linting** (golangci-lint v2.8.0 with 20 linters):
-- `copyloopvar`, `dupword`, `durationcheck`, `errcheck`, `fatcontext`
-- `ginkgolinter`, `goconst`, `gocritic`, `govet`, `ineffassign`
-- `loggercheck`, `makezero`, `misspell`, `nakedret`, `perfsprint`
-- `prealloc`, `revive`, `staticcheck`, `unconvert`, `unparam`, `unused`
-- Formatters: `gofmt`, `goimports`
+#### Linting
+- **golangci-lint v2.8.0** with 22+ linters: copyloopvar, dupword, durationcheck, errcheck, fatcontext, ginkgolinter, goconst, gocritic, govet, ineffassign, loggercheck, makezero, misspell, nakedret, perfsprint, prealloc, revive, staticcheck, unconvert, unparam, unused
+- Formatters: gofmt, goimports
 - Parallel runners enabled
+- Sensible exclusions (deprecation warnings for Accelerator, common false positives)
 
-**Pre-commit Hooks** (comprehensive):
-- `pre-commit-hooks` v6.0.0 (trailing whitespace, YAML/JSON, large files, merge conflicts, case conflicts)
-- `shellcheck` with `-x --severity=warning`
-- `hadolint` for Dockerfile linting (failure-threshold: error)
-- `markdownlint` v0.47.0 with auto-fix
-- `yamllint` v1.37.1 (max line 250, truthy check disabled for k8s)
+#### Pre-commit Hooks
+Comprehensive `.pre-commit-config.yaml`:
+- **File hygiene**: trailing-whitespace, end-of-file-fixer, check-yaml, check-json, check-added-large-files (1MB), check-merge-conflict, mixed-line-ending, check-case-conflict
+- **Shell**: shellcheck with severity=warning
+- **Docker**: hadolint with failure-threshold=error
+- **Markdown**: markdownlint with auto-fix
+- **YAML**: yamllint with 250 char line limit
 
-**Dependency Management**:
-- Dependabot configured for Go modules, GitHub Actions, and Docker base images (weekly)
-- Grouped updates for Kubernetes dependencies
-- Major version updates ignored for stability
+#### FIPS Compatibility
+- **Konflux build** (`Dockerfile.konflux`): `GOEXPERIMENT=strictfipsruntime`, `CGO_ENABLED=1`, UBI9 base images - fully FIPS-compliant
+- **Upstream build** (`Dockerfile`): `CGO_ENABLED=0`, distroless base - not FIPS-compliant (expected for upstream)
+- **Source code**: `math/rand` used only in `test/utils/e2eutils.go` (acceptable in test code)
+- No non-FIPS crypto imports (`crypto/md5`, `crypto/des`, `crypto/rc4`) found
 
-**Deploy Script Validation**:
-- `make lint-deploy-scripts` — `bash -n` syntax check for all deploy scripts
-- `make smoke-deploy-scripts` — non-interactive smoke test of install.sh
+#### Dependency Alerts
+- **Dependabot**: Configured for gomod, github-actions, and docker ecosystems with weekly schedule, grouped updates, and sensible ignore rules (major K8s updates)
+- **Renovate**: Also configured, extending `red-hat-data-services/konflux-central` defaults
+- Dual dependency management provides redundancy
 
-### Container Images
+#### Additional
+- `_typos.toml` for spell checking configuration
 
-**Dockerfile** (standard):
-- Multi-stage build: `quay.io/projectquay/golang:1.25` builder + `gcr.io/distroless/static:nonroot`
-- CGO disabled, non-root user (65532:65532)
-- OCI annotations for source, description, license
-- Multi-arch support via Docker Buildx (amd64 + arm64)
+### Agent Rules
 
-**Dockerfile.konflux** (production/RHOAI):
-- Multi-stage: `registry.redhat.io/ubi9/go-toolset:9.7` (pinned SHA) + `ubi9/ubi-minimal` (pinned SHA)
-- FIPS-compatible build (`GOEXPERIMENT=strictfipsruntime`, CGO_ENABLED=1)
-- License file copied to `/licenses/`
-- Red Hat component labels for RHOAI compliance
+**Score: 9/10**
 
-**Scanning**:
-- Trivy v0.35.0 via composite action (HIGH + CRITICAL severity)
-- Runs on: main pushes and release tags
-- **Gap**: Not running on PRs
+Best-in-class AI agent configuration:
 
-### Security
+**CLAUDE.md / AGENTS.md:**
+- Comprehensive Go code style guidelines (naming, formatting, error handling, logging, documentation, concurrency)
+- Kubernetes/controller-runtime specific guidance
+- Kustomize file naming conventions
+- E2E testing guidelines (no docker.io images, make targets)
+- Deprecation notes (helm chart removed)
 
-**Present**:
-- Trivy vulnerability scanning (main/release only)
-- Signed commit enforcement (`ci-signed-commits.yaml`)
-- Dependabot for dependency updates
-- FIPS-compatible builds in Konflux
-- Non-root container user
-- Pinned base image SHA digests in Dockerfile.konflux
-- Hadolint for Dockerfile linting
+**Custom Agent Reviewers (`.claude/agents/`):**
 
-**Missing**:
-- No SAST (CodeQL, gosec, Semgrep) for source code
-- No secret detection (Gitleaks, TruffleHog)
-- No SBOM generation (Syft, Trivy SBOM mode)
-- No image signing/attestation (cosign)
-- No PR-time Trivy scanning
+| Agent | Purpose | Model |
+|-------|---------|-------|
+| go-reviewer | AGENTS.md compliance, idiomatic Go, K8s patterns | sonnet |
+| test-analyzer | Test coverage gaps, missing tests, test quality | sonnet |
+| security-auditor | RBAC, secrets, input validation, K8s security | sonnet |
+| go-reuse-checker | Reimplemented stdlib/library functionality | sonnet |
 
-### Agent Rules (Agentic Flow Quality)
+All agents use confidence scoring (only report issues >= 80) and have detailed checklists.
 
-**Status**: Strong
+**PR Review Skill (`.claude/skills/pr-review/`):**
+- Orchestrates all 4 agents in parallel
+- Idempotent: creates comment on first run, updates with resolved/new diff on re-runs
+- Sentinel-based comment tracking (`<!-- claude-pr-review -->`)
 
-**CLAUDE.md**: Points to AGENTS.md
-
-**AGENTS.md** (comprehensive):
-- Go code style guidelines (naming, formatting, error handling, logging, concurrency)
-- Documentation organization (`docs/developer-guide/`, `docs/plans/`, `docs/superpowers/`)
-- Kustomize/config file naming conventions
-- E2E testing standards (make targets, no docker.io images)
-- Deprecation notes (Helm chart deprecated)
-
-**Claude Code Configuration** (`.claude/`):
-- `agents/go-reviewer.md` — Go code review agent
-- `agents/go-reuse-checker.md` — Code reuse analysis agent
-- `agents/security-auditor.md` — Security audit agent
-- `agents/test-analyzer.md` — Test analysis agent
-- `skills/pr-review/SKILL.md` — PR review skill
-
-**GitHub Agents** (`.github/agents/`):
-- `create-agentic-workflow.agent.md` — Workflow designer
-- `create-shared-agentic-workflow.agent.md` — Shared workflow designer
-- `debug-agentic-workflow.agent.md` — Workflow debugger
-
-**Gaps**:
-- No `.claude/rules/` directory with test-specific rules (unit test patterns, E2E patterns, mock strategies)
-- Could benefit from test automation rules generated via `/test-rules-generator`
+**Missing:**
+- No `.claude/rules/` directory with test creation rules (how to write new tests for this project)
+- No explicit patterns for fixture builder usage or envtest setup in agent rules
 
 ## Recommendations
 
-### Priority 0 (Critical — High Impact, Low Effort)
+### Priority 0 (Critical)
 
-1. **Add Codecov integration** — Upload `cover.out` from `ci-pr-checks.yaml`, add `.codecov.yml` with thresholds. The test infrastructure already generates coverage data; just needs the upload step. (2-4 hours)
+1. **Integrate codecov with coverage thresholds and PR reporting**
+   - Add `codecov/codecov-action@v5` to `lint-and-test` job
+   - Create `.codecov.yml` with project target (70%) and patch target (80%)
+   - Effort: 2-4 hours
 
-2. **Add Trivy scanning to PR workflow** — Reuse the existing `.github/actions/trivy-scan` composite action in `ci-pr-checks.yaml` after the image build step. This is a one-line addition. (1 hour)
+2. **Upload `cover.out` from `make test` to codecov**
+   - The coverage data already exists; it just needs to be uploaded
+   - Effort: 30 minutes (part of codecov integration above)
 
 ### Priority 1 (High Value)
 
-3. **Enable CodeQL analysis** — Add `.github/workflows/codeql.yml` for Go SAST. GitHub provides this free for open-source repos. (1-2 hours)
+3. **Add lightweight container startup test in PR workflow**
+   - After `build-wva-image-local.sh`, run `docker run --rm $IMG --help`
+   - Catches missing dependencies, broken entrypoints in seconds
+   - Effort: 1-2 hours
 
-4. **Add Gitleaks secret detection** — Add to `.pre-commit-config.yaml` and optionally as a CI step. (1 hour)
+4. **Create `.claude/rules/` with test creation patterns**
+   - `unit-tests.md`: Ginkgo suite structure, envtest setup, table-driven patterns
+   - `e2e-tests.md`: Fixture builders, Gomega async matchers, Kind cluster expectations
+   - Effort: 2-3 hours (or use `/test-rules-generator` skill)
 
-5. **Add SBOM generation** — Use Trivy SBOM mode or Syft in the release pipeline to generate SBOMs alongside container images. (2-3 hours)
-
-6. **Create `.claude/rules/` for test patterns** — Generate rules for unit tests (Ginkgo patterns, envtest usage), E2E tests (fixture patterns, cleanup), and mocking strategies using `/test-rules-generator`. (2-3 hours)
+5. **Add multi-version Kubernetes testing**
+   - Matrix strategy in E2E workflows to test against 2-3 K8s versions
+   - Effort: 4-6 hours
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Add cosign image signing** — Sign released images and Helm charts with cosign for supply chain security. (4-6 hours)
+6. **Increase `t.Parallel()` usage in unit tests**
+   - Currently only 4 calls; increasing would speed up `make test`
+   - Effort: 2-4 hours
 
-8. **Add benchmark regression tracking** — Integrate benchmark results into CI to detect performance regressions in saturation/optimization engines. (8-12 hours)
+7. **Add benchmark regression testing in CI**
+   - The Makefile has extensive benchmark targets; add CI comparison against baseline
+   - Effort: 8-12 hours
 
-9. **Consider contract testing** — Add contract tests between WVA controller and GAIE/KEDA/Prometheus Adapter APIs to catch breaking changes. (8-16 hours)
-
-10. **Add mutation testing** — Use `go-mutesting` or equivalent to validate test quality beyond line coverage. (4-8 hours)
+8. **Add contract tests for API boundaries**
+   - Validate InferencePool, InferenceObjective CRD contracts
+   - Effort: 8-12 hours
 
 ## Comparison to Gold Standards
 
-| Dimension | WVA | odh-dashboard | notebooks | kserve | Notes |
-|-----------|-----|--------------|-----------|--------|-------|
-| Unit Tests | 9 | 9 | 7 | 9 | WVA: outstanding 1.55:1 test ratio, envtest |
-| Integration/E2E | 9 | 9 | 8 | 9 | WVA: Kind + OpenShift dual-env E2E |
-| Build Integration | 8 | 8 | 7 | 7 | WVA: binary + image + kustomize on PR |
-| Image Testing | 7 | 7 | 9 | 6 | WVA: Trivy on main only, not PR |
-| Coverage Tracking | 3 | 8 | 5 | 8 | WVA: generates but doesn't report/enforce |
-| CI/CD Automation | 9 | 9 | 8 | 8 | WVA: sophisticated fork PR handling |
-| Agent Rules | 8 | 9 | 3 | 3 | WVA: 4 custom agents + skills |
-| Security | 6 | 7 | 7 | 7 | WVA: Trivy + signed commits, no SAST |
+| Practice | WVA | odh-dashboard | notebooks | kserve |
+|----------|-----|---------------|-----------|--------|
+| Unit test ratio | 1.51x LOC | High | Moderate | High |
+| E2E automation | PR-triggered smoke+full | PR-triggered | Image-focused | PR-triggered |
+| Coverage enforcement | None | Codecov | None | Codecov |
+| Build validation | Docker+kustomize+Konflux | Docker+webpack | Image pipeline | Docker+kustomize |
+| FIPS compliance | strictfipsruntime + UBI9 | N/A (frontend) | UBI-based | UBI-based |
+| Pre-commit hooks | Comprehensive | Present | Minimal | Present |
+| Agent rules | 4 agents + PR skill | Rules present | None | None |
+| Multi-arch | x86_64 + arm64 | x86_64 | Multi-arch | x86_64 |
+| Dependency alerts | Dependabot + Renovate | Dependabot | None | Dependabot |
+
+**WVA stands out for**: Agent rules (best-in-class), FIPS compliance, E2E comprehensiveness, and test-to-code ratio. Its only notable gap vs gold standards is coverage tracking.
 
 ## File Paths Reference
 
-### CI/CD Configuration
-- `.github/workflows/ci-pr-checks.yaml` — Main PR workflow (lint, test, build, E2E)
-- `.github/workflows/ci-e2e-openshift.yaml` — OpenShift GPU E2E
-- `.github/workflows/ci-main-image.yaml` — Main branch image build
-- `.github/workflows/ci-release.yaml` — Release image build
-- `.github/workflows/helm-release.yaml` — Helm chart release
-- `.github/workflows/ci-signed-commits.yaml` — Signed commit enforcement
-- `.tekton/workload-variant-autoscaler-controller-pull-request.yaml` — Konflux PR pipeline
-- `.tekton/workload-variant-autoscaler-controller-push.yaml` — Konflux push pipeline
+### CI/CD
+- `.github/workflows/ci-pr-checks.yaml` - Main PR checks (lint, test, kustomize, E2E)
+- `.github/workflows/ci-e2e-openshift.yaml` - OpenShift E2E tests
+- `.github/workflows/ci-main-image.yaml` - Main branch image build
+- `.github/workflows/ci-release.yaml` - Release automation
+- `.tekton/workload-variant-autoscaler-controller-pull-request.yaml` - Konflux PR pipeline
+- `.tekton/workload-variant-autoscaler-controller-push.yaml` - Konflux push pipeline
+- `Makefile` - Build and test targets
 
 ### Testing
-- `test/e2e/` — E2E test suite (12+ test files)
-- `test/benchmark/` — Benchmark scenarios
-- `test/chart/` — Helm chart tests
-- `test/utils/` — Shared test utilities
-- `test/testconfig/` — Test configuration
-- `internal/controller/suite_test.go` — envtest controller tests
-- `internal/engines/saturation/suite_test.go` — envtest engine tests
-- `internal/actuator/suite_test.go` — envtest actuator tests
-- `Makefile` — Test targets: `test`, `test-e2e-smoke`, `test-e2e-full`, `lint`
+- `test/e2e/` - E2E test suite (12 test files, 8 fixture files)
+- `test/utils/` - Shared test utilities
+- `test/testconfig/` - Test configuration
+- `internal/*/suite_test.go` - Ginkgo suite files
+- `internal/controller/indexers/suite_test.go` - envtest suite
+- `internal/engines/saturation/suite_test.go` - envtest suite
 
-### Code Quality
-- `.golangci.yml` — 20+ linters, v2.8.0 format
-- `.pre-commit-config.yaml` — shellcheck, hadolint, markdownlint, yamllint
-- `.github/dependabot.yml` — Go, Actions, Docker dependency updates
+### Static Analysis
+- `.golangci.yml` - golangci-lint v2 configuration (22+ linters)
+- `.pre-commit-config.yaml` - Pre-commit hooks (shellcheck, hadolint, markdownlint, yamllint)
+- `.github/dependabot.yml` - Dependabot (gomod, actions, docker)
+- `.github/renovate.json` - Renovate (extending konflux-central)
+- `_typos.toml` - Typo checking configuration
 
 ### Container Images
-- `Dockerfile` — Standard build (distroless)
-- `Dockerfile.konflux` — RHOAI/Konflux build (UBI9, FIPS)
-- `.github/actions/trivy-scan/action.yml` — Trivy composite action
+- `Dockerfile` - Upstream build (distroless, CGO_ENABLED=0)
+- `Dockerfile.konflux` - Downstream/Konflux build (UBI9, FIPS runtime)
+- `.dockerignore` - Docker build exclusions
+- `config/base/manager/deployment.yaml` - Deployment with probes
 
 ### Agent Rules
-- `CLAUDE.md` — Root Claude configuration
-- `AGENTS.md` — Comprehensive Go code + testing guidelines
-- `.claude/agents/` — 4 custom agents (go-reviewer, go-reuse-checker, security-auditor, test-analyzer)
-- `.claude/skills/pr-review/` — PR review skill
-- `.github/agents/` — 3 GitHub agentic workflow agents
+- `CLAUDE.md` - Redirects to AGENTS.md
+- `AGENTS.md` - Comprehensive Go code style and project conventions
+- `.claude/agents/go-reviewer.md` - Go code quality reviewer
+- `.claude/agents/test-analyzer.md` - Test coverage analyzer
+- `.claude/agents/go-reuse-checker.md` - Library reuse checker
+- `.claude/agents/security-auditor.md` - Kubernetes security auditor
+- `.claude/skills/pr-review/SKILL.md` - Orchestrated PR review skill

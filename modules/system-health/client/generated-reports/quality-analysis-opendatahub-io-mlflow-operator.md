@@ -1,449 +1,503 @@
 ---
 repository: "opendatahub-io/mlflow-operator"
-overall_score: 7.7
+overall_score: 8.3
 scorecard:
   - dimension: "Unit Tests"
     score: 9.0
-    status: "Exceptional 2:1 test-to-code ratio with envtest, Ginkgo/Gomega, and granular Helm chart tests"
+    status: "Excellent test-to-code ratio (1.78:1) with Ginkgo/envtest; 32 Go test files for 18 source files"
   - dimension: "Integration/E2E"
     score: 9.0
-    status: "Matrix-driven integration tests, Kind E2E, upgrade validation (Ginkgo + pytest), operator chaos"
+    status: "Comprehensive multi-backend, multi-version Kind E2E + Python integration suite with upgrade testing"
   - dimension: "Build Integration"
-    score: 7.0
-    status: "Tekton/Konflux PR pipelines, manifest verification, sample validation, but no GHA Konflux simulation"
+    score: 9.0
+    status: "PR-time image builds, kustomize/Helm verification, CRD schema validation, operator-chaos breaking-change gate"
   - dimension: "Image Testing"
-    score: 7.0
-    status: "Multi-stage FIPS build, multi-arch, SBOM via Syft, but no vulnerability scanning in CI"
+    score: 8.0
+    status: "UBI9 multi-stage builds, multi-arch support, Kind-based runtime validation, health probes in Helm"
   - dimension: "Coverage Tracking"
-    score: 3.0
-    status: "coverprofile generated locally but not uploaded, enforced, or reported on PRs"
+    score: 4.0
+    status: "coverprofile generated locally but no CI reporting, no thresholds, no Codecov integration"
   - dimension: "CI/CD Automation"
     score: 9.0
-    status: "12 well-organized workflows with path filters, matrix strategies, reusable actions"
+    status: "13 GitHub Actions workflows, Tekton/Konflux pipelines, matrix strategies, artifact upload/debug logs"
+  - dimension: "Static Analysis"
+    score: 8.0
+    status: "golangci-lint v2.5 with 15 linters, pre-commit hooks, actionlint, FIPS-compliant builds; no Dependabot"
   - dimension: "Agent Rules"
-    score: 7.0
-    status: "Comprehensive AGENTS.md with full project context but no .claude/rules/ for test patterns"
+    score: 8.0
+    status: "Comprehensive AGENTS.md covering project structure, testing, CI/CD, samples, agent notes"
 critical_gaps:
-  - title: "No coverage tracking or enforcement"
-    impact: "Coverage regressions go undetected; no visibility into test health over time"
+  - title: "No coverage reporting or threshold enforcement"
+    impact: "Coverage regressions are invisible on PRs; no gate to prevent merging under-tested code"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No container vulnerability scanning in CI"
-    impact: "CVEs in base images or dependencies not caught before merge"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No SAST/CodeQL integration"
-    impact: "Security vulnerabilities in Go code not caught by static analysis"
+  - title: "No Dependabot or Renovate for automated dependency alerts"
+    impact: "Vulnerable or outdated dependencies may go unnoticed until manual review"
     severity: "MEDIUM"
-    effort: "2-3 hours"
+    effort: "1-2 hours"
 quick_wins:
-  - title: "Add Codecov integration to test workflow"
-    effort: "2-3 hours"
-    impact: "Immediate visibility into coverage trends, PR-level coverage diffs"
-  - title: "Add Trivy container scanning to PR workflow"
+  - title: "Add Codecov integration with PR reporting"
+    effort: "3-4 hours"
+    impact: "Visible coverage metrics on every PR, prevents regression"
+  - title: "Enable Dependabot for gomod and docker ecosystems"
     effort: "1-2 hours"
-    impact: "Catch CVEs in UBI9 base images and Go dependencies before merge"
-  - title: "Add pre-commit hooks (.pre-commit-config.yaml)"
-    effort: "1-2 hours"
-    impact: "Catch lint/format issues locally before CI, faster feedback loop"
-  - title: "Add CodeQL workflow for Go"
-    effort: "1-2 hours"
-    impact: "Free GitHub-native SAST catches injection, crypto, and data-flow bugs"
+    impact: "Automated dependency update PRs with security alerts"
+  - title: "Add concurrency control to CI workflows"
+    effort: "1 hour"
+    impact: "Prevent redundant CI runs on rapid pushes, reduce resource waste"
 recommendations:
   priority_0:
-    - "Add Codecov/Coveralls integration with coverage thresholds and PR reporting"
-    - "Add Trivy or Snyk container scanning to PR workflows"
+    - "Integrate Codecov with coverage threshold enforcement (e.g. 60% minimum, no regression on PR)"
+    - "Upload cover.out from unit test workflow and configure PR coverage comments"
   priority_1:
-    - "Add CodeQL SAST workflow for Go security analysis"
-    - "Add Gitleaks or TruffleHog secret detection to PR workflows"
-    - "Create .claude/rules/ with test pattern rules for unit, e2e, and integration tests"
+    - "Add .github/dependabot.yml for gomod, docker, and github-actions ecosystems"
+    - "Add concurrency groups to PR-triggered workflows to cancel superseded runs"
+    - "Add CLAUDE.md and .claude/rules/ with test-creation rules for AI-assisted development"
   priority_2:
-    - "Add pre-commit hooks for golangci-lint, gofmt, and YAML validation"
-    - "Add Helm chart testing with chart-testing (ct) tool"
-    - "Add coverage thresholds (e.g., 80% minimum, no regression on PRs)"
+    - "Consider adding coverage tracking for the Python mlflow-tests suite"
+    - "Add workflow caching for Go modules across unit test and lint workflows"
 ---
 
 # Quality Analysis: mlflow-operator
 
+**Repository:** [opendatahub-io/mlflow-operator](https://github.com/opendatahub-io/mlflow-operator)
+**Type:** Kubernetes Operator (Go, Kubebuilder v4.10.1)
+**Jira:** RHOAIENG / MLflow (midstream)
+**Analysis Date:** 2026-07-20
+
 ## Executive Summary
 
-- **Overall Score: 7.7/10**
-- **Repository Type**: Kubernetes Operator (Go, Kubebuilder v4.10.1)
-- **Primary Language**: Go 1.25 (with Python integration test harness)
-- **Key Strengths**: Exceptional test-to-code ratio (~2:1), comprehensive multi-layer testing strategy spanning unit tests (envtest), E2E (Kind), integration (matrix-driven), upgrade validation (both Ginkgo and pytest), and operator chaos testing. 12 well-organized CI workflows with path filtering and matrix strategies.
-- **Critical Gaps**: No coverage tracking/enforcement, no container vulnerability scanning, no SAST integration
-- **Agent Rules Status**: Comprehensive AGENTS.md present but no `.claude/rules/` directory
+- **Overall Score: 8.3/10** - This is one of the strongest repositories analyzed, with exemplary testing practices
+- **Key Strengths:** Exceptional test coverage across unit, E2E, integration, and upgrade dimensions; FIPS-compliant builds with UBI9; operator-chaos breaking-change detection; 13 well-organized CI workflows with Tekton/Konflux pipelines
+- **Critical Gaps:** No coverage reporting/enforcement in CI; no Dependabot/Renovate for dependency alerts
+- **Agent Rules Status:** Present (AGENTS.md) - comprehensive guidance for project structure, testing, and CI
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 9/10 | Exceptional 2:1 test-to-code ratio with envtest, Ginkgo/Gomega, and granular Helm chart tests |
-| Integration/E2E | 9/10 | Matrix-driven integration tests, Kind E2E, upgrade validation (Ginkgo + pytest), operator chaos |
-| **Build Integration** | **7/10** | **Tekton/Konflux PR pipelines, manifest verification, sample validation, but no GHA Konflux simulation** |
-| Image Testing | 7/10 | Multi-stage FIPS build, multi-arch, SBOM via Syft, but no vulnerability scanning in CI |
-| Coverage Tracking | 3/10 | coverprofile generated locally but not uploaded, enforced, or reported on PRs |
-| CI/CD Automation | 9/10 | 12 well-organized workflows with path filters, matrix strategies, reusable actions |
-| Agent Rules | 7/10 | Comprehensive AGENTS.md with full project context but no `.claude/rules/` for test patterns |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 9/10 | 15% | 1.35 | Excellent test-to-code ratio (1.78:1) with Ginkgo/envtest |
+| Integration/E2E | 9/10 | 20% | 1.80 | Multi-backend, multi-version Kind E2E + Python integration suite |
+| Build Integration | 9/10 | 15% | 1.35 | PR-time image builds, kustomize/Helm/CRD validation, operator-chaos |
+| Image Testing | 8/10 | 10% | 0.80 | UBI9 multi-stage, multi-arch, Kind runtime validation, health probes |
+| Coverage Tracking | 4/10 | 10% | 0.40 | coverprofile generated but not reported or enforced |
+| CI/CD Automation | 9/10 | 15% | 1.35 | 13 workflows + Tekton, matrix strategies, debug artifact collection |
+| Static Analysis | 8/10 | 10% | 0.80 | golangci-lint v2.5 + 15 linters, pre-commit, actionlint, FIPS |
+| Agent Rules | 8/10 | 5% | 0.40 | Comprehensive AGENTS.md with project, testing, and CI guidance |
+| **Overall** | **8.3/10** | **100%** | **8.25** | |
 
 ## Critical Gaps
 
-### 1. No Coverage Tracking or Enforcement
-- **Impact**: Coverage regressions go undetected across PRs; no historical visibility into test health
-- **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: The Makefile generates `cover.out` via `-coverprofile`, but this file is never uploaded to Codecov/Coveralls, no coverage thresholds are enforced, and PRs get no coverage diff reporting. Given the excellent 2:1 test-to-code ratio, adding tracking would immediately showcase the project's strength.
+### 1. No Coverage Reporting or Threshold Enforcement
+- **Impact:** Coverage regressions are invisible on PRs; no automated gate to prevent merging under-tested code
+- **Severity:** HIGH
+- **Effort:** 4-6 hours
+- **Details:** The Makefile generates `cover.out` via `-coverprofile` during `make test`, but the CI workflow (`test.yml`) does not upload coverage data to any service. No `.codecov.yml`, no coverage thresholds, no PR comments showing coverage delta. This is the single largest gap in an otherwise exemplary repository.
 
-### 2. No Container Vulnerability Scanning
-- **Impact**: CVEs in UBI9 base images and Go dependencies are not caught before merge
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: No Trivy, Snyk, or Grype integration exists in any workflow. The project uses `registry.access.redhat.com/ubi9/go-toolset:1.25` and `ubi9/ubi-minimal:latest` base images, which should be regularly scanned. The `.syft.yaml` for SBOM generation is present but not integrated into CI.
-
-### 3. No SAST/CodeQL Integration
-- **Impact**: Security vulnerabilities in Go code (injection, crypto issues, data-flow bugs) not caught by static analysis
-- **Severity**: MEDIUM
-- **Effort**: 2-3 hours
-- **Details**: golangci-lint covers many code quality concerns, but does not replace dedicated SAST tools for security-focused analysis.
+### 2. No Dependabot or Renovate Configuration
+- **Impact:** Vulnerable or outdated Go modules, Docker base images, and GitHub Actions may go unnoticed until manual review
+- **Severity:** MEDIUM
+- **Effort:** 1-2 hours
+- **Details:** No `.github/dependabot.yml` or `renovate.json` found. The repo pins GitHub Actions to commit SHAs (good practice), but has no automated mechanism to receive update PRs when new versions are available. The UBI9 base image and Go toolset version also lack automated update tracking.
 
 ## Quick Wins
 
-### 1. Add Codecov Integration to Test Workflow (2-3 hours)
+### 1. Add Codecov Integration with PR Reporting (3-4 hours)
+Add coverage upload to the `test.yml` workflow and create `.codecov.yml`:
 ```yaml
-# Add to .github/workflows/test.yml after "Running Tests" step
-- name: Upload coverage to Codecov
+# .codecov.yml
+coverage:
+  status:
+    project:
+      default:
+        target: 60%
+        threshold: 2%
+    patch:
+      default:
+        target: 70%
+```
+Add to `test.yml` after `make test`:
+```yaml
+- name: Upload coverage
   uses: codecov/codecov-action@v4
   with:
-    files: ./cover.out
-    flags: unittests
-    token: ${{ secrets.CODECOV_TOKEN }}
+    files: cover.out
+    fail_ci_if_error: false
 ```
 
-### 2. Add Trivy Container Scanning (1-2 hours)
+### 2. Enable Dependabot (1-2 hours)
+Create `.github/dependabot.yml`:
 ```yaml
-# New workflow or add to existing PR workflow
-- name: Run Trivy vulnerability scanner
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: 'localhost/mlflow-operator:v0.0.1'
-    format: 'sarif'
-    output: 'trivy-results.sarif'
-    severity: 'CRITICAL,HIGH'
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
 ```
 
-### 3. Add Pre-commit Hooks (1-2 hours)
+### 3. Add Concurrency Control to Workflows (1 hour)
+Add to PR-triggered workflows:
 ```yaml
-# .pre-commit-config.yaml
-repos:
-  - repo: https://github.com/golangci/golangci-lint
-    rev: v2.5.0
-    hooks:
-      - id: golangci-lint
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
-    hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
-```
-
-### 4. Add CodeQL Workflow (1-2 hours)
-```yaml
-# .github/workflows/codeql.yml
-name: CodeQL
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: go
-      - uses: github/codeql-action/autobuild@v3
-      - uses: github/codeql-action/analyze@v3
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 ```
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflows (12 total)**:
+**Score: 9/10**
+
+Outstanding unit test coverage with an excellent test-to-code ratio:
+
+| Metric | Value |
+|--------|-------|
+| Go source files | 18 |
+| Go test files | 32 |
+| Test-to-code ratio | 1.78:1 |
+| Testing framework | Ginkgo v2 / Gomega |
+| Test runner | envtest (controller-runtime) |
+| Coverage generation | `-coverprofile cover.out` |
+
+**Strengths:**
+- Comprehensive controller tests using envtest (real API server, no mocks)
+- Dedicated test files for each Helm value dimension: cabundle, CORS, DRA, env, GC, helpers, image, metrics, mlflowconfig, networkpolicy, pod metadata, render chart, storage, trace archival, workload
+- Migration controller testing with dedicated test files
+- API type tests (`mlflow_types_test.go`)
+- Config package has full test coverage with export_test.go pattern
+- Suite test setup (`suite_test.go`) properly configures envtest with CRDs and scheme
+
+**Why not 10:** Coverage is generated but not reported or enforced. No coverage thresholds prevent regression.
+
+### Integration/E2E Tests
+
+**Score: 9/10**
+
+One of the most comprehensive integration/E2E test suites analyzed:
+
+**E2E Tests (Go, Ginkgo):**
+- Located in `test/e2e/`
+- Kind cluster-based with operator deployment
+- Tests operator lifecycle: namespace creation, CRD installation, controller-manager deployment
+- Upgrade E2E test suite (`upgrade_e2e_test.go`) with seed image and live version migration
+- Pod security policy enforcement (restricted namespace labeling)
+
+**Integration Tests (Python, pytest):**
+- Located in `mlflow-tests/`
+- Full MLflow runtime validation across multiple configurations
+- Test modules: experiments, models, artifacts, traces, trace_actions, workspaces, resource_map
+- Upgrade pytest phases: `pre_upgrade/` and `post_upgrade/` with version-gated selection
+- Containerized test harness via `Dockerfile.konflux`
+
+**Multi-Version/Multi-Backend Testing Matrix:**
+- Kubernetes versions: v1.29.0, v1.34.0
+- Backend stores: sqlite, postgres
+- Registry stores: sqlite, postgres
+- Artifact backends: file, s3, file+s3 (multi-backend)
+- Serve artifacts: true, false
+- TLS variants: postgres_tls, seaweedfs_tls
+- Workspace label selectors
+
+**Upgrade Testing:**
+- Seeded upgrade state validation: deploys MLflow 3.10.1, upgrades to PR-built images, validates post-upgrade state
+- Current-upgrade pytest validation: validates upgrade pytest machinery on current build
+- Upgrade E2E: operator-managed migration from seed version to current
+
+**Why not 10:** Could benefit from contract/API testing between operator and MLflow runtime.
+
+### Build Integration
+
+**Score: 9/10**
+
+Excellent PR-time build validation:
+
+**PR Build Validation:**
+- `test-e2e.yml`: Builds Docker image, loads into Kind, deploys and tests
+- `integration-tests.yml`: Builds 3 images (operator, runtime, tests), loads into Kind, runs full integration matrix
+- `upgrade-validation.yml`: Builds images, deploys seed version, validates upgrade path
+- `validate-samples.yaml`: Creates Kind cluster, installs CRDs, validates sample CRs with server-side validation
+
+**Manifest Verification:**
+- `verify-kustomize.yml`: Verifies kustomize and Helm builds succeed
+- `verify-codegen.yml`: Verifies `make manifests` and `make generate` produce no diffs
+- `validate-samples.yaml`: Full CRD schema validation of sample CRs
+
+**Konflux/Tekton Integration:**
+- `.tekton/mlflow-operator-pull-request.yaml`: PR build pipeline
+- `.tekton/mlflow-operator-push.yaml`: Push build pipeline
+- `.tekton/mlflow-tests-pull-request.yaml`: Test image PR pipeline
+- `.tekton/mlflow-tests-push.yaml`: Test image push pipeline
+
+**Operator Chaos:**
+- `operator-chaos.yml`: Validates knowledge model, runs preflight checks, diffs CRD schema, detects breaking changes, simulates upgrade — all offline, no cluster required
+
+**Why not 10:** No explicit Konflux build simulation in GHA workflows (Tekton runs separately in Konflux).
+
+### Image Testing
+
+**Score: 8/10**
+
+**Dockerfile Analysis:**
+- Multi-stage build: UBI9 go-toolset builder + UBI9 minimal runtime
+- FIPS-compliant by default: `GOEXPERIMENT=strictfipsruntime`, `-tags strictfipsruntime`
+- Multi-arch support via `TARGETOS`/`TARGETARCH` build args
+- Non-root user (`USER 1001`)
+- `.dockerignore` present
+- CGO_ENABLED configurable (1 for FIPS, 0 for local dev)
+- Go module dependency caching layer
+
+**Test Image:**
+- `mlflow-tests/images/Dockerfile.konflux`: Multi-arch (amd64, arm64)
+- Architecture-aware `oc` and `kustomize` CLI downloads
+- Version alignment verification at build time
+
+**Runtime Validation:**
+- Kind cluster loads and runs built images
+- Health probes defined in Helm chart (livenessProbe, readinessProbe)
+- Image version alignment verification (scheduled + PR)
+- `build-and-push-test-image.yml`: Multi-arch manifest publishing
+
+**Multi-Architecture:**
+- Makefile supports `linux/arm64,linux/amd64,linux/s390x,linux/ppc64le` via `docker-buildx`
+- Test image published for `linux/amd64,linux/arm64`
+
+**Why not 9/10:** No explicit Testcontainers-based validation. Runtime validation is indirect through Kind deployment.
+
+### Coverage Tracking
+
+**Score: 4/10**
+
+**What exists:**
+- `make test` generates `cover.out` via `-coverprofile` flag
+- Coverage file is generated during unit test runs
+
+**What's missing:**
+- No Codecov, Coveralls, or any coverage service integration
+- No `.codecov.yml` or equivalent configuration
+- No coverage threshold enforcement
+- No PR coverage reporting or comments
+- No coverage trend tracking over time
+- `cover.out` is not uploaded as a CI artifact
+- Python tests in `mlflow-tests/` have no coverage tracking
+
+**Why this matters:** Coverage generation without reporting is like running tests without reading results. The repo has excellent test coverage in practice, but there's no automated mechanism to prevent regression or show contributors the coverage impact of their changes.
+
+### CI/CD Automation
+
+**Score: 9/10**
+
+**Workflow Inventory (13 workflows):**
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `test.yml` | PR (Go changes), push | Unit tests with envtest (`make test`) |
-| `test-e2e.yml` | PR (code/config changes), push | E2E tests with Kind cluster |
-| `integration-tests.yml` | PR, push, workflow_call | Matrix-driven integration tests (multi-K8s, multi-backend) |
-| `upgrade-validation.yml` | PR, push | Comprehensive upgrade testing (pytest + Ginkgo) |
-| `lint.yml` | PR (Go changes), push | golangci-lint v2.5.0 |
-| `operator-chaos.yml` | PR (API/controller/config) | operator-chaos knowledge model validation |
-| `validate-samples.yaml` | PR | CRD sample validation |
-| `verify-codegen.yml` | PR | Code generation verification |
-| `verify-kustomize.yml` | PR | Kustomize overlay build verification |
-| `verify-mlflow-version-alignment.yml` | scheduled, dispatch | MLflow version alignment check |
-| `build-and-push-test-image.yml` | push (main/release) | Test image build and push to Quay |
-| `workflow-linter.yml` | PR | Workflow file linting |
+| `test.yml` | PR + push | Unit tests |
+| `test-e2e.yml` | PR + push | E2E tests with Kind |
+| `lint.yml` | PR + push | golangci-lint |
+| `integration-tests.yml` | PR + push + call | Full integration matrix |
+| `upgrade-validation.yml` | PR + push | Upgrade path validation |
+| `verify-codegen.yml` | PR + push | Generated code verification |
+| `verify-kustomize.yml` | PR + push | Manifest build verification |
+| `validate-samples.yaml` | PR + push | Sample CR schema validation |
+| `operator-chaos.yml` | PR | Breaking change detection |
+| `disconnected-readiness.yml` | PR | Disconnected environment check |
+| `workflow-linter.yml` | PR + push | GitHub Actions linting |
+| `verify-mlflow-version-alignment.yml` | Schedule (daily) | ODH default image alignment |
+| `build-and-push-test-image.yml` | Push + dispatch | Multi-arch test image publishing |
 
-**Strengths**:
-- Path-filtered triggers prevent unnecessary CI runs
-- Matrix strategies for multi-K8s version and multi-backend testing
-- Reusable composite actions (`.github/actions/build`, `create-cluster`, `collect-debug-logs`, `deploy`)
-- Artifact management (image tars uploaded/downloaded between jobs)
-- Debug log collection on failure
-- Concurrency control via `pipelinesascode.tekton.dev/cancel-in-progress`
+**Strengths:**
+- Path-filtered triggers (only runs when relevant files change)
+- Matrix strategies for multi-config testing
+- Artifact upload/download for sharing images between jobs
+- Debug log collection on failure with artifact upload
+- Test result preservation (30-day retention)
+- Pinned GitHub Actions to commit SHAs (supply chain security)
+- Workflow linting with actionlint
+- Tekton/Konflux pipelines for production builds
 
-**Tekton/Konflux**:
-- 4 Tekton PipelineRun configurations in `.tekton/`
-- PR-triggered builds for both operator and test images
-- References centralized `odh-konflux-central` pipeline definitions
-- Multi-arch container builds
+**Gaps:**
+- No concurrency control on most workflows (stale runs waste resources)
+- No explicit Go module caching in unit test workflow
+- No timeout-minutes on unit test and lint workflows
 
-### Test Coverage
+### Static Analysis
 
-**Unit Tests (30 Go test files)**:
-- **Test-to-code ratio**: ~2:1 (9,423 test lines vs 4,786 code lines) - exceptional
-- **Framework**: Ginkgo v2 + Gomega (BDD-style)
-- **Environment**: envtest (controller-runtime) for realistic API server testing
-- **Coverage areas**:
-  - Helm chart rendering: 15 dedicated test files (`helm_*_test.go`) covering CA bundles, CORS, DRA, env vars, garbage collection, helpers, image config, metrics, MLflowConfig, network policies, pod metadata, render chart, storage, trace archival, workloads
-  - Controller logic: `mlflow_controller_test.go`, `mlflow_controller_helpers_test.go`, `mlflowoperator_controller_test.go`
-  - Migration: `migration_test.go`, `migration_controller_test.go`
-  - Watch requests: `mlflow_watch_requests_test.go`
-  - Operator config: `operator_config_test.go`
-  - Status URLs: `status_urls_test.go`
-  - API types: `mlflow_types_test.go`
-  - Config: `config_test.go`
-  - Main: `cmd/main_test.go`
+**Score: 8/10**
 
-**E2E Tests (Go Ginkgo)**:
-- Kind cluster deployment
-- CRD installation, controller deployment
-- Namespace security policy enforcement (pod-security.kubernetes.io/enforce=restricted)
-- Metrics endpoint validation
-- MLflow resource reconciliation
-
-**Upgrade E2E Tests (Go Ginkgo + Python pytest)**:
-- Seeded upgrade path: 3.10.1 → current version
-- Pre/post upgrade validation phases
-- Version-gated test selection (filename threshold matching)
-- Multi-backend upgrade testing (SQLite, PostgreSQL)
-- Multi-artifact upgrade testing (file, S3)
-- Operator image swap, MLflow CR patch, rollout verification
-- Database migration validation
-
-**Integration Tests (Python pytest)**:
-- Matrix: K8s v1.29.0 + v1.34.0, SQLite/PostgreSQL, file/S3, TLS variants
-- Test areas: experiments, models, artifacts, traces, trace actions, workspaces, resource maps
-- Containerized test runner (Dockerfile.konflux)
-- Integration matrix config: `mlflow-tests/ci/integration-matrix.json`
-
-**Operator Chaos Testing**:
-- Knowledge model validation
-- Local preflight checks
-- Knowledge model diff (breaking change detection)
-- CRD schema diff (breaking change detection)
-- Upgrade simulation preview
-
-**Manifest Validation**:
-- `verify-manifests.sh`: Helm chart lint + template, kustomize overlay builds
-- `validate-samples.sh`: Server-side CRD dry-run validation, documentation checks
-- `verify-codegen`: Generated code is up-to-date
-- Version alignment: MLflow version in operator matches runtime image
-
-### Code Quality
-
-**Linting (golangci-lint v2.5.0)**:
-- 16 linters enabled: copyloopvar, dupl, errcheck, ginkgolinter, govet, ineffassign, lll, misspell, nakedret, prealloc, revive, staticcheck, unconvert, unparam, unused
-- Revive rules: comment-spacings, import-shadowing
+**Linting:**
+- golangci-lint v2.5.0 with 15 enabled linters:
+  - copyloopvar, dupl, errcheck, ginkgolinter, govet, ineffassign, lll, misspell, nakedret, prealloc, revive, staticcheck, unconvert, unparam, unused
 - Formatters: gofmt, goimports
-- Exclusions: API path (lll), internal path (dupl, lll)
-- Parallel runners enabled
+- Custom revive rules: comment-spacings, import-shadowing
+- Exclusions configured for API and internal packages
 
-**Missing Quality Tools**:
-- No pre-commit hooks (`.pre-commit-config.yaml`)
-- No CodeQL/SAST
-- No Gitleaks/TruffleHog secret detection
-- No dependency scanning (Dependabot/Renovate)
+**Pre-commit Hooks:**
+- `.pre-commit-config.yaml` with golangci-lint via `make lint-fix`
 
-### Container Images
+**Workflow Linting:**
+- actionlint runs on all `.github/workflows/` files
 
-**Dockerfile**:
-- Multi-stage build (builder + runtime)
-- Builder: `registry.access.redhat.com/ubi9/go-toolset:1.25`
-- Runtime: `registry.access.redhat.com/ubi9/ubi-minimal:latest`
-- FIPS compliance: `CGO_ENABLED=1`, `GOEXPERIMENT=strictfipsruntime`
-- Multi-arch support: `linux/arm64,linux/amd64,linux/s390x,linux/ppc64le` (via docker-buildx)
-- Non-root user (1001)
-- Proper `.dockerignore` (allowlist pattern)
+**FIPS Compatibility:**
+- No FIPS-incompatible crypto imports (`crypto/md5`, `crypto/des`, `crypto/rc4`, `math/rand`) found
+- FIPS-compliant build: `GOEXPERIMENT=strictfipsruntime`, `-tags strictfipsruntime`
+- UBI9 base images (FIPS-capable)
+- CGO_ENABLED=1 for BoringCrypto linkage
+- UVICORN_SSL_CIPHERS=PROFILE=SYSTEM for platform crypto policy compliance
 
-**SBOM**:
-- `.syft.yaml` configuration present
-- Excludes non-code directories (.github, config, test, docs, hack)
+**Dependency Alerts:**
+- No `.github/dependabot.yml`
+- No `renovate.json` or `.renovaterc`
+- Actions are pinned to SHAs (manual update tracking only)
 
-**Test Image**:
-- `mlflow-tests/images/Dockerfile.konflux`
-- Separate multi-arch build for test runner
-- Version alignment verification in CI
+**Why not 9:** Missing Dependabot/Renovate configuration is a notable gap.
 
-**Missing**:
-- No Trivy/Snyk/Grype vulnerability scanning
-- No image signing/attestation in GHA workflows
-- SBOM generation not integrated into CI (only Syft config exists)
+### Agent Rules
 
-### Security
+**Score: 8/10**
 
-**Present**:
-- FIPS-compliant binary builds
-- Pod security restricted enforcement in E2E tests
-- RBAC testing
-- Non-root container execution
-- Commit SHA pinning for GitHub Actions
-
-**Missing**:
-- No container vulnerability scanning (Trivy/Snyk)
-- No SAST (CodeQL/gosec/Semgrep)
-- No secret detection (Gitleaks/TruffleHog)
-- No dependency update automation (Dependabot/Renovate)
-
-### Agent Rules (Agentic Flow Quality)
-
-**Status**: Present (AGENTS.md) / Partially Complete
-- **AGENTS.md**: Comprehensive 400+ line document covering:
+**AGENTS.md (root):**
+- Comprehensive document covering:
   - Project structure and API definitions
-  - Custom resource documentation (MLflow, MLflowOperator, MLflowConfig)
-  - Development workflow (manifests, code generation)
+  - Resource types (MLflow, MLflowOperator, MLflowConfig)
+  - API modification workflow with code generation instructions
+  - Development guide with testing instructions
   - Deployment modes (RHOAI, OpenDataHub)
-  - Helm chart documentation and parity rules
-  - Storage configuration
-  - Migration behavior (detailed operator-managed migration docs)
-  - Testing instructions (unit, E2E, upgrade pytest phases)
-  - Sample CR documentation and update rules
-  - Linting instructions
-- **Quality**: High - provides actionable context for AI agents with specific patterns, examples, and constraints
-- **Gaps**:
-  - No `.claude/` directory
-  - No `.claude/rules/` for test creation patterns
-  - No structured test rules for unit tests, E2E tests, or integration tests
-- **Recommendation**: Generate structured test rules with `/test-rules-generator` to complement the excellent AGENTS.md
+  - Helm chart structure and values parity requirements
+  - Storage configuration patterns
+  - Operator-managed database migration details
+  - CI/CD workflow descriptions
+  - Sample CR maintenance checklist
+  - Agent notes with clear behavioral guidance
+
+**Strengths:**
+- Actionable: includes specific commands (`make manifests generate`, `make test`, etc.)
+- Framework-specific: references Kubebuilder, Ginkgo, envtest, Helm
+- Up-to-date: reflects current workflow structure and testing patterns
+- Comprehensive agent notes section with 6 specific rules
+
+**Gaps:**
+- No `CLAUDE.md` (AGENTS.md is used instead, which works but limits Claude-specific optimizations)
+- No `.claude/rules/` directory with granular test creation rules
+- No specific test pattern examples (e.g., "here's how to write a new Helm value test")
+- No quality gate checklist for agent-submitted changes
+
+**Why not 9:** Missing `.claude/rules/` with test-creation rules and no test pattern templates.
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add Codecov integration with PR reporting and thresholds**
-   - Upload `cover.out` from `make test`
-   - Set minimum coverage threshold (e.g., 70% given current test ratio)
-   - Enable PR comments with coverage diffs
+1. **Integrate Codecov with coverage threshold enforcement**
+   - Upload `cover.out` from the `test.yml` workflow
+   - Set project target at 60% minimum, patch target at 70%
+   - Enable PR comments showing coverage delta
    - Effort: 4-6 hours
 
-2. **Add container vulnerability scanning to PR workflows**
-   - Integrate Trivy or Snyk for UBI9 base images and Go dependencies
-   - Set severity thresholds (fail on CRITICAL/HIGH)
-   - Upload results as SARIF to GitHub Security tab
-   - Effort: 2-4 hours
+2. **Add coverage artifact upload to CI**
+   - Add `actions/upload-artifact` for `cover.out` in `test.yml`
+   - Consider adding `codecov/codecov-action` for automatic PR reporting
+   - Effort: 1-2 hours (part of Codecov integration)
 
 ### Priority 1 (High Value)
 
-3. **Add CodeQL SAST workflow for Go**
-   - Free for public repositories
-   - Catches injection, crypto, and data-flow vulnerabilities
+3. **Add Dependabot configuration**
+   - Create `.github/dependabot.yml` for gomod, docker, and github-actions ecosystems
+   - Set weekly update schedule
+   - Configure auto-merge for patch updates
    - Effort: 1-2 hours
 
-4. **Add secret detection to PR workflows**
-   - Gitleaks or TruffleHog
-   - Prevent accidental credential commits
-   - Effort: 1-2 hours
+4. **Add concurrency control to PR-triggered workflows**
+   - Cancel superseded runs to reduce resource waste
+   - Add `concurrency` groups to all PR-triggered workflows
+   - Effort: 1 hour
 
-5. **Create `.claude/rules/` with test pattern rules**
-   - Unit test rules (envtest patterns, Helm chart test patterns)
-   - E2E test rules (Kind cluster setup, Ginkgo patterns)
-   - Integration test rules (pytest patterns, matrix configuration)
+5. **Create CLAUDE.md and .claude/rules/ with test creation rules**
+   - Generate test-creation rules using `/test-rules-generator`
+   - Include Ginkgo/envtest patterns, Helm value test patterns, E2E test patterns
    - Effort: 3-4 hours
 
 ### Priority 2 (Nice-to-Have)
 
-6. **Add pre-commit hooks**
-   - golangci-lint, gofmt, YAML validation
-   - Faster local feedback loop
-   - Effort: 1-2 hours
-
-7. **Add Dependabot or Renovate**
-   - Automated dependency updates
-   - Security patch awareness
+6. **Add Go module caching to unit test and lint workflows**
+   - Use `actions/cache` or leverage `actions/setup-go` built-in caching
    - Effort: 1 hour
 
-8. **Add Helm chart testing with chart-testing (ct)**
-   - Schema validation, version bump checks
-   - Install/upgrade testing
+7. **Add timeout-minutes to all workflows**
+   - Prevent hung jobs from consuming resources indefinitely
+   - Effort: 30 minutes
+
+8. **Consider Python coverage tracking for mlflow-tests/**
+   - Add pytest-cov to the integration test harness
+   - Track coverage of the Python test framework itself
    - Effort: 2-3 hours
 
 ## Comparison to Gold Standards
 
-| Dimension | mlflow-operator | odh-dashboard | notebooks | kserve |
-|-----------|:-:|:-:|:-:|:-:|
-| Unit Tests | 9 | 8 | 6 | 9 |
-| Integration/E2E | 9 | 9 | 7 | 9 |
-| Build Integration | 7 | 7 | 8 | 7 |
-| Image Testing | 7 | 6 | 9 | 7 |
-| Coverage Tracking | 3 | 7 | 5 | 8 |
-| CI/CD Automation | 9 | 9 | 8 | 9 |
-| Agent Rules | 7 | 9 | 5 | 4 |
-| **Overall** | **7.7** | **8.2** | **7.0** | **8.0** |
+| Practice | mlflow-operator | odh-dashboard | notebooks | kserve |
+|----------|----------------|---------------|-----------|--------|
+| Unit test framework | Ginkgo/envtest | Jest/React Testing Library | pytest | Go testing/envtest |
+| Test-to-code ratio | 1.78:1 | ~0.8:1 | ~0.5:1 | ~1.2:1 |
+| E2E automation | Kind + matrix | Cypress | Shell scripts | Kind + matrix |
+| Multi-version testing | K8s v1.29, v1.34 | N/A | Multiple Python versions | K8s matrix |
+| Coverage enforcement | None | Codecov | None | Codecov |
+| FIPS compliance | strictfipsruntime + UBI9 | N/A | UBI base images | boringcrypto |
+| Dependency alerts | None | Dependabot | None | Dependabot |
+| Agent rules | AGENTS.md | CLAUDE.md + .claude/rules/ | None | None |
+| Operator chaos | Yes | N/A | N/A | N/A |
+| Upgrade testing | Yes (seeded + e2e) | N/A | N/A | Partial |
+| Integration matrix | 10+ configurations | N/A | N/A | Multi-version |
 
-**Standout strengths vs. gold standards**:
-- Test-to-code ratio (~2:1) exceeds all gold standards
-- Operator chaos testing is unique and innovative
-- Upgrade validation (both Go E2E + Python pytest) is comprehensive
-- Integration test matrix covers more backend permutations than most operators
-
-**Key gaps vs. gold standards**:
-- odh-dashboard has Codecov with enforcement; mlflow-operator does not track coverage
-- notebooks has 5-layer image validation; mlflow-operator lacks vulnerability scanning
-- kserve has coverage enforcement with thresholds; mlflow-operator generates but doesn't use coverage data
+**Notable distinction:** mlflow-operator has an operator-chaos integration that is unique among analyzed repositories. The seeded upgrade testing (deploying v3.10.1, upgrading in-place, validating post-upgrade state) is also exceptionally thorough and rare.
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/*.yml` (12 workflow files)
-- `.github/actions/build/action.yaml`
-- `.github/actions/create-cluster/action.yml`
-- `.github/actions/deploy/action.yml`, `deploy.py`
-- `.github/actions/collect-debug-logs/action.yml`
-- `.tekton/mlflow-operator-pull-request.yaml`
-- `.tekton/mlflow-operator-push.yaml`
-- `.tekton/mlflow-tests-pull-request.yaml`
-- `.tekton/mlflow-tests-push.yaml`
-- `Makefile`
+- `.github/workflows/test.yml` - Unit tests
+- `.github/workflows/test-e2e.yml` - E2E tests
+- `.github/workflows/lint.yml` - Linting
+- `.github/workflows/integration-tests.yml` - Integration test matrix
+- `.github/workflows/upgrade-validation.yml` - Upgrade path validation
+- `.github/workflows/verify-codegen.yml` - Generated code verification
+- `.github/workflows/verify-kustomize.yml` - Manifest build verification
+- `.github/workflows/validate-samples.yaml` - Sample CR validation
+- `.github/workflows/operator-chaos.yml` - Breaking change detection
+- `.github/workflows/disconnected-readiness.yml` - Disconnected readiness
+- `.github/workflows/workflow-linter.yml` - Workflow linting
+- `.github/workflows/verify-mlflow-version-alignment.yml` - Version alignment
+- `.github/workflows/build-and-push-test-image.yml` - Test image publishing
+- `.tekton/mlflow-operator-pull-request.yaml` - Konflux PR pipeline
+- `.tekton/mlflow-operator-push.yaml` - Konflux push pipeline
 
 ### Testing
-- `internal/controller/*_test.go` (24 unit test files)
-- `internal/controller/suite_test.go` (envtest setup)
-- `test/e2e/e2e_test.go`, `e2e_suite_test.go`, `upgrade_e2e_test.go`
-- `test/utils/utils.go`
-- `test/scripts/verify-manifests.sh`, `validate-samples.sh`, `verify_mlflow_version_alignment.py`
-- `mlflow-tests/tests/test_*.py` (7 integration test files)
-- `mlflow-tests/tests/upgrade/` (pre/post upgrade tests)
-- `mlflow-tests/ci/integration-matrix.json`
-- `mlflow-tests/images/run-integration-tests.sh`, `test-run.sh`
+- `internal/controller/*_test.go` - Controller unit tests (28 files)
+- `api/v1/mlflow_types_test.go` - API type tests
+- `internal/config/config_test.go` - Config package tests
+- `cmd/main_test.go` - Main package tests
+- `test/e2e/e2e_test.go` - E2E test suite
+- `test/e2e/upgrade_e2e_test.go` - Upgrade E2E tests
+- `mlflow-tests/tests/` - Python integration tests (7 test modules)
+- `mlflow-tests/tests/upgrade/` - Upgrade pytest phases
+- `mlflow-tests/ci/integration-matrix.json` - Integration test matrix config
 
 ### Code Quality
-- `.golangci.yml` (golangci-lint v2 config, 16 linters)
+- `.golangci.yml` - golangci-lint v2 config (15 linters)
+- `.pre-commit-config.yaml` - Pre-commit hooks
+- `Makefile` - Build, test, lint, deploy targets with coverage generation
 
 ### Container Images
-- `Dockerfile` (multi-stage, FIPS-compliant)
-- `mlflow-tests/images/Dockerfile.konflux`
-- `.dockerignore`
-- `.syft.yaml` (SBOM configuration)
+- `Dockerfile` - Operator image (UBI9, multi-stage, FIPS)
+- `mlflow-tests/images/Dockerfile.konflux` - Test harness image
+- `.dockerignore` - Docker build context filtering
 
 ### Agent Rules
-- `AGENTS.md` (comprehensive project documentation)
-- `docs/rhoai-mlflow-testing.md`
-- `docs/kind-deployment.md`
-
-### Operator Chaos
-- `chaos/knowledge/mlflow.yaml` (knowledge model)
+- `AGENTS.md` - Comprehensive agent guidance
+- `chaos/knowledge/mlflow.yaml` - Operator-chaos knowledge model

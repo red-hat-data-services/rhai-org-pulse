@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:01 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 03:54 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/kube-rbac-proxy</h2>
         </header>
 
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">30 test functions across 9 files; 2,443 test LOC vs 5,062 source LOC (48% test-to-code ratio); table-driven tests with go-cmp; no subtests in some packages</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Good unit test coverage with table-driven tests and race detection</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Comprehensive Kind-based E2E suite covering 13 scenarios (Basics, TLS, HTTP2, StaticAuth, TokenMasking, etc.); custom kubetest framework; but not run in CI</div>
+                            <div class="scorecard-status">Comprehensive E2E suite with Kind cluster, 13 test scenarios, kubetest framework</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Konflux/Tekton PR builds via odh-konflux-central; FIPS compliance check on PRs; no image startup validation or integration testing in PR workflow</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Konflux/Tekton pipelines for PR and push builds using Dockerfile.redhat</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Three Dockerfiles (upstream, Red Hat/FIPS, OCP); FIPS compliance check-payload scan; no runtime validation, no vulnerability scanning, no SBOM</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Multi-stage builds with UBI base, FIPS image validation, but no runtime testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No coverage generation, no codecov/coveralls, no coverage thresholds, no PR coverage reporting</div>
+                            <div class="scorecard-status">No coverage tooling, no codecov integration, no coverage thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">5 GitHub Actions workflows with concurrency control and pinned actions; Tekton/Konflux pipelines; but E2E tests are manual-only, no caching</div>
+                            <div class="scorecard-status">Well-structured workflows with concurrency control and timeouts, plus Tekton/Konflux</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
+                            <div class="scorecard-status">golangci-lint v2 in CI, FIPS compliance workflow, but no Dependabot/Renovate</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules, no test automation guidance for AI agents</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory present</div>
                         </div>
                     </div>
                 </div>
@@ -412,39 +417,31 @@
                         
                         <li class="item-card high">
                             <div class="item-description">No test coverage tracking or enforcement</div>
-                            <p>Cannot measure or enforce test coverage; regression risk unknown; no visibility into untested code paths</p>
+                            <p>Cannot measure test quality, no regression detection for coverage drops</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">E2E tests not automated in CI</div>
-                            <p>E2E suite exists but is never run automatically; regressions can ship without detection</p>
+                            <div class="item-description">No dependency update automation (Dependabot/Renovate)</div>
+                            <p>Security vulnerabilities in dependencies may go unnoticed; manual update burden</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No container vulnerability scanning</div>
-                            <p>CVEs in base images or dependencies go undetected until production</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No image runtime validation in PR builds</div>
-                            <p>Image startup failures and runtime issues not caught until deployment</p>
+                            <div class="item-description">No container runtime validation in CI</div>
+                            <p>Image startup failures not caught until deployment to cluster</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card low">
-                            <div class="item-description">No agent rules for test automation</div>
-                            <p>AI-assisted development produces inconsistent test patterns; no guardrails for test quality</p>
+                            <div class="item-description">No AI agent rules for test creation</div>
+                            <p>AI-generated tests will lack project-specific patterns and conventions</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-low">LOW</span>
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -464,35 +461,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add coverage generation to unit test workflow</div>
-                            <p>Immediate visibility into test coverage gaps; enables future threshold enforcement</p>
+                            <div class="item-description">Add --coverprofile to unit test command and integrate Codecov</div>
+                            <p>Enables coverage tracking, PR reporting, and threshold enforcement</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add .github/dependabot.yml for gomod and docker ecosystems</div>
+                            <p>Automated dependency update PRs and security alerts</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add t.Parallel() to unit tests for faster execution</div>
+                            <p>Faster CI feedback and better race condition detection</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create CLAUDE.md with test creation conventions</div>
+                            <p>Consistent AI-assisted test quality following project patterns</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to PR workflow</div>
-                            <p>Early detection of security vulnerabilities in container images and dependencies</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Enable Go test caching in CI</div>
-                            <p>Faster CI runs by caching Go build and test artifacts</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add pre-commit hooks for license check and lint</div>
-                            <p>Catch formatting and license issues before push, reducing CI failures</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add codecov integration with coverage threshold enforcement (e.g., 60% minimum, no regression)</li><li>Automate E2E tests in CI using Kind cluster (Makefile targets already exist)</li><li>Add Trivy container scanning to PR and push workflows</li></ul>
+                            <ul><li>Add coverage tracking with --coverprofile and integrate Codecov with threshold enforcement</li><li>Add Dependabot configuration for gomod and docker base image updates</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add image startup validation after Konflux builds (container healthcheck test)</li><li>Create .claude/rules/ with unit test and E2E test patterns for AI-assisted development</li><li>Add dependency scanning (Dependabot or Renovate) for Go modules</li></ul>
+                            <ul><li>Add container runtime smoke test in CI (startup + health check verification)</li><li>Add pre-commit hooks for license checks and linting</li><li>Automate E2E tests in GitHub Actions (currently manual/Makefile-only)</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SBOM generation and image signing/attestation</li><li>Implement pre-commit hooks for license, lint, and format checks</li><li>Add performance/benchmark tests for proxy throughput and latency</li></ul>
+                            <ul><li>Create CLAUDE.md and .claude/rules/ for AI-assisted test generation</li><li>Add multi-version Kubernetes testing in E2E suite</li><li>Add build cache optimization to unit-tests workflow</li></ul>
                         </div>
                     </div>
                 </div>

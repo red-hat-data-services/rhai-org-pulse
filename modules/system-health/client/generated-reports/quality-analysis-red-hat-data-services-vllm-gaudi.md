@@ -1,396 +1,453 @@
 ---
 repository: "red-hat-data-services/vllm-gaudi"
-overall_score: 4.8
+overall_score: 4.7
 scorecard:
   - dimension: "Unit Tests"
-    score: 5.5
-    status: "28 test files with 141 test functions covering ops, bucketing, embedding, worker, and sampler; decent HPU-specific coverage but no pytest markers, parametrization is limited, and coverage tracking is absent"
+    score: 7.0
+    status: "277 test files across 33 test subdirectories with pytest and extensive fixtures"
   - dimension: "Integration/E2E"
     score: 5.0
-    status: "Jenkins-driven E2E with lm-eval-harness correctness checks across multiple models and TP configurations; full_tests cover model loading and generation; requires Gaudi hardware so not runnable in PR CI"
+    status: "Distributed and spec-decode E2E tests exist but no dedicated HPU integration suite"
   - dimension: "Build Integration"
-    score: 3.5
-    status: "Konflux builds triggered by label/comment only, not automatic on PR; no PR-time image validation or startup testing; Tekton pipeline is build-only with no test stage"
-  - dimension: "Image Testing"
     score: 3.0
-    status: "6 Dockerfiles across Konflux, UBI, Ubuntu, and benchmark variants; multi-stage builds with proper UBI base; no image startup validation, no runtime smoke tests, no multi-arch support"
+    status: "No PR-time image builds; build validation delegated to external Jenkins/Buildkite"
+  - dimension: "Image Testing"
+    score: 5.0
+    status: "Multi-stage UBI Dockerfile with non-root user but no HEALTHCHECK or runtime validation"
   - dimension: "Coverage Tracking"
-    score: 1.0
-    status: "No coverage tooling whatsoever — no .coveragerc, no codecov.yml, no pytest-cov configuration, no coverage thresholds or PR reporting"
+    score: 0.0
+    status: "No coverage configuration, thresholds, or PR reporting of any kind"
   - dimension: "CI/CD Automation"
-    score: 4.0
-    status: "Jenkins for correctness/benchmark testing on Gaudi hardware; Tekton/Konflux for container builds; no GitHub Actions workflows; Renovate for dependency updates; no automated PR-triggered test suite"
+    score: 6.0
+    status: "15 workflows with good lint coverage but no caching or concurrency controls"
+  - dimension: "Static Analysis"
+    score: 7.5
+    status: "Ruff, mypy, yapf, codespell, shellcheck, clang-format, and Dependabot configured"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no AGENTS.md, no .claude/ directory — zero AI agent guidance for test creation or development standards"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
-  - title: "No test coverage tracking or enforcement"
-    impact: "Impossible to measure test quality, detect coverage regressions, or enforce minimum thresholds"
+  - title: "Zero coverage tracking"
+    impact: "No visibility into test coverage, no enforcement of coverage thresholds on PRs, regressions go undetected"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No automated PR-triggered test suite"
-    impact: "Unit tests never run automatically on PRs — regressions can merge undetected"
+  - title: "No PR-time build validation"
+    impact: "Docker image build failures only discovered in external Jenkins/Buildkite, not in the PR workflow itself"
     severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "No container image runtime validation"
-    impact: "Image startup failures, import errors, and entrypoint issues not caught until deployment"
+    effort: "8-12 hours"
+  - title: "No container health checks or runtime validation"
+    impact: "Image startup failures and runtime issues not caught until deployment"
     severity: "HIGH"
-    effort: "6-8 hours"
-  - title: "No security scanning (Trivy, Snyk, CodeQL, Bandit)"
-    impact: "Vulnerabilities in dependencies and code not detected before merge or release"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "Konflux builds are opt-in via label/comment, not automatic"
-    impact: "Build failures discovered late; inconsistent validation across PRs"
+    effort: "4-6 hours"
+  - title: "No HPU-specific integration test suite in GitHub CI"
+    impact: "HPU test validation relies entirely on external Jenkins; PR reviewers have no visibility in GitHub checks"
     severity: "MEDIUM"
-    effort: "2-3 hours"
+    effort: "16-24 hours"
 quick_wins:
-  - title: "Add GitHub Actions workflow to run pytest unit tests on PRs"
+  - title: "Add pytest-cov and .codecov.yml for coverage tracking"
     effort: "2-4 hours"
-    impact: "Catch unit-level regressions before merge; unit tests don't require Gaudi hardware"
-  - title: "Add pytest-cov and codecov integration"
-    effort: "2-3 hours"
-    impact: "Establish coverage baseline and trend tracking with PR comments"
-  - title: "Add Trivy container scanning to Tekton pipeline"
+    impact: "Immediate visibility into test coverage with PR reporting and threshold enforcement"
+  - title: "Add pre-commit hooks configuration"
     effort: "1-2 hours"
-    impact: "Detect known CVEs in container images before they reach production"
-  - title: "Create CLAUDE.md with test creation guidelines"
-    effort: "2-3 hours"
-    impact: "Enable consistent AI-assisted test development following project conventions"
-  - title: "Add Bandit security scanning to pre-commit hooks"
+    impact: "Enforce formatting and linting locally before push, reducing CI failures"
+  - title: "Add HEALTHCHECK to Dockerfile.hpu.ubi"
     effort: "1 hour"
-    impact: "Catch common Python security issues (SQL injection, shell injection, hardcoded secrets)"
+    impact: "Container orchestrators can detect unhealthy instances and restart them"
+  - title: "Create basic CLAUDE.md with test patterns"
+    effort: "2-3 hours"
+    impact: "AI-assisted development follows project conventions for test creation"
+  - title: "Add concurrency controls to GitHub workflows"
+    effort: "1 hour"
+    impact: "Prevent redundant CI runs on rapid pushes, saving CI resources"
 recommendations:
   priority_0:
-    - "Add a GitHub Actions workflow that runs `pytest tests/unit_tests/ -v` on every PR — these tests don't require Gaudi hardware"
-    - "Integrate pytest-cov and codecov.io to establish a coverage baseline and enforce a minimum threshold (start at 30%, grow to 60%)"
-    - "Add Trivy or Clair vulnerability scanning for all Dockerfiles in the CI pipeline"
+    - "Add coverage tracking with pytest-cov, .codecov.yml, and enforce minimum thresholds on PRs"
+    - "Add PR-time Dockerfile.hpu.ubi build validation in GitHub Actions workflow"
+    - "Add HEALTHCHECK directive to production Dockerfiles"
   priority_1:
-    - "Make Konflux PR builds automatic (remove label/comment gate) so every PR validates the container build"
-    - "Add container image startup validation — build image, run `python -c 'import vllm_gaudi'` and verify entrypoint responds to health check"
-    - "Create comprehensive agent rules (.claude/rules/) for unit test patterns, HPU-specific testing, and model test conventions"
-    - "Add Bandit and/or Semgrep to the pre-commit config for Python SAST"
+    - "Create a dedicated HPU integration test workflow that runs in GitHub CI (even with fake HPU)"
+    - "Add concurrency controls and caching to GitHub Actions workflows"
+    - "Create comprehensive agent rules (.claude/rules/) for test automation"
+    - "Add pre-commit hook configuration"
   priority_2:
-    - "Add multi-architecture (amd64/arm64) build support for broader compatibility"
-    - "Implement benchmark regression testing — compare throughput/latency against baseline on each release"
-    - "Add contract tests for the vLLM plugin API boundary (vllm_gaudi ↔ vllm core)"
-    - "Create integration test fixtures that mock Gaudi hardware for CI environments without HPU access"
+    - "Add multi-architecture build support via Docker buildx"
+    - "Add container startup validation tests using testcontainers"
+    - "Add performance regression testing for HPU inference benchmarks"
 ---
 
-# Quality Analysis: vllm-gaudi
+# Quality Analysis: red-hat-data-services/vllm-gaudi
 
 ## Executive Summary
 
-- **Overall Score: 4.8/10**
-- **Repository Type**: Python plugin package (vLLM hardware plugin for Intel Gaudi/Habana HPU)
-- **Primary Language**: Python 3.10-3.12
-- **Key Strengths**: Solid pre-commit hook setup (yapf, ruff, mypy, shellcheck), reasonable unit test structure for HPU-specific operations, comprehensive Jenkins-based correctness testing with lm-eval-harness across multiple model configurations
-- **Critical Gaps**: Zero coverage tracking, no automated PR-triggered test execution, no security scanning, no container runtime validation, no AI agent rules
-- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
+- **Overall Score: 4.7/10**
+- **Repository Type**: Python library / ML inference server (vLLM fork for Intel Gaudi/HPU)
+- **Primary Language**: Python (with C++/CUDA extensions)
+- **Branch Analyzed**: v1.19.0 (default)
+- **Tier**: Downstream (RHOAIENG / Model Runtimes)
+
+**Key Strengths**:
+- Large test suite inherited from upstream vLLM (277 test files, ~0.47 test-to-code ratio)
+- Strong static analysis toolchain (ruff, mypy, yapf, codespell, shellcheck, clang-format)
+- Well-structured UBI-based Dockerfile with multi-stage builds and non-root user
+
+**Critical Gaps**:
+- Zero coverage tracking — no .codecov.yml, no pytest-cov, no coverage thresholds
+- No PR-time Docker image build validation in GitHub workflows
+- No container health checks in any Dockerfile
+- No agent rules for AI-assisted development
+
+**Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 5.5/10 | 28 test files, 141 test functions — decent HPU ops coverage but no coverage tracking |
-| Integration/E2E | 5.0/10 | Jenkins lm-eval-harness tests + E2E model loading scripts; hardware-dependent |
-| **Build Integration** | **3.5/10** | **Konflux build opt-in only (label/comment); no PR-time image validation** |
-| Image Testing | 3.0/10 | 6 Dockerfiles, multi-stage builds, but no runtime validation or multi-arch |
-| Coverage Tracking | 1.0/10 | No coverage tooling at all — no pytest-cov, no codecov, no thresholds |
-| CI/CD Automation | 4.0/10 | Jenkins + Tekton/Konflux but no GitHub Actions; no PR-triggered tests |
-| Agent Rules | 0.0/10 | No CLAUDE.md, no .claude/ directory, no test creation guidance |
+| Dimension | Score | Weight | Status |
+|-----------|-------|--------|--------|
+| Unit Tests | 7.0/10 | 15% | 277 test files across 33 subdirectories with pytest |
+| Integration/E2E | 5.0/10 | 20% | Distributed and spec-decode E2E tests but no HPU integration suite |
+| Build Integration | 3.0/10 | 15% | Build validation delegated to external Jenkins/Buildkite |
+| Image Testing | 5.0/10 | 10% | Multi-stage UBI Dockerfile but no HEALTHCHECK or runtime tests |
+| Coverage Tracking | 0.0/10 | 10% | Complete absence of coverage tracking |
+| CI/CD Automation | 6.0/10 | 15% | 15 workflows, good lint CI, but no caching/concurrency |
+| Static Analysis | 7.5/10 | 10% | Ruff, mypy, yapf, codespell, shellcheck, Dependabot |
+| Agent Rules | 0.0/10 | 5% | No agent rules of any kind |
+| **Overall** | **4.7/10** | | |
 
 ## Critical Gaps
 
-### 1. No Test Coverage Tracking or Enforcement
-- **Impact**: Cannot measure test quality, detect coverage regressions, or enforce standards
+### 1. Zero Coverage Tracking
 - **Severity**: HIGH
+- **Impact**: No visibility into what code is tested, no enforcement of coverage on PRs, coverage regressions go completely undetected
 - **Effort**: 4-6 hours
-- **Details**: No `.coveragerc`, no `codecov.yml`, no `pytest-cov` in dependencies. The 141 test functions exist but their actual code coverage is unknown. Without tracking, there's no way to prevent coverage from degrading as the codebase grows (26K+ lines of source code).
+- **Details**: No `.codecov.yml`, no `pytest-cov` in dependencies, no `--coverprofile` or `--coverage` flags in any CI workflow, no coverage thresholds in `pyproject.toml`
 
-### 2. No Automated PR-Triggered Test Suite
-- **Impact**: Unit test regressions can merge undetected into main
+### 2. No PR-time Build Validation
 - **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Details**: No `.github/workflows/` directory exists. The unit tests under `tests/unit_tests/` (bucketing, ops, embedding, prefix caching, etc.) don't require Gaudi hardware and could run on standard CI runners, but there's no workflow to trigger them. Jenkins tests require Gaudi hardware and run separately.
+- **Impact**: Docker image build failures are only discovered in external Jenkins/Buildkite systems, not visible in GitHub PR checks. PR reviewers cannot see build status directly.
+- **Effort**: 8-12 hours
+- **Details**: The `trigger_jenkins.yml` workflow fires a webhook to external Jenkins, but there's no feedback loop in GitHub. The Buildkite `run-hpu-test.sh` builds images but runs externally.
 
-### 3. No Container Image Runtime Validation
-- **Impact**: Image startup failures, import errors, missing dependencies not caught until deployment
+### 3. No Container Health Checks
 - **Severity**: HIGH
-- **Effort**: 6-8 hours
-- **Details**: Six Dockerfiles exist (`Dockerfile.konflux.gaudi`, `Dockerfile.hpu.ubi`, three `.cd/` variants, one benchmark) but none are tested for runtime correctness in CI. The Tekton pipeline only builds the image — it doesn't verify the entrypoint works.
+- **Impact**: Container orchestrators cannot detect unhealthy vLLM instances; startup failures only discovered by failed inference requests
+- **Effort**: 4-6 hours
+- **Details**: None of the 10 Dockerfiles contain a `HEALTHCHECK` directive. No readiness/liveness probe definitions found.
 
-### 4. No Security Scanning
-- **Impact**: Vulnerabilities in Python dependencies and container images go undetected
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: No Trivy, Snyk, CodeQL, Bandit, Semgrep, or Gitleaks configuration. The Tekton pipeline includes `clair-scan` and `ecosystem-cert-preflight-checks` tasks, but these run only on opt-in Konflux builds, not on every PR.
-
-### 5. Konflux Builds Are Opt-In
-- **Impact**: Not all PRs get container build validation; build failures discovered late
+### 4. No HPU-Specific Integration Tests in GitHub CI
 - **Severity**: MEDIUM
-- **Effort**: 2-3 hours
-- **Details**: The Tekton pipeline (`.tekton/vllm-gaudi-pull-request.yaml`) triggers on comment `/build-konflux` or labels `kfbuild-all`/`kfbuild-vllm-gaudi`, not automatically on every PR.
+- **Impact**: The only HPU test in GitHub CI is a minimal fake-HPU smoke test. Real HPU validation depends entirely on external Jenkins.
+- **Effort**: 16-24 hours
+- **Details**: `cpu-test.yml` runs `VLLM_USE_FAKE_HPU=1 python examples/offline_inference_fakehpu.py` — a single smoke test. No pytest-based HPU integration test suite.
 
 ## Quick Wins
 
-### 1. Add GitHub Actions Workflow for Unit Tests (2-4 hours)
+### 1. Add Coverage Tracking (2-4 hours)
+Add `pytest-cov` to `requirements-test.in` and create `.codecov.yml`:
+
 ```yaml
-# .github/workflows/unit-tests.yml
-name: Unit Tests
-on: [pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.10", "3.11", "3.12"]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-      - run: pip install -e ".[test]" || pip install -e .
-      - run: pip install pytest pytest-cov
-      - run: pytest tests/unit_tests/ -v --cov=vllm_gaudi --cov-report=xml
-      - uses: codecov/codecov-action@v4
+# .codecov.yml
+coverage:
+  status:
+    project:
+      default:
+        target: 50%
+        threshold: 2%
+    patch:
+      default:
+        target: 60%
 ```
 
-### 2. Add pytest-cov and Codecov Integration (2-3 hours)
-- Add `pytest-cov` to test dependencies
-- Create `.codecov.yml` with minimum coverage thresholds
-- Add coverage badge to README.md
-
-### 3. Add Trivy Container Scanning (1-2 hours)
-- Add a Trivy scan step to the Tekton pipeline
-- Or create a GitHub Actions workflow to scan Dockerfiles on PR
-
-### 4. Create CLAUDE.md with Test Guidelines (2-3 hours)
-- Document testing conventions (pytest, conftest patterns, HPU fixtures)
-- Define test naming standards
-- Specify which tests require hardware vs. CPU-only
-
-### 5. Add Bandit to Pre-Commit (1 hour)
-```yaml
-# Add to .pre-commit-config.yaml
-- repo: https://github.com/PyCQA/bandit
-  rev: 1.7.9
-  hooks:
-  - id: bandit
-    args: ["-r", "vllm_gaudi/", "-c", "pyproject.toml"]
+Update CI to generate coverage:
+```bash
+pytest --cov=vllm --cov-report=xml tests/
 ```
+
+### 2. Add Pre-commit Hooks (1-2 hours)
+Create `.pre-commit-config.yaml`:
+```yaml
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.5
+    hooks:
+      - id: ruff
+        args: [--fix]
+  - repo: https://github.com/google/yapf
+    rev: v0.32.0
+    hooks:
+      - id: yapf
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.3.0
+    hooks:
+      - id: codespell
+```
+
+### 3. Add HEALTHCHECK to Dockerfile.hpu.ubi (1 hour)
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:${PORT}/health')" || exit 1
+```
+
+### 4. Add Concurrency Controls (1 hour)
+Add to each PR-triggered workflow:
+```yaml
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+```
+
+### 5. Create Basic CLAUDE.md (2-3 hours)
+Document test patterns, framework choices, and conventions to guide AI-assisted development.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Jenkins (Hardware-Dependent Testing)**
-- `.jenkins/test_config.yaml` defines a 2-stage pipeline:
-  - **smoke_tests**: GSM8K evaluation on Gaudi2 (G2) and Gaudi3 (G3) with TP=1 and TP=2
-  - **full_test_suite**: Extended model testing including FP8, APC, medium/large/huge models, vision models, and compressed tensors
-- `.jenkins/lm-eval-harness/` contains correctness tests that compare vLLM-Gaudi inference accuracy against baselines using the `lm-eval` framework
-- `.jenkins/vision/` covers multimodal model testing (Llama 4 Scout)
-- `.jenkins/benchmark/` has throughput benchmarking scripts
+**Score: 7.0/10**
 
-**Tekton/Konflux (Container Builds)**
-- `.tekton/vllm-gaudi-pull-request.yaml` — Konflux pipeline for building the container image
-  - Triggered by label (`kfbuild-all`, `kfbuild-vllm-gaudi`) or comment (`/build-konflux`)
-  - Uses `Dockerfile.konflux.gaudi` and `multi-arch-container-build.yaml` pipeline
-  - Includes `clair-scan` and `ecosystem-cert-preflight-checks`
-  - Platform: `linux/x86_64` only
-  - Cancel-in-progress enabled
+The repository has a substantial test suite inherited from upstream vLLM:
 
-**What's Missing**
-- No GitHub Actions workflows at all
-- No PR-triggered unit test execution
-- No automated linting check in CI (pre-commit hooks exist but aren't enforced in CI)
-- No dependency vulnerability scanning workflow
+- **277 test files** across 33 subdirectories covering:
+  - Core engine: `tests/core/` (19 files), `tests/engine/` (13 files)
+  - Model validation: `tests/models/` (60 files)
+  - Entrypoints/API: `tests/entrypoints/` (43 files)
+  - Kernels: `tests/kernels/` (35 files)
+  - LoRA: `tests/lora/` (31 files)
+  - Speculative decoding: `tests/spec_decode/` (23 files)
+  - Distributed: `tests/distributed/` (13 files)
+  - Samplers: `tests/samplers/` (11 files)
+  - Quantization: `tests/quantization/` (10 files)
+  - And more: tokenization, multimodal, worker, tracing, tool_use, etc.
 
-### Test Coverage
+- **Test-to-code ratio**: 277/585 ≈ 0.47 — adequate for the project complexity
+- **Framework**: pytest with extensive use of fixtures, parametrize, and custom markers
+- **Markers**: `core_model`, `cpu_model`, `quant_model`, `distributed_2_gpus`, `skip_v1`
+- **Test isolation**: 2,103 uses of `@pytest.fixture`, `@pytest.mark.parametrize`, etc.
+- **conftest.py**: 10 conftest files at various levels providing shared fixtures
 
-**Unit Tests** (`tests/unit_tests/`)
-- **28 test files with 141 test functions** across:
-  - `ops/`: HPU-specific operations (rotary embedding, layernorm, GPTQ, fused MoE, FP8, AWQ, compressed tensors, custom op registration) — 9 test files
-  - `worker/`: HPU model runner, input batch management — 2 test files
-  - `sampler/`: HPU sampler — 1 test file
-  - `multimodal/`: Multimodal processing and inputs — 2 test files
-  - `lora/`: LoRA with multi-LoRA and tensor parallel — 2 test files
-  - `kv_offload/`: CPU offloading and offloading connector — 2 test files
-  - Root: bucketing, prefix caching, flags, embedding, defragmentation, utils — 6 test files
-- Framework: pytest with `conftest.py` providing fixtures (distributed init, LoRA files, default VllmConfig)
-- 5,277 lines of unit test code vs. 26,032 lines of source → **test-to-code ratio: 0.20**
+**Gaps**:
+- Most tests target CUDA/GPU paths; HPU-specific test coverage appears thin
+- No explicit test isolation for HPU vs GPU test paths
 
-**Integration/E2E Tests**
-- `tests/full_tests/ci_e2e_discoverable_tests.sh`: Comprehensive E2E script testing model loading and generation for Gemma3, Llama4, DeepSeek, Granite, Qwen3, Mistral, with multimodal, TP, spec decode, pooling, sleep mode, structured outputs, and LoRA
-- `tests/full_tests/ci_perf_tests.sh`: Throughput benchmarking with ShareGPT dataset
-- `tests/upstream_tests/ci_tests.sh`: Basic upstream compatibility test
-- `tests/models/`: Model initialization, registration, and language/multimodal generation tests
-- `examples/nixl/`: NIXL accuracy and edge case tests
+### Integration/E2E Tests
 
-**CD Tests** (`.cd/tests/`)
-- 3 test files for vLLM autocalc rules (automatic resource calculation)
+**Score: 5.0/10**
 
-**What's Missing**
-- No coverage tracking or reporting
-- No pytest markers for test categorization (hardware-required vs. CPU-only)
-- No test timeouts configured
-- No parallel test execution setup
+- **E2E subdirectories**: `tests/spec_decode/e2e/` (13 files) and `tests/core/block/e2e/` (4 files)
+- **Distributed tests**: Multi-GPU (2, 4 GPU) and multi-node (2-node) test configurations in Buildkite
+- **LM-eval harness**: Model correctness validation via `lm-eval` in both Jenkins and Buildkite
+- **Jenkins HPU tests**: Triggered on every PR via `trigger_jenkins.yml` webhook
 
-### Code Quality
+**Gaps**:
+- No dedicated `e2e/` or `integration/` directory at the repo root
+- No Kind/Minikube/envtest cluster testing
+- No multi-version testing (single branch only)
+- HPU integration testing is opaque to GitHub — results not reported back as PR checks
+- The only GitHub CI HPU test is a minimal fake-HPU smoke test
 
-**Strong Points**
-- **Pre-commit hooks** (`.pre-commit-config.yaml`):
-  - `yapf` (v0.43.0) for code formatting
-  - `ruff` (v0.11.7) for linting with fix mode — enforces pycodestyle (E), pyflakes (F), pyupgrade (UP), bugbear (B), simplify (SIM), logging (G)
-  - `pymarkdown` for markdown linting
-  - `actionlint` for GitHub Action validation
-  - `shellcheck` for shell script linting
-  - `mypy` (v1.11.1) for type checking — configured for Python 3.10, 3.11, 3.12 with pydantic plugin
-  - Custom hooks: sign-off commit, filename space check, pip-compile for requirements
-- **pyproject.toml** properly configured with ruff rules, mypy settings, codespell, and isort
-- **Renovate** configured for automated dependency updates via Konflux central
+### Build Integration
 
-**What's Missing**
-- Pre-commit hooks only run locally; no CI enforcement (no `pre-commit run --all-files` in a workflow)
-- No SAST tools (Bandit, Semgrep)
-- No secret detection (Gitleaks, TruffleHog)
+**Score: 3.0/10**
 
-### Container Images
+- **Buildkite**: Has `run-hpu-test.sh` that builds `Dockerfile.hpu` and runs inference
+- **Jenkins**: Triggered on PRs via webhook for HPU testing
+- **GitHub CI**: CPU test does `python setup.py develop` but no image building
+- **Publish workflow**: Creates release assets on tags
 
-**Dockerfiles**
-1. `Dockerfile.konflux.gaudi` — Production RHEL 9.6 UBI-based image, 3-stage build (gaudi-base → gaudi-pytorch → vllm-openai), OpenShift-compatible (non-root user UID 2000), RHEL certification labels
-2. `Dockerfile.hpu.ubi` — Nearly identical to Konflux variant
-3. `.cd/Dockerfile.ubuntu.pytorch.vllm` — Ubuntu-based development image
-4. `.cd/Dockerfile.ubuntu.pytorch.vllm.nixl.latest` — Ubuntu with NIXL support
-5. `.cd/Dockerfile.rhel.ubi.vllm` — Alternative RHEL build
-6. `tests/pytorch_ci_hud_benchmark/Dockerfile.hpu` — Benchmark-specific image
+**Gaps**:
+- No PR-time Docker image build in GitHub workflows
+- No Konflux build simulation
+- No manifest validation or kustomize checks
+- No `make build` targets for PR validation
+- Build validation results from Jenkins/Buildkite are not visible in GitHub PR checks
 
-**Strengths**
-- Multi-stage builds reducing final image size
-- Proper RHEL UBI base images for enterprise deployments
-- OpenShift compatibility with non-root user
-- Version pinning for Synapse, PyTorch, and vLLM commits
-- `pip check` at end of install to verify dependency consistency
-- License copying for compliance
+### Image Testing
 
-**What's Missing**
-- No image startup validation in CI
-- No health check verification (`HEALTHCHECK` directive or API ping)
-- No multi-architecture builds (x86_64 only)
-- No SBOM generation
-- No image signing/attestation
+**Score: 5.0/10**
 
-### Security
+**Strengths**:
+- 10 Dockerfiles for different platforms (HPU, CPU, CUDA, ROCm, TPU, OpenVINO, Neuron, XPU, ppc64le)
+- `Dockerfile.hpu.ubi` uses excellent multi-stage build (6 stages: habana-base → python-install → python-habana-base → build → vllm-openai → vllm-grpc-adapter)
+- UBI/RHEL 9.4 base image (FIPS-capable): `vault.habana.ai/gaudi-docker/1.19.1/rhel9.4/habanalabs/pytorch-installer-2.5.1:1.19.1-26`
+- Non-root user setup (uid 2000, gid 0) for OpenShift compatibility
+- Build caching with `--mount=type=cache`
+- `.dockerignore` present and properly configured
+- License copied into `/licenses/`
 
-**Current State**
-- Tekton pipeline includes `clair-scan` and `ecosystem-cert-preflight-checks` — but only for opt-in Konflux builds
-- No proactive security scanning in the main CI flow
+**Gaps**:
+- No `HEALTHCHECK` directive in any Dockerfile
+- No testcontainers-based runtime validation
+- No multi-architecture support (separate per-platform Dockerfiles instead of `--platform`)
+- Buildkite does basic `docker run` validation but no structured health/functional tests
 
-**Missing**
-- No CodeQL or Semgrep for SAST
-- No Bandit for Python-specific security analysis
-- No Trivy for container vulnerability scanning on every PR
-- No Gitleaks or TruffleHog for secret detection
-- No dependency vulnerability scanning (pip-audit, safety)
-- No SBOM generation for supply chain security
+### Coverage Tracking
 
-### Agent Rules (Agentic Flow Quality)
+**Score: 0.0/10**
+
+Complete absence of coverage tracking:
+- No `.codecov.yml` or `codecov.yml`
+- No `.coveragerc`
+- No `pytest-cov` in any requirements file
+- No coverage flags (`--coverprofile`, `--coverage`, `--cov`) in any CI workflow
+- No coverage thresholds in `pyproject.toml`
+- No PR coverage reporting
+
+### CI/CD Automation
+
+**Score: 6.0/10**
+
+**15 GitHub Actions workflows**:
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `ruff.yml` | PR to habana_main | Python linting (ruff + isort) |
+| `mypy.yaml` | PR to habana_main | Type checking (Python 3.9-3.12 matrix) |
+| `yapf.yml` | PR to habana_main | Python formatting |
+| `codespell.yml` | PR to main | Spell checking |
+| `clang-format.yml` | PR to habana_main | C++/CUDA formatting |
+| `shellcheck.yml` | PR to main | Shell script linting |
+| `actionlint.yml` | PR to main | GitHub Actions linting |
+| `trigger_jenkins.yml` | PR (opened/reopened/edited/sync) | Trigger external HPU tests |
+| `cpu-test.yml` | PR to habana_main | Minimal fake-HPU smoke test |
+| `cleanup_pr_body.yml` | PR (opened/reopened/edited) | PR description cleanup |
+| `add_label_automerge.yml` | auto_merge_enabled | Add 'ready' label |
+| `publish.yml` | Tag push (v*) | Create GitHub release |
+| `scorecard.yml` | Schedule (weekly) + push to habana_main | Supply chain security |
+| `stale.yml` | Schedule (daily) | Close stale issues/PRs |
+
+**Additional CI systems**:
+- **Buildkite**: Comprehensive test pipeline with 30+ test steps, sharding, parallelism, multi-GPU/multi-node
+- **Jenkins**: HPU-specific testing, LM-eval harness
+
+**Gaps**:
+- No `concurrency:` controls — redundant runs on rapid pushes
+- No `cache:` actions for pip/dependencies
+- Branch targeting inconsistency: some workflows target `main`, others `habana_main`
+- No timeout settings on workflows
+- Jenkins results not reported back to GitHub PRs
+
+### Static Analysis
+
+**Score: 7.5/10**
+
+#### Linting
+Strong multi-tool linting setup:
+- **Ruff**: Configured in `pyproject.toml` with rules: E (pycodestyle), F (pyflakes), UP (pyupgrade), B (bugbear), SIM (simplify), G (logging)
+- **mypy**: Type checking across Python 3.9-3.12 matrix, covers core vllm modules
+- **yapf**: Code formatting (v0.32.0)
+- **isort**: Import sorting
+- **codespell**: Spell checking with custom ignore list
+- **clang-format**: C++/CUDA code formatting (v18.1.5)
+- **shellcheck**: Shell script linting
+- **actionlint**: GitHub Actions workflow linting
+
+Comprehensive `format.sh` script that runs all formatters locally.
+
+#### FIPS Compatibility
+- No non-FIPS-compliant cryptographic imports found in source code
+- `Dockerfile.hpu.ubi` uses RHEL 9.4 UBI-based base image (FIPS-capable)
+- `Dockerfile.hpu` uses Ubuntu 22.04 base (not FIPS-capable by default)
+- No FIPS build tags or `GOEXPERIMENT=boringcrypto` (N/A for Python project)
+
+#### Dependency Alerts
+- **Dependabot**: Configured for `github-actions` and `pip` ecosystems
+- Weekly schedule with grouping for patch and minor updates
+- Explicit ignores for core ML dependencies (torch, torchvision, xformers, etc.)
+- 5 open PR limit with designated reviewers
+
+**Gaps**:
+- No `.pre-commit-config.yaml` — formatting enforcement only in CI, not locally
+- No Renovate configuration (Dependabot is present though)
+- mypy coverage is partial (excludes `model_executor/models/`)
+
+### Agent Rules
+
+**Score: 0.0/10**
 
 - **Status**: Missing
-- **Coverage**: None — no CLAUDE.md, no AGENTS.md, no `.claude/` directory
+- **Coverage**: No test type rules of any kind
 - **Quality**: N/A
-- **Gaps**:
-  - No test creation rules for unit tests, E2E tests, or model tests
-  - No coding standards documentation for AI agents
-  - No guidance on HPU-specific testing patterns
-  - No documentation of pytest fixture conventions
-- **Recommendation**: Generate missing rules with `/test-rules-generator` to create `.claude/rules/` covering:
-  - Unit test patterns for HPU ops (monkeypatch, conftest fixtures)
-  - Model test conventions (model cards, generation scripts)
-  - E2E test structure (Jenkins integration, shell scripts)
-  - CD test patterns (autocalc rules testing)
+- **Gaps**: No `CLAUDE.md`, no `AGENTS.md`, no `.claude/` directory, no `.claude/rules/` files
+- **Recommendation**: Generate rules with `/test-rules-generator` to establish test patterns for:
+  - pytest conventions and fixture usage
+  - HPU-specific testing patterns (fake HPU mode)
+  - Model correctness testing methodology
+  - Distributed test patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add GitHub Actions workflow for PR-triggered unit tests** — The `tests/unit_tests/` suite doesn't require Gaudi hardware and should run on every PR with `pytest` on standard runners (ubuntu-latest). This is the single highest-impact improvement.
+1. **Add coverage tracking** — Install `pytest-cov`, create `.codecov.yml`, add `--cov` flags to CI, enforce minimum 50% project and 60% patch thresholds. This is the single highest-ROI improvement.
 
-2. **Integrate pytest-cov and codecov** — Establish a coverage baseline. Current test-to-code ratio is 0.20 (8K test lines / 26K source lines) but actual line/branch coverage is unknown. Start with a 30% threshold and incrementally raise it.
+2. **Add PR-time Dockerfile build validation** — Create a GitHub Actions workflow that builds `Dockerfile.hpu.ubi` on PRs (build-only, no push). This catches build breakages before merge.
 
-3. **Add container vulnerability scanning** — Either integrate Trivy into the Tekton pipeline for all PRs (not just opt-in Konflux builds) or add a GitHub Actions workflow with `aquasecurity/trivy-action`.
+3. **Add HEALTHCHECK to Dockerfile.hpu.ubi** — Enables container orchestrators to detect and restart unhealthy vLLM server instances.
 
 ### Priority 1 (High Value)
 
-4. **Make Konflux builds automatic on PRs** — Change Tekton trigger from label/comment-based to `on-event: [pull_request]` automatic execution to catch container build failures on every PR.
+4. **Create HPU integration test workflow** — Expand `cpu-test.yml` to run a broader set of tests with `VLLM_USE_FAKE_HPU=1`, covering key inference paths.
 
-5. **Add container image startup validation** — After building the image, run a smoke test: `docker run --rm <image> python3 -c "import vllm_gaudi; print('OK')"` and optionally test the OpenAI API entrypoint responds to `/health`.
+5. **Add concurrency and caching to workflows** — Add `concurrency:` groups and `actions/cache` for pip dependencies to all PR-triggered workflows.
 
-6. **Create agent rules for AI-assisted development** — Generate `.claude/rules/` with test creation guidelines covering unit test patterns (pytest + conftest), model test conventions, and HPU-specific testing guidance.
+6. **Create agent rules** — Add `CLAUDE.md` documenting test conventions, and `.claude/rules/` with pytest patterns, HPU testing guidance, and model test conventions.
 
-7. **Add Bandit/Semgrep to pre-commit for Python SAST** — Quick addition to the already-comprehensive pre-commit configuration.
+7. **Add pre-commit hooks** — Create `.pre-commit-config.yaml` with ruff, yapf, codespell, and isort to enforce quality locally.
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add multi-architecture build support** — Currently x86_64 only; consider adding arm64 for broader compatibility.
+8. **Standardize branch targeting** — Align all workflows to target the same branch (currently split between `main` and `habana_main`).
 
-9. **Implement benchmark regression testing** — Compare throughput/latency against baseline on each release using the existing `ci_perf_tests.sh` infrastructure.
+9. **Add container startup validation** — Use testcontainers or a lightweight docker-based test to validate image startup and health endpoint.
 
-10. **Add contract tests for vLLM plugin interface** — Test the boundary between `vllm_gaudi` and upstream `vllm` to catch breaking changes when upgrading the `VLLM_STABLE_COMMIT`.
-
-11. **Create mock HPU fixtures for CI** — Enable unit tests that currently require Gaudi hardware to run on standard CI runners with mocked HPU behavior.
+10. **Add performance regression testing** — Automated benchmarks for HPU inference latency/throughput with baseline comparison.
 
 ## Comparison to Gold Standards
 
-| Capability | vllm-gaudi | odh-dashboard | notebooks | kserve |
-|---|---|---|---|---|
-| PR-triggered tests | None | Full (unit+e2e) | Full | Full |
-| Coverage tracking | None | Codecov enforced | Present | Coveralls enforced |
-| Coverage threshold | None | 80%+ | N/A | Yes |
-| Container scanning | Clair (opt-in) | Trivy + Snyk | Trivy | Trivy |
-| Image runtime tests | None | Cypress E2E | 5-layer validation | Deployment tests |
-| Pre-commit hooks | Comprehensive | Comprehensive | Moderate | Basic |
-| Agent rules | None | Comprehensive | Basic | None |
-| Multi-arch builds | No | Yes | Yes | Yes |
-| Security scanning | None | CodeQL + Snyk | Trivy | CodeQL |
-| SBOM generation | None | Yes | Yes | Yes |
+| Dimension | vllm-gaudi | odh-dashboard | notebooks | kserve |
+|-----------|-----------|---------------|-----------|--------|
+| Unit Tests | 7.0 | 9.0 | 7.0 | 8.0 |
+| Integration/E2E | 5.0 | 9.0 | 8.0 | 9.0 |
+| Build Integration | 3.0 | 8.0 | 7.0 | 7.0 |
+| Image Testing | 5.0 | 7.0 | 9.0 | 6.0 |
+| Coverage Tracking | 0.0 | 9.0 | 6.0 | 8.0 |
+| CI/CD Automation | 6.0 | 9.0 | 8.0 | 9.0 |
+| Static Analysis | 7.5 | 8.0 | 6.0 | 7.0 |
+| Agent Rules | 0.0 | 8.0 | 2.0 | 2.0 |
+| **Overall** | **4.7** | **8.5** | **7.0** | **7.5** |
+
+**Key takeaways vs gold standards**:
+- Static analysis is comparable to gold standards — strong linting toolchain
+- Unit test count is solid but coverage tracking is completely absent (vs 8-9/10 in gold standards)
+- Build integration and E2E testing lag significantly — external CI creates visibility gaps
+- Coverage tracking is the largest single gap (0.0 vs 6.0-9.0 in gold standards)
 
 ## File Paths Reference
 
 ### CI/CD
-- `.tekton/vllm-gaudi-pull-request.yaml` — Konflux build pipeline
-- `.jenkins/test_config.yaml` — Jenkins test stages configuration
-- `.jenkins/lm-eval-harness/run-tests.sh` — LM eval correctness test runner
-- `.jenkins/vision/run-tests.sh` — Vision model test runner
-- `.jenkins/benchmark/run-benchmark.sh` — Benchmark runner
-- `.konflux/build-args.conf` — Konflux build arguments
-- `.github/renovate.json` — Renovate dependency update config
+- `.github/workflows/ruff.yml` — Python linting
+- `.github/workflows/mypy.yaml` — Type checking
+- `.github/workflows/yapf.yml` — Python formatting
+- `.github/workflows/cpu-test.yml` — Minimal HPU smoke test
+- `.github/workflows/trigger_jenkins.yml` — External HPU test trigger
+- `.github/workflows/publish.yml` — Release creation
+- `.buildkite/test-pipeline.yaml` — Comprehensive test pipeline
+- `.buildkite/run-hpu-test.sh` — HPU Docker build & test
+- `.jenkins/lm-eval-harness/test_lm_eval_correctness.py` — LM eval test
 
 ### Testing
-- `tests/unit_tests/` — 28 unit test files (pytest)
-- `tests/full_tests/ci_e2e_discoverable_tests.sh` — E2E test runner
-- `tests/full_tests/ci_perf_tests.sh` — Performance benchmark runner
-- `tests/upstream_tests/ci_tests.sh` — Upstream compatibility tests
-- `tests/models/` — Model-specific tests
-- `.cd/tests/` — CD/autocalc tests
-- `examples/nixl/` — NIXL accuracy/edge case tests
-
-### Code Quality
-- `.pre-commit-config.yaml` — Pre-commit hooks (yapf, ruff, mypy, shellcheck, actionlint)
-- `pyproject.toml` — Ruff lint config, mypy config, codespell, isort
-- `requirements-lint.txt` — Lint dependencies (pre-commit)
-- `format.sh` — Redirects to pre-commit
+- `tests/conftest.py` — Root test fixtures
+- `tests/spec_decode/e2e/` — Speculative decoding E2E tests
+- `tests/core/block/e2e/` — Block allocator E2E tests
+- `tests/distributed/` — Multi-GPU/multi-node tests
+- `requirements-test.in` — Test dependencies
 
 ### Container Images
-- `Dockerfile.konflux.gaudi` — Production RHEL 9.6 UBI image (3-stage)
-- `Dockerfile.hpu.ubi` — RHEL UBI variant
-- `.cd/Dockerfile.ubuntu.pytorch.vllm` — Ubuntu development image
-- `.cd/Dockerfile.ubuntu.pytorch.vllm.nixl.latest` — Ubuntu with NIXL
-- `.cd/Dockerfile.rhel.ubi.vllm` — Alternative RHEL build
-- `tests/pytorch_ci_hud_benchmark/Dockerfile.hpu` — Benchmark image
+- `Dockerfile.hpu.ubi` — Production UBI-based HPU image (multi-stage)
+- `Dockerfile.hpu` — Development HPU image
+- `Dockerfile` — CUDA GPU image
+- `.dockerignore` — Docker build exclusions
 
-### Source Code
-- `vllm_gaudi/` — Main plugin package (96 files, ~26K lines)
-- `calibration/` — FP8 calibration tools
-- `tools/` — Developer utilities (mypy, shellcheck, profiler)
-- `examples/` — Usage examples including NIXL
+### Code Quality
+- `pyproject.toml` — Ruff, mypy, isort, codespell, pytest config
+- `requirements-lint.txt` — Linting tool versions
+- `format.sh` — Local formatting script
+- `.github/dependabot.yml` — Dependency update automation

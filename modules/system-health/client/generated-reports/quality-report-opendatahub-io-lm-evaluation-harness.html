@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:08 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 04:16 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/lm-evaluation-harness</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#fd7e14"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="311.01741"
+                                stroke-dashoffset="316.6722719999999"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">4.5</div>
+                        <div class="score-value">4.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">29 test files with 1197 assertions covering core evaluator, tasks, metrics, and models; good parametrization but no coverage enforcement</div>
+                            <div class="scorecard-status">664 test functions across 32 files; good pytest usage with parametrize and fixtures, but low test-to-code ratio (32/725 = 0.044)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">No dedicated integration or E2E test suites; evaluator tests serve as coarse integration checks but lack model backend and pipeline-level validation</div>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">No dedicated integration or E2E test directories; no cluster-based testing; limited to unit-level tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No container builds, no Konflux/Tekton, no PR-time image validation; purely a Python library CI</div>
+                            <div class="scorecard-status">No Dockerfile, no PR-time build validation, no Konflux/Tekton pipelines, no image building in CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No Dockerfiles, no container images, no image testing of any kind</div>
+                            <div class="scorecard-status">No container image artifacts — no Dockerfile, no Containerfile, no image build or runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">pytest-cov listed as dev dependency but never invoked in CI; no codecov, no thresholds, no PR reporting</div>
+                            <div class="scorecard-status">pytest-cov listed as dev dependency but not used in CI; no codecov config, no coverage thresholds or PR reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">3 workflows covering linting, CPU unit tests, and PyPI publish; multi-Python matrix but no concurrency control, no E2E, and external model tests commented out</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">3 workflows (unit tests, task change detection, publish); multi-Python matrix; uv caching; Mergify for upstream sync; but no concurrency control, no E2E automation</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Strong ruff config with 10+ rule categories; comprehensive pre-commit hooks (codespell, pymarkdown); but no Dependabot/Renovate for dependency alerts</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No .claude/ directory, no CLAUDE.md, no agent rules or test automation guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory; no AI agent test creation guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,51 +416,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No code coverage tracking or enforcement</div>
-                            <p>Cannot measure test coverage trends; regressions in coverage go undetected; no PR-level feedback on untested code</p>
+                            <div class="item-description">No container image or build integration</div>
+                            <p>Repository produces no container images in CI — downstream Konflux builds have no upstream validation, risking build failures discovered only post-merge</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">16-24 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No coverage tracking or enforcement</div>
+                            <p>pytest-cov is a dev dependency but never invoked in CI; no coverage thresholds, no PR coverage gates — regressions in test coverage go undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container image build or testing</div>
-                            <p>ODH downstream relies on container images but this repo has zero Dockerfiles — image build failures discovered only at downstream integration</p>
+                            <div class="item-description">No integration or E2E tests</div>
+                            <p>With 209 task directories and multiple model backends (HuggingFace, vLLM, OpenVINO, API), there are no integration tests validating end-to-end evaluation pipelines</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No security scanning (SAST, dependency, container)</div>
-                            <p>Vulnerabilities in 50+ dependencies (PyTorch, transformers, datasets) go undetected until downstream scans catch them</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">External model tests commented out in CI</div>
-                            <p>Model backend integrations (API, vLLM, GGUF) not validated on PRs — regressions only caught by manual testing</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">24-40 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No integration or E2E test infrastructure</div>
-                            <p>Full evaluation pipeline (model load → task select → inference → scoring → output) never tested end-to-end in CI</p>
+                            <div class="item-description">Very low test-to-code ratio</div>
+                            <p>32 test files covering 725 source files (0.044 ratio) leaves large portions of the codebase untested, especially model backends and task configurations</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">12-20 hours</span>
+                                <span class="meta-tag effort-tag">40-80 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No Konflux/Tekton pipeline for ODH builds</div>
-                            <p>As an ODH component, missing Konflux integration means build/test gaps between upstream CI and downstream product builds</p>
+                            <div class="item-description">No dependency update automation</div>
+                            <p>No Dependabot or Renovate configuration; dependency vulnerabilities and version drift go undetected until manual review</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-16 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -472,43 +469,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Enable pytest-cov in CI and add codecov integration</div>
-                            <p>Immediate visibility into test coverage with PR-level reporting and trend tracking</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Dependabot for dependency scanning</div>
-                            <p>Automated alerts for vulnerable dependencies across 50+ packages</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add concurrency control to PR workflows</div>
-                            <p>Cancel redundant workflow runs on force-pushes, saving CI minutes</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">15 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Un-comment and fix external model tests</div>
-                            <p>Restore model backend validation in CI; catch API/vLLM/HF integration regressions</p>
+                            <div class="item-description">Enable coverage tracking in CI</div>
+                            <p>Add --cov flags to pytest in unit_tests.yml and configure codecov to get PR coverage reporting and threshold enforcement</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL or Bandit security scanning workflow</div>
-                            <p>Detect Python security issues (SQL injection via sqlite, unsafe deserialization, etc.)</p>
+                            <div class="item-description">Add Dependabot configuration</div>
+                            <p>Automated dependency update PRs for pip and GitHub Actions ecosystems</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add concurrency control to CI workflows</div>
+                            <p>Prevent redundant workflow runs on rapid PR pushes, saving CI resources</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create basic CLAUDE.md with test patterns</div>
+                            <p>Guide AI agents to write consistent, high-quality tests matching existing pytest patterns</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -525,15 +514,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Enable pytest-cov in CI with --cov=lm_eval --cov-report=xml and integrate codecov with a minimum threshold (e.g., 60%)</li><li>Add security scanning: CodeQL for SAST, Dependabot for dependency vulnerabilities, Bandit via ruff&#x27;s S rules (already partially configured)</li><li>Un-comment external model tests (testmodels job) and fix to run with CPU-only backends</li></ul>
+                            <ul><li>Enable pytest-cov in CI and add codecov integration with minimum coverage thresholds</li><li>Add a Dockerfile for the lm-eval container image used by downstream RHOAI deployments</li><li>Create integration tests for end-to-end evaluation pipelines with at least one model backend</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Create a Dockerfile for the evaluation harness and add PR-time image build validation</li><li>Add integration tests that exercise full evaluation pipelines (model→task→score) with mock/dummy models</li><li>Add Konflux/Tekton pipeline configuration for ODH downstream builds</li><li>Create .claude/rules/ with test creation guidelines for unit, integration, and model backend tests</li></ul>
+                            <ul><li>Add Dependabot configuration covering pip and github-actions ecosystems</li><li>Add concurrency control (concurrency: group/cancel-in-progress) to all PR-triggered workflows</li><li>Create CLAUDE.md with test creation guidelines and coding standards</li><li>Increase unit test coverage for model backends (only 11 test files for the models/ module)</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add mypy type checking (only 20.5% of functions have return type annotations)</li><li>Add performance regression testing for evaluation throughput</li><li>Add multi-architecture support testing for downstream container builds</li><li>Add pre-merge contract tests for task YAML schema validation</li></ul>
+                            <ul><li>Add multi-architecture container build support for downstream deployment targets</li><li>Create contract tests for the eval-hub-sdk integration boundary</li><li>Add performance regression tests for evaluation benchmarks</li></ul>
                         </div>
                     </div>
                 </div>

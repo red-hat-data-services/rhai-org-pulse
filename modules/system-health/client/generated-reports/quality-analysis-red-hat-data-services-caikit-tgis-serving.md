@@ -1,390 +1,457 @@
 ---
 repository: "red-hat-data-services/caikit-tgis-serving"
-overall_score: 3.4
+overall_score: 4.2
 scorecard:
   - dimension: "Unit Tests"
     score: 1.0
-    status: "No unit tests exist; only 97 lines of Python source code with zero test coverage"
+    status: "No unit tests; only a single smoke test file exists"
   - dimension: "Integration/E2E"
-    score: 5.0
-    status: "Docker Compose smoke test and KServe Kind cluster E2E exist but are minimal"
+    score: 6.0
+    status: "Docker Compose and KServe smoke tests with Kind cluster deployment"
   - dimension: "Build Integration"
-    score: 5.0
-    status: "PR builds Docker image and runs smoke tests; Konflux triggered by label/comment only"
+    score: 7.0
+    status: "PR image builds in GitHub Actions and Konflux multi-arch pipeline"
   - dimension: "Image Testing"
-    score: 4.0
-    status: "Image built and smoke-tested on PR; no vulnerability scanning or SBOM generation"
+    score: 6.0
+    status: "Multi-stage UBI9 Dockerfile with compose and KServe runtime validation"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling, no codecov integration, no coverage thresholds"
+    status: "No coverage configuration, thresholds, or PR reporting"
   - dimension: "CI/CD Automation"
-    score: 5.0
-    status: "5 workflows with PR/schedule triggers; good Dependabot setup; no caching or concurrency control"
+    score: 6.0
+    status: "Five workflows with PR builds and dependency management, but no concurrency or caching"
+  - dimension: "Static Analysis"
+    score: 3.0
+    status: "Dependabot configured; no linting, pre-commit, or FIPS build config"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
-  - title: "Zero unit test coverage"
-    impact: "No regression detection for caikit runtime configuration or utility code"
+  - title: "No unit tests for any component"
+    impact: "Regressions in configuration parsing, model conversion, or health probes go undetected until E2E"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "No security scanning (Trivy, Snyk, CodeQL)"
-    impact: "Container vulnerabilities and code security issues go undetected"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No coverage tracking or enforcement"
-    impact: "Cannot measure test quality or enforce coverage thresholds on PRs"
+  - title: "Zero coverage tracking"
+    impact: "No visibility into what code paths are exercised; no ability to enforce quality gates"
     severity: "HIGH"
     effort: "2-4 hours"
   - title: "No linting or static analysis"
-    impact: "Code quality issues, type errors, and style inconsistencies not caught automatically"
-    severity: "MEDIUM"
-    effort: "2-3 hours"
-  - title: "KServe E2E workflow disabled on PRs"
-    impact: "KServe integration regressions not caught until weekly scheduled run"
+    impact: "Code style drift, potential Python anti-patterns, and type errors undetected"
     severity: "HIGH"
-    effort: "1-2 hours"
-  - title: "No pre-commit hooks"
-    impact: "No local quality gates before commits reach CI"
+    effort: "2-3 hours"
+  - title: "No FIPS build configuration"
+    impact: "Downstream RHOAI builds may require FIPS compliance; no build tags or crypto audit in place"
     severity: "MEDIUM"
-    effort: "1-2 hours"
+    effort: "4-8 hours"
+  - title: "KServe PR test trigger is commented out"
+    impact: "KServe integration test only runs weekly/manually, not on PRs; regressions missed until scheduled run"
+    severity: "MEDIUM"
+    effort: "1 hour"
 quick_wins:
-  - title: "Add Trivy container scanning to PR workflow"
+  - title: "Add ruff linter configuration"
     effort: "1-2 hours"
-    impact: "Catch CVEs in base images and dependencies before merge"
-  - title: "Add Python linting with ruff"
-    effort: "1-2 hours"
-    impact: "Catch type errors, unused imports, and style issues in the 2 Python files"
-  - title: "Re-enable KServe smoke test on PRs"
+    impact: "Catch Python style issues, unused imports, and common bugs automatically on every PR"
+  - title: "Enable KServe test on PRs (uncomment trigger in kserve-test.yml)"
     effort: "30 minutes"
-    impact: "Catch KServe integration regressions on every PR instead of weekly"
-  - title: "Add concurrency control to PR workflow"
+    impact: "Catch KServe deployment regressions on every PR instead of weekly"
+  - title: "Add concurrency control to workflows"
     effort: "30 minutes"
-    impact: "Cancel stale CI runs, save compute resources"
-  - title: "Create basic CLAUDE.md with project context"
+    impact: "Cancel stale workflow runs and save CI resources"
+  - title: "Add HEALTHCHECK to Dockerfile"
+    effort: "30 minutes"
+    impact: "Container orchestrators can detect unhealthy containers without KServe-specific probes"
+  - title: "Create basic CLAUDE.md with test and contribution guidance"
     effort: "1-2 hours"
-    impact: "Enable AI-assisted development with project-specific guidance"
+    impact: "Improve AI-generated code quality and onboarding for new contributors"
 recommendations:
   priority_0:
-    - "Add container vulnerability scanning (Trivy) to the build-and-test PR workflow"
-    - "Re-enable the KServe smoke test workflow on pull_request events"
-    - "Add Python linting (ruff or flake8) and type checking (mypy) to CI"
+    - "Add unit tests for caikit configuration parsing and model conversion utility"
+    - "Configure coverage tracking with codecov and enforce minimum thresholds"
+    - "Add ruff or flake8 linting to CI pipeline with pre-commit hooks"
   priority_1:
-    - "Add unit tests for smoke-test.py and utils/convert.py"
-    - "Integrate codecov or coveralls for coverage tracking"
-    - "Add SBOM generation to container builds"
-    - "Create CLAUDE.md and .claude/rules/ for agent-assisted development"
+    - "Uncomment KServe PR test trigger to catch integration regressions on every PR"
+    - "Add FIPS build configuration (boringcrypto tags, crypto audit)"
+    - "Add concurrency control and timeout settings to all workflows"
+    - "Create CLAUDE.md with test patterns and contribution guidelines"
   priority_2:
-    - "Add pre-commit hooks for local quality gates"
-    - "Add multi-architecture image testing (arm64 validation)"
-    - "Add gRPC endpoint testing to KServe smoke test"
-    - "Add image signing with cosign/sigstore"
+    - "Add multi-version KServe/K8s testing via matrix strategy"
+    - "Add gRPC smoke test (currently TODO in smoke-test.py)"
+    - "Add error scenario testing (model not found, invalid input, OOM)"
+    - "Add mypy type checking for Python code"
 ---
 
 # Quality Analysis: caikit-tgis-serving
 
+**Repository**: [red-hat-data-services/caikit-tgis-serving](https://github.com/red-hat-data-services/caikit-tgis-serving)
+**Tier**: Downstream | **Jira**: RHOAIENG / Model Runtimes
+**Primary Language**: Python (3.11) | **Type**: Model Serving Runtime (Caikit + TGIS)
+**Package Manager**: Poetry | **Base Image**: UBI9 Minimal
+**Analysis Date**: 2026-07-20
+
 ## Executive Summary
 
-- **Overall Score: 3.4/10**
-- **Repository Type**: Python container image / KServe ServingRuntime for LLM inference
-- **Primary Language**: Python (97 LOC across 2 source files)
-- **Key Strengths**: Docker Compose smoke test with real inference validation, KServe Kind cluster E2E test, Dependabot with auto-approve, Konflux/Tekton PR pipeline, multi-arch build support
-- **Critical Gaps**: Zero unit tests, no security scanning, no coverage tracking, no linting, KServe E2E disabled on PRs, no agent rules
+- **Overall Score: 4.2/10**
+- **Key Strengths**: Solid E2E smoke test infrastructure with both Docker Compose and KServe/Kind deployment testing; Konflux multi-arch PR pipeline; UBI9 base images; Dependabot with auto-approve
+- **Critical Gaps**: Zero unit tests, no coverage tracking, no linting or static analysis, no FIPS build configuration, no agent rules
 - **Agent Rules Status**: Missing
 
-This is a lightweight container image project that bundles Caikit + TGIS for KServe-based LLM inference. The codebase is minimal (97 lines of Python), but the testing and quality infrastructure has significant gaps. The smoke tests that do exist are well-designed (real inference validation via gRPC and HTTP), but there is no unit testing, no security scanning, no code quality tooling, and the KServe E2E workflow has been disabled on PRs (only runs weekly).
+This is a thin packaging/integration repository (1 source file + dependencies) rather than a feature-rich codebase. The E2E testing is its strongest quality practice, but the complete absence of unit tests, coverage tracking, and static analysis leaves significant quality gaps for a downstream RHOAI component.
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 1/10 | No unit tests; zero test-to-code ratio |
-| Integration/E2E | 5/10 | Compose smoke test + KServe Kind E2E (disabled on PRs) |
-| **Build Integration** | **5/10** | **PR builds image + runs smoke test; Konflux on label only** |
-| Image Testing | 4/10 | Image built and smoke-tested; no vuln scanning or SBOM |
-| Coverage Tracking | 0/10 | No coverage tooling whatsoever |
-| CI/CD Automation | 5/10 | 5 workflows; no caching, no concurrency control |
-| Agent Rules | 0/10 | No CLAUDE.md, no .claude/ directory |
+| Dimension | Weight | Score | Status |
+|-----------|--------|-------|--------|
+| Unit Tests | 15% | 1.0/10 | No unit tests; only a single smoke test file |
+| Integration/E2E | 20% | 6.0/10 | Docker Compose + KServe smoke tests with Kind |
+| Build Integration | 15% | 7.0/10 | PR image builds + Konflux multi-arch pipeline |
+| Image Testing | 10% | 6.0/10 | Multi-stage UBI9 Dockerfile, runtime validation |
+| Coverage Tracking | 10% | 0.0/10 | No coverage config, thresholds, or reporting |
+| CI/CD Automation | 15% | 6.0/10 | 5 workflows, dependency mgmt, no concurrency/caching |
+| Static Analysis | 10% | 3.0/10 | Dependabot only; no linting or pre-commit |
+| Agent Rules | 5% | 0.0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory |
+| **Overall** | **100%** | **4.2/10** | |
 
 ## Critical Gaps
 
-### 1. Zero Unit Test Coverage
-- **Impact**: No regression detection for configuration parsing, utility functions, or test helper logic
-- **Severity**: HIGH
+### 1. No Unit Tests (Severity: HIGH)
+- **Impact**: Regressions in configuration parsing, model conversion (`utils/convert.py`), or health probe behavior go undetected until E2E tests
+- **Current State**: The only test file is `test/smoke-test.py`, which is an end-to-end inference smoke test, not a unit test
 - **Effort**: 4-8 hours
-- **Details**: The repository has 2 Python source files (`test/smoke-test.py` at 73 lines and `utils/convert.py` at 24 lines) with zero unit tests. While the codebase is small, the `smoke-test.py` file contains async test logic, retry mechanisms, and protocol-specific clients that should be unit-tested independently of the full stack.
+- **What to test**: `caikit.yml` configuration validation, `utils/convert.py` model conversion logic, error handling edge cases
 
-### 2. No Security Scanning
-- **Impact**: Container image vulnerabilities and Python dependency CVEs go completely undetected
-- **Severity**: HIGH
+### 2. Zero Coverage Tracking (Severity: HIGH)
+- **Impact**: No visibility into which code paths are exercised by existing tests; no ability to set or enforce quality gates
+- **Current State**: No `.codecov.yml`, no `pytest-cov` configuration, no coverage reporting in CI
 - **Effort**: 2-4 hours
-- **Details**: No Trivy, Snyk, or CodeQL integration. The Dockerfile uses `ubi9/ubi-minimal:latest` as base image and installs packages with `microdnf` and `pip` without any vulnerability scanning. Dependabot covers dependency updates but not vulnerability scanning of the built image.
 
-### 3. No Coverage Tracking
-- **Impact**: No visibility into test coverage levels; no ability to enforce coverage thresholds
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: No `.codecov.yml`, no `.coveragerc`, no coverage generation in any workflow. Even when unit tests are added, there's no infrastructure to track or enforce coverage.
-
-### 4. KServe E2E Workflow Disabled on PRs
-- **Impact**: KServe integration regressions only caught on weekly scheduled run, not on PRs
-- **Severity**: HIGH
-- **Effort**: 1-2 hours
-- **Details**: The `kserve-test.yml` workflow has `push` and `pull_request` triggers commented out (lines 8-14). This means KServe-specific regressions (ServingRuntime, InferenceService deployment, model loading) are only caught weekly. The `build-and-test.yml` does include a KServe smoke test step, but having the dedicated workflow also run on PRs would provide additional coverage with the standalone KServe setup.
-
-### 5. No Linting or Static Analysis
-- **Impact**: Code quality issues, type errors, and Python anti-patterns not caught
-- **Severity**: MEDIUM
+### 3. No Linting or Static Analysis (Severity: HIGH)
+- **Impact**: Code style inconsistencies, unused imports, potential Python anti-patterns, and type errors go undetected
+- **Current State**: No `ruff.toml`, `.flake8`, `mypy.ini`, or `.pre-commit-config.yaml`; `.dockerignore` references `.mypy_cache/` suggesting mypy was used at some point
 - **Effort**: 2-3 hours
-- **Details**: No `ruff.toml`, `.flake8`, `mypy.ini`, or any Python linting configuration. No pre-commit hooks. The `pyproject.toml` only defines Poetry dependencies, no tool configurations.
 
-### 6. No Agent Rules
-- **Impact**: AI-assisted development has no project-specific context or test creation guidance
-- **Severity**: MEDIUM
-- **Effort**: 2-3 hours
-- **Details**: No `CLAUDE.md`, no `.claude/` directory, no `AGENTS.md`. This means AI agents have no guidance on project architecture, testing patterns, or contribution standards.
+### 4. No FIPS Build Configuration (Severity: MEDIUM)
+- **Impact**: As a downstream RHOAI component, FIPS compliance may be required; no build tags or crypto library audit in place
+- **Current State**: UBI9 base images are FIPS-capable (positive), but no FIPS-specific build configuration exists
+- **Effort**: 4-8 hours (depends on upstream caikit/caikit-nlp FIPS posture)
+
+### 5. KServe PR Test Trigger Commented Out (Severity: MEDIUM)
+- **Impact**: The standalone KServe test workflow (`kserve-test.yml`) only runs weekly or manually; the `build-and-test.yml` workflow does include a KServe test on PRs, but the dedicated workflow's PR trigger is disabled
+- **Effort**: 1 hour
 
 ## Quick Wins
 
-### 1. Add Trivy Container Scanning (1-2 hours)
-Add a Trivy step to the `build-and-test.yml` workflow after image build:
-```yaml
-- name: Run Trivy vulnerability scanner
-  uses: aquasecurity/trivy-action@master
-  with:
-    input: /tmp/image.tar
-    format: 'sarif'
-    output: 'trivy-results.sarif'
-    severity: 'CRITICAL,HIGH'
+### 1. Add ruff Linter Configuration (1-2 hours)
+Catch Python style issues, unused imports, and common bugs automatically on every PR.
 
-- name: Upload Trivy scan results
-  uses: github/codeql-action/upload-sarif@v3
-  with:
-    sarif_file: 'trivy-results.sarif'
-```
-
-### 2. Add Python Linting with Ruff (1-2 hours)
-Add a lint job to the PR workflow:
-```yaml
-lint:
-  name: Lint
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v4
-    - uses: astral-sh/ruff-action@v3
-```
-
-And add to `pyproject.toml`:
 ```toml
-[tool.ruff]
+# ruff.toml
 target-version = "py311"
-select = ["E", "F", "I", "UP", "B", "SIM"]
+line-length = 120
+
+[lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
 ```
 
-### 3. Re-enable KServe Smoke Test on PRs (30 minutes)
-Uncomment the `push` and `pull_request` triggers in `.github/workflows/kserve-test.yml` (lines 8-14).
+Add to CI:
+```yaml
+- name: Lint with ruff
+  run: |
+    pip install ruff
+    ruff check .
+```
 
-### 4. Add Concurrency Control (30 minutes)
-Add to both PR-triggered workflows:
+### 2. Enable KServe Test on PRs (30 minutes)
+Uncomment the PR trigger in `.github/workflows/kserve-test.yml`:
+
+```yaml
+on:
+  schedule:
+    - cron: "20 4 * * 1"
+  workflow_dispatch:
+  pull_request:  # uncomment this
+```
+
+### 3. Add Concurrency Control (30 minutes)
+Add to `build-and-test.yml` and `kserve-test.yml`:
+
 ```yaml
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 ```
 
-### 5. Create CLAUDE.md (1-2 hours)
-Create a basic `CLAUDE.md` with project context, build instructions, and test patterns to enable AI-assisted development.
+### 4. Add HEALTHCHECK to Dockerfile (30 minutes)
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD python -m caikit_health_probe readiness || exit 1
+```
+
+### 5. Create Basic CLAUDE.md (1-2 hours)
+Add test patterns, build instructions, and contribution guidelines for AI-assisted development.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflow Inventory (5 workflows):**
+**Score: 1.0/10**
+
+| Metric | Value |
+|--------|-------|
+| Test files | 1 (smoke test only) |
+| Source files | 1 (`utils/convert.py`) |
+| Test framework | None configured |
+| Test-to-code ratio | N/A (no unit tests) |
+| Test isolation | N/A |
+
+**Files Analyzed**:
+- `test/smoke-test.py` — E2E smoke test using `caikit_nlp_client` to test HTTP and gRPC endpoints
+- `utils/convert.py` — Model conversion utility (untested)
+
+**Findings**:
+- The repository is primarily an integration/packaging layer — it bundles `caikit`, `caikit-nlp`, and `caikit-tgis-backend` (see `pyproject.toml`)
+- The smoke test validates end-to-end inference but does not exercise the configuration or conversion logic
+- No pytest configuration, no conftest.py, no test fixtures
+- Score not zero because the smoke test file does exist and exercises the runtime
+
+### Integration/E2E Tests
+
+**Score: 6.0/10**
+
+| Metric | Value |
+|--------|-------|
+| E2E test suites | 2 (Docker Compose, KServe/Kind) |
+| Cluster setup | Kind with KServe |
+| Multi-version testing | No |
+| Test scenarios | HTTP inference only (gRPC TODO) |
+
+**Files Analyzed**:
+- `test/compose/docker-compose.yml` — Two-service setup (caikit + tgis)
+- `test/compose/smoke-test.sh` — Builds image, downloads model, runs compose, runs smoke test
+- `test/kserve/` — Kind cluster config, KServe setup manifests, InferenceService + ServingRuntime manifests
+- `.github/workflows/build-and-test.yml` — Orchestrates both compose and KServe tests
+
+**Strengths**:
+- Docker Compose test validates real multi-container interaction (caikit + TGIS)
+- KServe test deploys full ServingRuntime + InferenceService on Kind
+- Model download and conversion tested as part of setup
+- Health probes (readiness/liveness) defined in KServe manifests
+
+**Gaps**:
+- gRPC inference test marked as TODO (`test/smoke-test.py:69`)
+- No multi-version testing (single KServe version `v0.12.1.4`)
+- No error scenario testing (model not found, invalid input, timeout)
+- No embeddings endpoint testing (only text generation)
+- `kserve-test.yml` has PR trigger commented out
+
+### Build Integration
+
+**Score: 7.0/10**
+
+| Metric | Value |
+|--------|-------|
+| PR image build | Yes (build-and-test.yml) |
+| Konflux pipeline | Yes (.tekton/caikit-tgis-serving-pull-request.yaml) |
+| Multi-arch | Yes (x86_64, arm64 in Konflux) |
+| Konflux simulation in GH CI | No |
+
+**Files Analyzed**:
+- `.github/workflows/build-and-test.yml` — Builds Docker image, uploads as artifact, loads into Kind
+- `.tekton/caikit-tgis-serving-pull-request.yaml` — Konflux PR pipeline with multi-arch build
+- `Dockerfile` / `Dockerfile.konflux` — Multi-stage builds with UBI9 base
+
+**Strengths**:
+- PR workflow builds the Docker image and tests it (not just linting)
+- Konflux pipeline builds for both x86_64 and arm64
+- Image artifact shared between build and test jobs
+- Konflux pipeline managed centrally via `konflux-central` repo
+
+**Gaps**:
+- No Konflux simulation in GitHub CI (Konflux runs separately)
+- Dockerfile and Dockerfile.konflux are nearly identical — could diverge silently
+- No build caching in the GitHub Actions workflow (Docker layer caching disabled)
+
+### Image Testing
+
+**Score: 6.0/10**
+
+| Metric | Value |
+|--------|-------|
+| Multi-stage build | Yes (poetry-builder → deploy) |
+| Base image | UBI9 Minimal (FIPS-capable) |
+| Runtime validation | Yes (compose + KServe smoke tests) |
+| HEALTHCHECK | No |
+| Multi-arch CI testing | No (only Konflux builds multi-arch) |
+
+**Files Analyzed**:
+- `Dockerfile` — Multi-stage: poetry install → UBI9 minimal deploy
+- `Dockerfile.konflux` — Same with RHOAI labels added
+- `test/compose/docker-compose.yml` — Runtime validation
+- `test/kserve/caikit-tgis-serving.yaml` — KServe manifest with health probes
+
+**Strengths**:
+- UBI9 Minimal base image (lightweight, FIPS-capable)
+- Non-root user (`caikit`, UID 1001, GID 0 for OpenShift compatibility)
+- Multi-stage build keeps image small
+- Runtime validated via Docker Compose and KServe deployment
+
+**Gaps**:
+- No `HEALTHCHECK` instruction in Dockerfile
+- No `.dockerignore` for test files, docs, demo directories (only venv/env excluded)
+- No Testcontainers usage
+- Multi-arch builds only happen in Konflux, not in GitHub CI
+
+### Coverage Tracking
+
+**Score: 0.0/10**
+
+| Metric | Value |
+|--------|-------|
+| Coverage tool | None |
+| Coverage config | None |
+| PR reporting | None |
+| Threshold enforcement | None |
+
+**Findings**:
+- No `.codecov.yml`, `coveralls.yml`, or `.coveragerc`
+- No `pytest-cov` or `--cov` flags anywhere in CI
+- No coverage thresholds or gates
+- Since there are no unit tests, coverage tracking would need to be added alongside test creation
+
+### CI/CD Automation
+
+**Score: 6.0/10**
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `build-and-test.yml` | PR, push to main, weekly, manual | Build image + compose smoke test + KServe smoke test |
-| `kserve-test.yml` | Weekly, manual (PR/push **disabled**) | Standalone KServe Kind cluster E2E test |
-| `dependabot-autoapprove.yaml` | PR (dependabot only) | Auto-approve dependabot PRs |
-| `pr-close-image-delete.yaml` | PR closed | Delete PR image from Quay registry |
-| `run-update.yml` | Weekly, manual | Update poetry lock files and create PR |
+| `build-and-test.yml` | PR, push, schedule, dispatch | Build image + compose/KServe smoke tests |
+| `kserve-test.yml` | Schedule, dispatch | KServe smoke test (PR trigger commented out) |
+| `run-update.yml` | Schedule, dispatch | Weekly poetry lock update |
+| `pr-close-image-delete.yaml` | PR close | Delete Quay PR image |
+| `dependabot-autoapprove.yaml` | PR | Auto-approve Dependabot PRs |
 
-**Strengths:**
-- `build-and-test.yml` has a well-structured 3-job pipeline: build-image → compose-smoke-test → kserve-smoke-test
-- Image artifact passing between jobs via `actions/upload-artifact`/`actions/download-artifact`
-- Docker Buildx setup for efficient builds
-- Disk space cleanup for CI runners
-- Automated poetry lock file updates
+**Strengths**:
+- Main workflow covers full build → test pipeline on PRs
+- Automatic dependency updates (Dependabot + weekly poetry refresh)
+- PR image cleanup prevents Quay image sprawl
+- Dependabot auto-approve reduces maintenance burden
 
-**Gaps:**
-- No concurrency control on any workflow (stale runs waste resources)
-- No build caching (Docker layer cache, pip cache)
-- No workflow status badges
-- KServe standalone test disabled on PRs
+**Gaps**:
+- No `concurrency:` control on any workflow — stale runs waste resources
+- No `timeout-minutes:` on any job
+- No caching (pip, Docker layers)
+- No test parallelization
+- `kserve-test.yml` PR trigger commented out (redundant with `build-and-test.yml` but could serve as standalone)
+- Free Disk Space action uses different versions across workflows (`@v1.3.1` vs `@main`)
 
-### Test Coverage
+### Static Analysis
 
-**Test Infrastructure:**
-- **Compose Smoke Test** (`test/compose/smoke-test.sh`): Builds image, starts caikit + TGIS via Docker Compose, converts a model, runs inference via gRPC and HTTP. Well-structured with error handling and CI-specific optimizations.
-- **Python Smoke Test** (`test/smoke-test.py`): 73-line async test that validates gRPC and HTTP inference endpoints with retry logic. Supports both local (Docker Compose) and KServe (InferenceService URL) modes.
-- **KServe E2E** (`test/kserve/`): Kind cluster setup, KServe installation, model volume provisioning, ServingRuntime/InferenceService deployment, HTTP inference validation.
+**Score: 3.0/10**
 
-**Test-to-Code Ratio**: 73 test lines / 24 source lines = 3.04 (misleadingly high because the "source" is minimal; the actual caikit runtime code comes from pip dependencies)
+#### Linting
+- **Status**: No linting configured
+- No `ruff.toml`, `.flake8`, `mypy.ini`, `pylint.rc`, or any Python linter configuration
+- `.dockerignore` references `.mypy_cache/` suggesting mypy may have been used locally at some point
 
-**What's Missing:**
-- Zero unit tests for any Python code
-- No gRPC testing in KServe E2E (noted as TODO in `smoke-test.py` line 69)
-- No negative test cases (error handling, invalid inputs, timeouts)
-- No load testing or performance validation
-- No multi-model testing
+#### FIPS Compatibility
+- **Source code**: No FIPS-concerning crypto imports found (no `hashlib.md5`, `crypto/md5`, etc.)
+- **Build config**: No FIPS build tags, no `GOEXPERIMENT=boringcrypto` (not applicable — Python project)
+- **Base images**: UBI9 Minimal — FIPS-capable when running on FIPS-enabled RHEL host (positive)
+- **Python FIPS**: No explicit FIPS configuration for Python's `hashlib` or `ssl` modules; relies on OS-level OpenSSL FIPS provider
 
-### Code Quality
+#### Dependency Alerts
+- **Dependabot**: Configured for `pip`, `docker`, and `github-actions` ecosystems (good coverage)
+- **Auto-approve**: Dependabot PRs are auto-approved (reduces friction but may skip review)
+- **Renovate**: Not configured (Dependabot covers the same use case)
 
-**Current State:**
-- No linting configuration (no ruff, flake8, mypy, pylint)
-- No pre-commit hooks
-- No type annotations in Python code
-- No code formatting enforcement (no black, isort, yapf)
-- `pyproject.toml` only has Poetry build config, no tool sections
-- `.gitignore` is minimal (IDE files only)
-- `.dockerignore` only excludes venv directories
+#### Pre-commit Hooks
+- **Status**: No `.pre-commit-config.yaml`
 
-**Positive:**
-- Well-structured Dockerfiles with multi-stage builds
-- Non-root user in container (security best practice)
-- OWNERS file for review governance
+### Agent Rules
 
-### Container Images
+**Score: 0.0/10**
 
-**Build Process:**
-- Two Dockerfiles: `Dockerfile` (upstream) and `Dockerfile.konflux` (downstream with RHEL labels)
-- Multi-stage build: `poetry-builder` → `deploy`
-- Base image: `ubi9/ubi-minimal:latest` (Red Hat certified)
-- Non-root user execution (UID 1001)
-- Poetry-based dependency management with lockfile
+| Check | Status |
+|-------|--------|
+| `CLAUDE.md` | Missing |
+| `AGENTS.md` | Missing |
+| `.claude/` directory | Missing |
+| `.claude/rules/` | Missing |
+| Test creation rules | Missing |
+| Framework-specific examples | Missing |
 
-**Konflux/Tekton Integration:**
-- `.tekton/caikit-tgis-serving-pull-request.yaml` defines a PipelineRun for PR builds
-- Triggered by label (`kfbuild-caikit-tgis-serving`) or comment (`/build-konflux`), not automatically
-- Multi-arch support: `linux/x86_64` and `linux-m2xlarge/arm64`
-- Image expires after 5 days for PR builds
-- References central Konflux pipeline from `red-hat-data-services/konflux-central`
-
-**Gaps:**
-- No Trivy/Snyk vulnerability scanning
-- No SBOM generation
-- No image signing (cosign/sigstore)
-- No image size optimization tracking
-- Konflux builds not automatic on PRs (require label/comment trigger)
-
-### Security
-
-**Current State:**
-- Dependabot enabled for pip, Docker, and GitHub Actions dependencies (daily/weekly)
-- Dependabot auto-approve workflow (potential security concern - auto-approves ALL dependabot PRs without review)
-- Non-root container user
-- UBI9 base image (RHEL certified)
-
-**Missing:**
-- No CodeQL/SAST integration
-- No container vulnerability scanning (Trivy, Snyk, Grype)
-- No secret detection (Gitleaks, TruffleHog)
-- No dependency audit (pip-audit, safety)
-- No `.gitleaks.toml` or `.trivyignore`
-- Dependabot auto-approve is overly permissive (should check update type)
-
-### Agent Rules (Agentic Flow Quality)
-
-- **Status**: Missing
-- **Coverage**: None - no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
-- **Quality**: N/A
-- **Gaps**: Complete absence of agent rules means AI-assisted development has no project-specific guidance for:
-  - Project architecture and component relationships
-  - Testing patterns and standards
-  - Build and deployment procedures
-  - Code style and conventions
-- **Recommendation**: Generate test creation rules with `/test-rules-generator` and create a `CLAUDE.md` with project context
+**Recommendation**: Generate test creation rules with `/test-rules-generator` to establish test patterns for the caikit runtime configuration and smoke test patterns.
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add container vulnerability scanning** - Integrate Trivy into the `build-and-test.yml` workflow to scan the built image before it's used in smoke tests. This catches CVEs in base images and pip dependencies.
+1. **Add unit tests for configuration and conversion logic**
+   - Test `caikit.yml` parsing and validation
+   - Test `utils/convert.py` model conversion with mock models
+   - Add `pytest` as dev dependency and configure in `pyproject.toml`
 
-2. **Re-enable KServe smoke test on PRs** - Uncomment the `push` and `pull_request` triggers in `kserve-test.yml`. The build-and-test workflow has a KServe step, but the standalone workflow provides independent validation.
+2. **Configure coverage tracking with codecov**
+   - Add `.codecov.yml` with minimum threshold (e.g., 60% initially)
+   - Add `pytest-cov` to dev dependencies
+   - Add codecov upload step to CI workflow
 
-3. **Add Python linting and type checking** - Add ruff (linting) and mypy (type checking) to the CI pipeline. Even with only 2 Python files, this establishes the foundation for quality as the codebase grows.
-
-4. **Fix Dependabot auto-approve** - The current auto-approve workflow approves ALL dependabot PRs regardless of update type. Add a condition to only auto-approve patch-level updates:
-   ```yaml
-   if: steps.metadata.outputs.update-type == 'version-update:semver-patch'
-   ```
+3. **Add Python linting with ruff**
+   - Create `ruff.toml` with standard Python rules
+   - Add lint check step to PR workflow
+   - Consider adding `mypy` for type checking
 
 ### Priority 1 (High Value)
 
-1. **Add unit tests** - Write unit tests for `test/smoke-test.py` (testing the retry logic, async flow, client creation) and `utils/convert.py` (model conversion paths) using pytest.
-
-2. **Integrate coverage tracking** - Add `.coveragerc` configuration and integrate codecov/coveralls into the CI pipeline with a minimum coverage threshold.
-
-3. **Add SBOM generation** - Generate Software Bill of Materials during image builds using syft or trivy for supply chain security.
-
-4. **Create agent rules** - Create `CLAUDE.md` and `.claude/rules/` directory with test creation patterns, project architecture overview, and contribution guidelines.
-
-5. **Add gRPC testing to KServe E2E** - The TODO at `test/smoke-test.py:69` notes gRPC testing is not implemented for KServe mode.
+4. **Uncomment KServe PR test trigger** or consolidate into single workflow
+5. **Add concurrency control and timeouts** to all workflows
+6. **Add FIPS compliance verification** for downstream RHOAI requirements
+7. **Create CLAUDE.md** with build, test, and contribution guidelines
+8. **Add pre-commit hooks** for ruff, trailing whitespace, YAML validation
 
 ### Priority 2 (Nice-to-Have)
 
-1. **Add pre-commit hooks** - Set up `.pre-commit-config.yaml` with ruff, mypy, and trailing whitespace checks for local quality gates.
-
-2. **Add multi-arch image validation** - The Konflux pipeline builds for x86_64 and arm64, but no tests validate the arm64 image actually works.
-
-3. **Add image signing** - Implement cosign/sigstore signing for built images to enable verification in deployment pipelines.
-
-4. **Add load testing** - Add basic inference performance testing to catch latency regressions.
-
-5. **Add build caching** - Add Docker layer caching and pip caching to speed up CI runs.
+9. **Add multi-version KServe/K8s testing** via matrix strategy
+10. **Complete gRPC smoke test** (currently TODO in `smoke-test.py`)
+11. **Add error scenario testing** (model not found, invalid input, container OOM)
+12. **Add `mypy` type checking** for Python source files
+13. **Improve `.dockerignore`** to exclude test/, docs/, demo/ directories
 
 ## Comparison to Gold Standards
 
-| Dimension | caikit-tgis-serving | odh-dashboard | notebooks | kserve |
-|-----------|-------------------|---------------|-----------|--------|
-| Unit Tests | 0/10 - None | 9/10 - Comprehensive Jest | 6/10 - Notebook validation | 9/10 - Go testing |
-| Integration/E2E | 5/10 - Smoke tests only | 9/10 - Multi-layer + Cypress | 8/10 - Multi-image E2E | 9/10 - Kind-based E2E |
-| Build Integration | 5/10 - PR build + smoke | 8/10 - Multi-mode builds | 7/10 - Image pipeline | 8/10 - Multi-version |
-| Image Testing | 4/10 - Basic smoke only | 7/10 - Container validation | 9/10 - 5-layer validation | 7/10 - Runtime checks |
-| Coverage Tracking | 0/10 - None | 8/10 - Codecov enforced | 5/10 - Partial | 9/10 - Thresholds |
-| CI/CD Automation | 5/10 - Basic workflows | 9/10 - Full pipeline | 8/10 - Automated E2E | 9/10 - Comprehensive |
-| Agent Rules | 0/10 - None | 8/10 - Comprehensive rules | 3/10 - Basic | 5/10 - Partial |
-| **Overall** | **3.4/10** | **8.3/10** | **6.6/10** | **8.0/10** |
+| Practice | caikit-tgis-serving | odh-dashboard | notebooks | kserve |
+|----------|---------------------|---------------|-----------|--------|
+| Unit test coverage | None | Comprehensive (Jest/Cypress) | Good | Extensive (Go testing) |
+| Integration/E2E | Compose + Kind (smoke only) | Multi-layer E2E | 5-layer image validation | Multi-version E2E |
+| Build integration | PR build + Konflux | PR build + validation | Image build matrix | PR build + envtest |
+| Coverage tracking | None | Codecov with thresholds | Basic | Codecov enforced |
+| Linting | None | ESLint + TypeScript strict | Shellcheck | golangci-lint (20+ linters) |
+| FIPS checks | None (UBI9 base only) | N/A | FIPS image variants | Build tags |
+| Agent rules | None | Comprehensive .claude/rules/ | Basic | None |
+| Dependency alerts | Dependabot (3 ecosystems) | Dependabot | Dependabot | Dependabot |
+| Concurrency control | None | Yes | Yes | Yes |
 
 ## File Paths Reference
 
-### CI/CD Configuration
-- `.github/workflows/build-and-test.yml` - Main PR/push workflow (build + smoke tests)
-- `.github/workflows/kserve-test.yml` - Standalone KServe E2E (disabled on PRs)
-- `.github/workflows/dependabot-autoapprove.yaml` - Auto-approve dependabot PRs
-- `.github/workflows/pr-close-image-delete.yaml` - Clean up PR images from Quay
-- `.github/workflows/run-update.yml` - Weekly poetry lock file update
-- `.tekton/caikit-tgis-serving-pull-request.yaml` - Konflux/Tekton PR pipeline
+### CI/CD
+- `.github/workflows/build-and-test.yml` — Main PR build and test pipeline
+- `.github/workflows/kserve-test.yml` — Standalone KServe test (scheduled only)
+- `.github/workflows/run-update.yml` — Weekly poetry lock refresh
+- `.github/workflows/pr-close-image-delete.yaml` — PR image cleanup
+- `.github/workflows/dependabot-autoapprove.yaml` — Dependabot auto-approve
+- `.tekton/caikit-tgis-serving-pull-request.yaml` — Konflux PR pipeline
 
-### Test Infrastructure
-- `test/smoke-test.py` - Python smoke test (gRPC + HTTP inference validation)
-- `test/compose/smoke-test.sh` - Docker Compose smoke test orchestrator
-- `test/compose/docker-compose.yml` - Compose config for local testing
-- `test/compose/caikit_config/` - Test-specific Caikit configuration
-- `test/kserve/caikit-tgis-serving.yaml` - KServe ServingRuntime + InferenceService
-- `test/kserve/kind_config.yaml` - Kind cluster configuration
-- `test/kserve/setup.yaml` - Model volume provisioning
+### Testing
+- `test/smoke-test.py` — HTTP/gRPC inference smoke test
+- `test/compose/smoke-test.sh` — Docker Compose test orchestrator
+- `test/compose/docker-compose.yml` — Two-service test environment
+- `test/kserve/` — Kind + KServe test manifests
 
 ### Container Images
-- `Dockerfile` - Upstream multi-stage build
-- `Dockerfile.konflux` - Downstream (RHOAI) build with RHEL labels
-- `.dockerignore` - Docker build context exclusions
+- `Dockerfile` — Standard multi-stage build
+- `Dockerfile.konflux` — Konflux variant with RHOAI labels
+- `.dockerignore` — Minimal exclusions
 
-### Project Configuration
-- `pyproject.toml` - Poetry dependencies (caikit, caikit-nlp, caikit-tgis-backend)
-- `poetry.lock` - Locked dependency versions
-- `caikit.yml` - Caikit runtime configuration
-- `Makefile` - Local build and shell targets
-- `OWNERS` - Review governance
-- `.github/dependabot.yml` - Dependabot configuration
+### Configuration
+- `pyproject.toml` — Poetry dependencies (caikit, caikit-nlp, caikit-tgis-backend)
+- `caikit.yml` — Caikit runtime configuration
+- `.github/dependabot.yml` — Dependabot for pip, docker, github-actions

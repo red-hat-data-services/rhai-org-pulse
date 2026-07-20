@@ -1,331 +1,389 @@
 ---
 repository: "opendatahub-io/caikit-nlp-client"
-overall_score: 6.9
+overall_score: 6.2
 scorecard:
   - dimension: "Unit Tests"
-    score: 7.5
-    status: "Good test coverage with pytest, mocked + real caikit modes, TLS/mTLS parametrization"
+    score: 8.0
+    status: "Strong pytest suite with 1.3:1 test-to-code ratio and multi-connection-type coverage"
   - dimension: "Integration/E2E"
     score: 7.0
-    status: "Docker Compose integration tests with real caikit-tgis-serving, weekly CI schedule"
+    status: "Docker-based integration tests against real caikit+tgis containers with TLS/mTLS"
   - dimension: "Build Integration"
-    score: 3.0
-    status: "No PR-time build validation, no container image builds, library-only PyPI release"
+    score: 5.0
+    status: "Nox build + twine check for package validation; no PR-time container build"
   - dimension: "Image Testing"
-    score: 2.0
-    status: "No Dockerfile or container image for the library itself; relies on downstream images"
+    score: 3.0
+    status: "No Dockerfile for library itself; docker-compose only for test dependencies"
   - dimension: "Coverage Tracking"
-    score: 8.0
-    status: "Codecov integration with 50% fail_under threshold, branch coverage, per-Python-version reporting"
+    score: 7.0
+    status: "Codecov integration with branch coverage, but low 50% threshold"
   - dimension: "CI/CD Automation"
-    score: 8.5
-    status: "Well-structured workflows with concurrency control, multi-Python matrix, nox automation"
+    score: 7.0
+    status: "Well-organized workflows with concurrency and matrix testing, missing caching"
+  - dimension: "Static Analysis"
+    score: 8.0
+    status: "Comprehensive setup with ruff, mypy, bandit, pre-commit hooks, and Dependabot"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, .claude/ directory, or agent rules present"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory present"
 critical_gaps:
-  - title: "No SAST or dependency vulnerability scanning in CI"
-    impact: "Security vulnerabilities in dependencies (protobuf, grpcio, requests) not detected until downstream"
+  - title: "No agent rules for AI-assisted development"
+    impact: "AI agents cannot follow project-specific testing patterns or conventions"
+    severity: "MEDIUM"
+    effort: "2-3 hours"
+  - title: "Low coverage threshold (50%)"
+    impact: "Significant untested code paths can be merged without detection"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No container image or build integration testing"
-    impact: "Library packaging issues (missing files, broken imports) only found by downstream consumers"
+  - title: "No dependency caching in CI workflows"
+    impact: "Slower CI runs and unnecessary network traffic for pip/nox downloads"
     severity: "MEDIUM"
-    effort: "4-6 hours"
-  - title: "Coverage threshold at 50% is too low"
-    impact: "Significant portions of code can go untested without failing CI"
-    severity: "MEDIUM"
-    effort: "2-4 hours"
-  - title: "No agent rules for AI-assisted development"
-    impact: "AI agents cannot follow project conventions when generating tests or code"
-    severity: "LOW"
-    effort: "2-3 hours"
-quick_wins:
-  - title: "Add CodeQL or Snyk scanning workflow"
     effort: "1-2 hours"
-    impact: "Automated detection of security vulnerabilities in code and dependencies"
-  - title: "Raise coverage threshold to 70-80%"
-    effort: "1 hour"
-    impact: "Enforce higher test standards, catch regressions earlier"
-  - title: "Add pip install validation step to PR workflow"
-    effort: "1 hour"
-    impact: "Catch packaging/import issues before merge"
-  - title: "Generate CLAUDE.md with test creation rules"
-    effort: "2 hours"
-    impact: "Enable AI agents to follow project testing patterns"
+  - title: "No container image for library distribution"
+    impact: "No image testing dimension applicable; downstream consumers cannot validate container runtime"
+    severity: "LOW"
+    effort: "N/A"
+quick_wins:
+  - title: "Raise coverage threshold from 50% to 70%+"
+    effort: "1-2 hours"
+    impact: "Catches regressions in test coverage before merge"
+  - title: "Add pip caching to CI workflows"
+    effort: "30 minutes"
+    impact: "Faster CI runs, reduced dependency download time"
+  - title: "Create basic CLAUDE.md with test patterns and conventions"
+    effort: "2-3 hours"
+    impact: "Improve AI-generated test quality and consistency"
 recommendations:
   priority_0:
-    - "Add dependency vulnerability scanning (CodeQL, Snyk, or Dependabot security alerts)"
-    - "Add pip install + import validation step to PR workflow to catch packaging issues"
+    - "Raise coverage fail_under from 50% to at least 70% and set Codecov target to a fixed value"
+    - "Add pip/nox dependency caching to CI workflows to reduce build times"
   priority_1:
-    - "Raise coverage fail_under from 50% to 70-80%"
-    - "Add missing gRPC client tests for embedding, sentence_similarity, rerank methods"
-    - "Create CLAUDE.md and .claude/rules/ for test automation guidance"
+    - "Create CLAUDE.md with project conventions, test patterns, and contribution guidelines"
+    - "Add multi-version integration testing (test against multiple caikit-nlp versions)"
+    - "Add grpc client embedding/rerank tests (currently only HTTP client has these)"
   priority_2:
-    - "Add type-checking enforcement (mypy strict mode) to prevent runtime type errors"
-    - "Add Python 3.12 to test matrix"
-    - "Add contract tests to validate gRPC/HTTP API compatibility with caikit-nlp server"
+    - "Add performance benchmarking for gRPC vs HTTP client response times"
+    - "Add contract tests to validate against caikit-nlp API schema changes"
 ---
 
 # Quality Analysis: caikit-nlp-client
 
 ## Executive Summary
 
-- **Overall Score: 6.9/10**
-- **Repository Type**: Python client library for caikit-nlp (gRPC + HTTP)
-- **Primary Language**: Python 3.9-3.11
-- **Framework**: setuptools + nox task runner
-- **Key Strengths**: Well-structured test infrastructure with mock and real-server modes, good CI automation with Nox, comprehensive TLS/mTLS testing, codecov integration
-- **Critical Gaps**: No security scanning, low coverage threshold (50%), no build/packaging validation in CI, no agent rules
+- **Overall Score: 6.2/10**
+- **Repository Type**: Python client library (gRPC + HTTP) for caikit-nlp runtime servers
+- **Primary Language**: Python
+- **Jira**: RHOAIENG / Model Runtimes (midstream tier)
+- **Key Strengths**: Strong unit test suite with excellent test-to-code ratio (1.3:1), comprehensive static analysis toolchain (ruff, mypy, bandit, pre-commit), Docker-based integration testing against real caikit+tgis containers, well-structured TLS/mTLS connection testing
+- **Critical Gaps**: Low coverage threshold (50%), no agent rules, no CI dependency caching, limited multi-version testing
 - **Agent Rules Status**: Missing
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 7.5/10 | Good coverage with pytest; mock + real caikit modes |
-| Integration/E2E | 7.0/10 | Docker Compose integration with real caikit-tgis-serving |
-| **Build Integration** | **3.0/10** | **No PR-time build validation or packaging checks** |
-| Image Testing | 2.0/10 | No container image for the library; downstream-only |
-| Coverage Tracking | 8.0/10 | Codecov with branch coverage, but 50% threshold is low |
-| CI/CD Automation | 8.5/10 | Excellent nox-based automation, concurrency control, multi-Python |
-| Agent Rules | 0.0/10 | No CLAUDE.md, .claude/, or agent rules |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 8.0/10 | 15% | 1.20 | Strong pytest suite with 1.3:1 test-to-code ratio |
+| Integration/E2E | 7.0/10 | 20% | 1.40 | Docker-based integration with real caikit+tgis |
+| Build Integration | 5.0/10 | 15% | 0.75 | Nox build + twine check; no container build |
+| Image Testing | 3.0/10 | 10% | 0.30 | N/A for library; docker-compose for test deps only |
+| Coverage Tracking | 7.0/10 | 10% | 0.70 | Codecov with branch coverage; low 50% threshold |
+| CI/CD Automation | 7.0/10 | 15% | 1.05 | Good workflows with concurrency; no caching |
+| Static Analysis | 8.0/10 | 10% | 0.80 | Ruff, mypy, bandit, pre-commit, Dependabot |
+| Agent Rules | 0.0/10 | 5% | 0.00 | No CLAUDE.md or .claude/ directory |
+| **Overall** | **6.2/10** | | **6.20** | |
 
 ## Critical Gaps
 
-### 1. No SAST or Dependency Vulnerability Scanning
-- **Impact**: Security vulnerabilities in `protobuf`, `grpcio`, `requests` and their transitive dependencies are not detected in CI. Bandit runs via pre-commit hooks catch common Python security pitfalls, but there is no deep dependency CVE scanning.
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Detail**: Dependabot is configured for version updates (`dependabot.yml`) but there is no `codeql-analysis.yml`, no Trivy scanning, no Snyk integration. The repository relies entirely on downstream consumers to detect dependency vulnerabilities.
+1. **Low coverage threshold (50%)**
+   - Impact: Significant untested code paths can be merged; the 50% bar allows nearly half the codebase to go untested
+   - Severity: HIGH
+   - Effort: 2-4 hours
+   - Location: `pyproject.toml:87` (`fail_under = 50`) and `.github/codecov.yml` (`target: auto`)
 
-### 2. No Build/Packaging Validation in PR Workflow
-- **Impact**: Packaging regressions (missing `__init__.py`, broken imports, sdist/wheel issues) are only caught at release time when `nox -s build` runs.
-- **Severity**: MEDIUM
-- **Effort**: 4-6 hours
-- **Detail**: The `tests.yml` workflow runs linting and unit tests but does not build the package or validate that `pip install .` works. The `release.yml` workflow builds and publishes but only runs on release events.
+2. **No agent rules for AI-assisted development**
+   - Impact: AI agents generating code or tests have no project-specific guidance on patterns, frameworks, or conventions
+   - Severity: MEDIUM
+   - Effort: 2-3 hours
 
-### 3. Coverage Threshold at 50%
-- **Impact**: Nearly half of the source code can go untested without CI failing. This is significantly below industry norms of 70-80% for a client library.
-- **Severity**: MEDIUM
-- **Effort**: 2-4 hours (raise threshold, add missing tests)
-- **Detail**: `pyproject.toml` sets `fail_under = 50`. Codecov is configured with `threshold: 2%` relative targeting, which is good for preventing regressions but doesn't enforce a meaningful baseline.
+3. **No dependency caching in CI**
+   - Impact: Every CI run downloads all pip dependencies from scratch, increasing build times and network usage
+   - Severity: MEDIUM
+   - Effort: 1-2 hours
+   - Location: `.github/workflows/tests.yml`, `.github/workflows/tests-docker.yml`
 
-### 4. No Agent Rules
-- **Impact**: AI development agents have no guidance on project conventions, test patterns, or code style.
-- **Severity**: LOW
-- **Effort**: 2-3 hours
+4. **Missing gRPC client tests for embedding/rerank endpoints**
+   - Impact: HTTP client has tests for `embedding`, `embedding_tasks`, `sentence_similarity`, `sentence_similarity_tasks`, `rerank`, `rerank_tasks` but gRPC client has none for these endpoints (gRPC client doesn't implement them yet, but `base.py` defines them as abstract methods)
+   - Severity: MEDIUM
+   - Effort: 4-6 hours
 
 ## Quick Wins
 
-### 1. Add CodeQL Scanning Workflow (1-2 hours)
-```yaml
-# .github/workflows/codeql.yml
-name: "CodeQL"
-on:
-  push:
-    branches: [main]
-  pull_request:
-  schedule:
-    - cron: '0 6 * * 1'
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: python
-      - uses: github/codeql-action/analyze@v3
-```
+1. **Raise coverage threshold from 50% to 70%+**
+   - Effort: 1-2 hours
+   - Impact: Catches coverage regressions before merge
+   - Implementation: Update `fail_under` in `pyproject.toml` and set a fixed target in `.github/codecov.yml`
 
-### 2. Raise Coverage Threshold (1 hour)
-```toml
-# pyproject.toml - change fail_under from 50 to 75
-[tool.coverage.report]
-fail_under = 75
-```
+2. **Add pip caching to CI workflows**
+   - Effort: 30 minutes
+   - Impact: Faster CI runs
+   - Implementation:
+     ```yaml
+     - name: Set up Python ${{ matrix.python }}
+       uses: actions/setup-python@v5.1.0
+       with:
+         python-version: ${{ matrix.python }}
+         cache: 'pip'
+     ```
 
-### 3. Add Package Install Validation to PR Workflow (1 hour)
-```yaml
-# Add to .github/workflows/tests.yml after "Run tests" step:
-- name: Validate package install
-  run: |
-    pip install .
-    python -c "from caikit_nlp_client import HttpClient, GrpcClient; print('Import OK')"
-```
-
-### 4. Generate Agent Rules (2 hours)
-Run `/test-rules-generator` on this repository to create `.claude/rules/` with test patterns.
+3. **Create basic CLAUDE.md**
+   - Effort: 2-3 hours
+   - Impact: AI agents follow project conventions
+   - Implementation: Document test patterns (pytest fixtures, connection types), coding standards (ruff config), and contribution guidelines
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflows (3 total):**
+**Score: 8.0/10**
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `tests.yml` | PR, push to main, daily schedule | Lint (pre-commit, mypy) + unit tests on Python 3.9/3.10/3.11 |
-| `tests-docker.yml` | PR, push to main, weekly schedule | Integration tests with real caikit-tgis via Docker Compose |
-| `release.yml` | GitHub release published | Build and publish to PyPI |
+The repository has a strong unit test suite:
 
-**Strengths:**
-- Concurrency control with `cancel-in-progress: true` on both test workflows
-- Matrix strategy with `fail-fast: false` for thorough multi-version testing
-- Nox-based task automation provides reproducible local and CI test execution
-- Daily unit test schedule catches upstream breakage in caikit-nlp
-- Weekly Docker integration test validates real-world server compatibility
-- Codecov upload on both test workflows with `fail_ci_if_error: true`
+- **4 test files**: `test_api.py` (7 lines), `test_grpc_client.py` (236 lines), `test_http_client.py` (417 lines), `test_utils.py` (49 lines)
+- **Test-to-code ratio**: 1404 test lines / 1060 source lines = **1.32:1** (excellent)
+- **Framework**: pytest with well-structured fixtures
+- **Test isolation**: Session-scoped fixtures with `monkeysession`, proper teardown
+- **Mocking**: Custom `StubTGISGenerationClient` for mock mode, `pytest-mock` for spying
+- **Connection type testing**: All tests run across INSECURE, TLS, and mTLS via parametrized `connection_type` fixture
+- **Error handling tests**: Validates exception messages, invalid init options, bogus certificates
+- **Edge cases**: Empty model IDs, unsupported kwargs, certificate loading from files vs bytes
 
-**Gaps:**
-- No caching of pip/nox virtualenvs (each run reinstalls all dependencies including PyTorch)
-- No build/packaging validation step in PR workflow
-- No security scanning workflow
-- No release candidate / pre-release testing
+**Strengths**:
+- Sophisticated fixture architecture in `tests/fixtures/` (grpc.py, http.py, tls.py, docker.py, mocked_results.py)
+- Tiny models included in repo for offline testing
+- Tests run both mocked and against real caikit via `--real-caikit` flag
 
-### Test Coverage
+**Gaps**:
+- gRPC client missing tests for embedding, rerank, sentence_similarity endpoints
+- Stream mocking is broken (acknowledged in code: `https://github.com/opendatahub-io/caikit-nlp-client/issues/46`)
+- `test_api.py` only has one test (module import check)
 
-**Test Inventory:**
-- **34 test functions** across 4 test files
-- Test-to-source ratio: 1,404 test lines / 1,069 source lines = **1.31:1** (good)
+### Integration/E2E Tests
 
-| Test File | Tests | Lines | What it Tests |
-|-----------|-------|-------|---------------|
-| `test_http_client.py` | 19 | 417 | HTTP client: text generation, streaming, embedding, similarity, rerank, TLS |
-| `test_grpc_client.py` | 13 | 236 | gRPC client: text generation, streaming, TLS/mTLS, certificate loading |
-| `test_utils.py` | 1 | 49 | Utility function: server certificate retrieval |
-| `test_api.py` | 1 | 7 | Module import validation |
+**Score: 7.0/10**
 
-**Test Infrastructure (Excellent):**
-- **Dual-mode testing**: Tests run against both mocked caikit runtime (fast, no Docker) and real caikit-tgis-serving Docker containers (`--real-caikit` flag)
-- **TLS parametrization**: All client tests run 3x against INSECURE, TLS, and mTLS connection types
-- **Fixture system**: Well-organized fixtures in `tests/fixtures/` for Docker, gRPC, HTTP, TLS, and mocked results
-- **pytest-docker**: Integration tests spin up real caikit + TGIS containers via Docker Compose
+The repository has Docker-based integration testing:
 
-**Coverage Gaps:**
-- gRPC client missing tests for `embedding()`, `embedding_tasks()`, `sentence_similarity()`, `sentence_similarity_tasks()`, `rerank()`, `rerank_tasks()` methods (all present on HTTP client)
-- Only 1 test for utility functions
-- No negative tests for malformed server responses
-- No timeout/retry behavior tests
-- No concurrent request tests
+- **tests-docker.yml**: Runs tests with `--real-caikit` flag against actual containers
+- **docker-compose.yml**: Defines caikit and tgis services with proper volume mounts
+- **pytest-docker**: Used for container lifecycle management
+- **Health checks**: Waits for containers to be responsive before running tests
+- **Connection types**: Tests INSECURE, TLS, and mTLS connections with real certificate infrastructure
 
-### Code Quality
+**Strengths**:
+- Real end-to-end testing against actual caikit-tgis-serving and text-generation-inference containers
+- Proper health check waiting logic
+- Model download fixture (`flan_t5_small_caikit`)
 
-**Linting (Strong):**
-- **Ruff** (v0.5.4): Configured with rules E, F, UP, B, SIM, I (errors, pyflakes, pyupgrade, bugbear, simplify, isort)
-- **Bandit**: Security linter configured via pre-commit with `pyproject.toml` config, excludes tests
-- **mypy** (v1.10.1): Type checking with `types-requests` and `types-protobuf` stubs
-- **pyupgrade**: Auto-upgrade Python syntax
+**Gaps**:
+- Docker tests only run on Python 3.11 (unit tests cover 3.9-3.11)
+- No multi-version testing of caikit-nlp itself
+- Weekly schedule for Docker tests (could miss regressions between weekly runs)
+- `platform: linux/amd64` hardcoded (no multi-arch testing)
 
-**Pre-commit Hooks (Excellent):**
-```
-- trailing-whitespace
-- end-of-file-fixer
-- check-yaml
-- check-toml
-- check-added-large-files
-- ruff (with --fix)
-- ruff-format
-- bandit
-- pyupgrade
-```
+### Build Integration
 
-**Gaps:**
-- No `ruff` strict mode or additional rule sets (ANN for annotations, D for docstrings)
-- mypy not in strict mode
-- No dead code detection (vulture, etc.)
+**Score: 5.0/10**
 
-### Container Images
+As a Python library, build integration is limited to package building:
 
-**Status**: Not applicable (library, not a service)
+- **Nox build session**: Builds the package with `python -m build`
+- **Twine check**: Validates the built distributions
+- **Release workflow**: Publishes to PyPI via `pypa/gh-action-pypi-publish`
+- **setuptools-scm**: Dynamic version management
 
-The repository does not build its own container image. It uses Docker Compose in `tests/fixtures/resources/docker-compose.yml` to pull pre-built `quay.io/opendatahub/caikit-tgis-serving:fast` and `quay.io/opendatahub/text-generation-inference:fast` images for integration testing.
+**Gaps**:
+- No PR-time build validation (the `build` nox session is not run in the test workflow)
+- No wheel/sdist installation testing
+- No downstream compatibility testing
 
-**Assessment:**
-- Appropriate for a library project - no Dockerfile needed
-- Docker Compose integration testing is a strength
-- No multi-architecture testing of the library itself
+### Image Testing
 
-### Security
+**Score: 3.0/10**
 
-**Present:**
-- Bandit security linting via pre-commit hooks
-- Dependabot for dependency version updates (weekly pip + GitHub Actions)
-- SSL/TLS certificate fixtures for testing secure connections
+This is a pure Python library without its own container image:
 
-**Missing:**
-- No CodeQL or SAST workflow
-- No dependency CVE scanning (Snyk, Trivy, pip-audit)
-- No secret detection (gitleaks, truffleHog)
-- No SBOM generation
-- No signed releases
+- **No Dockerfile/Containerfile**: Not applicable for this library
+- **docker-compose.yml**: Used only for test dependencies (caikit-tgis-serving, text-generation-inference)
+- **No multi-arch testing**: docker-compose.yml forces `linux/amd64`
 
-### Agent Rules (Agentic Flow Quality)
+The low score reflects that container image testing is largely N/A for a library. The `docker-compose.yml` for test dependencies is functional but minimal.
+
+### Coverage Tracking
+
+**Score: 7.0/10**
+
+Good coverage infrastructure with room for improvement:
+
+- **pytest-cov**: Configured in `pyproject.toml` and `noxfile.py`
+- **Branch coverage**: Enabled (`branch = true`)
+- **Codecov integration**: `codecov/codecov-action@v4` with `fail_ci_if_error: true`
+- **Coverage config**: `.github/codecov.yml` with project-level tracking
+- **Source mapping**: Properly configured in `[tool.coverage.paths]`
+
+**Gaps**:
+- **`fail_under = 50`**: Very low threshold; should be at least 70% for a client library
+- **`target: auto`** in codecov.yml: No fixed coverage target, only relative to previous commit
+- **`threshold: 2%`**: Allows 2% coverage drop per PR without blocking
+
+### CI/CD Automation
+
+**Score: 7.0/10**
+
+Well-organized CI with good practices:
+
+- **3 workflows**: `tests.yml` (unit), `tests-docker.yml` (integration), `release.yml`
+- **Triggers**: PR + push to main + scheduled (daily for unit, weekly for docker)
+- **Concurrency control**: `cancel-in-progress: true` with proper grouping
+- **Matrix strategy**: Python 3.9, 3.10, 3.11 with `fail-fast: false`
+- **Nox integration**: Used as consistent task runner across all sessions
+- **Workflow dispatch**: Manual trigger available for all workflows
+
+**Gaps**:
+- **No pip/nox caching**: Every run downloads dependencies from scratch
+- **No timeout-minutes**: Workflows could hang indefinitely
+- **No test parallelization**: Tests run sequentially within each matrix entry
+- **actions/setup-python@v5.1.0**: Could be updated to latest v5
+
+### Static Analysis
+
+**Score: 8.0/10**
+
+Comprehensive static analysis toolchain:
+
+- **Ruff**: Configured with rules E (pycodestyle errors), F (pyflakes), UP (pyupgrade), B (bugbear), SIM (simplify), I (isort) - good rule selection
+- **Ruff format**: Enforced via pre-commit
+- **MyPy**: Type checking for both `src/` and `tests/` directories
+- **Bandit**: Security linting with appropriate exclusions
+- **Pre-commit hooks**: 6 hooks including trailing-whitespace, end-of-file-fixer, check-yaml, check-toml, check-added-large-files, pyupgrade
+- **Dependabot**: Configured for both `github-actions` and `pip` ecosystems with weekly schedule
+
+**Strengths**:
+- Pre-commit runs as part of CI via nox (`nox -v --session pre-commit mypy`)
+- Ruff configured with a strong set of rules (bugbear, simplify)
+- Dependabot covers both code and CI action dependencies
+
+**FIPS Compatibility**:
+- No non-FIPS-compliant crypto patterns found in source code
+- Uses Python's built-in `ssl` module (delegates to system OpenSSL/crypto providers)
+- As a client library, FIPS compliance depends on the runtime environment rather than the library itself
+
+### Agent Rules
+
+**Score: 0.0/10**
+
+No agent rules exist:
 
 - **Status**: Missing
-- **Coverage**: N/A - no rules exist
+- **CLAUDE.md**: Not present
+- **AGENTS.md**: Not present
+- **.claude/ directory**: Not present
+- **Coverage**: No test types have rules
 - **Quality**: N/A
-- **Gaps**: No CLAUDE.md, no `.claude/` directory, no test creation rules, no coding standards documentation for agents
-- **Recommendation**: Generate rules with `/test-rules-generator https://github.com/opendatahub-io/caikit-nlp-client` to create:
-  - `unit-tests.md` - pytest patterns, fixture usage, mock vs real server modes
-  - `integration-tests.md` - Docker Compose testing, `--real-caikit` flag
-  - `tls-tests.md` - TLS/mTLS parametrization patterns
-  - `coding-standards.md` - Ruff rules, type annotations, project structure
+- **Gaps**: All agent rule types missing
+- **Recommendation**: Generate rules with `/test-rules-generator` covering pytest fixture patterns, connection type parametrization, mock vs real caikit testing, and TLS/mTLS test patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add dependency vulnerability scanning** - Configure CodeQL for Python analysis and/or add `pip-audit` to CI. The library's core dependencies (`protobuf`, `grpcio`, `requests`) have had past CVEs.
-2. **Add package build validation to PR workflow** - Run `nox -s build` and `pip install .` in the test workflow to catch packaging issues before merge.
+1. **Raise coverage threshold from 50% to 70%+**
+   - Update `pyproject.toml`: `fail_under = 70`
+   - Update `.github/codecov.yml`: Set `target: 70%` instead of `auto`
+   - Reduce threshold from `2%` to `1%`
+
+2. **Add dependency caching to CI workflows**
+   ```yaml
+   - name: Set up Python ${{ matrix.python }}
+     uses: actions/setup-python@v5.1.0
+     with:
+       python-version: ${{ matrix.python }}
+       cache: 'pip'
+   ```
 
 ### Priority 1 (High Value)
 
-3. **Raise coverage threshold from 50% to 75%** - Add missing gRPC client tests for embedding/similarity/rerank methods to close the gap, then raise the bar.
-4. **Add gRPC client tests for embedding endpoints** - The HTTP client has full coverage of embedding, sentence_similarity, and rerank endpoints. The gRPC client has these methods but zero test coverage for them.
-5. **Create agent rules** - Run `/test-rules-generator` to generate `.claude/rules/` with patterns for test creation following existing conventions.
-6. **Cache pip/nox virtualenvs in CI** - Add `actions/cache` for `.nox/` directory to speed up CI runs (currently reinstalls PyTorch CPU on every run).
+3. **Create CLAUDE.md with project conventions**
+   - Document pytest fixture patterns (session-scoped, connection_type parametrization)
+   - Document mock vs real caikit testing approach
+   - Document TLS/mTLS test certificate infrastructure
+   - Reference nox sessions for common development tasks
+
+4. **Add gRPC client tests for embedding/rerank endpoints**
+   - The `ClientBase` abstract class defines `embedding`, `embedding_tasks`, `sentence_similarity`, `sentence_similarity_tasks`, `rerank`, `rerank_tasks` but the gRPC client doesn't implement or test these
+
+5. **Add timeout-minutes to CI workflows**
+   ```yaml
+   jobs:
+     tests:
+       timeout-minutes: 30
+   ```
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Add Python 3.12 to test matrix** - Current matrix only covers 3.9-3.11.
-8. **Add contract tests** - Validate that the client's expected API surface matches the actual caikit-nlp server API schema, catching drift early.
-9. **Add mypy strict mode** - Current configuration has `ignore_missing_imports = true` for many modules. Incrementally tighten type checking.
-10. **Add secret detection** - Configure gitleaks or truffleHog pre-commit hook to prevent credential leaks.
+6. **Add multi-version integration testing**
+   - Test against multiple caikit-nlp and caikit-tgis-serving versions
+   - Use matrix strategy in tests-docker.yml
+
+7. **Fix stream mocking (issue #46)**
+   - HTTP client stream tests are skipped when not using real caikit
+   - This reduces test coverage in the standard CI run
+
+8. **Add PR-time build validation**
+   - Run the `nox -s build` session in the test workflow to catch packaging issues before merge
 
 ## Comparison to Gold Standards
 
-| Dimension | caikit-nlp-client | odh-dashboard | notebooks | Gold Standard |
-|-----------|-------------------|---------------|-----------|---------------|
-| Unit Tests | 7.5 - Good pytest coverage | 9.0 - Comprehensive Jest suite | 7.0 - Notebook validation | 9.0+ |
-| Integration/E2E | 7.0 - Docker Compose real-server | 9.0 - Cypress E2E | 8.0 - Multi-image testing | 9.0+ |
-| Build Integration | 3.0 - No PR-time build | 8.0 - PR build validation | 7.0 - Image build testing | 8.0+ |
-| Image Testing | 2.0 - N/A (library) | 7.0 - Container validation | 9.0 - 5-layer testing | 8.0+ |
-| Coverage Tracking | 8.0 - Codecov, branch cov | 9.0 - Enforcement + trending | 6.0 - Basic reporting | 9.0+ |
-| CI/CD | 8.5 - Nox, concurrency, matrix | 9.0 - Full automation | 8.0 - Multi-workflow | 9.0+ |
-| Security | 4.0 - Bandit only | 7.0 - CodeQL + scanning | 6.0 - Basic scanning | 8.0+ |
-| Agent Rules | 0.0 - None | 8.0 - Comprehensive rules | 2.0 - Minimal | 8.0+ |
+| Practice | caikit-nlp-client | odh-dashboard | notebooks | kserve |
+|----------|------------------|---------------|-----------|--------|
+| Unit Tests | 8/10 - Strong pytest suite | 9/10 - Multi-layer | 7/10 | 9/10 |
+| Integration/E2E | 7/10 - Docker-based | 9/10 - Cypress E2E | 8/10 | 9/10 |
+| Build Integration | 5/10 - Nox build only | 8/10 - Konflux sim | 7/10 | 8/10 |
+| Image Testing | 3/10 - N/A (library) | 7/10 | 9/10 - 5-layer | 7/10 |
+| Coverage | 7/10 - Low threshold | 9/10 - Enforced | 6/10 | 9/10 |
+| CI/CD | 7/10 - No caching | 9/10 - Full pipeline | 8/10 | 9/10 |
+| Static Analysis | 8/10 - Comprehensive | 8/10 | 6/10 | 8/10 |
+| Agent Rules | 0/10 - Missing | 8/10 | 2/10 | 3/10 |
 
 ## File Paths Reference
 
-| File | Purpose |
-|------|---------|
-| `.github/workflows/tests.yml` | PR unit tests + linting |
-| `.github/workflows/tests-docker.yml` | Docker integration tests |
-| `.github/workflows/release.yml` | PyPI release automation |
-| `.github/codecov.yml` | Coverage reporting config |
-| `.github/dependabot.yml` | Dependency update automation |
-| `.pre-commit-config.yaml` | Pre-commit hooks (ruff, bandit, pyupgrade) |
-| `pyproject.toml` | Project config, test deps, coverage, ruff, mypy, bandit |
-| `noxfile.py` | Task automation (pre-commit, mypy, tests, coverage, build) |
-| `tests/conftest.py` | Test configuration, model fixtures, caikit runtime setup |
-| `tests/fixtures/docker.py` | Docker Compose integration test fixtures |
-| `tests/fixtures/grpc.py` | gRPC client test fixtures |
-| `tests/fixtures/http.py` | HTTP client test fixtures |
-| `tests/fixtures/tls.py` | TLS/mTLS certificate fixtures |
-| `tests/fixtures/mocked_results.py` | Mock caikit response fixtures |
-| `tests/fixtures/resources/docker-compose.yml` | Docker Compose for caikit+TGIS |
-| `src/caikit_nlp_client/` | Source package (5 files, 1069 lines) |
+### CI/CD
+- `.github/workflows/tests.yml` - Unit test workflow (PR + daily)
+- `.github/workflows/tests-docker.yml` - Docker integration test workflow (PR + weekly)
+- `.github/workflows/release.yml` - PyPI release workflow
+- `noxfile.py` - Nox task runner (pre-commit, mypy, tests, coverage, build)
+
+### Testing
+- `tests/test_grpc_client.py` - gRPC client unit tests (14 tests)
+- `tests/test_http_client.py` - HTTP client unit tests (18 tests)
+- `tests/test_api.py` - Module import test
+- `tests/test_utils.py` - Utility function tests
+- `tests/conftest.py` - Root fixtures and configuration
+- `tests/fixtures/grpc.py` - gRPC server fixtures
+- `tests/fixtures/http.py` - HTTP server fixtures
+- `tests/fixtures/docker.py` - Docker integration fixtures
+- `tests/fixtures/tls.py` - TLS/mTLS certificate fixtures
+- `tests/fixtures/mocked_results.py` - Mock response fixtures
+- `tests/fixtures/resources/docker-compose.yml` - Test container orchestration
+- `tests/tiny_models/` - Offline model artifacts for testing
+
+### Source Code
+- `src/caikit_nlp_client/grpc_client.py` - gRPC client implementation (390 lines)
+- `src/caikit_nlp_client/http_client.py` - HTTP client implementation (541 lines)
+- `src/caikit_nlp_client/base.py` - Abstract base class (100 lines)
+- `src/caikit_nlp_client/utils.py` - SSL utilities (29 lines)
+
+### Code Quality
+- `pyproject.toml` - Ruff, mypy, pytest, coverage, bandit configuration
+- `.pre-commit-config.yaml` - Pre-commit hooks (ruff, bandit, pyupgrade)
+- `.github/dependabot.yml` - Dependabot for github-actions and pip
+- `.github/codecov.yml` - Codecov configuration

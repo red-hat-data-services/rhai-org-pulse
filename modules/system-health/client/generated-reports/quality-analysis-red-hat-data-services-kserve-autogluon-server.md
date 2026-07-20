@@ -1,390 +1,483 @@
 ---
 repository: "red-hat-data-services/kserve-autogluon-server"
-overall_score: 5.3
+overall_score: 4.9
 scorecard:
   - dimension: "Unit Tests"
-    score: 7.5
-    status: "Strong autogluon-specific unit tests (1:1 test-to-code ratio); upstream Go tests inherited but no golangci-lint config"
+    score: 8.0
+    status: "Strong test-to-code ratio across Go (0.48) and Python (0.67) with envtest and pytest frameworks"
   - dimension: "Integration/E2E"
-    score: 6.5
-    status: "Autogluon E2E tests for tabular and timeseries (v1/v2 protocols); upstream suite inherited but no CI to run them"
+    score: 6.0
+    status: "Comprehensive E2E suite (85 files, 13 domains) but no CI automation to run them"
   - dimension: "Build Integration"
-    score: 4.0
-    status: "Konflux PR build via Tekton (hermetic, multi-arch) but no image runtime validation or startup testing"
+    score: 5.0
+    status: "Konflux multi-arch PR builds but no test execution or manifest validation in pipeline"
   - dimension: "Image Testing"
-    score: 3.5
-    status: "Multi-arch Konflux build (x86_64, ppc64le, s390x, arm64) but no container runtime validation, no Trivy scanning, no SBOM"
+    score: 5.0
+    status: "Multi-stage UBI builds with 4-arch support but no runtime validation or health checks"
   - dimension: "Coverage Tracking"
     score: 3.0
-    status: "Go coverage.out generated locally but no Codecov/Coveralls integration, no thresholds, no PR reporting"
+    status: "Local coverprofile generation only; no CI integration, thresholds, or PR reporting"
   - dimension: "CI/CD Automation"
-    score: 4.0
-    status: "Tekton PR pipeline for image build only; no GitHub Actions workflows, no automated test execution on PRs"
+    score: 3.0
+    status: "Only Tekton image builds; no GitHub Actions, no automated test/lint execution"
+  - dimension: "Static Analysis"
+    score: 5.0
+    status: "Ruff, golangci-lint, mypy available locally; no CI enforcement or dependency alerts"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No .claude directory, no CLAUDE.md, no AGENTS.md, no test automation guidance for AI agents"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory present"
 critical_gaps:
-  - title: "No CI-driven test execution on PRs"
-    impact: "Unit tests, integration tests, and linting are not automatically validated on pull requests — regressions can merge undetected"
+  - title: "No CI/CD test automation"
+    impact: "Tests exist but never run automatically; regressions discovered only via manual testing or post-merge failures"
     severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "No container image runtime validation"
-    impact: "Built images are never tested for startup, health checks, or basic inference — broken images reach production"
+    effort: "8-16 hours"
+  - title: "No coverage enforcement or PR reporting"
+    impact: "Coverage can silently regress; no visibility into test gaps on PRs"
     severity: "HIGH"
+    effort: "4-6 hours"
+  - title: "No dependency management (Dependabot/Renovate)"
+    impact: "Vulnerable or outdated dependencies go undetected; no automated update PRs"
+    severity: "HIGH"
+    effort: "1-2 hours"
+  - title: "No linting or static analysis in CI"
+    impact: "Code quality checks depend entirely on developer discipline; inconsistent enforcement"
+    severity: "MEDIUM"
     effort: "4-8 hours"
-  - title: "No security scanning (Trivy, SAST, dependency scanning)"
-    impact: "Vulnerabilities in Python dependencies and base images are not detected before merge"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No coverage tracking or enforcement"
-    impact: "Coverage can silently decrease without anyone noticing; no visibility into untested code paths"
+  - title: "No container runtime validation"
+    impact: "Image startup failures not caught until deployment"
     severity: "MEDIUM"
-    effort: "2-4 hours"
-  - title: "No golangci-lint configuration"
-    impact: "Go linting relies on upstream config but no local enforcement; code quality inconsistencies possible in downstream changes"
-    severity: "MEDIUM"
-    effort: "1-2 hours"
+    effort: "4-6 hours"
 quick_wins:
-  - title: "Add GitHub Actions workflow for autogluon unit tests"
-    effort: "2-3 hours"
-    impact: "Catch regressions in the autogluon-specific Python code on every PR"
-  - title: "Add Trivy container image scanning to Tekton pipeline"
+  - title: "Add Dependabot configuration for pip and Go modules"
     effort: "1-2 hours"
-    impact: "Early detection of CVEs in base image and Python dependency chain"
-  - title: "Add pytest-cov reporting to autogluon test suite"
-    effort: "1-2 hours"
-    impact: "Visibility into test coverage for the autogluon-specific code (already declared as a test dependency)"
-  - title: "Create basic .claude/rules/ for test patterns"
+    impact: "Automated dependency update PRs and vulnerability alerts"
+  - title: "Create basic agent rules (CLAUDE.md) for autogluon test patterns"
     effort: "2-3 hours"
-    impact: "Standardize AI-generated test quality for autogluon model code"
-  - title: "Add golangci-lint config file"
-    effort: "1 hour"
-    impact: "Consistent Go code quality enforcement for any downstream Go modifications"
+    impact: "Improve AI-generated test quality and consistency"
+  - title: "Add coverage reporting to Tekton pipeline or GitHub Actions"
+    effort: "4-6 hours"
+    impact: "Visibility into coverage trends and regression detection"
+  - title: "Add pre-commit hooks configuration"
+    effort: "1-2 hours"
+    impact: "Enforce linting and formatting before commits reach CI"
 recommendations:
   priority_0:
-    - "Add GitHub Actions CI workflow to run autogluon unit tests (pytest) and Go tests (make test) on every PR"
-    - "Add container image startup and health check validation to the Tekton PR pipeline"
-    - "Integrate Trivy or Grype scanning into the Konflux build pipeline for vulnerability detection"
+    - "Add GitHub Actions workflows for automated unit test, lint, and e2e test execution on PRs"
+    - "Configure codecov integration with minimum coverage thresholds (e.g., 60% for Go, 70% for autogluonserver)"
+    - "Add Dependabot configuration covering pip, gomod, and docker ecosystems"
   priority_1:
-    - "Set up Codecov integration with coverage thresholds for both Go and Python code"
-    - "Add autogluon-specific E2E tests to a periodic CI job (requires cluster with model artifacts)"
-    - "Create agent rules (.claude/rules/) for unit test, integration test, and E2E test patterns"
-    - "Add pre-commit hooks for ruff, go vet, and mypy type checking"
+    - "Add container runtime validation (image startup + health check) to PR pipeline"
+    - "Create .pre-commit-config.yaml to enforce ruff, golangci-lint, and go vet before commit"
+    - "Add Kustomize overlay validation and CRD dry-run testing to PR builds"
   priority_2:
-    - "Add SBOM generation to the Konflux pipeline for supply chain transparency"
-    - "Add image signing/attestation for built container images"
-    - "Implement performance benchmarking for autogluon inference latency"
-    - "Add contract tests for the KServe predict API (v1 and v2 protocol conformance)"
+    - "Create comprehensive agent rules (.claude/rules/) for test automation guidance"
+    - "Add FIPS build tags and verification for Go binaries"
+    - "Implement e2e test matrix for multiple Kubernetes versions"
 ---
 
 # Quality Analysis: kserve-autogluon-server
 
 ## Executive Summary
+- **Overall Score: 4.9/10**
+- **Repository**: `red-hat-data-services/kserve-autogluon-server` (downstream fork of KServe)
+- **Jira**: RHOAIENG / Model Serving (downstream tier)
+- **Languages**: Go (operator/controllers), Python (serving runtimes)
+- **Type**: Kubernetes operator + ML model serving runtimes
 
-- **Overall Score: 5.3/10**
-- **Repository Type**: Red Hat downstream fork of KServe with AutoGluon model server component
-- **Primary Languages**: Go (operator/controller), Python (autogluon model server)
-- **Key Strength**: Solid autogluon-specific unit tests with 1:1 test-to-code ratio (1,357 test lines / 1,318 source lines), E2E tests for both tabular and timeseries models
-- **Critical Gap**: No CI-driven test execution on PRs — the only PR automation is Konflux image building via Tekton. Tests, linting, and coverage are not enforced.
-- **Agent Rules Status**: Missing — no `.claude/` directory or agent guidance files
+### Key Strengths
+- Excellent unit test coverage with 162 Go test files and 239 Python test files
+- Comprehensive E2E test suite spanning 13 test domains (85 test files)
+- Konflux/Tekton multi-arch builds (x86_64, ppc64le, s390x, arm64) with hermetic builds
+- Strong autogluon-specific tests (7 test files covering tabular/timeseries models, version compat, error handling)
+- UBI base images for FIPS-capable production builds
+
+### Critical Gaps
+- **No CI/CD test automation** — No `.github/workflows/` directory; Prow config commented out; tests never run automatically
+- **No coverage enforcement** — Local `coverprofile` exists but no CI integration or thresholds
+- **No dependency management** — No Dependabot or Renovate configuration
+- **No agent rules** — Missing CLAUDE.md, AGENTS.md, or `.claude/` directory
+
+### Agent Rules Status: **Missing**
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 7.5/10 | Strong autogluon Python tests; upstream Go tests inherited |
-| Integration/E2E | 6.5/10 | Autogluon E2E tests exist but not CI-automated |
-| **Build Integration** | **4.0/10** | **Konflux PR build only — no test execution or image validation** |
-| Image Testing | 3.5/10 | Multi-arch build, no runtime validation or scanning |
-| Coverage Tracking | 3.0/10 | Local coverage.out, no integration or thresholds |
-| CI/CD Automation | 4.0/10 | Tekton image build only, no GitHub Actions |
-| Agent Rules | 0.0/10 | No agent rules or test automation guidance |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 8.0/10 | 15% | 1.20 | Strong test-to-code ratio across Go and Python |
+| Integration/E2E | 6.0/10 | 20% | 1.20 | Comprehensive E2E suite but no CI automation |
+| Build Integration | 5.0/10 | 15% | 0.75 | Konflux multi-arch PR builds, no test validation |
+| Image Testing | 5.0/10 | 10% | 0.50 | Multi-stage UBI builds, no runtime validation |
+| Coverage Tracking | 3.0/10 | 10% | 0.30 | Local coverage only, no CI integration |
+| CI/CD Automation | 3.0/10 | 15% | 0.45 | Only Tekton image builds, no test/lint CI |
+| Static Analysis | 5.0/10 | 10% | 0.50 | Good local tools, no CI enforcement |
+| Agent Rules | 0.0/10 | 5% | 0.00 | Completely absent |
+| **Overall** | **4.9/10** | **100%** | **4.90** | |
 
 ## Critical Gaps
 
-### 1. No CI-Driven Test Execution on PRs
-- **Impact**: Regressions in autogluon server code or Go controller code can merge without any automated test validation
+### 1. No CI/CD Test Automation
+- **Impact**: Tests exist but never run automatically; regressions discovered only via manual testing or post-merge failures
 - **Severity**: HIGH
-- **Effort**: 8-12 hours
-- **Details**: The repository has zero GitHub Actions workflows. The only CI automation is a Tekton PipelineRun (`.tekton/odh-kserve-autogluon-on-pull-request.yaml`) that builds the container image on PRs triggered by `/build-konflux-autogluon` comment or `kfbuild-autogluon` label — but runs no tests.
-- **Recommendation**: Add a GitHub Actions workflow that runs `cd python/autogluonserver && make test` for Python tests and `make test` for Go tests on every PR
+- **Effort**: 8-16 hours
+- **Details**: No `.github/workflows/` directory exists. The Prow configuration (`prow_config.yaml`) has all workflow entries commented out. The only CI is a Tekton/Konflux pipeline that builds container images but does not execute any tests. The comprehensive E2E suite (85 test files) and unit tests (400+ files) are effectively dead weight without CI automation.
 
-### 2. No Container Image Runtime Validation
-- **Impact**: Built images are pushed without verifying they can start, pass health checks, or serve inference requests
+### 2. No Coverage Enforcement or PR Reporting
+- **Impact**: Coverage can silently regress; no visibility into test gaps on pull requests
 - **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Details**: The Tekton pipeline builds multi-arch images (x86_64, ppc64le, s390x, arm64) but never validates that the resulting image actually works
-- **Recommendation**: Add a post-build step that starts the container and validates the health endpoint (`/v2/models/*/ready`)
+- **Effort**: 4-6 hours
+- **Details**: The Go Makefile generates `coverage.out` via `go test -coverprofile`, and `coverage.sh` processes it locally. The Python `autogluonserver` has `pytest-cov` in test dependencies. However, there is no `.codecov.yml`, no coverage thresholds, no PR coverage comment bot, and no CI step to run coverage.
 
-### 3. No Security Scanning
-- **Impact**: CVEs in the extensive Python dependency chain (AutoGluon + all its ML dependencies) and Red Hat base image go undetected
+### 3. No Dependency Management
+- **Impact**: Vulnerable or outdated dependencies go undetected; no automated update PRs
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: No Trivy, Snyk, CodeQL, gosec, Semgrep, or Gitleaks integration found anywhere in the repository
-- **Recommendation**: Add Trivy scanning as a Tekton task in the Konflux pipeline, or add a GitHub Actions workflow for dependency scanning
-
-### 4. No Coverage Tracking or Enforcement
-- **Impact**: Coverage trends invisible; quality can silently degrade
-- **Severity**: MEDIUM
-- **Effort**: 2-4 hours
-- **Details**: Go tests generate `coverage.out` locally, Python tests have `pytest-cov` as a dependency but it's not used in the Makefile (`pytest -W ignore` without `--cov`). No Codecov/Coveralls integration exists. No `.codecov.yml` found.
-- **Recommendation**: Enable `pytest --cov=autogluonserver --cov-report=xml` and integrate with Codecov
-
-### 5. No golangci-lint Configuration
-- **Impact**: Go linting runs but with no custom configuration — relies on upstream defaults that may not match Red Hat downstream standards
-- **Severity**: MEDIUM
 - **Effort**: 1-2 hours
+- **Details**: No `.github/dependabot.yml`, no `renovate.json` or `.renovaterc`. No `.github/` directory at all. The repository manages Go modules (`go.mod`) and Python packages (`pyproject.toml`) but has no automated alerting for security vulnerabilities or version updates.
+
+### 4. No Linting in CI
+- **Impact**: Code quality checks depend entirely on developer discipline; inconsistent enforcement
+- **Severity**: MEDIUM
+- **Effort**: 4-8 hours
+- **Details**: The Makefile provides `go-lint` (golangci-lint), `py-lint` (ruff), `py-fmt` (ruff format), and `vet` targets. Type checking with `mypy` is available for autogluonserver. However, none of these run in CI. The `precommit` target exists in the Makefile but is a manual target, not a git hook.
+
+### 5. No Container Runtime Validation
+- **Impact**: Image startup failures not caught until deployment
+- **Severity**: MEDIUM
+- **Effort**: 4-6 hours
+- **Details**: No HEALTHCHECK in any Dockerfile. No testcontainers-based validation. No image startup tests. The Tekton pipeline builds images but does not verify they start successfully or serve predictions.
 
 ## Quick Wins
 
-### 1. Add GitHub Actions Workflow for Autogluon Unit Tests (2-3 hours)
+### 1. Add Dependabot Configuration (1-2 hours)
+Create `.github/dependabot.yml` covering all ecosystems:
+
 ```yaml
-# .github/workflows/autogluon-tests.yml
-name: AutoGluon Unit Tests
-on: [pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
-      - run: |
-          cd python/autogluonserver
-          make dev_install
-          make test
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/python/autogluonserver"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "monthly"
 ```
 
-### 2. Add Trivy Container Scanning (1-2 hours)
-Add as a Tekton task after the image build step, or add a GitHub Actions workflow:
+### 2. Create Basic Agent Rules (2-3 hours)
+Add `CLAUDE.md` with test patterns, project structure, and autogluon-specific guidance for AI agents working on the codebase.
+
+### 3. Add Pre-commit Hooks (1-2 hours)
+Create `.pre-commit-config.yaml`:
+
 ```yaml
-# .github/workflows/security-scan.yml
-name: Security Scan
-on: [pull_request]
-jobs:
-  trivy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          severity: 'CRITICAL,HIGH'
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.0
+    hooks:
+      - id: ruff
+        args: [--config, ruff.toml]
+      - id: ruff-format
+        args: [--config, ruff.toml]
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v2.1.0
+    hooks:
+      - id: golangci-lint
 ```
 
-### 3. Enable pytest-cov (1-2 hours)
-The dependency is already declared in `pyproject.toml`. Update `python/autogluonserver/Makefile`:
-```makefile
-test: type_check
-	pytest --cov=autogluonserver --cov-report=xml --cov-report=term -W ignore
-```
-
-### 4. Create Basic Agent Rules (2-3 hours)
-Create `.claude/rules/` with test patterns for the autogluon model server:
-- `unit-tests.md` — pytest patterns, monkeypatching, DummyPredictor pattern
-- `e2e-tests.md` — KServe InferenceService deployment patterns
-
-### 5. Add golangci-lint Config (1 hour)
-Copy upstream KServe's `.golangci.yaml` or create a minimal one with Go best-practice linters enabled.
+### 4. Add Coverage Reporting to CI (4-6 hours)
+Add codecov integration with minimum thresholds to catch coverage regressions.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Current State**: Minimal — one Tekton PipelineRun for Konflux image building only.
+**Score: 8.0/10**
 
-| Aspect | Finding |
-|--------|---------|
-| **GitHub Actions** | None — no `.github/workflows/` directory |
-| **Tekton Pipelines** | 1 PipelineRun for PR image build (comment/label triggered) |
-| **Build Trigger** | `/build-konflux-autogluon` comment or `kfbuild-autogluon` label |
-| **Concurrency** | Tekton `cancel-in-progress: true` |
-| **Multi-arch** | x86_64, ppc64le, s390x, arm64 |
-| **Hermetic Build** | Yes — `hermetic: true` with pip prefetch |
-| **Test on PR** | No — no tests run on any PR trigger |
-| **Prow** | Legacy prow_config.yaml present but all workflows commented out |
+The repository has an excellent unit test foundation:
 
-**Key Issue**: The Tekton pipeline is managed centrally via `konflux-central` — changes require PRs to that repo, not this one. This adds friction to adding test steps.
+**Go Tests (162 test files / 336 source files = 0.48 ratio)**:
+- Controller tests using envtest: `pkg/controller/v1beta1/inferenceservice/controller_test.go`, `pkg/controller/v1alpha2/llmisvc/` (30+ test files)
+- API validation tests: `pkg/apis/serving/v1beta1/` (19 test files covering all predictor types)
+- Webhook tests: `pkg/webhook/admission/` (storage initializer, batcher, agent injector)
+- Credential tests: `pkg/credentials/` (Azure, GCS, S3, HDFS, HF)
+- Suite-based test organization with Ginkgo where appropriate
 
-### Test Coverage
+**Python Tests (239 test files / 355 source files = 0.67 ratio)**:
+- KServe SDK tests: `python/kserve/test/` (extensive API model tests)
+- AutoGluon-specific tests: `python/autogluonserver/tests/` (7 files):
+  - `test_model.py` — Tabular model prediction (v1/v2 protocol), error handling, data type mapping
+  - `test_timeseries_model.py` — Time series predictions with various configurations
+  - `test_predictor_detect.py` — Predictor type detection logic
+  - `test_predictor_factory.py` — Factory pattern tests
+  - `test_runtime_paths.py` — Runtime path resolution
+  - `test_version_compat.py` — Version compatibility validation
+  - `test_autogluon_model_repository.py` — Model repository operations
+- HuggingFace server tests, sklearn server tests, storage tests, etc.
+- Type checking: `mypy` integrated in autogluonserver Makefile
 
-#### Autogluon-Specific Tests (Python)
-| Metric | Value |
-|--------|-------|
-| Source files | 7 modules (1,318 lines) |
-| Test files | 7 test modules (1,357 lines) |
-| Test-to-code ratio | 1.03:1 (excellent) |
-| Testing framework | pytest + pytest-asyncio |
-| Type checking | mypy (integrated into `make test`) |
-| Coverage tool | pytest-cov declared but not used in CI |
+**Strengths**: High test-to-code ratio, good use of fixtures and mocking (monkeypatch), comprehensive predictor coverage.
+**Gap**: Tests not executed in CI.
 
-**Test Quality Assessment**: The autogluon tests are well-structured:
-- `test_model.py` (287 lines) — Comprehensive tabular model testing with DummyPredictor pattern, v1/v2 protocol coverage, error handling, proba mode
-- `test_timeseries_model.py` (433 lines) — TimeSeriesPredictor with metadata handling, forecast validation
-- `test_predictor_factory.py` (93 lines) — Factory delegation to tabular/timeseries
-- `test_predictor_detect.py` (152 lines) — Model type detection logic
-- `test_version_compat.py` (199 lines) — Version compatibility validation
-- `test_runtime_paths.py` (118 lines) — Runtime path resolution
-- `test_autogluon_model_repository.py` (75 lines) — Model repository management
+### Integration/E2E Tests
 
-#### Upstream KServe Tests (Inherited)
-| Metric | Value |
-|--------|-------|
-| Go test files | 162 files across 40+ packages |
-| Go source files | 336 files |
-| Test-to-code ratio | 0.48:1 (moderate) |
-| E2E test files | 85 Python files in `test/e2e/` |
-| Testing framework | Go testing + Ginkgo/Gomega, pytest |
-| envtest | Yes — Kubernetes envtest for controller testing |
+**Score: 6.0/10**
 
-#### E2E Tests
-- **Autogluon-specific**: `test_autogluon.py` (121 lines) and `test_autogluon_timeseries.py` (95 lines)
-  - Tests v1 and v2 KServe protocols
-  - Uses `kserve-autogluonserver` runtime
-  - Requires cluster + model artifacts in GCS
-- **Upstream E2E**: 85 files covering predictors, transformers, explainers, graph, helm, etc.
-- **Not CI-automated**: No workflow triggers E2E tests
+Comprehensive E2E test suite in `test/e2e/` with 85 test files across 13 domains:
 
-### Code Quality
+| Domain | Test Files | Key Coverage |
+|--------|-----------|--------------|
+| `predictor/` | 20 | AutoGluon, XGBoost, sklearn, TensorFlow, vLLM, PyTorch, etc. |
+| `llmisvc/` | 13 | LLM inference service controller, autoscaling, storage migration |
+| `modelcache/` | 4 | Local model caching, namespace caching |
+| `transformer/` | 3 | Transformer, raw transformer, collocation |
+| `batcher/` | 3 | Batching, custom port, raw batcher |
+| `logger/` | 3 | Logging, marshaller, raw logger |
+| `helm/` | 1 | Helm chart validation |
+| `graph/` | 1 | Inference graph |
+| `explainer/` | 1 | ART explainer |
+| `custom/` | 2 | Custom model, Ray |
+| `storagespec/` | 1 | S3 storage spec |
+| `qpext/` | 1 | Queue proxy extension |
+| `credentials/` | 1 | Credential setup |
 
-| Tool | Status |
-|------|--------|
-| **Go linting** | `golangci-lint` in Makefile (no `.golangci.yaml` config file) |
-| **Go vet** | Yes — `go vet ./pkg/... ./cmd/...` |
-| **Go fmt** | Yes — `go fmt ./pkg/... ./cmd/...` |
-| **Python linting** | Ruff (E, F, W, B rules) via `ruff.toml` |
-| **Python formatting** | Ruff format (line-length=88) |
-| **Python type checking** | mypy (autogluon-specific) |
-| **Pre-commit hooks** | None — no `.pre-commit-config.yaml` |
-| **Precommit target** | `make precommit` exists (comprehensive: vet, lint, fmt, generate, manifests) |
-| **CI enforcement** | None — `make check`/`make precommit` not run in any CI |
+**AutoGluon-specific E2E tests**:
+- `test/e2e/predictor/test_autogluon.py` — v1 and v2 protocol end-to-end
+- `test/e2e/predictor/test_autogluon_timeseries.py` — Time series prediction e2e
 
-### Container Images
+**Pytest markers**: Well-organized with 35+ markers for selective test execution (predictor, llm, vllm, autoscaling, modelcache, etc.)
 
-| Aspect | Finding |
-|--------|---------|
-| **Dockerfiles** | 7 total: main Dockerfile, 5 component Dockerfiles, 1 Konflux-specific |
-| **Konflux Dockerfile** | `Dockerfile.konflux.autogluon` — multi-stage, Red Hat base image |
-| **Base Image** | `registry.redhat.io/rhai/base-image-cpu-rhel9` (hardcoded digest) |
-| **Multi-stage** | Yes — builder + prod stages |
-| **Multi-arch** | Yes — x86_64, ppc64le, s390x, arm64 via Tekton |
-| **License generation** | Yes — `pip-licenses.py` in build |
-| **Non-root user** | Yes — `USER 1001` in final stage |
-| **Runtime validation** | None — no health check, no smoke test |
-| **Trivy/Snyk scanning** | None |
-| **SBOM generation** | None |
-| **Image signing** | None |
+**Go integration tests**: envtest-based controller tests in `pkg/controller/` test Kubernetes API interactions.
 
-### Security
+**Major Gap**: No CI automation to run these E2E tests. Prow config is commented out. Tests require manual execution.
 
-| Practice | Status |
-|----------|--------|
-| Hermetic builds | Yes (Konflux) |
-| Dependency pinning | Yes (pip with Red Hat index, Go modules) |
-| Base image pinning | Yes (SHA256 digest) |
-| Container scanning | Not found |
-| SAST/CodeQL | Not found |
-| Dependency scanning | Not found |
-| Secret detection | Not found |
-| Pinned GH Actions | Yes — `make verify-pinned-actions` target with `pinact` tool |
-| Non-root container | Yes |
+### Build Integration
 
-### Agent Rules (Agentic Flow Quality)
+**Score: 5.0/10**
 
-- **Status**: Missing
-- **Coverage**: No test type rules exist
-- **Quality**: N/A
-- **Gaps**: No `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
-- **Recommendation**: Generate test automation rules with `/test-rules-generator` covering:
-  - Python unit test patterns (pytest, monkeypatching, DummyPredictor)
-  - Go unit test patterns (Ginkgo/Gomega, envtest)
-  - E2E test patterns (KServe InferenceService, async fixtures)
+**Tekton/Konflux Pipeline** (`.tekton/odh-kserve-autogluon-on-pull-request.yaml`):
+- Triggered on PR via comment `/build-konflux-autogluon` or labels `kfbuild-all`, `kfbuild-autogluon`
+- Multi-arch builds: `linux/x86_64`, `linux/ppc64le`, `linux/s390x`, `linux-m2xlarge/arm64`
+- Hermetic builds with pip prefetch for reproducibility
+- Uses `Dockerfile.konflux.autogluon` for production images
+- Builds autogluonserver with all dependencies in a UBI base image
+- Pipeline managed centrally via `konflux-central` repository
+- 8-hour pipeline timeout
+- Cancel-in-progress concurrency control
+
+**Gaps**:
+- Pipeline only builds images — no test execution step
+- No Kustomize overlay validation (`kustomize build` not in pipeline)
+- No `kubectl apply --dry-run` validation
+- No image startup or health check validation after build
+- Makefile has `precommit` target with comprehensive checks, but it's not wired to CI
+
+### Image Testing
+
+**Score: 5.0/10**
+
+**Dockerfiles**:
+- `Dockerfile.konflux.autogluon` — Production build with UBI base (`registry.redhat.io/rhai/base-image-cpu-rhel9`), multi-stage
+- `python/autogluon.Dockerfile` — Upstream build with `python:3.12-slim-bookworm`, multi-stage with uv
+- `Dockerfile` — Go operator build with `gcr.io/distroless/static:nonroot`, multi-stage with build caching
+
+**Positives**:
+- Multi-stage builds in all Dockerfiles (deps → build → prod)
+- UBI base image for FIPS compatibility in production
+- Non-root user execution (`USER 1001` / `USER 1000`)
+- Build caching with `--mount=type=cache` in Go Dockerfile
+- Multi-arch support (4 architectures via Tekton)
+- Proper `.dockerignore` for Python context
+
+**Gaps**:
+- No `HEALTHCHECK` instruction in any Dockerfile
+- No testcontainers or runtime validation tests
+- No image startup test after build
+- No container health check testing
+
+### Coverage Tracking
+
+**Score: 3.0/10**
+
+**What exists**:
+- Go: `go test -coverprofile coverage.out -coverpkg ./pkg/... ./cmd...` in Makefile test target
+- `coverage.sh` script: Filters ignored patterns from `.cov-ignore`, generates human-readable coverage report
+- Python: `pytest-cov` listed in autogluonserver test dependencies
+- Go qpext: `go test -v ./... -cover` in test-qpext target
+
+**What's missing**:
+- No `.codecov.yml` or `coveralls.yml`
+- No coverage thresholds or minimum requirements
+- No PR coverage reporting (no codecov-action, no coverage comment bot)
+- No CI step to generate or upload coverage
+- pytest-cov is a dependency but no `--cov` flags in the autogluonserver Makefile test target
+- No coverage trend tracking
+
+### CI/CD Automation
+
+**Score: 3.0/10**
+
+**What exists**:
+- Tekton/Konflux pipeline for PR image builds (multi-arch, hermetic)
+- Pipeline managed centrally via `konflux-central`
+- Cancel-in-progress concurrency control in Tekton
+
+**What's completely missing**:
+- No `.github/workflows/` directory — zero GitHub Actions
+- No `.github/` directory at all (no Dependabot, no issue templates, etc.)
+- Prow configuration is empty (all workflows commented out)
+- No automated unit test execution
+- No automated lint/format checking
+- No automated E2E test execution
+- No automated coverage reporting
+- No caching strategy for CI (Go module cache, Python pip cache)
+
+**Local development tools** (Makefile targets, not CI):
+- `make test` — Go unit tests with envtest
+- `make go-lint` — golangci-lint
+- `make py-lint` — ruff check
+- `make py-fmt` — ruff format
+- `make vet` — go vet
+- `make precommit` — comprehensive pre-commit checks
+
+### Static Analysis
+
+**Score: 5.0/10**
+
+#### Linting
+- **Go**: golangci-lint installed via `Makefile.tools.mk`, `make go-lint` target available. No `.golangci.yaml` config file found (uses defaults).
+- **Python**: ruff configured in `ruff.toml` with rules B (bugbear), E (pycodestyle), F (pyflakes), W (warnings). Line length 88. Extensive exclude list for generated code.
+- **Type checking**: mypy for autogluonserver (`mypy --ignore-missing-imports autogluonserver`)
+- **Go vet and fmt**: Available via Makefile targets
+
+#### FIPS Compatibility
+- **Positive**: UBI base image in Konflux Dockerfile (`registry.redhat.io/rhai/base-image-cpu-rhel9`) — FIPS-capable
+- **Negative**: No FIPS build tags in Go code (`-tags=fips`, `GOEXPERIMENT=boringcrypto` not used)
+- **No violations found**: No `crypto/md5`, `crypto/des`, `crypto/rc4`, or `math/rand` in security contexts detected
+
+#### Dependency Alerts
+- **Missing**: No `.github/dependabot.yml`
+- **Missing**: No `renovate.json` or `.renovaterc`
+- **Missing**: No `.github/` directory at all
+- **No auto-merge policies**
+
+#### Pre-commit Hooks
+- **Missing**: No `.pre-commit-config.yaml`
+- Makefile has a `precommit` target but it's not a git hook — requires manual invocation
+
+### Agent Rules
+
+**Score: 0.0/10**
+
+- **Status**: Completely absent
+- **Missing**: No `CLAUDE.md` in repository root
+- **Missing**: No `AGENTS.md` in repository root
+- **Missing**: No `.claude/` directory
+- **Missing**: No `.claude/rules/` test creation rules
+- **Missing**: No `.claude/skills/` custom skills
+- **Recommendation**: Generate comprehensive agent rules using `/test-rules-generator` to cover:
+  - Go controller test patterns (envtest, Ginkgo)
+  - Python pytest patterns (monkeypatch, fixtures, async tests)
+  - AutoGluon-specific test patterns (tabular model mocking, prediction validation)
+  - E2E test patterns (KServe InferenceService creation, prediction validation)
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add CI workflow for test execution on PRs**
-   - GitHub Actions workflow running autogluon unit tests (`pytest`) on every PR
-   - Go tests (`make test`) for any controller changes
-   - Ruff linting and mypy type checking
+1. **Add GitHub Actions workflows for automated test execution**
+   - Create PR-triggered workflow for Go unit tests (`make test`)
+   - Create PR-triggered workflow for Python unit tests (autogluonserver, kserve SDK)
+   - Create PR-triggered workflow for linting (`make go-lint py-lint`)
+   - Effort: 8-16 hours
 
-2. **Add container image runtime validation**
-   - After Konflux builds the image, start it and validate health endpoint
-   - Verify `python -m autogluonserver` starts without errors
+2. **Configure codecov integration with coverage thresholds**
+   - Add `.codecov.yml` with project-level minimums (e.g., 60% for Go)
+   - Add `codecov/codecov-action` to CI workflow
+   - Wire `pytest --cov` into autogluonserver test target
+   - Effort: 4-6 hours
 
-3. **Integrate security scanning**
-   - Trivy for container image and filesystem scanning
-   - Dependency vulnerability scanning for the extensive Python ML dependency chain
+3. **Add Dependabot for dependency vulnerability alerts**
+   - Create `.github/dependabot.yml` covering `gomod`, `pip`, and `docker` ecosystems
+   - Effort: 1-2 hours
 
 ### Priority 1 (High Value)
 
-4. **Set up coverage tracking with Codecov**
-   - Enable `pytest-cov` (already a declared dependency)
-   - Add Codecov integration with minimum thresholds
-   - Report coverage on PRs
+4. **Add container runtime validation to PR pipeline**
+   - Add image startup test after Konflux build
+   - Verify the autogluon server starts and serves a health check
+   - Effort: 4-6 hours
 
-5. **Automate E2E tests in periodic CI**
-   - The autogluon E2E tests exist but need a cluster environment
-   - Set up a periodic job (daily/weekly) to run `test_autogluon.py` and `test_autogluon_timeseries.py`
+5. **Create `.pre-commit-config.yaml` for local enforcement**
+   - Configure ruff, golangci-lint, go vet, and go fmt as pre-commit hooks
+   - Effort: 1-2 hours
 
-6. **Create agent rules for test automation**
-   - `.claude/rules/unit-tests.md` — Python and Go unit test patterns
-   - `.claude/rules/e2e-tests.md` — KServe E2E test patterns
-
-7. **Add pre-commit hooks**
-   - `.pre-commit-config.yaml` with ruff, mypy, go vet, golangci-lint
+6. **Add Kustomize validation to CI**
+   - Run `kustomize build` on overlays to catch manifest errors
+   - Add `kubectl apply --dry-run=server` for CRD validation
+   - Effort: 4-8 hours
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add SBOM generation** to Konflux pipeline
-9. **Add image signing/attestation** for supply chain security
-10. **Performance benchmarks** for AutoGluon inference latency (tabular and timeseries)
-11. **Contract tests** for KServe predict API v1/v2 protocol conformance
-12. **Add golangci-lint config** for downstream Go code quality
+7. **Create comprehensive agent rules**
+   - Add `CLAUDE.md` with project structure, testing patterns, and coding standards
+   - Create `.claude/rules/` with test creation rules for Go and Python
+   - Use `/test-rules-generator` skill to bootstrap
+   - Effort: 2-4 hours
+
+8. **Add FIPS build tags for Go binaries**
+   - Add `-tags=fips` or `GOEXPERIMENT=boringcrypto` to Go build configuration
+   - Verify crypto compliance in CI
+   - Effort: 4-8 hours
+
+9. **Implement e2e test matrix for multiple K8s versions**
+   - Add matrix strategy to run E2E tests against multiple Kubernetes/OpenShift versions
+   - Effort: 8-16 hours
 
 ## Comparison to Gold Standards
 
-| Dimension | kserve-autogluon-server | odh-dashboard (Gold) | notebooks (Gold) | kserve (Upstream) |
-|-----------|----------------------|---------------------|-------------------|------------------|
-| Unit Tests | 7.5 — Strong AG-specific | 9.0 — Multi-layer | 7.0 — Image-focused | 8.5 — Comprehensive |
-| Integration/E2E | 6.5 — Tests exist, not CI'd | 9.0 — Cypress + API | 8.0 — 5-layer validation | 9.0 — Multi-version |
-| Build Integration | 4.0 — Konflux only | 8.5 — PR builds + test | 7.5 — Image validation | 7.0 — GH Actions |
-| Image Testing | 3.5 — Multi-arch, no validation | 7.0 — Build + test | 9.0 — 5-layer pipeline | 6.5 — Basic |
-| Coverage Tracking | 3.0 — Local only | 9.0 — Codecov enforced | 5.0 — Basic | 8.0 — Codecov |
-| CI/CD Automation | 4.0 — Tekton build only | 9.5 — Full pipeline | 8.5 — Automated | 9.0 — GH Actions |
-| Agent Rules | 0.0 — None | 8.0 — Comprehensive | 2.0 — Minimal | 3.0 — Basic |
+| Practice | kserve-autogluon-server | odh-dashboard | notebooks | kserve (upstream) |
+|----------|----------------------|---------------|-----------|-------------------|
+| Unit test ratio | 0.48 (Go), 0.67 (Py) | High | Moderate | High |
+| E2E automation | Tests exist, no CI | Automated | Automated | Automated (Prow) |
+| Coverage enforcement | None | Codecov + thresholds | Present | Codecov |
+| PR build validation | Konflux image build | Multi-layer | 5-layer | GitHub Actions |
+| Multi-arch builds | 4 architectures | Yes | Yes | Yes |
+| Dependency alerts | None | Dependabot | Dependabot | Dependabot |
+| Linting in CI | None | ESLint in CI | Present | golangci-lint in CI |
+| Pre-commit hooks | None | Configured | Present | Configured |
+| Agent rules | None | Comprehensive | Present | Partial |
+| Container health | None | Present | Present | Present |
+| FIPS compliance | UBI base only | Full | Full | Partial |
 
 ## File Paths Reference
 
-### CI/CD
-- `.tekton/odh-kserve-autogluon-on-pull-request.yaml` — Konflux PR build pipeline
-- `.tekton/README.md` — Explains Tekton sync from konflux-central
-- `prow_config.yaml` — Legacy Prow config (all workflows disabled)
+### Build & CI
+- `.tekton/odh-kserve-autogluon-on-pull-request.yaml` — Konflux PR pipeline
+- `Dockerfile.konflux.autogluon` — Production Dockerfile (UBI base)
+- `python/autogluon.Dockerfile` — Upstream Dockerfile
+- `Dockerfile` — Go operator Dockerfile
+- `Makefile` — Build and test targets
+- `Makefile.tools.mk` — Go tool dependencies (golangci-lint, envtest)
+- `prow_config.yaml` — Prow CI config (commented out)
 
-### Testing (Autogluon-specific)
-- `python/autogluonserver/tests/` — 7 unit test files (1,357 lines)
-- `python/autogluonserver/Makefile` — Test targets (test, type_check)
-- `test/e2e/predictor/test_autogluon.py` — E2E tabular tests
-- `test/e2e/predictor/test_autogluon_timeseries.py` — E2E timeseries tests
-- `test/e2e/pytest.ini` — E2E test markers
-
-### Testing (Upstream/Go)
-- `pkg/` — 152 Go test files across 40+ packages
-- `Makefile` — `test`, `precommit`, `check` targets
+### Testing
+- `python/autogluonserver/tests/` — AutoGluon unit tests (7 files)
+- `test/e2e/` — End-to-end tests (85 files across 13 domains)
+- `test/e2e/predictor/test_autogluon.py` — AutoGluon E2E tests
+- `test/e2e/pytest.ini` — E2E pytest configuration with markers
 - `coverage.sh` — Go coverage processing script
 
 ### Code Quality
-- `ruff.toml` — Python linting config (B, E, F, W rules)
-- `Makefile.tools.mk` — Tool definitions (golangci-lint, ruff, etc.)
-- `Makefile` — `precommit` target (comprehensive quality checks)
+- `ruff.toml` — Python linting configuration
+- `python/autogluonserver/pyproject.toml` — AutoGluon project config with test dependencies
+- `python/autogluonserver/Makefile` — AutoGluon test and lint targets
 
-### Container Images
-- `Dockerfile.konflux.autogluon` — Red Hat Konflux build (multi-stage, RH base image)
-- `Dockerfile` — Upstream Go manager build
-- `agent.Dockerfile`, `router.Dockerfile`, etc. — Component-specific builds
-
-### Configuration
-- `go.mod` — Go dependencies
-- `python/autogluonserver/pyproject.toml` — Python package config with test deps
-- `kserve-deps.env` — Version-pinned tool dependencies
+### Key Source Files
+- `python/autogluonserver/autogluonserver/` — AutoGluon serving runtime source
+- `pkg/` — Go operator packages (controllers, APIs, webhooks)
+- `cmd/` — Go command entry points (manager, agent, router)
+- `config/` — Kustomize overlays and CRDs

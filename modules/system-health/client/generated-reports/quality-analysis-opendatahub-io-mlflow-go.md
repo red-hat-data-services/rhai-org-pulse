@@ -4,196 +4,160 @@ overall_score: 6.1
 scorecard:
   - dimension: "Unit Tests"
     score: 8.5
-    status: "Excellent unit test coverage with 149+ test functions, table-driven tests, httptest mocks, and race detector enabled"
+    status: "Strong unit test coverage with table-driven tests and httptest mocking"
   - dimension: "Integration/E2E"
     score: 8.0
-    status: "Strong integration suite testing against live MLflow (SQLite + PostgreSQL + midstream), build-tag isolation, CI-automated lifecycle"
+    status: "Comprehensive integration suite with SQLite, PostgreSQL, and midstream workspace testing"
   - dimension: "Build Integration"
     score: 2.0
-    status: "No Dockerfile, no PR-time image build, no Konflux simulation, no container validation"
+    status: "No Dockerfile, no PR-time image builds, no Konflux simulation"
   - dimension: "Image Testing"
     score: 1.0
-    status: "Pure Go library - no container images built or tested; no runtime image validation"
+    status: "No container images built or tested — pure Go SDK library"
   - dimension: "Coverage Tracking"
-    score: 2.0
-    status: "No coverage file generation, no codecov/coveralls integration, no coverage thresholds or PR reporting"
-  - dimension: "CI/CD Automation"
-    score: 7.5
-    status: "Single well-structured workflow with lint/unit/integration jobs; missing concurrency control, caching, and coverage upload"
-  - dimension: "Agent Rules"
     score: 1.0
-    status: "No .claude directory, no CLAUDE.md, no agent rules; .gitignore actively excludes them"
+    status: "No coverage generation, no codecov integration, no coverage gates"
+  - dimension: "CI/CD Automation"
+    score: 6.5
+    status: "Good workflow structure with 5 parallel jobs but lacks caching, concurrency control, and timeout guards"
+  - dimension: "Static Analysis"
+    score: 6.0
+    status: "Strong golangci-lint v2 config with 7 extra linters; missing Dependabot, pre-commit hooks, and FIPS build tags"
+  - dimension: "Agent Rules"
+    score: 0.0
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory present"
 critical_gaps:
-  - title: "No test coverage tracking or enforcement"
-    impact: "Cannot measure or enforce minimum coverage; regressions go undetected"
+  - title: "No code coverage tracking or enforcement"
+    impact: "Cannot measure test quality, regressions go undetected, no PR-level coverage feedback"
     severity: "HIGH"
     effort: "2-4 hours"
   - title: "No container image or build integration testing"
-    impact: "If project ever ships as a container (e.g., sidecar, gRPC bridge), no validation infrastructure exists"
+    impact: "When this SDK is packaged into container images downstream, build failures are discovered post-merge"
     severity: "MEDIUM"
-    effort: "4-8 hours"
-  - title: "No security scanning in CI"
-    impact: "Dependency vulnerabilities, secret leaks, and SAST issues not detected before merge"
+    effort: "8-12 hours"
+  - title: "No Dependabot or Renovate for dependency management"
+    impact: "Dependency vulnerabilities and Go module updates require manual monitoring"
     severity: "HIGH"
-    effort: "2-3 hours"
-  - title: "No agent rules for AI-assisted development"
-    impact: "AI agents generate inconsistent tests; no guidance on project patterns, naming, or frameworks"
-    severity: "MEDIUM"
-    effort: "3-4 hours"
-  - title: "CI workflow lacks concurrency control"
-    impact: "Multiple PR pushes can run redundant CI jobs, wasting resources"
-    severity: "LOW"
-    effort: "30 minutes"
-quick_wins:
-  - title: "Add coverage generation and upload to codecov"
-    effort: "2-3 hours"
-    impact: "Instant visibility into coverage trends and per-PR delta reporting"
-  - title: "Add go-vuln-check or Trivy scanning to CI"
     effort: "1-2 hours"
-    impact: "Detect known vulnerabilities in Go dependencies before merge"
-  - title: "Add concurrency control to CI workflow"
-    effort: "30 minutes"
-    impact: "Cancel stale CI runs when a new push arrives on the same PR"
-  - title: "Add Dependabot or Renovate for dependency updates"
-    effort: "1 hour"
-    impact: "Automated security patches and dependency freshness"
-  - title: "Generate CLAUDE.md and .claude/rules/ for test patterns"
+  - title: "No agent rules for AI-assisted test creation"
+    impact: "AI agents lack guidance on test patterns, frameworks, and conventions specific to this project"
+    severity: "MEDIUM"
     effort: "2-3 hours"
-    impact: "Consistent AI-generated tests that follow project conventions"
+quick_wins:
+  - title: "Add --coverprofile to unit test target and integrate Codecov"
+    effort: "2-4 hours"
+    impact: "Immediate visibility into test coverage with PR-level reporting and threshold enforcement"
+  - title: "Enable Dependabot for Go modules"
+    effort: "1 hour"
+    impact: "Automated PRs for dependency updates and security patches"
+  - title: "Add CI concurrency control and caching"
+    effort: "1-2 hours"
+    impact: "Faster CI runs, prevent duplicate workflow runs on force-pushes"
+  - title: "Generate CLAUDE.md with test creation rules"
+    effort: "2-3 hours"
+    impact: "AI agents can consistently generate tests matching project conventions"
 recommendations:
   priority_0:
-    - "Add coverage generation (-coverprofile) and upload to Codecov with thresholds"
-    - "Add govulncheck or Trivy to CI for dependency vulnerability scanning"
-    - "Add gosec as a standalone CI step (currently only via golangci-lint with G104 excluded)"
+    - "Add coverage generation (--coverprofile) and Codecov integration with minimum threshold (e.g., 70%)"
+    - "Enable Dependabot for gomod and GitHub Actions ecosystems"
   priority_1:
-    - "Add concurrency control and Go module caching to CI workflow"
-    - "Create .claude/rules/ with unit-test and integration-test patterns from existing code"
-    - "Add Dependabot/Renovate for automated dependency updates"
-    - "Add pre-commit hooks for fmt/vet/lint local enforcement"
+    - "Add CI caching (actions/cache for Go modules), concurrency control, and timeout-minutes on all jobs"
+    - "Create CLAUDE.md and .claude/rules/ with unit test and integration test creation guidelines"
+    - "Add pre-commit hooks for gofmt, go vet, and go mod tidy"
   priority_2:
-    - "Add benchmarks for HTTP client and protobuf serialization paths"
-    - "Add fuzz testing for template substitution and error parsing"
-    - "Create Dockerfile for potential sidecar/bridge deployment scenarios"
-    - "Add CodeQL or Semgrep for deeper SAST coverage"
+    - "Add Dockerfile for SDK development container (optional for library projects)"
+    - "Add FIPS build tags and boringcrypto support in CI for Red Hat downstream compatibility"
+    - "Add race detector and fuzz testing targets for security-sensitive code paths"
 ---
 
 # Quality Analysis: mlflow-go
 
 ## Executive Summary
 
-**Overall Score: 6.1/10**
+- **Overall Score: 6.1/10**
+- **Repository Type**: Go SDK library (MLflow client)
+- **Primary Language**: Go 1.24
+- **Jira Component**: MLflow (RHOAIENG)
+- **Tier**: Midstream (opendatahub-io)
 
-The `opendatahub-io/mlflow-go` repository is a Go SDK for the MLflow tracking and prompt registry APIs. It is a **pure Go library** (no container images, no operator, no web UI) with a surprisingly strong testing culture for its size. The project demonstrates excellent engineering practices in unit and integration testing, but has significant gaps in coverage tracking, security scanning, and CI/CD maturity.
+**Key Strengths**: Excellent unit and integration test suites with table-driven tests, httptest mocking, multiple backend support (SQLite + PostgreSQL), and midstream workspace isolation testing. Strong golangci-lint v2 configuration with 7 extra linters enabled. Well-organized Makefile with clear test/dev targets.
 
-**Key Strengths:**
-- Exceptional test-to-code ratio (5,232 test lines / 3,442 source lines = **1.52x**)
-- 169 test functions covering both unit and integration scenarios
-- Integration tests run against real MLflow servers (SQLite, PostgreSQL, and midstream fork)
-- Well-configured golangci-lint v2 with 7+ linters including gosec
-- Thoughtful ADR (Architecture Decision Record) documentation (9 ADRs)
-- Race detector enabled for all test runs
+**Critical Gaps**: No coverage tracking or enforcement anywhere in CI. No Dependabot or Renovate for dependency management. No agent rules for AI-assisted development. As a pure library (no Dockerfile), build integration and image testing dimensions are inherently limited.
 
-**Critical Gaps:**
-- Zero coverage tracking or enforcement (no codecov, no thresholds, no PR reporting)
-- No security scanning in CI (no govulncheck, no Trivy, no CodeQL, no Dependabot)
-- No agent rules or AI development guidance
-- CI workflow missing concurrency control and caching
-
-**Agent Rules Status:** Missing - `.gitignore` actively excludes `.claude/` and `CLAUDE.md`
-
----
+**Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory.
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 8.5/10 | Excellent coverage: 149 unit tests, table-driven, httptest mocks, race detector |
-| Integration/E2E | 8.0/10 | Strong: live MLflow server tests (SQLite + PostgreSQL + midstream), build-tag isolation |
-| Build Integration | 2.0/10 | N/A for library; no Dockerfile, no image builds, no Konflux pipeline |
-| Image Testing | 1.0/10 | Pure library; no container images built or tested |
-| Coverage Tracking | 2.0/10 | No coverage generation, no codecov, no thresholds, no PR delta |
-| CI/CD Automation | 7.5/10 | Single workflow with 5 jobs; missing concurrency, caching, coverage upload |
-| Agent Rules | 1.0/10 | No .claude directory, no CLAUDE.md, no agent rules |
-
----
+| Dimension | Weight | Score | Status |
+|-----------|--------|-------|--------|
+| Unit Tests | 15% | 8.5/10 | Strong coverage with table-driven tests and httptest mocking |
+| Integration/E2E | 20% | 8.0/10 | Comprehensive suite: SQLite, PostgreSQL, midstream workspace testing |
+| Build Integration | 15% | 2.0/10 | No Dockerfile, no PR-time image builds (library project) |
+| Image Testing | 10% | 1.0/10 | No container images — pure Go SDK library |
+| Coverage Tracking | 10% | 1.0/10 | No coverage generation, no codecov, no coverage gates |
+| CI/CD Automation | 15% | 6.5/10 | 5 CI jobs, good structure; lacks caching, concurrency, timeouts |
+| Static Analysis | 10% | 6.0/10 | golangci-lint v2 with 7 extra linters; no Dependabot or pre-commit |
+| Agent Rules | 5% | 0.0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory |
+| **Overall** | **100%** | **6.1/10** | |
 
 ## Critical Gaps
 
-### 1. No Test Coverage Tracking or Enforcement
-- **Severity:** HIGH
-- **Impact:** Cannot measure code coverage, track trends, or enforce minimum thresholds. Regressions in test quality go undetected.
-- **Current State:** `go test -v -race ./...` runs tests but produces no coverage output. No `.codecov.yml` or coveralls configuration exists.
-- **Effort:** 2-4 hours
-- **Fix:** Add `-coverprofile=coverage.out -covermode=atomic` to test commands, upload to Codecov, set thresholds.
+### 1. No Code Coverage Tracking or Enforcement
+- **Impact**: Cannot measure test quality or detect coverage regressions across PRs
+- **Severity**: HIGH
+- **Effort**: 2-4 hours
+- **Details**: Unit tests run with `-race` but not with `--coverprofile`. No `.codecov.yml`, no coverage thresholds, no PR-level coverage reporting. The CI workflow (`go.yaml`) runs `make test/unit` which calls `go test -v -race ./...` — adding `--coverprofile=coverage.out` and integrating `codecov/codecov-action` is straightforward.
 
-### 2. No Security Scanning in CI
-- **Severity:** HIGH
-- **Impact:** Dependency vulnerabilities (Go modules), leaked secrets, and code-level security issues are not caught before merge.
-- **Current State:** `gosec` runs via golangci-lint but excludes `G104` (unhandled errors) and does not run on test files. No dedicated security scan job exists.
-- **Effort:** 2-3 hours
-- **Fix:** Add `govulncheck`, Trivy, and Dependabot/Renovate.
+### 2. No Dependency Management Automation
+- **Impact**: Go module updates and security patches require manual monitoring and PRs
+- **Severity**: HIGH
+- **Effort**: 1 hour
+- **Details**: No `.github/dependabot.yml` or Renovate configuration. The project has a single dependency (`google.golang.org/protobuf`), making this easy to set up but still important for security hygiene.
 
-### 3. No Container/Build Integration Testing
-- **Severity:** MEDIUM (library project)
-- **Impact:** If the project evolves to include a container (sidecar, gRPC bridge, CLI binary), there is no infrastructure to validate builds.
-- **Current State:** No Dockerfile, Containerfile, or build automation. This is acceptable for a pure library but becomes a gap if deployment targets change.
-- **Effort:** 4-8 hours (when needed)
+### 3. No Agent Rules for AI-Assisted Development
+- **Impact**: AI agents (Claude Code, Copilot) lack context on project test conventions, patterns, and quality standards
+- **Severity**: MEDIUM
+- **Effort**: 2-3 hours
+- **Details**: No `CLAUDE.md`, `AGENTS.md`, or `.claude/` directory. The project has clear testing patterns (table-driven tests, httptest mocking, build-tag-gated integration tests) that should be documented for AI agents.
 
-### 4. No Agent Rules for AI-Assisted Development
-- **Severity:** MEDIUM
-- **Impact:** AI code assistants generate tests and code without awareness of project patterns (table-driven tests, httptest mocks, build-tag conventions for integration tests).
-- **Current State:** `.gitignore` excludes `.claude/` and `CLAUDE.md`. No `AGENTS.md` or other agent guidance exists.
-- **Effort:** 3-4 hours
-- **Fix:** Create `.claude/rules/` with unit-test-patterns.md and integration-test-patterns.md derived from existing codebase.
-
-### 5. CI Missing Concurrency Control
-- **Severity:** LOW
-- **Impact:** Multiple pushes to a PR branch trigger redundant CI runs that waste GitHub Actions minutes.
-- **Current State:** No `concurrency` block in the CI workflow.
-- **Effort:** 30 minutes
-
----
+### 4. No Container Build Integration (Library Context)
+- **Impact**: When this SDK is packaged into downstream images, build validation happens only at that downstream level
+- **Severity**: MEDIUM
+- **Effort**: 8-12 hours (if a Dockerfile is desired)
+- **Details**: As a pure Go SDK library, the absence of Dockerfiles is understandable. However, downstream projects (mlflow-operator, etc.) depend on this module. Consider adding a CI step that verifies the module builds cleanly as a dependency (`go build ./...`), which already happens implicitly via `make check`.
 
 ## Quick Wins
 
-### 1. Add Coverage Generation and Codecov Upload (2-3 hours)
-Add `-coverprofile` to test commands and upload to Codecov:
+### 1. Add Coverage Tracking (2-4 hours)
+Add `--coverprofile` to the unit test target and integrate Codecov:
+
 ```yaml
-- name: Run unit tests
-  run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+# .github/workflows/go.yaml - add to test-unit job
+- name: Run unit tests with coverage
+  run: go test -v -race -coverprofile=coverage.out ./...
 
 - name: Upload coverage
   uses: codecov/codecov-action@v4
   with:
-    file: ./coverage.out
-    token: ${{ secrets.CODECOV_TOKEN }}
+    file: coverage.out
+    fail_ci_if_error: false
 ```
 
-### 2. Add govulncheck to CI (1-2 hours)
 ```yaml
-vulnerability-check:
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-go@v5
-      with:
-        go-version-file: 'go.mod'
-    - name: Install govulncheck
-      run: go install golang.org/x/vuln/cmd/govulncheck@latest
-    - name: Run vulnerability check
-      run: govulncheck ./...
+# .codecov.yml
+coverage:
+  status:
+    project:
+      default:
+        target: 70%
+    patch:
+      default:
+        target: 80%
 ```
 
-### 3. Add Concurrency Control (30 minutes)
+### 2. Enable Dependabot (1 hour)
 ```yaml
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-```
-
-### 4. Add Dependabot (1 hour)
-Create `.github/dependabot.yml`:
-```yaml
+# .github/dependabot.yml
 version: 2
 updates:
   - package-ecosystem: "gomod"
@@ -206,215 +170,277 @@ updates:
       interval: "weekly"
 ```
 
-### 5. Generate Agent Rules (2-3 hours)
-Run `/test-rules-generator` on this repository to create `.claude/rules/` with patterns for unit tests (table-driven, httptest) and integration tests (build tags, live server setup).
+### 3. Add CI Concurrency and Caching (1-2 hours)
+```yaml
+# Add to .github/workflows/go.yaml
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
----
+# Add timeout to each job
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # ...
+  test-unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # ...
+  test-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # ...
+```
+
+Note: `actions/setup-go@v5` includes built-in Go module caching by default, so explicit `actions/cache` is not needed.
+
+### 4. Generate Agent Rules (2-3 hours)
+Use the `/test-rules-generator` skill to create `.claude/rules/` with:
+- Unit test patterns (table-driven tests, httptest mocking, error checking)
+- Integration test patterns (build tag gating, cleanup patterns, context timeouts)
+- Go testing conventions used in this project
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflow: `.github/workflows/go.yaml`** (single workflow, 5 jobs)
+**Score: 8.5/10**
 
-| Job | Trigger | What It Does |
+**Test Files**: 10 unit test files covering all major packages:
+- `mlflow/client_test.go` — 14 tests for client initialization, URI handling, env vars, insecure mode
+- `mlflow/promptregistry/format_test.go` — 12 tests for prompt formatting (text, chat, edge cases)
+- `mlflow/promptregistry/prompt_test.go` — Prompt type tests
+- `mlflow/promptregistry/client_test.go` — Client method tests
+- `mlflow/tracking/client_test.go` — Tracking client tests
+- `mlflow/artifacts/client_test.go` — Artifact client tests
+- `internal/transport/http_test.go` — 20+ tests with httptest, including secret redaction, timeout, cancellation
+- `internal/errors/api_test.go` — 30+ table-driven tests for all error classification helpers
+- `internal/artifact/uri_test.go` — 15 table-driven tests for URI resolution with security edge cases
+- `internal/artifact/store_test.go` — 12 tests for artifact upload/download strategies (presigned, proxy, tracking-server)
+
+**Test Quality Signals**:
+- Consistent use of table-driven tests (`tests := []struct{...}`)
+- `httptest.NewServer` for HTTP layer testing (no external dependencies)
+- Security-conscious: tests for path traversal prevention, secret redaction in logs, oversize rejection
+- Proper cleanup with `t.Cleanup()` and `defer`
+- Race detection enabled (`-race` flag)
+
+**Test-to-Code Ratio**: 13 test files / 27 source files = 0.48 (good for a Go library)
+**Test Lines**: ~6,352 lines of test code / ~4,437 lines of source code = 1.43:1 ratio (excellent)
+
+**Minor Gaps**:
+- `internal/conv/conv.go` has no dedicated test file (helper package)
+- No fuzz tests for security-sensitive code (URI parsing, path traversal validation)
+
+### Integration/E2E Tests
+
+**Score: 8.0/10**
+
+**Test Files**: 3 integration test files under `test/integration/`:
+- `tracking_test.go` — 8 tests: experiment lifecycle, run lifecycle, log batch, search, pagination, not-found errors, tag deletion
+- `prompt_registry_test.go` — 10 tests: prompt lifecycle, tags, list/filter, versions, delete, alias round-trip, workspace isolation
+- `artifacts_test.go` — 1 test: full artifact round-trip (upload, list, download)
+
+**Test Quality Signals**:
+- Properly gated with `//go:build integration` build tag
+- **Multi-backend testing**: SQLite (default) and PostgreSQL in separate CI jobs
+- **Midstream workspace isolation**: Dedicated CI job tests Red Hat midstream fork with workspace headers
+- Self-contained: CI targets (`make test/integration-ci`) start MLflow, run tests, clean up — fully automated
+- Unique resource naming with `time.Now().UnixNano()` to prevent conflicts
+- Proper cleanup with `t.Cleanup()` for all created resources
+- Context timeouts on all tests (30s)
+
+**Strong Points**:
+- Tests run against 3 different backends in CI: SQLite, PostgreSQL, midstream with workspaces
+- The `TestWorkspaceIsolation` test validates multi-tenant isolation end-to-end
+- Integration tests are fully automated in CI (no manual setup required)
+
+**Gaps**:
+- No multi-version testing (single Go version, single MLflow version)
+- No E2E tests against a real K8s/OpenShift deployment (expected for a library)
+- Artifact integration tests could cover more scenarios (multi-file, subdirectories, error cases)
+
+### Build Integration
+
+**Score: 2.0/10**
+
+**Context**: As a pure Go SDK library, build integration is inherently limited. There are no Dockerfiles, operators, or manifests to validate.
+
+**What Exists**:
+- `make check` runs `lint + vet + test/unit` — a basic quality gate
+- `go build ./...` runs implicitly through test compilation
+- Protobuf code generation (`make gen`) with `protoc-gen-go`
+
+**What's Missing**:
+- No Dockerfile or Containerfile (acceptable for a pure library)
+- No PR-time Konflux build simulation
+- No operator manifest validation (N/A)
+- No cross-component build validation
+
+**Mitigating Factor**: The library is consumed as a Go module dependency by downstream projects. Build validation happens at the import site, not here. Score reflects the structural absence rather than a quality failure.
+
+### Image Testing
+
+**Score: 1.0/10**
+
+This repository does not produce container images. It is a Go SDK library consumed via `go get`. No Dockerfile, Containerfile, or docker-compose configuration exists. The minimum score reflects that this dimension is not applicable rather than a quality failure.
+
+### Coverage Tracking
+
+**Score: 1.0/10**
+
+**What's Missing**:
+- No `--coverprofile` in any test command (Makefile or CI)
+- No `.codecov.yml` or coverage configuration
+- No coverage threshold enforcement
+- No PR-level coverage reporting
+- No coverage data generated anywhere
+
+This is the most impactful gap for a library with otherwise strong tests. Adding coverage tracking would provide quantitative evidence of test quality and prevent regressions.
+
+### CI/CD Automation
+
+**Score: 6.5/10**
+
+**Workflow Inventory**: Single workflow file `.github/workflows/go.yaml` with 5 jobs:
+
+| Job | Trigger | Description |
 |-----|---------|-------------|
-| `lint` | push/PR to main | golangci-lint, go vet, gofmt check, go mod tidy check |
-| `test-unit` | push/PR to main | `go test -v -race ./...` (all non-integration tests) |
-| `test-integration` | push/PR to main | Starts MLflow (SQLite), runs integration tests, cleans up |
-| `test-integration-postgres` | push/PR to main | Starts PostgreSQL + MLflow, runs integration tests |
-| `test-integration-midstream` | push/PR to main | Tests against opendatahub-io/mlflow fork with workspaces |
+| `lint` | push/PR to main | golangci-lint + go vet + gofmt check + go mod tidy check |
+| `test-unit` | push/PR to main | Unit tests with race detector |
+| `test-integration` | push/PR to main | Integration tests against SQLite |
+| `test-integration-postgres` | push/PR to main | Integration tests against PostgreSQL |
+| `test-integration-midstream` | push/PR to main | Integration tests against midstream fork with workspaces |
 
-**Strengths:**
-- All 5 jobs run on every PR - comprehensive gating
-- Integration tests are self-contained (start/stop MLflow server, clean up test data)
-- Multiple backend testing (SQLite + PostgreSQL) catches storage-specific bugs
-- Midstream testing validates compatibility with Red Hat fork
-- Race detector enabled everywhere
+**Strengths**:
+- 5 parallel jobs covering lint, unit, and 3 integration test variants
+- `go-version-file: 'go.mod'` ensures consistent Go version
+- Good job separation (lint vs test vs integration variants)
+- Both SQLite and PostgreSQL backends tested
 
-**Gaps:**
-- No concurrency control - stale runs waste resources
-- No Go module caching (`actions/cache` or `actions/setup-go` cache)
-- No coverage collection or upload
-- No security scanning job
-- No dependency update automation
-- Jobs run sequentially rather than using `needs:` dependency graph (though this is implicit since they're independent)
+**Gaps**:
+- **No concurrency control**: Duplicate workflows run on rapid push+PR events
+- **No timeout-minutes**: Jobs can hang indefinitely
+- **No explicit caching**: `actions/setup-go@v5` has built-in caching, but the workflow doesn't explicitly verify or configure it
+- **No test result artifacts**: No JUnit XML upload for test result visualization
+- **No scheduled/periodic runs**: Only PR and push triggers
+- **No matrix strategy**: Single Go version tested
 
-### Test Coverage
+### Static Analysis
 
-**Unit Tests (7 files, 149 unit test functions, 3,871 lines):**
+**Score: 6.0/10**
 
-| File | Tests | Lines | Key Patterns |
-|------|-------|-------|-------------|
-| `mlflow/tracking/client_test.go` | 41 | 1,175 | httptest server mocks, table-driven, error case coverage |
-| `mlflow/promptregistry/client_test.go` | 35 | 1,275 | httptest mocks, CRUD lifecycle, permission testing |
-| `internal/transport/http_test.go` | 15 | 495 | Context cancellation, timeout, logging, auth headers |
-| `internal/errors/api_test.go` | 8 | 295 | Error type assertions, sentinel checks |
-| `mlflow/promptregistry/prompt_test.go` | 11 | 223 | Clone deep-copy, chaining API, nil safety |
-| `mlflow/client_test.go` | 12 | 209 | URI parsing, env var handling, insecure mode |
-| `mlflow/promptregistry/format_test.go` | 11 | 199 | Template substitution, chat/text format, variable handling |
+**Linting Configuration** (`.golangci.yml`):
+- golangci-lint v2 (version 2.1.6)
+- **7 extra linters enabled**: gocritic, gosec, misspell, prealloc, revive, unconvert, unparam
+- `errcheck` with `check-type-assertions: true` and `check-blank: true`
+- `govet` with `enable-all: true`
+- Generated code excluded (`internal/gen/`)
+- Test-specific exclusions for errcheck, gocritic, gosec
+- Formatters: gofmt + goimports
 
-**Integration Tests (2 files, 20 test functions, 1,361 lines):**
+**FIPS Compatibility**:
+- `math/rand/v2` imported only in `sample-app/main.go` (demo code, not SDK library)
+- No crypto imports in the SDK library itself — the library uses `net/http` only, no direct cryptographic operations
+- No FIPS build tags (`-tags=fips`, `GOEXPERIMENT=boringcrypto`) — not currently configured
+- No UBI-based Dockerfile (N/A, no container images built)
 
-| File | Tests | Lines | Scope |
-|------|-------|-------|-------|
-| `test/integration/prompt_registry_test.go` | 12 | 754 | Full prompt lifecycle, CRUD, aliases, tags, workspace isolation |
-| `test/integration/tracking_test.go` | 8 | 607 | Experiment/run lifecycle, log batch, search, pagination |
+**Dependency Alerts**:
+- **No `.github/dependabot.yml`** — missing
+- **No Renovate configuration** — missing
+- Single dependency (`google.golang.org/protobuf`) makes this low-risk but still a gap
 
-**Test-to-Code Ratio:**
-- Source code (excl. generated): 3,442 lines
-- Test code: 5,232 lines
-- **Ratio: 1.52x** (excellent - more test code than source code)
+**Pre-commit Hooks**:
+- **No `.pre-commit-config.yaml`** — missing
+- CI enforces formatting and tidiness, but local development has no pre-commit guard
 
-**Testing Patterns:**
-- Table-driven tests with `t.Run()` subtests
-- `httptest.NewServer` for HTTP mocking (no external mock libraries)
-- `//go:build integration` build tags for test isolation
-- Context with timeout for integration tests
-- Cleanup via `t.Cleanup()` for resource teardown
-- Environment variable handling via `t.Setenv()`
+### Agent Rules
 
-**Missing:**
-- No coverage file generation (`-coverprofile`)
-- No benchmark tests
-- No fuzz tests
-- No example tests (`ExampleXxx`)
+**Score: 0.0/10**
 
-### Code Quality
+**What's Missing**:
+- No `CLAUDE.md` or `AGENTS.md` in repository root
+- No `.claude/` directory
+- No `.claude/rules/` with test creation guidelines
+- No `.claude/skills/` with custom skills
 
-**Linting: `.golangci.yml` (v2)**
-- **7 extra linters enabled:** gocritic, gosec, misspell, prealloc, revive, unconvert, unparam
-- **errcheck** with type-assertions and blank checking
-- **govet** with all analyzers enabled (except fieldalignment)
-- **Formatters:** gofmt + goimports
-- Generated code excluded via `internal/gen/` path filter
-- Test-relaxed rules: errcheck, gocritic, gosec excluded for `_test.go` files
+**Impact**: AI agents working on this codebase lack context on:
+- Table-driven test patterns used throughout the project
+- `httptest.NewServer` mocking conventions
+- Build tag gating for integration tests (`//go:build integration`)
+- Resource cleanup patterns (`t.Cleanup()`)
+- Error testing conventions (type assertions, `errors.As`, `errors.Is` patterns)
 
-**Makefile (comprehensive):**
-- `make check` = lint + vet + unit tests (full local validation)
-- `make fmt` / `make tidy` for formatting and module hygiene
-- Lazy tool installation (golangci-lint, protoc-gen-go, uv)
-
-**Missing:**
-- No `.pre-commit-config.yaml`
-- No CodeQL or Semgrep
-- No secret detection (gitleaks, trufflehog)
-- No Dependabot/Renovate
-
-### Container Images
-
-**Status: Not Applicable (Pure Library)**
-
-This repository is a Go SDK/library. It has:
-- No Dockerfile or Containerfile
-- No container build automation
-- No image registry publishing
-- No multi-architecture build support
-
-This is **appropriate** for a pure library. The gap would become critical if the project adds a CLI tool, sidecar container, or gRPC bridge service.
-
-### Security
-
-**Current State:**
-- `gosec` runs via golangci-lint but excludes `G104` (unhandled error returns)
-- `.env.local` is gitignored (credentials not committed)
-- `.env.local.example` uses placeholder values
-- No dedicated security scanning in CI
-- No dependency vulnerability scanning
-- No secret detection
-- No SBOM generation
-
-**Positive:**
-- Transport layer logs never include auth tokens (tested in `TestClient_LogsNeverIncludeSecrets`)
-- Token masking is explicitly tested
-- TLS verification is enforced by default (InsecureSkipVerify requires explicit opt-in)
-
-### Agent Rules (Agentic Flow Quality)
-
-**Status:** Missing
-
-- **`.claude/` directory:** Does not exist; `.gitignore` excludes it
-- **`CLAUDE.md`:** Does not exist; `.gitignore` excludes it
-- **`AGENTS.md`:** Does not exist
-- **`.claude/rules/`:** Does not exist
-- **Agent test guidance:** None
-
-**Impact:** AI code assistants will not know to:
-- Use `httptest.NewServer` for mocking (not external mock libraries)
-- Apply `//go:build integration` tags for integration tests
-- Follow the table-driven test pattern with `t.Run()`
-- Use `t.Cleanup()` for resource teardown
-- Test error sentinels via `errors.Is()`
-
-**Recommendation:** Generate agent rules via `/test-rules-generator` and remove `.claude/` and `CLAUDE.md` from `.gitignore`.
-
-### Documentation
-
-**Architecture Decision Records (9 ADRs):**
-- `0001-authentication-pattern.md`
-- `0002-error-type-design.md`
-- `0003-resilience-strategy.md`
-- `0004-prompt-type-abstraction.md`
-- `0005-flat-package-structure.md`
-- `0006-protobuf-strategy.md`
-- `0007-python-sdk-naming-alignment.md`
-- `0008-oss-only-target-platform.md`
-- `0009-experiment-tracking.md`
-
-This is an unusually strong ADR practice for a project of this size. The ADRs document critical design decisions including authentication, error handling, package structure, and platform targeting.
-
-**README:** 648 lines - comprehensive with usage examples, architecture explanation, and development setup instructions.
-
----
+**Recommendation**: Use `/test-rules-generator` to generate comprehensive test creation rules based on existing test patterns. The project has very consistent and well-structured tests that are ideal for codifying into rules.
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Add coverage generation and Codecov integration** - Add `-coverprofile=coverage.out -covermode=atomic` to CI and upload to Codecov. Set minimum threshold (e.g., 70%) and require PR delta reporting.
-2. **Add govulncheck to CI** - Detect known vulnerabilities in Go module dependencies before merge.
-3. **Add standalone gosec scanning** - Currently runs via golangci-lint with exclusions. Add a dedicated job for full security analysis.
+
+1. **Add coverage generation and Codecov integration** — Add `--coverprofile=coverage.out` to `make test/unit`, add `codecov/codecov-action` to CI, create `.codecov.yml` with 70% project target and 80% patch target. This is the highest-impact improvement for 2-4 hours of work.
+
+2. **Enable Dependabot** — Create `.github/dependabot.yml` covering `gomod` and `github-actions` ecosystems. Single dependency makes this trivial but important for security posture.
 
 ### Priority 1 (High Value)
-4. **Add CI concurrency control and Go module caching** - Cancel stale runs, speed up builds with `actions/setup-go` cache.
-5. **Create `.claude/rules/`** - Generate agent rules from existing test patterns using `/test-rules-generator`. Remove `.claude/` from `.gitignore`.
-6. **Add Dependabot or Renovate** - Automate Go module and GitHub Actions dependency updates.
-7. **Add pre-commit hooks** - Enforce fmt, vet, and lint locally before push.
+
+3. **Add CI concurrency control and timeouts** — Add `concurrency` block to prevent duplicate workflow runs, add `timeout-minutes` to all jobs (10 min for lint/unit, 15 min for integration).
+
+4. **Create agent rules** — Generate `CLAUDE.md` and `.claude/rules/` with test creation guidelines covering table-driven tests, httptest mocking, build tag gating, and cleanup patterns. Use `/test-rules-generator` skill.
+
+5. **Add pre-commit hooks** — Create `.pre-commit-config.yaml` with gofmt, go vet, and go mod tidy checks. The CI already enforces these, but local hooks catch issues earlier.
 
 ### Priority 2 (Nice-to-Have)
-8. **Add benchmark tests** - Benchmark HTTP client round-trip, protobuf serialization, and template substitution.
-9. **Add fuzz testing** - Fuzz `substituteVars()` and error parsing for edge cases.
-10. **Add CodeQL/Semgrep** - Deeper SAST analysis beyond gosec.
-11. **Add gitleaks** - Detect accidental secret commits in CI.
-12. **Prepare container infrastructure** - When deployment targets emerge, have Dockerfile and build pipeline templates ready.
 
----
+6. **Add FIPS build configuration** — Add `-tags=fips` and `GOEXPERIMENT=boringcrypto` CI variants for Red Hat downstream compatibility testing.
+
+7. **Add fuzz tests** — The URI parsing and path traversal validation in `internal/artifact/` are ideal candidates for Go's built-in fuzz testing.
+
+8. **Add Go version matrix** — Test against Go 1.23 and 1.24 to ensure backward compatibility.
+
+9. **Upload test result artifacts** — Add gotestsum or JUnit XML output for better test result visualization in GitHub.
 
 ## Comparison to Gold Standards
 
-| Dimension | mlflow-go | odh-dashboard | notebooks | kserve |
-|-----------|-----------|---------------|-----------|--------|
-| Unit Tests | 8.5 - Excellent ratio, table-driven | 9.0 - Multi-layer, contract | 7.0 - Notebook-focused | 9.0 - Envtest, CRD |
-| Integration/E2E | 8.0 - Live server, multi-backend | 9.0 - Cypress E2E | 8.0 - Image validation | 9.0 - Multi-version |
-| Build Integration | 2.0 - N/A (library) | 7.0 - PR builds | 8.0 - Image builds | 7.0 - Operator builds |
-| Image Testing | 1.0 - N/A (library) | 6.0 - Basic | 9.0 - 5-layer validation | 7.0 - Runtime tests |
-| Coverage Tracking | 2.0 - None | 8.0 - Codecov + thresholds | 5.0 - Basic | 9.0 - Enforcement |
-| CI/CD Automation | 7.5 - Single workflow | 9.0 - Multi-workflow | 8.0 - Multi-arch | 9.0 - Comprehensive |
-| Agent Rules | 1.0 - None | 8.0 - Rules + skills | 3.0 - Basic | 2.0 - None |
-
----
+| Practice | mlflow-go | odh-dashboard | notebooks | kserve |
+|----------|-----------|---------------|-----------|--------|
+| Unit test coverage | Strong (1.43:1 lines ratio) | Comprehensive | Moderate | Strong |
+| Integration tests | 3 backends (SQLite, PostgreSQL, midstream) | Multi-layer | N/A | Multi-version |
+| Coverage enforcement | None | Codecov with thresholds | N/A | Codecov |
+| Linting | golangci-lint v2 (7 extra) | ESLint strict | Varied | golangci-lint |
+| Dependabot | Missing | Configured | Configured | Configured |
+| Pre-commit | Missing | Husky | Varied | pre-commit |
+| Agent rules | Missing | Comprehensive | Partial | Partial |
+| CI concurrency | Missing | Configured | Varied | Configured |
+| Build integration | N/A (library) | Multi-image | 5-layer | Operator testing |
+| FIPS checks | Not configured | N/A | Configured | Partial |
 
 ## File Paths Reference
 
-| Category | Path | Notes |
-|----------|------|-------|
-| CI Workflow | `.github/workflows/go.yaml` | Single workflow, 5 jobs |
-| Lint Config | `.golangci.yml` | v2, 7 extra linters |
-| Go Module | `go.mod` | Go 1.24, protobuf dependency |
-| Makefile | `Makefile` | 20+ targets, comprehensive |
-| Unit Tests | `mlflow/**/*_test.go`, `internal/**/*_test.go` | 7 files, 149 functions |
-| Integration Tests | `test/integration/*_test.go` | 2 files, 20 functions |
-| ADRs | `docs/adr/*.md` | 9 architectural decisions |
-| Sample App | `sample-app/main.go` | Usage examples |
-| Protobuf | `internal/gen/`, `tools/proto/` | Generated types |
-| Scripts | `scripts/seed.sh` | Test data seeding |
-| Env Example | `.env.local.example` | Credential template |
+### CI/CD
+- `.github/workflows/go.yaml` — Single workflow with 5 jobs (lint, test-unit, test-integration, test-integration-postgres, test-integration-midstream)
+
+### Testing
+- `mlflow/client_test.go` — Client initialization tests
+- `mlflow/promptregistry/format_test.go` — Prompt formatting tests
+- `mlflow/promptregistry/prompt_test.go` — Prompt type tests
+- `mlflow/promptregistry/client_test.go` — Prompt registry client tests
+- `mlflow/tracking/client_test.go` — Tracking client tests
+- `mlflow/artifacts/client_test.go` — Artifact client tests
+- `internal/transport/http_test.go` — HTTP transport tests
+- `internal/errors/api_test.go` — Error handling tests
+- `internal/artifact/uri_test.go` — URI resolution tests
+- `internal/artifact/store_test.go` — Artifact store tests
+- `test/integration/tracking_test.go` — Tracking integration tests
+- `test/integration/prompt_registry_test.go` — Prompt registry integration tests
+- `test/integration/artifacts_test.go` — Artifact integration tests
+
+### Code Quality
+- `.golangci.yml` — golangci-lint v2 configuration (7 extra linters)
+- `Makefile` — Build and test targets (test/unit, test/integration, lint, vet, fmt, tidy, check)
+
+### Source Structure
+- `mlflow/` — Public SDK package (client, tracking, promptregistry, artifacts)
+- `internal/` — Internal packages (transport, errors, conv, artifact)
+- `sample-app/` — Demo application
+- `docs/adr/` — Architecture decision records (10 ADRs)

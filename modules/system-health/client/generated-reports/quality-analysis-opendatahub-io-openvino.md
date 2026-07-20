@@ -1,151 +1,135 @@
 ---
 repository: "opendatahub-io/openvino"
-overall_score: 7.6
+overall_score: 6.9
 scorecard:
   - dimension: "Unit Tests"
-    score: 8.5
-    status: "Extensive C++ (gtest) and Python (pytest) unit test suites with 1,345+ test files"
+    score: 8.0
+    status: "1,837 test files (723 C++, 1,114 Python) using Google Test and pytest with 0.29 test-to-code ratio"
   - dimension: "Integration/E2E"
     score: 8.0
-    status: "Multi-framework layer tests (PyTorch, TensorFlow, ONNX, JAX), model hub tests, and e2e pipeline"
+    status: "Comprehensive E2E, layer, model hub, stress, fuzz, and memory testing across all frontends"
   - dimension: "Build Integration"
     score: 7.0
-    status: "Smart CI with component-aware builds on PRs; multi-platform Docker builds; no Konflux simulation"
+    status: "Docker-based CI builds with Smart CI skip detection; cross-platform PR validation; no Konflux simulation"
   - dimension: "Image Testing"
-    score: 6.0
-    status: "Extensive Dockerfiles for build/test but no runtime image validation or startup testing"
+    score: 5.0
+    status: "19 CI Dockerfiles but no multi-stage builds, no HEALTHCHECK, no runtime validation of images"
   - dimension: "Coverage Tracking"
-    score: 4.5
-    status: "Coverage workflow exists with Codecov but is workflow_dispatch only — no PR enforcement or thresholds"
+    score: 5.0
+    status: "lcov + codecov workflow exists but manual-trigger only; no PR coverage gating or thresholds"
   - dimension: "CI/CD Automation"
     score: 9.0
-    status: "56 workflows, Smart CI component filtering, concurrency control, multi-OS/arch matrix, OpenTelemetry metrics"
+    status: "56 workflows, 30 PR-triggered, merge queue support, Smart CI, sccache, concurrency control"
+  - dimension: "Static Analysis"
+    score: 7.0
+    status: "clang-format, ShellCheck, flake8/mypy, naming convention check, Dependabot; no pre-commit hooks or FIPS config"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory — zero AI-assisted test guidance"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory — no AI-assisted development guidance"
 critical_gaps:
-  - title: "Coverage tracking is manual-only (workflow_dispatch)"
-    impact: "No automated coverage feedback on PRs; regressions in test coverage go undetected"
+  - title: "Coverage workflow is manual-trigger only — no PR-level enforcement"
+    impact: "Coverage regressions can be merged without detection; no automated feedback loop for developers"
     severity: "HIGH"
+    effort: "4-8 hours"
+  - title: "No AI agent rules or test automation guidance"
+    impact: "AI-generated code lacks project-specific testing patterns, leading to inconsistent test quality"
+    severity: "MEDIUM"
     effort: "4-6 hours"
-  - title: "No container image vulnerability scanning"
-    impact: "Base image CVEs and dependency vulnerabilities not detected in CI pipeline"
+  - title: "No FIPS build configuration or UBI base images"
+    impact: "Not FIPS-ready for Red Hat downstream distribution; Dockerfiles use ubuntu base images only"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No SBOM generation or image signing"
-    impact: "Supply chain transparency missing; no attestation for built artifacts"
-    severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "No CodeQL or SAST integration for source code"
-    impact: "C++/Python security flaws not detected by static analysis in CI"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No agent rules for AI-assisted development"
-    impact: "AI-generated code and tests have no project-specific guidance, leading to inconsistent patterns"
+    effort: "16-24 hours"
+  - title: "CI Dockerfiles lack multi-stage builds and health checks"
+    impact: "Larger image footprint; no runtime validation of CI environment images"
     severity: "MEDIUM"
-    effort: "4-8 hours"
-  - title: "macOS CI runs on schedule only, not PRs"
-    impact: "macOS build/test regressions not caught until after merge"
-    severity: "MEDIUM"
-    effort: "2-4 hours"
+    effort: "8-12 hours"
 quick_wins:
   - title: "Enable coverage workflow on PRs with threshold enforcement"
-    effort: "2-4 hours"
-    impact: "Automated coverage regression detection on every PR"
-  - title: "Add Trivy scanning to Docker image builds"
+    effort: "4-6 hours"
+    impact: "Automatic coverage regression detection on every PR; prevents silent coverage drops"
+  - title: "Add .codecov.yml with coverage thresholds and PR commenting"
     effort: "1-2 hours"
-    impact: "Immediate detection of known CVEs in base images and dependencies"
-  - title: "Add CodeQL analysis workflow"
-    effort: "1-2 hours"
-    impact: "Automated detection of C++ and Python security vulnerabilities"
-  - title: "Create basic CLAUDE.md with testing conventions"
+    impact: "Automated PR-level coverage reports and minimum threshold enforcement"
+  - title: "Create CLAUDE.md with basic project conventions and test patterns"
     effort: "2-3 hours"
-    impact: "Consistent AI-generated tests following project patterns"
+    impact: "Consistent AI-generated test code following project standards (gtest, pytest patterns)"
+  - title: "Add .pre-commit-config.yaml for local developer checks"
+    effort: "2-3 hours"
+    impact: "Catch style issues before push; reduce CI feedback cycles"
 recommendations:
   priority_0:
-    - "Enable code coverage on PR workflows with minimum threshold enforcement via Codecov config"
-    - "Add Trivy container scanning for all Dockerfile builds in CI"
-    - "Add CodeQL or Semgrep SAST workflow triggered on PRs for C++ and Python"
+    - "Enable the coverage workflow on pull_request trigger and add minimum coverage thresholds via .codecov.yml"
+    - "Add FIPS build support: UBI base images for downstream Dockerfiles, boringcrypto build tags if needed"
   priority_1:
-    - "Enable macOS ARM64 CI on pull_request triggers (currently schedule-only)"
-    - "Add SBOM generation (Syft/CycloneDX) to release builds"
-    - "Create .claude/rules/ with test pattern guidelines for C++/Python"
-    - "Add image signing with cosign for release artifacts"
+    - "Create agent rules (.claude/rules/) covering gtest patterns, pytest conventions, and layer test structure"
+    - "Add .pre-commit-config.yaml with clang-format, flake8, mypy, shellcheck, and cspell hooks"
+    - "Add multi-stage Dockerfiles and HEALTHCHECK directives for CI images"
   priority_2:
-    - "Add pre-commit hooks configuration for local developer checks"
-    - "Integrate fuzz testing into periodic CI (currently manual-only)"
-    - "Add performance regression benchmarks to CI pipeline"
+    - "Add .clang-tidy configuration for deeper C++ static analysis beyond formatting"
+    - "Move sanitizer tests from schedule-only to PR-triggered (at least on critical paths)"
+    - "Add Renovate as complementary dependency update tool alongside Dependabot"
 ---
 
 # Quality Analysis: opendatahub-io/openvino
 
 ## Executive Summary
 
-- **Overall Score: 7.6/10**
-- **Repository Type**: Deep learning inference optimization toolkit (C++/Python/JS)
-- **Primary Languages**: C++ (6,607 files), Python (2,831 files), Headers (3,964 files), JS/TS (74 files)
-- **Key Strengths**: Exceptional CI/CD automation with 56 workflows, Smart CI component-aware filtering, multi-platform coverage (Linux, Windows, macOS, Android, RISC-V, WebAssembly), comprehensive test suite across multiple ML frameworks
-- **Critical Gaps**: No PR-time coverage enforcement, no container vulnerability scanning, no SAST/CodeQL, no SBOM/signing, no agent rules
-- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
+- **Overall Score: 6.9/10**
+- **Repository Type**: C++/Python deep learning inference toolkit (midstream fork of openvinotoolkit/openvino)
+- **Primary Languages**: C++ (10,578 files), Python (2,831 files), CMake (330 files)
+- **RHOAI Component**: Model Runtimes (RHOAIENG)
+- **Tier**: Midstream
+
+**Key Strengths**: Exceptional CI/CD automation with 56 workflows, Smart CI skip detection, comprehensive cross-platform testing (Linux x64/ARM/RISC-V, macOS x64/ARM, Windows, Android, WebAssembly), and deep testing at every layer (unit, integration, E2E, fuzz, stress, memory, model hub).
+
+**Critical Gaps**: Coverage workflow is manual-trigger only with no PR enforcement. No FIPS build configuration or UBI base images for Red Hat downstream. No AI agent rules for development guidance. CI Dockerfiles lack multi-stage optimization and health checks.
+
+**Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory.
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 8.5/10 | Extensive C++ (gtest) and Python (pytest) suites with 1,345+ test files |
-| Integration/E2E | 8.0/10 | Multi-framework layer tests, model hub tests, e2e pipeline, conformance tests |
-| **Build Integration** | **7.0/10** | **Smart CI with PR builds across platforms; no Konflux simulation** |
-| Image Testing | 6.0/10 | 20+ Dockerfiles for build/test environments but no runtime validation |
-| Coverage Tracking | 4.5/10 | Codecov integration exists but workflow_dispatch only — no PR enforcement |
-| CI/CD Automation | 9.0/10 | 56 workflows, Smart CI, concurrency control, OpenTelemetry metrics |
-| Agent Rules | 0.0/10 | No agent rules, no CLAUDE.md, no testing guidance for AI |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 8.0/10 | 15% | 1.20 | 1,837 test files using gtest and pytest |
+| Integration/E2E | 8.0/10 | 20% | 1.60 | Comprehensive E2E, layer tests, model hub tests |
+| Build Integration | 7.0/10 | 15% | 1.05 | Cross-platform Docker-based CI; no Konflux simulation |
+| Image Testing | 5.0/10 | 10% | 0.50 | 19 CI Dockerfiles; no multi-stage, HEALTHCHECK, or runtime validation |
+| Coverage Tracking | 5.0/10 | 10% | 0.50 | lcov + codecov exists but manual-trigger only |
+| CI/CD Automation | 9.0/10 | 15% | 1.35 | 56 workflows, Smart CI, merge queue, sccache |
+| Static Analysis | 7.0/10 | 10% | 0.70 | clang-format, ShellCheck, flake8/mypy, Dependabot |
+| Agent Rules | 0.0/10 | 5% | 0.00 | No agent rules or AI development guidance |
+| **Overall** | **6.9/10** | **100%** | **6.90** | |
 
 ## Critical Gaps
 
-### 1. Coverage Tracking is Manual-Only (workflow_dispatch)
-- **Impact**: Coverage data is only generated when manually triggered — no automated feedback on PRs
+### 1. Coverage Workflow Is Manual-Trigger Only
+- **Impact**: Coverage regressions can be merged without detection; no automated feedback for developers on PRs
 - **Severity**: HIGH
+- **Effort**: 4-8 hours
+- **Details**: The `coverage.yml` workflow exists and is well-configured (lcov, codecov action, per-component coverage extraction via `coverage.cmake`), but it only triggers on `workflow_dispatch`. There is no `.codecov.yml` configuration file for threshold enforcement.
+
+### 2. No FIPS Build Configuration or UBI Base Images
+- **Impact**: Not ready for FIPS-compliant Red Hat downstream distribution
+- **Severity**: HIGH
+- **Effort**: 16-24 hours
+- **Details**: All CI Dockerfiles use `FROM ubuntu:*` base images. No `GOEXPERIMENT=boringcrypto`, `-tags=fips`, or UBI-based images. Only one `hashlib.md5` usage found (in `tests/e2e_tests/test_utils/path_utils.py` — acceptable for test hashing). As this is a C++ library, FIPS compliance would primarily involve base image selection and OpenSSL FIPS provider configuration for downstream builds.
+
+### 3. No AI Agent Rules
+- **Impact**: AI-generated code will lack project-specific conventions for test creation, naming, and structure
+- **Severity**: MEDIUM
 - **Effort**: 4-6 hours
-- **Details**: The `coverage.yml` workflow uses `on: workflow_dispatch` only. No `.codecov.yml` configuration file exists to enforce thresholds. Coverage regressions can be merged silently.
-- **Fix**: Change trigger to include `pull_request`, add `.codecov.yml` with project/patch thresholds
+- **Details**: No `CLAUDE.md`, `AGENTS.md`, or `.claude/` directory. Given the complexity of this codebase (C++ with gtest, Python with pytest, layer tests per frontend), agent rules would significantly improve AI-assisted development consistency.
 
-### 2. No Container Image Vulnerability Scanning
-- **Impact**: 20+ Dockerfiles used for build/test environments have no vulnerability scanning
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: Despite having extensive Docker infrastructure (15 build images, 6 test images), no Trivy, Snyk, or Grype scanning is configured. Base images (Ubuntu 20.04, 22.04, 24.04) may contain known CVEs.
-- **Fix**: Add Trivy scan step to Docker image build workflows
-
-### 3. No SBOM Generation or Image Signing
-- **Impact**: No supply chain transparency for built artifacts; cannot verify artifact provenance
-- **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Details**: No Syft/CycloneDX for SBOM, no cosign/sigstore for signing. For a security-sensitive inference toolkit, this is a significant gap.
-
-### 4. No CodeQL or SAST Integration
-- **Impact**: C++ memory safety issues, Python injection flaws, and other security vulnerabilities not detected automatically
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: Coverity runs on schedule (daily) and is workflow_dispatch. No CodeQL, gosec, or Semgrep for PR-time static analysis. The `workflows_scans.yml` only scans GitHub Actions workflow files with Semgrep, not source code.
-
-### 5. No Agent Rules for AI-Assisted Development
-- **Impact**: AI-generated code follows no project-specific conventions; test generation is inconsistent
+### 4. CI Dockerfiles Lack Optimization
+- **Impact**: Larger image sizes and no runtime validation of CI environment images
 - **Severity**: MEDIUM
-- **Effort**: 4-8 hours
-- **Details**: No `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`. For a large codebase with multiple languages and testing frameworks, agent rules would significantly improve AI-assisted contributions.
-
-### 6. macOS CI on Schedule Only
-- **Impact**: macOS ARM64 and x86 regressions not caught until nightly/scheduled runs
-- **Severity**: MEDIUM
-- **Effort**: 2-4 hours
-- **Details**: `mac_arm64.yml` and `mac.yml` run on `schedule` and `workflow_dispatch` only. PR triggers are commented out.
+- **Effort**: 8-12 hours
+- **Details**: 19 Dockerfiles in `.github/dockerfiles/` use single-stage builds with no `HEALTHCHECK` directives. No multi-stage builds to separate build dependencies from runtime environments.
 
 ## Quick Wins
 
-### 1. Enable Coverage on PRs with Thresholds (2-4 hours)
-Add `.codecov.yml` and modify the coverage workflow trigger:
+### 1. Add `.codecov.yml` with Coverage Thresholds (1-2 hours)
 ```yaml
-# .codecov.yml
 coverage:
   status:
     project:
@@ -155,236 +139,355 @@ coverage:
     patch:
       default:
         target: 80%
+  precision: 2
+comment:
+  layout: "reach, diff, flags, files"
+  behavior: default
 ```
 
-### 2. Add Trivy Scanning to Docker Builds (1-2 hours)
-Add to Docker image build steps:
+### 2. Enable Coverage Workflow on PRs (2-3 hours)
+Update `.github/workflows/coverage.yml` to trigger on `pull_request` in addition to `workflow_dispatch`. Consider running a lighter coverage pass on PRs (core components only) to manage CI time.
+
+### 3. Create Basic CLAUDE.md (2-3 hours)
+Add a `CLAUDE.md` covering:
+- Build system (CMake) conventions
+- C++ test patterns (Google Test, naming: `*_test.cpp`)
+- Python test patterns (pytest, conftest.py structure)
+- Layer test organization per frontend
+- Test binary naming conventions
+
+### 4. Add `.pre-commit-config.yaml` (2-3 hours)
 ```yaml
-- name: Run Trivy vulnerability scanner
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: '${{ steps.build.outputs.image }}'
-    format: 'sarif'
-    output: 'trivy-results.sarif'
-    severity: 'CRITICAL,HIGH'
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v15.0.7
+    hooks:
+      - id: clang-format
+        args: [--style=file]
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        args: [--config=src/bindings/python/setup.cfg]
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.9.0
+    hooks:
+      - id: shellcheck
 ```
-
-### 3. Add CodeQL Analysis (1-2 hours)
-Create `.github/workflows/codeql.yml`:
-```yaml
-name: CodeQL
-on: [pull_request]
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        language: ['cpp', 'python', 'javascript']
-    steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: ${{ matrix.language }}
-      - uses: github/codeql-action/autobuild@v3
-      - uses: github/codeql-action/analyze@v3
-```
-
-### 4. Create Basic Agent Rules (2-3 hours)
-Create `CLAUDE.md` with testing conventions for C++ (gtest patterns), Python (pytest patterns), and JS (mocha/jest patterns).
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Strengths (Score: 9.0/10)**:
-- **56 total workflows** covering an impressive range of platforms and configurations
-- **Smart CI system**: Custom `smart-ci` action analyzes changed components and skips irrelevant tests, dramatically reducing CI time
-- **Concurrency control**: All workflows use `concurrency.cancel-in-progress: true` to avoid duplicate runs
-- **Multi-platform matrix**: Linux (Ubuntu 20/22/24), Windows (VS 2019), macOS (x86/ARM64), Android (ARM64/x64), RISC-V, WebAssembly, Debian ARM
-- **Reusable workflows**: 15+ `job_*.yml` callable workflows promote consistency
-- **PR triggers**: Core workflows (ubuntu_24, ubuntu_22_dpcpp, windows, android, fedora, webassembly) trigger on `pull_request`
-- **OpenTelemetry integration**: `send_workflows_to_opentelemetry.yml` exports CI metrics for observability
-- **Cache management**: Dedicated `cleanup_caches.yml` workflow for cache lifecycle
+**Score: 8.0/10**
 
-**Gaps**:
-- macOS workflows run on schedule only (PR triggers commented out)
-- Coverage workflow is manual-only
-- Coverity is daily/manual — no PR-time SAST
-- No Konflux or downstream build simulation
+The repository has excellent unit test coverage with a well-organized test structure:
 
-### Test Coverage
+- **C++ Unit Tests (723 files)**: Using Google Test (gtest/gmock) framework
+  - Core tests: `src/core/tests/` — aligned_buffer, any, bfloat16, dimension, element_type, etc.
+  - Plugin tests: `src/plugins/*/tests/` — auto, auto_batch, hetero, intel_cpu, intel_gpu, intel_npu, proxy, template
+  - Frontend tests: `src/frontends/*/tests/` — IR, ONNX, Paddle, TensorFlow, TF Lite
+  - Infrastructure tests: `src/inference/tests/`, `src/common/*/tests/`
+  - Dedicated reusable workflow: `job_cxx_unit_tests.yml` with configurable runners and timeouts
 
-**Strengths (Score: 8.5/10 unit, 8.0/10 integration)**:
+- **Python Unit Tests (1,114 files)**: Using pytest framework
+  - Binding tests: `src/bindings/python/tests/` — test_graph, test_runtime, test_transformations
+  - Configuration: `pytest.ini` files in multiple test directories, `conftest.py` fixtures
+  - Type checking: `setup.cfg` with mypy configuration for Python API
 
-**Unit Tests**:
-- **C++ unit tests**: 588 `*_test.cpp` files using Google Test framework (1,263 files reference gtest)
-- **Python unit tests**: 757 `test_*.py` files using pytest (855 files reference pytest)
-- **JS unit tests**: 10+ `.test.js` files for Node.js bindings
-- **Test-to-code ratio**: Excellent — 3,219 C++ test files vs 3,383 source files (0.95:1)
+- **Test-to-Code Ratio**: 0.29 (1,897 test files / 6,477 source files) — solid for a C++ codebase of this size
 
-**Integration/E2E Tests**:
-- **Layer tests**: Dedicated suites for PyTorch, TensorFlow, ONNX, JAX framework integration
-- **Model hub tests**: Tests against real models from popular model hubs
-- **E2E tests**: Full pipeline tests in `tests/e2e_tests/`
-- **Conformance tests**: Standard compliance testing
-- **Sample tests**: Validation of code samples
-- **ONNX Runtime integration**: Cross-project compatibility tests
+- **Test Isolation**: Test binaries are named descriptively (e.g., `ov_core_unit_tests`, `ov_proxy_plugin_tests`, `ov_ir_frontend_tests`) and run independently in CI
 
-**Specialized Tests**:
-- **Fuzz testing**: LibFuzzer-based fuzz tests in `tests/fuzz/` (manual build required)
-- **Stress tests**: Memory stress testing in `tests/stress_tests/`
-- **Memory tests**: Leak and usage testing in `tests/memory_tests/`
-- **Time tests**: Performance benchmarks in `tests/time_tests/`
-- **Sanitizer tests**: AddressSanitizer, ThreadSanitizer builds (schedule-only)
-- **GPU tests**: Dedicated GPU functional testing workflow
-- **Conditional compilation tests**: Selective build testing
+**Gaps**: No visible use of test isolation patterns like test parallelization within test suites.
 
-### Code Quality
+### Integration/E2E Tests
 
-**Strengths**:
-- **clang-format**: Enforced on PRs via `code_style.yml` with reviewdog auto-suggestions
-- **ShellCheck**: Shell script linting on PRs with reviewdog
-- **Naming convention check**: Custom clang-based naming style enforcement
-- **Python linting**: flake8 + mypy + black on Python bindings and samples
-- **ESLint**: Configured for JS bindings and samples
-- **Dependency review**: GitHub dependency review on PRs with license allowlist and vulnerability checks
-- **Commit checks**: PR commit validation via custom script
-- **File size monitoring**: Tracks file sizes in repo
-- **Spell checking**: cspell.json configured
+**Score: 8.0/10**
 
-**Gaps**:
-- No `.pre-commit-config.yaml` for local developer hooks
-- No ruff or modern Python linting
-- Python checks trigger on push, not pull_request (partial gap)
-- No `.golangci.yml` (not a Go project, so N/A)
+Comprehensive multi-layer integration and E2E testing:
 
-### Container Images
+- **E2E Tests** (`tests/e2e_tests/`): Full pipeline testing with configurable test rules (`base_test_rules.yml`, `reshape_test_rules.yml`), test pipelines, and environment configuration
 
-**Strengths (Score: 6.0/10)**:
-- **Extensive Docker infrastructure**: 15 build images + 6 test images covering multiple OS/arch combinations
-- **Multi-architecture**: x64, ARM64, RISC-V, Android, WebAssembly
-- **Organized hierarchy**: Separate `ov_build/` and `ov_test/` image directories
-- **Docker-in-Docker**: Dedicated image for Docker build testing (`ubuntu_22_04_x64_docker`)
-- **Custom Docker handling action**: `handle_docker` action manages image builds
+- **Layer Tests** (`tests/layer_tests/`): Validates each frontend independently:
+  - JAX tests, ONNX tests, PyTorch tests
+  - TensorFlow tests, TensorFlow 2 Keras tests, TensorFlow Lite tests
+  - Python API tests, frontend tests
+  - Dedicated CI workflows: `job_pytorch_layer_tests.yml`, `job_tensorflow_layer_tests.yml`, `job_jax_models_tests.yml`
 
-**Gaps**:
-- No Trivy/Snyk/Grype vulnerability scanning on any images
-- No SBOM generation
-- No image signing/attestation
-- No runtime validation (image startup, health checks)
-- Images are CI infrastructure, not product deliverables — but still need scanning
+- **Model Hub Tests** (`tests/model_hub_tests/`): Tests against real-world models:
+  - PyTorch model hub, TensorFlow model hub, JAX model hub
+  - Performance tests and transformation tests
+  - Dedicated workflows: `job_pytorch_models_tests.yml`, `job_tensorflow_models_tests.yml`, `job_onnx_models_tests.yml`
 
-### Security
+- **Specialized Testing**:
+  - Fuzz testing: `tests/fuzz/` with fuzzer infrastructure
+  - Stress tests: `tests/stress_tests/` (memcheck, memleaks)
+  - Memory tests: `tests/memory_tests/`
+  - Time tests: `tests/time_tests/` (performance regression)
+  - Sample tests: `tests/samples_tests/` (smoke tests for sample applications)
+  - Sanitizer tests: ASAN, TSAN, LSAN, MSAN via `linux_sanitizers.yml`
+  - Conditional compilation tests: `tests/conditional_compilation/`
+  - App verifier tests: `tests/appverifier_tests/`
 
-**Strengths**:
-- **Coverity**: Static analysis via Coverity Scan (daily schedule + manual dispatch)
-- **Dependency review**: License and vulnerability checks on PRs
-- **Semgrep for workflows**: GitHub Actions workflow scanning with Semgrep
-- **OpenSSF badge**: Best practices badge displayed
-- **SECURITY.md**: Vulnerability disclosure process documented
-- **Pinned actions**: All GitHub Actions use SHA-pinned versions (e.g., `actions/checkout@11bd71901...`)
-- **Permissions**: All workflows use `permissions: read-all` (principle of least privilege)
+- **Multi-Version Testing**: Cross-platform and cross-version CI matrix:
+  - Ubuntu 20.04, 22.04, 24.04
+  - Fedora 29, Debian 10 ARM
+  - macOS (x64, ARM64), Windows (VS2019 Debug/Release)
+  - Android (ARM64, x64), WebAssembly, RISC-V
+
+### Build Integration
+
+**Score: 7.0/10**
+
+Strong build validation with sophisticated CI infrastructure:
+
+- **PR Build Validation**: 30 workflows trigger on `pull_request` covering cmake builds across all platforms
+- **Smart CI**: Custom `.github/actions/smart-ci/` action that detects affected components and skips irrelevant workflows based on changed files and PR labels
+- **Build Infrastructure**: Dedicated build images in `.github/dockerfiles/ov_build/` with sccache/ccache for build caching
+- **Cross-Platform Builds**: Linux (x64, ARM64, RISC-V), macOS (x64, ARM64), Windows (VS2019), Android (ARM64, x64), WebAssembly
+- **Reusable Workflows**: `job_build_linux.yml` and `job_build_windows.yml` used as callable workflows
+- **Merge Queue Support**: 25 workflows support `merge_group` trigger
+- **Build Features**: Configurable cmake options for different build modes (contrib, JS, Debian packages, RPMs)
 
 **Gaps**:
-- **No CodeQL**: No source-code SAST for C++/Python/JS
-- **No Trivy/container scanning**: Despite 20+ Dockerfiles
-- **No secret detection**: No gitleaks or TruffleHog integration
-- **No SBOM/signing**: No supply chain security tooling
-- **Coverity is not PR-gated**: Runs daily, so issues found post-merge
-- **Sanitizers are schedule-only**: ASAN/TSAN don't run on PRs
+- No Konflux build simulation (this is an upstream C++ library, Konflux is more relevant for downstream container builds)
+- No operator manifest or Kustomize validation (not applicable — this is a library)
 
-### Agent Rules (Agentic Flow Quality)
+### Image Testing
+
+**Score: 5.0/10**
+
+The repository uses Docker extensively for CI but doesn't treat images as production artifacts:
+
+- **19 Dockerfiles** in `.github/dockerfiles/`:
+  - Build images: `ov_build/` (ubuntu 20/22/24 x64, ARM, RISC-V, Android, WebAssembly, NVIDIA, DPCPP)
+  - Test images: `ov_test/` (ubuntu 20/22/24 x64, ARM64, Fedora 33, Debian 10 ARM)
+
+- **Base Images**: All use `FROM ubuntu:*` or `FROM fedora:*` — no UBI base images
+- **`.dockerignore`**: Minimal — only passes `install_build_dependencies.sh` and one script
+
+**Gaps**:
+- No multi-stage builds in any Dockerfile
+- No `HEALTHCHECK` directives
+- No Testcontainers or runtime image validation
+- No multi-architecture Docker image builds (cross-compilation exists but not Docker buildx/manifest)
+- Images are CI infrastructure, not product images — lower priority
+
+### Coverage Tracking
+
+**Score: 5.0/10**
+
+Coverage infrastructure exists but is not integrated into the PR workflow:
+
+- **Coverage Workflow** (`coverage.yml`): Well-structured with lcov + codecov/codecov-action
+  - Builds with `-DENABLE_COVERAGE=ON`
+  - Runs core unit tests, proxy plugin tests, hetero tests, frontend tests
+  - Generates lcov report and uploads to Codecov
+
+- **CMake Coverage** (`cmake/coverage.cmake`): Sophisticated per-component coverage extraction:
+  - Overall OpenVINO coverage
+  - Per-component: core, inference, transformations, low_precision_transformations, preprocessing, snippets, frontend_common
+  - Per-plugin: auto, auto_batch, hetero, intel_cpu, intel_gpu, template
+  - Per-frontend: IR, JAX, ONNX, Paddle, PyTorch, TensorFlow
+
+**Gaps**:
+- **Manual trigger only**: `on: workflow_dispatch` — not run on PRs
+- **No `.codecov.yml`**: No threshold configuration, no PR comment integration
+- **No coverage gating**: No minimum coverage enforcement
+- **No patch coverage**: No requirement for new code to be tested
+- **Python coverage**: No pytest-cov integration visible
+
+### CI/CD Automation
+
+**Score: 9.0/10**
+
+Exceptional CI/CD infrastructure — one of the strongest dimensions:
+
+- **56 GitHub Actions Workflows**: Comprehensive automation covering every aspect
+- **30 PR-triggered workflows**: Extensive pre-merge validation
+- **25 merge_group workflows**: Full merge queue support
+- **10 scheduled workflows**: Sanitizers (daily), main builds (Wed/Sat), stale PR cleanup
+
+**Best Practices**:
+- **Concurrency Control**: 29/56 workflows use `concurrency:` with cancel-in-progress
+- **Build Caching**: sccache/ccache used in 10+ workflows; 9 use `actions/cache`
+- **Timeouts**: 33/56 workflows have `timeout-minutes` configured
+- **Matrix Strategies**: 8 workflows use cross-platform/version matrices
+- **Smart CI**: Custom component-based skip detection to avoid unnecessary builds
+- **Reusable Workflows**: Modular job_*.yml workflows called from platform-specific workflows
+- **Dependency Review**: `dependency_review.yml` on PRs and merge_group
+- **Workflow Observability**: `send_workflows_to_opentelemetry.yml` for CI telemetry
+
+**Additional CI Features**:
+- PR commit checks, file size checks, labeler, stale PR management
+- Code snippets validation, documentation builds
+- Coverity static analysis (scheduled)
+- Workflow rerunner for flaky test mitigation
+
+### Static Analysis
+
+**Score: 7.0/10**
+
+#### Linting
+- **C++ Formatting**: clang-format-15 with reviewdog PR suggestions (`code_style.yml`)
+  - `.clang-format` files in `src/` and `docs/`
+  - CMake target `clang_format_fix_all` for automated formatting
+- **Shell Scripts**: ShellCheck with reviewdog PR review (`code_style.yml`)
+- **Naming Conventions**: Custom NCC tool using Clang-14 for C++ naming style checks (`code_style.yml`)
+- **Python**:
+  - flake8 for code style (Python API, samples, wheel, tests)
+  - mypy for type checking (Python API)
+  - black for auto-formatting (line length 160, skip string normalization)
+  - Configuration in `src/bindings/python/setup.cfg`
+- **Spell Checking**: `cspell.json` present for typo detection
+
+#### FIPS Compatibility
+- **Source Code**: One `hashlib.md5` usage in `tests/e2e_tests/test_utils/path_utils.py` (test utility, acceptable)
+- **Build Configuration**: No FIPS build tags, no `GOEXPERIMENT=boringcrypto` (N/A for C++)
+- **Base Images**: All CI Dockerfiles use `FROM ubuntu:*` — no UBI base images for FIPS-capable builds
+- **Assessment**: Not FIPS-configured. For Red Hat downstream, UBI base images and OpenSSL FIPS provider configuration would be needed
+
+#### Dependency Alerts
+- **Dependabot**: Comprehensive `.github/dependabot.yml` covering:
+  - 5 pip ecosystems (Python API, tests, tools, 2 sample directories)
+  - github-actions ecosystem
+  - Daily schedule with specific assignees per ecosystem
+  - `increase-if-necessary` versioning strategy
+- **Renovate**: Not configured
+- **Auto-merge**: Not configured
+
+**Gaps**:
+- No `.pre-commit-config.yaml` for local developer enforcement
+- No `.clang-tidy` for deeper C++ static analysis
+- No Renovate as complementary dependency management
+- Sanitizer testing is schedule-only, not PR-triggered
+
+### Agent Rules
+
+**Score: 0.0/10**
 
 - **Status**: Missing
-- **Coverage**: No test types have rules
-- **Quality**: N/A
-- **Gaps**: No CLAUDE.md, no AGENTS.md, no `.claude/` directory. For a large multi-language codebase with complex testing patterns (gtest, pytest, mocha, layer tests, conformance tests), agent rules would provide significant value.
-- **Recommendation**: Generate rules with `/test-rules-generator` covering:
-  - C++ unit tests (gtest patterns, fixture usage, parameterized tests)
-  - Python unit tests (pytest fixtures, conftest patterns, parametrize)
-  - JS unit tests (mocha/jest patterns for Node.js bindings)
-  - Layer tests (framework-specific test patterns)
-  - E2E tests (pipeline validation patterns)
+- **CLAUDE.md**: Not present
+- **AGENTS.md**: Not present
+- **`.claude/` directory**: Not present
+- **`.claude/rules/`**: Not present
+- **Test creation rules**: Not present
+
+**Coverage**: No test types have agent rules.
+
+**Quality**: N/A — no rules exist to evaluate.
+
+**Gaps**: Complete absence of AI-assisted development guidance. Given the codebase complexity (C++/Python, gtest/pytest, multiple frontends, layer test patterns), agent rules would be highly valuable.
+
+**Recommendation**: Generate test creation rules with `/test-rules-generator` covering:
+- C++ unit tests with Google Test (naming, fixtures, assertions)
+- Python unit tests with pytest (conftest.py patterns, markers, fixtures)
+- Layer tests per frontend (test structure, model loading patterns)
+- Test file organization conventions
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Enable code coverage on PR workflows** — Change `coverage.yml` trigger from `workflow_dispatch` to include `pull_request`. Add `.codecov.yml` with project/patch thresholds. This is the single highest-impact change.
+1. **Enable coverage workflow on PRs and add thresholds**
+   - Change `coverage.yml` trigger from `workflow_dispatch` to include `pull_request`
+   - Add `.codecov.yml` with project/patch targets and PR commenting
+   - Consider a lighter "fast coverage" job for PRs that covers core components only
 
-2. **Add container vulnerability scanning** — Add Trivy scanning to Docker image builds. Even though these are CI images, they run untrusted PR code.
-
-3. **Add CodeQL SAST** — Create a CodeQL workflow for C++, Python, and JavaScript. This catches memory safety issues, injection flaws, and other vulnerabilities on every PR.
+2. **Add FIPS build support for Red Hat downstream**
+   - Create UBI-based Dockerfiles for downstream builds
+   - Configure OpenSSL FIPS provider in downstream container images
+   - Audit `hashlib.md5` usage in tests for FIPS compatibility
 
 ### Priority 1 (High Value)
 
-4. **Enable macOS CI on PRs** — Uncomment the `pull_request` trigger in `mac_arm64.yml` and `mac.yml`. macOS regressions currently go undetected until nightly runs.
+3. **Create agent rules for AI-assisted development**
+   - Add `CLAUDE.md` documenting build system, test patterns, and conventions
+   - Create `.claude/rules/unit-tests.md` for gtest and pytest patterns
+   - Create `.claude/rules/layer-tests.md` for frontend-specific test organization
 
-5. **Add SBOM generation** — Use Syft or CycloneDX to generate SBOMs for release builds. Important for supply chain compliance.
+4. **Add `.pre-commit-config.yaml`**
+   - Include clang-format, flake8, mypy, shellcheck, cspell hooks
+   - Ensure consistency between pre-commit and CI checks
 
-6. **Create agent rules** — Add `CLAUDE.md` and `.claude/rules/` with testing conventions for all languages and test types in the project.
-
-7. **Add secret detection** — Integrate gitleaks or TruffleHog in PR workflow to prevent accidental credential exposure.
+5. **Optimize CI Dockerfiles**
+   - Add multi-stage builds to separate build dependencies from runtime
+   - Add `HEALTHCHECK` directives where applicable
+   - Consider UBI base images for downstream-compatible builds
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add pre-commit hooks** — Create `.pre-commit-config.yaml` with clang-format, shellcheck, flake8, mypy checks for local development.
+6. **Add `.clang-tidy` configuration**
+   - Enable deeper C++ static analysis beyond formatting
+   - Configure relevant checks for performance, modernization, and correctness
 
-9. **Integrate fuzz testing into CI** — Add periodic fuzz testing runs. Currently fuzz tests exist but require manual building.
+7. **PR-triggered sanitizer testing for critical paths**
+   - Move sanitizer tests from schedule-only to PR-triggered for core component changes
+   - Use Smart CI to run sanitizers only when relevant code changes
 
-10. **Enable sanitizers on PRs** — Move ASAN/TSAN from schedule-only to Smart CI-filtered PR runs for changed components.
-
-11. **Add performance regression tracking** — Time tests exist but no CI integration for tracking regressions over time.
+8. **Add Renovate for complementary dependency management**
+   - Provides auto-merge capabilities for patch/minor updates
+   - Better monorepo support than Dependabot
 
 ## Comparison to Gold Standards
 
 | Dimension | openvino | odh-dashboard | notebooks | kserve |
-|-----------|----------|---------------|-----------|--------|
-| Unit Tests | 8.5 (gtest+pytest) | 9.0 (Jest+RTL) | 7.0 | 8.5 (Go) |
-| Integration/E2E | 8.0 (multi-framework) | 9.0 (Cypress) | 8.0 (5-layer) | 9.0 |
-| Build Integration | 7.0 (Smart CI) | 7.0 | 6.0 | 7.0 |
-| Image Testing | 6.0 (no scanning) | 7.0 | 9.0 | 7.0 |
-| Coverage Tracking | 4.5 (manual only) | 9.0 (enforced) | 6.0 | 8.5 |
-| CI/CD Automation | 9.0 (56 workflows) | 8.5 | 8.0 | 8.5 |
-| Agent Rules | 0.0 | 8.0 | 2.0 | 2.0 |
+|-----------|---------|---------------|-----------|--------|
+| Unit Tests | 8/10 | 9/10 | 6/10 | 8/10 |
+| Integration/E2E | 8/10 | 9/10 | 7/10 | 9/10 |
+| Build Integration | 7/10 | 8/10 | 8/10 | 7/10 |
+| Image Testing | 5/10 | 7/10 | 9/10 | 6/10 |
+| Coverage Tracking | 5/10 | 8/10 | 5/10 | 8/10 |
+| CI/CD Automation | 9/10 | 9/10 | 8/10 | 8/10 |
+| Static Analysis | 7/10 | 8/10 | 6/10 | 7/10 |
+| Agent Rules | 0/10 | 8/10 | 2/10 | 3/10 |
+| **Overall** | **6.9** | **8.5** | **6.6** | **7.3** |
 
-**Notable**: OpenVINO has the most extensive CI/CD automation of any compared repository (56 workflows), but falls behind on coverage enforcement and security scanning — areas where odh-dashboard and kserve excel.
+**Key Differences from Gold Standards**:
+- **vs odh-dashboard**: Missing coverage enforcement, agent rules, and pre-commit hooks. Superior in CI/CD scope and cross-platform testing.
+- **vs notebooks**: Superior in unit testing and CI/CD automation. Behind in image testing (notebooks has 5-layer validation).
+- **vs kserve**: Comparable in unit tests and static analysis. Behind in coverage enforcement and E2E test organization.
 
 ## File Paths Reference
 
 ### CI/CD
 - `.github/workflows/` — 56 workflow files
-- `.github/actions/smart-ci/` — Component-aware CI filtering
+- `.github/actions/smart-ci/` — Smart CI skip detection
 - `.github/actions/handle_docker/` — Docker image management
-- `.github/dockerfiles/ov_build/` — 15 build environment Dockerfiles
-- `.github/dockerfiles/ov_test/` — 6 test environment Dockerfiles
-- `Jenkinsfile` — Jenkins pipeline (legacy/parallel)
+- `.github/dockerfiles/` — 19 Dockerfiles for build/test images
+- `Jenkinsfile` — Jenkins pipeline definition
 
 ### Testing
-- `tests/` — Top-level test directory
-- `tests/e2e_tests/` — End-to-end pipeline tests
-- `tests/layer_tests/` — ML framework layer tests
-- `tests/model_hub_tests/` — Model hub integration tests
-- `tests/fuzz/` — LibFuzzer fuzz tests
-- `tests/stress_tests/` — Stress testing
-- `tests/memory_tests/` — Memory leak/usage tests
-- `tests/time_tests/` — Performance benchmarks
-- `tests/sanitizers/` — Sanitizer configurations
 - `src/core/tests/` — Core C++ unit tests
-- `src/inference/tests/` — Inference engine tests
-- `src/frontends/tests/` — Frontend (ONNX/TF/Paddle) tests
-- `src/bindings/js/node/tests/` — JavaScript binding tests
+- `src/plugins/*/tests/` — Plugin-specific tests
+- `src/frontends/*/tests/` — Frontend-specific tests
+- `src/bindings/python/tests/` — Python binding tests
+- `tests/e2e_tests/` — End-to-end tests
+- `tests/layer_tests/` — Frontend layer tests
+- `tests/model_hub_tests/` — Real model validation
+- `tests/fuzz/` — Fuzz testing
+- `tests/stress_tests/` — Stress and memory leak tests
+- `tests/memory_tests/` — Memory usage tests
+- `tests/time_tests/` — Performance regression tests
+- `tests/samples_tests/` — Sample application smoke tests
+- `tests/sanitizers/` — Sanitizer configurations
 
-### Code Quality
-- `.github/workflows/code_style.yml` — clang-format + ShellCheck
-- `.github/workflows/py_checks.yml` — Python flake8/mypy/black
-- `src/bindings/js/.eslintrc.js` — ESLint for JS bindings
-- `tools/mo/.coveragerc` — Python coverage config
-- `cspell.json` — Spell checker config
-- `.github/dependency_review.yml` — Dependency license/vulnerability policy
+### Static Analysis / Code Quality
+- `src/.clang-format` — C++ formatting config
+- `src/bindings/python/setup.cfg` — Python flake8/mypy config
+- `cspell.json` — Spell checking config
+- `.github/dependabot.yml` — Dependency update configuration
+- `cmake/coverage.cmake` — Coverage tracking infrastructure
 
-### Security
-- `.github/workflows/coverity.yml` — Coverity static analysis
-- `.github/workflows/workflows_scans.yml` — Semgrep for GHA workflows
-- `.github/workflows/dependency_review.yml` — Dependency review
-- `SECURITY.md` — Vulnerability disclosure policy
+### Build
+- `CMakeLists.txt` — Root CMake build config
+- `cmake/` — CMake modules (features, dependencies, coverage, test_model_zoo)
+- `install_build_dependencies.sh` — System dependency installer
+- `.dockerignore` — Docker build context filter

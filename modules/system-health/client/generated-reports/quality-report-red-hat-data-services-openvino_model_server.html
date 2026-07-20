@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 05:20 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 07:18 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/openvino_model_server</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="147.026412"
+                                stroke-dashoffset="203.57503199999996"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.4</div>
+                        <div class="score-value">6.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Extensive C++ unit tests (149 files, 100K+ LOC) with Google Test, coverage thresholds enforced (76% line, 83% function)</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">130+ gtest C++ test files with solid test-to-code ratio and Bazel integration</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Comprehensive functional tests, Python client tests, performance tests (latency + throughput), file integrity checks via CI</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Python functional tests via pytest/Docker, but limited scenario breadth</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Dual CI pipelines (Prow + Konflux), image-based integration testing triggered on PR build completion, but no PR-time image build in GitHub Actions</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Konflux Dockerfile and Jenkins PR builds with multi-stage Docker pipeline</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Multi-stage Dockerfiles (UBI9 + Ubuntu), runtime validation via file integrity and functional tests against built image, but no container scanning in CI</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Multi-stage UBI9 Dockerfiles but no runtime validation or health checks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Bazel coverage with lcov, enforced thresholds (76% lines / 83% functions), genhtml reports, but no codecov/coveralls PR integration</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Bazel coverage with lcov and threshold enforcement, but no PR-level reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">3 GitHub Actions workflows (fast-checks, integration, Konflux integration), but limited to style checks on PRs; heavy testing requires external Prow/Konflux builds</div>
+                            <div class="scorecard-status">Jenkins CI with parallel stages, smart diff detection, and SDL checks</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">cpplint, clang-format, hadolint, bandit — but no Dependabot or pre-commit hooks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory — zero AI agent guidance</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Copilot instructions present; no CLAUDE.md or .claude/ rules</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +416,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No container image vulnerability scanning in CI</div>
-                            <p>CVEs in base images or dependencies not detected until downstream scanning</p>
+                            <div class="item-description">No PR-level coverage reporting</div>
+                            <p>Coverage regressions can slip through unnoticed; reviewers lack visibility into coverage delta on each PR</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No SAST/CodeQL integration for C++ codebase</div>
-                            <p>Memory safety and security bugs in 78K+ lines of C++ not caught by static analysis in CI</p>
+                            <div class="item-description">No container runtime validation or HEALTHCHECK</div>
+                            <p>Image startup and runtime failures not caught until deployment; no readiness signal for orchestrators</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No dependency alert configuration (Dependabot/Renovate)</div>
+                            <p>Vulnerable or outdated dependencies remain undetected without manual review</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No PR-time codecov/coveralls integration</div>
-                            <p>Coverage regressions not visible on PR reviews; coverage only checked during Docker build with CHECK_COVERAGE=1</p>
+                            <div class="item-description">Limited functional test scenario coverage</div>
+                            <p>Only 4 functional test modules cover a complex model serving platform; edge cases and failure modes may be untested</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">3-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Integration tests are event-triggered, not PR-triggered</div>
-                            <p>Integration tests only run after external Prow/Konflux builds complete; latency between code push and test feedback is high</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card low">
-                            <div class="item-description">No agent rules for AI-assisted development</div>
-                            <p>AI agents cannot leverage project-specific test patterns, coding standards, or build conventions</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">20-40 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,32 +461,32 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to fast-checks workflow</div>
-                            <p>Detect known CVEs in Dockerfiles and dependencies on every PR</p>
+                            <div class="item-description">Add .github/dependabot.yml for pip and Docker ecosystems</div>
+                            <p>Automated dependency vulnerability alerts and update PRs</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL analysis workflow for C++</div>
-                            <p>Catch memory safety, injection, and other security bugs automatically</p>
+                            <div class="item-description">Add HEALTHCHECK to Dockerfile.redhat and Dockerfile.konflux</div>
+                            <p>Container orchestrators can detect unhealthy server instances automatically</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create CLAUDE.md with test creation rules from copilot-instructions.md</div>
+                            <p>AI-assisted development follows consistent patterns for test creation</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create basic CLAUDE.md with build/test instructions</div>
-                            <p>Enable AI agents to understand repo structure, build system (Bazel), and test patterns</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add codecov integration to coverage workflow</div>
-                            <p>PR-level coverage diff reporting and enforcement</p>
+                            <div class="item-description">Add .pre-commit-config.yaml for cpplint and clang-format</div>
+                            <p>Catch style issues before commit, reducing CI feedback cycles</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -509,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add container vulnerability scanning (Trivy) to PR workflow to catch CVEs before merge</li><li>Add CodeQL or Semgrep SAST analysis for the C++ codebase</li></ul>
+                            <ul><li>Integrate codecov or similar tool for PR-level coverage reporting and delta tracking</li><li>Add Dependabot configuration covering pip, Docker, and Bazel ecosystems</li><li>Add HEALTHCHECK directive to production Dockerfiles</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Integrate codecov for PR-level coverage reporting and diff coverage enforcement</li><li>Add secret detection (Gitleaks) to prevent credential leaks</li><li>Create comprehensive CLAUDE.md and .claude/rules/ for AI-assisted development</li></ul>
+                            <ul><li>Expand functional test suite to cover more model serving scenarios (gRPC/REST, LLM serving, mediapipe, embeddings)</li><li>Create CLAUDE.md and .claude/rules/ for test automation guidance</li><li>Add .pre-commit-config.yaml to enforce style checks locally</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add multi-architecture image builds (ARM64) for broader platform support</li><li>Add Dockerfile best-practice linting (hadolint) to PR checks (currently only in sdl-check)</li><li>Consider adding fuzz testing for gRPC/REST request parsing</li></ul>
+                            <ul><li>Add multi-architecture build support (ARM64) for broader deployment targets</li><li>Consider migrating Jenkins CI to GitHub Actions for better PR integration and community visibility</li><li>Add container image startup validation tests using testcontainers or equivalent</li></ul>
                         </div>
                     </div>
                 </div>

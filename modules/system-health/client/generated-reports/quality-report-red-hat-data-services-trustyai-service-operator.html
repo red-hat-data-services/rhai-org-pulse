@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 05:39 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 06:49 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/trustyai-service-operator</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="135.71668799999998"
+                                stroke-dashoffset="141.37154999999998"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.6</div>
+                        <div class="score-value">7.5</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Excellent test-to-code ratio (~1:1) with Ginkgo+envtest across all 6 controllers</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Excellent test-to-code ratio (1.1:1 by lines) with Ginkgo/Gomega + envtest across all 6 controllers</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Kind-based smoke tests on PRs with CRD deployment, plus operator-chaos upgrade validation</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Kind-based smoke tests on PRs with operator deployment validation; no multi-version matrix testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">PR builds Docker image and deploys to Kind, but no Konflux simulation or multi-mode build testing</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">PR-time Docker build + Kind deployment + smoke tests + OPA manifest policy checks + operator-chaos CRD diff</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">6 Dockerfiles with multi-stage builds and Konflux variants, but no runtime validation or startup testing</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Multi-stage UBI builds with FIPS config; smoke test validates image startup but no container runtime tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">cover.out generated locally but no Codecov/Coveralls integration or PR enforcement</div>
+                            <div class="scorecard-status">Coverage profile generated locally (cover.out) but no codecov/coveralls integration or PR reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">8 well-organized workflows with tiered naming, security scanning, policy checks, and chaos testing</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">9 well-tiered workflows (Tier 1/2) with good PR coverage; missing concurrency controls, caching, and timeouts</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">YAML lint, OPA policy checks with tests, Dependabot for gomod; no golangci-lint or pre-commit hooks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Comprehensive CLAUDE.md with architecture, build, test, and deployment docs; no .claude/rules/ directory</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Comprehensive CLAUDE.md with architecture, build/test/deploy instructions, and code generation guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +416,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No coverage tracking or enforcement</div>
-                            <p>Coverage regressions go unnoticed; no PR gating on coverage thresholds</p>
+                            <div class="item-description">No coverage tracking or PR reporting</div>
+                            <p>Coverage regressions go undetected; no visibility into which code paths lack tests</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container image runtime validation</div>
-                            <p>Image startup failures and runtime issues not caught until deployment to staging/production</p>
+                            <div class="item-description">No golangci-lint configuration</div>
+                            <p>Missing static analysis catches (unused code, error handling, complexity) that go vet alone misses</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No multi-version Kubernetes testing</div>
+                            <p>Operator may break on older or newer K8s versions; smoke test uses only v1.24.17</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No PR-time Konflux build simulation</div>
-                            <p>Konflux-specific build failures (FIPS mode, pinned digests) discovered only post-merge</p>
+                            <div class="item-description">No concurrency controls or timeouts in CI workflows</div>
+                            <p>Concurrent PR pushes can waste CI resources; hung jobs are not terminated</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Missing Go linter configuration</div>
-                            <p>Only go fmt and go vet run; no golangci-lint with extended checks (errcheck, staticcheck, etc.)</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +461,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Codecov integration to controller-tests workflow</div>
-                            <p>PR coverage reporting and threshold enforcement; immediate visibility into coverage trends</p>
+                            <div class="item-description">Add codecov integration with coverage thresholds</div>
+                            <p>Immediate visibility into coverage trends and PR-level coverage reporting</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add golangci-lint with curated linter set</div>
+                            <p>Catch unused code, error handling issues, complexity violations, and style inconsistencies</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add golangci-lint configuration</div>
-                            <p>Catch common Go bugs (unchecked errors, shadowed variables, inefficient code) at PR time</p>
+                            <div class="item-description">Add concurrency controls and timeout-minutes to all workflows</div>
+                            <p>Prevent duplicate CI runs on rapid pushes and terminate hung jobs</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add container startup validation to smoke test</div>
-                            <p>Verify all 6 Dockerfile images can start and respond to health checks</p>
+                            <div class="item-description">Add pre-commit hooks for fmt, vet, and yaml lint</div>
+                            <p>Catch formatting and lint issues before push, reducing CI failures</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create .claude/rules/ for test patterns</div>
-                            <p>Standardize AI-generated tests to match existing Ginkgo+envtest patterns</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add Codecov/Coveralls integration with coverage threshold enforcement (e.g., 60% minimum)</li><li>Add golangci-lint with a comprehensive linter set to CI pipeline</li></ul>
+                            <ul><li>Integrate codecov with .codecov.yml and coverage thresholds (e.g., 70% project, 5% patch delta)</li><li>Add golangci-lint configuration (.golangci.yaml) with error-check, unused, govet, staticcheck, gosimple</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add container runtime validation — test that all 6 images start and respond to health/ready probes</li><li>Add PR-time Konflux build simulation for the operator and driver images</li><li>Create .claude/rules/ directory with Ginkgo+envtest test creation patterns</li></ul>
+                            <ul><li>Add multi-version K8s matrix to smoke tests (v1.27, v1.28, v1.29, v1.30)</li><li>Add concurrency groups and timeout-minutes to all workflows</li><li>Create .claude/rules/ with test creation patterns for Ginkgo/envtest</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add pre-commit hooks for go fmt, go vet, and YAML lint</li><li>Add multi-architecture build validation (arm64) to PR workflow</li><li>Add SBOM generation and image signing for release images</li></ul>
+                            <ul><li>Add pre-commit hooks (.pre-commit-config.yaml) for go fmt, go vet, yaml lint</li><li>Add Dependabot coverage for github-actions ecosystem</li><li>Add container runtime validation tests (health check, readiness probe verification)</li></ul>
                         </div>
                     </div>
                 </div>

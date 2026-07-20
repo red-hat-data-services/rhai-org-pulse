@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 05:43 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 08:11 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/workload-variant-autoscaler</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#ffc107"
+                                stroke="#28a745"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="130.06182599999997"
+                                stroke-dashoffset="101.78751600000001"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.7</div>
+                        <div class="score-value">8.2</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Excellent test-to-code ratio (1.55:1 LOC), Ginkgo/Gomega + testify, envtest for controller tests</div>
+                            <div class="scorecard-status">130 unit test files, 48K test LOC vs 32K source LOC (1.51x), Ginkgo/Gomega + testify + envtest</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Outstanding E2E on Kind (emulated GPU) + OpenShift (real GPU), smoke/full/multi-controller suites</div>
+                            <div class="scorecard-status">12 E2E test files with Kind cluster, smoke + full split, OpenShift E2E, fixture builders</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">PR checks build binary + Docker image + kustomize overlays; Konflux pipeline for production</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">PR-time Docker build, kustomize overlay validation, Tekton/Konflux multi-arch pipelines</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Trivy on main/release, multi-arch (amd64+arm64), distroless + UBI9; no PR-time scan or SBOM</div>
+                            <div class="scorecard-status">Multi-stage builds, SHA-pinned bases, hadolint, probes defined; no explicit container runtime tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Generates cover.out but no codecov/coveralls integration, no PR reporting, no enforcement</div>
+                            <div class="scorecard-status">coverprofile generated but no codecov, no thresholds, no PR reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">17+ workflows, concurrency control, doc-only skip, /ok-to-test for forks, Dependabot</div>
+                            <div class="scorecard-status">18+ workflows, concurrency control, code-change detection, timeout enforcement, Tekton pipelines</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">golangci-lint with 22+ linters, pre-commit hooks, Dependabot + Renovate, FIPS-compliant Konflux build</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">CLAUDE.md + AGENTS.md, 4 custom agents, pr-review skill, GitHub agentic workflows</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Comprehensive AGENTS.md, 4 custom agent reviewers, PR review skill with confidence scoring</div>
                         </div>
                     </div>
                 </div>
@@ -412,34 +417,18 @@
                         
                         <li class="item-card high">
                             <div class="item-description">No coverage tracking or enforcement</div>
-                            <p>Cannot detect test coverage regressions on PRs; coverage quality is invisible</p>
+                            <p>Coverage regressions go undetected; no visibility into test health per PR</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No PR-time container vulnerability scanning</div>
-                            <p>New dependency vulnerabilities only caught after merge to main</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No SAST/CodeQL integration</div>
-                            <p>Static security analysis gaps — no automated detection of injection, race conditions, or unsafe patterns</p>
+                            <div class="item-description">No container runtime validation outside E2E</div>
+                            <p>Image startup or dependency issues only caught during full E2E runs, not fast-feedback build stage</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No secret detection (Gitleaks/TruffleHog)</div>
-                            <p>Accidental secret commits not caught by CI</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +445,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Codecov integration with PR coverage reporting</div>
-                            <p>Instant visibility into coverage changes on every PR; can enforce minimum thresholds</p>
+                            <div class="item-description">Add codecov integration with PR reporting</div>
+                            <p>Immediate coverage visibility on every PR; coverage gates prevent regressions</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to ci-pr-checks workflow</div>
-                            <p>Catch container vulnerabilities before merge, not after</p>
+                            <div class="item-description">Add test creation agent rules to .claude/rules/</div>
+                            <p>AI-generated tests follow project conventions (Ginkgo suites, envtest patterns, fixture builders)</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL workflow for Go SAST</div>
-                            <p>Automated detection of security issues via GitHub&#x27;s free CodeQL scanning</p>
+                            <div class="item-description">Add container startup smoke test in CI</div>
+                            <p>Catch image startup failures in seconds rather than waiting for full E2E</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Gitleaks pre-commit hook and CI check</div>
-                            <p>Prevent accidental secret leaks in commits</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +482,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add Codecov integration: upload cover.out from ci-pr-checks, configure .codecov.yml with thresholds</li><li>Add Trivy scanning to PR workflow (reuse existing .github/actions/trivy-scan composite action)</li></ul>
+                            <ul><li>Integrate codecov with coverage thresholds (e.g., 70% minimum) and PR delta reporting</li><li>Upload cover.out from `make test` to codecov in ci-pr-checks workflow</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Enable CodeQL analysis for Go code via .github/workflows/codeql.yml</li><li>Add Gitleaks secret detection to pre-commit hooks and CI</li><li>Add SBOM generation (Syft/Trivy) to release pipeline</li><li>Create .claude/rules/ directory with test pattern rules for unit, integration, and E2E tests</li></ul>
+                            <ul><li>Add a lightweight container runtime test (docker run --entrypoint /manager --help) in PR workflow</li><li>Create .claude/rules/ with test creation patterns for unit tests (Ginkgo suites, envtest setup, fixture builders)</li><li>Add multi-version Kubernetes testing via matrix strategy in E2E workflows</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add image signing/attestation (cosign) to release pipeline</li><li>Add benchmark regression tracking to nightly CI</li><li>Consider contract testing between WVA controller and GAIE/KEDA APIs</li></ul>
+                            <ul><li>Increase t.Parallel() usage across unit tests (currently only 4 calls) for faster test runs</li><li>Add benchmark regression testing in CI (compare against baseline metrics)</li></ul>
                         </div>
                     </div>
                 </div>

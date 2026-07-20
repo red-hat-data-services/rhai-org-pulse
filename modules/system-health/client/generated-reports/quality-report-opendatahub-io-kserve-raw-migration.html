@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:00 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 06:07 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/kserve-raw-migration</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="486.31813199999993"
+                                stroke-dashoffset="537.2118899999999"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">1.4</div>
+                        <div class="score-value">0.5</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No tests of any kind exist in the repository</div>
+                            <div class="scorecard-status">No test files of any kind exist in the repository</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E tests; script requires live OpenShift cluster to validate</div>
+                            <div class="scorecard-status">No integration or E2E test suites present</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CI/CD workflows, no build validation, no PR checks</div>
+                            <div class="scorecard-status">No CI/CD workflows, no Makefile, no build automation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No container images built or tested; repository is a bash script tool</div>
+                            <div class="scorecard-status">No container images (Dockerfile/Containerfile) in the repository</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tooling of any kind</div>
+                            <div class="scorecard-status">No coverage configuration or tooling</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No .github/workflows/, Makefile, Jenkinsfile, or any CI/CD configuration</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No workflows exist; OWNERS file provides basic review governance</div>
+                            <div class="scorecard-status">No linting, no FIPS checks, no dependency alerts; script has basic validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No .claude directory, no CLAUDE.md, no agent rules</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +416,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Zero CI/CD pipeline</div>
-                            <p>No automated checks on PRs — broken scripts can be merged without any validation</p>
+                            <div class="item-description">No CI/CD automation at all</div>
+                            <p>Changes to the conversion script are merged without any automated validation, risking regressions and broken behavior</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No tests at all</div>
-                            <p>Bash script has ~1060 lines of complex logic with no test coverage; regressions go undetected</p>
+                            <div class="item-description">No tests for a 1000+ line Bash script</div>
+                            <p>No confidence that the script handles edge cases correctly; errors found only by users in production</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No linting or static analysis</div>
-                            <p>Shell script bugs (quoting issues, unset variables, command injection) are not caught</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No security scanning</div>
-                            <p>Script handles RBAC, secrets, and service account tokens with no security review automation</p>
+                            <div class="item-description">No static analysis or linting</div>
+                            <p>Shell script bugs (quoting, globbing, unset variables) go undetected until runtime failures</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No agent rules or test automation guidance</div>
-                            <p>AI-assisted contributions have no guardrails or standards to follow</p>
+                            <div class="item-description">No PR review automation</div>
+                            <p>No automated checks on PRs; all quality depends on manual human review</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -465,7 +462,15 @@
                         
                         <li class="item-card ">
                             <div class="item-description">Add ShellCheck linting via GitHub Actions</div>
-                            <p>Catches common bash pitfalls (unquoted variables, missing error handling, syntax issues)</p>
+                            <p>Catches common Bash bugs (quoting issues, unused variables, unreachable code) on every PR</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add a basic GitHub Actions CI workflow</div>
+                            <p>Establishes PR-triggered validation pipeline foundation</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
@@ -473,26 +478,18 @@
                         </li>
                         <li class="item-card ">
                             <div class="item-description">Add BATS (Bash Automated Testing System) unit tests</div>
-                            <p>Test argument parsing, helper functions, and transformation logic in isolation</p>
+                            <p>Validates argument parsing, error handling, and transformation logic without a live cluster</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add basic PR workflow with ShellCheck + BATS</div>
-                            <p>Prevents broken scripts from being merged; establishes quality baseline</p>
+                            <div class="item-description">Create CLAUDE.md with contribution and testing guidance</div>
+                            <p>Guides AI agents and contributors on how to safely modify the script</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add pre-commit hooks for shell formatting</div>
-                            <p>Consistent script formatting with shfmt; catches issues before commit</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Create GitHub Actions CI workflow with ShellCheck static analysis on every PR</li><li>Add BATS unit tests for argument parsing, helper functions, and YAML transformations</li><li>Add shellcheck directives or fix all existing warnings in convert.sh</li></ul>
+                            <ul><li>Add a GitHub Actions workflow with ShellCheck linting on every PR</li><li>Create unit tests using BATS for argument parsing, validation, and YAML transformation logic</li><li>Add integration tests that mock oc/yq/jq commands to validate the full conversion flow</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add integration tests using mock oc/yq/jq commands for end-to-end workflow validation</li><li>Add Gitleaks or TruffleHog secret scanning to prevent accidental credential commits</li><li>Create CLAUDE.md with testing standards and contribution guidelines</li></ul>
+                            <ul><li>Add Dependabot configuration for GitHub Actions version pinning</li><li>Create CLAUDE.md with testing patterns and contribution guidelines</li><li>Add pre-commit hooks with ShellCheck and shell formatting (shfmt)</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add BATS integration tests with stubbed OpenShift API responses</li><li>Add script versioning and release workflow</li><li>Create agent rules for test creation patterns (.claude/rules/)</li></ul>
+                            <ul><li>Add E2E tests against a Kind/Minikube cluster with KServe installed</li><li>Add Containerfile for a portable execution environment</li><li>Add coverage tracking for shell scripts using kcov or bashcov</li></ul>
                         </div>
                     </div>
                 </div>
