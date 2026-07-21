@@ -461,6 +461,56 @@ describe('draft-plans routes', () => {
     })
   })
 
+  describe('GET /access', () => {
+    it('returns canViewDraftPlans for any authenticated user', async () => {
+      const { router } = await setupRouter()
+      const res = await callRoute(router, 'get', '/access', {
+        userEmail: 'alice@redhat.com'
+      })
+      expect(res._status).toBe(200)
+      expect(res._json.canViewDraftPlans).toBe(true) // DEMO_MODE in beforeEach
+      expect(res._json.session).toBeTruthy()
+    })
+
+    it('reports false for non-viewers when DEMO_MODE is off', async () => {
+      process.env.DEMO_MODE = 'false'
+      const { router } = await setupRouter()
+      const denied = await callRoute(router, 'get', '/access', {
+        userEmail: 'alice@redhat.com'
+      })
+      expect(denied._json.canViewDraftPlans).toBe(false)
+
+      const allowed = await callRoute(router, 'get', '/access', {
+        userEmail: 'emarion@redhat.com'
+      })
+      expect(allowed._json.canViewDraftPlans).toBe(true)
+    })
+  })
+
+  describe('viewer allowlist gate', () => {
+    it('returns 403 on draft-plans routes for non-viewers outside DEMO_MODE', async () => {
+      process.env.DEMO_MODE = 'false'
+      const { router } = await setupRouter()
+      const res = await callRoute(router, 'get', '/cycles', {
+        query: { product: 'RHOAI' },
+        userEmail: 'alice@redhat.com'
+      })
+      expect(res._status).toBe(403)
+      expect(res._json.error).toMatch(/not enabled/i)
+    })
+
+    it('allows allowlisted viewer outside DEMO_MODE', async () => {
+      process.env.DEMO_MODE = 'false'
+      const { router } = await setupRouter()
+      const res = await callRoute(router, 'get', '/cycles', {
+        query: { product: 'RHOAI' },
+        userEmail: 'emarion@redhat.com'
+      })
+      expect(res._status).toBe(200)
+      expect(res._json.defaultVersion).toBe('3.6')
+    })
+  })
+
   describe('GET /cycles', () => {
     it('returns demo 3.6 cycle and both products', async () => {
       const { router } = await setupRouter()
@@ -598,6 +648,11 @@ describe('draft-plans routes', () => {
       process.env.DEMO_MODE = 'false'
       process.env.VITE_DEMO_MODE = 'false'
       const { router, storage } = await setupRouter({
+        // Allow this non-admin user through the preview viewer gate so the
+        // test exercises row-level ACL (assignee/PM), not the UI allowlist.
+        [`${DATA_PREFIX}/config.json`]: {
+          draftPlansViewerEmails: ['abellusci@redhat.com']
+        },
         [`${DATA_PREFIX}/drafts/RHOAI/3.6.json`]: {
           version: '3.6',
           candidates: [
@@ -621,6 +676,7 @@ describe('draft-plans routes', () => {
         }
       })
       expect(foreign._status).toBe(403)
+      expect(foreign._json.error).toMatch(/assignee or PM/i)
 
       const own = await callRoute(router, 'put', '/editor/:version', {
         params: { version: '3.6' },

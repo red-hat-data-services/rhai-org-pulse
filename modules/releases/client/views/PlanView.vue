@@ -18,7 +18,7 @@
     <div class="p-6">
       <DashboardView v-if="activeTab === 'outcomes'" />
       <FeatureReadinessView v-else-if="activeTab === 'feature-readiness'" />
-      <DraftPlansView v-else-if="activeTab === 'draft-plans'" />
+      <DraftPlansView v-else-if="activeTab === 'draft-plans' && canViewDraftPlans" />
       <BuFeedbackView v-else-if="activeTab === 'bu-feedback'" />
       <PmHubView v-else-if="activeTab === 'pm-hub'" />
     </div>
@@ -26,14 +26,15 @@
 </template>
 
 <script setup>
-import { ref, inject, watch } from 'vue'
+import { ref, computed, inject, watch, onMounted } from 'vue'
+import { apiRequest } from '@shared/client/services/api'
 import DashboardView from '../plan/views/DashboardView.vue'
 import FeatureReadinessView from '../plan/views/FeatureReadinessView.vue'
 import DraftPlansView from '../plan/views/DraftPlansView.vue'
 import BuFeedbackView from '../plan/views/BuFeedbackView.vue'
 import PmHubView from '../plan/views/PmHubView.vue'
 
-const tabs = [
+var ALL_TABS = [
   { id: 'outcomes', label: 'Big Rocks' },
   { id: 'pm-hub', label: 'PM Hub' },
   { id: 'feature-readiness', label: 'Features List (1-n)' },
@@ -41,17 +42,40 @@ const tabs = [
   { id: 'bu-feedback', label: 'Field and BU Feedback' },
 ]
 
+var canViewDraftPlans = ref(false)
+
+var tabs = computed(function() {
+  return ALL_TABS.filter(function(tab) {
+    if (tab.id === 'draft-plans') return canViewDraftPlans.value
+    return true
+  })
+})
+
 var moduleNav = inject('moduleNav', null)
-var validTabIds = tabs.map(function(t) { return t.id })
+
+function validTabIds() {
+  return tabs.value.map(function(t) { return t.id })
+}
 
 function getTabFromParams() {
   var params = moduleNav && moduleNav.params ? moduleNav.params.value : {}
   var tab = params.tab
-  if (tab && validTabIds.indexOf(tab) !== -1) return tab
+  var ids = validTabIds()
+  if (tab && ids.indexOf(tab) !== -1) return tab
   return 'outcomes'
 }
 
-const activeTab = ref(getTabFromParams())
+const activeTab = ref('outcomes')
+
+function syncActiveTab() {
+  var tab = getTabFromParams()
+  // Deep-link to draft-plans while gated → fall back until access resolves or deny.
+  if (tab === 'draft-plans' && !canViewDraftPlans.value) {
+    activeTab.value = 'outcomes'
+    return
+  }
+  activeTab.value = tab
+}
 
 watch(activeTab, function(tab) {
   if (moduleNav && moduleNav.updateParams) {
@@ -62,7 +86,25 @@ watch(activeTab, function(tab) {
 if (moduleNav && moduleNav.params) {
   watch(moduleNav.params, function() {
     var tab = getTabFromParams()
+    if (tab === 'draft-plans' && !canViewDraftPlans.value) {
+      if (activeTab.value !== 'outcomes') activeTab.value = 'outcomes'
+      return
+    }
     if (tab !== activeTab.value) activeTab.value = tab
   })
 }
+
+watch(canViewDraftPlans, function() {
+  syncActiveTab()
+})
+
+onMounted(async function() {
+  try {
+    var res = await apiRequest('/modules/releases/draft-plans/access')
+    canViewDraftPlans.value = !!(res && res.canViewDraftPlans)
+  } catch {
+    canViewDraftPlans.value = false
+  }
+  syncActiveTab()
+})
 </script>

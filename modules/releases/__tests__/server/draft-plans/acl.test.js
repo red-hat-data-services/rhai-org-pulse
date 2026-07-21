@@ -107,6 +107,48 @@ describe('draft-plans acl', function() {
     expect(tiffany.isPlanAdmin).toBe(true)
   })
 
+  it('gates Draft Plans view to viewer allowlist (default: emarion only)', async function() {
+    var emarion = await resolveDraftPlanSession(
+      { userEmail: 'emarion@redhat.com' },
+      makeStorage()
+    )
+    expect(emarion.canViewDraftPlans).toBe(true)
+
+    var tiffany = await resolveDraftPlanSession(
+      { userEmail: 'trozell@redhat.com' },
+      makeStorage()
+    )
+    expect(tiffany.isPlanAdmin).toBe(true)
+    expect(tiffany.canViewDraftPlans).toBe(false)
+
+    var alice = await resolveDraftPlanSession(
+      { userEmail: 'alice@redhat.com' },
+      makeStorage()
+    )
+    expect(alice.canViewDraftPlans).toBe(false)
+  })
+
+  it('honors draftPlansViewerEmails config override', async function() {
+    var storage = makeStorage({
+      'releases/draft-plans/config.json': {
+        draftPlansViewerEmails: ['trozell@redhat.com', 'alice@redhat.com']
+      }
+    })
+    var tiffany = await resolveDraftPlanSession({ userEmail: 'trozell@redhat.com' }, storage)
+    expect(tiffany.canViewDraftPlans).toBe(true)
+    var emarion = await resolveDraftPlanSession({ userEmail: 'emarion@redhat.com' }, storage)
+    expect(emarion.canViewDraftPlans).toBe(false)
+  })
+
+  it('opens Draft Plans view to everyone in DEMO_MODE', async function() {
+    process.env.DEMO_MODE = 'true'
+    var alice = await resolveDraftPlanSession(
+      { userEmail: 'alice@redhat.com' },
+      makeStorage()
+    )
+    expect(alice.canViewDraftPlans).toBe(true)
+  })
+
   it('allows impersonation only in DEMO_MODE', async function() {
     process.env.DEMO_MODE = 'true'
     var session = await resolveDraftPlanSession(

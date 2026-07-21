@@ -1,9 +1,13 @@
 /**
- * Draft Plans plan-admin allowlist (freeze / Final GA / reset).
+ * Draft Plans plan-admin allowlist (freeze / Final GA / reset)
+ * and UI/API viewer allowlist (who can see Draft Plans at all).
  * Keep emails + fallback display names in sync with product owners.
  */
 
 var DEFAULT_PLAN_ADMIN_EMAILS = ['emarion@redhat.com', 'trozell@redhat.com']
+
+/** Preview gate: who can see the Draft Plans tab and call draft-plans APIs. */
+var DEFAULT_VIEWER_EMAILS = ['emarion@redhat.com']
 
 var DEFAULT_PLAN_ADMIN_NAMES_BY_EMAIL = {
   'emarion@redhat.com': 'Emarion',
@@ -33,14 +37,28 @@ function loadAdminEmails(config) {
   return DEFAULT_PLAN_ADMIN_EMAILS.slice()
 }
 
-function isPlanAdminEmail(email, adminEmails) {
+function loadViewerEmails(config) {
+  if (config && Array.isArray(config.draftPlansViewerEmails) && config.draftPlansViewerEmails.length > 0) {
+    return config.draftPlansViewerEmails.map(normalizeEmail).filter(Boolean)
+  }
+  return DEFAULT_VIEWER_EMAILS.slice()
+}
+
+function emailInList(email, list) {
   var e = normalizeEmail(email)
   if (!e) return false
-  var list = adminEmails || DEFAULT_PLAN_ADMIN_EMAILS
   for (var i = 0; i < list.length; i++) {
     if (normalizeEmail(list[i]) === e) return true
   }
   return false
+}
+
+function isPlanAdminEmail(email, adminEmails) {
+  return emailInList(email, adminEmails || DEFAULT_PLAN_ADMIN_EMAILS)
+}
+
+function isDraftPlansViewerEmail(email, viewerEmails) {
+  return emailInList(email, viewerEmails || DEFAULT_VIEWER_EMAILS)
 }
 
 function isPlanAdminName(name, adminNames) {
@@ -85,9 +103,12 @@ function resolvePlanAdminNames(adminEmails, people) {
 
 module.exports = {
   DEFAULT_PLAN_ADMIN_EMAILS,
+  DEFAULT_VIEWER_EMAILS,
   DEFAULT_PLAN_ADMIN_NAMES_BY_EMAIL,
   loadAdminEmails,
+  loadViewerEmails,
   isPlanAdminEmail,
+  isDraftPlansViewerEmail,
   isPlanAdminName,
   resolvePlanAdminNames,
   namesMatch
