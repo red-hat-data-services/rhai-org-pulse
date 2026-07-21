@@ -1,15 +1,18 @@
 /**
  * Draft Plans identity + ACL.
  * Production: actor is the signed-in user (roster-resolved); no impersonation.
- * DEMO_MODE: keep Acting-as impersonation for local review.
+ * DEMO_MODE: keep Acting-as impersonation for local review; UI/API visible to all.
  * Plan admin (freeze / Final GA / reset): allowlisted emails only.
+ * Viewer preview gate: draftPlansViewerEmails (default: emarion only) when not DEMO_MODE.
  */
 
 const roster = require('../../../../shared/server/roster')
 const { DATA_PREFIX } = require('./fetch')
 const {
   loadAdminEmails,
+  loadViewerEmails,
   isPlanAdminEmail,
+  isDraftPlansViewerEmail,
   isPlanAdminName,
   resolvePlanAdminNames,
   namesMatch
@@ -85,8 +88,11 @@ async function resolveDraftPlanSession(req, storage) {
   var cfg = await loadDraftPlansConfig(storage)
   var planAdminEmails = loadAdminEmails(cfg)
   var planAdminNames = resolvePlanAdminNames(planAdminEmails, people)
+  var viewerEmails = loadViewerEmails(cfg)
   // Draft Plans admin is allowlist-only (not general platform ADMIN_EMAILS).
   var isPlanAdmin = isPlanAdminEmail(email, planAdminEmails)
+  // Preview gate: allowlisted viewers in prod; DEMO_MODE opens the surface locally.
+  var canViewDraftPlans = demo || isDraftPlansViewerEmail(email, viewerEmails)
 
   return {
     email: email,
@@ -94,11 +100,30 @@ async function resolveDraftPlanSession(req, storage) {
     actor: actor,
     rosterMatched: !!person,
     isPlanAdmin: isPlanAdmin,
+    canViewDraftPlans: canViewDraftPlans,
     canImpersonate: demo,
     demoMode: demo,
     planAdminEmails: planAdminEmails,
-    planAdminNames: planAdminNames
+    planAdminNames: planAdminNames,
+    viewerEmails: viewerEmails
   }
+}
+
+/**
+ * @returns {{ ok: true } | { ok: false, status: number, error: string }}
+ */
+function assertCanViewDraftPlans(session) {
+  if (!session) {
+    return { ok: false, status: 401, error: 'Authentication required' }
+  }
+  if (!session.canViewDraftPlans) {
+    return {
+      ok: false,
+      status: 403,
+      error: 'Draft Plans is not enabled for your account'
+    }
+  }
+  return { ok: true }
 }
 
 function applySessionToMeta(meta, session, requestedUser) {
@@ -207,5 +232,6 @@ module.exports = {
   resolveDraftPlanSession,
   applySessionToMeta,
   authorizeEditorSave,
+  assertCanViewDraftPlans,
   _setGetAllPeople
 }
