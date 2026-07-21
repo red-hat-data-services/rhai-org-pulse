@@ -1,152 +1,160 @@
 ---
 repository: "elyra-ai/elyra"
-overall_score: 7.4
+overall_score: 6.8
 scorecard:
   - dimension: "Unit Tests"
-    score: 7.5
-    status: "Strong Python backend coverage (63 test files, ~16k lines); weak frontend unit tests (only 4 spec files)"
+    score: 7.0
+    status: "Strong Python test suite (32 files, pytest+fixtures), sparse frontend unit tests (4 spec files for 65+ TS sources)"
   - dimension: "Integration/E2E"
-    score: 8.5
-    status: "Comprehensive Cypress suite with 11 spec files, sharded CI, code coverage integration"
+    score: 7.5
+    status: "Comprehensive Cypress suite (11 specs, 2229 lines) with CI sharding across 3 parallel runners"
   - dimension: "Build Integration"
     score: 6.0
-    status: "Image environment validation on PRs; no Konflux simulation or multi-arch build testing"
+    status: "Image environment validation on PRs, runtime image validation, but no PR-time Docker image builds"
   - dimension: "Image Testing"
-    score: 7.0
-    status: "Runtime image validation with functional checks; no vulnerability scanning or SBOM"
+    score: 5.0
+    status: "Runtime image validation with notebook execution tests, but no multi-stage builds, HEALTHCHECK, or multi-arch"
   - dimension: "Coverage Tracking"
-    score: 8.0
-    status: "Codecov integration for both Python and JS; nyc thresholds enforced (70% lines, 60% functions, 50% branches)"
+    score: 6.5
+    status: "Codecov integration for Python, Jest, and Cypress coverage uploads — no threshold enforcement"
   - dimension: "CI/CD Automation"
-    score: 8.5
-    status: "Well-organized single workflow with concurrency control, matrix testing, caching, and artifact upload"
+    score: 8.0
+    status: "Well-organized workflow with matrix testing (4 Python versions), Cypress sharding, caching, concurrency control"
+  - dimension: "Static Analysis"
+    score: 6.0
+    status: "Flake8 + Black (Python), ESLint + Prettier (TS) with strict enforcement; Husky hooks; missing Dependabot/Renovate"
   - dimension: "Agent Rules"
-    score: 7.0
-    status: "AGENT.md with comprehensive guidelines, CLAUDE.md and GEMINI.md present; no .claude/rules/ directory"
+    score: 7.5
+    status: "Comprehensive AGENT.md with DCO sign-off guidance and dependency constraints; CLAUDE.md and GEMINI.md present; no structured test rules"
 critical_gaps:
-  - title: "No container vulnerability scanning"
-    impact: "CVEs in base images and dependencies go undetected until deployment"
+  - title: "No PR-time Docker image builds"
+    impact: "Image build failures (Dockerfile syntax, dependency conflicts, layer ordering) only discovered post-merge or during release"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "Minimal frontend unit test coverage"
-    impact: "Only 4 spec files for 12 frontend packages (~85 TS/TSX source files); regressions easily missed"
+    effort: "4-6 hours"
+  - title: "Sparse frontend unit test coverage"
+    impact: "Only 4 spec files cover 65+ TypeScript source files — frontend logic regressions may be caught only by slower Cypress integration tests"
     severity: "HIGH"
     effort: "16-24 hours"
-  - title: "No dependency scanning or secret detection"
-    impact: "Supply chain vulnerabilities and credential leaks not caught in CI"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No multi-architecture image builds"
-    impact: "Images only built for single platform; no ARM64 support verified"
+  - title: "No coverage threshold enforcement"
+    impact: "Coverage can silently regress without any PR gate; no .codecov.yml with target/threshold configuration"
     severity: "MEDIUM"
-    effort: "4-8 hours"
-  - title: "No pre-commit hooks enforcement in CI"
-    impact: "Husky/lint-staged only runs locally; CI bypass possible"
+    effort: "2-3 hours"
+  - title: "No Dependabot or Renovate configuration"
+    impact: "Dependency updates are manual; security vulnerabilities in transitive dependencies may go unnoticed"
     severity: "MEDIUM"
     effort: "1-2 hours"
 quick_wins:
-  - title: "Add Trivy scanning to PR workflow"
+  - title: "Add .codecov.yml with coverage thresholds"
     effort: "1-2 hours"
-    impact: "Early detection of CVEs in container images and filesystem dependencies"
-  - title: "Add Dependabot or Renovate for dependency updates"
+    impact: "Prevent silent coverage regression on every PR with automatic enforcement"
+  - title: "Enable Dependabot for pip and npm ecosystems"
     effort: "1-2 hours"
-    impact: "Automated dependency freshness and security patching"
-  - title: "Add secret detection with Gitleaks"
-    effort: "1-2 hours"
-    impact: "Prevent accidental credential commits"
-  - title: "Create .claude/rules/ directory with test creation rules"
-    effort: "2-3 hours"
-    impact: "Standardize AI-generated test quality across test types"
-  - title: "Add SBOM generation to image build"
-    effort: "1-2 hours"
-    impact: "Supply chain transparency and compliance readiness"
+    impact: "Automated dependency update PRs with security alerts for known vulnerabilities"
+  - title: "Add HEALTHCHECK to production Dockerfiles"
+    effort: "1 hour"
+    impact: "Enable container orchestrators to detect unhealthy instances and restart them automatically"
+  - title: "Add PR-time Docker image build smoke test"
+    effort: "3-4 hours"
+    impact: "Catch Dockerfile and dependency issues before merge instead of during release"
 recommendations:
   priority_0:
-    - "Add container vulnerability scanning (Trivy) to PR and push workflows"
-    - "Implement dependency scanning (Dependabot/Renovate) for Python and npm"
-    - "Add secret detection (Gitleaks) to prevent credential leaks"
+    - "Increase frontend unit test coverage — add Jest specs for untested packages (code-snippet, metadata, ui-components, python-editor, r-editor, scala-editor)"
+    - "Add .codecov.yml with project/patch coverage targets (e.g., 70% project, 60% patch) to enforce coverage gates on PRs"
+    - "Enable Dependabot for pip, npm, and docker ecosystems to automate security and dependency updates"
   priority_1:
-    - "Expand frontend unit tests — currently only 4 spec files across 12 packages"
-    - "Add SBOM generation and image signing for supply chain security"
-    - "Create comprehensive .claude/rules/ for test automation guidance"
-    - "Add multi-architecture (amd64/arm64) image build support"
+    - "Add a PR-triggered job that builds the elyra Docker image and validates startup (docker build + docker run --health-cmd)"
+    - "Add HEALTHCHECK instructions to production Dockerfiles (elyra, kubeflow)"
+    - "Create structured test creation rules in .claude/rules/ for pytest and Cypress patterns"
   priority_2:
-    - "Add performance regression testing for pipeline execution"
-    - "Implement contract tests between frontend service clients and backend API"
-    - "Add accessibility testing for JupyterLab extensions"
-    - "Consider migrating from flake8 to ruff for faster Python linting"
+    - "Migrate Dockerfiles to multi-stage builds for smaller production images"
+    - "Consider UBI-based images for FIPS compatibility in enterprise/Red Hat deployments"
+    - "Add multi-architecture image support (amd64 + arm64) for broader deployment scenarios"
+    - "Add .pre-commit-config.yaml to complement Husky hooks for Python-side enforcement"
 ---
 
-# Quality Analysis: Elyra
+# Quality Analysis: elyra-ai/elyra
 
 ## Executive Summary
 
-- **Overall Score: 7.4/10**
-- **Repository Type:** JupyterLab extension suite (monorepo)
-- **Primary Languages:** Python (backend), TypeScript/React (frontend)
-- **Framework:** Jupyter Server extensions + JupyterLab 4.x frontend
-- **Key Strengths:** Comprehensive Cypress integration test suite with sharding, strong Python test coverage with multi-version matrix, Codecov integration with coverage thresholds, well-structured CI workflow with concurrency control
-- **Critical Gaps:** No container vulnerability scanning, minimal frontend unit tests, no dependency scanning or secret detection
-- **Agent Rules Status:** Present (AGENT.md, CLAUDE.md, GEMINI.md) — comprehensive but no `.claude/rules/` directory
+- **Overall Score: 6.8/10**
+- **Repository Type:** JupyterLab AI-centric extension suite (Python backend + TypeScript frontend monorepo)
+- **Primary Languages:** Python 3.10+, TypeScript
+- **Frameworks:** Jupyter Server, JupyterLab 4.x, React, Lerna monorepo
+- **RHOAI Component:** Notebooks Extensions (RHOAIENG)
+- **Tier:** Upstream
+
+**Key Strengths:**
+- Well-organized CI/CD with Cypress test sharding, matrix Python testing, and comprehensive caching
+- Unique image environment validation job that validates conda env consistency with Docker image deps on every PR
+- Rich integration test suite (11 Cypress specs, 2229 lines) covering pipeline editor, code snippets, script editors, and more
+- Comprehensive AGENT.md with DCO sign-off guidance, dependency constraints, and architectural overview
+
+**Critical Gaps:**
+- Frontend unit test coverage is critically thin (4 spec files for 65+ TypeScript source files)
+- No PR-time Docker image builds — build failures surface only post-merge
+- No coverage threshold enforcement despite Codecov integration
+- No Dependabot or Renovate for automated dependency management
+
+**Agent Rules Status:** Present and comprehensive (CLAUDE.md + AGENT.md + GEMINI.md)
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 7.5/10 | Strong Python backend (63 test files); weak frontend (4 spec files) |
-| Integration/E2E | 8.5/10 | Comprehensive Cypress suite, 11 specs, sharded CI execution |
-| **Build Integration** | **6.0/10** | **Image env validation on PRs; no Konflux sim or multi-arch** |
-| Image Testing | 7.0/10 | Runtime image validation with functional checks; no vuln scanning |
-| Coverage Tracking | 8.0/10 | Codecov for Python + JS; nyc thresholds: 70/60/50 (lines/funcs/branches) |
-| CI/CD Automation | 8.5/10 | Single well-organized workflow, matrix testing, caching |
-| Agent Rules | 7.0/10 | AGENT.md comprehensive; no .claude/rules/ test automation rules |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 7.0/10 | 15% | 1.05 | Strong Python test suite, sparse TS unit tests |
+| Integration/E2E | 7.5/10 | 20% | 1.50 | Comprehensive Cypress with CI sharding |
+| Build Integration | 6.0/10 | 15% | 0.90 | Image env validation, no PR-time Docker builds |
+| Image Testing | 5.0/10 | 10% | 0.50 | Runtime validation, no multi-stage/HEALTHCHECK |
+| Coverage Tracking | 6.5/10 | 10% | 0.65 | Codecov uploads for all test types, no gates |
+| CI/CD Automation | 8.0/10 | 15% | 1.20 | Matrix testing, sharding, caching, concurrency |
+| Static Analysis | 6.0/10 | 10% | 0.60 | Strong linting, missing dependency management |
+| Agent Rules | 7.5/10 | 5% | 0.375 | Rich AGENT.md, no structured test rules |
+| **Overall** | **6.8/10** | **100%** | **6.775** | |
 
 ## Critical Gaps
 
-### 1. No Container Vulnerability Scanning
-- **Impact:** CVEs in base images (`jupyterhub/k8s-singleuser-sample:3.3.7`) and pip dependencies go undetected until production deployment
-- **Severity:** HIGH
-- **Effort:** 2-4 hours
-- **Details:** No Trivy, Snyk, or Grype integration. Dockerfile uses `jupyterhub/k8s-singleuser-sample` base image without any scanning. No `.trivyignore` or vulnerability threshold configuration.
-
-### 2. Minimal Frontend Unit Test Coverage
-- **Impact:** Only 4 spec files (`pipeline-service.spec.ts`, `pipeline-hooks.spec.ts`, `script-editor.spec.ts`, `services.spec.ts`) for 12 frontend packages containing ~12,000 lines of TypeScript/TSX. Many packages (code-snippet, metadata, r-editor, scala-editor, theme, ui-components, python-editor, script-debugger) have zero unit tests.
+### 1. Sparse Frontend Unit Test Coverage
+- **Impact:** Only 4 spec files exist across 3 packages (`pipeline-editor`, `services`, `script-editor`) — the remaining 9+ packages have no Jest tests despite having `test` scripts in their `package.json`
 - **Severity:** HIGH
 - **Effort:** 16-24 hours
-- **Details:** Frontend testing relies heavily on Cypress integration tests, which are slower and more brittle than unit tests for component-level logic.
+- **Details:** The test-to-code ratio for TypeScript is ~0.06 (4 test files / 65 source files). Frontend logic regressions can only be caught by the slower Cypress integration tests, which take ~10 minutes per shard
 
-### 3. No Dependency Scanning or Secret Detection
-- **Impact:** Supply chain attacks and credential leaks not prevented in CI
+### 2. No PR-Time Docker Image Builds
+- **Impact:** Dockerfile issues (syntax errors, dependency resolution failures, base image changes) are only discovered during release or manual builds
 - **Severity:** HIGH
-- **Effort:** 2-4 hours
-- **Details:** No Dependabot, Renovate, or `pip-audit` configuration. No Gitleaks, TruffleHog, or similar secret detection. Only CodeQL provides static analysis.
+- **Effort:** 4-6 hours
+- **Details:** The `upload-artifacts` job builds artifacts but only runs on push events (`if: github.event_name == 'push'`). The `validate-image-env` job validates the conda environment but doesn't build the actual Docker image
 
-### 4. No Multi-Architecture Image Builds
-- **Impact:** Container images only built for single architecture (likely amd64). ARM64 users must build from source.
+### 3. No Coverage Threshold Enforcement
+- **Impact:** Coverage can silently regress without blocking PRs. All three test types upload to Codecov but there's no `.codecov.yml` with target or patch thresholds
 - **Severity:** MEDIUM
-- **Effort:** 4-8 hours
-- **Details:** `Dockerfile` uses `buildx` but `CONTAINER_OUTPUT_OPTION` defaults to `--output=type=docker` without `--platform` flags.
+- **Effort:** 2-3 hours
 
-### 5. No Pre-commit Hook Enforcement in CI
-- **Impact:** Husky + lint-staged only enforces formatting locally; developers who skip hooks bypass format checks
+### 4. No Dependency Management Automation
+- **Impact:** No `.github/dependabot.yml` or Renovate configuration. Dependencies are managed manually, increasing risk of missing security patches in the ~40+ Python dependencies and npm packages
 - **Severity:** MEDIUM
 - **Effort:** 1-2 hours
-- **Details:** `.lintstagedrc` configures Prettier on staged files, but CI only runs `prettier:check` and `eslint:check` separately. No `.pre-commit-config.yaml` for standardized hook management.
 
 ## Quick Wins
 
-### 1. Add Trivy Scanning to PR Workflow (1-2 hours)
+### 1. Add `.codecov.yml` with Coverage Thresholds (1-2 hours)
 ```yaml
-- name: Run Trivy vulnerability scanner
-  uses: aquasecurity/trivy-action@master
-  with:
-    scan-type: 'fs'
-    scan-ref: '.'
-    severity: 'CRITICAL,HIGH'
-    exit-code: '1'
+# .codecov.yml
+coverage:
+  status:
+    project:
+      default:
+        target: 70%
+        threshold: 2%
+    patch:
+      default:
+        target: 60%
+comment:
+  layout: "reach,diff,flags,files"
+  behavior: default
 ```
 
-### 2. Add Dependabot Configuration (1-2 hours)
+### 2. Enable Dependabot (1-2 hours)
 ```yaml
 # .github/dependabot.yml
 version: 2
@@ -155,6 +163,9 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      test-deps:
+        patterns: ["pytest*", "requests-mock"]
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -162,290 +173,292 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
 ```
 
-### 3. Add Secret Detection with Gitleaks (1-2 hours)
-```yaml
-- name: Gitleaks
-  uses: gitleaks/gitleaks-action@v2
-  env:
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+### 3. Add HEALTHCHECK to Production Dockerfiles (1 hour)
+```dockerfile
+# etc/docker/elyra/Dockerfile
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:8888/api || exit 1
 ```
 
-### 4. Create `.claude/rules/` Test Creation Rules (2-3 hours)
-Create rules for pytest patterns, Jest patterns, and Cypress patterns to standardize AI-generated tests.
-
-### 5. Add SBOM Generation (1-2 hours)
+### 4. Add PR-Time Docker Build Smoke Test (3-4 hours)
 ```yaml
-- name: Generate SBOM
-  uses: anchore/sbom-action@v0
-  with:
-    image: ${{ env.ELYRA_IMAGE }}
-    format: spdx-json
+# Add to .github/workflows/build.yml
+validate-docker-build:
+  name: Validate Docker Build
+  runs-on: ubuntu-latest
+  if: github.event_name == 'pull_request'
+  steps:
+    - uses: actions/checkout@v4
+    - name: Build elyra image
+      run: |
+        make build-dependencies yarn-install build-ui-prod build-server
+        make elyra-image TAG=pr-test
+    - name: Smoke test
+      run: |
+        docker run --rm -d --name elyra-test elyra/elyra:pr-test
+        sleep 30
+        docker exec elyra-test curl -f http://localhost:8888/api || exit 1
+        docker stop elyra-test
 ```
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflow Organization: Excellent (8.5/10)**
+**Python Backend (32 test files)**
+- Framework: pytest with fixtures (`conftest.py`), `@pytest.mark.parametrize`
+- Test directory structure mirrors source: `elyra/tests/{pipeline,metadata,kfp,contents,cli,airflow,util}`
+- Coverage: `pytest-cov` with XML output (`--cov --cov-report=xml`)
+- Multi-version testing: Python 3.10, 3.11, 3.12, 3.13 via matrix strategy
+- Test-to-code ratio: ~0.29 (32 test files / 109 source files)
+- Key test files: `test_validation.py`, `test_pipeline_parser.py`, `test_metadata.py`, `test_handlers.py`
+- Submodule-specific tests: `test_kfp_processor.py`, `test_processor_airflow.py`, `test_kfp_authentication.py`
 
-Elyra uses a single well-organized workflow (`build.yml`) that covers all CI/CD concerns:
+**TypeScript Frontend (4 spec files)**
+- Framework: Jest with ts-jest, jsdom environment
+- Shared configuration in `testutils/jest.config.js`
+- Only 3 packages have tests: `pipeline-editor`, `services`, `script-editor`
+- 9+ packages define `test` scripts in `package.json` but have no actual spec files
+- Test-to-code ratio: ~0.06 (4 test files / 65 source files)
 
-- **Triggers:** Push to `main`/`release/**` and all PRs with smart path-ignore for non-code files
-- **Concurrency:** PR runs cancel in-progress on new push; branch pushes always complete
-- **Jobs (8 total):**
-  1. `lint-server` — Python flake8 + black format check
-  2. `lint-ui` — ESLint + Prettier check
-  3. `test-server` — Python pytest with 4-version matrix (3.10–3.13)
-  4. `test-ui` — Jest unit tests
-  5. `test-integration` — Cypress with 3-way sharding (pipeline, editors, misc)
-  6. `test-documentation-build` — Sphinx docs build verification
-  7. `validate-image-env` — Conda environment validation (reduced matrix on PRs)
-  8. `validate-images` — Runtime image functional validation
-  9. `upload-artifacts` — Wheel + npm bundle (push-only)
-
-**Caching:** Yarn cache, pip cache, Cypress binary cache all configured. Node modules cached with lock file hash key.
-
-**CodeQL:** Separate workflow scanning JavaScript and Python with `security-and-quality` queries, running on push to main, PRs, and weekly schedule.
-
-**Missing:**
-- No container vulnerability scanning workflow
-- No dependency update automation (Dependabot/Renovate)
-- No secret detection
-- No release automation workflow (release process is via `create-release.py` script)
-
-### Test Coverage
-
-**Python Backend Tests: Strong (7.5/10)**
-
-- 63 test files totaling ~16,400 lines of test code
-- ~20,000 lines of production Python code
-- **Test-to-code ratio: ~0.82** (good)
-- Comprehensive test directories:
-  - `elyra/tests/pipeline/` — pipeline parsing, validation, processors, handlers
-  - `elyra/tests/metadata/` — metadata service, schemas, CLI
-  - `elyra/tests/contents/` — content parser, handlers
-  - `elyra/tests/cli/` — pipeline CLI application
-  - `elyra/tests/kfp/` — Kubeflow Pipelines bootstrapper
-  - `elyra/tests/airflow/` — Airflow bootstrapper and operators
-  - `elyra/tests/util/` — URL, Kubernetes, COS, archive utilities
-- Framework: pytest with fixtures in `conftest.py`, `pytest-cov`, `pytest-console-scripts`, `pytest_jupyter`
-- Multi-Python matrix: 3.10, 3.11, 3.12, 3.13
-- Coverage uploaded to Codecov
-
-**Frontend Unit Tests: Weak (4/10)**
-
-- Only **4 spec files** across 12 packages:
-  - `packages/pipeline-editor/src/test/pipeline-service.spec.ts`
-  - `packages/pipeline-editor/src/test/pipeline-hooks.spec.ts`
-  - `packages/script-editor/src/test/script-editor.spec.ts`
-  - `packages/services/src/test/services.spec.ts`
-- ~12,000 lines of TypeScript source code with minimal unit test coverage
-- Framework: Jest with `ts-jest`
-- **9 packages with zero unit tests:** code-snippet, metadata, metadata-common, python-editor, r-editor, scala-editor, script-debugger, theme, ui-components
-
-**Integration Tests: Excellent (8.5/10)**
-
-- **11 Cypress spec files** covering major features:
-  - `pipeline.cy.ts` — Visual pipeline editor (heaviest spec)
-  - `codesnippet.cy.ts` — Code snippet management
-  - `pythoneditor.cy.ts` — Python script editor
-  - `scriptdebugger.cy.ts` — Script debugger
-  - `git.cy.ts` — Git integration
-  - `launcher.cy.ts` — JupyterLab launcher
-  - `lsp.cy.ts` — Language server protocol
-  - `reditor.cy.ts` — R editor
-  - `toc.cy.ts` — Table of contents
-  - `submitnotebookbutton.cy.ts` — Notebook submission
-  - `codesnippetfromselectedcells.cy.ts` — Cell-to-snippet
-- **Sharded execution:** 3 parallel CI runners (pipeline, editors, misc)
-- **Code coverage:** `@cypress/code-coverage` with nyc, cobertura reports uploaded to Codecov
-- **Retry logic:** 1 retry in both run and open modes
-- **Artifact collection:** Screenshots, videos, and logs on failure
-- Custom snapshot testing plugin
-- Start-server-and-test pattern with MinIO + JupyterLab
-
-### Code Quality
-
-**Python Linting: Good (7/10)**
-
-- **flake8** with Google-style import ordering, max-line-length 120
-- **black** code formatter with multi-version target (3.10–3.13)
-- Not using modern tools (ruff, mypy) — flake8 + black is functional but slower
-- No type checker (mypy/pyright) configured
-
-**TypeScript/JS Linting: Strong (8.5/10)**
-
-- **ESLint** with comprehensive config:
-  - `@typescript-eslint/recommended`
-  - `plugin:react/recommended`
-  - `plugin:react-hooks/recommended`
-  - `prettier` integration
-  - `no-explicit-any: error` — strict type safety
-  - Import ordering enforced
-  - License header enforced
-  - `eqeqeq` warning
-- **Prettier** for formatting
-- **lint-staged** via Husky for pre-commit hooks
-- Zero warnings policy (`--max-warnings=0`)
-
-**Missing:**
-- No mypy/pyright for Python type checking
-- No `.pre-commit-config.yaml` for standardized hooks
-- No Semgrep or additional SAST beyond CodeQL
-
-### Container Images
-
-**Build Process: Adequate (6.5/10)**
-
-- Two Dockerfiles: `elyra/Dockerfile` and `kubeflow/Dockerfile`
-- Base image: `jupyterhub/k8s-singleuser-sample:3.3.7`
-- Uses `buildx` for builds
-- Proper user switching (root → jovyan)
-- Custom entrypoint script
-
-**Runtime Validation: Good (7.5/10)**
-
-- `validate-runtime-images` target validates runtime images:
-  - Checks for required commands (`python3`)
-  - Validates Python version ≥ 3.10
-  - Runs notebook execution test (papermill)
-  - Installs requirements and verifies compatibility
-- `elyra-image-env` validates image environment via conda
-
-**Missing:**
-- No vulnerability scanning (Trivy, Snyk, Grype)
-- No SBOM generation
-- No image signing/attestation
-- No multi-architecture builds
-- No image startup testing in CI
-
-### Security
-
-**CodeQL: Good (7/10)**
-- Scans both JavaScript and Python
-- Custom config excluding test directories
-- Runs on push, PRs, and weekly schedule
-- Uses `security-and-quality` query suite
-
-**Missing Security Practices:**
-- No container scanning
-- No dependency scanning automation
-- No secret detection (Gitleaks, TruffleHog)
-- No SAST beyond CodeQL (no Semgrep, Bandit)
-- No DAST or fuzzing
-- No supply chain security (Sigstore, cosign)
-
-### Agent Rules (Agentic Flow Quality)
-
-**Status:** Present — AGENT.md is comprehensive
-
-**Coverage:**
-- `AGENT.md` (248 lines): Comprehensive guidelines covering:
-  - Repository structure and architecture
-  - Tech stack details
-  - Development setup instructions
-  - Coding conventions (Python + TypeScript)
-  - Dependency constraints documentation
-  - Git best practices (DCO sign-off requirements)
-  - Testing guidelines
-  - Documentation tone and style guide
-- `CLAUDE.md`: Pointer to AGENT.md
-- `GEMINI.md`: Pointer to AGENT.md
-
-**Quality Assessment:**
-- Conventions are clear and actionable
-- Dependency constraint documentation is excellent (uuid pinning rationale)
-- DCO sign-off requirements are well-documented
-- Testing guidelines provide framework-level guidance
+**Strengths:**
+- Comprehensive Python test organization with fixtures and parametrize
+- Multi-Python-version matrix testing
+- Good test isolation patterns
 
 **Gaps:**
-- No `.claude/rules/` directory for automated test creation rules
-- No specific test pattern examples (pytest fixtures, Jest mocking, Cypress commands)
-- No quality gates or checklists for PR review
-- No test coverage thresholds documented in agent rules
+- Frontend unit coverage is critically thin
+- No mutation testing
+- No snapshot testing for UI components
 
-**Recommendation:** Generate `.claude/rules/` with `/test-rules-generator` skill for pytest, Jest, and Cypress patterns
+### Integration/E2E Tests
+
+**Cypress Integration Suite**
+- 11 spec files, 2229 lines total
+- CI sharding across 3 parallel runners:
+  - `pipeline` shard (926 lines — heaviest spec)
+  - `editors` shard (codesnippet, codesnippetfromselectedcells, pythoneditor, scriptdebugger, submitnotebookbutton)
+  - `misc` shard (git, launcher, lsp, reditor, toc)
+- Full JupyterLab server started with MinIO for pipeline tests
+- Code coverage via `@cypress/code-coverage` with istanbul instrumentation
+- Retries configured (1 retry in both run and open mode)
+- Artifact collection on failure (logs, screenshots, videos, pipeline artifacts)
+- Snapshot testing plugin registered
+
+**Strengths:**
+- Excellent sharding strategy to parallelize the ~9.5-min pipeline spec
+- Real server + real MinIO service for realistic integration testing
+- Coverage collection from integration tests (rare and valuable)
+- Comprehensive spec coverage: pipeline editor, code snippets, script editors, git, LSP, launcher
+
+**Gaps:**
+- No multi-version JupyterLab testing
+- `testIsolation: false` means tests share state (faster but riskier)
+
+### Build Integration
+
+**PR-Triggered Build Validation:**
+- `validate-image-env`: Creates a conda environment matching Docker image dependencies and validates consistency. Runs on PR with single Python version (3.13), expands to full matrix on push
+- `validate-images`: Validates runtime images meet minimum criteria (required commands, Python version, notebook execution)
+- Full UI and server builds run as part of `test-ui` and `test-integration` jobs
+- `upload-artifacts`: Only runs on push events (not PRs)
+
+**Strengths:**
+- Unique `validate-image-env` job catches dependency drift between local dev and Docker images
+- Runtime image validation with actual notebook execution (papermill)
+- Build validation via test jobs (build-ui-prod, install-server)
+
+**Gaps:**
+- No actual Docker image build in PR workflow
+- No Konflux build simulation
+- No operator manifest or Kustomize validation (N/A for this project type)
+
+### Image Testing
+
+**Dockerfiles:**
+- `etc/docker/elyra/Dockerfile`: Standalone Elyra image based on `jupyterhub/k8s-singleuser-sample:3.3.7`
+- `etc/docker/kubeflow/Dockerfile`: Kubeflow-integrated image based on `ghcr.io/kubeflow/kubeflow/notebook-servers/jupyter:v1.8.0`
+- `etc/docker/elyra_development/Dockerfile`: Development image based on `ubuntu:20.04`
+
+**Analysis:**
+- Single-stage builds (no multi-stage optimization)
+- No HEALTHCHECK instructions
+- No multi-architecture support
+- Base images are not UBI-based (not FIPS-capable without extra work)
+- Non-root user configured (`jovyan`) in production images
+- `--no-cache-dir` used for pip installs (good practice)
+
+**Runtime Validation:**
+- Makefile `validate-runtime-images` target:
+  - Pulls and inspects images
+  - Checks for required commands (`python3`)
+  - Validates Python version >= 3.10
+  - Executes a notebook via papermill as a smoke test
+  - Option to remove images after validation
+
+### Coverage Tracking
+
+**Coverage Generation:**
+- Python: `pytest-cov` with `--cov --cov-report=xml`
+- Frontend unit: Jest coverage (configured via shared jest config)
+- Integration: Cypress code coverage with `@cypress/code-coverage` plugin, istanbul instrumentation, and nyc
+
+**Coverage Upload:**
+- Codecov action (v5) in 3 workflow jobs:
+  - `test-server` (only for Python 3.13 matrix entry)
+  - `test-ui` (Jest coverage)
+  - `test-integration` (Cypress coverage with per-shard flags: `integration-pipeline`, `integration-editors`, `integration-misc`)
+
+**Gaps:**
+- No `.codecov.yml` configuration file — no project or patch thresholds
+- No coverage gates blocking PR merge
+- No coverage comments on PRs (default Codecov behavior without config)
+
+### CI/CD Automation
+
+**Workflow Inventory:**
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `build.yml` (Elyra Tests) | PR, push (main, release/**, v* tags) | Full test/lint/build suite |
+| `codeql-analysis.yml` | PR (main), push (main), weekly schedule | Code scanning |
+
+**Jobs in build.yml (8 jobs):**
+1. `lint-server` — Python linting (flake8 + black)
+2. `lint-ui` — TypeScript linting (ESLint + Prettier)
+3. `test-server` — Python tests (4-version matrix)
+4. `test-ui` — Jest unit tests
+5. `test-integration` (x3 shards) — Cypress integration tests
+6. `test-documentation-build` — Sphinx docs build verification
+7. `validate-image-env` — Conda env consistency check
+8. `validate-images` — Runtime image validation
+9. `upload-artifacts` — Wheel + npm bundle (push only)
+
+**Optimization:**
+- Concurrency: `cancel-in-progress` for PRs, full runs for push events
+- Caching: yarn, pip, Cypress binary, node_modules with `hashFiles`-based keys
+- paths-ignore: skips CI for `.md`, `LICENSE`, `.gitignore` changes
+- Matrix strategy with `fail-fast: false` for integration tests
+- Error handling: package metadata fetcher on test failure
+
+### Static Analysis
+
+**Linting:**
+- Python: flake8 (via `pyflake8` pyproject.toml compat) + black formatting
+  - `max-line-length: 120`
+  - Google import order style
+  - Strict: `black --check --diff --color`
+- TypeScript: ESLint + Prettier
+  - `--max-warnings=0` (zero tolerance)
+  - Prettier with single quotes, no trailing commas
+
+**Pre-commit Hooks:**
+- Husky configured in `package.json` with `lint-staged`
+- No `.pre-commit-config.yaml` (Python-side pre-commit framework not used)
+
+**FIPS Compatibility:**
+- No non-FIPS-compliant crypto imports found in source code (clean scan)
+- No FIPS build tags (Python project, not applicable)
+- Dockerfiles use non-UBI base images: `jupyterhub/k8s-singleuser-sample`, `kubeflow/notebook-servers/jupyter`, `ubuntu:20.04`
+
+**Dependency Alerts:**
+- No `.github/dependabot.yml`
+- No Renovate configuration
+- Dependencies manually managed in `pyproject.toml`, `build_requirements.txt`, `lint_requirements.txt`, `test_requirements.txt`
+
+### Agent Rules
+
+**Present Files:**
+- `CLAUDE.md` — Points to `AGENT.md`
+- `AGENT.md` — Comprehensive agent guidelines (248 lines)
+- `GEMINI.md` — Points to `AGENT.md`
+
+**AGENT.md Quality Assessment:**
+- **Project Overview:** Clear description of Elyra as JupyterLab AI extensions
+- **Repository Structure:** Complete directory tree with descriptions
+- **Tech Stack:** Python, TypeScript, build tools, testing frameworks, runtimes
+- **Development Setup:** Makefile commands for install, test, lint
+- **Coding Conventions:** Detailed Python and TypeScript guidelines
+- **Dependency Constraints:** Excellent agent-specific guidance (uuid pinning, CJS/ESM constraints)
+- **Git Best Practices:** DCO sign-off instructions with explicit AI-agent guidance (use `-s` not `-S`)
+- **Architecture:** Pipeline editor, metadata service, runtime processors explained
+- **Documentation Style:** Detailed tone and structure guidelines
+- **Testing Guidelines:** General testing instructions (not framework-specific patterns)
+
+**Gaps:**
+- No `.claude/rules/` directory with structured test creation rules
+- No `.claude/skills/` directory with custom skills
+- Testing guidelines are general ("all new features must include tests") rather than providing specific patterns, examples, or checklists for pytest fixtures, Cypress commands, etc.
+
+**Recommendation:** Generate structured test rules using `/test-rules-generator` to create `.claude/rules/unit-tests.md` and `.claude/rules/e2e-tests.md` with framework-specific patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add container vulnerability scanning** — Integrate Trivy or Grype into the build workflow for filesystem and image scanning. Block PRs on CRITICAL/HIGH CVEs.
-2. **Add dependency scanning automation** — Configure Dependabot or Renovate for Python (pip), JavaScript (npm/yarn), and GitHub Actions version updates.
-3. **Add secret detection** — Integrate Gitleaks or TruffleHog to prevent accidental credential commits.
+1. **Increase frontend unit test coverage** — Add Jest specs for the 9+ untested packages. Start with `code-snippet`, `metadata`, `ui-components`, and language editor packages. Target: at least 1 spec file per package
+2. **Add `.codecov.yml` with coverage thresholds** — Configure project target (70%) and patch target (60%) to gate PR merges on coverage
+3. **Enable Dependabot** — Add `.github/dependabot.yml` covering pip, npm, and github-actions ecosystems
 
 ### Priority 1 (High Value)
 
-4. **Expand frontend unit tests** — Add Jest unit tests for untested packages: code-snippet, metadata, metadata-common, python-editor, r-editor, scala-editor, script-debugger, theme, ui-components. Target at least 50% statement coverage per package.
-5. **Add SBOM generation and image signing** — Use `anchore/sbom-action` for SBOM and `sigstore/cosign-installer` for image signing. Essential for supply chain security.
-6. **Create `.claude/rules/` test automation rules** — Generate rules with specific patterns for pytest (fixtures, parametrize, conftest), Jest (React Testing Library, mocking), and Cypress (custom commands, assertions).
-7. **Add multi-architecture image builds** — Configure `buildx` with `--platform linux/amd64,linux/arm64` for broader deployment support.
-8. **Add Python type checking** — Configure mypy or pyright for gradual type safety enforcement.
+4. **Add PR-time Docker image build** — Add a job to build and smoke-test the elyra Docker image on every PR
+5. **Add HEALTHCHECK to production Dockerfiles** — Enable container orchestrators to detect unhealthy instances
+6. **Create structured test rules** — Add `.claude/rules/pytest-patterns.md` and `.claude/rules/cypress-patterns.md` with framework-specific examples, fixtures, and checklists
 
 ### Priority 2 (Nice-to-Have)
 
-9. **Add performance regression testing** — Benchmark pipeline compilation and execution times across releases.
-10. **Implement contract tests** — Add tests between frontend service clients (`packages/services/`) and backend API handlers.
-11. **Add accessibility testing** — Integrate axe-core or similar for JupyterLab extension accessibility compliance.
-12. **Migrate from flake8 to ruff** — Ruff is 10-100x faster and replaces flake8 + isort + pyflakes + pycodestyle in a single tool.
-13. **Add `.pre-commit-config.yaml`** — Standardize pre-commit hooks across contributors with pre-commit framework.
+7. **Migrate to multi-stage Docker builds** — Separate build and runtime stages for smaller production images
+8. **Consider UBI-based images** — For FIPS compatibility in enterprise/Red Hat deployments
+9. **Add multi-architecture support** — Build for amd64 + arm64 using `docker buildx`
+10. **Add `.pre-commit-config.yaml`** — Complement Husky hooks with Python-side pre-commit enforcement
 
 ## Comparison to Gold Standards
 
-| Dimension | Elyra | odh-dashboard | notebooks | kserve |
-|-----------|-------|---------------|-----------|--------|
-| Unit Tests | 7.5 | 9.0 | 7.0 | 9.0 |
-| Integration/E2E | 8.5 | 9.0 | 8.0 | 9.5 |
-| Build Integration | 6.0 | 7.0 | 8.0 | 7.5 |
-| Image Testing | 7.0 | 7.5 | 9.5 | 7.0 |
-| Coverage Tracking | 8.0 | 9.0 | 6.0 | 9.0 |
-| CI/CD Automation | 8.5 | 9.0 | 8.5 | 9.0 |
-| Agent Rules | 7.0 | 8.5 | 4.0 | 3.0 |
-| **Overall** | **7.4** | **8.4** | **7.3** | **7.7** |
-
-**Key Differentiators:**
-- Elyra's Cypress suite with sharding is a strong point — comparable to odh-dashboard
-- Python test coverage is solid with multi-version matrix
-- Image validation (runtime functional checks) is above average
-- Main weaknesses vs. gold standards: no vuln scanning, minimal frontend unit tests, no supply chain security
+| Capability | elyra-ai/elyra | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
+|---|---|---|---|---|
+| Unit test coverage | Python: strong, TS: weak | Multi-layer testing | N/A | Strong |
+| Integration/E2E | Cypress sharded (3 runners) | Contract + E2E | N/A | Multi-version |
+| Coverage enforcement | Upload only, no gates | Threshold enforcement | N/A | Enforced |
+| PR image builds | Env validation only | Full image builds | 5-layer validation | Image builds |
+| Dependency management | Manual | Dependabot | Dependabot | Dependabot |
+| Agent rules | AGENT.md (comprehensive) | Comprehensive rules | N/A | N/A |
+| Multi-arch images | No | Yes | Yes | Yes |
+| FIPS compliance | Clean code, non-UBI images | UBI-based | UBI-based | UBI-based |
+| CI caching | yarn + pip + Cypress | Comprehensive | Comprehensive | Comprehensive |
+| Test sharding | Cypress 3-way split | Matrix + parallel | N/A | Matrix |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/build.yml` — Main CI workflow (all jobs)
-- `.github/workflows/codeql-analysis.yml` — CodeQL security scanning
-- `.github/codeql/codeql-config.yml` — CodeQL configuration
-- `.github/actions/install-ui-dependencies/action.yml` — Composite action for UI deps
+- `.github/workflows/build.yml` — Main test/lint/build workflow
+- `.github/workflows/codeql-analysis.yml` — Code scanning
+- `.github/actions/install-ui-dependencies/` — Reusable action
+- `Makefile` — Build, test, and release orchestration
 
 ### Testing
-- `elyra/tests/` — Python backend tests (63 files)
-- `packages/*/src/test/` — Frontend unit tests (4 files)
+- `elyra/tests/` — Python unit tests (32 files)
 - `cypress/tests/` — Cypress integration tests (11 specs)
-- `cypress/support/commands.ts` — Custom Cypress commands
-- `cypress.config.ts` — Cypress configuration with code coverage
+- `packages/*/src/test/` — Jest unit tests (4 spec files)
+- `testutils/jest.config.js` — Shared Jest configuration
+- `cypress.config.ts` — Cypress configuration
 - `conftest.py` — Root pytest fixtures
 - `test_requirements.txt` — Python test dependencies
-- `.nycrc` — NYC coverage configuration with thresholds
 
 ### Code Quality
-- `.eslintrc.json` — ESLint configuration (TypeScript + React)
+- `pyproject.toml` — flake8, black, pytest configuration
 - `.prettierrc` — Prettier configuration
-- `.lintstagedrc` — Pre-commit lint configuration
-- `lint_requirements.txt` — Python lint dependencies (flake8 + black)
-- `pyproject.toml` — flake8, black, and pytest configuration
+- `lint_requirements.txt` — Python linting dependencies
+- `package.json` — Husky pre-commit hooks, ESLint/Prettier scripts
 
-### Build & Containers
-- `Makefile` — All build, test, and release targets
-- `etc/docker/elyra/Dockerfile` — Elyra standalone image
+### Container Images
+- `etc/docker/elyra/Dockerfile` — Standalone Elyra image
 - `etc/docker/kubeflow/Dockerfile` — Kubeflow notebook image
 - `etc/docker/elyra_development/Dockerfile` — Development image
-- `pyproject.toml` — Hatchling build configuration
-- `package.json` — Yarn workspace and Lerna configuration
 
 ### Agent Rules
-- `AGENT.md` — Comprehensive AI agent guidelines (248 lines)
-- `CLAUDE.md` — Claude Code pointer to AGENT.md
-- `GEMINI.md` — Gemini pointer to AGENT.md
+- `CLAUDE.md` — Claude Code guidelines (pointer)
+- `AGENT.md` — Comprehensive agent guidelines
+- `GEMINI.md` — Gemini guidelines (pointer)

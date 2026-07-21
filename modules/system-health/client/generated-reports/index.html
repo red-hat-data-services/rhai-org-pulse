@@ -44,10 +44,10 @@
 </head>
 <body>
   <div class="card">
-    <h1>Quality Analysis (270 Repos)</h1>
-    <p><strong>Generated:</strong> 2026-07-20 21:27:28</p>
-    <p><strong>Average score:</strong> 5.6/10</p>
-    <p>RHOAI quality analysis — 270 repositories (upstream preserved, midstream + downstream refreshed 2026-07-20)</p>
+    <h1>Quality Analysis (257 Repos)</h1>
+    <p><strong>Generated:</strong> 2026-07-21 13:09:09</p>
+    <p><strong>Average score:</strong> 5.5/10</p>
+    <p>RHOAI quality analysis — 56 upstream repos refreshed (2026-07-21)</p>
   </div>
 
   <div class="card">
@@ -89,28 +89,12 @@
               <td>Coverage enforcement is informational only, No multi-architecture container image builds</td>
             </tr>
             <tr>
-              <td><a href="quality-report-kubernetes-sigs-kueue.html">kubernetes-sigs/kueue</a></td>
-              <td><a href="https://github.com/kubernetes-sigs/kueue" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>Workload Orchestration</td>
-              <td>8.6/10</td>
-              <td>No coverage tracking integration (Codecov/Coveralls), No container vulnerability scanning (Trivy/Snyk)</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-langfuse-langfuse.html">langfuse/langfuse</a></td>
               <td><a href="https://github.com/langfuse/langfuse" target="_blank">GitHub</a></td>
               <td>upstream</td>
               <td></td>
               <td>8.6/10</td>
               <td>No coverage enforcement or reporting, Minimal Playwright E2E test coverage</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-opendatahub-io-llm-d-router.html">opendatahub-io/llm-d-router</a></td>
-              <td><a href="https://github.com/opendatahub-io/llm-d-router" target="_blank">GitHub</a></td>
-              <td>midstream</td>
-              <td>llm-d</td>
-              <td>8.5/10</td>
-              <td>No external coverage reporting service, No standalone container runtime validation tests</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-odh-dashboard.html">opendatahub-io/odh-dashboard</a></td>
@@ -121,44 +105,12 @@
               <td>Coverage enforcement is informational-only, No pre-commit-config.yaml for standardized hooks</td>
             </tr>
             <tr>
-              <td><a href="quality-report-red-hat-data-services-llm-d-router.html">red-hat-data-services/llm-d-router</a></td>
-              <td><a href="https://github.com/red-hat-data-services/llm-d-router" target="_blank">GitHub</a></td>
-              <td>downstream</td>
-              <td>llm-d</td>
-              <td>8.5/10</td>
-              <td>No external coverage reporting service (Codecov/Coveralls), math/rand usage in scheduling/routing paths</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-llm-d-llm-d-inference-scheduler.html">llm-d/llm-d-inference-scheduler</a></td>
-              <td><a href="https://github.com/llm-d/llm-d-inference-scheduler" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td></td>
-              <td>8.4/10</td>
-              <td>No PR-time Trivy/security scanning, No CodeQL or SAST integration</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-mlflow-mlflow.html">mlflow/mlflow</a></td>
-              <td><a href="https://github.com/mlflow/mlflow" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>MLflow</td>
-              <td>8.4/10</td>
-              <td>No coverage tracking or enforcement, No container security scanning (Trivy, Snyk, etc.)</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-openvinotoolkit-openvino.html">openvinotoolkit/openvino</a></td>
-              <td><a href="https://github.com/openvinotoolkit/openvino" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>Model Runtimes</td>
-              <td>8.4/10</td>
-              <td>No container vulnerability scanning (Trivy/Snyk/Grype), No SBOM generation or image signing</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-eval-hub-eval-hub.html">eval-hub/eval-hub</a></td>
               <td><a href="https://github.com/eval-hub/eval-hub" target="_blank">GitHub</a></td>
               <td>upstream</td>
               <td>AI Safety</td>
               <td>8.3/10</td>
-              <td>No container vulnerability scanning (Trivy/Snyk/Grype), No SBOM generation or image signing</td>
+              <td>No custom golangci-lint configuration, Coverage thresholds are moderate (50-75 range)</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-kserve.html">opendatahub-io/kserve</a></td>
@@ -169,14 +121,6 @@
               <td>No Dependabot or Renovate for dependency alerts, No explicit FIPS build-tag configuration</td>
             </tr>
             <tr>
-              <td><a href="quality-report-opendatahub-io-mlflow-operator.html">opendatahub-io/mlflow-operator</a></td>
-              <td><a href="https://github.com/opendatahub-io/mlflow-operator" target="_blank">GitHub</a></td>
-              <td>midstream</td>
-              <td>MLflow</td>
-              <td>8.3/10</td>
-              <td>No coverage reporting or threshold enforcement, No Dependabot or Renovate for automated dependency alerts</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-red-hat-data-services-eval-hub.html">red-hat-data-services/eval-hub</a></td>
               <td><a href="https://github.com/red-hat-data-services/eval-hub" target="_blank">GitHub</a></td>
               <td>downstream</td>
@@ -185,20 +129,28 @@
               <td>No golangci-lint with extended linters, No container HEALTHCHECK instruction</td>
             </tr>
             <tr>
-              <td><a href="quality-report-red-hat-data-services-llm-d-inference-scheduler.html">red-hat-data-services/llm-d-inference-scheduler</a></td>
-              <td><a href="https://github.com/red-hat-data-services/llm-d-inference-scheduler" target="_blank">GitHub</a></td>
-              <td>downstream</td>
-              <td>llm-d</td>
-              <td>8.3/10</td>
-              <td>No external coverage dashboard (Codecov/Coveralls), math/rand usage in scheduling plugins without FIPS review</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-kserve-kserve.html">kserve/kserve</a></td>
               <td><a href="https://github.com/kserve/kserve" target="_blank">GitHub</a></td>
               <td>upstream</td>
               <td>Serving Orchestration</td>
               <td>8.2/10</td>
-              <td>No agent rules for AI-assisted development, No Konflux/production build simulation on PRs</td>
+              <td>No Dependabot or Renovate for automated dependency updates, No FIPS build configuration</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-llm-d-llm-d-router.html">llm-d/llm-d-router</a></td>
+              <td><a href="https://github.com/llm-d/llm-d-router" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>llm-d</td>
+              <td>8.2/10</td>
+              <td>No FIPS build configuration or compliance checks, math/rand used in non-test production code (9 files)</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-ogx-ai-ogx.html">ogx-ai/ogx</a></td>
+              <td><a href="https://github.com/ogx-ai/ogx" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>OGX Core</td>
+              <td>8.2/10</td>
+              <td>No Codecov/Coveralls PR coverage reporting, No container runtime validation (HEALTHCHECK, startup tests)</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-NeMo-Guardrails.html">opendatahub-io/NeMo-Guardrails</a></td>
@@ -225,20 +177,28 @@
               <td>No pre-commit hooks for local development, No multi-version Kubernetes testing</td>
             </tr>
             <tr>
-              <td><a href="quality-report-red-hat-data-services-mlflow-operator.html">red-hat-data-services/mlflow-operator</a></td>
-              <td><a href="https://github.com/red-hat-data-services/mlflow-operator" target="_blank">GitHub</a></td>
-              <td>downstream</td>
-              <td>MLflow</td>
-              <td>8.2/10</td>
-              <td>No coverage tracking or enforcement in CI, No container runtime health validation</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-red-hat-data-services-workload-variant-autoscaler.html">red-hat-data-services/workload-variant-autoscaler</a></td>
               <td><a href="https://github.com/red-hat-data-services/workload-variant-autoscaler" target="_blank">GitHub</a></td>
               <td>downstream</td>
               <td>llm-d</td>
               <td>8.2/10</td>
               <td>No coverage tracking or enforcement, No container runtime validation outside E2E</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-mlflow-mlflow.html">mlflow/mlflow</a></td>
+              <td><a href="https://github.com/mlflow/mlflow" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>MLflow</td>
+              <td>8.1/10</td>
+              <td>No coverage tracking or enforcement, No Dependabot or Renovate configuration</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-ogx-ai-ogx-k8s-operator.html">ogx-ai/ogx-k8s-operator</a></td>
+              <td><a href="https://github.com/ogx-ai/ogx-k8s-operator" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>OGX Core</td>
+              <td>8.1/10</td>
+              <td>Coverage thresholds not enforced, No PR coverage comment reporting</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-kubeflow.html">opendatahub-io/kubeflow</a></td>
@@ -313,6 +273,14 @@
               <td>crypto/md5 usage in production code, No container runtime validation</td>
             </tr>
             <tr>
+              <td><a href="quality-report-llm-d-llm-d-workload-variant-autoscaler.html">llm-d/llm-d-workload-variant-autoscaler</a></td>
+              <td><a href="https://github.com/llm-d/llm-d-workload-variant-autoscaler" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>llm-d</td>
+              <td>7.9/10</td>
+              <td>No coverage tracking or enforcement in CI, No container image runtime validation</td>
+            </tr>
+            <tr>
               <td><a href="quality-report-opendatahub-io-eval-hub.html">opendatahub-io/eval-hub</a></td>
               <td><a href="https://github.com/opendatahub-io/eval-hub" target="_blank">GitHub</a></td>
               <td>midstream</td>
@@ -329,6 +297,14 @@
               <td>No Dependabot or Renovate for dependency alerts, No container runtime validation or healthcheck testing</td>
             </tr>
             <tr>
+              <td><a href="quality-report-kubeflow-trainer.html">kubeflow/trainer</a></td>
+              <td><a href="https://github.com/kubeflow/trainer" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Training Kubeflow</td>
+              <td>7.8/10</td>
+              <td>No coverage threshold enforcement, No Python or Rust coverage tracking</td>
+            </tr>
+            <tr>
               <td><a href="quality-report-opendatahub-io-ogx.html">opendatahub-io/ogx</a></td>
               <td><a href="https://github.com/opendatahub-io/ogx" target="_blank">GitHub</a></td>
               <td>midstream</td>
@@ -343,6 +319,14 @@
               <td>AI Core Platform</td>
               <td>7.8/10</td>
               <td>Coverage thresholds are informational-only, No container runtime validation tests</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-openvinotoolkit-openvino.html">openvinotoolkit/openvino</a></td>
+              <td><a href="https://github.com/openvinotoolkit/openvino" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Runtimes</td>
+              <td>7.8/10</td>
+              <td>No PR-time coverage gates, No pre-commit hooks</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-kuberay.html">opendatahub-io/kuberay</a></td>
@@ -369,6 +353,14 @@
               <td>Coverage thresholds are informational-only (not enforced), No container image runtime validation testing</td>
             </tr>
             <tr>
+              <td><a href="quality-report-vllm-project-semantic-router.html">vllm-project/semantic-router</a></td>
+              <td><a href="https://github.com/vllm-project/semantic-router" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Inference Gateway</td>
+              <td>7.7/10</td>
+              <td>No coverage tracking for main semantic-router module, No Dependabot or Renovate for dependency alerts</td>
+            </tr>
+            <tr>
               <td><a href="quality-report-anomalyco-opencode.html">anomalyco/opencode</a></td>
               <td><a href="https://github.com/anomalyco/opencode" target="_blank">GitHub</a></td>
               <td>upstream</td>
@@ -382,39 +374,7 @@
               <td>upstream</td>
               <td>Feature Store</td>
               <td>7.6/10</td>
-              <td>No Python coverage tracking or enforcement, Integration tests require label approval, not auto-triggered on PR</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-kubeflow-hub.html">kubeflow/hub</a></td>
-              <td><a href="https://github.com/kubeflow/hub" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>AI Hub</td>
-              <td>7.6/10</td>
-              <td>No coverage tracking or enforcement in CI, No SAST/CodeQL scanning</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-kubeflow-pipelines.html">kubeflow/pipelines</a></td>
-              <td><a href="https://github.com/kubeflow/pipelines" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>AI Pipelines</td>
-              <td>7.6/10</td>
-              <td>No coverage tracking or enforcement, Trivy and CodeQL are schedule-only (not on PR)</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-kubeflow-spark-operator.html">kubeflow/spark-operator</a></td>
-              <td><a href="https://github.com/kubeflow/spark-operator" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>Kubeflow Spark Operator</td>
-              <td>7.6/10</td>
-              <td>No coverage tracking in CI, No container image security scanning</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-kubeflow-trainer.html">kubeflow/trainer</a></td>
-              <td><a href="https://github.com/kubeflow/trainer" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>Training Kubeflow</td>
-              <td>7.6/10</td>
-              <td>No container image vulnerability scanning, No container runtime validation after build</td>
+              <td>No Dependabot or Renovate for automated dependency updates, Coverage tracking is informational-only (no enforced gates)</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-feast.html">opendatahub-io/feast</a></td>
@@ -441,14 +401,6 @@
               <td>No coverage threshold enforcement, No dedicated E2E test suite</td>
             </tr>
             <tr>
-              <td><a href="quality-report-openvinotoolkit-openvino.genai.html">openvinotoolkit/openvino.genai</a></td>
-              <td><a href="https://github.com/openvinotoolkit/openvino.genai" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>Model Runtimes</td>
-              <td>7.6/10</td>
-              <td>No code coverage tracking or enforcement, No container image testing pipeline</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-red-hat-data-services-model-registry.html">red-hat-data-services/model-registry</a></td>
               <td><a href="https://github.com/red-hat-data-services/model-registry" target="_blank">GitHub</a></td>
               <td>downstream</td>
@@ -465,12 +417,12 @@
               <td>No coverage threshold enforcement, No dedicated E2E test suite</td>
             </tr>
             <tr>
-              <td><a href="quality-report-trustyai-explainability-NeMo-Guardrails.html">trustyai-explainability/NeMo-Guardrails</a></td>
-              <td><a href="https://github.com/trustyai-explainability/NeMo-Guardrails" target="_blank">GitHub</a></td>
+              <td><a href="quality-report-kubeflow-sdk.html">kubeflow/sdk</a></td>
+              <td><a href="https://github.com/kubeflow/sdk" target="_blank">GitHub</a></td>
               <td>upstream</td>
-              <td>AI Safety</td>
-              <td>7.6/10</td>
-              <td>Coverage thresholds are informational only, No PR-time validation for Dockerfile.server (fork image)</td>
+              <td>Kubeflow Unified SDK</td>
+              <td>7.5/10</td>
+              <td>No PR-time build integration or Konflux simulation, No coverage threshold enforcement</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-models-as-a-service.html">opendatahub-io/models-as-a-service</a></td>
@@ -521,20 +473,28 @@
               <td>No coverage tracking or PR reporting, No golangci-lint configuration</td>
             </tr>
             <tr>
-              <td><a href="quality-report-elyra-ai-elyra.html">elyra-ai/elyra</a></td>
-              <td><a href="https://github.com/elyra-ai/elyra" target="_blank">GitHub</a></td>
+              <td><a href="quality-report-trustyai-explainability-NeMo-Guardrails.html">trustyai-explainability/NeMo-Guardrails</a></td>
+              <td><a href="https://github.com/trustyai-explainability/NeMo-Guardrails" target="_blank">GitHub</a></td>
               <td>upstream</td>
-              <td>Notebooks Extensions</td>
-              <td>7.4/10</td>
-              <td>No container vulnerability scanning, Minimal frontend unit test coverage</td>
+              <td>AI Safety</td>
+              <td>7.5/10</td>
+              <td>hashlib.md5 usage in production code, No PR-time Docker image build for most PRs</td>
             </tr>
             <tr>
-              <td><a href="quality-report-kubeflow-sdk.html">kubeflow/sdk</a></td>
-              <td><a href="https://github.com/kubeflow/sdk" target="_blank">GitHub</a></td>
+              <td><a href="quality-report-argoproj-argo-workflows.html">argoproj/argo-workflows</a></td>
+              <td><a href="https://github.com/argoproj/argo-workflows" target="_blank">GitHub</a></td>
               <td>upstream</td>
-              <td>Kubeflow Unified SDK</td>
+              <td>AI Pipelines</td>
               <td>7.4/10</td>
-              <td>No PR-time package build validation, No coverage threshold enforcement</td>
+              <td>No coverage enforcement on PRs, No FIPS build configuration</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-kubeflow-hub.html">kubeflow/hub</a></td>
+              <td><a href="https://github.com/kubeflow/hub" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Hub</td>
+              <td>7.4/10</td>
+              <td>No coverage tracking or enforcement, No Go test parallelization (t.Parallel)</td>
             </tr>
             <tr>
               <td><a href="quality-report-langflow-ai-openrag.html">langflow-ai/openrag</a></td>
@@ -545,28 +505,12 @@
               <td>No coverage tracking or enforcement, No container vulnerability scanning</td>
             </tr>
             <tr>
-              <td><a href="quality-report-ogx-ai-ogx-k8s-operator.html">ogx-ai/ogx-k8s-operator</a></td>
-              <td><a href="https://github.com/ogx-ai/ogx-k8s-operator" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>OGX Core</td>
-              <td>7.4/10</td>
-              <td>No container security scanning (Trivy/Snyk/Grype), Coverage thresholds set to 0 — no enforcement</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-opendatahub-io-argo-workflows.html">opendatahub-io/argo-workflows</a></td>
               <td><a href="https://github.com/opendatahub-io/argo-workflows" target="_blank">GitHub</a></td>
               <td>midstream</td>
               <td>AI Pipelines</td>
               <td>7.4/10</td>
               <td>No coverage enforcement on PRs, No Konflux build simulation on PRs</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-ray-project-kuberay.html">ray-project/kuberay</a></td>
-              <td><a href="https://github.com/ray-project/kuberay" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>KubeRay</td>
-              <td>7.4/10</td>
-              <td>No coverage tracking or enforcement in CI, No container security scanning (Trivy/Snyk/CodeQL)</td>
             </tr>
             <tr>
               <td><a href="quality-report-red-hat-data-services-argo-workflows.html">red-hat-data-services/argo-workflows</a></td>
@@ -585,12 +529,20 @@
               <td>No coverage tracking or enforcement for Python SDK, FIPS non-compliant crypto usage in Python and Go code</td>
             </tr>
             <tr>
-              <td><a href="quality-report-red-hat-data-services-llm-d-async.html">red-hat-data-services/llm-d-async</a></td>
-              <td><a href="https://github.com/red-hat-data-services/llm-d-async" target="_blank">GitHub</a></td>
-              <td>downstream</td>
-              <td>llm-d</td>
-              <td>7.4/10</td>
-              <td>No coverage tracking or PR gates, No container runtime validation</td>
+              <td><a href="quality-report-kubeflow-pipelines.html">kubeflow/pipelines</a></td>
+              <td><a href="https://github.com/kubeflow/pipelines" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Pipelines</td>
+              <td>7.3/10</td>
+              <td>No coverage enforcement or PR reporting, No container runtime validation</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-kubernetes-sigs-kueue.html">kubernetes-sigs/kueue</a></td>
+              <td><a href="https://github.com/kubernetes-sigs/kueue" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Workload Orchestration</td>
+              <td>7.3/10</td>
+              <td>No coverage tracking or enforcement, No PR-time container image build validation</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-ai-gateway-payload-processing.html">opendatahub-io/ai-gateway-payload-processing</a></td>
@@ -673,12 +625,28 @@
               <td>No coverage tracking or enforcement in CI, No container image vulnerability scanning</td>
             </tr>
             <tr>
+              <td><a href="quality-report-trustyai-explainability-trustyai-service-operator.html">trustyai-explainability/trustyai-service-operator</a></td>
+              <td><a href="https://github.com/trustyai-explainability/trustyai-service-operator" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Safety</td>
+              <td>7.3/10</td>
+              <td>No coverage tracking or enforcement, No golangci-lint configuration</td>
+            </tr>
+            <tr>
               <td><a href="quality-report-opendatahub-io-training-operator.html">opendatahub-io/training-operator</a></td>
               <td><a href="https://github.com/opendatahub-io/training-operator" target="_blank">GitHub</a></td>
               <td>midstream</td>
               <td>Training Kubeflow</td>
               <td>7.2/10</td>
               <td>No coverage tracking or enforcement, No Dependabot or Renovate for dependency alerts</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-openshift-mcp-lifecycle-operator.html">openshift/mcp-lifecycle-operator</a></td>
+              <td><a href="https://github.com/openshift/mcp-lifecycle-operator" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>OCPMCPLO</td>
+              <td>7.2/10</td>
+              <td>No coverage tracking in CI, No container runtime validation</td>
             </tr>
             <tr>
               <td><a href="quality-report-red-hat-data-services-notebooks-downstream.html">red-hat-data-services/notebooks-downstream</a></td>
@@ -745,12 +713,12 @@
               <td>No coverage tracking or enforcement, No PR-time Docker image build validation</td>
             </tr>
             <tr>
-              <td><a href="quality-report-opendatahub-io-llm-d-async.html">opendatahub-io/llm-d-async</a></td>
-              <td><a href="https://github.com/opendatahub-io/llm-d-async" target="_blank">GitHub</a></td>
-              <td>midstream</td>
+              <td><a href="quality-report-llm-d-incubation-llm-d-async.html">llm-d-incubation/llm-d-async</a></td>
+              <td><a href="https://github.com/llm-d-incubation/llm-d-async" target="_blank">GitHub</a></td>
+              <td>upstream</td>
               <td>llm-d</td>
               <td>7.0/10</td>
-              <td>No coverage tracking in CI, No container runtime validation</td>
+              <td>No coverage reporting or enforcement, No FIPS-compatible base images</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-ogx-distribution.html">opendatahub-io/ogx-distribution</a></td>
@@ -761,36 +729,12 @@
               <td>No code coverage tracking, Build scripts lack unit tests</td>
             </tr>
             <tr>
-              <td><a href="quality-report-openvinotoolkit-model_server.html">openvinotoolkit/model_server</a></td>
-              <td><a href="https://github.com/openvinotoolkit/model_server" target="_blank">GitHub</a></td>
+              <td><a href="quality-report-ray-project-kuberay.html">ray-project/kuberay</a></td>
+              <td><a href="https://github.com/ray-project/kuberay" target="_blank">GitHub</a></td>
               <td>upstream</td>
-              <td>Model Runtimes</td>
+              <td>KubeRay</td>
               <td>7.0/10</td>
-              <td>No public CI/CD pipeline visibility, No container image vulnerability scanning in CI</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-red-hat-data-services-eval-hub-sobha.html">red-hat-data-services/eval-hub-sobha</a></td>
-              <td><a href="https://github.com/red-hat-data-services/eval-hub-sobha" target="_blank">GitHub</a></td>
-              <td>downstream</td>
-              <td>AI Safety</td>
-              <td>7.0/10</td>
-              <td>No golangci-lint configuration, No PR-time Docker build validation in GitHub CI</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-kubeflow-notebooks.html">kubeflow/notebooks</a></td>
-              <td><a href="https://github.com/kubeflow/notebooks" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>Notebooks Server</td>
-              <td>6.9/10</td>
-              <td>No security scanning (Trivy, CodeQL, SAST), No coverage enforcement in CI</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-kubernetes-sigs-gateway-api-inference-extension.html">kubernetes-sigs/gateway-api-inference-extension</a></td>
-              <td><a href="https://github.com/kubernetes-sigs/gateway-api-inference-extension" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td></td>
-              <td>6.9/10</td>
-              <td>No PR-gated E2E or integration tests, No coverage tracking or enforcement</td>
+              <td>No coverage tracking or enforcement in CI, No AI agent rules for test automation</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-openvino.html">opendatahub-io/openvino</a></td>
@@ -799,6 +743,14 @@
               <td>Model Runtimes</td>
               <td>6.9/10</td>
               <td>Coverage workflow is manual-trigger only — no PR-level enforcement, No AI agent rules or test automation guidance</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-openvinotoolkit-model_server.html">openvinotoolkit/model_server</a></td>
+              <td><a href="https://github.com/openvinotoolkit/model_server" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Runtimes</td>
+              <td>6.9/10</td>
+              <td>No Dependabot or Renovate for automated dependency updates, No pre-commit hooks for enforcing style checks locally</td>
             </tr>
             <tr>
               <td><a href="quality-report-red-hat-data-services-data-science-pipelines.html">red-hat-data-services/data-science-pipelines</a></td>
@@ -825,12 +777,28 @@
               <td>No container image build or testing, Coverage workflow is manual dispatch only</td>
             </tr>
             <tr>
-              <td><a href="quality-report-kubeflow-pipelines-components.html">kubeflow/pipelines-components</a></td>
-              <td><a href="https://github.com/kubeflow/pipelines-components" target="_blank">GitHub</a></td>
+              <td><a href="quality-report-elyra-ai-elyra.html">elyra-ai/elyra</a></td>
+              <td><a href="https://github.com/elyra-ai/elyra" target="_blank">GitHub</a></td>
               <td>upstream</td>
-              <td>AI Pipelines</td>
+              <td>Notebooks Extensions</td>
               <td>6.8/10</td>
-              <td>No coverage enforcement or tracking integration, No security scanning (Trivy, CodeQL, SAST)</td>
+              <td>No PR-time Docker image builds, Sparse frontend unit test coverage</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-kubeflow-notebooks.html">kubeflow/notebooks</a></td>
+              <td><a href="https://github.com/kubeflow/notebooks" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Notebooks Server</td>
+              <td>6.8/10</td>
+              <td>No coverage tracking or enforcement in CI, No Dependabot or Renovate for dependency management</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-kubeflow-spark-operator.html">kubeflow/spark-operator</a></td>
+              <td><a href="https://github.com/kubeflow/spark-operator" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Kubeflow Spark Operator</td>
+              <td>6.8/10</td>
+              <td>No coverage tracking in CI, No dependency alert configuration</td>
             </tr>
             <tr>
               <td><a href="quality-report-red-hat-data-services-training-operator.html">red-hat-data-services/training-operator</a></td>
@@ -849,30 +817,6 @@
               <td>No coverage enforcement or tracking in CI, No Dependabot or Renovate for dependency alerts</td>
             </tr>
             <tr>
-              <td><a href="quality-report-llm-d-incubation-batch-gateway.html">llm-d-incubation/batch-gateway</a></td>
-              <td><a href="https://github.com/llm-d-incubation/batch-gateway" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td></td>
-              <td>6.7/10</td>
-              <td>No coverage tracking in CI, No container vulnerability scanning</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-opendatahub-io-kubeflow-sdk.html">opendatahub-io/kubeflow-sdk</a></td>
-              <td><a href="https://github.com/opendatahub-io/kubeflow-sdk" target="_blank">GitHub</a></td>
-              <td>midstream</td>
-              <td>Kubeflow Unified SDK</td>
-              <td>6.7/10</td>
-              <td>No coverage threshold enforcement in CI, Missing E2E tests for Optimizer and Hub modules</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-opendatahub-io-llm-d-batch-gateway-operator.html">opendatahub-io/llm-d-batch-gateway-operator</a></td>
-              <td><a href="https://github.com/opendatahub-io/llm-d-batch-gateway-operator" target="_blank">GitHub</a></td>
-              <td>midstream</td>
-              <td>llm-d</td>
-              <td>6.7/10</td>
-              <td>No coverage tracking or enforcement, No AI agent rules for test creation</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-opendatahub-io-odh-konflux-central.html">opendatahub-io/odh-konflux-central</a></td>
               <td><a href="https://github.com/opendatahub-io/odh-konflux-central" target="_blank">GitHub</a></td>
               <td>midstream</td>
@@ -887,14 +831,6 @@
               <td>Serving Orchestration</td>
               <td>6.7/10</td>
               <td>No coverage tracking or enforcement in CI, Main controller E2E workflow is manual-only (workflow_dispatch)</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-red-hat-data-services-llm-d-batch-gateway-operator.html">red-hat-data-services/llm-d-batch-gateway-operator</a></td>
-              <td><a href="https://github.com/red-hat-data-services/llm-d-batch-gateway-operator" target="_blank">GitHub</a></td>
-              <td>downstream</td>
-              <td>llm-d</td>
-              <td>6.7/10</td>
-              <td>No coverage tracking or enforcement, No dependency update automation (Dependabot/Renovate)</td>
             </tr>
             <tr>
               <td><a href="quality-report-red-hat-data-services-odh-gitops.html">red-hat-data-services/odh-gitops</a></td>
@@ -929,6 +865,14 @@
               <td>No automated coverage reporting on PRs, No Dependabot or Renovate for dependency alerts</td>
             </tr>
             <tr>
+              <td><a href="quality-report-project-codeflare-codeflare-operator.html">project-codeflare/codeflare-operator</a></td>
+              <td><a href="https://github.com/project-codeflare/codeflare-operator" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Workload Orchestration</td>
+              <td>6.6/10</td>
+              <td>No coverage tracking or enforcement, No agent rules for AI-assisted development</td>
+            </tr>
+            <tr>
               <td><a href="quality-report-red-hat-data-services-feast-module-operator.html">red-hat-data-services/feast-module-operator</a></td>
               <td><a href="https://github.com/red-hat-data-services/feast-module-operator" target="_blank">GitHub</a></td>
               <td>downstream</td>
@@ -953,20 +897,20 @@
               <td>No coverage tracking or enforcement, Minimal integration/E2E testing</td>
             </tr>
             <tr>
-              <td><a href="quality-report-SeldonIO-MLServer.html">SeldonIO/MLServer</a></td>
-              <td><a href="https://github.com/SeldonIO/MLServer" target="_blank">GitHub</a></td>
+              <td><a href="quality-report-trustyai-explainability-trustyai-service.html">trustyai-explainability/trustyai-service</a></td>
+              <td><a href="https://github.com/trustyai-explainability/trustyai-service" target="_blank">GitHub</a></td>
               <td>upstream</td>
-              <td>Model Runtimes</td>
+              <td>AI Safety</td>
               <td>6.6/10</td>
-              <td>No test coverage tracking or enforcement, No PR-time Docker image build validation</td>
+              <td>No E2E or operator integration testing, No coverage threshold enforcement</td>
             </tr>
             <tr>
-              <td><a href="quality-report-autogluon-autogluon.html">autogluon/autogluon</a></td>
-              <td><a href="https://github.com/autogluon/autogluon" target="_blank">GitHub</a></td>
+              <td><a href="quality-report-kubeflow-pipelines-components.html">kubeflow/pipelines-components</a></td>
+              <td><a href="https://github.com/kubeflow/pipelines-components" target="_blank">GitHub</a></td>
               <td>upstream</td>
-              <td>AutoML</td>
+              <td>AI Pipelines</td>
               <td>6.5/10</td>
-              <td>No test coverage tracking or enforcement, No container image runtime validation</td>
+              <td>No coverage tracking or enforcement in CI, No E2E or integration tests against a real KFP cluster</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-codeflare-operator.html">opendatahub-io/codeflare-operator</a></td>
@@ -977,20 +921,20 @@
               <td>No coverage tracking or enforcement in CI, No agent rules for AI-assisted development</td>
             </tr>
             <tr>
-              <td><a href="quality-report-opendatahub-io-llm-d-kv-cache.html">opendatahub-io/llm-d-kv-cache</a></td>
-              <td><a href="https://github.com/opendatahub-io/llm-d-kv-cache" target="_blank">GitHub</a></td>
-              <td>midstream</td>
-              <td>llm-d</td>
-              <td>6.5/10</td>
-              <td>No code coverage tracking or enforcement, No agent rules for AI-assisted development</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-opendatahub-io-opendatahub-tests.html">opendatahub-io/opendatahub-tests</a></td>
               <td><a href="https://github.com/opendatahub-io/opendatahub-tests" target="_blank">GitHub</a></td>
               <td>midstream</td>
               <td>QE</td>
               <td>6.5/10</td>
               <td>No code coverage tracking, No unit tests for utility code</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-openvinotoolkit-openvino.genai.html">openvinotoolkit/openvino.genai</a></td>
+              <td><a href="https://github.com/openvinotoolkit/openvino.genai" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Runtimes</td>
+              <td>6.5/10</td>
+              <td>No code coverage tracking or enforcement, No container image builds or testing</td>
             </tr>
             <tr>
               <td><a href="quality-report-red-hat-data-services-gateway-api-inference-extension.html">red-hat-data-services/gateway-api-inference-extension</a></td>
@@ -1049,36 +993,12 @@
               <td>No coverage reporting or enforcement in CI, No golangci-lint configuration</td>
             </tr>
             <tr>
-              <td><a href="quality-report-openshift-kube-rbac-proxy.html">openshift/kube-rbac-proxy</a></td>
-              <td><a href="https://github.com/openshift/kube-rbac-proxy" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>AI Core Platform</td>
-              <td>6.4/10</td>
-              <td>No test coverage tracking or enforcement, No container vulnerability scanning</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-project-codeflare-codeflare-operator.html">project-codeflare/codeflare-operator</a></td>
-              <td><a href="https://github.com/project-codeflare/codeflare-operator" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>Workload Orchestration</td>
-              <td>6.4/10</td>
-              <td>No coverage tracking or enforcement, No container security scanning</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-red-hat-data-services-codeflare-operator.html">red-hat-data-services/codeflare-operator</a></td>
               <td><a href="https://github.com/red-hat-data-services/codeflare-operator" target="_blank">GitHub</a></td>
               <td>downstream</td>
               <td>Workload Orchestration</td>
               <td>6.4/10</td>
               <td>No coverage enforcement or PR reporting, No agent rules for AI-assisted development</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-red-hat-data-services-llm-d-kv-cache.html">red-hat-data-services/llm-d-kv-cache</a></td>
-              <td><a href="https://github.com/red-hat-data-services/llm-d-kv-cache" target="_blank">GitHub</a></td>
-              <td>downstream</td>
-              <td>llm-d</td>
-              <td>6.4/10</td>
-              <td>No coverage tracking or enforcement, Lint and examples workflows disabled on PRs</td>
             </tr>
             <tr>
               <td><a href="quality-report-red-hat-data-services-openvino_model_server.html">red-hat-data-services/openvino_model_server</a></td>
@@ -1089,12 +1009,12 @@
               <td>No PR-level coverage reporting, No container runtime validation or HEALTHCHECK</td>
             </tr>
             <tr>
-              <td><a href="quality-report-trustyai-explainability-guardrails-detectors.html">trustyai-explainability/guardrails-detectors</a></td>
-              <td><a href="https://github.com/trustyai-explainability/guardrails-detectors" target="_blank">GitHub</a></td>
+              <td><a href="quality-report-kserve-modelmesh-serving.html">kserve/modelmesh-serving</a></td>
+              <td><a href="https://github.com/kserve/modelmesh-serving" target="_blank">GitHub</a></td>
               <td>upstream</td>
-              <td>AI Safety</td>
-              <td>6.4/10</td>
-              <td>No container image build or runtime testing in CI, No coverage thresholds or PR gating</td>
+              <td>Model Serving</td>
+              <td>6.3/10</td>
+              <td>No coverage tracking or enforcement, No dependency alert configuration (Dependabot/Renovate)</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-mcp-lifecycle-module-operator.html">opendatahub-io/mcp-lifecycle-module-operator</a></td>
@@ -1137,12 +1057,12 @@
               <td>No coverage tracking or enforcement in CI, No E2E or cluster-level testing</td>
             </tr>
             <tr>
-              <td><a href="quality-report-opendatahub-io-caikit-nlp-client.html">opendatahub-io/caikit-nlp-client</a></td>
-              <td><a href="https://github.com/opendatahub-io/caikit-nlp-client" target="_blank">GitHub</a></td>
-              <td>midstream</td>
-              <td>Model Runtimes</td>
+              <td><a href="quality-report-llm-d-llm-d-kv-cache.html">llm-d/llm-d-kv-cache</a></td>
+              <td><a href="https://github.com/llm-d/llm-d-kv-cache" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>llm-d</td>
               <td>6.2/10</td>
-              <td>No agent rules for AI-assisted development, Low coverage threshold (50%)</td>
+              <td>No coverage tracking or enforcement, Empty agent rules (CLAUDE.md)</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-disconnected-readiness-scorer.html">opendatahub-io/disconnected-readiness-scorer</a></td>
@@ -1161,14 +1081,6 @@
               <td>No coverage enforcement in CI, No dedicated E2E/integration test suite</td>
             </tr>
             <tr>
-              <td><a href="quality-report-openvinotoolkit-openvino_tokenizers.html">openvinotoolkit/openvino_tokenizers</a></td>
-              <td><a href="https://github.com/openvinotoolkit/openvino_tokenizers" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>Model Runtimes</td>
-              <td>6.2/10</td>
-              <td>No code coverage measurement or enforcement, No C++ unit tests</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-prometheus-blackbox_exporter.html">prometheus/blackbox_exporter</a></td>
               <td><a href="https://github.com/prometheus/blackbox_exporter" target="_blank">GitHub</a></td>
               <td>upstream</td>
@@ -1177,28 +1089,12 @@
               <td>No test coverage tracking or enforcement, No container image runtime validation</td>
             </tr>
             <tr>
-              <td><a href="quality-report-llm-d-llm-d-kv-cache.html">llm-d/llm-d-kv-cache</a></td>
-              <td><a href="https://github.com/llm-d/llm-d-kv-cache" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>llm-d</td>
-              <td>6.1/10</td>
-              <td>No coverage tracking or enforcement, No Trivy scanning on PR images</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-opendatahub-io-kube-auth-proxy.html">opendatahub-io/kube-auth-proxy</a></td>
               <td><a href="https://github.com/opendatahub-io/kube-auth-proxy" target="_blank">GitHub</a></td>
               <td>midstream</td>
               <td>AI Core Platform</td>
               <td>6.1/10</td>
               <td>No coverage threshold enforcement, No full E2E test suite with cluster deployment</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-opendatahub-io-mlflow-go.html">opendatahub-io/mlflow-go</a></td>
-              <td><a href="https://github.com/opendatahub-io/mlflow-go" target="_blank">GitHub</a></td>
-              <td>midstream</td>
-              <td>MLflow</td>
-              <td>6.1/10</td>
-              <td>No code coverage tracking or enforcement, No container image or build integration testing</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-odh-cli.html">opendatahub-io/odh-cli</a></td>
@@ -1329,14 +1225,6 @@
               <td>Zero coverage tracking, No dependency alert automation</td>
             </tr>
             <tr>
-              <td><a href="quality-report-triton-inference-server-perf_analyzer.html">triton-inference-server/perf_analyzer</a></td>
-              <td><a href="https://github.com/triton-inference-server/perf_analyzer" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td></td>
-              <td>5.9/10</td>
-              <td>Critical CI/CD split between GitHub and private GitLab, No container image build or testing</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-opendatahub-io-kube-authkit.html">opendatahub-io/kube-authkit</a></td>
               <td><a href="https://github.com/opendatahub-io/kube-authkit" target="_blank">GitHub</a></td>
               <td>midstream</td>
@@ -1345,20 +1233,20 @@
               <td>No PR-time package build validation, No dependency update automation (Dependabot/Renovate)</td>
             </tr>
             <tr>
+              <td><a href="quality-report-trustyai-explainability-llama-stack-provider-trustyai-garak.html">trustyai-explainability/llama-stack-provider-trustyai-garak</a></td>
+              <td><a href="https://github.com/trustyai-explainability/llama-stack-provider-trustyai-garak" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Safety</td>
+              <td>5.8/10</td>
+              <td>No integration or E2E test infrastructure, Coverage not enforced in CI</td>
+            </tr>
+            <tr>
               <td><a href="quality-report-opendatahub-io-elyra.html">opendatahub-io/elyra</a></td>
               <td><a href="https://github.com/opendatahub-io/elyra" target="_blank">GitHub</a></td>
               <td>midstream</td>
               <td>Notebooks Extensions</td>
               <td>5.7/10</td>
               <td>No Dependabot or Renovate for automated dependency updates, Very sparse TypeScript unit test coverage</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-EleutherAI-lm-evaluation-harness.html">EleutherAI/lm-evaluation-harness</a></td>
-              <td><a href="https://github.com/EleutherAI/lm-evaluation-harness" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>AI Safety</td>
-              <td>5.6/10</td>
-              <td>No coverage tracking or enforcement, No security scanning in CI</td>
             </tr>
             <tr>
               <td><a href="quality-report-noobaa-noobaa-operator.html">noobaa/noobaa-operator</a></td>
@@ -1385,6 +1273,22 @@
               <td>No coverage tracking or enforcement, Unit tests are scaffolding-only — no real business logic assertions</td>
             </tr>
             <tr>
+              <td><a href="quality-report-openshift-kube-rbac-proxy.html">openshift/kube-rbac-proxy</a></td>
+              <td><a href="https://github.com/openshift/kube-rbac-proxy" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Core Platform</td>
+              <td>5.6/10</td>
+              <td>No coverage tracking or enforcement, No Konflux/OCP build simulation in PR workflow</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-openvinotoolkit-openvino_tokenizers.html">openvinotoolkit/openvino_tokenizers</a></td>
+              <td><a href="https://github.com/openvinotoolkit/openvino_tokenizers" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Runtimes</td>
+              <td>5.6/10</td>
+              <td>No code coverage tracking or enforcement, No container image or Dockerfile</td>
+            </tr>
+            <tr>
               <td><a href="quality-report-red-hat-data-services-codeflare-sdk.html">red-hat-data-services/codeflare-sdk</a></td>
               <td><a href="https://github.com/red-hat-data-services/codeflare-sdk" target="_blank">GitHub</a></td>
               <td>downstream</td>
@@ -1399,22 +1303,6 @@
               <td>AI Safety</td>
               <td>5.6/10</td>
               <td>No integration or E2E tests, Coverage not enforced in CI</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-trustyai-explainability-fms-guardrails-orchestrator.html">trustyai-explainability/fms-guardrails-orchestrator</a></td>
-              <td><a href="https://github.com/trustyai-explainability/fms-guardrails-orchestrator" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>AI Safety</td>
-              <td>5.6/10</td>
-              <td>No code coverage tracking or enforcement, No container vulnerability scanning</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-trustyai-explainability-trustyai-explainability.html">trustyai-explainability/trustyai-explainability</a></td>
-              <td><a href="https://github.com/trustyai-explainability/trustyai-explainability" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>AI Safety</td>
-              <td>5.6/10</td>
-              <td>No code coverage tracking or enforcement, No PR-time Docker image build or validation</td>
             </tr>
             <tr>
               <td><a href="quality-report-langfuse-langfuse-k8s.html">langfuse/langfuse-k8s</a></td>
@@ -1465,12 +1353,12 @@
               <td>No PR-time build validation, Coverage enforcement is informational-only</td>
             </tr>
             <tr>
-              <td><a href="quality-report-google-ml-metadata.html">google/ml-metadata</a></td>
-              <td><a href="https://github.com/google/ml-metadata" target="_blank">GitHub</a></td>
+              <td><a href="quality-report-kubeflow-kale.html">kubeflow/kale</a></td>
+              <td><a href="https://github.com/kubeflow/kale" target="_blank">GitHub</a></td>
               <td>upstream</td>
-              <td>AI Pipelines</td>
+              <td>Notebooks Extensions</td>
               <td>5.4/10</td>
-              <td>Bazel C++ tests not running in CI, No coverage tracking or enforcement</td>
+              <td>No coverage tracking or enforcement in CI, TypeScript labextension has no meaningful tests</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-kale.html">opendatahub-io/kale</a></td>
@@ -1489,14 +1377,6 @@
               <td>No coverage tracking in CI, Integration tests skipped by default</td>
             </tr>
             <tr>
-              <td><a href="quality-report-red-hat-data-services-caikit-tgis-backend.html">red-hat-data-services/caikit-tgis-backend</a></td>
-              <td><a href="https://github.com/red-hat-data-services/caikit-tgis-backend" target="_blank">GitHub</a></td>
-              <td>downstream</td>
-              <td>Model Runtimes</td>
-              <td>5.4/10</td>
-              <td>No integration or E2E test suite, No container image build or testing</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-opendatahub-io-trustyai-explainability.html">opendatahub-io/trustyai-explainability</a></td>
               <td><a href="https://github.com/opendatahub-io/trustyai-explainability" target="_blank">GitHub</a></td>
               <td>midstream</td>
@@ -1513,6 +1393,14 @@
               <td>No coverage tracking or enforcement, No dedicated integration/E2E test suite</td>
             </tr>
             <tr>
+              <td><a href="quality-report-trustyai-explainability-fms-guardrails-orchestrator.html">trustyai-explainability/fms-guardrails-orchestrator</a></td>
+              <td><a href="https://github.com/trustyai-explainability/fms-guardrails-orchestrator" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Safety</td>
+              <td>5.3/10</td>
+              <td>No code coverage tracking or enforcement, No PR-time container image build validation</td>
+            </tr>
+            <tr>
               <td><a href="quality-report-red-hat-data-services-fms-guardrails-orchestrator.html">red-hat-data-services/fms-guardrails-orchestrator</a></td>
               <td><a href="https://github.com/red-hat-data-services/fms-guardrails-orchestrator" target="_blank">GitHub</a></td>
               <td>downstream</td>
@@ -1521,12 +1409,12 @@
               <td>No code coverage tracking, No true E2E tests against real services</td>
             </tr>
             <tr>
-              <td><a href="quality-report-opendatahub-io-caikit-nlp.html">opendatahub-io/caikit-nlp</a></td>
-              <td><a href="https://github.com/opendatahub-io/caikit-nlp" target="_blank">GitHub</a></td>
-              <td>midstream</td>
-              <td>Model Runtimes</td>
+              <td><a href="quality-report-llm-d-llm-d-latency-predictor.html">llm-d/llm-d-latency-predictor</a></td>
+              <td><a href="https://github.com/llm-d/llm-d-latency-predictor" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>llm-d</td>
               <td>5.1/10</td>
-              <td>No integration or E2E test suite, No coverage enforcement or PR reporting</td>
+              <td>No unit tests — all tests require deployed servers, No coverage tracking or enforcement</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-model-registry-bf4-kf.html">opendatahub-io/model-registry-bf4-kf</a></td>
@@ -1537,6 +1425,22 @@
               <td>Very low unit test coverage — only 4 of 89 Go source files have tests, No coverage threshold enforcement</td>
             </tr>
             <tr>
+              <td><a href="quality-report-openvinotoolkit-openvino_contrib.html">openvinotoolkit/openvino_contrib</a></td>
+              <td><a href="https://github.com/openvinotoolkit/openvino_contrib" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Runtimes</td>
+              <td>5.1/10</td>
+              <td>No code coverage tracking or enforcement, No dependency update automation (Dependabot/Renovate)</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-trustyai-explainability-guardrails-detectors.html">trustyai-explainability/guardrails-detectors</a></td>
+              <td><a href="https://github.com/trustyai-explainability/guardrails-detectors" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Safety</td>
+              <td>5.1/10</td>
+              <td>No PR-time container image build validation, No coverage threshold enforcement or PR reporting</td>
+            </tr>
+            <tr>
               <td><a href="quality-report-opendatahub-io-vllm-gaudi.html">opendatahub-io/vllm-gaudi</a></td>
               <td><a href="https://github.com/opendatahub-io/vllm-gaudi" target="_blank">GitHub</a></td>
               <td>midstream</td>
@@ -1545,12 +1449,12 @@
               <td>Zero coverage tracking across the entire repository, No PR-time build validation in GitHub Actions</td>
             </tr>
             <tr>
-              <td><a href="quality-report-kserve-modelmesh.html">kserve/modelmesh</a></td>
-              <td><a href="https://github.com/kserve/modelmesh" target="_blank">GitHub</a></td>
+              <td><a href="quality-report-elyra-ai-pipeline-editor.html">elyra-ai/pipeline-editor</a></td>
+              <td><a href="https://github.com/elyra-ai/pipeline-editor" target="_blank">GitHub</a></td>
               <td>upstream</td>
-              <td>Model Serving</td>
+              <td>Notebooks Extensions</td>
               <td>4.9/10</td>
-              <td>No code coverage tracking or enforcement, Repository is archived — no active maintenance</td>
+              <td>No container image or Dockerfile, Cypress E2E suite has only 1 test scenario</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-mod-arch-library.html">opendatahub-io/mod-arch-library</a></td>
@@ -1577,14 +1481,6 @@
               <td>No code coverage tracking or enforcement, No C++ unit tests for core tokenizer operations</td>
             </tr>
             <tr>
-              <td><a href="quality-report-red-hat-data-services-kserve-autogluon-server.html">red-hat-data-services/kserve-autogluon-server</a></td>
-              <td><a href="https://github.com/red-hat-data-services/kserve-autogluon-server" target="_blank">GitHub</a></td>
-              <td>downstream</td>
-              <td>Model Serving</td>
-              <td>4.9/10</td>
-              <td>No CI/CD test automation, No coverage enforcement or PR reporting</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-red-hat-data-services-opendatahub-operator-sync.html">red-hat-data-services/opendatahub-operator-sync</a></td>
               <td><a href="https://github.com/red-hat-data-services/opendatahub-operator-sync" target="_blank">GitHub</a></td>
               <td>downstream</td>
@@ -1593,12 +1489,12 @@
               <td>No PR-time image build or Konflux simulation, E2E tests not automated on PRs</td>
             </tr>
             <tr>
-              <td><a href="quality-report-elyra-ai-pipeline-editor.html">elyra-ai/pipeline-editor</a></td>
-              <td><a href="https://github.com/elyra-ai/pipeline-editor" target="_blank">GitHub</a></td>
+              <td><a href="quality-report-caikit-caikit-nlp.html">caikit/caikit-nlp</a></td>
+              <td><a href="https://github.com/caikit/caikit-nlp" target="_blank">GitHub</a></td>
               <td>upstream</td>
-              <td>Notebooks Extensions</td>
+              <td>Model Runtimes</td>
               <td>4.8/10</td>
-              <td>Cypress E2E suite is effectively empty, No coverage enforcement or thresholds</td>
+              <td>No integration or E2E test suites, No coverage enforcement or PR reporting</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-elyra-pipeline-editor.html">opendatahub-io/elyra-pipeline-editor</a></td>
@@ -1617,14 +1513,6 @@
               <td>No code coverage tracking or enforcement, No dependency update automation (Dependabot/Renovate)</td>
             </tr>
             <tr>
-              <td><a href="quality-report-opendatahub-io-llm-d-latency-predictor.html">opendatahub-io/llm-d-latency-predictor</a></td>
-              <td><a href="https://github.com/opendatahub-io/llm-d-latency-predictor" target="_blank">GitHub</a></td>
-              <td>midstream</td>
-              <td>llm-d</td>
-              <td>4.8/10</td>
-              <td>Zero unit test coverage, No code coverage tracking</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-opendatahub-io-openvino_contrib.html">opendatahub-io/openvino_contrib</a></td>
               <td><a href="https://github.com/opendatahub-io/openvino_contrib" target="_blank">GitHub</a></td>
               <td>midstream</td>
@@ -1641,20 +1529,12 @@
               <td>No container image build or testing, No integration or E2E test suite</td>
             </tr>
             <tr>
-              <td><a href="quality-report-red-hat-data-services-caikit-nlp.html">red-hat-data-services/caikit-nlp</a></td>
-              <td><a href="https://github.com/red-hat-data-services/caikit-nlp" target="_blank">GitHub</a></td>
-              <td>downstream</td>
-              <td>Model Runtimes</td>
-              <td>4.8/10</td>
-              <td>No integration or E2E test suite, No coverage threshold enforcement or PR reporting</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-redhat-openshift-ecosystem-community-operators-prod.html">redhat-openshift-ecosystem/community-operators-prod</a></td>
-              <td><a href="https://github.com/redhat-openshift-ecosystem/community-operators-prod" target="_blank">GitHub</a></td>
+              <td><a href="quality-report-autogluon-autogluon.html">autogluon/autogluon</a></td>
+              <td><a href="https://github.com/autogluon/autogluon" target="_blank">GitHub</a></td>
               <td>upstream</td>
-              <td>AI Core Platform</td>
-              <td>4.8/10</td>
-              <td>No in-repo CI/CD — entire validation depends on external pipeline, No manifest schema validation in-repo</td>
+              <td>AutoML</td>
+              <td>4.7/10</td>
+              <td>No code coverage tracking, No dependency alert configuration (Dependabot/Renovate)</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-autogluon.html">opendatahub-io/autogluon</a></td>
@@ -1673,20 +1553,20 @@
               <td>Zero coverage tracking, No PR-time build validation</td>
             </tr>
             <tr>
-              <td><a href="quality-report-openvinotoolkit-openvino_contrib.html">openvinotoolkit/openvino_contrib</a></td>
-              <td><a href="https://github.com/openvinotoolkit/openvino_contrib" target="_blank">GitHub</a></td>
+              <td><a href="quality-report-google-ml-metadata.html">google/ml-metadata</a></td>
+              <td><a href="https://github.com/google/ml-metadata" target="_blank">GitHub</a></td>
               <td>upstream</td>
-              <td>Model Runtimes</td>
-              <td>4.6/10</td>
-              <td>No code coverage tracking or enforcement, No container image security scanning</td>
+              <td>AI Pipelines</td>
+              <td>4.5/10</td>
+              <td>No coverage tracking or enforcement, No dedicated E2E or integration test suite</td>
             </tr>
             <tr>
-              <td><a href="quality-report-red-hat-data-services-llm-d-latency-predictor.html">red-hat-data-services/llm-d-latency-predictor</a></td>
-              <td><a href="https://github.com/red-hat-data-services/llm-d-latency-predictor" target="_blank">GitHub</a></td>
-              <td>downstream</td>
-              <td>llm-d</td>
-              <td>4.6/10</td>
-              <td>No unit tests — only integration tests exist, Zero coverage tracking</td>
+              <td><a href="quality-report-kserve-modelmesh.html">kserve/modelmesh</a></td>
+              <td><a href="https://github.com/kserve/modelmesh" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Serving</td>
+              <td>4.5/10</td>
+              <td>No code coverage tracking or enforcement, No static analysis or linting configuration</td>
             </tr>
             <tr>
               <td><a href="quality-report-red-hat-data-services-fms-hf-tuning.html">red-hat-data-services/fms-hf-tuning</a></td>
@@ -1703,6 +1583,14 @@
               <td>AI Safety</td>
               <td>4.5/10</td>
               <td>No coverage tracking or enforcement, No Docker image build validation in CI</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-SeldonIO-MLServer.html">SeldonIO/MLServer</a></td>
+              <td><a href="https://github.com/SeldonIO/MLServer" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Runtimes</td>
+              <td>4.5/10</td>
+              <td>No coverage tracking or enforcement, No PR-time Docker image build validation</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-lm-evaluation-harness.html">opendatahub-io/lm-evaluation-harness</a></td>
@@ -1729,12 +1617,20 @@
               <td>No coverage tracking or enforcement, No E2E or cluster-based integration tests</td>
             </tr>
             <tr>
-              <td><a href="quality-report-opendatahub-io-caikit-tgis-serving.html">opendatahub-io/caikit-tgis-serving</a></td>
-              <td><a href="https://github.com/opendatahub-io/caikit-tgis-serving" target="_blank">GitHub</a></td>
-              <td>midstream</td>
-              <td>Model Runtimes</td>
+              <td><a href="quality-report-trustyai-explainability-trustyai-explainability.html">trustyai-explainability/trustyai-explainability</a></td>
+              <td><a href="https://github.com/trustyai-explainability/trustyai-explainability" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Safety</td>
+              <td>4.4/10</td>
+              <td>No code coverage tracking, No PR-time Docker image build validation</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-kserve-modelmesh-runtime-adapter.html">kserve/modelmesh-runtime-adapter</a></td>
+              <td><a href="https://github.com/kserve/modelmesh-runtime-adapter" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Serving</td>
               <td>4.3/10</td>
-              <td>No unit tests exist, Zero coverage tracking or enforcement</td>
+              <td>No coverage tracking or enforcement, No integration or E2E tests</td>
             </tr>
             <tr>
               <td><a href="quality-report-red-hat-data-services-lm-evaluation-harness-sobha.html">red-hat-data-services/lm-evaluation-harness-sobha</a></td>
@@ -1753,12 +1649,12 @@
               <td>No CI-integrated test execution, No e2e/integration tests</td>
             </tr>
             <tr>
-              <td><a href="quality-report-red-hat-data-services-caikit-tgis-serving.html">red-hat-data-services/caikit-tgis-serving</a></td>
-              <td><a href="https://github.com/red-hat-data-services/caikit-tgis-serving" target="_blank">GitHub</a></td>
-              <td>downstream</td>
-              <td>Model Runtimes</td>
+              <td><a href="quality-report-EleutherAI-lm-evaluation-harness.html">EleutherAI/lm-evaluation-harness</a></td>
+              <td><a href="https://github.com/EleutherAI/lm-evaluation-harness" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Safety</td>
               <td>4.2/10</td>
-              <td>No unit tests for any component, Zero coverage tracking</td>
+              <td>No code coverage tracking or enforcement in CI, No container image or Dockerfile for downstream consumers</td>
             </tr>
             <tr>
               <td><a href="quality-report-red-hat-data-services-lm-evaluation-harness.html">red-hat-data-services/lm-evaluation-harness</a></td>
@@ -1775,14 +1671,6 @@
               <td>Model Serving</td>
               <td>4.2/10</td>
               <td>No code coverage tracking or enforcement, No dedicated E2E or integration test suite</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-triton-inference-server-client.html">triton-inference-server/client</a></td>
-              <td><a href="https://github.com/triton-inference-server/client" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>Model Runtimes</td>
-              <td>4.2/10</td>
-              <td>No test execution in CI/CD pipeline, No coverage tracking or enforcement</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-mcp-server-operator.html">opendatahub-io/mcp-server-operator</a></td>
@@ -1841,12 +1729,12 @@
               <td>No coverage tracking or enforcement, No integration or E2E tests</td>
             </tr>
             <tr>
-              <td><a href="quality-report-ogx-ai-ogx-demos.html">ogx-ai/ogx-demos</a></td>
-              <td><a href="https://github.com/ogx-ai/ogx-demos" target="_blank">GitHub</a></td>
+              <td><a href="quality-report-kserve-rest-proxy.html">kserve/rest-proxy</a></td>
+              <td><a href="https://github.com/kserve/rest-proxy" target="_blank">GitHub</a></td>
               <td>upstream</td>
-              <td></td>
+              <td>Model Serving</td>
               <td>3.6/10</td>
-              <td>No unit test framework or test suite, No automated test execution in CI</td>
+              <td>No integration or E2E tests, No coverage tracking or enforcement</td>
             </tr>
             <tr>
               <td><a href="quality-report-assafelovic-gpt-researcher.html">assafelovic/gpt-researcher</a></td>
@@ -1857,14 +1745,6 @@
               <td>Tests are NOT run on PRs, No coverage tracking at all</td>
             </tr>
             <tr>
-              <td><a href="quality-report-kserve-rest-proxy.html">kserve/rest-proxy</a></td>
-              <td><a href="https://github.com/kserve/rest-proxy" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>Model Serving</td>
-              <td>3.4/10</td>
-              <td>No integration or E2E tests for proxy functionality, No container vulnerability scanning</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-opendatahub-io-observatory.html">opendatahub-io/observatory</a></td>
               <td><a href="https://github.com/opendatahub-io/observatory" target="_blank">GitHub</a></td>
               <td>midstream</td>
@@ -1873,12 +1753,20 @@
               <td>No CI/CD pipeline exists, No code coverage tracking</td>
             </tr>
             <tr>
-              <td><a href="quality-report-trustyai-explainability-vllm-orchestrator-gateway.html">trustyai-explainability/vllm-orchestrator-gateway</a></td>
-              <td><a href="https://github.com/trustyai-explainability/vllm-orchestrator-gateway" target="_blank">GitHub</a></td>
+              <td><a href="quality-report-triton-inference-server-client.html">triton-inference-server/client</a></td>
+              <td><a href="https://github.com/triton-inference-server/client" target="_blank">GitHub</a></td>
               <td>upstream</td>
-              <td>Model Serving</td>
+              <td>Model Runtimes</td>
               <td>3.4/10</td>
-              <td>No tests for main.rs (547 LOC) - the core gateway logic, No integration/E2E tests for HTTP API</td>
+              <td>No test execution in CI, No coverage tracking</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-trustyai-explainability-llama-stack-provider-ragas.html">trustyai-explainability/llama-stack-provider-ragas</a></td>
+              <td><a href="https://github.com/trustyai-explainability/llama-stack-provider-ragas" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Safety</td>
+              <td>3.4/10</td>
+              <td>No unit tests — all tests require live infrastructure, No coverage tracking or enforcement</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-llama-stack-provider-ragas.html">opendatahub-io/llama-stack-provider-ragas</a></td>
@@ -1945,6 +1833,14 @@
               <td>No test automation in CI, No build validation on PRs</td>
             </tr>
             <tr>
+              <td><a href="quality-report-trustyai-explainability-vllm-orchestrator-gateway.html">trustyai-explainability/vllm-orchestrator-gateway</a></td>
+              <td><a href="https://github.com/trustyai-explainability/vllm-orchestrator-gateway" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Serving</td>
+              <td>2.6/10</td>
+              <td>No integration or E2E tests, No code coverage tracking</td>
+            </tr>
+            <tr>
               <td><a href="quality-report-opendatahub-io-opendatahub.io.html">opendatahub-io/opendatahub.io</a></td>
               <td><a href="https://github.com/opendatahub-io/opendatahub.io" target="_blank">GitHub</a></td>
               <td>midstream</td>
@@ -1993,20 +1889,36 @@
               <td>No CI/CD automation — tests never run automatically, No coverage tracking for bash or Python scanning logic</td>
             </tr>
             <tr>
+              <td><a href="quality-report-elyra-ai-examples.html">elyra-ai/examples</a></td>
+              <td><a href="https://github.com/elyra-ai/examples" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Notebooks Extensions</td>
+              <td>1.8/10</td>
+              <td>CI does not run any tests, No coverage tracking at all</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-trustyai-explainability-guardrails-regex-detector.html">trustyai-explainability/guardrails-regex-detector</a></td>
+              <td><a href="https://github.com/trustyai-explainability/guardrails-regex-detector" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Safety</td>
+              <td>1.8/10</td>
+              <td>No CI/CD pipeline, Minimal unit test coverage</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-redhat-openshift-ecosystem-community-operators-prod.html">redhat-openshift-ecosystem/community-operators-prod</a></td>
+              <td><a href="https://github.com/redhat-openshift-ecosystem/community-operators-prod" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Core Platform</td>
+              <td>1.7/10</td>
+              <td>No in-repo YAML schema validation for operator bundles, No PR-time bundle structure validation workflow</td>
+            </tr>
+            <tr>
               <td><a href="quality-report-red-hat-data-services-guardrails-regex-detector.html">red-hat-data-services/guardrails-regex-detector</a></td>
               <td><a href="https://github.com/red-hat-data-services/guardrails-regex-detector" target="_blank">GitHub</a></td>
               <td>downstream</td>
               <td>AI Safety</td>
               <td>1.6/10</td>
               <td>No CI/CD automation, No integration tests for HTTP endpoints</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-kubeflow-kubeflow.html">kubeflow/kubeflow</a></td>
-              <td><a href="https://github.com/kubeflow/kubeflow" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>Notebooks Server</td>
-              <td>1.5/10</td>
-              <td>Repository is an umbrella/meta repo with no source code, No cross-subproject integration testing</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-elyra-examples.html">opendatahub-io/elyra-examples</a></td>
@@ -2055,14 +1967,6 @@
               <td>Internal Processes &amp; Documentation</td>
               <td>1.2/10</td>
               <td>No CI validation for markdown quality or link integrity, No PR template or ADR compliance checks</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-opendatahub-io-llm-d-playbooks.html">opendatahub-io/llm-d-playbooks</a></td>
-              <td><a href="https://github.com/opendatahub-io/llm-d-playbooks" target="_blank">GitHub</a></td>
-              <td>midstream</td>
-              <td>llm-d</td>
-              <td>1.1/10</td>
-              <td>No CI/CD automation at all, No automated manifest validation</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-odh-build-metadata.html">opendatahub-io/odh-build-metadata</a></td>
@@ -2121,6 +2025,14 @@
               <td>No tests for workflow logic or shell script, README is effectively empty</td>
             </tr>
             <tr>
+              <td><a href="quality-report-kubeflow-kubeflow.html">kubeflow/kubeflow</a></td>
+              <td><a href="https://github.com/kubeflow/kubeflow" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Notebooks Server</td>
+              <td>0.5/10</td>
+              <td>Repository is a meta/gateway repo with no source code, No CI/CD workflows at all</td>
+            </tr>
+            <tr>
               <td><a href="quality-report-opendatahub-io-feast-demo.html">opendatahub-io/feast-demo</a></td>
               <td><a href="https://github.com/opendatahub-io/feast-demo" target="_blank">GitHub</a></td>
               <td>midstream</td>
@@ -2135,14 +2047,6 @@
               <td>Feature Store</td>
               <td>0.5/10</td>
               <td>Repository is an empty skeleton with no source code, No CI/CD pipeline</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-opendatahub-io-kserve-raw-migration.html">opendatahub-io/kserve-raw-migration</a></td>
-              <td><a href="https://github.com/opendatahub-io/kserve-raw-migration" target="_blank">GitHub</a></td>
-              <td>midstream</td>
-              <td>Serving Orchestration</td>
-              <td>0.5/10</td>
-              <td>No CI/CD automation at all, No tests for a 1000+ line Bash script</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-odh-doc-examples.html">opendatahub-io/odh-doc-examples</a></td>
@@ -2215,14 +2119,6 @@
               <td>Internal Processes &amp; Documentation</td>
               <td>0.1/10</td>
               <td>No CI/CD workflows at all, No markdown linting or link validation</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-opendatahub-io-kserve-migration.html">opendatahub-io/kserve-migration</a></td>
-              <td><a href="https://github.com/opendatahub-io/kserve-migration" target="_blank">GitHub</a></td>
-              <td>midstream</td>
-              <td>Serving Orchestration</td>
-              <td>0.0/10</td>
-              <td>Repository is an empty placeholder, No CI/CD workflows</td>
             </tr>
       </tbody>
     </table>

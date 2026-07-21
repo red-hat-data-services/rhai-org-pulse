@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 03:33 PM</p>
+            <p class="timestamp">Generated on July 21, 2026 at 12:26 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">openvinotoolkit/model_server</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="169.64586"
+                                stroke-dashoffset="175.30072199999995"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.0</div>
+                        <div class="score-value">6.9</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Extensive C++ unit tests with 3,971 test cases using Google Test, 114 test files, strong test-to-code ratio (0.44)</div>
+                            <div class="scorecard-status">Extensive GTest-based C++ unit tests with 154 test files and ~2564 test cases; Bazel-integrated</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Comprehensive functional test framework (27K+ LOC) with pytest, Docker-based integration, parallel execution via pytest-xdist</div>
+                            <div class="scorecard-status">Rich functional test suite (141 Python files) with Docker-based testing; internal E2E via separate repo</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Jenkins pipelines with smart change detection but no PR-time Konflux simulation or container startup validation</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Jenkins CI builds Docker images on PRs; Konflux-aware Dockerfile; no PR-time Konflux simulation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">Multi-OS Dockerfiles (Ubuntu, Red Hat), Hadolint scanning, but limited runtime image validation pre-merge</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Multi-stage Dockerfiles (5 stages), UBI9 base images, buildx support; no HEALTHCHECK or Testcontainers</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Bazel coverage with lcov, enforced thresholds (76% lines, 83% functions), genhtml reports</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">Bazel coverage with lcov/genhtml, threshold enforcement (76% lines, 83% functions); no PR-gating integration</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Jenkins-based CI with smart change detection; no GitHub Actions, limited caching, timeout controls present</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Jenkins-based CI with parallel stages, smart diff-based triggering, but no GitHub Actions or public CI visibility</div>
+                            <div class="scorecard-status">cpplint, clang-format, cppclean, bandit, hadolint; no pre-commit hooks, no Dependabot/Renovate</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory — no AI agent guidance for test creation</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Comprehensive GitHub Copilot instructions (194 lines) with code review protocol; no CLAUDE.md or .claude/rules/</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +416,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No public CI/CD pipeline visibility</div>
-                            <p>Contributors cannot see build status, test results, or coverage data from external PRs</p>
+                            <div class="item-description">No Dependabot or Renovate for automated dependency updates</div>
+                            <p>Dependencies may become stale or contain known vulnerabilities without automated alerts</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">16-24 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No container image vulnerability scanning in CI</div>
-                            <p>Security vulnerabilities in base images or dependencies not caught until post-release BDBA scans</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No PR-time container startup validation</div>
-                            <p>Image build regressions only detected in downstream integration, not at PR review time</p>
+                            <div class="item-description">No pre-commit hooks for enforcing style checks locally</div>
+                            <p>Style violations discovered only in CI, slowing development feedback loop</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No SAST beyond Coverity and Bandit</div>
-                            <p>C++ security flaws may be missed; no CodeQL or Semgrep integration for broader coverage</p>
+                            <div class="item-description">Coverage not gated on PRs</div>
+                            <p>Coverage thresholds exist but are checked post-build, not blocking PR merge</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
-                        <li class="item-card low">
-                            <div class="item-description">No agent rules for AI-assisted test creation</div>
-                            <p>AI tools cannot generate tests that match project patterns, frameworks, or conventions</p>
+                        <li class="item-card medium">
+                            <div class="item-description">No GitHub Actions workflows</div>
+                            <p>All CI depends on Jenkins infrastructure; no community-visible CI status on PRs for contributors</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">3-4 hours</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,35 +461,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to CI pipeline</div>
-                            <p>Catch CVEs in base images and dependencies before release; complements existing BDBA scans</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add GitHub Actions mirror for PR status checks</div>
-                            <p>Give external contributors visibility into build/test status directly on PRs</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create basic .claude/rules/ for test patterns</div>
-                            <p>Enable AI agents to generate tests matching GTest and pytest conventions used in the project</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add pre-commit hooks configuration</div>
-                            <p>Catch style issues (clang-format, cpplint, codespell) before commit instead of only in CI</p>
+                            <div class="item-description">Add .github/dependabot.yml for pip, docker, and bazel ecosystems</div>
+                            <p>Automated dependency update PRs and vulnerability alerts</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add .pre-commit-config.yaml with cpplint, clang-format, and bandit hooks</div>
+                            <p>Catch style violations before push, reducing CI failures</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create CLAUDE.md with test patterns from existing copilot-instructions.md</div>
+                            <p>Enable Claude Code agent to follow project testing conventions</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add HEALTHCHECK to release Dockerfiles</div>
+                            <p>Container orchestrators can properly monitor OVMS container health</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add container image vulnerability scanning (Trivy/Grype) to the Jenkins on-commit pipeline</li><li>Implement PR-time container startup validation — build and smoke-test the Docker image before merge</li></ul>
+                            <ul><li>Add Dependabot configuration covering pip, Docker, and Bazel ecosystems</li><li>Integrate coverage reporting into PR workflow so coverage regressions block merge</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add GitHub Actions workflows mirroring key Jenkins stages for public PR visibility</li><li>Add CodeQL or Semgrep SAST scanning for C++ and Python code</li><li>Create .claude/rules/ with unit-tests.md and functional-tests.md for AI-assisted test creation</li></ul>
+                            <ul><li>Create .pre-commit-config.yaml to enforce style checks before commit</li><li>Add CLAUDE.md and .claude/rules/ for comprehensive AI agent test guidance</li><li>Add GitHub Actions workflow for basic PR checks (lint, format) to complement Jenkins</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add .pre-commit-config.yaml for local developer checks</li><li>Integrate Codecov/Coveralls for public coverage badge and PR comments</li><li>Add contract testing for gRPC/REST API surfaces</li></ul>
+                            <ul><li>Add HEALTHCHECK instructions to Dockerfiles for container runtime monitoring</li><li>Consider Testcontainers for lightweight container integration testing</li><li>Add FIPS build configuration documentation and verification in CI</li></ul>
                         </div>
                     </div>
                 </div>

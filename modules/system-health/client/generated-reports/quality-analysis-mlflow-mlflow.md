@@ -1,473 +1,418 @@
 ---
 repository: "mlflow/mlflow"
-overall_score: 8.4
+overall_score: 8.1
 scorecard:
   - dimension: "Unit Tests"
     score: 9.0
-    status: "Exceptional coverage with 1046 test files covering 1135 source files (0.92 ratio); pytest with strict markers, parallelized matrix runs"
+    status: "Exceptional test suite with 826 Python test files, 657 JS/TS test files, pytest with parallelized splits, and 38 conftest.py fixtures"
   - dimension: "Integration/E2E"
     score: 8.5
-    status: "Cross-version testing, Helm E2E with Kind clusters, Docker integration tests, gateway benchmarks"
+    status: "Testcontainers-based DB integration tests, Helm E2E with Kind cluster, cross-version flavor testing, docker-compose test orchestration"
   - dimension: "Build Integration"
-    score: 7.0
-    status: "Wheel builds on PR, Helm template rendering, but no container image validation on PR"
+    score: 7.5
+    status: "PR-triggered wheel builds (dev/skinny/tracing), Helm chart lint+template rendering, but no Konflux simulation"
   - dimension: "Image Testing"
-    score: 5.5
-    status: "Basic Dockerfiles present, Helm E2E builds images into Kind, but no PR-time image validation or startup tests"
+    score: 7.0
+    status: "Multi-arch builds (amd64/arm64) on release, docker-compose integration tests with health checks, but no PR-time image validation"
   - dimension: "Coverage Tracking"
     score: 4.0
-    status: "pytest-cov dependency exists but no codecov/coveralls integration, no coverage enforcement or thresholds"
+    status: "pytest-cov installed in cross-version tests but no codecov integration, no coverage thresholds, no PR coverage reporting"
   - dimension: "CI/CD Automation"
     score: 9.5
-    status: "85 workflows, concurrency control, caching, matrix strategies, custom actions, OPA policy enforcement"
+    status: "62 workflows, 32 PR-triggered, concurrency control, matrix strategies, pytest-split parallelization, extensive caching"
+  - dimension: "Static Analysis"
+    score: 8.5
+    status: "Ruff + custom clint linter, mypy strict mode, ESLint, Prettier, pre-commit hooks, but no Dependabot/Renovate"
   - dimension: "Agent Rules"
-    score: 9.0
-    status: "Comprehensive CLAUDE.md, .claude/rules/ with Python and GitHub Actions guides, 6+ skills, hooks, settings"
+    score: 9.5
+    status: "Comprehensive CLAUDE.md (249 lines), AGENTS.md, .claude/rules/ with Python and GitHub Actions guidelines, 7 custom skills, hooks"
 critical_gaps:
   - title: "No coverage tracking or enforcement"
-    impact: "Cannot detect test coverage regressions; no visibility into which code paths are untested"
+    impact: "Coverage regressions go undetected; no visibility into test coverage trends across PRs"
     severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "No container security scanning (Trivy, Snyk, etc.)"
-    impact: "Vulnerabilities in base images and dependencies are not detected before release"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No SAST/CodeQL integration"
-    impact: "Static security vulnerabilities not caught in CI; relies solely on manual review"
-    severity: "HIGH"
-    effort: "2-3 hours"
-  - title: "No PR-time container image validation"
-    impact: "Image build failures only discovered at release time; no startup or runtime validation"
-    severity: "MEDIUM"
     effort: "4-6 hours"
-  - title: "No dependency vulnerability scanning"
-    impact: "Known CVEs in Python dependencies may go undetected between manual audits"
+  - title: "No Dependabot or Renovate configuration"
+    impact: "Dependency updates are manual; security vulnerabilities in transitive dependencies may go unnoticed"
+    severity: "MEDIUM"
+    effort: "1-2 hours"
+  - title: "No PR-time container image validation"
+    impact: "Docker image build failures only discovered post-merge during release image push"
+    severity: "MEDIUM"
+    effort: "6-8 hours"
+  - title: "Non-FIPS-compliant hashlib.md5 usage"
+    impact: "Several files use hashlib.md5 without usedforsecurity=False (e.g., db/utils.py, gemini provider), blocking FIPS deployment"
     severity: "MEDIUM"
     effort: "2-3 hours"
 quick_wins:
-  - title: "Add CodeQL scanning workflow"
+  - title: "Add Dependabot configuration for pip and npm ecosystems"
     effort: "1-2 hours"
-    impact: "Automatic static analysis for security vulnerabilities on every PR"
-  - title: "Add Trivy container scanning to push-images workflow"
+    impact: "Automated security alerts and dependency update PRs for Python and JavaScript dependencies"
+  - title: "Add Codecov integration with coverage thresholds"
+    effort: "4-6 hours"
+    impact: "PR-level coverage reporting, trend tracking, and regression prevention"
+  - title: "Fix remaining hashlib.md5 calls missing usedforsecurity=False"
     effort: "1-2 hours"
-    impact: "Catch vulnerabilities in Docker images before publishing to GHCR"
-  - title: "Enable codecov integration with coverage thresholds"
-    effort: "3-4 hours"
-    impact: "Visibility into test coverage trends and prevention of coverage regression"
-  - title: "Add pip-audit or safety check to CI"
-    effort: "1-2 hours"
-    impact: "Automated detection of known vulnerabilities in Python dependencies"
-  - title: "Add SBOM generation to container image publishing"
-    effort: "1-2 hours"
-    impact: "Supply chain transparency and compliance with SBOM requirements"
+    impact: "Full FIPS compliance for hashlib usage across the codebase"
 recommendations:
   priority_0:
-    - "Implement coverage tracking with codecov/coveralls and enforce minimum thresholds"
-    - "Add container security scanning (Trivy) to both PR and release workflows"
-    - "Enable CodeQL or Semgrep for static application security testing"
+    - "Add Codecov or Coveralls integration with PR coverage reporting and minimum threshold enforcement"
+    - "Fix hashlib.md5 calls in db/utils.py and gateway/providers/gemini.py to include usedforsecurity=False"
   priority_1:
-    - "Add dependency vulnerability scanning (pip-audit, safety, or Dependabot)"
-    - "Implement PR-time Docker image build validation and startup testing"
-    - "Add SBOM generation and image signing for published container images"
+    - "Add Dependabot configuration covering pip, npm, docker, and GitHub Actions ecosystems"
+    - "Add PR-time Docker image build validation to catch image build issues before merge"
+    - "Add frontend E2E testing with Playwright (config already exists in eslint presets)"
   priority_2:
-    - "Add contract testing for API boundaries (REST, gRPC, GraphQL)"
-    - "Implement chaos engineering tests for MLflow server resilience"
-    - "Add performance regression testing beyond gateway benchmarks"
+    - "Add container health check (HEALTHCHECK) directives to production Dockerfiles"
+    - "Consider adding API contract testing between frontend and backend"
+    - "Add performance regression testing for tracking server endpoints"
 ---
 
-# Quality Analysis: MLflow
+# Quality Analysis: mlflow/mlflow
 
 ## Executive Summary
 
-- **Overall Score: 8.4/10**
-- **Repository Type**: Python ML lifecycle platform library (experiment tracking, model management, LLM tracing)
-- **Primary Language**: Python (v3.10+), with TypeScript/React frontend and R bindings
-- **Version**: 3.14.1.dev0
-- **Key Strengths**: Exceptional test coverage (1046 test files), world-class CI/CD automation (85 workflows), comprehensive agent rules, sophisticated pre-commit pipeline, cross-version compatibility testing, performance benchmarking
-- **Critical Gaps**: No coverage tracking/enforcement, no container security scanning, no SAST integration
-- **Agent Rules Status**: Excellent - comprehensive CLAUDE.md, Python/GitHub Actions rules, 6+ custom skills, hooks, settings
+- **Overall Score: 8.1/10**
+- **Repository Type**: Python/TypeScript ML platform (experiment tracking, model registry, LLM tracing)
+- **Primary Languages**: Python (core), TypeScript/React (UI), Java (Spark integration)
+- **JIRA**: RHOAIENG / MLflow (upstream tier)
 
-MLflow represents one of the most mature open-source ML platform projects in terms of quality engineering. The 85 GitHub workflows, extensive pre-commit hooks (25+ hooks), and cross-version testing infrastructure set a high bar. The primary gaps are in security scanning automation and coverage enforcement - areas where the project relies more on manual processes than automated guardrails.
+### Key Strengths
+- **Massive, well-organized test suite**: 826 Python test files + 657 JS/TS test files with smart parallelization via pytest-split
+- **Best-in-class CI/CD**: 62 workflows with 32 PR-triggered, extensive matrix strategies, concurrency control, and custom tooling
+- **Exemplary agent rules**: Comprehensive CLAUDE.md, AGENTS.md, .claude/rules/ with framework-specific guidelines, 7 custom skills, and hooks
+- **Strong static analysis**: Ruff (strict), mypy (strict mode), ESLint, Prettier, custom clint linter, pre-commit hooks
+
+### Critical Gaps
+- No coverage tracking or enforcement (pytest-cov available but not integrated with Codecov)
+- No Dependabot/Renovate for automated dependency management
+- Some hashlib.md5 calls without `usedforsecurity=False` flag
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 9.0/10 | Exceptional: 1046 test files, pytest with strict config, parallel matrix |
-| Integration/E2E | 8.5/10 | Cross-version, Helm E2E (Kind), Docker compose, gateway benchmarks |
-| **Build Integration** | **7.0/10** | **Wheel builds on PR, Helm templates, but no container image validation** |
-| Image Testing | 5.5/10 | Basic Dockerfiles, Helm E2E only, no PR-time image validation |
-| Coverage Tracking | 4.0/10 | pytest-cov available but no CI integration or thresholds |
-| CI/CD Automation | 9.5/10 | 85 workflows, OPA policy, concurrency, caching, matrix strategies |
-| Agent Rules | 9.0/10 | CLAUDE.md + rules + skills + hooks + settings = gold standard |
+| Dimension | Weight | Score | Status |
+|-----------|--------|-------|--------|
+| Unit Tests | 15% | 9.0/10 | Exceptional: 826 Python + 657 JS/TS test files, pytest-split parallelization |
+| Integration/E2E | 20% | 8.5/10 | Testcontainers DB tests, Helm E2E with Kind, cross-version flavor testing |
+| Build Integration | 15% | 7.5/10 | PR wheel builds, Helm lint+template, no Konflux simulation |
+| Image Testing | 10% | 7.0/10 | Multi-arch release builds, docker-compose tests, no PR-time validation |
+| Coverage Tracking | 10% | 4.0/10 | pytest-cov available but no Codecov, no thresholds, no PR reporting |
+| CI/CD Automation | 15% | 9.5/10 | 62 workflows, excellent concurrency, parallelization, matrix strategies |
+| Static Analysis | 10% | 8.5/10 | Ruff + mypy strict + ESLint + pre-commit, missing Dependabot |
+| Agent Rules | 5% | 9.5/10 | CLAUDE.md + AGENTS.md + .claude/rules/ + 7 skills + hooks |
+
+**Weighted Overall: 8.1/10**
 
 ## Critical Gaps
 
 ### 1. No Coverage Tracking or Enforcement
 - **Severity**: HIGH
-- **Impact**: Cannot detect test coverage regressions; no visibility into which code paths are untested
-- **Details**: `pytest-cov` is listed in `requirements/test-requirements.txt` but there is no `.codecov.yml`, no `coveralls` configuration, and no coverage upload step in any workflow. Coverage data is generated locally but never aggregated or enforced.
-- **Effort**: 4-8 hours
-- **Recommendation**: Add codecov integration to the `master.yml` workflow with minimum threshold enforcement
-
-### 2. No Container Security Scanning
-- **Severity**: HIGH
-- **Impact**: Vulnerabilities in base images (`python:3.10-slim-bullseye`) and installed packages not detected before release
-- **Details**: The `push-images.yml` workflow publishes to `ghcr.io/mlflow/mlflow` without any vulnerability scanning. No Trivy, Snyk, Grype, or any scanner is configured.
-- **Effort**: 2-4 hours
-- **Recommendation**: Add Trivy scanning before image push; fail on CRITICAL/HIGH severity CVEs
-
-### 3. No SAST/CodeQL Integration
-- **Severity**: HIGH
-- **Impact**: Static security vulnerabilities (injection, insecure deserialization, etc.) rely entirely on manual review
-- **Details**: No CodeQL, Semgrep, or Bandit workflows found. The security-related grep only found `close-security-issues.yml` (which closes issues, not scans) and a component ID registry file.
-- **Effort**: 2-3 hours
-- **Recommendation**: Add GitHub CodeQL analysis for Python and JavaScript/TypeScript
-
-### 4. No PR-time Container Image Validation
-- **Severity**: MEDIUM
-- **Impact**: Image build failures only discovered during release process
-- **Details**: The Helm E2E workflow builds images into Kind, but this only covers `charts/**` path changes. General Python changes don't trigger any container validation.
+- **Impact**: Coverage regressions go undetected; no visibility into test coverage trends across PRs
 - **Effort**: 4-6 hours
+- **Details**: While `pytest-cov` is installed in the cross-version test environment, there is no `.codecov.yml`, no coverage threshold configuration, and no PR coverage reporting. The main test workflow (`master.yml`) does not generate coverage reports.
+- **Recommendation**: Add Codecov integration with `--cov` flags and enforce minimum coverage thresholds.
 
-### 5. No Dependency Vulnerability Scanning
+### 2. No Dependabot or Renovate Configuration
 - **Severity**: MEDIUM
-- **Impact**: Known CVEs in Python dependencies may persist between manual audits
-- **Details**: The 7-day cooldown policy (`exclude-newer = "P7D"`) provides supply-chain protection against very new packages, but doesn't scan for known CVEs in existing dependencies.
+- **Impact**: Dependency updates are entirely manual; security vulnerabilities in transitive dependencies may go unnoticed longer than necessary
+- **Effort**: 1-2 hours
+- **Details**: No `.github/dependabot.yml` or `renovate.json` found. The project has a custom "7-day cooldown" policy for new package releases (documented in CLAUDE.md), but no automated tooling to surface available updates.
+
+### 3. No PR-Time Container Image Validation
+- **Severity**: MEDIUM
+- **Impact**: Docker image build failures are only discovered during the release process when `push-images.yml` runs
+- **Effort**: 6-8 hours
+- **Details**: The `push-images.yml` workflow only runs on release events. There is no PR-triggered workflow that builds or validates Docker images. The `slow-tests.yml` tests Docker-based functionality but doesn't build the production images.
+
+### 4. Non-FIPS-Compliant hashlib.md5 Usage
+- **Severity**: MEDIUM
+- **Impact**: Several files use `hashlib.md5` without the `usedforsecurity=False` flag, which will fail on FIPS-enabled systems
 - **Effort**: 2-3 hours
+- **Files affected**:
+  - `mlflow/store/db/utils.py:100` - missing `usedforsecurity=False`
+  - `mlflow/gateway/providers/gemini.py:240` - missing `usedforsecurity=False`
+  - Other files correctly use the flag (e.g., `file_store.py`, `data/digest_utils.py`)
 
 ## Quick Wins
 
-### 1. Add CodeQL Scanning (1-2 hours)
+### 1. Add Dependabot Configuration (1-2 hours)
+Create `.github/dependabot.yml`:
 ```yaml
-# .github/workflows/codeql.yml
-name: CodeQL
-on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
-  schedule:
-    - cron: '0 6 * * 1'
-permissions:
-  security-events: write
-  contents: read
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        language: [python, javascript]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: ${{ matrix.language }}
-      - uses: github/codeql-action/analyze@v3
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "npm"
+    directory: "/mlflow/server/js"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/docker"
+    schedule:
+      interval: "monthly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
 ```
 
-### 2. Add Trivy Container Scanning (1-2 hours)
-Add to `push-images.yml` before the push step:
+### 2. Add Codecov Integration (4-6 hours)
+Add `.codecov.yml` and update the main test workflow to generate and upload coverage:
 ```yaml
-- name: Scan image for vulnerabilities
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: ghcr.io/mlflow/mlflow:${{ github.ref_name }}
-    format: 'sarif'
-    output: 'trivy-results.sarif'
-    severity: 'CRITICAL,HIGH'
-    exit-code: '1'
+# .codecov.yml
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: 80%
+comment:
+  layout: "reach,diff,flags"
 ```
 
-### 3. Enable Codecov Integration (3-4 hours)
-Add to test jobs in `master.yml`:
-```yaml
-- name: Upload coverage
-  uses: codecov/codecov-action@v4
-  with:
-    flags: python
-    fail_ci_if_error: false
-```
-
-### 4. Add pip-audit for Dependency Scanning (1-2 hours)
-```yaml
-- name: Audit dependencies
-  run: |
-    uv pip install pip-audit
-    pip-audit --requirement requirements/core-requirements.yaml
-```
+### 3. Fix Remaining hashlib.md5 Calls (1-2 hours)
+Add `usedforsecurity=False` to the two remaining files that are missing it.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Score: 9.5/10** - Among the best CI/CD setups in any open-source project.
+**Score: 9.0/10**
 
-**Workflow Inventory (85 workflows)**:
-- **PR-triggered tests**: `master.yml` (4-way parallel Python tests + skinny tests), `cross-version-tests.yml`, `js.yml`, `lint.yml`, `build-wheel.yml`, `helm.yml`, `examples.yml`, `docs.yml`, `protobuf-cross-test.yml`, `protos.yml`
-- **Scheduled/periodic**: `slow-tests.yml` (daily), `gateway-benchmark.yml` (daily benchmarks with P50/P99 thresholds), `cross-version-tests.yml` (daily), `examples.yml` (daily), `link-checker.yml` (daily)
-- **Release**: `push-images.yml` (multi-arch Docker images to GHCR on release), `build-wheel.yml`
-- **Automation**: `auto-assign.yml`, `auto-close-pr.yml`, `autoformat.yml`, `labeling.yml`, `pr-size.yml`, `cherry-picks-warn.yml`, `community-label.yml`
-- **AI-powered review**: `review.yml` (Claude Code PR review triggered by `/review`), `nailaopus.yml` (NaiLaOpus LLM review via `/review-v2`)
-- **Policy**: OPA Rego policy enforcement via `conftest` pre-commit hook (`.github/policy.rego`)
+MLflow has an exceptional unit test suite:
 
-**Concurrency Control**: Every workflow uses `cancel-in-progress: true` with `group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}`.
+- **Python test files**: 826 test files in the `tests/` directory
+- **JS/TS test files**: 605 in `mlflow/server/js/` + 52 in `libs/typescript/`
+- **Java test files**: 12 test files for Spark integration
+- **Test-to-code ratio (Python)**: ~0.48:1 (826 test files / 1,712 source files)
+- **Framework**: pytest (Python), Jest with @testing-library (TypeScript/React)
+- **Fixtures**: 38 `conftest.py` files providing extensive test infrastructure
+- **Parallelization**: pytest-split with matrix strategy (4 groups for main tests, 3 for models, 4 for genai)
+- **Custom tooling**: Custom `clint` linter for enforcing test patterns
 
-**Caching**: Extensive use of `actions/cache` for mypy cache, pre-commit hooks, install-bin tools, HuggingFace models.
+Test organization covers a wide breadth of functionality:
+- ML flavor tests (sklearn, xgboost, catboost, diffusers, etc.)
+- Tracking store tests (SQLAlchemy, file store)
+- LLM provider integration tests (anthropic, bedrock, gemini, openai)
+- Tracing SDK tests (dedicated workflow)
+- Gateway/deployment tests
+- CLI tests
 
-**Custom Actions**: 10 reusable actions (`cache-hf`, `check-component-ids`, `free-disk-space`, `setup-java`, `setup-node`, `setup-pyenv`, `setup-python`, `show-versions`, `untracked`, `update-requirements`).
+### Integration/E2E Tests
 
-**Matrix Strategies**: Python tests split into 4 groups with `fail-fast: false`; cross-version tests use dynamic matrix generation; lint runs on both ubuntu and macOS.
+**Score: 8.5/10**
 
-**Draft PR Handling**: Smart skip logic for draft PRs with Copilot bot exception.
+Strong integration testing across multiple axes:
 
-### Test Coverage
+- **Database integration**: Testcontainers-based tests with docker-compose for PostgreSQL, MySQL, and MSSQL (`tests/docker/test_integrations.py`)
+- **Helm E2E**: Kind cluster deployment with TLS matrix testing (`helm.yml`)
+- **Cross-version testing**: Comprehensive flavor compatibility testing across library versions (`cross-version-tests.yml`) with daily schedule + PR triggers
+- **Docker-based slow tests**: Dedicated workflow for Docker and pyfunc/docker tests
+- **Protobuf cross-testing**: Cross-version protobuf compatibility tests
 
-**Score: 9.0/10** - Exceptional breadth and depth.
+Minor gap: No dedicated frontend E2E tests (Cypress/Playwright presets exist in ESLint config but no E2E test infrastructure found).
 
-**Test Statistics**:
-- **Test files**: 1046
-- **Source files**: 1135 (Python, excluding protos and JS)
-- **Test-to-code ratio**: 0.92 (near 1:1)
-- **Total test lines**: 184,862
-- **Test config files (conftest.py)**: 34
-- **Test directories**: 80+ covering every ML framework integration
+### Build Integration
 
-**Testing Framework**: pytest with strict configuration:
-- `--strict-markers` (no undefined markers)
-- `--showlocals` (debug-friendly)
-- `--durations=10` (performance visibility)
-- `filterwarnings` set to error-level for deprecated patterns
-- 1200s timeout per test
+**Score: 7.5/10**
 
-**Test Categories**:
-- **Unit tests**: Comprehensive per-module tests (tracking, store, entities, cli, etc.)
-- **Integration tests**: `tests/docker/` with Docker Compose for MySQL, PostgreSQL, MSSQL backend testing
-- **Cross-version tests**: Tests against multiple versions of ML frameworks (sklearn, pytorch, transformers, etc.) via `ml-package-versions.yml` matrix
-- **Skinny client tests**: Verification that minimal installation works correctly
-- **Example tests**: All examples in `examples/` directory tested in CI
-- **Gateway benchmarks**: Daily performance regression testing with P50/P99 latency thresholds
+Good build validation on PRs:
 
-**Framework Coverage** (tested integrations):
-anthropic, autogen, bedrock, catboost, claude_code, crewai, dspy, gemini, groq, h2o, haystack, keras, langchain, langgraph, lightgbm, litellm, llama_index, mistral, onnx, openai, optuna, paddle, pmdarima, prophet, pytorch, sagemaker, sentence_transformers, sklearn, spacy, spark, statsmodels, strands, tensorflow, transformers, xgboost
+- **Wheel builds**: PR-triggered builds for dev, skinny, and tracing packages (`build-wheel.yml`) with size validation
+- **JS build**: Full `yarn build` on PR for the React UI (`js.yml`)
+- **Helm chart**: Lint and template rendering on PR (`helm.yml`)
+- **Protobuf generation**: PR-triggered proto validation (`protos.yml`)
 
-### Code Quality
+Gaps:
+- No PR-time Docker image building (production Dockerfiles only built on release)
+- No Konflux build simulation
+- Helm E2E runs on PR but not Docker image E2E
 
-**Score: 9.0/10** - Exceptionally thorough.
+### Image Testing
 
-**Pre-commit Hooks (25+ hooks)**:
-- `ruff` - Python linting with 50+ rule categories selected
-- `ruff format` - Code formatting with preview features
-- `mypy` - Strict type checking for dev scripts and skills
-- `clint` - Custom MLflow linter
-- `typos` - Spell checking for Python and Markdown
-- `prettier` - JS/TS/MD/JSON/YAML formatting
-- `trailing-whitespace`, `end-of-file-fixer`, `check-vcs-permalinks`
-- `uv-lock` - Lock file consistency
-- `normalize-chars` - Unicode normalization
-- `unresolved-import` - Broken import detection via `ty`
-- `check-github-workflows` / `check-github-actions` - Schema validation
-- `taplo` - TOML formatting
-- `buf` - Protobuf formatting
-- `conftest` - OPA policy enforcement on workflows
-- `regal` - Rego linting
-- `check-init-py` - Init file consistency
-- `check-component-ids` - UI component ID registry
-- `mlflow-typo` - MLflow-specific typo detection
-- `check-mlflow-ui` - Enforces `mlflow server` over deprecated `mlflow ui`
-- `forbid-gif` - Enforces MP4 over GIF in docs
-- `no-yaml` - Enforces `.yml` over `.yaml` for workflows
-- `no-spaces` - Prevents spaces in filenames
-- `skills` - Validates skill definitions
+**Score: 7.0/10**
 
-**Ruff Configuration**: 50+ lint rules selected from categories including Pyflakes (F), Error (E), flake8-comprehensions (C4), isort (I), pytest (PT), security (S), and many more. `line-length = 100`, `target-version = "py310"`.
+Decent image practices:
 
-**Type Checking**: mypy with `strict = true` for dev scripts and `.claude/skills/`.
+- **Multiple Dockerfiles**: Base (`Dockerfile`), full (`Dockerfile.full`), and dev (`Dockerfile.full.dev`)
+- **Multi-architecture**: Release builds target `linux/amd64,linux/arm64` via Docker Buildx
+- **Pinned base images**: Using `python:3.10-slim-bullseye` with SHA256 digest pinning
+- **Docker Buildx**: Proper setup with QEMU for cross-compilation
+- **Integration testing**: Testcontainers-based tests validate MLflow server startup via docker-compose with health checks
 
-### Container Images
+Gaps:
+- No `HEALTHCHECK` directive in production Dockerfiles
+- No PR-time image build validation
+- No multi-stage builds (single-stage `pip install` pattern)
+- Base image is Debian-based (not UBI/FIPS-compatible)
 
-**Score: 5.5/10** - Functional but minimal.
+### Coverage Tracking
 
-**Dockerfiles**:
-- `docker/Dockerfile` - Minimal: `python:3.10-slim-bullseye` + `pip install mlflow==$VERSION`
-- `docker/Dockerfile.full` - Full extras: `mlflow[extras,azure,db,gateway,genai,auth]`
-- `docker/Dockerfile.full.dev` - Development variant
-- `dev/Dockerfile.protos` - Protobuf compilation
+**Score: 4.0/10**
 
-**Image Publishing**: `push-images.yml` publishes to GHCR on release with multi-arch (QEMU + Buildx), smart `latest` tag management, and separate tracking/full image variants.
+This is the weakest dimension:
 
-**Gaps**:
-- No vulnerability scanning before publish
-- No SBOM generation
-- No image signing/attestation (cosign)
-- No startup validation tests
-- No PR-time image build testing (except Helm E2E path)
-- Base image pinned by digest (good) but on `bullseye` (may be outdated)
+- `pytest-cov` is installed in cross-version test environments but not used in the main test workflow
+- No `.codecov.yml` or `coveralls.yml` configuration
+- No coverage thresholds or gates
+- No PR coverage reporting or comments
+- No coverage trend tracking
+- The JS test suite also lacks coverage enforcement
 
-### Security
+### CI/CD Automation
 
-**Score: 4.5/10** - Security policy present but minimal automated tooling.
+**Score: 9.5/10**
 
-**Present**:
-- `SECURITY.md` with clear vulnerability reporting process via GitHub Security Advisories
-- Package cooldown period (7 days for both Python and JavaScript) - excellent supply chain protection
-- Action versions pinned by SHA (not tags) - prevents supply chain attacks
-- `persist-credentials: false` on all checkout actions
-- `permissions: {}` default with minimal per-job grants
-- OPA policy enforcement on workflow files
+Best-in-class CI/CD setup:
 
-**Missing**:
-- No SAST (CodeQL, Semgrep, Bandit)
-- No container scanning (Trivy, Snyk, Grype)
-- No dependency scanning (pip-audit, Safety, Dependabot alerts)
-- No secret detection (Gitleaks, TruffleHog)
-- No SBOM generation
-- No image signing
+- **62 total workflows** with excellent organization
+- **32 PR-triggered workflows** covering tests, lint, build, docs, Helm, protobuf, and more
+- **19 scheduled workflows** for nightly cross-version tests, benchmarks, and maintenance
+- **Concurrency control**: Most test workflows use `cancel-in-progress: true` with workflow+event+ref grouping
+- **Test parallelization**: pytest-split with matrix strategies (4-way split for main tests)
+- **Smart path filtering**: Workflows only trigger on relevant path changes
+- **Draft PR handling**: Tests skip draft PRs unless authored by Copilot bot
+- **Custom tooling**: Custom rerun workflows, autoformat workflows, PR size labeling
+- **Caching**: mypy cache, pre-commit hooks cache, action pins cache, HuggingFace model cache
+- **Problem matchers**: Custom matchers for inline CI annotations
+- **Resource management**: `ubuntu-slim` for lightweight jobs, disk space cleanup for test jobs
 
-### Agent Rules (Agentic Flow Quality)
+### Static Analysis
 
-**Score: 9.0/10** - Near gold standard.
+**Score: 8.5/10**
 
-**Status**: Comprehensive and production-grade
+Comprehensive static analysis:
 
-**CLAUDE.md** (8KB): Covers:
-- Code style principles
-- Repository overview
-- Development server setup (including Databricks backend proxy)
-- Complete testing commands with uv
-- Code quality commands
-- Documentation building
-- Git workflow (DCO sign-off, Co-Authored-By)
-- Pre-commit hook setup
-- CI status checking
-- Frontend development cross-reference
+- **Ruff**: Configured with `line-length = 100`, `target-version = "py310"`, extensive rule selection including FURB, SIM, RUF, UP rules
+- **mypy**: Strict mode enabled (`strict = true`) with Python 3.10 target
+- **Custom linter (clint)**: Project-specific Python linting rules in `dev/clint/`
+- **ESLint**: Configured for TypeScript React code with custom MLflow plugin
+- **Prettier**: Code formatting for JS/TS/JSON/YAML
+- **Pre-commit hooks**: 7+ hooks including trailing whitespace, EOF fixer, uv lock, normalize-chars, ruff, format, mypy
+- **TypeScript**: Strict mode enabled in `tsconfig.json`
+- **Multi-platform linting**: Lint workflow runs on both Ubuntu and macOS
 
-**`.claude/rules/`**:
-- `python.md` - Extensive Python style guide beyond what Ruff enforces: dataclass usage, pattern matching, pathlib, mock best practices, parametrized tests, decorator patterns (with code examples for good/bad patterns)
-- `github-actions.md` - GitHub Actions best practices: ubuntu-slim usage, workflow context vs API calls, `gh` CLI preference, sparse-checkout, pipefail documentation
+Gaps:
+- No Dependabot or Renovate configuration for automated dependency updates
+- FIPS: Some `hashlib.md5` calls missing `usedforsecurity=False`
+- FIPS: Base images are Debian-based, not UBI
 
-**`.claude/skills/` (6 custom skills)**:
-- `pr-review` - Automated PR code review with validation schema
-- `ui-review` - UI/UX review with headless browser
-- `analyze-ci` - Failed CI analysis
-- `fetch-diff` - PR diff fetching
-- `add-review-comment` - Review comment posting
-- `copilot` - Copilot task handoff
+#### FIPS Compatibility
+- 9 instances of `hashlib.md5` usage found
+- 7 correctly use `usedforsecurity=False`
+- 2 missing the flag (`db/utils.py`, `gateway/providers/gemini.py`)
+- No FIPS build tags (not applicable for Python)
+- Base images are `python:3.10-slim-bullseye` (Debian, not FIPS-capable)
 
-**`.claude/settings.json`**: Hooks configured for `enforce-uv.sh` (enforces uv usage) and `validate_pr_body.py`.
+#### Dependency Alerts
+- **Status**: Not configured
+- No `.github/dependabot.yml`
+- No `renovate.json` or `.renovaterc`
+- Project relies on manual dependency management with a 7-day cooldown policy
 
-**`.claude/hooks/`**: Pre-tool-use hooks for uv enforcement and PR body validation.
+### Agent Rules
 
-**`.agents/`**: Contains `skills` directory reference (GitHub Copilot agent mode support via AGENTS.md symlink to CLAUDE.md).
+**Score: 9.5/10**
 
-**Gaps**:
-- No dedicated test-creation rules (e.g., `rules/testing.md` for unit test patterns specific to MLflow fixtures)
-- No rules for integration/E2E test patterns
-- Missing rules for container image testing patterns
+Exemplary agent rules setup:
+
+- **CLAUDE.md**: 249 lines covering code style, development setup, debugging, commands, package cooldown policy, workspace-aware testing guidance
+- **AGENTS.md**: Mirrors CLAUDE.md content (cross-agent compatibility)
+- **.claude/rules/**: 
+  - `python.md` - Python style guide (typing, docstrings, imports, naming)
+  - `github-actions.md` - GitHub Actions workflow guidelines (ubuntu-slim, context usage)
+- **.claude/skills/**: 7 custom skills
+  - `add-review-comment` - PR review commenting
+  - `analyze-ci` - CI analysis
+  - `copilot` - Copilot integration (approve/poll)
+  - `fetch-diff` - Diff fetching
+  - `pr-review` - PR review with JSON schema
+  - `ui-review` - UI review
+  - `src/skills` - Additional skill sources
+- **.claude/settings.json**: Custom statusline, pre-tool-use hooks (enforce-uv, validate PR body)
+- **.claude/hooks/**: `enforce-uv.sh` to ensure `uv` is used instead of pip
+
+This is one of the most comprehensive agent rules setups observed, with actionable, framework-specific guidance that goes well beyond generic advice.
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-
-1. **Implement coverage tracking with codecov** - Add coverage upload to `master.yml` Python test jobs, create `.codecov.yml` with project/patch thresholds, and enable PR coverage reporting. This is the single highest-ROI improvement.
-
-2. **Add container security scanning** - Add Trivy scanning to `push-images.yml` before image push. Fail on CRITICAL/HIGH vulnerabilities. Consider also adding to PR-time Helm E2E workflow.
-
-3. **Enable CodeQL** - Add CodeQL analysis for Python and JavaScript. GitHub provides this free for open-source projects. Catches injection, deserialization, and other OWASP Top 10 issues automatically.
+1. **Add Codecov integration with coverage thresholds** - Add `--cov` to the main pytest workflow, upload to Codecov, and enforce minimum coverage on PRs. This is the largest quality gap in an otherwise excellent testing setup.
+2. **Fix hashlib.md5 FIPS issues** - Add `usedforsecurity=False` to the remaining 2 call sites in `db/utils.py` and `gateway/providers/gemini.py`.
 
 ### Priority 1 (High Value)
-
-4. **Add dependency vulnerability scanning** - Use `pip-audit` or GitHub's Dependabot alerts to continuously monitor for known CVEs in the ~50+ direct dependencies.
-
-5. **Implement PR-time Docker image build validation** - Add a workflow step that builds the Docker image on PRs touching `mlflow/` or `docker/` and validates it starts correctly.
-
-6. **Add SBOM generation and image signing** - Use Syft for SBOM and Cosign for signing published container images. Increasingly required for enterprise adoption.
+3. **Add Dependabot configuration** - Cover pip, npm, docker, and github-actions ecosystems with weekly/monthly update schedules.
+4. **Add PR-time Docker image build validation** - Add a workflow that builds the production Docker images on PRs that modify `docker/`, `Dockerfile`, or core package files.
+5. **Add frontend E2E testing** - Leverage Playwright (ESLint preset already exists) for critical UI flow testing.
 
 ### Priority 2 (Nice-to-Have)
-
-7. **Add contract tests for API boundaries** - The REST API, gRPC proto API, and GraphQL API would benefit from contract tests to catch breaking changes.
-
-8. **Add test-creation agent rules** - Create `.claude/rules/testing.md` documenting MLflow-specific test patterns (fixtures, mock patterns, cross-version test setup, marker usage).
-
-9. **Add performance regression testing** - The gateway benchmark is excellent; extend similar automated performance testing to the tracking server and model serving endpoints.
-
-10. **Update base Docker image** - `python:3.10-slim-bullseye` is Debian 11 (oldstable); consider upgrading to `bookworm` (Debian 12).
+6. **Add HEALTHCHECK to production Dockerfiles** - Enable container orchestrators to monitor MLflow server health.
+7. **Consider multi-stage builds** - Separate build and runtime stages to reduce image size and attack surface.
+8. **Add API contract testing** - Test frontend-backend API contracts to catch interface drift.
 
 ## Comparison to Gold Standards
 
-| Dimension | MLflow | odh-dashboard | notebooks | kserve | Industry Best |
-|-----------|--------|---------------|-----------|--------|---------------|
-| Unit Tests | 9.0 | 9.0 | 7.0 | 8.0 | 10.0 |
-| Integration/E2E | 8.5 | 9.0 | 8.0 | 9.0 | 10.0 |
-| Build Integration | 7.0 | 8.0 | 8.0 | 7.0 | 9.0 |
-| Image Testing | 5.5 | 7.0 | 9.5 | 7.0 | 9.0 |
-| Coverage Tracking | 4.0 | 8.0 | 5.0 | 9.0 | 10.0 |
-| CI/CD Automation | 9.5 | 8.5 | 7.5 | 8.0 | 9.5 |
-| Agent Rules | 9.0 | 8.5 | 3.0 | 2.0 | 9.0 |
-| **Overall** | **8.4** | **8.3** | **7.1** | **7.6** | **9.5** |
+| Dimension | mlflow/mlflow | odh-dashboard | notebooks | kserve |
+|-----------|:---:|:---:|:---:|:---:|
+| Unit Tests | 9.0 | 9.0 | 7.0 | 8.0 |
+| Integration/E2E | 8.5 | 9.0 | 8.0 | 9.0 |
+| Build Integration | 7.5 | 8.0 | 7.0 | 7.0 |
+| Image Testing | 7.0 | 7.0 | 9.0 | 6.0 |
+| Coverage Tracking | 4.0 | 8.0 | 6.0 | 8.0 |
+| CI/CD Automation | 9.5 | 9.0 | 8.0 | 8.0 |
+| Static Analysis | 8.5 | 8.0 | 6.0 | 7.0 |
+| Agent Rules | 9.5 | 8.0 | 3.0 | 2.0 |
+| **Overall** | **8.1** | **8.5** | **7.0** | **7.2** |
 
-**MLflow's Standout Practices** (worthy of adoption by other projects):
-- 85 GitHub workflows with OPA policy enforcement
-- 25+ pre-commit hooks including custom linters
-- Cross-version ML framework compatibility testing
-- Daily gateway performance benchmarks with P50/P99 thresholds
-- AI-powered PR review workflows (Claude Code + NaiLaOpus)
-- 7-day package cooldown for supply chain protection
-- SHA-pinned action versions throughout
-- Comprehensive Claude Code integration (rules, skills, hooks)
+MLflow stands out for its exceptional CI/CD automation (62 workflows) and agent rules setup. Its primary gap relative to gold standards is coverage tracking, which is notably absent despite the massive test suite.
 
 ## File Paths Reference
 
-### CI/CD
-- `.github/workflows/master.yml` - Main Python test suite (4-way parallel)
-- `.github/workflows/cross-version-tests.yml` - ML framework compatibility
-- `.github/workflows/lint.yml` - Pre-commit + linting (Ubuntu + macOS)
-- `.github/workflows/js.yml` - Frontend tests and lint
-- `.github/workflows/helm.yml` - Helm chart lint + E2E with Kind
-- `.github/workflows/build-wheel.yml` - Wheel build verification
-- `.github/workflows/push-images.yml` - Docker image publishing
-- `.github/workflows/gateway-benchmark.yml` - Performance regression
-- `.github/workflows/slow-tests.yml` - Docker/slow tests (daily)
-- `.github/workflows/review.yml` - AI PR review
-- `.github/workflows/nailaopus.yml` - NaiLaOpus review
-- `.github/policy.rego` - OPA workflow policy
+### CI/CD Workflows
+- `.github/workflows/master.yml` - Main Python tests (PR + push)
+- `.github/workflows/js.yml` - JavaScript/React tests (PR + push)
+- `.github/workflows/lint.yml` - Ruff, mypy, pre-commit (PR + push)
+- `.github/workflows/cross-version-tests.yml` - ML flavor compatibility (PR + daily)
+- `.github/workflows/build-wheel.yml` - Wheel package builds (PR + push)
+- `.github/workflows/push-images.yml` - Docker image builds (release only)
+- `.github/workflows/helm.yml` - Helm chart lint + E2E (PR + push)
+- `.github/workflows/tracing.yml` - Tracing SDK tests (PR + push)
+- `.github/workflows/slow-tests.yml` - Docker-based slow tests (daily + PR)
 
 ### Testing
-- `tests/` - 80+ subdirectories, 1046 Python test files
-- `tests/conftest.py` - Root conftest with custom markers and fixtures
-- `tests/docker/` - Docker Compose integration tests (MySQL, PostgreSQL, MSSQL)
-- `tests/integration/` - Async logging integration tests
-- `mlflow/ml-package-versions.yml` - Cross-version test matrix definition
+- `tests/` - 755 Python test files
+- `tests/conftest.py` + 37 additional conftest.py files
+- `tests/docker/test_integrations.py` - Testcontainers DB integration
+- `tests/docker/docker-compose.*.yaml` - DB test orchestration
+- `mlflow/server/js/` - 605 JS/TS test files
+- `libs/typescript/` - 52 TypeScript test files
 
-### Code Quality
-- `.pre-commit-config.yaml` - 25+ hooks configuration
-- `pyproject.toml` - Ruff (50+ rules), pytest, mypy config
-- `dev/clint/` - Custom MLflow linter source
-- `dev/ruff.py` - Ruff wrapper script
-- `dev/format.py` - Formatting wrapper
+### Static Analysis
+- `.pre-commit-config.yaml` - 7+ hooks (ruff, mypy, prettier, etc.)
+- `pyproject.toml` - Ruff config, mypy strict, pytest config
+- `mlflow/server/js/.eslintrc.js` - ESLint configuration
+- `mlflow/server/js/tsconfig.json` - TypeScript strict mode
+- `dev/clint/` - Custom Python linter
 
 ### Container Images
-- `docker/Dockerfile` - Minimal MLflow image
-- `docker/Dockerfile.full` - Full extras image
+- `docker/Dockerfile` - Base MLflow image
+- `docker/Dockerfile.full` - Full MLflow image with extras
 - `docker/Dockerfile.full.dev` - Development image
-- `docker-compose/docker-compose.yml` - Local dev setup
-- `.dockerignore` - Docker build context filter
+- `docker-compose/docker-compose.yml` - Docker Compose setup
+- `.dockerignore` - Docker build context exclusions
 
 ### Agent Rules
-- `CLAUDE.md` - Primary agent instructions (8KB)
-- `AGENTS.md` - Symlink to CLAUDE.md
-- `.claude/rules/python.md` - Python style guide with examples
-- `.claude/rules/github-actions.md` - GitHub Actions best practices
-- `.claude/settings.json` - Hooks and statusline config
-- `.claude/hooks/enforce-uv.sh` - Enforces uv over pip/conda
-- `.claude/hooks/validate_pr_body.py` - PR body validation
-- `.claude/skills/pr-review/` - Automated PR review skill
-- `.claude/skills/ui-review/` - UI/UX review with headless browser
-- `.claude/skills/analyze-ci/` - CI failure analysis
-- `.claude/skills/fetch-diff/` - PR diff fetching
-- `.claude/skills/copilot/` - Copilot handoff
-- `.claude/skills/add-review-comment/` - Review comment posting
+- `CLAUDE.md` - 249-line comprehensive guide
+- `AGENTS.md` - Cross-agent compatibility (mirrors CLAUDE.md)
+- `.claude/rules/python.md` - Python style guide
+- `.claude/rules/github-actions.md` - GitHub Actions guidelines
+- `.claude/skills/` - 7 custom skills (pr-review, ui-review, copilot, etc.)
+- `.claude/settings.json` - Custom hooks and statusline
+- `.claude/hooks/enforce-uv.sh` - Enforce uv over pip
 
-### Security
-- `SECURITY.md` - Vulnerability reporting policy
-- `requirements/constraints.txt` - Dependency constraints
+### Coverage
+- No `.codecov.yml` or coverage configuration found
