@@ -11,7 +11,7 @@
 
 const { getConfig } = require('../config')
 const { CACHE_MAX_AGE_MS, VALID_PHASES } = require('../constants')
-const { runHealthPipeline, loadMilestones, backfillFreezeDatesFromSmartsheet, deriveFreezeDates } = require('./health-pipeline')
+const { runHealthPipeline, loadMilestones, backfillFreezeDatesFromSmartsheet, deriveFreezeDates, derivePlanningStatus } = require('./health-pipeline')
 const { logAudit } = require('../audit-log')
 var { blockDuringImpersonation } = require('../../../../../shared/server/auth')
 var sharedJira = require('../../../../../shared/server/jira')
@@ -352,9 +352,9 @@ async function healthRoutes(router, context) {
       var cachedReleaseType = feature.releaseType || ''
       if (execDetail.releaseType !== cachedReleaseType) {
         feature = Object.assign({}, feature, { releaseType: execDetail.releaseType })
-        var featureForFpdor = Object.assign({}, feature)
-        var rubricData = extractRubricData(featureForFpdor)
-        feature.fpdor = computeFPDoRReadiness(featureForFpdor, rubricData)
+        var rubricData = extractRubricData(feature)
+        feature.fpdor = computeFPDoRReadiness(feature, rubricData)
+        feature.planningStatus = derivePlanningStatus(feature.fpdor)
       }
     }
 
