@@ -128,6 +128,13 @@ module.exports = async function registerHygieneRoutes(router, context) {
     return DATA_PREFIX + '/features-' + version + '.json';
   }
 
+  // Format a raw version ID (e.g. "rhoai-3.5.EA1") into a readable name ("RHOAI 3.5.EA1")
+  function formatVersionId(versionId) {
+    var m = versionId.match(/^([a-zA-Z][a-zA-Z-]*?)-(\d.*)$/);
+    if (m) return m[1].toUpperCase() + ' ' + m[2];
+    return versionId;
+  }
+
   async function resolveHygieneVersion(version) {
     var data = await storage.readFromStorage(storageKey(version));
     if (data) return { data: data, resolvedVersion: version };
@@ -610,6 +617,14 @@ module.exports = async function registerHygieneRoutes(router, context) {
           rel = rr;
           break;
         }
+        var fvs = rr.fixVersions || [];
+        for (var fvi = 0; fvi < fvs.length; fvi++) {
+          if (fvs[fvi] === versionId) {
+            rel = rr;
+            break;
+          }
+        }
+        if (rel) break;
       }
 
       var gaDate = rel && rel.milestones && (rel.milestones.gaDate || rel.milestones.ga);
@@ -669,7 +684,7 @@ module.exports = async function registerHygieneRoutes(router, context) {
 
       versions.push({
         versionId: versionId,
-        displayName: (rel && rel.displayName) || data.version || versionId,
+        displayName: (rel && rel.displayName) || data.version || formatVersionId(versionId),
         gaDate: gaDate || null,
         isReleased: !!isReleased,
         fetchedAt: data.fetchedAt || null,
