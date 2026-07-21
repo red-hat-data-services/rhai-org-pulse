@@ -9,8 +9,9 @@ vi.mock('@shared/client/services/api', () => ({
 }))
 
 const mockIsAdmin = ref(false)
+const mockUser = ref({ email: 'testuser@redhat.com' })
 vi.mock('@shared/client/composables/useAuth', () => ({
-  useAuth: () => ({ isAdmin: mockIsAdmin })
+  useAuth: () => ({ isAdmin: mockIsAdmin, user: mockUser })
 }))
 
 const sampleComponents = {
@@ -188,9 +189,43 @@ describe('JiraTaxonomyView', () => {
     const wrapper = mountView()
     await flushPromises()
 
-    const btn = wrapper.find('button')
+    const btn = wrapper.find('button[aria-label*="Sync available"]')
+    expect(btn.exists()).toBe(true)
     expect(btn.attributes('disabled')).toBeDefined()
     // Should show countdown text (e.g., "4m 59s")
     expect(btn.text()).toMatch(/\d+m \d+s/)
+  })
+
+  it('shows request form on Request Component tab', async () => {
+    const wrapper = mountView()
+    await flushPromises()
+    // Click Request Component tab
+    const tabs = wrapper.findAll('.border-b button')
+    const requestTab = tabs.find(t => t.text().includes('Request Component'))
+    expect(requestTab).toBeTruthy()
+    await requestTab.trigger('click')
+    expect(wrapper.text()).toContain('Naming Standards')
+    expect(wrapper.text()).toContain('Pre-Request Checklist')
+    expect(wrapper.text()).toContain('Proposed Component Name/Rename')
+    expect(wrapper.text()).toContain('Submit Request')
+  })
+
+  it('shows submitting-as email on request tab', async () => {
+    const wrapper = mountView()
+    await flushPromises()
+    const tabs = wrapper.findAll('.border-b button')
+    const requestTab = tabs.find(t => t.text().includes('Request Component'))
+    await requestTab.trigger('click')
+    expect(wrapper.text()).toContain('testuser@redhat.com')
+  })
+
+  it('disables submit button when form is incomplete', async () => {
+    const wrapper = mountView()
+    await flushPromises()
+    const tabs = wrapper.findAll('.border-b button')
+    const requestTab = tabs.find(t => t.text().includes('Request Component'))
+    await requestTab.trigger('click')
+    const submitBtn = wrapper.find('button.bg-primary-600')
+    expect(submitBtn.attributes('disabled')).toBeDefined()
   })
 })

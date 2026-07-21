@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+const mockFetch = vi.fn()
+vi.stubGlobal('fetch', mockFetch)
+
 function makeStorage(initial = {}) {
   const data = { ...initial }
   return {
@@ -115,5 +118,135 @@ describe('GET /jira-components', () => {
     const { handlers } = setupRoutes({ 'team-data/field-options/component.json': noSync })
     const res = await callHandler(handlers['GET /jira-components'], {})
     expect(res._body.fetchedAt).toBe('2026-06-15T00:00:00Z')
+  })
+})
+
+describe('POST /jira-components/request', () => {
+  let testUserCounter = 0
+
+  beforeEach(() => {
+    vi.resetModules()
+    mockFetch.mockReset()
+    delete process.env.DEMO_MODE
+    // Each test gets a unique email to avoid cross-test rate limiting
+    testUserCounter++
+  })
+
+  function uniqueEmail() {
+    return `test${testUserCounter}@redhat.com`
+  }
+
+  const validPayload = {
+    preRequestConfirmation: ['item1', 'item2', 'item3', 'item4'],
+    proposedName: 'Test Component',
+    description: 'A test component',
+    justification: 'Needed for testing',
+    owningPm: 'Jane Doe',
+    pmDirectorApproval: 'John Smith',
+    engineeringTeamAndManager: 'Platform Team - Bob Jones',
+    componentLead: 'Alice Williams',
+    leadershipAlignment: ['PM approved', 'Eng approved']
+  }
+
+  it('submits valid request to Google Form and returns success', async () => {
+    mockFetch.mockResolvedValue({ ok: true })
+    const email = uniqueEmail()
+    const { handlers } = setupRoutes({})
+    const res = await callHandler(handlers['POST /jira-components/request'], {
+      body: validPayload,
+      userEmail: email
+    })
+    expect(res._status).toBe(200)
+    expect(res._body.success).toBe(true)
+    expect(res._body.submittedBy).toBe(email)
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('google.com/forms'),
+      expect.objectContaining({ method: 'POST' })
+    )
+  })
+
+  it('returns 400 for missing required fields', async () => {
+    const { handlers } = setupRoutes({})
+    const res = await callHandler(handlers['POST /jira-components/request'], {
+      body: { proposedName: 'Test' },
+      userEmail: uniqueEmail()
+    })
+    expect(res._status).toBe(400)
+    expect(res._body.error).toBe('Validation failed')
+    expect(res._body.details.length).toBeGreaterThan(0)
+  })
+
+  it('returns 502 when Google Form fails but saves locally', async () => {
+    mockFetch.mockResolvedValue({ ok: false, status: 500 })
+    const email = uniqueEmail()
+    const { handlers, storage } = setupRoutes({})
+    const res = await callHandler(handlers['POST /jira-components/request'], {
+      body: validPayload,
+      userEmail: email
+    })
+    expect(res._status).toBe(502)
+    expect(res._body.savedLocally).toBe(true)
+    expect(storage.writeToStorage).toHaveBeenCalledWith(
+      'component-requests-log.json',
+      expect.objectContaining({ submissions: expect.any(Array) })
+    )
+  })
+
+  it('logs submission in component-requests-log.json', async () => {
+    mockFetch.mockResolvedValue({ ok: true })
+    const email = uniqueEmail()
+    const { handlers, storage } = setupRoutes({})
+    await callHandler(handlers['POST /jira-components/request'], {
+      body: validPayload,
+      userEmail: email
+    })
+    expect(storage.writeToStorage).toHaveBeenCalledWith(
+      'component-requests-log.json',
+      expect.objectContaining({
+        submissions: expect.arrayContaining([
+          expect.objectContaining({
+            submittedBy: email,
+            payload: validPayload
+          })
+        ])
+      })
+    )
+  })
+
+  it('returns 400 for proposedName exceeding 200 characters', async () => {
+    const { handlers } = setupRoutes({})
+    const res = await callHandler(handlers['POST /jira-components/request'], {
+      body: { ...validPayload, proposedName: 'x'.repeat(201) },
+      userEmail: uniqueEmail()
+    })
+    expect(res._status).toBe(400)
+    expect(res._body.details).toContain('proposedName must be 200 characters or fewer')
+  })
+
+  it('skips Google Form POST in demo mode', async () => {
+    process.env.DEMO_MODE = 'true'
+    const { handlers } = setupRoutes({})
+    const res = await callHandler(handlers['POST /jira-components/request'], {
+      body: validPayload,
+      userEmail: uniqueEmail()
+    })
+    expect(res._status).toBe(200)
+    expect(res._body.demo).toBe(true)
+    expect(mockFetch).not.toHaveBeenCalled()
+  })
+
+  it('resolves submitter email from registry when userUid is present', async () => {
+    mockFetch.mockResolvedValue({ ok: true })
+    const registry = {
+      people: { 'uid123': { email: 'resolved@redhat.com' } }
+    }
+    const { handlers } = setupRoutes({ 'team-data/registry.json': registry })
+    const res = await callHandler(handlers['POST /jira-components/request'], {
+      body: validPayload,
+      userEmail: uniqueEmail(),
+      userUid: 'uid123'
+    })
+    expect(res._status).toBe(200)
+    expect(res._body.submittedBy).toBe('resolved@redhat.com')
   })
 })
