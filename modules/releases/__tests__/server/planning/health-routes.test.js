@@ -383,6 +383,61 @@ describe('health routes', function() {
       expect(res._json.key).toBe('T-1')
       expect(res._json.summary).toBe('Feature 1')
     })
+
+    it('recomputes fpdor when execution detail has fresher release type', async function() {
+      var cached = freshCache('3.5', {
+        features: [
+          {
+            key: 'T-1', summary: 'Feature 1', releaseType: '',
+            risk: { level: 'green', flags: [] },
+            fpdor: {
+              items: [
+                { name: 'Release Type', pass: false, source: 'jira', state: 'failed', detail: 'No release type set' }
+              ],
+              passedCount: 0, totalCount: 13, evaluatedCount: 13
+            },
+            planningStatus: 'not-ready'
+          }
+        ]
+      })
+      storage._store['releases/planning/health-cache-3.5-all.json'] = cached
+      storage._store['releases/execution/features/T-1.json'] = {
+        key: 'T-1', summary: 'Feature 1', releaseType: 'GA'
+      }
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/feature/:key',
+        makeReq({ params: { version: '3.5', key: 'T-1' } }))
+      expect(res._status).toBe(200)
+      expect(res._json.releaseType).toBe('GA')
+      var rtItem = res._json.fpdor.items.find(function(i) { return i.name === 'Release Type' })
+      expect(rtItem.pass).toBe(true)
+      expect(rtItem.state).toBe('passed')
+    })
+
+    it('does not recompute fpdor when execution release type matches cached', async function() {
+      var cached = freshCache('3.5', {
+        features: [
+          {
+            key: 'T-1', summary: 'Feature 1', releaseType: 'GA',
+            risk: { level: 'green', flags: [] },
+            fpdor: {
+              items: [
+                { name: 'Release Type', pass: true, source: 'jira', state: 'passed', detail: null }
+              ],
+              passedCount: 1, totalCount: 13, evaluatedCount: 13
+            },
+            planningStatus: 'ready-for-execution'
+          }
+        ]
+      })
+      storage._store['releases/planning/health-cache-3.5-all.json'] = cached
+      storage._store['releases/execution/features/T-1.json'] = {
+        key: 'T-1', summary: 'Feature 1', releaseType: 'GA'
+      }
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/feature/:key',
+        makeReq({ params: { version: '3.5', key: 'T-1' } }))
+      expect(res._status).toBe(200)
+      expect(res._json.fpdor.passedCount).toBe(1)
+    })
   })
 
   // ─── PUT /releases/:version/health/override/:featureKey ───

@@ -672,16 +672,20 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     }
     for (var fi = 0; fi < features.length; fi++) {
       var execFeature = execByKey[features[fi].key]
-      if (execFeature && execFeature.epicCount) {
+      if (!execFeature) continue
+      if (execFeature.epicCount) {
         features[fi].epicCount = execFeature.epicCount
       }
-      if (execFeature && typeof execFeature.completionPct === 'number') {
+      if (typeof execFeature.completionPct === 'number') {
         features[fi].completionPct = execFeature.completionPct
       }
-      if (execFeature && !features[fi].scores) {
-        var execDetail = await loadFeatureDetail(readFromStorage, features[fi].key)
-        if (execDetail && execDetail.aiReview && execDetail.aiReview.scores) {
+      var execDetail = await loadFeatureDetail(readFromStorage, features[fi].key)
+      if (execDetail) {
+        if (!features[fi].scores && execDetail.aiReview && execDetail.aiReview.scores) {
           features[fi].scores = execDetail.aiReview.scores
+        }
+        if (execDetail.releaseType) {
+          features[fi].releaseType = execDetail.releaseType
         }
       }
     }
