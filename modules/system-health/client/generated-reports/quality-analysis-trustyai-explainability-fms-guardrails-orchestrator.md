@@ -1,458 +1,678 @@
 ---
 repository: "trustyai-explainability/fms-guardrails-orchestrator"
-overall_score: 5.6
+overall_score: 5.3
 scorecard:
   - dimension: "Unit Tests"
-    score: 5.0
-    status: "28 inline unit tests across 54 source files; low test-to-code ratio"
+    score: 6.0
+    status: "28 unit tests across 14 modules; moderate coverage of core components"
   - dimension: "Integration/E2E"
-    score: 7.5
-    status: "86 integration tests with mock server infrastructure covering all API endpoints"
+    score: 7.0
+    status: "12 comprehensive integration test files (~20K lines) with mock-based testing via mocktail"
   - dimension: "Build Integration"
-    score: 4.0
-    status: "Tests run inside Docker build but no PR-time image validation or Konflux simulation"
+    score: 5.0
+    status: "Basic cargo build/test in CI; tests run during Docker build; no PR-time image validation"
   - dimension: "Image Testing"
-    score: 4.5
-    status: "Multi-arch Dockerfiles (amd64, ppc64le, s390x) but no runtime validation or scanning"
+    score: 7.0
+    status: "Multi-arch Dockerfiles (amd64/ppc64le/s390x), UBI9 base, non-root, hardening scripts"
   - dimension: "Coverage Tracking"
     score: 1.0
-    status: "No coverage tool configured; no codecov, tarpaulin, or llvm-cov integration"
+    status: "No coverage tooling, thresholds, or reporting configured"
   - dimension: "CI/CD Automation"
+    score: 5.0
+    status: "Single workflow with build/lint/test; missing concurrency control, timeouts, and matrix"
+  - dimension: "Static Analysis"
     score: 6.0
-    status: "Single workflow with build+fmt+clippy+test; missing security scans, coverage, and multi-arch CI"
+    status: "Pre-commit hooks (fmt/clippy), RUSTFLAGS=-Dwarnings; no dependency alerts"
   - dimension: "Agent Rules"
-    score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory; no AI agent test guidance"
+    score: 1.0
+    status: "No CLAUDE.md, .claude/ directory, or agent rules present"
 critical_gaps:
   - title: "No code coverage tracking or enforcement"
-    impact: "No visibility into how much code is tested; regressions in coverage go undetected"
+    impact: "No visibility into test coverage; regressions in coverage go undetected"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No container vulnerability scanning"
-    impact: "CVEs in base images and dependencies not detected until downstream consumers scan"
+  - title: "No PR-time container image build validation"
+    impact: "Dockerfile build failures discovered only in downstream Konflux builds"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No dependency update automation"
-    impact: "Stale dependencies with known vulnerabilities; manual tracking burden"
-    severity: "HIGH"
+    effort: "6-8 hours"
+  - title: "Missing CI concurrency control and timeouts"
+    impact: "Stale CI runs consume resources; hung jobs block the pipeline indefinitely"
+    severity: "MEDIUM"
     effort: "1-2 hours"
-  - title: "No SAST/CodeQL integration"
-    impact: "Static analysis vulnerabilities not caught in CI; relies solely on clippy"
+  - title: "No dependency update automation (Dependabot/Renovate)"
+    impact: "Vulnerable dependencies not detected automatically; manual update burden"
     severity: "MEDIUM"
-    effort: "2-3 hours"
-  - title: "Low unit test density"
-    impact: "28 unit tests for 15,586 LOC (1 test per 557 LOC); core logic lacks isolated tests"
-    severity: "MEDIUM"
-    effort: "20-40 hours"
+    effort: "1-2 hours"
+  - title: "No agent rules for AI-assisted development"
+    impact: "AI agents lack context on Rust testing patterns, project conventions, and quality gates"
+    severity: "LOW"
+    effort: "3-4 hours"
 quick_wins:
-  - title: "Add cargo-tarpaulin or llvm-cov to CI workflow"
-    effort: "2-3 hours"
-    impact: "Immediate visibility into code coverage percentage and trend tracking"
-  - title: "Add Dependabot configuration"
+  - title: "Add concurrency control and timeout to CI workflow"
     effort: "30 minutes"
-    impact: "Automated dependency updates with PR-based review workflow"
-  - title: "Add Trivy container scanning to CI"
+    impact: "Prevent resource waste from stale/hung CI runs"
+  - title: "Enable Dependabot for cargo and GitHub Actions dependencies"
     effort: "1-2 hours"
-    impact: "Early detection of CVEs in base images and compiled binary"
-  - title: "Add CodeQL security analysis workflow"
-    effort: "1-2 hours"
-    impact: "Automated SAST scanning for Rust security patterns"
-  - title: "Create basic CLAUDE.md with test patterns"
+    impact: "Automated security and dependency update PRs"
+  - title: "Add cargo-llvm-cov for coverage tracking"
+    effort: "2-4 hours"
+    impact: "Visibility into test coverage with PR reporting"
+  - title: "Add PR-time Docker build step to CI"
     effort: "2-3 hours"
-    impact: "Consistent AI-assisted test creation following project conventions"
+    impact: "Catch Dockerfile build failures before merge"
+  - title: "Create basic CLAUDE.md with Rust testing patterns"
+    effort: "2-3 hours"
+    impact: "Guide AI agents to generate idiomatic Rust tests"
 recommendations:
   priority_0:
-    - "Add coverage tracking with cargo-tarpaulin or llvm-cov and integrate with Codecov"
-    - "Add container vulnerability scanning (Trivy) to the CI pipeline"
-    - "Configure Dependabot for Cargo.toml and GitHub Actions dependencies"
+    - "Add code coverage tracking with cargo-llvm-cov and Codecov integration"
+    - "Add concurrency control and timeout-minutes to CI workflow"
+    - "Enable Dependabot for cargo, docker, and github-actions ecosystems"
   priority_1:
-    - "Increase unit test density for core orchestrator logic (handlers, batcher, config)"
-    - "Add CodeQL or similar SAST workflow for security analysis"
-    - "Add secret detection (gitleaks) to pre-commit and CI"
-    - "Create comprehensive CLAUDE.md and .claude/rules/ for test automation guidance"
+    - "Add PR-time Docker image build validation step in CI"
+    - "Add matrix strategy to test against multiple Rust versions"
+    - "Create agent rules (.claude/rules/) for Rust unit and integration test patterns"
+    - "Add E2E tests against real services in staging environment"
   priority_2:
-    - "Add multi-arch CI builds (currently only Dockerfiles exist, no CI building them)"
-    - "Add image runtime validation tests (container startup, healthcheck, API response)"
-    - "Add performance/load testing for streaming endpoints"
-    - "Add contract tests for detector and chunker API boundaries"
+    - "Add performance benchmarks with criterion"
+    - "Add release automation workflow"
+    - "Consolidate multi-arch Dockerfiles using buildx"
+    - "Add OpenAPI spec validation in CI"
 ---
 
-# Quality Analysis: fms-guardrails-orchestrator
+# Quality Analysis: trustyai-explainability/fms-guardrails-orchestrator
 
 ## Executive Summary
-
-- **Overall Score: 5.6/10**
-- **Repository Type**: Rust application (gRPC/REST API orchestration server)
-- **Primary Language**: Rust (Edition 2024, toolchain 1.92.0)
-- **Key Strengths**: Strong integration test suite with 86 tests covering all API endpoints; well-structured mock server infrastructure using `mocktail`; multi-architecture Docker support (amd64, ppc64le, s390x); good pre-commit hooks (fmt, check, clippy); comprehensive ADR documentation
-- **Critical Gaps**: No code coverage tracking; no container vulnerability scanning; no dependency update automation; low unit test density (28 tests for 15.6K LOC)
-- **Agent Rules Status**: Missing - No CLAUDE.md, AGENTS.md, or .claude/ directory
+- **Overall Score: 5.3/10**
+- **Key Strengths**: Comprehensive mock-based integration tests (~20K lines), multi-architecture Docker support with UBI9 base images, pre-commit hooks with clippy/fmt enforcement, tests run during Docker builds
+- **Critical Gaps**: Zero coverage tracking, no PR-time image build validation, missing CI hardening (concurrency/timeouts), no dependency update automation
+- **Agent Rules Status**: Missing
 
 ## Quality Scorecard
-
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 5.0/10 | 28 inline unit tests across 54 source files; low test-to-code ratio |
-| Integration/E2E | 7.5/10 | 86 integration tests with mock server infrastructure covering all API endpoints |
-| **Build Integration** | **4.0/10** | **Tests run inside Docker build but no PR-time image validation or Konflux simulation** |
-| Image Testing | 4.5/10 | Multi-arch Dockerfiles but no runtime validation or vulnerability scanning |
-| Coverage Tracking | 1.0/10 | No coverage tool configured; no codecov, tarpaulin, or llvm-cov integration |
-| CI/CD Automation | 6.0/10 | Single workflow with build+fmt+clippy+test; missing security scans and coverage |
-| Agent Rules | 0.0/10 | No AI agent test guidance; no CLAUDE.md or .claude/ directory |
+| Dimension | Score | Weight | Status |
+|-----------|-------|--------|--------|
+| Unit Tests | 6/10 | 15% | 28 unit tests across 14 modules; moderate coverage |
+| Integration/E2E | 7/10 | 20% | 12 integration test files (~20K lines) with mocktail |
+| Build Integration | 5/10 | 15% | Basic cargo build/test in CI; no PR-time image validation |
+| Image Testing | 7/10 | 10% | Multi-arch UBI9 Dockerfiles, non-root, hardening |
+| Coverage Tracking | 1/10 | 10% | No coverage tooling configured |
+| CI/CD Automation | 5/10 | 15% | Single workflow; no concurrency/timeout/matrix |
+| Static Analysis | 6/10 | 10% | Pre-commit hooks, clippy, RUSTFLAGS=-Dwarnings |
+| Agent Rules | 1/10 | 5% | No CLAUDE.md or agent rules |
 
 ## Critical Gaps
 
-### 1. No Code Coverage Tracking or Enforcement
-- **Impact**: No visibility into what percentage of code is actually tested. Coverage regressions go completely undetected. Contributors have no guidance on whether their changes need tests.
-- **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: The project has no `cargo-tarpaulin`, `llvm-cov`, or any coverage tool configured. No `.codecov.yml`, no coverage reporting in CI, and no coverage thresholds to enforce minimum coverage on PRs.
+1. **No code coverage tracking or enforcement**
+   - Impact: No visibility into which code paths are tested; coverage regressions go completely undetected
+   - Severity: HIGH
+   - Effort: 4-6 hours
 
-### 2. No Container Vulnerability Scanning
-- **Impact**: CVEs in the `ubi9/ubi-minimal` base image, compiled dependencies, or the Rust binary itself are not detected until downstream consumers (like Konflux or Red Hat product builds) scan the images.
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: No Trivy, Snyk, or Grype integration. No `.trivyignore` or equivalent configuration. The Dockerfiles use `registry.access.redhat.com/ubi9/ubi-minimal:latest` which could pull vulnerable versions without pinning or scanning.
+2. **No PR-time container image build validation**
+   - Impact: Dockerfile build failures discovered only in downstream Konflux builds, requiring rollbacks
+   - Severity: HIGH
+   - Effort: 6-8 hours
 
-### 3. No Dependency Update Automation
-- **Impact**: Stale dependencies accumulate known vulnerabilities. Manual tracking is error-prone and creates audit burden.
-- **Severity**: HIGH
-- **Effort**: 1-2 hours
-- **Details**: No `dependabot.yml` or Renovate configuration. The `Cargo.toml` references several git dependencies with pinned revisions (e.g., `ginepro`, `mocktail`) that will never receive automatic update PRs.
+3. **Missing CI concurrency control and timeouts**
+   - Impact: Stale CI runs on force-pushed branches consume resources; hung `cargo test` jobs block the pipeline indefinitely
+   - Severity: MEDIUM
+   - Effort: 1-2 hours
 
-### 4. No SAST/CodeQL Integration
-- **Impact**: Static analysis vulnerabilities beyond what `clippy` catches are missed. Clippy focuses on idiomatic Rust, not security-specific patterns.
-- **Severity**: MEDIUM
-- **Effort**: 2-3 hours
-- **Details**: No CodeQL workflow, no `cargo-audit` in CI, no `cargo-deny` for license/vulnerability checking.
+4. **No dependency update automation**
+   - Impact: Vulnerable or outdated Cargo crates and GitHub Actions not detected; relies entirely on manual monitoring
+   - Severity: MEDIUM
+   - Effort: 1-2 hours
 
-### 5. Low Unit Test Density
-- **Impact**: 28 unit tests for 15,586 lines of source code (1 test per ~557 LOC). Core orchestrator handlers have no inline unit tests; they rely entirely on integration tests which are slower and less isolated.
-- **Severity**: MEDIUM
-- **Effort**: 20-40 hours (ongoing)
-- **Details**: Files with `#[cfg(test)]` modules: `config.rs` (8 tests), `orchestrator/common/utils.rs` (5 tests), `clients/openai.rs` (4 tests), `orchestrator/types/detection_batcher/completion.rs` (3 tests), `models.rs` (2 tests), `detection_batcher/max_processed_index.rs` (2 tests), `server.rs` (1 test), `utils.rs` (1 test), `clients/http.rs` (1 test), `clients.rs` (1 test). Many handler files (12+) have zero inline tests.
+5. **No agent rules for AI-assisted development**
+   - Impact: AI code assistants generate tests that don't follow the project's Rust idioms, mocktail patterns, or async test conventions
+   - Severity: LOW
+   - Effort: 3-4 hours
 
 ## Quick Wins
 
-### 1. Add cargo-tarpaulin or llvm-cov to CI (2-3 hours)
-**Impact**: Immediate visibility into code coverage percentage and per-file breakdown.
+1. **Add concurrency control and timeout to CI workflow**
+   - Effort: 30 minutes
+   - Impact: Prevent resource waste from stale/hung CI runs
+   - Implementation:
+   ```yaml
+   # .github/workflows/test.yml
+   concurrency:
+     group: ${{ github.workflow }}-${{ github.ref }}
+     cancel-in-progress: true
 
-Add to `test.yml`:
-```yaml
-    - name: Install cargo-tarpaulin
-      run: cargo install cargo-tarpaulin
-    - name: Generate coverage
-      run: cargo tarpaulin --out xml --output-dir coverage/
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: coverage/cobertura.xml
-        fail_ci_if_error: false
-```
+   jobs:
+     ci-checks:
+       runs-on: ubuntu-latest
+       timeout-minutes: 30
+   ```
 
-### 2. Add Dependabot Configuration (30 minutes)
-**Impact**: Automated dependency update PRs for both Cargo and GitHub Actions.
+2. **Enable Dependabot for automated dependency alerts**
+   - Effort: 1-2 hours
+   - Impact: Automated PRs for Cargo crate updates and GitHub Actions version bumps
+   - Implementation:
+   ```yaml
+   # .github/dependabot.yml
+   version: 2
+   updates:
+     - package-ecosystem: "cargo"
+       directory: "/"
+       schedule:
+         interval: "weekly"
+       open-pull-requests-limit: 10
+     - package-ecosystem: "docker"
+       directory: "/"
+       schedule:
+         interval: "monthly"
+     - package-ecosystem: "github-actions"
+       directory: "/"
+       schedule:
+         interval: "monthly"
+   ```
 
-Create `.github/dependabot.yml`:
-```yaml
-version: 2
-updates:
-  - package-ecosystem: "cargo"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-```
+3. **Add cargo-llvm-cov for coverage tracking**
+   - Effort: 2-4 hours
+   - Impact: Visibility into test coverage percentages with PR-level reporting
+   - Implementation:
+   ```yaml
+   # Add to .github/workflows/test.yml
+   - name: Install cargo-llvm-cov
+     uses: taiki-e/install-action@cargo-llvm-cov
+   - name: Generate code coverage
+     run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+   - name: Upload coverage to Codecov
+     uses: codecov/codecov-action@v5
+     with:
+       files: lcov.info
+       fail_ci_if_error: false
+   ```
 
-### 3. Add Trivy Container Scanning (1-2 hours)
-**Impact**: Detect CVEs in base images and dependencies before merge.
+4. **Add PR-time Docker build step**
+   - Effort: 2-3 hours
+   - Impact: Catch Dockerfile build failures before merge
+   - Implementation:
+   ```yaml
+   # Add to .github/workflows/test.yml or new workflow
+   docker-build:
+     runs-on: ubuntu-latest
+     if: github.event.pull_request.draft == false
+     steps:
+       - uses: actions/checkout@v4
+       - name: Build Docker image
+         run: docker build -f Dockerfile.amd64 --target fms-guardrails-orchestr8-release .
+   ```
 
-Create `.github/workflows/security.yml`:
-```yaml
-name: Security Scanning
-on:
-  pull_request:
-    branches: [main]
-  schedule:
-    - cron: '0 6 * * 1'
-jobs:
-  trivy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build image
-        run: docker build -f Dockerfile.amd64 -t orchestrator:test .
-      - name: Run Trivy
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'orchestrator:test'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-      - name: Upload Trivy results
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
-```
-
-### 4. Add CodeQL Security Analysis (1-2 hours)
-**Impact**: Automated SAST for security patterns beyond clippy.
-
-### 5. Create CLAUDE.md with Test Patterns (2-3 hours)
-**Impact**: AI agents can generate consistent, high-quality tests following project conventions.
+5. **Create basic CLAUDE.md with Rust testing patterns**
+   - Effort: 2-3 hours
+   - Impact: Guide AI agents to generate idiomatic Rust tests matching project conventions
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflow Inventory:**
-- **1 workflow**: `test.yml` - triggered on push to main and PRs to main
-- **Triggers**: `push` (main), `pull_request` (opened, reopened, synchronize, ready_for_review)
-- **Draft PR skip**: Yes (`if: github.event.pull_request.draft == false`)
+**Status: Moderate (6/10)**
 
-**Jobs:**
-- Single `ci-checks` job on `ubuntu-latest`:
-  1. Install nightly rustfmt
-  2. Install protoc v26.0
-  3. Checkout code
-  4. Cache Rust dependencies (registry, git, target)
-  5. `cargo build`
-  6. `cargo +nightly fmt --check --all`
-  7. `cargo clippy --no-deps --all-targets --all-features`
-  8. `cargo test`
+The project has 28 unit tests distributed across 14 `#[cfg(test)]` modules within the `src/` directory. Tests cover core components including configuration deserialization, model validation, client health checks, orchestrator utilities, detection batching, server TLS, and OpenAI client serialization.
 
 **Strengths:**
-- Dependency caching with `actions/cache@v4` keyed on `Cargo.lock`
-- Compilation warnings treated as errors via `RUSTFLAGS: "-Dwarnings"`
-- Draft PR filtering to save CI resources
-- Nightly rustfmt for latest formatting rules
-
-**Gaps:**
-- Single workflow doing everything; no parallel job splitting
-- No coverage reporting step
-- No security scanning step
-- No multi-arch build validation
-- No image build step in CI (only in Dockerfiles)
-- No concurrency control (duplicate runs for rapid pushes)
-
-### Test Coverage
-
-**Unit Tests (28 total):**
-| File | Test Count | What's Tested |
-|------|-----------|---------------|
-| `config.rs` | 8 | Configuration parsing and validation |
-| `orchestrator/common/utils.rs` | 5 | Utility functions and helpers |
-| `clients/openai.rs` | 4 | OpenAI client request/response handling |
-| `detection_batcher/completion.rs` | 3 | Completion batching logic |
-| `models.rs` | 2 | Data model serialization |
-| `detection_batcher/max_processed_index.rs` | 2 | Index tracking logic |
-| `server.rs` | 1 | Server configuration |
-| `utils.rs` | 1 | General utilities |
-| `clients/http.rs` | 1 | HTTP client behavior |
-| `clients.rs` | 1 | Client factory logic |
-
-**Integration Tests (86 total across 12 test files):**
-| Test File | Tests | Endpoint Covered |
-|-----------|-------|-----------------|
-| `chat_completions_streaming.rs` | 16 | `/api/v2/chat/completions-detection` (streaming) |
-| `completions_streaming.rs` | 15 | `/api/v2/text/completions-detection` (streaming) |
-| `chat_completions_unary.rs` | 8 | `/api/v2/chat/completions-detection` (unary) |
-| `completions_unary.rs` | 8 | `/api/v2/text/completions-detection` (unary) |
-| `streaming_classification_with_gen.rs` | 8 | `/api/v1/task/server-streaming-classification-with-text-generation` |
-| `classification_with_text_gen.rs` | 7 | `/api/v1/task/classification-with-text-generation` |
-| `chat_detection.rs` | 4 | `/api/v2/text/detection/chat` |
-| `context_docs_detection.rs` | 4 | `/api/v2/text/detection/context` |
-| `detection_on_generation.rs` | 4 | `/api/v2/text/detection/generated` |
-| `generation_with_detection.rs` | 4 | `/api/v2/text/generation-detection` |
-| `streaming_content_detection.rs` | 4 | `/api/v2/text/detection/stream-content` |
-| `text_content_detection.rs` | 4 | `/api/v2/text/detection/content` |
-
-**Test Infrastructure (Strong):**
-- `TestOrchestratorServerBuilder` - Builder pattern for spinning up test orchestrator instances
-- `mocktail` crate for mock gRPC/HTTP servers (detector, chunker, generation, OpenAI)
-- `test_log` for structured test logging
-- Test configuration via `tests/test_config.yaml`
-- TLS test resources (`tests/resources/localhost.crt`, `localhost.key`)
+- Unit tests are co-located with source code using Rust's idiomatic `#[cfg(test)]` module pattern
+- Good use of `#[tokio::test]` for async test coverage (server, gRPC health checks, detection streams)
+- Configuration deserialization tests are thorough (8 test cases covering valid configs, TLS, error cases)
+- Tests cover critical paths: config parsing, model validation, client behavior, batcher logic
 
 **Test-to-Code Ratio:**
-- Source LOC: 15,586
-- Test LOC: 20,370 (including infrastructure)
-- Ratio: 1.31:1 (test code exceeds source code - strong, but driven by integration tests)
+- Source files: 54
+- Files with test modules: 14
+- Ratio: 26% of source files have unit tests
 
-### Code Quality
-
-**Linting & Formatting:**
-- `rustfmt.toml`: Custom import grouping (`StdExternalCrate`) and granularity (`Crate`)
-- `clippy`: Run in CI with `-D warnings` (warnings are errors via RUSTFLAGS)
-- Nightly rustfmt for latest formatting capabilities
-
-**Pre-commit Hooks (.pre-commit-config.yaml):**
-- `cargo +nightly fmt` - Format all Rust code
-- `cargo check` - Compile check without building
-- `cargo clippy` - Lint with warnings-as-errors
-- All hooks are local (no remote repos) - good for security
-
-**Static Analysis:**
-- ❌ No CodeQL workflow
-- ❌ No `cargo-audit` for dependency vulnerability checking
-- ❌ No `cargo-deny` for license/vulnerability policy
-- ❌ No secret detection (gitleaks, trufflehog)
-- ✅ Clippy with strict warnings-as-errors
-
-### Container Images
-
-**Dockerfiles:**
-- 3 architecture-specific Dockerfiles: `Dockerfile.amd64`, `Dockerfile.ppc64le`, `Dockerfile.s390x`
-- Multi-stage builds: `rust-builder` → `fms-guardrails-orchestr8-builder` → `fms-guardrails-orchestr8-release`
-- Base image: `registry.access.redhat.com/ubi9/ubi-minimal:latest`
-- **Tests run inside Docker build** (`cargo test` in builder stage) - good practice
-- Image hardening scripts in `scripts/` (amd64 only - missing from ppc64le and s390x)
-- Non-root user (`orchestr8`, UID 1001) - good security practice
-- `HEALTHCHECK NONE` - relies on external health monitoring
-- Release optimizations: LTO, symbol stripping, no debug info
+**Key Test Files:**
+- `src/config.rs` - 8 tests for config deserialization and validation
+- `src/models.rs` - 2 tests for model validation and detector params
+- `src/clients/openai.rs` - 4 tests for serialization/deserialization
+- `src/orchestrator/common/utils.rs` - 5 tests for utility functions
+- `src/orchestrator/types/detection_batcher/` - 6 tests for batcher logic
+- `src/server.rs` - 2 tests for server binding and TLS
 
 **Gaps:**
-- ❌ No vulnerability scanning of built images
-- ❌ No SBOM generation
-- ❌ No image signing/attestation
-- ❌ No CI workflow to build and test images (only Dockerfiles, no GitHub Actions building them)
-- ❌ Image hardening scripts not applied on ppc64le and s390x
-- ❌ Base image tag `latest` not pinned (could break builds unexpectedly)
-- ❌ No `HEALTHCHECK` instruction (or external health probe validation)
+- No unit tests for `src/clients/detector.rs`, `src/clients/chunker.rs`, `src/clients/generation.rs`
+- No unit tests for `src/orchestrator/handlers/` (handler logic only tested via integration tests)
+- No unit tests for `src/health.rs`
+- Limited use of property-based testing or fuzzing
+- No explicit test isolation validation
 
-### Security
+**Recommendations:**
+- Add unit tests for client modules (detector, chunker, generation)
+- Add unit tests for health check endpoint logic
+- Consider adding `proptest` or `quickcheck` for property-based testing of serialization/deserialization
+- Add tests for error paths in handler modules
 
-**Current Security Measures:**
-- ✅ Non-root container user with dedicated group
-- ✅ Image hardening scripts (amd64 only)
-- ✅ Strict compiler warnings (treats all warnings as errors)
-- ✅ Pre-commit clippy hooks
-- ✅ `.dockerignore` configured
-- ✅ CODEOWNERS file configured
+### Integration/E2E Tests
 
-**Missing Security Measures:**
-- ❌ No container scanning (Trivy, Snyk, Grype)
-- ❌ No SAST workflow (CodeQL, Semgrep)
-- ❌ No dependency vulnerability scanning (cargo-audit, cargo-deny)
-- ❌ No secret detection (gitleaks, trufflehog)
-- ❌ No Dependabot/Renovate for automated updates
-- ❌ No SBOM generation (SPDX, CycloneDX)
-- ❌ No signed commits enforcement
-- ❌ No branch protection analysis
+**Status: Strong (7/10)**
 
-### Agent Rules (Agentic Flow Quality)
+The `tests/` directory contains 12 comprehensive integration test files totaling approximately 19,867 lines. These tests use the `mocktail` crate (from IBM) to mock HTTP and gRPC services, creating realistic test scenarios for all orchestrator endpoints.
 
-**Status**: Missing
-- ❌ No `CLAUDE.md` or `AGENTS.md` in repository root
-- ❌ No `.claude/` directory
-- ❌ No `.claude/rules/` for test creation rules
-- ❌ No `.claude/skills/` for custom skills
-- ❌ No test pattern documentation for AI agents
+**Strengths:**
+- Extensive endpoint coverage across all orchestrator APIs:
+  - Chat completions (streaming: 5,653 lines, unary: 1,655 lines)
+  - Completions (streaming: 4,701 lines, unary: 1,406 lines)
+  - Classification with text generation (1,466 lines + streaming: 1,833 lines)
+  - Content detection (text: 535 lines, streaming: 832 lines)
+  - Chat detection (460 lines)
+  - Context docs detection (448 lines)
+  - Detection on generation (390 lines)
+  - Generation with detection (488 lines)
+- Shared test infrastructure in `tests/common/` with modules for:
+  - Chunker mocks (`chunker.rs`)
+  - Detector mocks (`detectors.rs`)
+  - Error handling (`errors.rs`)
+  - Generation mocks (`generation.rs`)
+  - OpenAI API mocks (`openai.rs`)
+  - Orchestrator server setup (`orchestrator.rs`)
+- Tests use `TestOrchestratorServer` to spin up a real orchestrator server in tests
+- Dedicated test config (`tests/test_config.yaml`) with multiple detector types
 
-**Impact**: AI agents (Claude, Copilot, etc.) have no project-specific guidance for:
-- Test creation patterns and conventions
-- Mock server setup with `mocktail`
-- Integration test structure (TestOrchestratorServerBuilder)
-- API endpoint testing patterns
-- Required test assertions and error scenarios
+**Gaps:**
+- All integration tests are mock-based (no real service E2E tests)
+- No tests against actual detector/chunker/generation services
+- No multi-version or compatibility testing
+- No performance/load testing
+- No chaos/resilience testing (e.g., service timeouts, partial failures)
 
-**Recommendation**: Generate rules with `/test-rules-generator` to create comprehensive `.claude/rules/` covering:
-- Unit test patterns (inline `#[cfg(test)]` modules)
-- Integration test patterns (TestOrchestratorServerBuilder + MockServer)
-- Mock server setup with `mocktail`
-- Streaming vs unary endpoint testing
-- Error handling test patterns
+**Recommendations:**
+- Add E2E tests against real services in a staging or CI environment
+- Add tests for service degradation scenarios (timeouts, partial responses)
+- Add performance benchmarks for critical request paths
+- Consider contract testing (Pact) for API boundaries with detectors/chunkers
+
+### Build Integration
+
+**Status: Adequate (5/10)**
+
+**Strengths:**
+- CI workflow runs `cargo build` on every PR
+- Dockerfile build process includes `cargo test` — tests run during image build, ensuring the release binary passes all tests
+- Tests are compiled and run in the same environment as the production build
+- Three architecture-specific Dockerfiles provide multi-platform coverage
+
+**Gaps:**
+- No PR-time Docker image build in CI workflow — Dockerfile issues only caught during downstream Konflux builds
+- No Kubernetes manifest validation (no kustomize overlays present)
+- No container image startup validation in CI
+- No Konflux build simulation
+- Build only targets a single OS/arch in CI (ubuntu-latest)
+
+**Current CI Pipeline:**
+```
+PR → Build → Format Check → Clippy Lint → Tests
+```
+
+**Missing Steps:**
+```
+PR → Build → Lint → Tests → Coverage → Docker Build → Image Startup Check
+```
+
+**Recommendations:**
+
+1. **Add PR-time Docker build:**
+   ```yaml
+   - name: Build Docker image
+     run: docker build -f Dockerfile.amd64 --target fms-guardrails-orchestr8-release .
+   ```
+
+2. **Add image startup validation:**
+   ```yaml
+   - name: Test image startup
+     run: |
+       docker build -f Dockerfile.amd64 -t orchestr8:test .
+       docker run --rm -d --name orchestr8-test orchestr8:test
+       sleep 5
+       docker logs orchestr8-test
+       docker stop orchestr8-test
+   ```
+
+3. **Consider Konflux build simulation** to catch downstream build failures early
+
+### Image Testing
+
+**Status: Good (7/10)**
+
+**Strengths:**
+- **Multi-architecture support**: Three separate Dockerfiles for amd64, ppc64le, and s390x
+- **UBI9 base images**: `registry.access.redhat.com/ubi9/ubi-minimal` — FIPS-capable and enterprise-grade
+- **Multi-stage builds**: Separate builder and release stages minimize image size
+- **Non-root execution**: Dedicated `orchestr8` user (UID 1001, GID 0) for runtime
+- **Image hardening**: Custom remediation scripts run during build:
+  - `scripts/installRemediationTools.sh`
+  - `scripts/remediation-script.sh`
+  - `scripts/removeRemediationTools.sh`
+- **Tests in Docker build**: `cargo test` runs during the image build, validating the release binary
+- **Minimal runtime**: Only the compiled binary and config are copied to the release image
+- **.dockerignore**: Properly configured to exclude `.DS_Store`, `.vscode`, `target/`, hermeto files
+
+**Gaps:**
+- No runtime validation tests (health checks, endpoint availability) in CI
+- `HEALTHCHECK NONE` explicitly set — no Docker-level health monitoring
+- No Testcontainers-based integration tests
+- Multi-arch uses separate Dockerfiles rather than unified `docker buildx` with `--platform`
+- No image scanning integration mentioned in CI
+
+**Recommendations:**
+
+1. **Consider consolidating Dockerfiles** with `docker buildx` and `--platform` flag for cleaner multi-arch builds
+
+2. **Add container health check** (even if K8s probes are used, Docker HEALTHCHECK aids development):
+   ```dockerfile
+   HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
+     CMD curl -f http://localhost:8033/health || exit 1
+   ```
+
+3. **Add runtime validation in CI** to verify the built image starts successfully and responds to health checks
+
+### Coverage Tracking
+
+**Status: Critical Gap (1/10)**
+
+**Current State:**
+- No `.codecov.yml` or `codecov.yml` configuration
+- No coverage tool configured (no `cargo-tarpaulin`, `cargo-llvm-cov`, or `grcov`)
+- No coverage collection in CI workflows
+- No coverage thresholds or enforcement
+- No coverage reporting in PRs
+- No coverage badges
+
+**Impact:**
+- Zero visibility into which code paths are tested
+- Coverage regressions go completely undetected
+- New code may be merged with no test coverage
+- Cannot benchmark quality improvements over time
+
+**Recommendations:**
+
+1. **Add `cargo-llvm-cov` to CI (recommended over tarpaulin for Rust 2024 edition):**
+   ```yaml
+   - name: Install cargo-llvm-cov
+     uses: taiki-e/install-action@cargo-llvm-cov
+   - name: Generate code coverage
+     run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+   - name: Upload coverage to Codecov
+     uses: codecov/codecov-action@v5
+     with:
+       files: lcov.info
+       fail_ci_if_error: false
+   ```
+
+2. **Configure Codecov thresholds:**
+   ```yaml
+   # .codecov.yml
+   coverage:
+     status:
+       project:
+         default:
+           target: 60%
+           threshold: 2%
+       patch:
+         default:
+           target: 70%
+   ```
+
+3. **Add coverage badge to README**
+
+### CI/CD Automation
+
+**Status: Basic (5/10)**
+
+**Current Workflow (`test.yml`):**
+- **Triggers**: Push to `main`, PRs (opened, reopened, synchronize, ready_for_review)
+- **Draft PR skip**: `if: github.event.pull_request.draft == false`
+- **Steps**: Install nightly fmt → Install protoc → Checkout → Cache → Build → Format → Clippy → Tests
+- **Caching**: Cargo registry, git, and target directory cached via `actions/cache@v4`
+- **Warnings as errors**: `RUSTFLAGS="-Dwarnings"` ensures no warnings in CI
+
+**Strengths:**
+- Draft PR filtering avoids wasting CI resources
+- Dependency caching reduces build times
+- Warnings treated as errors enforces code quality
+- Protoc installation automated for gRPC code generation
+- Nightly rustfmt for latest formatting capabilities
+
+**Gaps:**
+- **No concurrency control**: Multiple CI runs for the same PR can overlap
+- **No timeout-minutes**: Hung builds (especially `cargo test` with mock servers) run indefinitely
+- **No matrix strategy**: Only tests on single Rust version (pinned 1.92.0) and single OS
+- **No release/deployment workflow**: No automated releases or image publishing
+- **No scheduled/periodic jobs**: No nightly builds or dependency audits
+- **Single workflow**: All steps in one job — no parallelism between lint and test
+
+**Recommendations:**
+
+1. **Add concurrency control:**
+   ```yaml
+   concurrency:
+     group: ${{ github.workflow }}-${{ github.ref }}
+     cancel-in-progress: true
+   ```
+
+2. **Add timeout:**
+   ```yaml
+   jobs:
+     ci-checks:
+       timeout-minutes: 30
+   ```
+
+3. **Split into parallel jobs** (lint and test can run independently):
+   ```yaml
+   jobs:
+     lint:
+       runs-on: ubuntu-latest
+       steps:
+         - name: Format check
+           run: cargo +nightly fmt --check --all
+         - name: Clippy
+           run: cargo clippy --no-deps --all-targets --all-features
+     test:
+       runs-on: ubuntu-latest
+       steps:
+         - name: Run tests
+           run: cargo test
+   ```
+
+4. **Add `cargo audit` for vulnerability scanning:**
+   ```yaml
+   - name: Install cargo-audit
+     run: cargo install cargo-audit
+   - name: Security audit
+     run: cargo audit
+   ```
+
+### Static Analysis
+
+#### Linting
+
+**Status: Good**
+
+**Strengths:**
+- **Pre-commit hooks** (`.pre-commit-config.yaml`):
+  - `cargo +nightly fmt` — uses nightly rustfmt for latest features
+  - `cargo check` — compilation verification
+  - `cargo clippy -- -D warnings` — all clippy warnings are errors
+- **rustfmt.toml** configured with:
+  - `group_imports = "StdExternalCrate"` — organized imports
+  - `imports_granularity = "Crate"` — clean import style
+- **rust-toolchain.toml** pins Rust 1.92.0 with `clippy` and `rustfmt` components
+- **CI enforcement**: `RUSTFLAGS="-Dwarnings"` makes all compiler warnings CI failures
+
+**Gaps:**
+- No additional clippy lint groups enabled beyond defaults (e.g., `clippy::pedantic`, `clippy::nursery`)
+- No `clippy.toml` for customizing lint behavior
+
+#### FIPS Compatibility
+
+**Status: Reasonable Foundation**
+
+**Positive indicators:**
+- **UBI9 base images**: `registry.access.redhat.com/ubi9/ubi-minimal` is FIPS-capable
+- **rustls with ring**: Uses `rustls` with the `ring` cryptographic backend instead of OpenSSL — ring is designed to work in FIPS-capable environments
+- **No non-FIPS crypto imports**: No `md5`, `des`, `rc4` usage in source code
+- **`rand` only in dev-dependencies**: The `rand` crate is only used in tests, not production code
+
+**Gaps:**
+- No explicit FIPS build tags or configuration
+- No FIPS validation in CI
+- `ring` provides FIPS-capable algorithms but is not itself FIPS-certified
+
+#### Dependency Alerts
+
+**Status: Not Configured**
+
+- No `.github/dependabot.yml`
+- No `renovate.json` or `.renovaterc`
+- Relies on manual dependency updates
+- One git dependency (`ginepro`) pinned by rev — higher maintenance burden
+
+### Agent Rules
+
+**Status: Missing (1/10)**
+
+**Current State:**
+- No `CLAUDE.md` or `AGENTS.md` in repository root
+- No `.claude/` directory
+- No `.claude/rules/` for test creation guidance
+- No `.claude/skills/` for custom skills
+
+**Existing Documentation:**
+- `CONTRIBUTING.md` provides general contribution guidelines but no test-specific patterns
+- `CODEOWNERS` identifies 4 maintainers
+- `docs/architecture/adrs/` contains 11 architecture decision records — excellent project documentation
+
+**Impact:**
+AI agents generating code for this project will lack context on:
+- Rust async test patterns (`#[tokio::test]`)
+- `mocktail` mock server setup patterns
+- `TestOrchestratorServer` integration test infrastructure
+- Project-specific detector/chunker mock patterns
+- `#[cfg(test)]` module organization conventions
+
+**Recommendations:**
+
+1. **Create CLAUDE.md:**
+   ```markdown
+   # FMS Guardrails Orchestrator
+
+   ## Project Overview
+   Rust-based orchestration server for LLM guardrails detection.
+   Uses Axum, Tokio, Tonic (gRPC), and Hyper.
+
+   ## Testing
+   - Unit tests: `#[cfg(test)]` modules in src/ files
+   - Integration tests: `tests/` directory using `mocktail` for mocking
+   - Run: `cargo test`
+   - Async tests: use `#[tokio::test]`
+
+   ## Build
+   - `cargo build` (requires protoc for gRPC code generation)
+   - `cargo +nightly fmt --check --all` for formatting
+   - `cargo clippy --no-deps --all-targets --all-features` for linting
+
+   ## Architecture
+   See `docs/architecture/adrs/` for design decisions.
+   ```
+
+2. **Create `.claude/rules/unit-tests.md`** with Rust-specific patterns:
+   - `#[cfg(test)]` module placement
+   - `#[tokio::test]` for async tests
+   - Assertion patterns with standard library `assert!`/`assert_eq!`
+   - Error handling test patterns
+
+3. **Create `.claude/rules/integration-tests.md`** with mocktail patterns:
+   - `TestOrchestratorServer` setup
+   - Mock detector/chunker/generation service configuration
+   - Request/response assertion patterns
+
+4. **Quick win**: Generate rules automatically with `/test-rules-generator`
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-
-1. **Add coverage tracking with cargo-tarpaulin** - Integrate `cargo-tarpaulin` into CI and set up Codecov to track coverage per PR. Establish a baseline and enforce no-regression. Target: complete in 1 sprint.
-
-2. **Add container vulnerability scanning** - Add Trivy scanning to CI for the amd64 Docker image at minimum. Configure severity thresholds (block on CRITICAL/HIGH). Target: 1-2 days.
-
-3. **Configure Dependabot** - Add `dependabot.yml` for both `cargo` and `github-actions` ecosystems. Enable weekly update checks. Target: 30 minutes.
-
-4. **Add cargo-audit to CI** - Run `cargo audit` in the CI pipeline to check for known vulnerabilities in Cargo dependencies. Target: 1 hour.
+- Add code coverage tracking with `cargo-llvm-cov` and Codecov integration
+- Add concurrency control (`cancel-in-progress`) and `timeout-minutes: 30` to CI workflow
+- Enable Dependabot for `cargo`, `docker`, and `github-actions` ecosystems
 
 ### Priority 1 (High Value)
-
-5. **Increase unit test density** - Focus on orchestrator handlers (`handlers/*.rs`) which have 0 inline unit tests. These are the core business logic and currently rely entirely on integration tests. Target: 5-10 new unit test modules over 2-3 sprints.
-
-6. **Add CodeQL security analysis** - Enable GitHub CodeQL for Rust analysis. Catches patterns clippy misses (unsafe blocks, buffer handling, etc.). Target: 2-3 hours.
-
-7. **Add secret detection** - Configure gitleaks in pre-commit and CI. The project handles TLS certificates and API keys in configuration. Target: 1-2 hours.
-
-8. **Create CLAUDE.md and agent rules** - Document test patterns, conventions, and project architecture for AI-assisted development. Use `/test-rules-generator` for comprehensive rule generation. Target: 2-3 hours.
-
-9. **Fix multi-arch Dockerfile parity** - The ppc64le and s390x Dockerfiles are missing image hardening scripts that amd64 has. Either add them or document why they're excluded. Target: 2-4 hours.
+- Add PR-time Docker image build validation step in CI
+- Add matrix strategy to test against multiple Rust versions (stable + pinned)
+- Create agent rules (`.claude/rules/`) for Rust unit and integration test patterns
+- Add `cargo audit` to CI for dependency vulnerability scanning
+- Split CI into parallel lint and test jobs for faster feedback
 
 ### Priority 2 (Nice-to-Have)
-
-10. **Add multi-arch CI builds** - Add a workflow that builds Docker images for all 3 architectures. Currently only Dockerfiles exist with no CI building them. Target: 4-8 hours.
-
-11. **Add image runtime validation** - After building the container image, validate it starts correctly, responds to health checks, and serves the API. Target: 4-6 hours.
-
-12. **Add CI concurrency control** - Add `concurrency` group to `test.yml` to cancel duplicate runs on rapid pushes. Target: 15 minutes.
-
-13. **Add performance testing** - Streaming endpoints are latency-sensitive; add benchmark tests with `criterion` to detect performance regressions. Target: 8-16 hours.
-
-14. **Add contract tests** - The orchestrator interfaces with detectors, chunkers, and generation servers via specific APIs. Contract tests would catch API drift. Target: 8-12 hours.
-
-15. **Split CI workflow** - Separate build/lint/test into parallel jobs to reduce CI wall time. Target: 2-3 hours.
+- Add performance benchmarks with `criterion` crate
+- Add release automation workflow (cargo-release + image publishing)
+- Consolidate multi-arch Dockerfiles using `docker buildx` with `--platform`
+- Add OpenAPI spec validation in CI (validate `docs/api/` specs)
+- Add E2E tests against real detector/chunker services
+- Consider property-based testing with `proptest` for serialization logic
 
 ## Comparison to Gold Standards
 
-| Practice | fms-guardrails-orchestrator | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
-|----------|---------------------------|---------------------|------------------|---------------|
-| Unit Tests | 28 tests, low density | Extensive Jest suite | N/A | Comprehensive Go tests |
-| Integration Tests | 86 tests, strong | Contract + integration | Layered validation | Multi-version |
-| Coverage Tracking | ❌ None | ✅ Codecov enforced | ✅ Coverage reports | ✅ Codecov with thresholds |
-| Container Scanning | ❌ None | ✅ Trivy integrated | ✅ Multi-layer scanning | ✅ Trivy + Snyk |
-| Dependency Updates | ❌ None | ✅ Dependabot | ✅ Renovate | ✅ Dependabot |
-| SAST | ❌ None (clippy only) | ✅ CodeQL + ESLint | ✅ Security scanning | ✅ CodeQL |
-| Pre-commit Hooks | ✅ fmt + check + clippy | ✅ Comprehensive | ✅ Present | ✅ Present |
-| Agent Rules | ❌ None | ✅ Comprehensive rules | ❌ None | ❌ None |
-| Multi-arch | ✅ 3 Dockerfiles | ✅ Multi-arch builds | ✅ Multi-arch tested | ✅ Multi-arch |
-| Image Runtime Test | ❌ None | ✅ Startup validation | ✅ 5-layer validation | ✅ Deployment tests |
-| CI Caching | ✅ Cargo cache | ✅ Multi-layer cache | ✅ Cached | ✅ Cached |
-| Architecture Docs | ✅ 11 ADRs | ✅ Documented | ✅ Documented | ✅ Documented |
+| Dimension | fms-guardrails-orchestrator | odh-dashboard | notebooks | Gap |
+|-----------|---------------------------|---------------|-----------|-----|
+| Unit Tests | 6/10 | 9/10 | 8/10 | -3 (Add tests for untested modules) |
+| Integration/E2E | 7/10 | 10/10 | 7/10 | -3 (Add real E2E, contract tests) |
+| Build Integration | 5/10 | 9/10 | 8/10 | -4 (Add PR-time image validation) |
+| Image Testing | 7/10 | 7/10 | 10/10 | 0 (Multi-arch + UBI + hardening) |
+| Coverage Tracking | 1/10 | 9/10 | 8/10 | -8 (Add coverage tooling entirely) |
+| CI/CD Automation | 5/10 | 9/10 | 8/10 | -4 (Add concurrency, matrix, timeouts) |
+| Static Analysis | 6/10 | 9/10 | 8/10 | -3 (Add Dependabot, cargo audit) |
+| Agent Rules | 1/10 | 8/10 | 6/10 | -7 (Create CLAUDE.md + rules) |
+
+**Key Takeaways:**
+- **Biggest gap**: Coverage Tracking (1/10 vs 9/10 in odh-dashboard) — no coverage tooling at all
+- **Second gap**: Agent Rules (1/10 vs 8/10 in odh-dashboard) — no AI agent guidance
+- **Third gap**: Build Integration (5/10 vs 9/10) and CI/CD Automation (5/10 vs 9/10)
+- **Strength**: Image Testing (7/10) matches odh-dashboard with multi-arch UBI9 builds and hardening
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/test.yml` - Main CI workflow (build, fmt, clippy, test)
+- `.github/workflows/test.yml` — Single CI workflow (build, lint, test)
 
 ### Testing
-- `tests/` - 12 integration test files + common infrastructure
-- `tests/common/` - Shared test utilities (orchestrator builder, mock servers)
-- `tests/test_config.yaml` - Test configuration
-- `tests/resources/` - TLS certificates for testing
-- `src/**/*.rs` inline `#[cfg(test)]` modules - Unit tests
+- `tests/*.rs` — 12 integration test files (~20K lines total)
+- `tests/common/` — Shared test infrastructure (mock servers, utilities)
+- `tests/test_config.yaml` — Test configuration for integration tests
+- `tests/resources/` — TLS certificates for test server
+- `src/config.rs:461-808` — Unit tests for config parsing
+- `src/models.rs:1222-1420` — Unit tests for model validation
+- `src/clients/openai.rs:1187-1400` — Unit tests for OpenAI client
+- `src/orchestrator/common/utils.rs:77-400` — Unit tests for orchestrator utils
+- `src/orchestrator/types/detection_batcher/` — Unit tests for batcher logic
 
-### Code Quality
-- `rustfmt.toml` - Rust formatter configuration
-- `rust-toolchain.toml` - Toolchain pinning (1.92.0 with rustfmt + clippy)
-- `.pre-commit-config.yaml` - Pre-commit hooks (fmt, check, clippy)
+### Coverage
+- No coverage configuration files exist
 
 ### Container Images
-- `Dockerfile.amd64` - AMD64 multi-stage build with tests
-- `Dockerfile.ppc64le` - PPC64LE build
-- `Dockerfile.s390x` - S390X build
-- `.dockerignore` - Docker build exclusions
-- `scripts/` - Image hardening scripts (amd64 only)
+- `Dockerfile.amd64` — AMD64 architecture build
+- `Dockerfile.ppc64le` — PPC64LE architecture build
+- `Dockerfile.s390x` — S390X architecture build
+- `.dockerignore` — Build context exclusions
+- `scripts/remediation-script.sh` — Image hardening
 
-### Project Configuration
-- `Cargo.toml` - Rust project configuration and dependencies
-- `Cargo.lock` - Locked dependency versions
-- `build.rs` - Protobuf compilation build script
-- `config/config.yaml` - Runtime configuration template
-- `protos/` - gRPC protocol buffer definitions
+### Static Analysis
+- `.pre-commit-config.yaml` — Pre-commit hooks (fmt, check, clippy)
+- `rustfmt.toml` — Rust formatter configuration
+- `rust-toolchain.toml` — Pinned Rust version (1.92.0)
+- `.github/dependabot.yml` — Missing (needs creation)
+
+### Configuration
+- `config/config.yaml` — Production config template
+- `config/test.config.yaml` — Test config
+- `Cargo.toml` — Rust project configuration and dependencies
 
 ### Documentation
-- `docs/architecture/adrs/` - 11 Architecture Decision Records
-- `docs/api/` - OpenAPI specifications (detector API, orchestrator API, tokenization)
-- `CONTRIBUTING.md` - Contribution guidelines
-- `CODEOWNERS` - Code ownership configuration
+- `docs/architecture/adrs/` — 11 architecture decision records
+- `docs/api/` — OpenAPI specifications (orchestrator, detector, tokenization)
+- `CONTRIBUTING.md` — Contribution guidelines
+- `CODEOWNERS` — Code ownership (4 maintainers)
+
+### Agent Rules
+- `CLAUDE.md` — Missing (needs creation)
+- `.claude/rules/` — Missing (needs creation)
