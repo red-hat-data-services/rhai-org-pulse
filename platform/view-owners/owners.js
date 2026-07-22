@@ -89,17 +89,78 @@ export const viewOwners = {
   'upstream-pulse/portfolio':                   { name: 'Dipanshu Gupta',      email: 'dipgupta@redhat.com' },
   'upstream-pulse/org-detail':                  { name: 'Dipanshu Gupta',      email: 'dipgupta@redhat.com' },
   'upstream-pulse/project-detail':              { name: 'Dipanshu Gupta',      email: 'dipgupta@redhat.com' },
-  'upstream-pulse/strategy':                    { name: 'Dipanshu Gupta',      email: 'dipgupta@redhat.com' }
+  'upstream-pulse/strategy':                    { name: 'Dipanshu Gupta',      email: 'dipgupta@redhat.com' },
+
+  // ── Sub-tab owners (module/view/tab) ──
+  // These override the view-level owner when a specific tab is active.
+
+  // releases > execute
+  'releases/execute/feature-list':              { name: 'shuels2',             email: 'shuels@redhat.com' },
+  'releases/execute/feature-status':            { name: 'Alex Corvin',         email: 'acorvin@redhat.com' },
+  'releases/execute/feature-tracking':          { name: 'Saiesh Prabhu',       email: 'saprabhu@redhat.com' },
+
+  // releases > plan
+  'releases/plan/outcomes':                     { name: 'Jen Albertson',        email: 'jalberts@redhat.com' },
+  'releases/plan/pm-hub':                       { name: 'Saiesh Prabhu',       email: 'saprabhu@redhat.com' },
+  'releases/plan/feature-readiness':            { name: 'Erle Marion',         email: 'emarion@redhat.com' },
+  'releases/plan/draft-plans':                  { name: 'Erle Marion',         email: 'emarion@redhat.com' },
+  'releases/plan/bu-feedback':                  { name: 'Saiesh Prabhu',       email: 'saprabhu@redhat.com' },
+
+  // releases > deliver
+  'releases/deliver/risk-dashboard':            { name: 'Saiesh Prabhu',       email: 'saprabhu@redhat.com' },
+  'releases/deliver/release-blockers':          { name: 'srija-ganguly',       email: 'srgangul@redhat.com' },
+  'releases/deliver/conforma-insights':         { name: 'Deepak Chourasia',    email: 'dchouras@redhat.com' },
+
+  // releases > registry
+  'releases/registry/releases':                 { name: 'Alex Corvin',         email: 'acorvin@redhat.com' },
+  'releases/registry/hygiene':                  { name: 'Alex Corvin',         email: 'acorvin@redhat.com' },
+
+  // system-health > component-maturity
+  'system-health/component-maturity/maturity':      { name: 'Dana Gutride',    email: 'dgutride@redhat.com' },
+  'system-health/component-maturity/disconnected':  { name: 'Ajay Jaganathan', email: 'ajagan@redhat.com' },
+
+  // product-builds > package-analysis
+  'product-builds/package-analysis/onboarded':  { name: 'Einat Pacifici',      email: 'epacific@redhat.com' },
+  'product-builds/package-analysis/daily':      { name: 'Einat Pacifici',      email: 'epacific@redhat.com' },
+  'product-builds/package-analysis/search':     { name: 'Einat Pacifici',      email: 'epacific@redhat.com' },
+  'product-builds/package-analysis/nightly':    { name: 'Einat Pacifici',      email: 'epacific@redhat.com' },
+  'product-builds/package-analysis/versions':   { name: 'Einat Pacifici',      email: 'epacific@redhat.com' },
+  'product-builds/package-analysis/tracker':    { name: 'Einat Pacifici',      email: 'epacific@redhat.com' },
+
+  // ── Report owners (module/view/reportId) ──
+  // These override the view-level owner when a specific report is selected.
+
+  // releases > reports
+  'releases/reports/program-hygiene':           { name: 'Alex Corvin',         email: 'acorvin@redhat.com' },
+  'releases/reports/tv-fv-delta':               { name: 'Dimitri Saridakis',   email: 'dsarida@redhat.com' },
+  'releases/reports/feature-pressure':          { name: 'Dimitri Saridakis',   email: 'dsarida@redhat.com' },
+  'releases/reports/release-performance':       { name: 'Alex Corvin',         email: 'acorvin@redhat.com' },
+  'releases/reports/release-readiness':         { name: 'Arthy Loganathan',    email: 'aloganat@redhat.com' },
+  'releases/reports/cve-sustaining':            { name: 'Saiesh Prabhu',       email: 'saprabhu@redhat.com' },
+
+  // team-tracker > reports
+  'team-tracker/reports/trends':                { name: 'Alex Corvin',         email: 'acorvin@redhat.com' },
+  'team-tracker/reports/team-comparison':       { name: 'Alex Corvin',         email: 'acorvin@redhat.com' },
+  'team-tracker/reports/allocation':            { name: 'Alex Corvin',         email: 'acorvin@redhat.com' }
 }
 
 /**
- * Look up the owner of a view.
+ * Look up the owner of a view, with optional sub-view granularity.
+ * Supports both ?tab= and ?report= query params as sub-view identifiers.
+ * Resolution order: sub-view-specific override > sub-view-specific default >
+ *                   view-level override > view-level default.
  * @param {string} moduleSlug
  * @param {string} viewId
  * @param {Object} [overrides] - Admin overrides from view-owner-overrides.json
+ * @param {string} [subView] - Active sub-view id (tab or report from query params)
  * @returns {{ name: string, email: string } | null}
  */
-export function getViewOwner(moduleSlug, viewId, overrides = {}) {
-  const key = `${moduleSlug}/${viewId}`
-  return overrides[key] || viewOwners[key] || null
+export function getViewOwner(moduleSlug, viewId, overrides = {}, subView = null) {
+  const viewKey = `${moduleSlug}/${viewId}`
+  if (subView) {
+    const subKey = `${viewKey}/${subView}`
+    if (overrides[subKey]) return overrides[subKey]
+    if (viewOwners[subKey]) return viewOwners[subKey]
+  }
+  return overrides[viewKey] || viewOwners[viewKey] || null
 }
