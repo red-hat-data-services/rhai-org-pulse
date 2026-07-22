@@ -18,7 +18,7 @@
 
 const fs = require('fs')
 const path = require('path')
-const { execSync } = require('child_process')
+const { execSync, execFileSync } = require('child_process')
 
 const ROOT = path.resolve(__dirname, '..')
 const OUTPUT = path.join(ROOT, 'platform', 'view-owners', 'owners.js')
@@ -264,8 +264,9 @@ function getGitAuthor(relFile) {
 
 function gitLogAuthor(relFile) {
   try {
-    const out = execSync(
-      `git log --diff-filter=A --format="%an <%ae>" --follow -- "${relFile}"`,
+    const out = execFileSync(
+      'git',
+      ['log', '--diff-filter=A', '--format=%an <%ae>', '--follow', '--', relFile],
       { cwd: ROOT, encoding: 'utf-8', timeout: 10000 }
     ).trim()
     if (!out) return null
