@@ -8,7 +8,7 @@ const DEFAULT_CONFIG = {
   excludedStatuses: ['Closed'],
   lookbackMonths: 0,
   trendThresholdPp: 2,
-  autofixProjects: ['AIPCC', 'RHOAIENG'],
+  autofixProjects: ['AIPCC', 'RHOAIENG', 'RHAIENG', 'RHAIFIRST', 'INFERENG', 'JN'],
   autofixCreatedAfter: null,
   docProject: 'RHAISTRAT',
   docRequiredStatuses: ['Review', 'Release Pending'],
