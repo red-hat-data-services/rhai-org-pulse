@@ -484,8 +484,8 @@ function main() {
     }
   }
 
-  const withAuthor = all.filter(e => e.author)
-  const noAuthor = all.filter(e => !e.author)
+  const resolvedCount = all.filter(e => e.author).length
+  const unresolvedCount = all.length - resolvedCount
 
   if (adminOverrideCount > 0) {
     console.log(`[view-owners] ${adminOverrideCount} admin overrides applied`)
@@ -495,8 +495,8 @@ function main() {
     console.log(`[view-owners] ${fallbackCount} entries preserved from existing owners.js`)
   }
 
-  if (noAuthor.length > 0) {
-    console.log(`[view-owners] ${noAuthor.length} entries have no author (external URL or uncommitted)`)
+  if (unresolvedCount > 0) {
+    console.log(`[view-owners] ${unresolvedCount} entries have no author (external URL or uncommitted)`)
   }
 
   const content = generateFile(all)
@@ -519,7 +519,7 @@ function main() {
 
   fs.mkdirSync(path.dirname(OUTPUT), { recursive: true })
   fs.writeFileSync(OUTPUT, content, 'utf-8')
-  console.log(`[view-owners] Updated ${path.relative(ROOT, OUTPUT)} (${withAuthor.length} entries)`)
+  console.log(`[view-owners] Updated ${path.relative(ROOT, OUTPUT)} (${resolvedCount} entries)`)
 
   try {
     execFileSync('git', ['add', path.relative(ROOT, OUTPUT)], { cwd: ROOT })
