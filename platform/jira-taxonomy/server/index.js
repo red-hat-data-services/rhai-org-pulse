@@ -253,6 +253,8 @@ module.exports = function registerJiraTaxonomyRoutes(router, context) {
 
       // Build Google Form URL-encoded body
       var formParams = new URLSearchParams();
+      // Built-in email collection field (not an entry.* — Google Forms uses 'emailAddress')
+      formParams.append('emailAddress', submitterEmail);
       // Pre-request confirmation (repeated checkbox entries)
       for (var i = 0; i < body.preRequestConfirmation.length; i++) {
         formParams.append(FORM_ENTRY.PRE_REQUEST_CONFIRMATION, body.preRequestConfirmation[i]);
