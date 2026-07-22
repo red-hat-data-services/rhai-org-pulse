@@ -4,7 +4,7 @@
  * Auto-generates platform/view-owners/owners.js from git history.
  *
  * Scans all module client/index.js route maps, report registry files,
- * platform view extensions, and known sub-tab definitions, then runs
+ * platform view extensions, and sub-tab definitions, then runs
  * `git log --diff-filter=A` on each component file to discover the
  * original author.
  *
@@ -18,7 +18,7 @@
 
 const fs = require('fs')
 const path = require('path')
-const { execSync, execFileSync } = require('child_process')
+const { execFileSync } = require('child_process')
 
 const ROOT = path.resolve(__dirname, '..')
 const OUTPUT = path.join(ROOT, 'platform', 'view-owners', 'owners.js')
@@ -41,10 +41,10 @@ function parseExistingOwners() {
   if (!fs.existsSync(OUTPUT)) return {}
   const src = fs.readFileSync(OUTPUT, 'utf-8')
   const map = {}
-  const re = /'([^']+)':\s*\{[^}]*name:\s*'([^']+)',\s*email:\s*'([^']+)'/g
+  const re = /'([^']+)':\s*'([^']+)'/g
   let m
   while ((m = re.exec(src)) !== null) {
-    map[m[1]] = { name: m[2], email: m[3] }
+    map[m[1]] = m[2]
   }
   return map
 }
@@ -147,43 +147,88 @@ function discoverReports() {
   return entries
 }
 
-// ─── 4. Discover sub-tabs from view files ───
+// ─── 4. Discover sub-tabs dynamically from all route view files ───
 
 function discoverTabs() {
+  const modulesDir = path.join(ROOT, 'modules')
   const entries = []
 
-  const tabViews = [
-    { slug: 'releases', viewId: 'execute', viewFile: 'modules/releases/client/views/ExecuteView.vue' },
-    { slug: 'releases', viewId: 'plan', viewFile: 'modules/releases/client/views/PlanView.vue' },
-    { slug: 'releases', viewId: 'deliver', viewFile: 'modules/releases/client/views/DeliverView.vue' },
-    { slug: 'releases', viewId: 'registry', viewFile: 'modules/releases/client/views/RegistryView.vue' },
-    { slug: 'system-health', viewId: 'component-maturity', viewFile: 'modules/system-health/client/views/ComponentMaturityView.vue' },
-    { slug: 'product-builds', viewId: 'package-analysis', viewFile: 'modules/product-builds/client/views/PackageAnalysisView.vue' },
-  ]
+  for (const slug of fs.readdirSync(modulesDir).sort()) {
+    const indexPath = path.join(modulesDir, slug, 'client', 'index.js')
+    if (!fs.existsSync(indexPath)) continue
+    const indexSrc = fs.readFileSync(indexPath, 'utf-8')
+    const dir = path.dirname(indexPath)
 
-  for (const tv of tabViews) {
-    const absPath = path.join(ROOT, tv.viewFile)
-    if (!fs.existsSync(absPath)) continue
-    const src = fs.readFileSync(absPath, 'utf-8')
-    const dir = path.dirname(absPath)
-
-    let tabIds = extractTabIds(src)
-
-    if (tabIds.length === 0 && tv.viewFile.includes('PackageAnalysis')) {
-      tabIds = ['onboarded', 'daily', 'search', 'nightly', 'versions', 'tracker']
+    const viewFiles = []
+    const importRe = /import\('([^']+\.vue)'\)/g
+    let im
+    while ((im = importRe.exec(indexSrc)) !== null) {
+      viewFiles.push(im[1])
     }
 
-    const tabComponentMap = resolveTabComponents(src, dir)
+    const routeIdRe = /'([^']+)':\s*(?:defineAsyncComponent|(\w+))\s*(?:\(|[,}])/g
+    const routeIds = []
+    let rm
+    while ((rm = routeIdRe.exec(indexSrc)) !== null) {
+      routeIds.push(rm[1])
+    }
 
+    for (let i = 0; i < viewFiles.length; i++) {
+      const viewFile = path.resolve(dir, viewFiles[i])
+      if (!fs.existsSync(viewFile)) continue
+      const src = fs.readFileSync(viewFile, 'utf-8')
+
+      const tabIds = extractTabIds(src)
+      if (tabIds.length === 0) continue
+
+      const viewId = routeIds[i] || path.basename(viewFile, '.vue').replace(/View$/, '').toLowerCase()
+      const tabComponentMap = resolveTabComponents(src, path.dirname(viewFile))
+
+      for (const tabId of tabIds) {
+        entries.push({
+          key: `${slug}/${viewId}/${tabId}`,
+          file: tabComponentMap[tabId] || null,
+          section: `${slug} > ${viewId}`
+        })
+      }
+    }
+
+    discoverTabsFromNonInlineViews(slug, indexSrc, dir, entries)
+  }
+  return entries
+}
+
+function discoverTabsFromNonInlineViews(slug, indexSrc, dir, entries) {
+  const varRe = /(?:const|let|var)\s+(\w+)\s*=\s*defineAsyncComponent\(\(\)\s*=>\s*import\('([^']+\.vue)'\)\)/g
+  const varViews = {}
+  let vm
+  while ((vm = varRe.exec(indexSrc)) !== null) {
+    varViews[vm[1]] = path.resolve(dir, vm[2])
+  }
+
+  const refRe = /'([^']+)':\s*(\w+)\s*[,}]/g
+  let rm
+  while ((rm = refRe.exec(indexSrc)) !== null) {
+    const viewId = rm[1]
+    const varName = rm[2]
+    if (!varViews[varName]) continue
+    if (entries.some(e => e.key.startsWith(`${slug}/${viewId}/`))) continue
+
+    const viewFile = varViews[varName]
+    if (!fs.existsSync(viewFile)) continue
+    const src = fs.readFileSync(viewFile, 'utf-8')
+    const tabIds = extractTabIds(src)
+    if (tabIds.length === 0) continue
+
+    const tabComponentMap = resolveTabComponents(src, path.dirname(viewFile))
     for (const tabId of tabIds) {
       entries.push({
-        key: `${tv.slug}/${tv.viewId}/${tabId}`,
+        key: `${slug}/${viewId}/${tabId}`,
         file: tabComponentMap[tabId] || null,
-        section: `${tv.slug} > ${tv.viewId}`
+        section: `${slug} > ${viewId}`
       })
     }
   }
-  return entries
 }
 
 function extractTabIds(src) {
@@ -195,6 +240,20 @@ function extractTabIds(src) {
     let m
     while ((m = idRe.exec(block[1])) !== null) {
       if (!ids.includes(m[1])) ids.push(m[1])
+    }
+  }
+
+  if (ids.length === 0) {
+    const hardcoded = src.match(/(?:tab\s*===\s*'([^']+)')/g)
+    if (hardcoded && hardcoded.length >= 3) {
+      for (const match of hardcoded) {
+        const id = match.match(/'([^']+)'/)[1]
+        if (!ids.includes(id)) ids.push(id)
+      }
+      const defaultMatch = src.match(/return\s+'([^']+)'/)
+      if (defaultMatch && !ids.includes(defaultMatch[1])) {
+        ids.unshift(defaultMatch[1])
+      }
     }
   }
   return ids
@@ -240,7 +299,7 @@ function toRelative(absPath) {
   return path.relative(ROOT, absPath)
 }
 
-// ─── 5. Git author lookup ───
+// ─── 5. Git author lookup (name only, email not persisted) ───
 
 function getGitAuthor(relFile) {
   if (!relFile) return null
@@ -266,13 +325,11 @@ function gitLogAuthor(relFile) {
   try {
     const out = execFileSync(
       'git',
-      ['log', '--diff-filter=A', '--format=%an <%ae>', '--follow', '--', relFile],
+      ['log', '--diff-filter=A', '--format=%an', '--follow', '--', relFile],
       { cwd: ROOT, encoding: 'utf-8', timeout: 10000 }
     ).trim()
     if (!out) return null
-    const last = out.split('\n').pop()
-    const m = last.match(/^(.+?)\s+<(.+)>$/)
-    if (m) return { name: m[1], email: m[2] }
+    return out.split('\n').pop()
   } catch { /* git not available or file never committed */ }
   return null
 }
@@ -287,7 +344,7 @@ function generateFile(allEntries) {
   lines.push(' * DO NOT EDIT MANUALLY — regenerated by scripts/update-view-owners.js')
   lines.push(' * Run: npm run update:view-owners')
   lines.push(' *')
-  lines.push(' * Each key is "moduleSlug/viewId" and the value is { name, email } of the')
+  lines.push(' * Each key is "moduleSlug/viewId" and the value is the display name of the')
   lines.push(' * person who first introduced that view\'s component file.')
   lines.push(' *')
   lines.push(' * This mapping is also consumed by the org-pulse chatbot integration.')
@@ -330,7 +387,7 @@ function generateFile(allEntries) {
   lines.push(' * @param {string} viewId')
   lines.push(' * @param {Object} [overrides] - Admin overrides from view-owner-overrides.json')
   lines.push(' * @param {string} [subView] - Active sub-view id (tab or report from query params)')
-  lines.push(' * @returns {{ name: string, email: string } | null}')
+  lines.push(' * @returns {string | null} Display name of the owner')
   lines.push(' */')
   lines.push('export function getViewOwner(moduleSlug, viewId, overrides = {}, subView = null) {')
   lines.push('  const viewKey = `${moduleSlug}/${viewId}`')
@@ -363,7 +420,7 @@ function writeSection(lines, entries, isSub) {
     }
 
     const keyPad = padKey(entry.key)
-    lines.push(`  '${entry.key}':${keyPad}{ name: '${esc(entry.author.name)}', email: '${esc(entry.author.email)}' },`)
+    lines.push(`  '${entry.key}':${keyPad}'${esc(entry.author)}',`)
   }
 }
 
@@ -389,7 +446,7 @@ function padKey(key) {
 }
 
 function esc(s) {
-  return s.replace(/'/g, "\\'")
+  return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
 }
 
 // ─── Main ───
@@ -416,7 +473,8 @@ function main() {
 
   for (const entry of all) {
     if (adminOverrides[entry.key]) {
-      entry.author = adminOverrides[entry.key]
+      const override = adminOverrides[entry.key]
+      entry.author = typeof override === 'string' ? override : override.name
     } else {
       entry.author = getGitAuthor(entry.file)
       if (!entry.author && existing[entry.key]) {
@@ -430,18 +488,15 @@ function main() {
   const noAuthor = all.filter(e => !e.author)
 
   if (adminOverrideCount > 0) {
-    console.log(`[view-owners] ${adminOverrideCount} admin overrides applied from view-owner-overrides.json`)
+    console.log(`[view-owners] ${adminOverrideCount} admin overrides applied`)
   }
 
   if (fallbackCount > 0) {
-    console.log(`[view-owners] ${fallbackCount} entries preserved from existing owners.js (no git history in this repo)`)
+    console.log(`[view-owners] ${fallbackCount} entries preserved from existing owners.js`)
   }
 
   if (noAuthor.length > 0) {
-    console.log(`[view-owners] ${noAuthor.length} entries have no author (external URL or uncommitted):`)
-    for (const e of noAuthor) {
-      console.log(`  - ${e.key} (${e.file || 'no component file'})`)
-    }
+    console.log(`[view-owners] ${noAuthor.length} entries have no author (external URL or uncommitted)`)
   }
 
   const content = generateFile(all)
@@ -467,8 +522,8 @@ function main() {
   console.log(`[view-owners] Updated ${path.relative(ROOT, OUTPUT)} (${withAuthor.length} entries)`)
 
   try {
-    execSync(`git add "${path.relative(ROOT, OUTPUT)}"`, { cwd: ROOT })
-    console.log('[view-owners] Staged owners.js for commit.')
+    execFileSync('git', ['add', path.relative(ROOT, OUTPUT)], { cwd: ROOT })
+    console.log('[view-owners] \u26a0\ufe0f  Auto-staged owners.js — it was regenerated with updated view ownership data.')
   } catch { /* not in a git context */ }
 }
 
