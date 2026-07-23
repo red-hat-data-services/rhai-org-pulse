@@ -5,7 +5,7 @@ import FeatureTable from '../components/FeatureTable.vue'
 import { useReleasePicker } from '../composables/useReleasePicker'
 import { useComponentBreakdown } from '../composables/useComponentBreakdown'
 import { useTvFvData } from '../composables/useTvFvData'
-import { useReleaseFamily, getAlignmentTarget } from '../composables/useReleaseFamily'
+import { useReleaseFamily, getAlignmentTarget, buildNameRollup } from '../composables/useReleaseFamily'
 import { DEFAULT_SELECTED_VERSIONS } from '../composables/tvFvDeltaDefaults'
 
 const FEATURE_COLS = ['key', 'summary', 'status', 'target_version', 'fix_versions', 'color_status', 'product_manager', 'assignee', 'team', 'component']
@@ -26,7 +26,6 @@ const {
   pickerOpen, pickerRef,
   chosenVersionNames, versionSearch,
   availableVersions, filteredVersions, allSelectedVersions,
-  chosenVersionsDisplay,
   formatDate, isInCurrentData,
   toggleVersion, removeVersion, handleClickOutside,
 } = useReleasePicker(data, registryReleases, jiraVersions)
@@ -72,8 +71,23 @@ const filteredSummary = computed(() => {
 const {
   selectedFamily, availableFamilies,
   toggleSummarySort, summarySortIcon,
-  sortedSummary,
+  summaryRollup,
 } = useReleaseFamily(filteredSummary, data)
+
+const SUMMARY_COL_COUNT = 11
+
+/** Selected version chips grouped: cycle → milestone → products (numeric desc) */
+const chosenVersionsRollup = computed(() => buildNameRollup(allSelectedVersions.value))
+
+/** Add-release dropdown entries grouped the same way */
+const dropdownVersionsRollup = computed(() => {
+  const names = filteredVersions.value.map(v => v.name)
+  return buildNameRollup(names)
+})
+
+function versionInfo(name) {
+  return availableVersions.value.find(v => v.name === name) || { name, displayName: name, source: 'manual' }
+}
 
 /** Compute target alignment for a row based on days to GA */
 function targetForRow(row) {
@@ -234,160 +248,239 @@ onBeforeUnmount(() => {
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-              <tr
-                v-for="row in sortedSummary"
-                :key="row.release"
-                class="hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
-                :class="{ 'bg-blue-50/50 dark:bg-blue-900/10': row.release === selectedRelease }"
-                @click="!row._pending ? selectedRelease = row.release : null"
-              >
-                <td class="px-4 py-2 font-mono text-xs font-medium" :class="row._pending ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-gray-100'">
-                  {{ row.release }}
-                  <span v-if="row._pending" class="ml-1 text-[10px] text-amber-500 dark:text-amber-400 italic">(refreshing data...)</span>
-                </td>
-                <td class="px-4 py-2 text-right">
-                  <template v-if="!row._pending">
-                    <ClickableCount :count="row.total" :jql="row.total_jql" label="Total features" />
-                  </template>
-                  <span v-else class="text-gray-400">&mdash;</span>
-                </td>
-                <td class="px-4 py-2 text-right">
-                  <ClickableCount v-if="!row._pending" :count="row.aligned" :jql="row.aligned_jql" color="green" label="Aligned" />
-                  <span v-else class="text-gray-400">&mdash;</span>
-                </td>
-                <td class="px-4 py-2 text-right">
-                  <ClickableCount v-if="!row._pending" :count="row.tv_only" :jql="row.tv_only_jql" color="yellow" label="TV-only" />
-                  <span v-else class="text-gray-400">&mdash;</span>
-                </td>
-                <td class="px-4 py-2 text-right">
-                  <ClickableCount v-if="!row._pending" :count="row.fv_only" :jql="row.fv_only_jql" color="muted" label="FV-only" />
-                  <span v-else class="text-gray-400">&mdash;</span>
-                </td>
-                <td class="px-4 py-2 text-right">
-                  <ClickableCount v-if="!row._pending" :count="row.mismatched" :jql="row.mismatched_jql" color="red" label="Mismatched" />
-                  <span v-else class="text-gray-400">&mdash;</span>
-                </td>
-                <td class="px-4 py-2 text-right">
-                  <span v-if="!row._pending"
-                    class="font-semibold"
+              <template v-for="cycle in summaryRollup" :key="cycle.key">
+                <!-- Cycle rollup: e.g. 3.6 Release Cycle -->
+                <tr class="bg-gray-100 dark:bg-gray-900/80">
+                  <td class="px-4 py-2.5 text-xs font-semibold text-gray-800 dark:text-gray-100 uppercase tracking-wide">
+                    {{ cycle.label }}
+                  </td>
+                  <td class="px-4 py-2.5 text-right text-xs font-semibold text-gray-700 dark:text-gray-200">{{ cycle.totals.total }}</td>
+                  <td class="px-4 py-2.5 text-right text-xs font-semibold text-green-700 dark:text-green-400">{{ cycle.totals.aligned }}</td>
+                  <td class="px-4 py-2.5 text-right text-xs font-semibold text-yellow-700 dark:text-yellow-400">{{ cycle.totals.tv_only }}</td>
+                  <td class="px-4 py-2.5 text-right text-xs font-semibold text-gray-500 dark:text-gray-400">{{ cycle.totals.fv_only }}</td>
+                  <td class="px-4 py-2.5 text-right text-xs font-semibold text-red-700 dark:text-red-400">{{ cycle.totals.mismatched }}</td>
+                  <td class="px-4 py-2.5 text-right text-xs font-semibold"
                     :class="{
-                      'text-red-600 dark:text-red-400': row.alignment_pct < 50,
-                      'text-yellow-600 dark:text-yellow-400': row.alignment_pct >= 50 && row.alignment_pct < 75,
-                      'text-green-600 dark:text-green-400': row.alignment_pct >= 75,
+                      'text-red-600 dark:text-red-400': cycle.totals.alignment_pct < 50,
+                      'text-yellow-600 dark:text-yellow-400': cycle.totals.alignment_pct >= 50 && cycle.totals.alignment_pct < 75,
+                      'text-green-600 dark:text-green-400': cycle.totals.alignment_pct >= 75,
                     }"
-                  >
-                    {{ row.alignment_pct }}%
-                  </span>
-                  <span v-else class="text-gray-400">&mdash;</span>
-                </td>
-                <td class="px-4 py-2 text-right text-xs whitespace-nowrap">
-                  <template v-if="!row._pending && targetForRow(row)">
-                    <span
-                      class="font-semibold"
+                  >{{ cycle.totals.alignment_pct }}%</td>
+                  <td :colspan="SUMMARY_COL_COUNT - 7" class="px-4 py-2.5"></td>
+                </tr>
+
+                <template v-for="ms in cycle.milestones" :key="ms.key">
+                  <!-- Milestone rollup: e.g. 3.6 GA Release -->
+                  <tr class="bg-gray-50 dark:bg-gray-800/70">
+                    <td class="px-4 py-2 pl-8 text-xs font-medium text-gray-700 dark:text-gray-200">
+                      {{ ms.label }}
+                      <span class="ml-1 text-[10px] font-normal text-gray-400 dark:text-gray-500">(includes {{ ms.rows.length }})</span>
+                    </td>
+                    <td class="px-4 py-2 text-right text-xs font-medium text-gray-600 dark:text-gray-300">{{ ms.totals.total }}</td>
+                    <td class="px-4 py-2 text-right text-xs font-medium text-green-700 dark:text-green-400">{{ ms.totals.aligned }}</td>
+                    <td class="px-4 py-2 text-right text-xs font-medium text-yellow-700 dark:text-yellow-400">{{ ms.totals.tv_only }}</td>
+                    <td class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400">{{ ms.totals.fv_only }}</td>
+                    <td class="px-4 py-2 text-right text-xs font-medium text-red-700 dark:text-red-400">{{ ms.totals.mismatched }}</td>
+                    <td class="px-4 py-2 text-right text-xs font-medium"
                       :class="{
-                        'text-red-600 dark:text-red-400': row.alignment_pct < targetForRow(row).target,
-                        'text-green-600 dark:text-green-400': row.alignment_pct >= targetForRow(row).target,
+                        'text-red-600 dark:text-red-400': ms.totals.alignment_pct < 50,
+                        'text-yellow-600 dark:text-yellow-400': ms.totals.alignment_pct >= 50 && ms.totals.alignment_pct < 75,
+                        'text-green-600 dark:text-green-400': ms.totals.alignment_pct >= 75,
                       }"
-                      :title="'Target: ' + targetForRow(row).label + ' (based on ' + daysToGa(row.ga_date) + ' days to GA)'"
-                    >{{ targetForRow(row).label }}</span>
-                  </template>
-                  <span v-else class="text-gray-400">&mdash;</span>
-                </td>
-                <td class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                  {{ row.ga_date ? formatDate(row.ga_date) : '—' }}
-                </td>
-                <td class="px-4 py-2 text-right text-xs whitespace-nowrap"
-                  :class="{
-                    'text-gray-400': row._pending || daysToGa(row.ga_date) === null,
-                    'text-green-600 dark:text-green-400': daysToGa(row.ga_date) !== null && daysToGa(row.ga_date) <= 0,
-                    'text-red-600 dark:text-red-400': daysToGa(row.ga_date) > 0 && daysToGa(row.ga_date) <= 30,
-                    'text-yellow-600 dark:text-yellow-400': daysToGa(row.ga_date) > 30 && daysToGa(row.ga_date) <= 60,
-                    'text-gray-500 dark:text-gray-400': daysToGa(row.ga_date) > 60,
-                  }"
-                >
-                  <template v-if="daysToGa(row.ga_date) !== null">
-                    {{ daysToGa(row.ga_date) > 0 ? daysToGa(row.ga_date) + 'd' : 'Released' }}
-                  </template>
-                  <template v-else>&mdash;</template>
-                </td>
-                <td class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                  {{ row.planning_freeze ? formatDate(row.planning_freeze) : '—' }}
-                </td>
-              </tr>
+                    >{{ ms.totals.alignment_pct }}%</td>
+                    <td :colspan="SUMMARY_COL_COUNT - 7" class="px-4 py-2"></td>
+                  </tr>
+
+                  <!-- Product rows -->
+                  <tr
+                    v-for="row in ms.rows"
+                    :key="row.release"
+                    class="hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
+                    :class="{ 'bg-blue-50/50 dark:bg-blue-900/10': row.release === selectedRelease }"
+                    @click="!row._pending ? selectedRelease = row.release : null"
+                  >
+                    <td class="px-4 py-2 pl-12 font-mono text-xs font-medium" :class="row._pending ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-gray-100'">
+                      {{ row.release }}
+                      <span v-if="row._pending" class="ml-1 text-[10px] text-amber-500 dark:text-amber-400 italic">(refreshing data...)</span>
+                    </td>
+                    <td class="px-4 py-2 text-right">
+                      <template v-if="!row._pending">
+                        <ClickableCount :count="row.total" :jql="row.total_jql" label="Total features" />
+                      </template>
+                      <span v-else class="text-gray-400">&mdash;</span>
+                    </td>
+                    <td class="px-4 py-2 text-right">
+                      <ClickableCount v-if="!row._pending" :count="row.aligned" :jql="row.aligned_jql" color="green" label="Aligned" />
+                      <span v-else class="text-gray-400">&mdash;</span>
+                    </td>
+                    <td class="px-4 py-2 text-right">
+                      <ClickableCount v-if="!row._pending" :count="row.tv_only" :jql="row.tv_only_jql" color="yellow" label="TV-only" />
+                      <span v-else class="text-gray-400">&mdash;</span>
+                    </td>
+                    <td class="px-4 py-2 text-right">
+                      <ClickableCount v-if="!row._pending" :count="row.fv_only" :jql="row.fv_only_jql" color="muted" label="FV-only" />
+                      <span v-else class="text-gray-400">&mdash;</span>
+                    </td>
+                    <td class="px-4 py-2 text-right">
+                      <ClickableCount v-if="!row._pending" :count="row.mismatched" :jql="row.mismatched_jql" color="red" label="Mismatched" />
+                      <span v-else class="text-gray-400">&mdash;</span>
+                    </td>
+                    <td class="px-4 py-2 text-right">
+                      <span v-if="!row._pending"
+                        class="font-semibold"
+                        :class="{
+                          'text-red-600 dark:text-red-400': row.alignment_pct < 50,
+                          'text-yellow-600 dark:text-yellow-400': row.alignment_pct >= 50 && row.alignment_pct < 75,
+                          'text-green-600 dark:text-green-400': row.alignment_pct >= 75,
+                        }"
+                      >
+                        {{ row.alignment_pct }}%
+                      </span>
+                      <span v-else class="text-gray-400">&mdash;</span>
+                    </td>
+                    <td class="px-4 py-2 text-right text-xs whitespace-nowrap">
+                      <template v-if="!row._pending && targetForRow(row)">
+                        <span
+                          class="font-semibold"
+                          :class="{
+                            'text-red-600 dark:text-red-400': row.alignment_pct < targetForRow(row).target,
+                            'text-green-600 dark:text-green-400': row.alignment_pct >= targetForRow(row).target,
+                          }"
+                          :title="'Target: ' + targetForRow(row).label + ' (based on ' + daysToGa(row.ga_date) + ' days to GA)'"
+                        >{{ targetForRow(row).label }}</span>
+                      </template>
+                      <span v-else class="text-gray-400">&mdash;</span>
+                    </td>
+                    <td class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                      {{ row.ga_date ? formatDate(row.ga_date) : '—' }}
+                    </td>
+                    <td class="px-4 py-2 text-right text-xs whitespace-nowrap"
+                      :class="{
+                        'text-gray-400': row._pending || daysToGa(row.ga_date) === null,
+                        'text-green-600 dark:text-green-400': daysToGa(row.ga_date) !== null && daysToGa(row.ga_date) <= 0,
+                        'text-red-600 dark:text-red-400': daysToGa(row.ga_date) > 0 && daysToGa(row.ga_date) <= 30,
+                        'text-yellow-600 dark:text-yellow-400': daysToGa(row.ga_date) > 30 && daysToGa(row.ga_date) <= 60,
+                        'text-gray-500 dark:text-gray-400': daysToGa(row.ga_date) > 60,
+                      }"
+                    >
+                      <template v-if="daysToGa(row.ga_date) !== null">
+                        {{ daysToGa(row.ga_date) > 0 ? daysToGa(row.ga_date) + 'd' : 'Released' }}
+                      </template>
+                      <template v-else>&mdash;</template>
+                    </td>
+                    <td class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                      {{ row.planning_freeze ? formatDate(row.planning_freeze) : '—' }}
+                    </td>
+                  </tr>
+                </template>
+              </template>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- Release selector -->
-      <div class="flex items-center gap-2 mb-6 flex-wrap">
-        <button
-          v-for="v in chosenVersionsDisplay"
-          :key="v.name"
-          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border transition-colors"
-          :class="isInCurrentData(v.name)
-            ? (v.name === selectedRelease
-              ? 'bg-blue-600 text-white border-blue-600 dark:border-blue-500'
-              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700')
-            : 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700 border-dashed'"
-          @click="isInCurrentData(v.name) ? selectedRelease = v.name : null"
+      <!-- Release selector — cycle → milestone → product (numeric desc) -->
+      <div class="mb-6 space-y-4">
+        <div
+          v-for="cycle in chosenVersionsRollup"
+          :key="'sel-' + cycle.key"
+          class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/40 overflow-hidden"
         >
-          {{ v.name }}
-          <span
-            @click.stop="removeVersion(v.name)"
-            class="ml-0.5 opacity-40 hover:opacity-100 transition-opacity cursor-pointer"
-            title="Remove"
-          >&times;</span>
-        </button>
-        <!-- Add release dropdown -->
-        <div class="relative" ref="pickerRef">
-          <button
-            @click.stop="pickerOpen = !pickerOpen"
-            class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md border border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-          >
-            + Add release
-          </button>
+          <div class="px-3 py-2 bg-gray-100 dark:bg-gray-900/80 text-xs font-semibold text-gray-800 dark:text-gray-100 uppercase tracking-wide">
+            {{ cycle.label }}
+          </div>
           <div
-            v-if="pickerOpen"
-            class="absolute z-20 mt-1 left-0 w-80 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-lg"
-            @click.stop
+            v-for="ms in cycle.milestones"
+            :key="'sel-' + ms.key"
+            class="px-3 py-2.5 border-t border-gray-100 dark:border-gray-700/80"
           >
-            <div class="p-2 border-b border-gray-200 dark:border-gray-700">
-              <input
-                v-model="versionSearch"
-                type="text"
-                placeholder="Search versions..."
-                class="w-full px-2.5 py-1.5 text-sm rounded-md border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
+            <div class="text-[11px] font-medium text-gray-600 dark:text-gray-300 mb-1.5">
+              {{ ms.label }}
             </div>
-            <div class="max-h-64 overflow-y-auto">
+            <div class="flex items-center gap-1.5 flex-wrap">
               <button
-                v-for="v in filteredVersions"
-                :key="v.name"
-                class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between gap-2 transition-colors"
-                :class="{ 'bg-blue-50 dark:bg-blue-900/20': chosenVersionNames.has(v.name) }"
-                @click.stop="toggleVersion(v.name)"
+                v-for="name in ms.names"
+                :key="name"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border transition-colors"
+                :class="isInCurrentData(name)
+                  ? (name === selectedRelease
+                    ? 'bg-blue-600 text-white border-blue-600 dark:border-blue-500'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700')
+                  : 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700 border-dashed'"
+                @click="isInCurrentData(name) ? selectedRelease = name : null"
               >
-                <div class="min-w-0">
-                  <span class="font-medium text-gray-900 dark:text-gray-100">{{ v.displayName }}</span>
-                  <span v-if="v.codeFreeze" class="ml-2 text-xs text-gray-400">CF {{ formatDate(v.codeFreeze) }}</span>
-                  <span v-else-if="v.releaseDate" class="ml-2 text-xs text-gray-400">{{ v.released ? 'Released' : 'Due' }} {{ formatDate(v.releaseDate) }}</span>
-                </div>
-                <span v-if="chosenVersionNames.has(v.name)" class="text-blue-500 flex-shrink-0">&#10003;</span>
+                {{ name }}
+                <span
+                  @click.stop="removeVersion(name)"
+                  class="ml-0.5 opacity-40 hover:opacity-100 transition-opacity cursor-pointer"
+                  title="Remove"
+                >&times;</span>
               </button>
-              <div v-if="!filteredVersions.length" class="px-3 py-4 text-center text-xs text-gray-400">
-                {{ availableVersions.length ? 'No matches' : 'No versions available' }}
-              </div>
             </div>
           </div>
         </div>
-        <!-- Refresh indicator -->
-        <span
-          v-if="refreshing"
-          class="px-2.5 py-1.5 text-xs font-medium rounded-md bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700"
-        >
-          Analyzing...
-        </span>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <!-- Add release dropdown -->
+          <div class="relative" ref="pickerRef">
+            <button
+              @click.stop="pickerOpen = !pickerOpen"
+              class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md border border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+            >
+              + Add release
+            </button>
+            <div
+              v-if="pickerOpen"
+              class="absolute z-20 mt-1 left-0 w-96 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-lg"
+              @click.stop
+            >
+              <div class="p-2 border-b border-gray-200 dark:border-gray-700">
+                <input
+                  v-model="versionSearch"
+                  type="text"
+                  placeholder="Search versions..."
+                  class="w-full px-2.5 py-1.5 text-sm rounded-md border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+              <div class="max-h-80 overflow-y-auto">
+                <template v-for="cycle in dropdownVersionsRollup" :key="'dd-' + cycle.key">
+                  <div class="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/60 sticky top-0">
+                    {{ cycle.label }}
+                  </div>
+                  <template v-for="ms in cycle.milestones" :key="'dd-' + ms.key">
+                    <div class="px-3 pt-2 pb-0.5 text-[11px] font-medium text-gray-600 dark:text-gray-300">
+                      {{ ms.label }}
+                    </div>
+                    <button
+                      v-for="name in ms.names"
+                      :key="name"
+                      class="w-full text-left px-4 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between gap-2 transition-colors"
+                      :class="{ 'bg-blue-50 dark:bg-blue-900/20': chosenVersionNames.has(name) }"
+                      @click.stop="toggleVersion(name)"
+                    >
+                      <div class="min-w-0">
+                        <span class="font-medium text-gray-900 dark:text-gray-100">{{ versionInfo(name).displayName || name }}</span>
+                        <span v-if="versionInfo(name).codeFreeze" class="ml-2 text-xs text-gray-400">CF {{ formatDate(versionInfo(name).codeFreeze) }}</span>
+                        <span v-else-if="versionInfo(name).releaseDate" class="ml-2 text-xs text-gray-400">{{ versionInfo(name).released ? 'Released' : 'Due' }} {{ formatDate(versionInfo(name).releaseDate) }}</span>
+                      </div>
+                      <span v-if="chosenVersionNames.has(name)" class="text-blue-500 flex-shrink-0">&#10003;</span>
+                    </button>
+                  </template>
+                </template>
+                <div v-if="!filteredVersions.length" class="px-3 py-4 text-center text-xs text-gray-400">
+                  {{ availableVersions.length ? 'No matches' : 'No versions available' }}
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Refresh indicator -->
+          <span
+            v-if="refreshing"
+            class="px-2.5 py-1.5 text-xs font-medium rounded-md bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700"
+          >
+            Analyzing...
+          </span>
+        </div>
       </div>
 
       <!-- Category lists for selected release -->

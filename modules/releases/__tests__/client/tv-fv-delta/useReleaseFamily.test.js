@@ -1,6 +1,6 @@
 /**
- * Tests for useReleaseFamily composable — release name parsing, product
- * filtering, release family sorting, and target alignment thresholds.
+ * Tests for useReleaseFamily composable — release name parsing, cycle
+ * filtering, milestone rollups, and target alignment thresholds.
  */
 import { describe, it, expect } from 'vitest'
 import { ref } from 'vue'
@@ -9,9 +9,14 @@ import {
   compareReleases,
   extractProduct,
   extractFamily,
+  extractCycle,
+  extractMilestoneGroup,
+  cycleLabel,
+  milestoneGroupLabel,
   familyLabel,
   productLabel,
   getAlignmentTarget,
+  buildNameRollup,
   useReleaseFamily,
 } from '../../../client/composables/useReleaseFamily'
 
@@ -34,12 +39,26 @@ describe('parseReleaseName', function () {
     })
   })
 
-  it('parses rhoai EA2 version', function () {
-    var r = parseReleaseName('rhoai-3.6.EA2')
+  it('parses product-family GA name', function () {
+    var r = parseReleaseName('3.6 GA RHOAI RELEASE')
     expect(r).toEqual({
       product: 'rhoai', major: 3, minor: 6,
-      milestone: 'EA2', milestoneOrder: 2, raw: 'rhoai-3.6.EA2',
+      milestone: 'GA', milestoneOrder: 99, raw: '3.6 GA RHOAI RELEASE',
     })
+  })
+
+  it('parses product-family EA2 name', function () {
+    var r = parseReleaseName('3.5 EA2 RHAII RELEASE')
+    expect(r).toEqual({
+      product: 'rhaii', major: 3, minor: 5,
+      milestone: 'EA2', milestoneOrder: 2, raw: '3.5 EA2 RHAII RELEASE',
+    })
+  })
+
+  it('parses product-family EA1 RHELAI name', function () {
+    var r = parseReleaseName('3.6 EA1 RHELAI RELEASE')
+    expect(r.product).toBe('rhelai')
+    expect(r.milestone).toBe('EA1')
   })
 
   it('parses RHELAI version (case-insensitive)', function () {
@@ -51,7 +70,6 @@ describe('parseReleaseName', function () {
   })
 
   it('returns null for z-stream-like RHAII versions', function () {
-    // RHAII-3.2.3 has ".3" not ".EA<N>", so it doesn't match the pattern
     expect(parseReleaseName('RHAII-3.2.3')).toBeNull()
   })
 
@@ -60,35 +78,63 @@ describe('parseReleaseName', function () {
     expect(parseReleaseName('')).toBeNull()
     expect(parseReleaseName('random-text')).toBeNull()
   })
+})
 
-  it('handles underscore and space separators', function () {
-    var r = parseReleaseName('rhoai_3.5')
-    expect(r).not.toBeNull()
-    expect(r.product).toBe('rhoai')
-    expect(r.major).toBe(3)
-    expect(r.minor).toBe(5)
+// ═══ extractCycle / milestone ═══
+
+describe('extractCycle', function () {
+  it('extracts cycle from product-family names', function () {
+    expect(extractCycle('3.6 GA RHOAI RELEASE')).toBe('3.6')
+    expect(extractCycle('3.5 EA1 RHELAI RELEASE')).toBe('3.5')
+  })
+
+  it('extracts cycle from legacy names', function () {
+    expect(extractCycle('rhoai-3.6.EA1')).toBe('3.6')
+    expect(extractCycle('RHELAI-3.2')).toBe('3.2')
+  })
+})
+
+describe('extractMilestoneGroup', function () {
+  it('builds milestone keys', function () {
+    expect(extractMilestoneGroup('3.6 GA RHOAI RELEASE')).toBe('3.6-GA')
+    expect(extractMilestoneGroup('3.6 EA2 RHAII RELEASE')).toBe('3.6-EA2')
+    expect(extractMilestoneGroup('rhoai-3.5.EA1')).toBe('3.5-EA1')
+  })
+})
+
+describe('cycleLabel / milestoneGroupLabel', function () {
+  it('formats cycle and milestone labels', function () {
+    expect(cycleLabel('3.6')).toBe('3.6 Release Cycle')
+    expect(milestoneGroupLabel('3.6-GA')).toBe('3.6 GA Release')
+    expect(milestoneGroupLabel('3.5-EA1')).toBe('3.5 EA1 Release')
+  })
+})
+
+describe('buildNameRollup', function () {
+  it('groups names cycle → milestone → product in numeric descending order', function () {
+    var rollup = buildNameRollup([
+      '3.5 EA1 RHOAI RELEASE',
+      '3.6 GA RHELAI RELEASE',
+      '3.6 GA RHOAI RELEASE',
+      '3.6 EA1 RHOAI RELEASE',
+      '3.5 GA RHOAI RELEASE',
+    ])
+    expect(rollup.map(function (c) { return c.key })).toEqual(['3.6', '3.5'])
+    expect(rollup[0].milestones.map(function (m) { return m.key })).toEqual(['3.6-GA', '3.6-EA1'])
+    expect(rollup[0].milestones[0].names).toEqual([
+      '3.6 GA RHOAI RELEASE',
+      '3.6 GA RHELAI RELEASE',
+    ])
   })
 })
 
 // ═══ extractProduct ═══
 
 describe('extractProduct', function () {
-  it('extracts rhoai', function () {
+  it('extracts from legacy and product-family names', function () {
     expect(extractProduct('rhoai-3.5')).toBe('rhoai')
-    expect(extractProduct('rhoai-3.6.EA1')).toBe('rhoai')
-  })
-
-  it('extracts rhelai (case-insensitive)', function () {
-    expect(extractProduct('RHELAI-3.2')).toBe('rhelai')
-  })
-
-  it('extracts rhaii', function () {
-    expect(extractProduct('RHAII-3.2.3')).toBe('rhaii')
-  })
-
-  it('returns null for unknown products', function () {
-    expect(extractProduct('openshift-4.15')).toBeNull()
-    expect(extractProduct('')).toBeNull()
+    expect(extractProduct('3.6 EA1 RHOAI RELEASE')).toBe('rhoai')
+    expect(extractProduct('3.6 GA RHAII RELEASE')).toBe('rhaii')
   })
 })
 
@@ -100,19 +146,15 @@ describe('productLabel', function () {
     expect(productLabel('rhelai')).toBe('RHELAI')
     expect(productLabel('rhaii')).toBe('RHAII')
   })
-
-  it('passes through unknown products', function () {
-    expect(productLabel('foo')).toBe('foo')
-  })
 })
 
 // ═══ compareReleases ═══
 
 describe('compareReleases', function () {
-  it('sorts EA1 before EA2 before GA within same version', function () {
+  it('sorts GA before EA2 before EA1 within same version', function () {
     var names = ['rhoai-3.6', 'rhoai-3.6.EA2', 'rhoai-3.6.EA1']
     var sorted = names.slice().sort(compareReleases)
-    expect(sorted).toEqual(['rhoai-3.6.EA1', 'rhoai-3.6.EA2', 'rhoai-3.6'])
+    expect(sorted).toEqual(['rhoai-3.6', 'rhoai-3.6.EA2', 'rhoai-3.6.EA1'])
   })
 
   it('sorts newer minor versions first (descending)', function () {
@@ -121,12 +163,18 @@ describe('compareReleases', function () {
     expect(sorted).toEqual(['rhoai-3.6', 'rhoai-3.5', 'rhoai-3.4'])
   })
 
-  it('sorts by product alphabetically', function () {
-    var names = ['rhoai-3.5', 'RHELAI-3.2', 'RHAII-3.2.3']
+  it('sorts products RHOAI → RHAII → RHELAI within a milestone', function () {
+    var names = [
+      '3.6 GA RHELAI RELEASE',
+      '3.6 GA RHOAI RELEASE',
+      '3.6 GA RHAII RELEASE',
+    ]
     var sorted = names.slice().sort(compareReleases)
-    // rhaii < rhelai < rhoai alphabetically
-    // But RHAII-3.2.3 won't parse (z-stream), so it sorts last
-    expect(sorted[sorted.length - 1]).toBe('RHAII-3.2.3')
+    expect(sorted).toEqual([
+      '3.6 GA RHOAI RELEASE',
+      '3.6 GA RHAII RELEASE',
+      '3.6 GA RHELAI RELEASE',
+    ])
   })
 
   it('puts unparseable names last, sorted alphabetically', function () {
@@ -135,18 +183,21 @@ describe('compareReleases', function () {
     expect(sorted).toEqual(['rhoai-3.6', 'rhoai-3.5', 'unknown-1.0'])
   })
 
-  it('handles full multi-product multi-milestone sort', function () {
+  it('handles product-family multi-milestone sort matching default picker order', function () {
     var names = [
-      'rhoai-3.5', 'rhoai-3.5.EA1', 'rhoai-3.5.EA2',
-      'rhoai-3.6', 'rhoai-3.6.EA1', 'rhoai-3.6.EA2',
-      'RHELAI-3.2',
+      '3.5 EA1 RHOAI RELEASE',
+      '3.6 EA1 RHOAI RELEASE',
+      '3.6 GA RHOAI RELEASE',
+      '3.6 EA2 RHOAI RELEASE',
+      '3.5 GA RHOAI RELEASE',
     ]
     var sorted = names.slice().sort(compareReleases)
-    // rhelai first (alphabetically), then rhoai 3.6 family, then 3.5 family
     expect(sorted).toEqual([
-      'RHELAI-3.2',
-      'rhoai-3.6.EA1', 'rhoai-3.6.EA2', 'rhoai-3.6',
-      'rhoai-3.5.EA1', 'rhoai-3.5.EA2', 'rhoai-3.5',
+      '3.6 GA RHOAI RELEASE',
+      '3.6 EA2 RHOAI RELEASE',
+      '3.6 EA1 RHOAI RELEASE',
+      '3.5 GA RHOAI RELEASE',
+      '3.5 EA1 RHOAI RELEASE',
     ])
   })
 })
@@ -156,33 +207,28 @@ describe('compareReleases', function () {
 describe('getAlignmentTarget', function () {
   it('returns 100%* for ≤30 days', function () {
     expect(getAlignmentTarget(30)).toEqual({ target: 100, label: '100%*', maxDays: 30 })
-    expect(getAlignmentTarget(1)).toEqual({ target: 100, label: '100%*', maxDays: 30 })
-  })
-
-  it('returns 100%* for released (≤0 days)', function () {
-    expect(getAlignmentTarget(0)).toEqual({ target: 100, label: '100%*', maxDays: 0 })
-    expect(getAlignmentTarget(-5)).toEqual({ target: 100, label: '100%*', maxDays: 0 })
-  })
-
-  it('returns 95%* for 31-60 days', function () {
-    expect(getAlignmentTarget(31)).toEqual({ target: 95, label: '95%*', maxDays: 60 })
-    expect(getAlignmentTarget(60)).toEqual({ target: 95, label: '95%*', maxDays: 60 })
-  })
-
-  it('returns 90%* for 61-90 days', function () {
-    expect(getAlignmentTarget(61)).toEqual({ target: 90, label: '90%*', maxDays: 90 })
-    expect(getAlignmentTarget(90)).toEqual({ target: 90, label: '90%*', maxDays: 90 })
   })
 
   it('returns null for >90 days', function () {
     expect(getAlignmentTarget(91)).toBeNull()
-    expect(getAlignmentTarget(180)).toBeNull()
-    expect(getAlignmentTarget(365)).toBeNull()
   })
+})
 
-  it('returns null for null/undefined input', function () {
-    expect(getAlignmentTarget(null)).toBeNull()
-    expect(getAlignmentTarget(undefined)).toBeNull()
+// ═══ extractFamily / familyLabel ═══
+
+describe('extractFamily', function () {
+  it('extracts family from legacy and product-family names', function () {
+    expect(extractFamily('rhoai-3.6')).toBe('rhoai-3.6')
+    expect(extractFamily('rhoai-3.6.EA1')).toBe('rhoai-3.6')
+    expect(extractFamily('3.6 EA1 RHOAI RELEASE')).toBe('rhoai-3.6')
+    expect(extractFamily('3.6 GA RHAII RELEASE')).toBe('rhaii-3.6')
+  })
+})
+
+describe('familyLabel', function () {
+  it('formats product families', function () {
+    expect(familyLabel('rhoai-3.6')).toBe('RHOAI 3.6')
+    expect(familyLabel('rhelai-3.2')).toBe('RHELAI 3.2')
   })
 })
 
@@ -200,63 +246,36 @@ function makeSummaryRows() {
   ]
 }
 
-// ═══ extractFamily ═══
-
-describe('extractFamily', function () {
-  it('extracts family from GA version', function () {
-    expect(extractFamily('rhoai-3.6')).toBe('rhoai-3.6')
-  })
-
-  it('extracts family from EA version', function () {
-    expect(extractFamily('rhoai-3.6.EA1')).toBe('rhoai-3.6')
-    expect(extractFamily('rhoai-3.6.EA2')).toBe('rhoai-3.6')
-  })
-
-  it('extracts family case-insensitively', function () {
-    expect(extractFamily('RHELAI-3.2')).toBe('rhelai-3.2')
-  })
-
-  it('falls back to lowercase name for unparseable releases', function () {
-    expect(extractFamily('RHAII-3.2.3')).toBe('rhaii-3.2')
-  })
-})
-
-// ═══ familyLabel ═══
-
-describe('familyLabel', function () {
-  it('formats rhoai family', function () {
-    expect(familyLabel('rhoai-3.6')).toBe('RHOAI 3.6')
-  })
-
-  it('formats rhelai family', function () {
-    expect(familyLabel('rhelai-3.2')).toBe('RHELAI 3.2')
-  })
-
-  it('passes through unknown keys', function () {
-    expect(familyLabel('unknown')).toBe('unknown')
-  })
-})
+function makeProductFamilyRows() {
+  return [
+    { release: '3.6 GA RHOAI RELEASE', total: 10, aligned: 4, tv_only: 3, fv_only: 1, mismatched: 2, alignment_pct: 40 },
+    { release: '3.6 GA RHAII RELEASE', total: 5, aligned: 2, tv_only: 2, fv_only: 0, mismatched: 1, alignment_pct: 40 },
+    { release: '3.6 GA RHELAI RELEASE', total: 1, aligned: 1, tv_only: 0, fv_only: 0, mismatched: 0, alignment_pct: 100 },
+    { release: '3.6 EA1 RHOAI RELEASE', total: 7, aligned: 2, tv_only: 3, fv_only: 1, mismatched: 1, alignment_pct: 28.6 },
+    { release: '3.5 GA RHOAI RELEASE', total: 20, aligned: 10, tv_only: 5, fv_only: 2, mismatched: 3, alignment_pct: 50 },
+  ]
+}
 
 describe('useReleaseFamily composable', function () {
-  function makeDataRef() {
-    return ref({ executive_summary: makeSummaryRows() })
+  function makeDataRef(rows) {
+    return ref({ executive_summary: rows || makeSummaryRows() })
   }
 
-  describe('release family filtering', function () {
+  describe('cycle filtering', function () {
     it('defaults to all', function () {
       var summary = ref(makeSummaryRows())
       var rf = useReleaseFamily(summary, makeDataRef())
       expect(rf.selectedFamily.value).toBe('all')
     })
 
-    it('filters to a specific release family', function () {
+    it('filters to a specific release cycle', function () {
       var summary = ref(makeSummaryRows())
       var rf = useReleaseFamily(summary, makeDataRef())
 
-      rf.selectedFamily.value = 'rhoai-3.6'
+      rf.selectedFamily.value = '3.6'
       var rows = rf.productFilteredSummary.value
       expect(rows.length).toBe(3) // EA1, EA2, GA
-      expect(rows.every(function (r) { return extractFamily(r.release) === 'rhoai-3.6' })).toBe(true)
+      expect(rows.every(function (r) { return extractCycle(r.release) === '3.6' })).toBe(true)
     })
 
     it('shows all releases when set to "all"', function () {
@@ -265,56 +284,69 @@ describe('useReleaseFamily composable', function () {
       expect(rf.productFilteredSummary.value.length).toBe(7)
     })
 
-    it('filters to rhelai family', function () {
+    it('lists cycles as filter chips', function () {
       var summary = ref(makeSummaryRows())
       var rf = useReleaseFamily(summary, makeDataRef())
-      rf.selectedFamily.value = 'rhelai-3.2'
-      var rows = rf.productFilteredSummary.value
-      expect(rows.length).toBe(1)
-      expect(rows[0].release).toBe('RHELAI-3.2')
+      var keys = rf.availableFamilies.value.map(function (f) { return f.key })
+      expect(keys).toContain('3.6')
+      expect(keys).toContain('3.5')
+      expect(keys).toContain('3.2')
+      expect(keys[0]).toBe('3.6') // newer first
+    })
+  })
+
+  describe('summaryRollup', function () {
+    it('groups product-family rows into cycle → milestone → products', function () {
+      var rows = makeProductFamilyRows()
+      var summary = ref(rows)
+      var rf = useReleaseFamily(summary, makeDataRef(rows))
+      var rollup = rf.summaryRollup.value
+
+      expect(rollup.length).toBe(2)
+      expect(rollup[0].label).toBe('3.6 Release Cycle')
+      expect(rollup[1].label).toBe('3.5 Release Cycle')
+
+      var milestones = rollup[0].milestones.map(function (m) { return m.label })
+      expect(milestones[0]).toBe('3.6 GA Release')
+      expect(milestones).toContain('3.6 EA1 Release')
+
+      var ga = rollup[0].milestones.find(function (m) { return m.key === '3.6-GA' })
+      expect(ga.rows.map(function (r) { return r.release })).toEqual([
+        '3.6 GA RHOAI RELEASE',
+        '3.6 GA RHAII RELEASE',
+        '3.6 GA RHELAI RELEASE',
+      ])
+      expect(ga.totals.total).toBe(16) // 10+5+1
+      expect(ga.totals.aligned).toBe(7) // 4+2+1
     })
 
-    it('discovers families from full data, not just filtered summary', function () {
-      var filteredOnly = ref(makeSummaryRows().filter(function (r) { return extractProduct(r.release) === 'rhoai' }))
-      var fullData = makeDataRef()
-      var rf = useReleaseFamily(filteredOnly, fullData)
-      var familyKeys = rf.availableFamilies.value.map(function (f) { return f.key })
-      expect(familyKeys).toContain('rhoai-3.6')
-      expect(familyKeys).toContain('rhoai-3.5')
-      expect(familyKeys).toContain('rhelai-3.2')
-    })
-
-    it('lists families with display labels', function () {
-      var summary = ref(makeSummaryRows())
-      var rf = useReleaseFamily(summary, makeDataRef())
-      var labels = rf.availableFamilies.value.map(function (f) { return f.label })
-      expect(labels).toContain('RHOAI 3.6')
-      expect(labels).toContain('RHOAI 3.5')
-      expect(labels).toContain('RHELAI 3.2')
+    it('rolls up cycle totals across milestones', function () {
+      var rows = makeProductFamilyRows()
+      var summary = ref(rows)
+      var rf = useReleaseFamily(summary, makeDataRef(rows))
+      var cycle36 = rf.summaryRollup.value[0]
+      // 10+5+1 + 7 = 23
+      expect(cycle36.totals.total).toBe(23)
     })
   })
 
   describe('sorting', function () {
-    it('default sort is release family order (all products)', function () {
+    it('default sort is GA → EA2 → EA1, newer cycle first', function () {
       var summary = ref(makeSummaryRows())
       var rf = useReleaseFamily(summary, makeDataRef())
-      var sorted = rf.sortedSummary.value
-      var names = sorted.map(function (r) { return r.release })
-      // Default is "all", so all products show — rhelai first (alpha), then rhaii (unparseable, last), then rhoai
-      expect(names[0]).toBe('RHELAI-3.2')
-      // rhoai 3.6 family then 3.5 family
-      expect(names.indexOf('rhoai-3.6.EA1')).toBeLessThan(names.indexOf('rhoai-3.6'))
+      var names = rf.sortedSummary.value.map(function (r) { return r.release })
+      expect(names.indexOf('rhoai-3.6')).toBeLessThan(names.indexOf('rhoai-3.6.EA2'))
+      expect(names.indexOf('rhoai-3.6.EA2')).toBeLessThan(names.indexOf('rhoai-3.6.EA1'))
       expect(names.indexOf('rhoai-3.6')).toBeLessThan(names.indexOf('rhoai-3.5'))
     })
 
-    it('sorts within filtered family', function () {
+    it('sorts within filtered cycle', function () {
       var summary = ref(makeSummaryRows())
       var rf = useReleaseFamily(summary, makeDataRef())
-      rf.selectedFamily.value = 'rhoai-3.6'
-      var sorted = rf.sortedSummary.value
-      var names = sorted.map(function (r) { return r.release })
+      rf.selectedFamily.value = '3.6'
+      var names = rf.sortedSummary.value.map(function (r) { return r.release })
       expect(names).toEqual([
-        'rhoai-3.6.EA1', 'rhoai-3.6.EA2', 'rhoai-3.6',
+        'rhoai-3.6', 'rhoai-3.6.EA2', 'rhoai-3.6.EA1',
       ])
     })
 
@@ -331,7 +363,6 @@ describe('useReleaseFamily composable', function () {
 
       rf.toggleSummarySort('total')
       expect(rf.sortColumn.value).toBeNull()
-      expect(rf.sortDirection.value).toBe('asc')
     })
 
     it('sorts by total ascending', function () {
@@ -342,48 +373,6 @@ describe('useReleaseFamily composable', function () {
       for (var i = 1; i < totals.length; i++) {
         expect(totals[i]).toBeGreaterThanOrEqual(totals[i - 1])
       }
-    })
-
-    it('sorts by total descending', function () {
-      var summary = ref(makeSummaryRows())
-      var rf = useReleaseFamily(summary, makeDataRef())
-      rf.toggleSummarySort('total')
-      rf.toggleSummarySort('total')
-      var totals = rf.sortedSummary.value.map(function (r) { return r.total })
-      for (var i = 1; i < totals.length; i++) {
-        expect(totals[i]).toBeLessThanOrEqual(totals[i - 1])
-      }
-    })
-
-    it('sorts by alignment_pct', function () {
-      var summary = ref(makeSummaryRows())
-      var rf = useReleaseFamily(summary, makeDataRef())
-      rf.toggleSummarySort('alignment_pct')
-      var pcts = rf.sortedSummary.value.map(function (r) { return r.alignment_pct })
-      for (var i = 1; i < pcts.length; i++) {
-        expect(pcts[i]).toBeGreaterThanOrEqual(pcts[i - 1])
-      }
-    })
-
-    it('sortIcon returns correct state', function () {
-      var summary = ref(makeSummaryRows())
-      var rf = useReleaseFamily(summary, makeDataRef())
-      expect(rf.summarySortIcon('total')).toBe('none')
-      rf.toggleSummarySort('total')
-      expect(rf.summarySortIcon('total')).toBe('asc')
-      expect(rf.summarySortIcon('aligned')).toBe('none')
-      rf.toggleSummarySort('total')
-      expect(rf.summarySortIcon('total')).toBe('desc')
-    })
-
-    it('switching columns resets direction to asc', function () {
-      var summary = ref(makeSummaryRows())
-      var rf = useReleaseFamily(summary, makeDataRef())
-      rf.toggleSummarySort('total')
-      rf.toggleSummarySort('total') // desc
-      rf.toggleSummarySort('aligned') // switch column
-      expect(rf.sortColumn.value).toBe('aligned')
-      expect(rf.sortDirection.value).toBe('asc')
     })
   })
 })

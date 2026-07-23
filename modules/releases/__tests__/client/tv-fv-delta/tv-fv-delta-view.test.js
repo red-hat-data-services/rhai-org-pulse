@@ -113,18 +113,18 @@ describe('TvFvDeltaView default version selection', function () {
   })
 })
 
-describe('TvFvDeltaView release family filter', function () {
+describe('TvFvDeltaView release cycle filter', function () {
   beforeEach(function () {
     mockApiRequest.mockReset()
   })
 
-  it('renders release family filter pills', async function () {
+  it('renders cycle filter pills', async function () {
     var wrapper = await mountView()
     var buttons = wrapper.findAll('button').filter(function (b) {
-      var text = b.text()
-      return text === 'All' || text.includes('3.6') || text.includes('3.5')
+      var text = b.text().trim()
+      return text === 'All' || text === '3.6' || text === '3.5'
     })
-    expect(buttons.length).toBeGreaterThanOrEqual(2)
+    expect(buttons.length).toBeGreaterThanOrEqual(3)
   })
 
   it('defaults to All — shows default-selected releases present in data', async function () {
@@ -135,6 +135,16 @@ describe('TvFvDeltaView release family filter', function () {
     expect(allText).toContain('3.5 GA RHOAI RELEASE')
     // Non-default RHELAI-3.2 must not appear
     expect(allText).not.toContain('RHELAI-3.2')
+  })
+
+  it('renders cycle and milestone rollup headers', async function () {
+    var wrapper = await mountView()
+    var table = findSummaryTable(wrapper)
+    var text = table.find('tbody').text()
+    expect(text).toContain('3.6 Release Cycle')
+    expect(text).toContain('3.5 Release Cycle')
+    expect(text).toContain('3.6 GA Release')
+    expect(text).toContain('3.6 EA1 Release')
   })
 })
 
@@ -151,36 +161,14 @@ describe('TvFvDeltaView executive summary sorting', function () {
     expect(headers.length).toBe(11)
   })
 
-  it('default sort includes 3.6 and 3.5 default versions from data', async function () {
+  it('default view includes 3.6 and 3.5 default versions from data', async function () {
     var wrapper = await mountView()
     var table = findSummaryTable(wrapper)
-    var rows = table.findAll('tbody tr')
-    var releases = rows.map(function (r) { return r.find('td').text().trim().replace(/\s*\(refreshing data\.\.\.\)\s*$/, '') })
-    expect(releases).toContain('3.6 EA1 RHOAI RELEASE')
-    expect(releases).toContain('3.6 EA2 RHOAI RELEASE')
-    expect(releases).toContain('3.6 GA RHOAI RELEASE')
-    expect(releases).toContain('3.5 GA RHOAI RELEASE')
-  })
-
-  it('clicking Total header sorts by total', async function () {
-    var wrapper = await mountView()
-    var table = findSummaryTable(wrapper)
-    var totalHeader = table.findAll('thead th').find(function (th) {
-      return th.text().includes('Total')
-    })
-    await totalHeader.trigger('click')
-    await flushPromises()
-    var rows = table.findAll('tbody tr')
-    var totals = []
-    rows.forEach(function (r) {
-      var cells = r.findAll('td')
-      var countEl = cells[1].find('.clickable-count')
-      if (countEl.exists()) totals.push(parseInt(countEl.text(), 10))
-    })
-    // Ascending order among rows with real counts
-    for (var i = 1; i < totals.length; i++) {
-      expect(totals[i]).toBeGreaterThanOrEqual(totals[i - 1])
-    }
+    var text = table.find('tbody').text()
+    expect(text).toContain('3.6 EA1 RHOAI RELEASE')
+    expect(text).toContain('3.6 EA2 RHOAI RELEASE')
+    expect(text).toContain('3.6 GA RHOAI RELEASE')
+    expect(text).toContain('3.5 GA RHOAI RELEASE')
   })
 
   it('shows sort arrow on active column', async function () {
