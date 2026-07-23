@@ -1687,9 +1687,9 @@ test.describe('TV/FV Delta — Registry fixVersions Edge Cases @tv-fv-delta', ()
       await expect(versionChip(page, release)).toBeVisible();
     }
 
-    // Executive summary should render with all 18 default releases
+    // 18 product rows + 2 cycle headers + 6 milestone headers = 26
     const summarySection = page.locator('div:has(> div > h2:has-text("Executive Summary"))').first();
     const rows = summarySection.locator('tbody tr');
-    await expect(rows).toHaveCount(18);
+    await expect(rows).toHaveCount(26);
   });
 });
