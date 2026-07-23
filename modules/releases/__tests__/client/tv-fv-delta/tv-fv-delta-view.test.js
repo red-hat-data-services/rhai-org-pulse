@@ -146,6 +146,36 @@ describe('TvFvDeltaView release cycle filter', function () {
     expect(text).toContain('3.6 GA Release')
     expect(text).toContain('3.6 EA1 Release')
   })
+
+  it('orders executive summary and selector cycle → milestone descending', async function () {
+    var wrapper = await mountView()
+    var table = findSummaryTable(wrapper)
+    var labels = table.findAll('tbody tr td:first-child').map(function (td) {
+      return td.text().replace(/\s+/g, ' ').trim()
+    })
+    function indexOf(needle) {
+      return labels.findIndex(function (t) { return t.indexOf(needle) !== -1 })
+    }
+    expect(indexOf('3.6 Release Cycle')).toBeLessThan(indexOf('3.5 Release Cycle'))
+    expect(indexOf('3.6 GA Release')).toBeLessThan(indexOf('3.6 EA2 Release'))
+    expect(indexOf('3.6 EA2 Release')).toBeLessThan(indexOf('3.6 EA1 Release'))
+    expect(indexOf('3.6 GA RHOAI RELEASE')).toBeLessThan(indexOf('3.6 GA RHELAI RELEASE'))
+
+    var selector = wrapper.find('div.mb-6.space-y-4')
+    var cycleHeaders = selector.findAll('div.uppercase.tracking-wide').map(function (el) {
+      return el.text().trim()
+    })
+    expect(cycleHeaders[0]).toContain('3.6')
+    expect(cycleHeaders[1]).toContain('3.5')
+
+    var chips = selector.findAll('button').filter(function (b) {
+      return b.find('span[title="Remove"]').exists()
+    }).map(function (b) {
+      return b.text().replace(/×/g, '').replace(/\s+/g, ' ').trim()
+    })
+    expect(chips[0]).toBe('3.6 GA RHOAI RELEASE')
+    expect(chips.indexOf('3.6 GA RHOAI RELEASE')).toBeLessThan(chips.indexOf('3.5 GA RHOAI RELEASE'))
+  })
 })
 
 describe('TvFvDeltaView executive summary sorting', function () {
