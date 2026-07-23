@@ -32,29 +32,49 @@ function createModelsCorpClient(config) {
    * @returns {Promise<Object>} Extracted interaction data
    */
   async function extractFromTranscript(transcript) {
-    const prompt = `You are a product manager assistant analyzing customer interaction transcripts.
+    const prompt = `You are a product manager assistant analyzing customer interaction transcripts for Red Hat AI products.
 
-Extract the following information from the transcript below and return it as JSON:
+AVAILABLE COMPONENTS (organized by pillar):
+- Inference: vLLM, llm-d, Model Serving, Model Runtimes
+- Data: RAG + Vector DB, AutoRAG, Data Processing, Feature Store, SDG (Synthetic Data Generation)
+- Agents: LlamaStack, Agentic, Agent Development, AgentOps
+- Platform: Training, Training Hub, Fine Tuning, Project Navigator, Notebooks, AI Hub, AI Pipelines, MLflow, Model Observability, Explainability, AI Safety, Model Evaluation
 
+Analyze the transcript below and:
+1. Extract shared customer information
+2. Identify ALL Red Hat AI components discussed (from the list above)
+3. For each component, extract component-specific pain points, feature feedback, use case, and wishlist items
+
+Return JSON in this exact format:
 {
-  "customerCompany": "Company name (if mentioned)",
-  "contactName": "Contact person name (if mentioned)",
-  "industryVertical": "Industry vertical (e.g., Banking, Healthcare, Manufacturing, etc.)",
-  "geo": "Geography (NA, EMEA, APAC, or LATAM)",
-  "customerType": "Customer type (SSA, CAI, or Customer)",
-  "environment": "Environment (On-Prem, Cloud, Air-gapped, or Unknown)",
-  "mainAIUseCase": "Brief description of their main AI/ML use case",
-  "toolsOfChoice": ["Array of tools/frameworks mentioned (e.g., PyTorch, TensorFlow, etc.)"],
-  "painPoints": "Summary of pain points and challenges mentioned",
-  "featureFeedback": "Summary of feature requests and feedback",
-  "futureWishlist": ["Array of future wishlist items mentioned"],
-  "status": "Lead, Discovery, Evaluating, Feedback Received, or Closed"
+  "shared": {
+    "customerCompany": "Company name (if mentioned)",
+    "contactName": "Contact person name (if mentioned)",
+    "industryVertical": "Industry vertical (e.g., Banking, Healthcare, Manufacturing, etc.)",
+    "geo": "NA, EMEA, APAC, or LATAM",
+    "customerType": "SSA, CAI, or Customer",
+    "environment": "On-Prem, Cloud, Air-gapped, or Unknown",
+    "toolsOfChoice": ["Array of tools/frameworks mentioned"],
+    "status": "Lead, Discovery, Evaluating, Feedback Received, or Closed"
+  },
+  "components": [
+    {
+      "component": "Exact component ID from the list above",
+      "mainAIUseCase": "Use case relevant to this component",
+      "painPoints": "Pain points relevant to this component",
+      "featureFeedback": "Feature feedback relevant to this component",
+      "futureWishlist": ["Wishlist items relevant to this component"]
+    }
+  ]
 }
 
 Rules:
+- Use EXACT component IDs from the list above (e.g., "vLLM", "Model Observability", "RAG + Vector DB")
 - If a field is not mentioned, use empty string or empty array
 - For geo, infer from country/region if mentioned
 - For status, use "Discovery" if uncertain
+- Only include components that are clearly discussed in the transcript
+- If no specific component is identifiable, return an empty components array
 - Be concise but capture key details
 - Return ONLY valid JSON, no markdown or explanation
 
@@ -74,7 +94,7 @@ JSON:`
         model: modelId,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.2,
-        max_tokens: 4096
+        max_tokens: 8192
       }
 
       const response = await fetch(endpoint, {
@@ -140,8 +160,17 @@ JSON:`
       }
 
       return {
-        ...extracted,
-        component: extracted.component || '',
+        shared: extracted.shared || {
+          customerCompany: extracted.customerCompany || '',
+          contactName: extracted.contactName || '',
+          industryVertical: extracted.industryVertical || '',
+          geo: extracted.geo || '',
+          customerType: extracted.customerType || '',
+          environment: extracted.environment || '',
+          toolsOfChoice: extracted.toolsOfChoice || [],
+          status: extracted.status || 'Discovery',
+        },
+        components: Array.isArray(extracted.components) ? extracted.components : [],
       }
     } catch (error) {
       console.error('Error extracting from transcript:', error)

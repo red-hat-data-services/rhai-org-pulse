@@ -74,17 +74,7 @@ export const viewOwners = {
   'system-health/quality-analysis':                'Dana Gutride',
 
   // team-tracker
-  'team-tracker/home':                             'Dipanshu Gupta',
   'team-tracker/jira-taxonomy':                    'Alex Corvin',
-  'team-tracker/manage':                           'Alex Corvin',
-  'team-tracker/manager-dashboard':                'Alex Corvin',
-  'team-tracker/org-dashboard':                    'Alex Corvin',
-  'team-tracker/org-explorer':                     'Dipanshu Gupta',
-  'team-tracker/people':                           'Dipanshu Gupta',
-  'team-tracker/person-detail':                    'Dipanshu Gupta',
-  'team-tracker/reports':                          'Alex Corvin',
-  'team-tracker/team-detail':                      'Alex Corvin',
-  'team-tracker/unassigned':                       'Alex Corvin',
 
   // upstream-pulse
   'upstream-pulse/dashboard':                      'Dipanshu Gupta',
@@ -112,12 +102,6 @@ export const viewOwners = {
   // system-health > component-maturity
   'system-health/component-maturity/disconnected': 'Ajay Jaganathan',
 
-  // team-tracker > manage
-  'team-tracker/manage/data-quality':              'Alex Corvin',
-  'team-tracker/manage/field-options':             'Alex Corvin',
-  'team-tracker/manage/fields':                    'Alex Corvin',
-  'team-tracker/manage/teams':                     'Alex Corvin',
-
   // ── Report owners (module/view/reportId) ──
   // These override the view-level owner when a specific report is selected.
 
@@ -127,11 +111,6 @@ export const viewOwners = {
   'releases/reports/program-hygiene':              'Alex Corvin',
   'releases/reports/release-readiness':            'Arthy Loganathan',
   'releases/reports/tv-fv-delta':                  'Dimitri Saridakis',
-
-  // team-tracker > reports
-  'team-tracker/reports/allocation':               'Alex Corvin',
-  'team-tracker/reports/team-comparison':          'Alex Corvin',
-  'team-tracker/reports/trends':                   'Alex Corvin',
 }
 
 /**

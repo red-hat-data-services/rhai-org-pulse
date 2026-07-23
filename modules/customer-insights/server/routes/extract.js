@@ -48,13 +48,22 @@ module.exports = function registerExtractRoutes(router, context) {
    *               - transcript
    *     responses:
    *       200:
-   *         description: Extracted customer interaction data
+   *         description: Extracted customer interaction data with multi-component detection
    *         content:
    *           application/json:
    *             schema:
    *               type: object
+   *               properties:
+   *                 shared:
+   *                   type: object
+   *                   description: Shared customer information across all components
+   *                 components:
+   *                   type: array
+   *                   description: Per-component pain points and feedback
+   *                   items:
+   *                     type: object
    */
-  router.post('/extract/transcript', async (req, res) => {
+  router.post('/extract/transcript', requireAuth, async (req, res) => {
     try {
       const { transcript } = req.body
 
@@ -71,20 +80,33 @@ module.exports = function registerExtractRoutes(router, context) {
       // If in demo mode AND no API key configured, return mock data
       if (isDemoMode && !apiKey) {
         return res.json({
-          customerCompany: 'Example Corp',
-          contactName: 'John Doe',
-          industryVertical: 'Technology',
-          geo: 'NA',
-          customerType: 'Customer',
-          environment: 'Cloud',
-          mainAIUseCase: 'Extract the use case from your transcript manually',
-          toolsOfChoice: ['PyTorch', 'TensorFlow'],
-          painPoints: 'Extract pain points from your transcript manually',
-          featureFeedback: 'Extract feature requests from your transcript manually',
-          futureWishlist: [],
-          status: 'Discovery',
-          component: 'platform',
-          _demoMode: true
+          shared: {
+            customerCompany: 'Example Corp',
+            contactName: 'John Doe',
+            industryVertical: 'Technology',
+            geo: 'NA',
+            customerType: 'Customer',
+            environment: 'Cloud',
+            toolsOfChoice: ['PyTorch', 'TensorFlow'],
+            status: 'Discovery',
+          },
+          components: [
+            {
+              component: 'Model Serving',
+              mainAIUseCase: 'Real-time model inference for recommendation engine',
+              painPoints: 'Latency issues with large models under high concurrency',
+              featureFeedback: 'Need better autoscaling and GPU scheduling support',
+              futureWishlist: ['GPU memory optimization'],
+            },
+            {
+              component: 'Model Observability',
+              mainAIUseCase: 'Monitoring model drift in production',
+              painPoints: 'No alerting on data drift, limited custom metrics',
+              featureFeedback: 'Dashboard is useful but needs custom metric support',
+              futureWishlist: ['Custom metric support', 'Slack integration'],
+            },
+          ],
+          _demoMode: true,
         })
       }
 

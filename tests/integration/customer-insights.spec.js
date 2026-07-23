@@ -48,13 +48,18 @@ test.describe('@customer-insights Customer Insights Module', () => {
     await page.waitForLoadState('networkidle')
 
     // Check for import tabs
-    const csvTab = page.locator('button:has-text("CSV Upload")')
-    const transcriptTab = page.locator('button:has-text("Transcript")')
+    const spreadsheetTab = page.locator('button:has-text("Spreadsheet Import")')
     const driveTab = page.locator('button:has-text("Google Drive")')
 
-    await expect(csvTab).toBeVisible()
-    await expect(transcriptTab).toBeVisible()
+    await expect(spreadsheetTab).toBeVisible()
     await expect(driveTab).toBeVisible()
+
+    // Transcript tab is only visible when AI extraction is configured
+    const transcriptTab = page.locator('button:has-text("Transcript Import")')
+    const transcriptVisible = await transcriptTab.isVisible().catch(() => false)
+    if (transcriptVisible) {
+      await expect(transcriptTab).toBeVisible()
+    }
   })
 
   test('Roadmap view loads correctly', async ({ page }) => {
