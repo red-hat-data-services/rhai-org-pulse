@@ -23,7 +23,7 @@ const TRACKING_CACHE_PREFIX = 'releases/execution/tracking-data-'
 const CACHE_TTL_MS = 10 * 60 * 1000
 const DEFAULT_PRODUCTS = ['rhoai', 'rhelai', 'RHAII']
 const DEFAULT_PROJECTS = ['RHAISTRAT', 'AIPCC', 'INFERENG']
-const DEFAULT_ISSUE_TYPES = ['Feature', 'Initiative']
+const DEFAULT_ISSUE_TYPES = ['Feature']
 
 const EXCLUDE_VERSION_RE = /^\d+\.\d+\.\d+$/
 
@@ -754,6 +754,7 @@ module.exports = async function registerFeatureTrackingRoutes(router, context) {
             return {
               key: f.key,
               summary: f.summary || '',
+              issueType: f.issueType || null,
               colorStatus: f.colorStatus || null,
               statusSummary: f.statusSummary || null,
               isBlocked: f.isBlocked || false,
