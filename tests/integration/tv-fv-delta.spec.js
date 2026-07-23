@@ -685,8 +685,7 @@ test.describe('TV/FV Delta — Category Sections @tv-fv-delta', () => {
     await expect(page.locator('summary:has-text("TV-Only")')).toContainText('(1)');
 
     // Switch to 3.5 GA RHOAI RELEASE (GA): tv_only=0, aligned=3
-    // Use negative lookahead to match only the GA chip (not EA1/EA2)
-    await page.locator('button', { hasText: /rhoai-3\.5(?!\.)/ }).click();
+    await versionChip(page, '3.5 GA RHOAI RELEASE').click();
     await page.waitForTimeout(500);
 
     await expect(page.locator('summary:has-text("Aligned")')).toContainText('(3)');
@@ -1085,7 +1084,7 @@ test.describe('TV/FV Delta — Component Breakdown @tv-fv-delta', () => {
     expect(ea1Rows).toBeGreaterThan(0);
 
     // Switch to 3.5 GA RHOAI RELEASE (GA) — different components
-    await page.locator('button', { hasText: /rhoai-3\.5(?!\.)/ }).click();
+    await versionChip(page, '3.5 GA RHOAI RELEASE').click();
     await page.waitForTimeout(500);
 
     // GA has Serving (RHAISTRAT-700, 702) = 2 features
