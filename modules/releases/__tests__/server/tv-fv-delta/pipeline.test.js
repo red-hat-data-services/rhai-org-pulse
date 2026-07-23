@@ -441,8 +441,13 @@ describe('buildExport', () => {
 // ---------------------------------------------------------------------------
 
 describe('DEFAULT_RELEASES', () => {
-  it('contains EA1, EA2, and GA in that order', () => {
-    expect(DEFAULT_RELEASES).toEqual(['rhoai-3.5.EA1', 'rhoai-3.5.EA2', 'rhoai-3.5']);
+  it('contains the 18 product-family versions for 3.5 and 3.6', () => {
+    expect(DEFAULT_RELEASES).toHaveLength(18);
+    expect(DEFAULT_RELEASES).toContain('3.6 GA RHOAI RELEASE');
+    expect(DEFAULT_RELEASES).toContain('3.6 EA1 RHAII RELEASE');
+    expect(DEFAULT_RELEASES).toContain('3.5 EA2 RHELAI RELEASE');
+    expect(DEFAULT_RELEASES[0]).toBe('3.6 GA RHOAI RELEASE');
+    expect(DEFAULT_RELEASES[17]).toBe('3.5 EA1 RHELAI RELEASE');
   });
 });
 

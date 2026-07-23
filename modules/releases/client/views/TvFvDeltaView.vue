@@ -6,6 +6,7 @@ import { useReleasePicker } from '../composables/useReleasePicker'
 import { useComponentBreakdown } from '../composables/useComponentBreakdown'
 import { useTvFvData } from '../composables/useTvFvData'
 import { useReleaseFamily, getAlignmentTarget } from '../composables/useReleaseFamily'
+import { DEFAULT_SELECTED_VERSIONS } from '../composables/tvFvDeltaDefaults'
 
 const FEATURE_COLS = ['key', 'summary', 'status', 'target_version', 'fix_versions', 'color_status', 'product_manager', 'assignee', 'team', 'component']
 
@@ -22,11 +23,11 @@ const {
 } = useTvFvData()
 
 const {
-  chosenReleases, pickerOpen, pickerRef,
+  pickerOpen, pickerRef,
   chosenVersionNames, versionSearch,
   availableVersions, filteredVersions, allSelectedVersions,
   chosenVersionsDisplay,
-  autoSelectReleases, formatDate, isInCurrentData,
+  formatDate, isInCurrentData,
   toggleVersion, removeVersion, handleClickOutside,
 } = useReleasePicker(data, registryReleases, jiraVersions)
 
@@ -112,22 +113,16 @@ watch(chosenVersionNames, (names) => {
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
   await Promise.all([fetchRegistry(), fetchVersions()])
-  // Seed picker from registry auto-selection
-  if (!chosenReleases.value.length && registryReleases.value.length) {
-    const auto = autoSelectReleases(registryReleases.value)
-    chosenReleases.value = auto
-    const names = new Set()
-    for (const rel of auto) {
-      for (const fv of (rel.fixVersions || [])) names.add(fv)
-    }
-    if (names.size) chosenVersionNames.value = names
+  // Pre-populate with the default 3.5/3.6 product-family versions (users can add/remove after load)
+  if (!chosenVersionNames.value.size) {
+    chosenVersionNames.value = new Set(DEFAULT_SELECTED_VERSIONS)
   }
   await fetchData()
-  // If registry was empty and we have cached data, seed from cached releases
-  if (!chosenVersionNames.value.size && data.value?.metadata?.releases?.length) {
-    chosenVersionNames.value = new Set(data.value.metadata.releases)
+  // Prefer a default version that already has detail data in the cache
+  if (data.value?.releases) {
+    const firstWithDetail = DEFAULT_SELECTED_VERSIONS.find(v => data.value.releases[v])
+    if (firstWithDetail) selectedRelease.value = firstWithDetail
   }
-
 })
 
 onBeforeUnmount(() => {

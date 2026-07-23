@@ -8,9 +8,29 @@ const CACHE_MAX_AGE_MS = 60 * 60 * 1000 // 1 hour
 const VERSIONS_CACHE_KEY = 'releases/tv-fv-delta-versions.json'
 const VERSIONS_CACHE_MAX_AGE_MS = 4 * 60 * 60 * 1000 // 4 hours
 
-// Default releases — EA1, EA2, then GA (timeline order)
-// Fallback if Smartsheet/planning releases are not configured
-const DEFAULT_RELEASES = ['rhoai-3.5.EA1', 'rhoai-3.5.EA2', 'rhoai-3.5']
+// Default releases — 3.5/3.6 product-family Jira versions (EA1, EA2, GA × RHOAI/RHAII/RHELAI)
+// Fallback if Smartsheet/planning releases are not configured.
+// Keep in sync with client DEFAULT_SELECTED_VERSIONS (tvFvDeltaDefaults.js).
+const DEFAULT_RELEASES = [
+  '3.6 GA RHOAI RELEASE',
+  '3.6 GA RHAII RELEASE',
+  '3.6 GA RHELAI RELEASE',
+  '3.6 EA2 RHOAI RELEASE',
+  '3.6 EA2 RHAII RELEASE',
+  '3.6 EA2 RHELAI RELEASE',
+  '3.6 EA1 RHOAI RELEASE',
+  '3.6 EA1 RHAII RELEASE',
+  '3.6 EA1 RHELAI RELEASE',
+  '3.5 GA RHOAI RELEASE',
+  '3.5 GA RHAII RELEASE',
+  '3.5 GA RHELAI RELEASE',
+  '3.5 EA2 RHOAI RELEASE',
+  '3.5 EA2 RHAII RELEASE',
+  '3.5 EA2 RHELAI RELEASE',
+  '3.5 EA1 RHOAI RELEASE',
+  '3.5 EA1 RHAII RELEASE',
+  '3.5 EA1 RHELAI RELEASE',
+]
 const DEFAULT_JIRA_PROJECT = 'RHAISTRAT'
 
 // JQL-safe release name pattern — allows spaces for version names like "RHAII-3.5 EA1"
@@ -576,7 +596,7 @@ async function registerRoutes(router, context) {
    *               releases:
    *                 type: array
    *                 items: { type: string }
-   *                 description: Release versions to analyse (defaults to EA1, EA2, 3.5)
+   *                 description: Release versions to analyse (defaults to 3.5/3.6 product-family versions)
    *     responses:
    *       200:
    *         description: Refresh started or already running
