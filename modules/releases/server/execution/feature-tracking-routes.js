@@ -665,6 +665,17 @@ module.exports = async function registerFeatureTrackingRoutes(router, context) {
         }
       }
 
+      if (demoMode) {
+        const cached = await storage.readFromStorage(cacheKey(version))
+        if (cached) {
+          if (!cached.planningFreezeDate && cached.featureFreezeDate) {
+            cached.planningFreezeDate = cached.featureFreezeDate
+          }
+          return res.json(cached)
+        }
+        return res.json({ portfolioVersion: version, planningFreezeDate: null, fetchedAt: new Date().toISOString(), totalUniqueFeatures: 0, groups: [] })
+      }
+
       const jira = require('../../../../shared/server/jira')
       const jiraRequest = jira.jiraRequest
       const fetchAllJqlResults = jira.fetchAllJqlResults
