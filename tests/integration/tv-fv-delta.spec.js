@@ -218,6 +218,18 @@ function versionChip(page, release) {
   return page.locator('button', { hasText: release }).filter({ has: page.locator('span[title="Remove"]') });
 }
 
+/**
+ * First default version that has detail fixture data (GA before EA in DEFAULT list).
+ * Auto-selection prefers this when present in data.releases.
+ */
+const DEFAULT_SELECTED_DETAIL_RELEASE = '3.5 GA RHOAI RELEASE';
+
+/** Select a version chip (used when a test needs EA1/EA2 detail instead of the auto-selected GA). */
+async function selectVersion(page, release) {
+  await versionChip(page, release).click();
+  await page.waitForTimeout(300);
+}
+
 // ---------------------------------------------------------------------------
 // Helper: mock all API endpoints the app needs to boot + TV/FV data
 // ---------------------------------------------------------------------------
@@ -524,10 +536,10 @@ test.describe('TV/FV Delta — Executive Summary @tv-fv-delta', () => {
 
     const summarySection = page.locator('div:has(> div > h2:has-text("Executive Summary"))').first();
 
-    // First default version with detail data (3.5 EA1 RHOAI) should be selected
-    const ea1Row = summarySection.locator('tbody tr', { hasText: '3.5 EA1 RHOAI RELEASE' });
-    const ea1Classes = await ea1Row.getAttribute('class');
-    expect(ea1Classes).toContain('bg-blue-50');
+    // Auto-selects first default version that has detail data (3.5 GA precedes EA in the list)
+    const gaRow = summarySection.locator('tbody tr', { hasText: DEFAULT_SELECTED_DETAIL_RELEASE });
+    const gaClasses = await gaRow.getAttribute('class');
+    expect(gaClasses).toContain('bg-blue-50');
 
     expect(relevantErrors(page)).toHaveLength(0);
   });
@@ -601,10 +613,10 @@ test.describe('TV/FV Delta — Release Tabs @tv-fv-delta', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    // EA1 is selected by default → should have blue background
-    const ea1Tab = versionChip(page, '3.5 EA1 RHOAI RELEASE');
-    const ea1Classes = await ea1Tab.getAttribute('class');
-    expect(ea1Classes).toContain('bg-blue-600');
+    // Auto-selected GA chip should have blue background
+    const gaTab = versionChip(page, DEFAULT_SELECTED_DETAIL_RELEASE);
+    const gaClasses = await gaTab.getAttribute('class');
+    expect(gaClasses).toContain('bg-blue-600');
 
     // EA2 should NOT have blue background
     const ea2Tab = versionChip(page, '3.5 EA2 RHOAI RELEASE');
@@ -652,6 +664,7 @@ test.describe('TV/FV Delta — Category Sections @tv-fv-delta', () => {
     await page.goto('/#/releases/reports?report=tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+    await selectVersion(page, '3.5 EA1 RHOAI RELEASE');
 
     // EA1 has: aligned (3), tv_only (1), fv_only (0), mismatched (1)
     await expect(page.locator('summary:has-text("TV-Only")')).toBeVisible();
@@ -667,8 +680,8 @@ test.describe('TV/FV Delta — Category Sections @tv-fv-delta', () => {
     await page.goto('/#/releases/reports?report=tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+    await selectVersion(page, '3.5 EA1 RHOAI RELEASE');
 
-    // EA1 selected by default
     await expect(page.locator('summary:has-text("TV-Only")')).toContainText('(1)');
     await expect(page.locator('summary:has-text("Aligned")')).toContainText('(3)');
     await expect(page.locator('summary:has-text("Mismatched")')).toContainText('(1)');
@@ -680,13 +693,13 @@ test.describe('TV/FV Delta — Category Sections @tv-fv-delta', () => {
     await page.goto('/#/releases/reports?report=tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+    await selectVersion(page, '3.5 EA1 RHOAI RELEASE');
 
     // EA1: tv_only=1
     await expect(page.locator('summary:has-text("TV-Only")')).toContainText('(1)');
 
-    // Switch to 3.5 GA RHOAI RELEASE (GA): tv_only=0, aligned=3
-    await versionChip(page, '3.5 GA RHOAI RELEASE').click();
-    await page.waitForTimeout(500);
+    // Switch to GA: tv_only=0, aligned=3
+    await selectVersion(page, DEFAULT_SELECTED_DETAIL_RELEASE);
 
     await expect(page.locator('summary:has-text("Aligned")')).toContainText('(3)');
     await expect(page.locator('summary:has-text("TV-Only")')).toContainText('(0)');
@@ -858,6 +871,7 @@ test.describe('TV/FV Delta — Feature Tables @tv-fv-delta', () => {
     await page.goto('/#/releases/reports?report=tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+    await selectVersion(page, '3.5 EA1 RHOAI RELEASE');
 
     // Expand TV-Only section
     await page.locator('summary:has-text("TV-Only")').click();
@@ -900,6 +914,8 @@ test.describe('TV/FV Delta — Feature Tables @tv-fv-delta', () => {
     await page.goto('/#/releases/reports?report=tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+    // EA1 has Mismatched + TV-Only sections; GA does not
+    await selectVersion(page, '3.5 EA1 RHOAI RELEASE');
 
     // Test that TV-Only, Aligned, and Mismatched all have TV/FV columns
     const categories = ['TV-Only', 'Aligned', 'Mismatched'];
@@ -959,6 +975,7 @@ test.describe('TV/FV Delta — Feature Tables @tv-fv-delta', () => {
     await page.goto('/#/releases/reports?report=tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+    await selectVersion(page, '3.5 EA1 RHOAI RELEASE');
 
     // Expand Aligned section (3 features)
     await page.locator('summary:has-text("Aligned")').click();
@@ -1157,6 +1174,7 @@ test.describe('TV/FV Delta — Data Completeness @tv-fv-delta', () => {
     await page.goto('/#/releases/reports?report=tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+    await selectVersion(page, '3.5 EA1 RHOAI RELEASE');
 
     // Expand Mismatched section (has both TV and FV populated)
     await page.locator('summary:has-text("Mismatched")').click();
@@ -1238,6 +1256,7 @@ test.describe('TV/FV Delta — Data Completeness @tv-fv-delta', () => {
     await page.goto('/#/releases/reports?report=tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+    await selectVersion(page, '3.5 EA1 RHOAI RELEASE');
 
     // Expand Mismatched section (RHAISTRAT-300 has "Serving, Training")
     await page.locator('summary:has-text("Mismatched")').click();
