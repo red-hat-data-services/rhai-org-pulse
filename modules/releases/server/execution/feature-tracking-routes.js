@@ -646,18 +646,22 @@ module.exports = async function registerFeatureTrackingRoutes(router, context) {
     }
 
     const forceRefresh = req.query.refresh === 'true'
+    const demoMode = process.env.DEMO_MODE === 'true'
 
     try {
       if (!forceRefresh) {
         const cached = await storage.readFromStorage(cacheKey(version))
         if (cached && cached.fetchedAt) {
           const age = Date.now() - new Date(cached.fetchedAt).getTime()
-          if (age < CACHE_TTL_MS) {
+          if (age < CACHE_TTL_MS || demoMode) {
             if (!cached.planningFreezeDate && cached.featureFreezeDate) {
               cached.planningFreezeDate = cached.featureFreezeDate
             }
             return res.json(cached)
           }
+        }
+        if (demoMode) {
+          return res.json({ portfolioVersion: version, planningFreezeDate: null, fetchedAt: new Date().toISOString(), totalUniqueFeatures: 0, groups: [] })
         }
       }
 

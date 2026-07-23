@@ -1,0 +1,109 @@
+{
+  "portfolioVersion": "2.14",
+  "planningFreezeDate": "2026-06-15",
+  "fetchedAt": "2099-01-01T00:00:00.000Z",
+  "totalUniqueFeatures": 5,
+  "groups": [
+    {
+      "label": "RHOAI: rhoai-3.5",
+      "product": "rhoai",
+      "releaseNumber": "rhoai-3.5",
+      "planningFreezeDate": "2026-06-15",
+      "featureCount": 3,
+      "features": [
+        {
+          "key": "TEST1-349",
+          "summary": "Enable model serving autoscaling",
+          "issueType": "Feature",
+          "colorStatus": "Green",
+          "statusSummary": "On track for GA",
+          "isBlocked": false,
+          "components": ["Model Serving"],
+          "assignee": "Alice Chen",
+          "pmOwner": "Bob Smith",
+          "status": "In Progress",
+          "team": "Inference",
+          "scopeChange": null,
+          "fixVersionAddedAt": "2026-05-01T10:00:00.000Z",
+          "fixVersionRemovedAt": null
+        },
+        {
+          "key": "TEST1-502",
+          "summary": "Implement RAG pipeline improvements",
+          "issueType": "Feature",
+          "colorStatus": "Yellow",
+          "statusSummary": "Minor delay in testing",
+          "isBlocked": false,
+          "components": ["Data Science"],
+          "assignee": "Charlie Davis",
+          "pmOwner": "Diana Evans",
+          "status": "In Progress",
+          "team": "Data",
+          "scopeChange": null,
+          "fixVersionAddedAt": "2026-05-10T14:00:00.000Z",
+          "fixVersionRemovedAt": null
+        },
+        {
+          "key": "TEST1-728",
+          "summary": "Add GPU monitoring dashboard",
+          "issueType": "Feature",
+          "colorStatus": "Green",
+          "statusSummary": null,
+          "isBlocked": false,
+          "components": ["Platform"],
+          "assignee": "Eve Foster",
+          "pmOwner": "Bob Smith",
+          "status": "Done",
+          "team": "Platform",
+          "scopeChange": null,
+          "fixVersionAddedAt": "2026-04-20T09:00:00.000Z",
+          "fixVersionRemovedAt": null
+        }
+      ]
+    },
+    {
+      "label": "RHELAI: rhelai-3.5",
+      "product": "rhelai",
+      "releaseNumber": "rhelai-3.5",
+      "planningFreezeDate": "2026-06-15",
+      "featureCount": 2,
+      "features": [
+        {
+          "key": "TEST1-940",
+          "summary": "vLLM performance optimization",
+          "issueType": "Feature",
+          "colorStatus": "Green",
+          "statusSummary": "Completed benchmarks",
+          "isBlocked": false,
+          "components": ["Inference"],
+          "assignee": "Grace Hill",
+          "pmOwner": "Diana Evans",
+          "status": "In Progress",
+          "team": "Inference",
+          "scopeChange": null,
+          "fixVersionAddedAt": "2026-05-05T11:00:00.000Z",
+          "fixVersionRemovedAt": null
+        },
+        {
+          "key": "TEST1-1131",
+          "summary": "Support multi-GPU inference",
+          "issueType": "Feature",
+          "colorStatus": "Red",
+          "statusSummary": "Blocked on driver update",
+          "isBlocked": true,
+          "components": ["Inference"],
+          "assignee": "Ivan Jones",
+          "pmOwner": "Bob Smith",
+          "status": "In Progress",
+          "team": "Inference",
+          "scopeChange": null,
+          "fixVersionAddedAt": "2026-05-15T08:00:00.000Z",
+          "fixVersionRemovedAt": null
+        }
+      ]
+    }
+  ],
+  "_freezeDateSource": "fixture",
+  "_freezeDatesCache": {},
+  "_freezeDatesFinal": {}
+}
