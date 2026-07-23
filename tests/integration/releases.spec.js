@@ -343,6 +343,114 @@ test.describe('Releases PM Hub @releases', () => {
 });
 
 /**
+ * Draft Plans (Plan tab)
+ *
+ * Verify the Draft Plans red-pen view loads under Plan (tab + deep link),
+ * shows the release-cycle chrome and candidate table (demo fixture), and that
+ * the cycles / editor APIs respond. Skips freeze/approve matrix coverage.
+ */
+test.describe('Releases Draft Plans @releases', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('should show Draft Plans tab under Plan and load draft table', async ({ page }) => {
+    await page.goto('/#/releases/plan');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const draftPlansTab = page.locator('button', { hasText: 'Draft Plans' });
+    await expect(draftPlansTab).toBeVisible();
+
+    await draftPlansTab.click();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.getByText('Release cycle', { exact: true }).first()).toBeVisible();
+    await expect(page.locator('h2', { hasText: /Draft Plan/ })).toBeVisible();
+
+    const table = page.locator('table[role="table"]');
+    await expect(table).toBeVisible();
+
+    const dataRows = page.locator('tbody tr[role="row"]');
+    await expect(dataRows.first()).toBeVisible({ timeout: 15000 });
+    expect(await dataRows.count()).toBeGreaterThan(0);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('Draft Plans deep link loads with candidates', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=draft-plans');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.getByText('Release cycle', { exact: true }).first()).toBeVisible();
+    await expect(page.locator('h2', { hasText: /Draft Plan/ })).toBeVisible();
+
+    const keyHeader = page.locator('thead th', { hasText: 'Key' });
+    await expect(keyHeader.first()).toBeVisible();
+    await expect(page.locator('thead th', { hasText: 'Big Rock' }).first()).toBeVisible();
+
+    const dataRows = page.locator('tbody tr[role="row"]');
+    await expect(dataRows.first()).toBeVisible({ timeout: 15000 });
+    expect(await dataRows.count()).toBeGreaterThan(0);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('clicking a Draft Plans row opens the feature detail drawer', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=draft-plans');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const dataRows = page.locator('tbody tr[role="row"]');
+    await expect(dataRows.first()).toBeVisible({ timeout: 15000 });
+
+    // Click title cell (opens drawer; avoids Jira key link navigation)
+    await dataRows.first().locator('td').nth(2).click();
+    await page.waitForTimeout(500);
+
+    const drawer = page.locator('[role="complementary"][aria-label="Draft plan feature detail"]');
+    await expect(drawer).toBeVisible();
+    await expect(drawer.getByText('Strategy', { exact: true })).toBeVisible();
+    await expect(drawer.getByText('Big Rock', { exact: true })).toBeVisible();
+    await expect(drawer.getByText('Outcome', { exact: true })).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('draft-plans cycles and editor APIs return demo candidates', async ({ request }) => {
+    const cyclesRes = await request.get('/api/modules/releases/draft-plans/cycles?product=RHOAI');
+    if (cyclesRes.status() === 403) {
+      test.skip();
+      return;
+    }
+    expect(cyclesRes.ok()).toBe(true);
+    const cyclesBody = await cyclesRes.json();
+    expect(cyclesBody).toHaveProperty('product', 'RHOAI');
+    expect(cyclesBody).toHaveProperty('cycles');
+    expect(Array.isArray(cyclesBody.cycles)).toBe(true);
+    expect(cyclesBody.cycles.length).toBeGreaterThan(0);
+
+    const editorRes = await request.get('/api/modules/releases/draft-plans/editor/3.6?product=RHOAI');
+    if (editorRes.status() === 403) {
+      test.skip();
+      return;
+    }
+    expect(editorRes.ok()).toBe(true);
+    const editorBody = await editorRes.json();
+    expect(editorBody).toHaveProperty('draft');
+    expect(editorBody.draft).toHaveProperty('candidates');
+    expect(Array.isArray(editorBody.draft.candidates)).toBe(true);
+    expect(editorBody.draft.candidates.length).toBeGreaterThan(0);
+  });
+});
+
+/**
  * Unified Feature Store — AI Review endpoints
  *
  * Verify that the releases execution store serves feature data with aiReview
@@ -468,5 +576,376 @@ test.describe('Releases Planning Health @releases', () => {
     if (health.releasePhaseMode === 'planning' && health.summary) {
       expect(health.summary).toHaveProperty('planningReadiness');
     }
+  });
+});
+
+/**
+ * FPDoR Readiness Model
+ *
+ * Verify the new FPDoR (Feature Planning Definition of Ready) readiness model:
+ * - Releases module is visible and clickable in sidebar
+ * - Feature List view loads with the new FPDoR readiness display
+ * - Priority scores render in the PM Hub view
+ * - API endpoint returns features with fpdor and readinessGates shape
+ */
+test.describe('Releases FPDoR Readiness @releases', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('Releases module is visible and clickable in sidebar', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    var moduleHeader = page.locator('aside nav button').filter({ hasText: 'Releases' }).first();
+    await expect(moduleHeader).toBeVisible();
+
+    await moduleHeader.click();
+    await page.waitForTimeout(500);
+
+    var planLink = page.locator('aside nav button').filter({ hasText: 'Plan' }).first();
+    await planLink.click();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    expect(page.url()).toContain('releases');
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('Feature List view loads under Plan tab', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=feature-readiness');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    var table = page.locator('table[role="table"]');
+    await expect(table).toBeVisible();
+
+    var headerRow = page.locator('thead th');
+    var headerCount = await headerRow.count();
+    expect(headerCount).toBeGreaterThan(5);
+
+    var scoreHeader = page.locator('thead th', { hasText: 'Score' });
+    await expect(scoreHeader.first()).toBeVisible();
+
+    var readinessHeader = page.locator('thead th', { hasText: 'Readiness' });
+    await expect(readinessHeader.first()).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('Feature List shows FPDoR readiness badges', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=feature-readiness');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    var dataRows = page.locator('tbody tr[role="row"]');
+    var rowCount = await dataRows.count();
+    if (rowCount === 0) {
+      test.skip();
+      return;
+    }
+
+    var readinessBadges = page.locator('tbody [role="button"][data-popover-trigger]');
+    var badgeCount = await readinessBadges.count();
+    expect(badgeCount).toBeGreaterThan(0);
+
+    var firstBadge = readinessBadges.first();
+    var badgeText = await firstBadge.textContent();
+    expect(badgeText).toMatch(/\d+\/\d+/);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('Feature List shows Product, Failed FPDoR filters and Export CSV', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=feature-readiness');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.getByText('Product', { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: /All products/i })).toBeVisible();
+    await expect(page.getByText('Failed FPDoR', { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: /Any failed item/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Export CSV/i })).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('PM Hub view loads with priority scores visible', async ({ page }) => {
+    await page.goto('/#/releases/plan');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    var pmHubTab = page.locator('button', { hasText: 'PM Hub' });
+    await expect(pmHubTab).toBeVisible();
+
+    await pmHubTab.click();
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    var reportCard = page.locator('text=Component Release Load Tracking');
+    await expect(reportCard.first()).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('feature-readiness API returns features with fpdor and readinessGates', async ({ request }) => {
+    var res = await request.get('/api/modules/releases/planning/feature-readiness');
+    if (res.status() === 403) {
+      test.skip();
+      return;
+    }
+    expect(res.ok()).toBe(true);
+    var body = await res.json();
+
+    expect(body).toHaveProperty('pendingReview');
+    expect(body).toHaveProperty('ready');
+    expect(Array.isArray(body.pendingReview)).toBe(true);
+    expect(Array.isArray(body.ready)).toBe(true);
+
+    var allFeatures = body.pendingReview.concat(body.ready);
+    if (allFeatures.length === 0) {
+      test.skip();
+      return;
+    }
+
+    var sample = allFeatures[0];
+
+    expect(sample).toHaveProperty('fpdor');
+    expect(sample.fpdor).toHaveProperty('items');
+    expect(sample.fpdor).toHaveProperty('passedCount');
+    expect(sample.fpdor).toHaveProperty('totalCount');
+    expect(sample.fpdor).toHaveProperty('evaluatedCount');
+    expect(Array.isArray(sample.fpdor.items)).toBe(true);
+    expect(sample.fpdor.totalCount).toBe(13);
+    expect(sample.fpdor.items.length).toBe(13);
+
+    var itemNames = sample.fpdor.items.map(function(i) { return i.name });
+    expect(itemNames).toContain('Cross-functional Engineering');
+    expect(itemNames).toContain('Documentation');
+    expect(itemNames).toContain('UXD');
+    expect(itemNames).not.toContain('Cross-functional Engagement');
+
+    var item = sample.fpdor.items[0];
+    expect(item).toHaveProperty('name');
+    expect(item).toHaveProperty('pass');
+    expect(item).toHaveProperty('source');
+    expect(item).toHaveProperty('state');
+    expect(item.source).toBe('jira');
+    expect(['passed', 'failed']).toContain(item.state);
+
+    expect(sample).toHaveProperty('readinessGates');
+    expect(sample.readinessGates).toHaveProperty('fpDorPassed');
+    expect(sample.readinessGates).toHaveProperty('fpDorTotal');
+    expect(sample.readinessGates).toHaveProperty('fpDorEvaluated');
+    expect(sample.readinessGates).toHaveProperty('pastRefinement');
+    expect(sample.readinessGates).toHaveProperty('noBlockingViolations');
+    expect(typeof sample.readinessGates.fpDorPassed).toBe('number');
+    expect(typeof sample.readinessGates.fpDorTotal).toBe('number');
+    expect(typeof sample.readinessGates.pastRefinement).toBe('boolean');
+  });
+
+  test('feature-readiness API returns priority score breakdown', async ({ request }) => {
+    var res = await request.get('/api/modules/releases/planning/feature-readiness');
+    if (res.status() === 403) {
+      test.skip();
+      return;
+    }
+    expect(res.ok()).toBe(true);
+    var body = await res.json();
+
+    var allFeatures = body.pendingReview.concat(body.ready);
+    var withScore = allFeatures.filter(function(f) { return f.priorityScoreBreakdown && f.priorityScoreBreakdown.signals });
+    if (withScore.length === 0) {
+      test.skip();
+      return;
+    }
+
+    var breakdown = withScore[0].priorityScoreBreakdown;
+    expect(breakdown).toHaveProperty('score');
+    expect(breakdown).toHaveProperty('signals');
+    expect(Array.isArray(breakdown.signals)).toBe(true);
+    expect(breakdown.signals.length).toBeGreaterThan(0);
+
+    var signal = breakdown.signals[0];
+    expect(signal).toHaveProperty('name');
+    expect(signal).toHaveProperty('value');
+    expect(signal).toHaveProperty('weight');
+    expect(typeof signal.value).toBe('number');
+    expect(typeof signal.weight).toBe('number');
+  });
+});
+
+/**
+ * RHOAI Release Readiness Dashboard
+ *
+ * Verify the release readiness report card is visible, clickable, and renders
+ * the expected dashboard structure with version selector and content sections.
+ */
+test.describe('Releases Release Readiness @releases', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('release readiness report card is visible in Reports hub', async ({ page }) => {
+    await page.goto('/#/releases/reports');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const card = page.locator('text=RHOAI Release Readiness');
+    await expect(card.first()).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('release readiness report loads with content', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=release-readiness');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const heading = page.locator('text=RHOAI Release Readiness');
+    await expect(heading.first()).toBeVisible();
+
+    const mainContent = page.locator('main, [role="main"], .min-h-screen').first();
+    await expect(mainContent).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('release readiness versions API returns available versions', async ({ request }) => {
+    const res = await request.get('/api/modules/releases/release-readiness/versions');
+    expect(res.ok()).toBe(true);
+    const body = await res.json();
+    expect(body).toHaveProperty('versions');
+    expect(Array.isArray(body.versions)).toBe(true);
+  });
+
+  test('release readiness metrics API returns data for fixture version', async ({ request }) => {
+    const res = await request.get('/api/modules/releases/release-readiness?version=rhoai-3.5.EA2');
+    if (res.status() === 404) {
+      test.skip();
+      return;
+    }
+    expect(res.ok()).toBe(true);
+    const body = await res.json();
+    expect(body).toHaveProperty('version');
+    expect(body).toHaveProperty('summary');
+    expect(body).toHaveProperty('director_summary');
+    expect(body).toHaveProperty('component_readiness');
+    expect(body).toHaveProperty('product_blockers');
+    expect(body.summary).toHaveProperty('total_work');
+    expect(body.summary).toHaveProperty('progress_pct');
+  });
+
+  test('release readiness refresh endpoint is not a data-producing GET', async ({ request }) => {
+    const res = await request.post('/api/modules/releases/release-readiness/refresh?version=rhoai-3.5.EA2');
+    const body = await res.json();
+    expect(body).not.toHaveProperty('director_summary');
+  });
+});
+
+/**
+ * Release Blockers (Deliver tab)
+ *
+ * Verify the Release Blockers sub-tab is visible and clickable in the Deliver
+ * view, the API returns the expected response shape, and the view renders
+ * summary cards, tables, and the version input.
+ */
+test.describe('Releases Blockers @releases', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('Release Blockers tab is visible and clickable in Deliver view', async ({ page }) => {
+    await page.goto('/#/releases/deliver');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    var blockerTab = page.locator('button', { hasText: 'Release Blockers' });
+    await expect(blockerTab).toBeVisible();
+
+    await blockerTab.click();
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('Release Blockers view loads without errors via deep link', async ({ page }) => {
+    await page.goto('/#/releases/deliver?tab=release-blockers');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    var mainContent = page.locator('main, [role="main"], .min-h-screen').first();
+    await expect(mainContent).toBeVisible();
+
+    // Version input or summary cards should be visible (depends on whether analysis data is cached)
+    var hasInput = await page.locator('input[placeholder*="rhoai"]').count() > 0;
+    var hasCards = await page.locator('text=TOTAL BLOCKERS').count() > 0;
+    expect(hasInput || hasCards).toBe(true);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('Release Blockers view renders summary cards for a version', async ({ page }) => {
+    // Use version param to load data directly via URL
+    await page.goto('/#/releases/deliver?tab=release-blockers&version=3.5');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.locator('text=TOTAL BLOCKERS').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=PROPOSED').first()).toBeVisible();
+    await expect(page.locator('text=APPROVED').first()).toBeVisible();
+    await expect(page.locator('text=REJECTED').first()).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('blockers API returns expected response shape', async ({ request }) => {
+    var res = await request.get('/api/modules/releases/delivery/blockers/3.5');
+    expect(res.ok()).toBe(true);
+    var body = await res.json();
+
+    expect(body).toHaveProperty('releaseNumber', '3.5');
+    expect(body).toHaveProperty('fetchedAt');
+    expect(body).toHaveProperty('summary');
+    expect(body.summary).toHaveProperty('proposed');
+    expect(body.summary).toHaveProperty('approved');
+    expect(body.summary).toHaveProperty('rejected');
+    expect(body.summary).toHaveProperty('noStatus');
+    expect(body.summary).toHaveProperty('total');
+
+    expect(body).toHaveProperty('timing');
+    expect(body.timing).toHaveProperty('proposedBeforeCodeFreeze');
+    expect(body.timing).toHaveProperty('proposedAfterCodeFreeze');
+
+    expect(body).toHaveProperty('aging');
+    expect(body.aging).toHaveProperty('proposalToDecision');
+    expect(body.aging.proposalToDecision).toHaveProperty('avg');
+    expect(body.aging.proposalToDecision).toHaveProperty('count');
+    expect(body.aging).toHaveProperty('approvalToResolution');
+    expect(body.aging).toHaveProperty('byStatus');
+
+    expect(body).toHaveProperty('blockers');
+    expect(Array.isArray(body.blockers)).toBe(true);
+    expect(body).toHaveProperty('criticalMonitoring');
+    expect(Array.isArray(body.criticalMonitoring)).toBe(true);
+  });
+
+  test('blockers API rejects invalid release number', async ({ request }) => {
+    var res = await request.get('/api/modules/releases/delivery/blockers/; DROP TABLE');
+    expect(res.status()).toBe(400);
+    var body = await res.json();
+    expect(body).toHaveProperty('error');
   });
 });

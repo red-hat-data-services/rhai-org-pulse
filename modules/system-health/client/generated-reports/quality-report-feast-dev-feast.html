@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 03:19 PM</p>
+            <p class="timestamp">Generated on July 21, 2026 at 12:22 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">feast-dev/feast</h2>
         </header>
 
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Strong coverage with 221 Python + 47 Go + 6 Java test files; multi-OS/Python-version matrix</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Strong multi-language test suite with pytest, Go testing, and matrix CI across Python 3.10-3.12 and multi-OS</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Extensive integration suite across 10+ backends; operator E2E with KIND; label-gated PR triggers</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Extensive integration test suite covering 15+ backends with operator E2E on Kind cluster</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Docker smoke tests on PR with multi-arch; but no Konflux simulation or full operator deployment on every PR</div>
+                            <div class="scorecard-status">Docker smoke tests on PR with multi-arch builds; no Konflux simulation but strong build validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Docker smoke tests validate health endpoints on amd64+arm64; multi-arch builds for feature-server</div>
+                            <div class="scorecard-status">Multi-arch Docker smoke tests with health endpoint validation; UBI base images for operator and feature server</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Go coverage generated but no codecov integration; no Python coverage enforcement or reporting</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Codecov integration with Python and Go flags; informational mode only, no enforced coverage gates</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">31 workflows covering lint, test, build, security, release; concurrency control everywhere</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">30 workflows with concurrency control, label-gated integration tests, nightly CI, and uv/pixi caching</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Ruff + mypy + pre-commit hooks enforced; ESLint for UI; missing Dependabot/Renovate; FIPS gaps in Go code</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">CLAUDE.md, AGENTS.md, .claude/rules, 4 skills (architecture, dev, testing, user-guide); CODEOWNERS; comprehensive</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
+                            <div class="scorecard-status">Exceptional agent rules: CLAUDE.md, AGENTS.md, .claude/rules/, 4 comprehensive skills with testing, dev, architecture, and user guide</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +416,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No Python coverage tracking or enforcement</div>
-                            <p>Coverage can silently degrade without detection; no visibility into test health trends</p>
+                            <div class="item-description">No Dependabot or Renovate for automated dependency updates</div>
+                            <p>Dependencies may drift silently; security patches not automatically surfaced as PRs</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">Coverage tracking is informational-only (no enforced gates)</div>
+                            <p>Coverage can decrease without blocking merges; no minimum thresholds enforced</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">math/rand used in Go production code (non-crypto PRNG)</div>
+                            <p>math/rand is not cryptographically secure and not FIPS-compliant; used in DynamoDB online store and logging</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">hashlib.md5 used in Python Bigtable online store</div>
+                            <p>MD5 is not FIPS-compliant; used for entity key hashing in Bigtable store</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">Go feature server Dockerfile uses debian-based golang image (not UBI)</div>
+                            <p>Inconsistent with operator/Python server which use UBI9; not FIPS-capable by default</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Integration tests require label approval, not auto-triggered on PR</div>
-                            <p>Integration regressions can merge if reviewers forget to label; delays feedback loop</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No container vulnerability scanning in CI</div>
-                            <p>Vulnerable base images or dependencies can ship undetected</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Go coverage generated but not reported or enforced</div>
-                            <p>Go code coverage trends are invisible to contributors</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +469,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add codecov integration with pytest-cov for Python</div>
-                            <p>Immediate visibility into coverage trends; PR-level coverage diff reporting</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">3-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to docker_smoke_tests workflow</div>
-                            <p>Early detection of vulnerabilities in built images before release</p>
+                            <div class="item-description">Enable Dependabot for automated dependency alerts</div>
+                            <p>Automated security and dependency update PRs for pip, gomod, npm, and docker ecosystems</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Upload Go coverage to codecov</div>
-                            <p>Unified coverage dashboard across Python and Go codebases</p>
+                            <div class="item-description">Enforce coverage thresholds in Codecov config</div>
+                            <p>Prevent coverage regressions by changing informational: true to informational: false</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add SBOM generation to image builds</div>
-                            <p>Supply chain transparency and compliance readiness</p>
+                            <div class="item-description">Replace math/rand with crypto/rand in Go production code</div>
+                            <p>FIPS compliance for Go feature server; eliminates non-secure PRNG in production paths</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Switch Go feature server Dockerfile to UBI base image</div>
+                            <p>Consistent FIPS-capable base image across all components</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +514,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Implement Python coverage tracking with codecov — add pytest-cov to unit_tests.yml and enforce minimum thresholds</li><li>Add Trivy container scanning to docker_smoke_tests.yml and publish_images.yml workflows</li></ul>
+                            <ul><li>Add .github/dependabot.yml covering gomod, pip, npm, docker, and github-actions ecosystems</li><li>Enforce Codecov coverage gates by setting informational: false and threshold enforcement</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Auto-trigger at least pr_local_integration_tests on all PRs (remove label gate for core integration tests)</li><li>Add SBOM generation (syft/trivy) to image publishing pipeline</li><li>Upload Go coverage reports to codecov alongside Python coverage</li></ul>
+                            <ul><li>Replace math/rand with crypto/rand in Go production code (dynamodbonlinestore.go, logger.go)</li><li>Replace hashlib.md5 with hashlib.sha256 in Bigtable online store</li><li>Standardize Go feature server Dockerfile on UBI9 base image</li><li>Add FIPS build tags (//go:build boringcrypto) for Go components</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add performance regression detection to benchmark tests (fail on significant degradation)</li><li>Add contract tests between Python SDK and Go feature server</li><li>Implement image signing with cosign for published images</li></ul>
+                            <ul><li>Add contract tests for gRPC API boundaries between feature server and SDK</li><li>Add Renovate as alternative to Dependabot for more flexible dependency management</li><li>Consider adding performance regression tests in CI for feature retrieval latency</li></ul>
                         </div>
                     </div>
                 </div>

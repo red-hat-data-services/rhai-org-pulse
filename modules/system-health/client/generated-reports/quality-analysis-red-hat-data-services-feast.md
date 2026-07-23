@@ -4,68 +4,74 @@ overall_score: 7.4
 scorecard:
   - dimension: "Unit Tests"
     score: 8.5
-    status: "Excellent coverage across Python (132 unit tests), Go (17 tests), and operator (33 tests) with multi-platform matrix"
+    status: "Extensive Python unit tests (211 files), Go operator tests (50 files), Java tests (15 files) using pytest, Ginkgo, and JUnit"
   - dimension: "Integration/E2E"
     score: 8.0
-    status: "Comprehensive integration suite (42 tests) covering multiple backends, operator E2E with Kind, upgrade tests, and REST API tests"
+    status: "Comprehensive integration test suites across stores with operator E2E using Kind clusters and envtest"
   - dimension: "Build Integration"
-    score: 7.0
-    status: "Konflux pipelines via Tekton, Docker smoke tests on PR, but label-gated for most integration suites"
+    score: 7.5
+    status: "Tekton/Konflux PR pipelines for operator and feature-server, Docker smoke tests on PR, but Konflux triggered by label/comment only"
   - dimension: "Image Testing"
     score: 7.5
-    status: "Docker smoke tests with multi-arch (amd64/arm64), health-check validation, but no Trivy/Snyk scanning in CI"
+    status: "Docker smoke tests validate health endpoint on multi-arch (amd64/arm64), UBI9 base images, multi-stage builds"
   - dimension: "Coverage Tracking"
     score: 4.0
-    status: "Operator generates cover.out but no codecov integration, no coverage thresholds, no PR coverage reporting"
+    status: "Go coverprofile generated locally; Java Jacoco present; no codecov integration, no PR coverage gates, no Python coverage tracking"
   - dimension: "CI/CD Automation"
     score: 8.5
-    status: "32 well-organized workflows with concurrency control, caching, smart path-based triggers, and nightly CI"
+    status: "33 workflows with concurrency control, caching, matrix strategies, nightly CI, PR-triggered and post-merge pipelines"
+  - dimension: "Static Analysis"
+    score: 7.5
+    status: "Ruff linting + formatting, golangci-lint with 19 linters, pre-commit hooks, Renovate configured, FIPS build tags present but md5 usage found"
   - dimension: "Agent Rules"
-    score: 8.0
-    status: "AGENTS.md, CLAUDE.md, .claude/rules/ and .claude/skills/ with comprehensive component and testing guidance"
+    score: 9.0
+    status: "CLAUDE.md + AGENTS.md, .claude/rules/ with component and skills maintenance rules, 4 detailed skills covering architecture, testing, dev workflow, and user guide"
 critical_gaps:
-  - title: "No coverage tracking or enforcement"
-    impact: "Coverage regressions go undetected — no codecov, no thresholds, no PR reporting"
+  - title: "No coverage tracking or enforcement for Python SDK"
+    impact: "Test regressions can silently reduce coverage without detection; no PR-level coverage gates"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No container vulnerability scanning in CI"
-    impact: "CVEs in base images and dependencies not caught until downstream Konflux builds"
+  - title: "FIPS non-compliant crypto usage in Python and Go code"
+    impact: "hashlib.md5 in bigtable online store and math/rand in Go server could cause FIPS compliance failures"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "Most integration tests label-gated on upstream feast-dev/feast only"
-    impact: "Integration suites don't run on the downstream fork PRs — failures discovered late"
-    severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "No Go code coverage tracking"
-    impact: "Go feature server and operator coverage unknown and untracked"
+    effort: "4-8 hours"
+  - title: "Konflux builds are label/comment-gated, not automatic on PRs"
+    impact: "Developers must manually trigger Konflux builds; easy to forget, risking post-merge build failures"
     severity: "MEDIUM"
-    effort: "4-6 hours"
-quick_wins:
-  - title: "Add codecov integration with PR reporting"
     effort: "2-4 hours"
-    impact: "Visibility into coverage trends, block regressions, PR-level coverage diffs"
-  - title: "Add Trivy scanning to PR workflow"
+  - title: "No coverage configuration file (.codecov.yml)"
+    impact: "Cannot enforce minimum coverage thresholds or track coverage trends across PRs"
+    severity: "MEDIUM"
+    effort: "2-3 hours"
+quick_wins:
+  - title: "Add .codecov.yml with coverage thresholds and PR reporting"
+    effort: "2-3 hours"
+    impact: "Immediate visibility into coverage changes on every PR"
+  - title: "Add pytest-cov to Python unit test workflow"
     effort: "1-2 hours"
-    impact: "Early detection of CVEs in container images before merge"
-  - title: "Add coverage thresholds to operator Makefile test target"
-    effort: "1 hour"
-    impact: "Operator already generates cover.out — just add -covermode=atomic and threshold check"
-  - title: "Enable secret scanning in PR workflow"
-    effort: "1 hour"
-    impact: "detect-secrets is configured in pre-commit but not enforced in CI"
+    impact: "Generate coverage reports for Python SDK on every PR"
+  - title: "Replace hashlib.md5 with hashlib.sha256 in bigtable store"
+    effort: "1-2 hours"
+    impact: "Remove FIPS non-compliant crypto usage from Python SDK"
+  - title: "Replace math/rand with crypto/rand in Go server code"
+    effort: "2-3 hours"
+    impact: "Remove FIPS non-compliant random number generation"
 recommendations:
   priority_0:
-    - "Add codecov/coveralls integration with minimum coverage thresholds for Python and Go"
-    - "Add Trivy or Snyk container scanning to PR workflows for both feature-server and operator images"
-    - "Fix integration test conditions to also run on red-hat-data-services/feast fork (not just feast-dev/feast)"
+    - "Add Python coverage tracking (pytest-cov) with --cov flag in unit_tests.yml and integration test workflows"
+    - "Configure .codecov.yml with target thresholds (e.g., 70% project minimum) and patch coverage requirements"
+    - "Replace hashlib.md5 calls in sdk/python/feast/infra/online_stores/bigtable.py with FIPS-compliant hashlib.sha256"
+    - "Replace math/rand imports in go/ directory with crypto/rand for FIPS compliance"
   priority_1:
-    - "Add Go coverage reporting to go test targets and CI"
-    - "Add SBOM generation to Konflux Tekton pipelines"
-    - "Add test rules for unit test creation patterns to .claude/rules/"
+    - "Make Tekton/Konflux PR builds automatic (remove label/comment gate) for critical paths"
+    - "Add Java coverage reporting (Jacoco) to CI with threshold enforcement"
+    - "Add coverage gate to operator Go test target (threshold on cover.out)"
+    - "Add timeout-minutes to all PR-triggered workflows to prevent runaway jobs"
   priority_2:
-    - "Add performance regression testing for online serving endpoints"
-    - "Add contract tests between Python SDK and Go feature server"
-    - "Add chaos/resilience testing for operator reconciliation"
+    - "Add ruff lint rules section in pyproject.toml for stricter rule enforcement"
+    - "Consider adding a .golangci.yml at root level for Go feature server code"
+    - "Add contract tests for Python-to-Go feature server API boundary"
+    - "Consider adding performance regression tests for online feature retrieval latency"
 ---
 
 # Quality Analysis: red-hat-data-services/feast
@@ -73,329 +79,387 @@ recommendations:
 ## Executive Summary
 
 - **Overall Score: 7.4/10**
-- **Repository Type**: Feature store platform (polyglot: Python primary, Go, Java, TypeScript)
-- **Key Strengths**: Exceptionally well-organized CI/CD with 32 workflows, comprehensive multi-backend integration testing, strong operator E2E test suite with upgrade/previous-version testing, excellent agent rules with skills-based architecture
-- **Critical Gaps**: No coverage tracking or enforcement, no container vulnerability scanning, integration tests label-gated to upstream repo only
-- **Agent Rules Status**: Present and comprehensive — AGENTS.md, .claude/rules/, .claude/skills/ with 4 dedicated skills
+- **Repository Type**: Polyglot feature store library + Kubernetes operator (Python, Go, Java, TypeScript)
+- **Tier**: Downstream (RHOAIENG / Feature Store)
+- **Key Strengths**: Excellent test breadth across 4 languages, comprehensive CI/CD with 33 workflows, strong agent rules with 4 dedicated skills, Docker smoke tests with multi-arch validation, FIPS build tags in Konflux Dockerfiles, Renovate configured
+- **Critical Gaps**: No Python coverage tracking or enforcement, FIPS non-compliant crypto usage in source code (hashlib.md5, math/rand), Konflux builds require manual triggering via labels
+- **Agent Rules Status**: Excellent — CLAUDE.md, AGENTS.md, 2 .claude/rules/, 4 comprehensive skills with reference docs
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 8.5/10 | Excellent coverage: 132 Python unit tests, 17 Go tests, 33 operator tests, multi-platform matrix |
-| Integration/E2E | 8.0/10 | Comprehensive: 42 integration tests, operator E2E w/ Kind, upgrade tests, REST API tests |
-| **Build Integration** | **7.0/10** | **Konflux Tekton pipelines present, Docker smoke tests, but label-gated integration** |
-| Image Testing | 7.5/10 | Docker smoke tests with multi-arch validation, health-check probes, but no vuln scanning |
-| Coverage Tracking | 4.0/10 | Operator generates cover.out but no codecov, no thresholds, no PR reporting |
-| CI/CD Automation | 8.5/10 | 32 well-organized workflows, concurrency control, caching, path triggers, nightly CI |
-| Agent Rules | 8.0/10 | AGENTS.md + CLAUDE.md + .claude/rules/ + .claude/skills/ with 4 dedicated skills |
+| Dimension | Score | Weight | Status |
+|-----------|-------|--------|--------|
+| Unit Tests | 8.5/10 | 15% | Extensive: 211 Python, 50 Go, 15 Java, 3 TS test files |
+| Integration/E2E | 8.0/10 | 20% | Comprehensive integration suites + operator E2E with Kind |
+| Build Integration | 7.5/10 | 15% | Tekton/Konflux PR pipelines + Docker smoke tests |
+| Image Testing | 7.5/10 | 10% | Multi-arch smoke tests, UBI9 base, health endpoint validation |
+| Coverage Tracking | 4.0/10 | 10% | Go/Java local coverage only; no Python, no PR gates |
+| CI/CD Automation | 8.5/10 | 15% | 33 workflows, concurrency control, caching, nightly CI |
+| Static Analysis | 7.5/10 | 10% | Ruff + golangci-lint + pre-commit + Renovate; FIPS gaps |
+| Agent Rules | 9.0/10 | 5% | CLAUDE.md + AGENTS.md + 2 rules + 4 skills + references |
 
 ## Critical Gaps
 
-1. **No coverage tracking or enforcement**
-   - Impact: Coverage regressions go completely undetected. No codecov/coveralls integration, no minimum thresholds, no PR coverage diffs
-   - Severity: HIGH
-   - Effort: 4-6 hours
-   - Note: Operator Makefile generates `cover.out` but it's not collected or reported
+### 1. No Python Coverage Tracking or Enforcement
+- **Impact**: The Python SDK is the primary codebase (~600 source files, 211 test files) but has no coverage measurement in CI. Test regressions can silently reduce coverage without detection.
+- **Severity**: HIGH
+- **Effort**: 4-6 hours
+- **Details**: Neither `pytest-cov` nor `--cov` flags are used in `unit_tests.yml` or any PR workflow. No `.codecov.yml` exists. Go operator generates `cover.out` locally but doesn't report to any service. Java has Jacoco but it's not integrated with PR reporting.
 
-2. **No container vulnerability scanning in CI**
-   - Impact: CVEs in base images (ubi9) and Python/Go dependencies not caught until downstream Konflux builds
-   - Severity: HIGH
-   - Effort: 2-4 hours
-   - Note: Konflux pipelines may include scanning, but GitHub CI does not
+### 2. FIPS Non-Compliant Crypto Usage
+- **Impact**: Production code uses FIPS-prohibited cryptographic primitives that will fail FIPS compliance validation.
+- **Severity**: HIGH
+- **Effort**: 4-8 hours
+- **Details**:
+  - **Python**: `hashlib.md5` used in `sdk/python/feast/infra/online_stores/bigtable.py` (lines 288, 298) for entity key hashing
+  - **Go**: `math/rand` imported in `go/internal/feast/onlinestore/dynamodbonlinestore.go`, `go/internal/feast/server/logging/logger.go`, and test files
+  - **Positive**: Konflux Dockerfiles correctly use `GOEXPERIMENT=strictfipsruntime` and `-tags strictfipsruntime` for the operator build
 
-3. **Integration tests only run on upstream `feast-dev/feast` repository**
-   - Impact: All integration test workflows check `github.repository == 'feast-dev/feast'` — they never run on `red-hat-data-services/feast` fork PRs
-   - Severity: HIGH
-   - Effort: 8-12 hours
-   - Example: `pr_integration_tests.yml` line: `github.repository == 'feast-dev/feast'`
+### 3. Konflux Builds Not Automatic on PRs
+- **Impact**: Developers must manually trigger Konflux builds by adding labels (`kfbuild-all`, `kfbuild-feast-operator`) or comments (`/build-konflux feast-operator`). This creates risk of forgetting to validate Konflux builds before merge.
+- **Severity**: MEDIUM
+- **Effort**: 2-4 hours
+- **Details**: Tekton PipelineRun definitions in `.tekton/` use `on-label` and `on-comment` triggers rather than automatic `on-event: [pull_request]` triggers
 
-4. **No Go code coverage tracking**
-   - Impact: Go feature server (38 source files, 17 test files) has unknown coverage
-   - Severity: MEDIUM
-   - Effort: 4-6 hours
+### 4. No Coverage Configuration File
+- **Impact**: Cannot enforce minimum coverage thresholds or track trends
+- **Severity**: MEDIUM
+- **Effort**: 2-3 hours
 
 ## Quick Wins
 
-1. **Add codecov integration with PR reporting** (2-4 hours)
-   - Impact: Immediate visibility into coverage trends and PR-level diffs
-   - Implementation: Add `.codecov.yml`, upload coverage artifacts in unit_tests workflow
-   ```yaml
-   - name: Upload coverage
-     uses: codecov/codecov-action@v4
-     with:
-       files: ./coverage.xml
-       flags: python-unit
-   ```
+### 1. Add .codecov.yml with Coverage Thresholds
+- **Effort**: 2-3 hours
+- **Impact**: Immediate visibility into coverage changes on every PR
+- **Implementation**:
+```yaml
+# .codecov.yml
+coverage:
+  status:
+    project:
+      default:
+        target: 70%
+        threshold: 2%
+    patch:
+      default:
+        target: 80%
+comment:
+  layout: "reach,diff,flags,files"
+  behavior: default
+```
 
-2. **Add Trivy scanning to PR workflow** (1-2 hours)
-   - Impact: Catch CVEs in container images before merge
-   - Implementation: Add step after Docker build in `docker_smoke_tests.yml`:
-   ```yaml
-   - name: Run Trivy vulnerability scanner
-     uses: aquasecurity/trivy-action@master
-     with:
-       image-ref: 'feastdev/feature-server:smoke-${{ matrix.arch }}'
-       format: 'sarif'
-       output: 'trivy-results.sarif'
-   ```
+### 2. Add pytest-cov to Python Unit Test Workflow
+- **Effort**: 1-2 hours
+- **Impact**: Generate and upload Python coverage on every PR
+- **Implementation**: Add `--cov=feast --cov-report=xml` to pytest invocation in `unit_tests.yml` and add codecov upload step
 
-3. **Add coverage threshold to operator tests** (1 hour)
-   - Impact: Operator already generates `cover.out` — just enforce minimum
-   - Implementation: Add to operator Makefile after `go test`:
-   ```makefile
-   @go tool cover -func=cover.out | grep total | awk '{if ($$3+0 < 60) {print "Coverage below 60%: "$$3; exit 1}}'
-   ```
+### 3. Replace hashlib.md5 with hashlib.sha256
+- **Effort**: 1-2 hours
+- **Impact**: Remove FIPS-prohibited MD5 usage in bigtable online store
+- **File**: `sdk/python/feast/infra/online_stores/bigtable.py`
 
-4. **Enable detect-secrets in CI** (1 hour)
-   - Impact: `.secrets.baseline` and `.pre-commit-config.yaml` already configured — just run in CI
-   - The linter workflow runs `pre-commit/action@v3.0.1` which should pick it up, but verify it actually executes
+### 4. Replace math/rand with crypto/rand in Go Code
+- **Effort**: 2-3 hours
+- **Impact**: Remove FIPS-prohibited random number generation
+- **Files**: `go/internal/feast/onlinestore/dynamodbonlinestore.go`, `go/internal/feast/server/logging/logger.go`
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflow Inventory (32 workflows)**:
+**Score: 8.5/10**
 
-| Category | Workflows | Trigger |
-|----------|-----------|---------|
-| **PR Tests** | unit_tests, smoke_tests, linter, lint_pr, operator_pr, docker_smoke_tests | PR (automatic) |
-| **PR Integration** (label-gated) | pr_integration_tests, pr_local_integration_tests, pr_duckdb_integration_tests, pr_ray_integration_tests, pr_registration_integration_tests, pr_remote_rbac_integration_tests, operator-e2e-integration-tests, registry-rest-api-tests, dbt-integration-tests | PR (requires `ok-to-test`/`approved`/`lgtm` label) |
-| **Post-merge** | master_only (integration + docker builds) | Push to master |
-| **Nightly** | nightly-ci (full integration + cleanup) | Cron 08:00 UTC daily |
-| **Release** | release, build_wheels, publish_images, publish_python_sdk, publish_web_ui, publish_helm_charts, publish.yml | Manual/workflow_dispatch |
-| **Utility** | check_skip_tests, sync_stable_branch, update_stable_branch, deploy-website, pr_website_build, nightly_python_sdk_release | Various |
-| **Security** | security.yml (CodeQL + Safety + govulncheck) | PR to master, push, weekly schedule |
+The repository has excellent unit test breadth across all four languages:
 
-**Strengths**:
-- All workflows use `concurrency` with `cancel-in-progress: true` — excellent PR resource management
-- Smart `paths-ignore` for docs/examples/community reduces unnecessary CI runs
-- Multi-Python version matrix (3.10, 3.11, 3.12) on unit tests with macOS cross-platform testing
-- Well-structured label-gating for expensive integration tests (`ok-to-test`, `approved`, `lgtm`)
-- UV caching with `astral-sh/setup-uv@v5` and cache pruning
-- Nightly CI includes resource cleanup (DynamoDB/Bigtable tables)
-- Docker builds on master push with multi-arch support (amd64/arm64)
-
-**Gaps**:
-- Integration test conditions check `github.repository == 'feast-dev/feast'` — downstream fork gets none of these
-- No dependency caching for Go modules in operator workflow
-- `check_skip_tests` workflow uses deprecated `set-output` syntax
-
-### Test Coverage
-
-**Python Tests**:
-- 132 unit test files in `sdk/python/tests/unit/`
-- 42 integration test files in `sdk/python/tests/integration/`
-- 494 source files → test-to-code ratio: 0.39 (solid)
-- Frameworks: pytest with pytest-xdist for parallelization
-- Test categories: unit, integration-local, integration (cloud), benchmark, smoke, dbt
-- Benchmark tests run post-merge with results uploaded to S3
-
-**Go Tests**:
-- 17 test files across `go/` (feature server)
-- 38 source files → test-to-code ratio: 0.45 (strong)
-- Tests cover: online stores (Redis, Postgres, DynamoDB, SQLite), serving, registry, HTTP/gRPC servers
-
-**Operator Tests (Go)**:
-- 33 test files (more test files than source files!)
-- 30 source files → test-to-code ratio: 1.1 (exceptional)
-- Test types: controller unit tests, API validation, E2E (Kind cluster), upgrade, previous-version
-- Uses envtest for controller testing, Ginkgo/Gomega framework
-- Covers: TLS, OIDC auth, PVC, volumes, log levels, object store, RBAC, notebook configmap
-
-**Java Tests**:
-- 6 test files in `java/serving/` and `java/serving-client/`
-- Covers serving and client functionality
-
-**UI Tests**:
-- Jest-based tests run via `yarn test` in `unit_tests.yml`
-- Format checking and build verification included
-
-### Code Quality
-
-**Linting & Formatting**:
-- **Python**: Ruff for linting + formatting (configured in `pyproject.toml`), MyPy for type checking
-- **Go (operator)**: golangci-lint v2 with 15+ enabled linters (dupl, errcheck, ginkgolinter, goconst, gocyclo, govet, ineffassign, lll, misspell, nakedret, prealloc, revive, staticcheck, unconvert, unparam, unused)
-- **Go (feature server)**: Standard `gofmt`
-- **TypeScript/UI**: Yarn format checking
-- **PR titles**: commitlint with conventional commits (`feat:`, `fix:`, `ci:`, etc.)
-
-**Pre-commit Hooks**:
-- `.pre-commit-config.yaml` with 5 hooks:
-  - `format-files` — Ruff check + format on commit (Python)
-  - `lint-files` — Ruff check + format verification on commit (Python)
-  - `template` — Build templates when template files change
-  - `lint-push` — Lint gate on push (check-only)
-  - `detect-secrets` — Secret scanning with baseline (Yelp/detect-secrets v1.5.0)
-  - `commitlint` — Conventional commit message validation
-- Hooks enforced in CI via `pre-commit/action@v3.0.1`
-
-**Static Analysis**:
-- CodeQL for Python and JavaScript/TypeScript (weekly + PR to master)
-- `safety scan` for Python dependency vulnerabilities
-- `govulncheck` for Go vulnerability checking (both feature server and operator modules)
-- `.secrets.baseline` for secret detection baseline tracking
-
-### Container Images
-
-**Dockerfiles**:
-- `Dockerfiles/Dockerfile.feature-server.konflux` — Multi-stage UBI9 Python 3.12 build with multi-arch support (ppc64le workaround), FIPS compliance
-- `Dockerfiles/Dockerfile.feast-operator.konflux` — Multi-stage UBI9 Go build with FIPS runtime (`strictfipsruntime`), SHA-pinned base images
-- `infra/feast-operator/Dockerfile` — Standard operator Dockerfile (non-Konflux)
-- `ui/docker/Dockerfile` — UI container
-- `.gitpod.Dockerfile` — Development environment
+| Language | Test Files | Source Files | Test-to-Code Ratio | Framework |
+|----------|-----------|-------------|---------------------|-----------|
+| Python | 211 | 600 | 0.35 | pytest |
+| Go | 50 | 68 | 0.74 | Ginkgo + envtest |
+| Java | 15 | 43 | 0.35 | JUnit + Testcontainers |
+| TypeScript | 3 | 225 | 0.01 | Jest/Vitest |
 
 **Strengths**:
-- Multi-stage builds for minimal runtime images
-- UBI9 base images (Red Hat certified)
-- FIPS compliance in operator Konflux build
-- SHA-pinned base images in Konflux Dockerfiles
-- Multi-arch support (amd64/arm64) for feature server
-- Docker smoke tests in PR workflow with health check validation
+- Python tests well-organized into `unit/` and `integration/` with clear subdirectories per component
+- Go operator tests use `envtest` for realistic Kubernetes API testing
+- Multi-Python-version matrix (3.10, 3.11, 3.12) with cross-OS (Ubuntu, macOS) testing
+- Well-structured conftest.py with shared fixtures
+- Test isolation via mocking (unittest.mock) and pytest fixtures
 
 **Gaps**:
-- No Trivy/Snyk scanning in GitHub CI workflows
-- No SBOM generation in GitHub workflows (may be handled by Konflux)
-- No image signing/attestation in GitHub workflows
+- TypeScript/UI test coverage is minimal (3 test files for 225 source files)
+- No explicit test isolation patterns like `t.Parallel()` in Go tests (uses Ginkgo's `Ordered`)
 
-### Build Integration (Konflux/Tekton)
+### Integration/E2E Tests
 
-**Tekton Pipelines**:
-- `odh-feast-operator-pull-request.yaml` — PR build for operator image via Konflux
-- `odh-feature-server-pull-request.yaml` — PR build for feature server via Konflux (3h pipeline, 2h task timeout)
-- Triggered by label (`kfbuild-all`, `kfbuild-feast-operator`, `kfbuild-feature-server`) or comment (`/build-konflux`)
-- Managed centrally via `red-hat-data-services/konflux-central` (auto-synced, do not edit directly)
-
-**Docker Smoke Tests on PR**:
-- Builds and validates feature-server Docker image on PR
-- Tests both `feature-server` and `feature-server-dev` variants
-- Multi-arch: amd64 and arm64 via QEMU
-- Health check validation: waits for `/health` endpoint readiness
-- Path-scoped: only triggers when feature server files change
-
-**Gaps**:
-- No PR-time Konflux simulation (Konflux builds are label-triggered, not automatic)
-- No operator image build on regular PR (only Konflux-triggered)
-
-### Security
+**Score: 8.0/10**
 
 **Strengths**:
-- CodeQL SAST for Python and JavaScript/TypeScript
-- `safety scan` for Python dependency vulnerabilities
-- `govulncheck` for Go vulnerability detection (both modules)
-- `detect-secrets` with baseline tracking in pre-commit
-- Security workflow runs on: PR to master, push to master, weekly schedule (Monday 06:00 UTC)
-- FIPS-compliant operator build
+- Comprehensive integration test ecosystem with 7+ dedicated PR integration workflows:
+  - `pr_integration_tests.yml` — full integration with Redis, cloud stores
+  - `pr_local_integration_tests.yml` — containerized store stubs
+  - `pr_duckdb_integration_tests.yml` — DuckDB offline store
+  - `pr_ray_integration_tests.yml` — Ray compute engine
+  - `pr_registration_integration_tests.yml` — feature registration
+  - `pr_remote_rbac_integration_tests.yml` — RBAC functionality
+  - `registry-rest-api-tests.yml` — REST API with Kind cluster
+- Operator E2E tests deploy to Kind clusters with realistic CRD lifecycle
+- Integration tests cover multi-store backends (Redis, DynamoDB, Bigtable, PostgreSQL, DuckDB)
+- `conftest.py` provides sophisticated test fixtures with data source parametrization
+- Nightly CI runs comprehensive cloud integration tests (AWS, GCP)
 
 **Gaps**:
-- Security workflow only targets `master` branch — PRs to other branches not scanned
-- `safety scan` runs with `continue-on-error: true` — failures don't block
-- `govulncheck` also runs with `continue-on-error: true` — not enforced
-- No container image vulnerability scanning (Trivy/Snyk)
-- No DAST (dynamic application security testing)
+- Most integration tests are label-gated (`ok-to-test`, `approved`, `lgtm`) — appropriate for security but may slow feedback
+- No multi-version Kubernetes testing in operator E2E (fixed to v1.30.6)
+- Java integration tests (`ServingRedis*RegistryIT`) exist but aren't clearly wired into PR workflows
 
-### Agent Rules (Agentic Flow Quality)
+### Build Integration
 
-**Status**: Present and well-structured
-
-**AGENTS.md** (root):
-- Comprehensive project overview and development commands
-- Skills table with 4 registered skills
-- Code style guidelines and contribution instructions
-- ~120 lines, well-scoped as an entry point
-
-**CLAUDE.md**: References `@AGENTS.md` (single-line indirection)
-
-**.claude/rules/**:
-- `feast-components.md` — Component-specific checklist: test requirements, doc locations, proto recompilation, cross-SDK updates. Path-scoped to key source directories
-- `feast-skills-maintenance.md` — Meta-rule for keeping skills/rules in sync with codebase. Verification checklist for commands, paths, interfaces
-
-**.claude/skills/** (4 skills):
-- `feast-architecture` — Component internals, data flows, adding backends
-- `feast-dev` — Contributor workflow, setup, Docker, docs, PR process
-- `feast-testing` — Running tests, writing tests, debugging strategies
-- `feast-user-guide` — End-user feature definitions, retrieval, RAG
-
-**Additional Skills** (`skills/` root):
-- Same 4 skills plus `references/` directory — tool-agnostic (Claude Code, Codex, etc.)
-
-**Cursor Rules**: `.cursor/rules/` directory present (cross-tool consistency)
+**Score: 7.5/10**
 
 **Strengths**:
-- Unusually comprehensive for an open-source project
-- Skills cover architecture, testing, development, and user-facing workflows
-- Component rules include actionable checklists (unit tests, integration tests, proto, docs)
-- Skills maintenance rule ensures agent guidance stays in sync with code
-- Cross-tool support (Claude Code + Cursor + generic agents via `skills/`)
+- Tekton/Konflux PR pipelines for both feast-operator and feature-server components
+- Multi-architecture builds: x86_64, arm64, ppc64le via Konflux
+- Hermetic builds with prefetch-input for Go modules and pip packages
+- Docker smoke tests on PR validate feature-server builds for amd64 and arm64
+- Operator `make test` in `operator_pr.yml` runs on every PR unconditionally
+- `registry-rest-api-tests.yml` builds operator image, deploys to Kind, runs REST API tests
 
 **Gaps**:
-- No dedicated unit test creation rules with concrete patterns/examples
-- No integration test creation rules with fixture patterns
-- Missing rules for Go test patterns (operator and feature server)
+- Konflux Tekton builds are label/comment-gated, not automatic
+- No PR-time Kustomize overlay validation in GitHub Actions (only in Konflux pipeline)
+- Docker smoke tests only run on path changes to feature server code, not on all PRs
+
+**Key Files**:
+- `.tekton/odh-feast-operator-pull-request.yaml` — Konflux operator build
+- `.tekton/odh-feature-server-pull-request.yaml` — Konflux feature-server build
+- `.github/workflows/docker_smoke_tests.yml` — PR docker smoke tests
+- `.github/workflows/operator_pr.yml` — Operator tests on every PR
+
+### Image Testing
+
+**Score: 7.5/10**
+
+**Strengths**:
+- Docker smoke tests build and run feature-server image, validate `/health` endpoint
+- Multi-arch testing: amd64 and arm64 via QEMU in GitHub Actions
+- Konflux builds test x86_64, arm64, and ppc64le
+- UBI9 base images for both operator (`ubi9/go-toolset`, `ubi9/ubi-minimal`) and feature-server (`ubi9/python-312`, `ubi9/python-312-minimal`)
+- Multi-stage builds in Konflux Dockerfiles for smaller runtime images
+- Liveness and readiness probes defined in operator manifests
+- Power (ppc64le) architecture-specific handling in feature-server Dockerfile
+
+**Gaps**:
+- No `HEALTHCHECK` instruction in Dockerfiles themselves (probes are in K8s manifests only)
+- No Testcontainers usage for container-level integration testing
+- Docker smoke tests only cover the upstream feature-server Dockerfiles, not the Konflux downstream Dockerfiles
+
+### Coverage Tracking
+
+**Score: 4.0/10**
+
+**Strengths**:
+- Go operator: `make test` generates `cover.out` via `go test -coverprofile`
+- Go feature server: `make test-go` generates `coverage.out` with HTML report
+- Java: `test-java-with-coverage` target uses Jacoco for coverage reports
+
+**Gaps**:
+- **No Python coverage tracking at all** — the primary codebase (~600 source files) has zero coverage measurement in CI
+- No `.codecov.yml` or `coveralls.yml` configuration
+- No `pytest-cov` or `--cov` flag used in any CI workflow
+- Go coverage is generated locally but not uploaded or enforced
+- No PR coverage comment bots or gates
+- No coverage trend tracking across time
+- Java Jacoco reports generated but not uploaded or enforced
+
+### CI/CD Automation
+
+**Score: 8.5/10**
+
+**Strengths**:
+- 33 workflow files covering unit tests, integration, E2E, linting, Docker, publishing, nightly CI, and release
+- Concurrency control on all PR-triggered workflows (cancel-in-progress)
+- Caching: uv cache, pixi cache, npm cache, pip cache across workflows
+- Matrix strategies for multi-Python-version and multi-OS testing
+- Nightly CI runs comprehensive integration tests daily at 08:00 UTC (only if commits in last 24h)
+- Separate workflows for different integration test scopes (local, cloud, DuckDB, Ray, RBAC)
+- PR title linting via commitlint enforces semantic commit conventions
+- Pre-commit hooks run in CI via `pre-commit/action`
+- Tekton/Konflux pipelines complement GitHub Actions for downstream builds
+
+**Gaps**:
+- Only 4 workflows have explicit `timeout-minutes` — most can run indefinitely
+- No explicit test parallelization (no `pytest-xdist -n` in CI, though `pytest-xdist` is a dev dependency)
+- Nightly CI concurrency control is commented out due to a known GitHub Actions runner issue
+
+### Static Analysis
+
+**Score: 7.5/10**
+
+#### Linting
+- **Python**: Ruff configured in `pyproject.toml` for formatting and linting (line-length 88, target py310). Pre-commit hooks run ruff check + format on commit and lint on push.
+- **Go Operator**: `.golangci.yml` with 19 linters enabled: dupl, errcheck, ginkgolinter, goconst, gocyclo, govet, ineffassign, lll, misspell, nakedret, prealloc, revive, staticcheck, unconvert, unparam, unused + formatters (gofmt, goimports)
+- **Go Feature Server**: No `.golangci.yml` at root level; uses `gofmt` via Makefile
+- **TypeScript/UI**: No ESLint configuration found
+- **Java**: No explicit linter configuration found (relies on Maven conventions)
+
+#### Pre-commit Hooks
+- `.pre-commit-config.yaml` with:
+  - Ruff format + check on commit
+  - Ruff lint gate on push
+  - Template build validation
+  - Secret detection (detect-secrets with baseline)
+  - Commitlint for commit message format
+
+#### FIPS Compatibility
+- **Build Config** (Positive):
+  - Operator Konflux Dockerfile uses `GOEXPERIMENT=strictfipsruntime` and `-tags strictfipsruntime`
+  - `CGO_ENABLED=1` properly set for FIPS-compliant builds
+  - UBI9 base images (FIPS-capable)
+- **Source Code** (Issues):
+  - `hashlib.md5` used in `sdk/python/feast/infra/online_stores/bigtable.py` (lines 288, 298)
+  - `math/rand` used in `go/internal/feast/onlinestore/dynamodbonlinestore.go` and `go/internal/feast/server/logging/logger.go`
+  - No FIPS build tags in Go feature server build (only in operator)
+
+#### Dependency Alerts
+- **Renovate**: Configured in `.github/renovate.json` extending `red-hat-data-services/konflux-central` defaults
+- **Dependabot**: Not configured (Renovate covers this need)
+
+### Agent Rules
+
+**Score: 9.0/10**
+
+This repository has one of the most comprehensive agent rule configurations observed:
+
+**Files Present**:
+- `CLAUDE.md` — references AGENTS.md
+- `AGENTS.md` — 120-line entry point with project overview, dev commands, skills table, code style, contributing guidelines
+- `.claude/rules/feast-components.md` — component-specific rules with testing, documentation, and skills update checklists
+- `.claude/rules/feast-skills-maintenance.md` — meta-rules for keeping skills synchronized with the codebase
+- `.cursor/rules/feast-components.mdc` — mirror of Claude rules for Cursor
+- `.cursor/rules/feast-skills-maintenance.mdc` — mirror for Cursor
+
+**Skills** (4 comprehensive skills in `skills/` and `.claude/skills/`):
+1. `feast-user-guide` — Feast user workflow (features, CLI, RAG)
+2. `feast-dev` — contributor workflow (setup, tests, PR process)
+3. `feast-architecture` — component internals and data flows
+4. `feast-testing` — test patterns, debugging, targeted test execution
+
+**Reference Docs** (3 reference files in `skills/references/`):
+- `configuration.md`, `feature-definitions.md`, `retrieval-and-rag.md`
+
+**Strengths**:
+- Tool-agnostic skills (compatible with Claude Code, Codex, other agents)
+- Cross-IDE rule sync (`.claude/rules/` and `.cursor/rules/` kept in parity)
+- Skills cover all major use cases: user guide, development, architecture, testing
+- Skills-maintenance meta-rule ensures skills stay up-to-date with code changes
+- Reference docs provide quick lookup for common operations
+
+**Gaps**:
+- No explicit rules for integration test patterns or E2E test creation
+- Skills are all read-only reference material; no interactive skill workflows
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add codecov/coveralls integration** — Python unit tests already generate coverage data via pytest. Add coverage upload to `unit_tests.yml` and create `.codecov.yml` with minimum thresholds (recommend 70% for Python, 50% for Go as starting point).
+1. **Add Python coverage tracking**: Add `pytest-cov` with `--cov=feast --cov-report=xml` to `unit_tests.yml` and configure codecov upload. This is the single highest-impact improvement.
 
-2. **Add container vulnerability scanning** — Add Trivy or Snyk scanning to `docker_smoke_tests.yml` after image build. Upload SARIF results to GitHub Security tab.
+2. **Configure .codecov.yml**: Set project coverage target (70%) and patch coverage target (80%) with PR comment reporting.
 
-3. **Fix integration test fork conditions** — All integration test workflows check `github.repository == 'feast-dev/feast'`. The downstream `red-hat-data-services/feast` fork never runs these. Either:
-   - Add `|| github.repository == 'red-hat-data-services/feast'` to conditions
-   - Or use `github.event.pull_request.base.repo.full_name` with both repo names
-   - Or remove the repo check entirely and rely on label-gating for security
+3. **Fix FIPS-prohibited hashlib.md5**: Replace `hashlib.md5` with `hashlib.sha256` in `sdk/python/feast/infra/online_stores/bigtable.py`. Ensure hash truncation still produces sufficient uniqueness.
+
+4. **Fix FIPS-prohibited math/rand**: Replace `math/rand` imports in Go source files with `crypto/rand` for production code paths. Test files using `math/rand` for data generation are acceptable.
 
 ### Priority 1 (High Value)
 
-4. **Add Go coverage reporting** — Go feature server and operator should track coverage. Operator already generates `cover.out` — upload to codecov with Go flags.
+5. **Auto-trigger Konflux builds on PRs**: Change Tekton annotations from `on-label`/`on-comment` to automatic `on-event: [pull_request]` for critical paths, or at minimum add a required check in branch protection.
 
-5. **Enforce security scan results** — Remove `continue-on-error: true` from safety scan and govulncheck, or add explicit severity thresholds that allow known-acceptable vulnerabilities.
+6. **Add timeout-minutes to all PR workflows**: Most workflows lack timeouts. Add `timeout-minutes: 30` (or appropriate value) to prevent stuck jobs.
 
-6. **Add SBOM generation** — Add Syft or similar SBOM generation to image build workflows for supply chain transparency.
+7. **Enable pytest-xdist in CI**: The `pytest-xdist` dependency exists but isn't used in CI. Add `-n auto` flag to parallelize Python tests.
 
-7. **Add unit test creation rules** — Create `.claude/rules/unit-tests.md` with concrete pytest patterns, fixture usage, mock strategies, and naming conventions derived from existing tests.
+8. **Add Go operator coverage enforcement**: Add coverage threshold check to `infra/feast-operator/Makefile` test target (e.g., `go tool cover -func=cover.out | grep total | awk '{if ($3+0 < 70) exit 1}'`).
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add performance regression testing** — Benchmark tests run on master but results are only uploaded to S3. Add comparison logic to detect regressions.
+9. **Add ruff lint rules**: Configure `[tool.ruff.lint]` section with explicit rule selection (e.g., E, F, I, N, W, UP rules).
 
-9. **Add contract tests** — Python SDK ↔ Go feature server protocol conformance tests to catch serialization mismatches.
+10. **Add root-level .golangci.yml for Go feature server**: The Go feature server code under `go/` has no golangci-lint config, unlike the operator.
 
-10. **Add chaos/resilience testing** — Operator reconciliation under adverse conditions (pod kills, network partitions).
+11. **Add UI test coverage**: The TypeScript UI has 225 source files but only 3 test files. Add tests for key components.
 
-11. **Add integration test creation rules** — Document fixture patterns from `feature_repos/`, environment setup, and cleanup patterns for AI agents.
+12. **Add contract tests**: Consider adding contract tests for the Python-to-Go feature server API boundary.
 
 ## Comparison to Gold Standards
 
 | Dimension | feast | odh-dashboard | notebooks | kserve |
 |-----------|-------|---------------|-----------|--------|
-| Unit Tests | 8.5 | 9.0 | 7.0 | 9.0 |
-| Integration/E2E | 8.0 | 9.0 | 7.0 | 9.0 |
-| Build Integration | 7.0 | 8.0 | 8.0 | 7.0 |
-| Image Testing | 7.5 | 7.0 | 9.5 | 7.0 |
-| Coverage Tracking | 4.0 | 8.0 | 5.0 | 9.0 |
-| CI/CD Automation | 8.5 | 9.0 | 8.0 | 8.0 |
-| Agent Rules | 8.0 | 8.5 | 3.0 | 3.0 |
-| **Overall** | **7.4** | **8.4** | **6.8** | **7.4** |
+| Unit Tests | 8.5 | 9.0 | 7.0 | 8.5 |
+| Integration/E2E | 8.0 | 8.5 | 7.5 | 9.0 |
+| Build Integration | 7.5 | 8.0 | 8.5 | 7.5 |
+| Image Testing | 7.5 | 7.0 | 9.0 | 7.0 |
+| Coverage Tracking | 4.0 | 8.5 | 6.0 | 8.5 |
+| CI/CD Automation | 8.5 | 9.0 | 8.0 | 8.5 |
+| Static Analysis | 7.5 | 8.0 | 7.0 | 7.5 |
+| Agent Rules | 9.0 | 8.0 | 3.0 | 4.0 |
+| **Overall** | **7.4** | **8.4** | **7.2** | **7.8** |
 
 **Key Differentiators**:
-- Feast has the best agent rules infrastructure of any analyzed repo (4 skills, 2 rule files, cross-tool support)
-- CI workflow count (32) is exceptionally high — shows investment in automation
-- Test-to-code ratio for operator (1.1) is best-in-class
-- Coverage tracking is the weakest dimension — significantly behind kserve and odh-dashboard
+- Feast has the best agent rules of any analyzed repo — 4 skills with reference docs, cross-IDE sync
+- Feast's CI/CD is comprehensive with 33 workflows but lacks coverage tracking that kserve and odh-dashboard have
+- Image testing is strong with Docker smoke tests but doesn't match notebooks' 5-layer validation approach
+- FIPS compliance is partially addressed (build tags yes, source code has prohibited imports)
 
 ## File Paths Reference
 
-| Category | Key Files |
-|----------|-----------|
-| CI/CD | `.github/workflows/*.yml` (32 workflows) |
-| Tekton/Konflux | `.tekton/odh-feast-operator-pull-request.yaml`, `.tekton/odh-feature-server-pull-request.yaml` |
-| Python Tests | `sdk/python/tests/unit/` (132 files), `sdk/python/tests/integration/` (42 files) |
-| Go Tests | `go/internal/feast/*_test.go` (17 files) |
-| Operator Tests | `infra/feast-operator/internal/controller/*_test.go`, `infra/feast-operator/test/e2e/` |
-| Dockerfiles | `Dockerfiles/Dockerfile.feature-server.konflux`, `Dockerfiles/Dockerfile.feast-operator.konflux` |
-| Linting | `.pre-commit-config.yaml`, `pyproject.toml` (ruff), `infra/feast-operator/.golangci.yml` |
-| Security | `.github/workflows/security.yml`, `.secrets.baseline` |
-| Agent Rules | `AGENTS.md`, `CLAUDE.md`, `.claude/rules/`, `.claude/skills/`, `skills/` |
-| Build Config | `Makefile` (38KB), `pyproject.toml`, `go.mod` |
+### CI/CD
+- `.github/workflows/unit_tests.yml` — Python & Go & TS unit tests
+- `.github/workflows/linter.yml` — Ruff linting + pre-commit
+- `.github/workflows/lint_pr.yml` — PR title validation
+- `.github/workflows/pr_integration_tests.yml` — Full integration tests
+- `.github/workflows/pr_local_integration_tests.yml` — Local integration with containers
+- `.github/workflows/pr_duckdb_integration_tests.yml` — DuckDB offline store tests
+- `.github/workflows/pr_ray_integration_tests.yml` — Ray compute engine tests
+- `.github/workflows/pr_registration_integration_tests.yml` — Feature registration tests
+- `.github/workflows/pr_remote_rbac_integration_tests.yml` — RBAC tests
+- `.github/workflows/operator_pr.yml` — Operator unit tests
+- `.github/workflows/operator-e2e-integration-tests.yml` — Operator E2E with Kind
+- `.github/workflows/registry-rest-api-tests.yml` — REST API tests with Kind
+- `.github/workflows/docker_smoke_tests.yml` — Docker image smoke tests
+- `.github/workflows/smoke_tests.yml` — Basic import smoke tests
+- `.github/workflows/nightly-ci.yml` — Nightly comprehensive CI
+- `.github/workflows/master_only.yml` — Post-merge integration tests
+- `.tekton/odh-feast-operator-pull-request.yaml` — Konflux operator build
+- `.tekton/odh-feature-server-pull-request.yaml` — Konflux feature-server build
+
+### Testing
+- `sdk/python/tests/unit/` — Python unit tests (~160+ files)
+- `sdk/python/tests/integration/` — Python integration tests (16 subdirectories)
+- `go/internal/feast/` — Go feature server tests
+- `infra/feast-operator/internal/controller/` — Operator controller tests (envtest)
+- `infra/feast-operator/test/e2e/` — Operator E2E tests (Kind)
+- `infra/feast-operator/test/api/` — API type tests
+- `java/serving/src/test/` — Java serving tests
+
+### Static Analysis
+- `.pre-commit-config.yaml` — Ruff format/lint, detect-secrets, commitlint
+- `pyproject.toml` — Ruff config (format + lint)
+- `infra/feast-operator/.golangci.yml` — 19-linter golangci-lint config
+- `.github/renovate.json` — Renovate dependency management
+- `.commitlintrc.yaml` — Semantic commit format rules
+
+### Container Images
+- `Dockerfiles/Dockerfile.feast-operator.konflux` — Operator Konflux Dockerfile (UBI9, FIPS-enabled)
+- `Dockerfiles/Dockerfile.feature-server.konflux` — Feature-server Konflux Dockerfile (UBI9, multi-stage)
+- `.dockerignore` — Docker build exclusions
+
+### Agent Rules
+- `CLAUDE.md` — Agent entry point (references AGENTS.md)
+- `AGENTS.md` — Comprehensive agent instructions
+- `.claude/rules/feast-components.md` — Component change checklists
+- `.claude/rules/feast-skills-maintenance.md` — Skills sync rules
+- `.claude/skills/feast-architecture/SKILL.md` — Architecture internals
+- `.claude/skills/feast-testing/SKILL.md` — Test patterns
+- `.claude/skills/feast-dev/SKILL.md` — Dev workflow
+- `.claude/skills/feast-user-guide/SKILL.md` — User guide
+- `skills/references/` — Quick reference docs

@@ -341,6 +341,36 @@ const EXCLUDED_PHASES = new Set([600, 1000]) // Maintenance, Unsupported
 
 const RELEASE_MILESTONE_PATTERN = /\b(EA\d?|GA)\b/i
 
+// Known sub-product shortnames that appear inside umbrella milestone names.
+// Maps uppercase sub-product name → lowercase shortname used in release IDs.
+const KNOWN_SUB_PRODUCTS = {
+  RHOAI: 'rhoai',
+  RHELAI: 'rhelai',
+  RHAII: 'rhaii',
+  RHAIIS: 'rhaiis'
+}
+
+/**
+ * Extracts a sub-product shortname from a milestone name, if present.
+ * e.g. "3.5 EA1 RHOAI RELEASE" → "rhoai"
+ *      "3.5 GA RHELAI RELEASE" → "rhelai"
+ *      "rhelai-3.4 EA1 release" → null (rhelai is the parent, not a sub-product embedding)
+ *
+ * Only matches when the parent shortname does NOT already match a known sub-product.
+ */
+function extractSubProduct(milestoneName, parentShortname) {
+  const parentPrefix = (parentShortname || '').replace(/-.*$/, '').toUpperCase()
+  // If the parent IS already a known sub-product, no extraction needed
+  if (KNOWN_SUB_PRODUCTS[parentPrefix]) return null
+
+  const nameUpper = (milestoneName || '').toUpperCase()
+  for (const [subUpper, subLower] of Object.entries(KNOWN_SUB_PRODUCTS)) {
+    const re = new RegExp('\\b' + subUpper + '\\b')
+    if (re.test(nameUpper)) return subLower
+  }
+  return null
+}
+
 /**
  * Expands a single Product Pages release into discrete EA/GA entries when
  * the release's major_milestones contain EA1, EA2, GA sub-releases.
@@ -349,6 +379,10 @@ const RELEASE_MILESTONE_PATTERN = /\b(EA\d?|GA)\b/i
  * rhoai-3.4.EA2, rhoai-3.4), so those pass through as a single entry.
  * Products like rhelai and RHAIIS bundle EA/GA as milestones within one
  * release — those get expanded here.
+ *
+ * Umbrella products (e.g. rhai) embed sub-product names in milestone names
+ * (e.g. "3.5 EA1 RHOAI RELEASE"). These get expanded with per-sub-product
+ * release IDs (rhoai-3.5.EA1) instead of the parent shortname.
  */
 function expandReleaseMilestones(r, productName) {
   const milestones = r.major_milestones
@@ -366,10 +400,13 @@ function expandReleaseMilestones(r, productName) {
     // Matches "rhelai-3.4 GA", "RHAI-3.5 GA Release", but not
     // "rpms release 1 month before the 3.4 GA" (too long) or
     // "RHAII-3.5 GA final RC available" (doesn't end in GA/Release).
+    // Also handles umbrella milestones like "3.5 GA RHOAI RELEASE" where
+    // a sub-product name appears between GA and RELEASE.
     const hasNoEa = !/\bEA\d?\b/i.test(name)
     const isGa = hasNoEa && (
       (/\bGA\s*$/i.test(name) && name.split(/\s+/).length <= 4) ||
-      /\bGA\s+Release\s*$/i.test(name)
+      /\bGA\s+Release\s*$/i.test(name) ||
+      /\bGA\s+[A-Z]+\s+RELEASE\s*$/i.test(name)
     )
     return isEaRelease || isGa
   })
@@ -390,8 +427,11 @@ function expandReleaseMilestones(r, productName) {
   return [...byNumber.entries()].map(([releaseNumber, m]) => {
     const eaMatch = (m.name || '').match(/\b(EA\d?)\b/i)
     const eaTag = eaMatch ? eaMatch[1] : null
+    // For umbrella products, use sub-product name if available
+    const subProduct = extractSubProduct(m.name, r.shortname)
+    const entryProductName = subProduct ? subProduct.toUpperCase() : productName
     return {
-      productName,
+      productName: entryProductName,
       releaseNumber,
       dueDate: m.date_finish,
       codeFreezeDate: extractCodeFreezeDate(r, eaTag) || null,
@@ -402,27 +442,119 @@ function expandReleaseMilestones(r, productName) {
 }
 
 /**
+ * Matches a freeze date from schedule-tasks for a specific release entry.
+ *
+ * Schedule task names follow the pattern: "{version} {phase} {product} {type} Freeze"
+ * e.g. "3.5 GA RHOAI Feature Freeze", "3.5 EA1 RHOAI Code Freeze"
+ *
+ * When the release is from an umbrella product (e.g. "rhai") whose prefix doesn't
+ * appear in task names (tasks use sub-product names like RHOAI, RHAII), falls back
+ * to matching by phase + freeze type only and returns the earliest date.
+ *
+ * @param {Array} tasks  Schedule tasks from /api/v7/releases/{id}/schedule-tasks/
+ * @param {string} releaseNumber  e.g. "rhoai-3.5.EA1", "rhoai-3.5"
+ * @param {string} freezeType  "feature", "code", or "planning"
+ * @returns {string|null} Date string (YYYY-MM-DD) or null
+ */
+function matchScheduleFreezeDate(tasks, releaseNumber, freezeType) {
+  const freezeRe = new RegExp(freezeType + '[.\\-_\\s]*freeze', 'i')
+
+  // Extract product prefix and phase from release number
+  // Handles: rhoai-3.5.EA1, rhoai-3.5.z.EA1, rhoai-3.5, RHAII-3.5.z
+  const productMatch = releaseNumber.match(/^([a-zA-Z]+)-/)
+  if (!productMatch) return null
+  const productUpper = productMatch[1].toUpperCase()
+
+  const eaMatch = releaseNumber.match(/\.(EA\d?)\s*$/i)
+  const phase = eaMatch ? eaMatch[1].toUpperCase() : 'GA'
+  const phaseRe = new RegExp('\\b' + phase + '\\b', 'i')
+
+  // First pass: exact product match
+  for (const task of tasks) {
+    if (task.draft) continue
+    const name = task.name || ''
+    if (!freezeRe.test(name)) continue
+    if (!name.toUpperCase().includes(productUpper)) continue
+    if (!phaseRe.test(name)) continue
+    return task.date_finish || null
+  }
+
+  // Second pass: phase + freeze type only (umbrella products like "rhai"
+  // whose prefix doesn't appear in task names). Pick the earliest date.
+  let earliest = null
+  for (const task of tasks) {
+    if (task.draft) continue
+    const name = task.name || ''
+    if (!freezeRe.test(name)) continue
+    if (!phaseRe.test(name)) continue
+    if (task.date_finish && (!earliest || task.date_finish < earliest)) {
+      earliest = task.date_finish
+    }
+  }
+  return earliest
+}
+
+/**
+ * Fetches schedule tasks for a Product Pages release and returns them.
+ * Uses the nested endpoint: /api/v7/releases/{id}/schedule-tasks/
+ *
+ * @param {number} releaseId  PP release ID
+ * @param {string} baseUrl    PP base URL
+ * @param {object} headers    Request headers with auth
+ * @returns {Promise<Array>}  Schedule task objects
+ */
+async function fetchScheduleTasks(releaseId, baseUrl, headers) {
+  try {
+    const url = `${baseUrl}/api/v7/releases/${releaseId}/schedule-tasks/`
+    const resp = await fetch(url, { headers, signal: AbortSignal.timeout(15000) })
+    if (!resp.ok) {
+      console.warn(`[product-pages] Schedule tasks API returned HTTP ${resp.status} for release ${releaseId}`)
+      return []
+    }
+    const payload = await resp.json()
+    return Array.isArray(payload) ? payload : (payload.data || payload.results || [])
+  } catch (err) {
+    console.warn(`[product-pages] Schedule tasks fetch failed for release ${releaseId}:`, err.message)
+    return []
+  }
+}
+
+/**
  * Derives a release number from the parent shortname and milestone name.
  * e.g. (rhelai-3.4, "rhelai-3.4 EA1 release") → "rhelai-3.4.EA1"
  *      (rhelai-3.4, "rhelai-3.4 GA") → "rhelai-3.4"
  *      (RHAIIS-3.4, "rhaiis-3.4 EA2 GA") → "RHAIIS-3.4.EA2"
  *
+ * For umbrella products (e.g. rhai), extracts the sub-product name from the
+ * milestone name and uses it as the prefix instead of the parent shortname:
+ *      (rhai-3.5, "3.5 EA1 RHOAI RELEASE") → "rhoai-3.5.EA1"
+ *      (rhai-3.5, "3.5 GA RHOAI RELEASE") → "rhoai-3.5"
+ *
  * Prevents duplicate EA tags when shortname already includes the EA suffix.
  */
 function milestoneToReleaseNumber(shortname, milestoneName) {
+  // Check for sub-product embedding (umbrella products)
+  const subProduct = extractSubProduct(milestoneName, shortname)
+  let base = shortname
+  if (subProduct) {
+    // Replace parent prefix with sub-product prefix, preserving version
+    const versionMatch = shortname.match(/-(.+)$/)
+    const version = versionMatch ? versionMatch[1] : ''
+    base = `${subProduct}-${version}`
+  }
+
   const eaMatch = milestoneName.match(/\b(EA\d?)\b/i)
   if (eaMatch) {
     const eaTag = eaMatch[1].toUpperCase()
-    // Check if shortname already ends with this EA tag (case-insensitive)
-    const endsWithEa = new RegExp(`[.\\-_]${eaTag}$`, 'i').test(shortname)
+    // Check if base already ends with this EA tag (case-insensitive)
+    const endsWithEa = new RegExp(`[.\\-_]${eaTag}$`, 'i').test(base)
     if (endsWithEa) {
-      // Already has the EA tag, return as-is
-      return shortname
+      return base
     }
-    return `${shortname}.${eaTag}`
+    return `${base}.${eaTag}`
   }
-  // GA milestone → use the parent shortname as-is
-  return shortname
+  // GA milestone → use the base shortname as-is
+  return base
 }
 
 /**
@@ -483,6 +615,24 @@ async function fetchProductsByShortname(shortnames, config) {
         // Try to expand into discrete EA/GA entries from milestones
         const expanded = expandReleaseMilestones(r, productName)
         if (expanded) {
+          // Enrich with schedule-tasks if any entry is missing freeze dates
+          const missingFreeze = expanded.some(e => e.dueDate && (!e.featureFreezeDate || !e.planningFreezeDate))
+          if (missingFreeze && r.id) {
+            const tasks = await fetchScheduleTasks(r.id, baseUrl, {
+              Accept: 'application/json',
+              Authorization: `Bearer ${token}`
+            })
+            if (tasks.length > 0) {
+              for (const entry of expanded) {
+                if (!entry.featureFreezeDate) {
+                  entry.featureFreezeDate = matchScheduleFreezeDate(tasks, entry.releaseNumber, 'feature')
+                }
+                if (!entry.planningFreezeDate) {
+                  entry.planningFreezeDate = matchScheduleFreezeDate(tasks, entry.releaseNumber, 'planning')
+                }
+              }
+            }
+          }
           for (const entry of expanded) {
             if (entry.dueDate) {
               entry._expanded = true
@@ -499,13 +649,32 @@ async function fetchProductsByShortname(shortnames, config) {
         const releaseNumber = r.shortname || r.name || ''
         const eaMatch = releaseNumber.match(/\b(EA\d?)\b/i)
         const eaTag = eaMatch ? eaMatch[1] : null
+        let featureFreezeDate = extractFeatureFreezeDate(r, eaTag) || null
+        let planningFreezeDate = extractPlanningFreezeDate(r, eaTag) || null
+
+        // Enrich from schedule-tasks if freeze dates are missing
+        if ((!featureFreezeDate || !planningFreezeDate) && r.id) {
+          const tasks = await fetchScheduleTasks(r.id, baseUrl, {
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`
+          })
+          if (tasks.length > 0) {
+            if (!featureFreezeDate) {
+              featureFreezeDate = matchScheduleFreezeDate(tasks, releaseNumber, 'feature')
+            }
+            if (!planningFreezeDate) {
+              planningFreezeDate = matchScheduleFreezeDate(tasks, releaseNumber, 'planning')
+            }
+          }
+        }
+
         releases.push({
           productName,
           releaseNumber,
           dueDate,
           codeFreezeDate: extractCodeFreezeDate(r, eaTag) || null,
-          featureFreezeDate: extractFeatureFreezeDate(r, eaTag) || null,
-          planningFreezeDate: extractPlanningFreezeDate(r, eaTag) || null
+          featureFreezeDate,
+          planningFreezeDate
         })
       }
     } catch (err) {
@@ -698,8 +867,8 @@ async function fetchFeatureFreezeDatesFromSchedule(portfolioVersion, productShor
 
       console.log(`[product-pages] Found release entity ${releaseId} ("${matchedShortname}") for "${shortname}", exactEa=${matchedExactEa}`)
 
-      // Fetch schedule tasks filtered to "feature freeze"
-      const schedUrl = `${baseUrl}/api/v7/schedule-tasks/?entity_id=${releaseId}&q=${encodeURIComponent('feature freeze')}`
+      // Fetch schedule tasks for this release
+      const schedUrl = `${baseUrl}/api/v7/releases/${releaseId}/schedule-tasks/`
       const schedResponse = await fetch(schedUrl, { headers, signal: AbortSignal.timeout(15000) })
       if (!schedResponse.ok) {
         console.warn(`[product-pages] Schedule tasks API returned HTTP ${schedResponse.status} for entity ${releaseId}`)
@@ -837,7 +1006,7 @@ async function fetchPlanningFreezeDatesFromSchedule(portfolioVersion, productSho
         continue
       }
 
-      const schedUrl = `${baseUrl}/api/v7/schedule-tasks/?entity_id=${releaseId}&q=${encodeURIComponent('planning freeze')}`
+      const schedUrl = `${baseUrl}/api/v7/releases/${releaseId}/schedule-tasks/`
       const schedResponse = await fetch(schedUrl, { headers, signal: AbortSignal.timeout(15000) })
       if (!schedResponse.ok) {
         console.warn(`[product-pages] Schedule tasks API returned HTTP ${schedResponse.status} for entity ${releaseId} (planning freeze)`)
@@ -911,5 +1080,8 @@ module.exports = {
   extractPlanningFreezeDate,
   expandReleaseMilestones,
   milestoneToReleaseNumber,
+  matchScheduleFreezeDate,
+  fetchScheduleTasks,
+  extractSubProduct,
   _resetForTesting
 }

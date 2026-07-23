@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 05:14 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 06:35 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/odh-gitops</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="158.336136"
+                                stroke-dashoffset="186.61044599999997"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.2</div>
+                        <div class="score-value">6.7</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Helm snapshot testing (27 snapshots) covers chart rendering; no traditional unit tests (config repo, not application code)</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">33 Helm snapshot tests across 7 charts; no programmatic unit tests (expected for config repo)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Tekton pipelines provision real OCP clusters for validation; Kind-based E2E for XKS chart with multi-cloud matrix</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Kind-based E2E across 3 cloud providers with upgrade tests; Tekton cluster validation on real OCP</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">PR-time Kustomize build + kube-linter + Helm lint + chart-testing; Tekton cluster validation on PRs</div>
+                            <div class="scorecard-status">PR-time YAML/Kustomize/kube-linter validation, Helm chart linting, snapshot tests, and real OCP cluster validation via Tekton</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No container images built by this repo; no image scanning or runtime validation (not directly applicable)</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">GitOps config repo — no container images built; no validation of referenced operator images</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">No coverage metrics, no snapshot completeness tracking, no manifest diff analysis</div>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">No coverage tracking; limited applicability for YAML/config repo but no Helm template branch coverage measurement</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Well-structured GitHub Actions + Tekton pipelines with concurrency control, automated bundle syncing, and PR-target gating</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">5 GitHub Actions workflows + 3 Tekton pipelines; matrix testing, concurrency control, scheduled bundle updates, automated PR creation</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">yamllint, kube-linter with custom CEL checks, chart-testing; missing Dependabot and pre-commit hooks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">CLAUDE.md + AGENTS.md present; 4 path-scoped rules in .rules/ covering Helm and Kustomize patterns</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">AGENTS.md + 4 path-scoped .rules/ files covering Helm charts and Kustomize patterns</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +416,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No security scanning of generated Kubernetes manifests</div>
-                            <p>RBAC escalation, privileged containers, or secret exposure in manifests not caught until cluster admission</p>
+                            <div class="item-description">No dependency alert automation (Dependabot/Renovate)</div>
+                            <p>Outdated tool versions and Helm chart dependencies not flagged; security vulnerabilities in referenced images may go undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No OCP 4.20 cluster validation active</div>
-                            <p>API deprecations or behavioral changes in next OCP release not caught pre-merge</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No coverage or completeness metrics for snapshot tests</div>
-                            <p>New value combinations or chart features can ship without snapshot coverage, silent regressions</p>
+                            <div class="item-description">No coverage tracking for Helm template branches</div>
+                            <p>Unknown how much of the Helm template logic is exercised by snapshot tests; untested template branches may produce broken manifests</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No validation of referenced operator container images</div>
+                            <p>Chart references to non-existent or broken container images are only caught at deployment time, not at PR validation</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Missing Helm schema validation in CI</div>
-                            <p>Invalid values.yaml combinations not caught until helm install fails on a real cluster</p>
+                            <div class="item-description">OCP 4.20 Tekton validation disabled</div>
+                            <p>No CI coverage for OCP 4.20 compatibility; regressions on newer OCP versions may go undetected until manual testing</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">3-4 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,32 +461,32 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Enable OCP 4.20 cluster validation pipeline</div>
-                            <p>Forward-compatibility testing for next OCP release (pipeline already exists, just commented out)</p>
+                            <div class="item-description">Add .github/dependabot.yml for GitHub Actions version updates</div>
+                            <p>Automated PRs for outdated GitHub Actions, keeping CI secure and up-to-date</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add pre-commit hooks for yamllint and kube-linter</div>
+                            <p>Catch linting issues locally before pushing, reducing CI failures</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Kubescape or Checkov scanning to PR workflow</div>
-                            <p>Catch security misconfigurations in generated manifests before merge</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add helm template --validate against target API versions</div>
-                            <p>Catch deprecated API usage in chart templates automatically</p>
+                            <div class="item-description">Enable OCP 4.20 Tekton pipeline</div>
+                            <p>Extend multi-version OCP validation coverage to next release</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add agent rules for test creation patterns (snapshot tests, verification scripts)</div>
-                            <p>Improve AI-generated test quality for Helm chart and Kustomize changes</p>
+                            <div class="item-description">Add shellcheck to CI for shell script validation</div>
+                            <p>Catch shell scripting bugs in 21 scripts (1,664 lines total) before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -501,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add security scanning (Kubescape/Checkov/Polaris) for rendered Kustomize and Helm manifests in PR workflow</li><li>Enable OCP 4.20 cluster validation pipeline (already scaffolded in .tekton/cluster-validation-ocp-4.20.yaml)</li></ul>
+                            <ul><li>Add .github/dependabot.yml covering github-actions ecosystem to keep CI actions up-to-date</li><li>Enable OCP 4.20 Tekton cluster validation pipeline (currently commented out)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add snapshot completeness tracking — ensure every values.yaml key has at least one snapshot exercising it</li><li>Add helm template --validate to catch deprecated APIs before merge</li><li>Add test rules for AI agents covering snapshot test patterns, verification script patterns, and kustomization patterns</li></ul>
+                            <ul><li>Add pre-commit hooks (.pre-commit-config.yaml) for yamllint, kube-linter, and shellcheck</li><li>Add CI step to validate referenced container image tags exist in registries</li><li>Add Helm template coverage analysis to measure snapshot test completeness</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add automated RBAC diff analysis on PRs to flag privilege escalation</li><li>Add Helm values.schema.json validation tests for invalid value combinations</li><li>Consider adding a pre-commit hook for yamllint and kustomize build</li></ul>
+                            <ul><li>Add AWS cloud provider to upgrade tests (currently only azure and coreweave)</li><li>Add schema validation for values.yaml against values.schema.json in CI</li><li>Consider adding OPA/Gatekeeper policy tests for generated Kubernetes manifests</li></ul>
                         </div>
                     </div>
                 </div>

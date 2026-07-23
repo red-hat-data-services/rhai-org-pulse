@@ -141,7 +141,7 @@ async function writeFeatures(storage, features) {
     for (let i = 0; i < features.length; i++) {
       const feature = features[i];
       if (!feature.key) continue;
-      storage.writeToStorage(
+      await storage.writeToStorage(
         DATA_PREFIX + '/features/' + feature.key + '.json',
         feature
       );
@@ -160,9 +160,9 @@ async function writeFeatures(storage, features) {
  * @param {object} storage - Storage abstraction
  */
 async function rebuildIndex(storage) {
-  const fileNames = storage.listStorageFiles(DATA_PREFIX + '/features');
+  const fileNames = await storage.listStorageFiles(DATA_PREFIX + '/features');
   if (!fileNames || fileNames.length === 0) {
-    storage.writeToStorage(DATA_PREFIX + '/index.json', {
+    await storage.writeToStorage(DATA_PREFIX + '/index.json', {
       fetchedAt: new Date().toISOString(),
       schemaVersion: 'v2',
       featureCount: 0,
@@ -177,7 +177,7 @@ async function rebuildIndex(storage) {
     const fileName = fileNames[i];
     if (!fileName.endsWith('.json')) continue;
 
-    const feature = storage.readFromStorage(DATA_PREFIX + '/features/' + fileName);
+    const feature = await storage.readFromStorage(DATA_PREFIX + '/features/' + fileName);
     if (!feature || !feature.key) continue;
 
     // Map detail fields to index summary fields
@@ -226,7 +226,7 @@ async function rebuildIndex(storage) {
     features.push(indexEntry);
   }
 
-  storage.writeToStorage(DATA_PREFIX + '/index.json', {
+  await storage.writeToStorage(DATA_PREFIX + '/index.json', {
     fetchedAt: new Date().toISOString(),
     schemaVersion: 'v2',
     featureCount: features.length,

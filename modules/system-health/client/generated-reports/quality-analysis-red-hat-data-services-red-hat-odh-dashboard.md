@@ -1,448 +1,555 @@
 ---
 repository: "red-hat-data-services/red-hat-odh-dashboard"
-overall_score: 5.2
+overall_score: 5.5
 scorecard:
   - dimension: "Unit Tests"
-    score: 6.0
-    status: "167 frontend spec files with Jest/RTL, but only 3 backend tests and no coverage thresholds"
+    score: 7.0
+    status: "170 Jest specs with strong mock infrastructure (103 mock files), 11% test-to-code ratio"
   - dimension: "Integration/E2E"
     score: 7.0
-    status: "72 Cypress tests (56 mocked + 16 e2e) with page object pattern and intercept snapshots"
+    status: "72 Cypress tests (56 mocked + 16 E2E) with page object pattern and accessibility testing"
   - dimension: "Build Integration"
-    score: 2.0
-    status: "No PR-time image build, no Konflux simulation, no kustomize validation"
-  - dimension: "Image Testing"
-    score: 3.0
-    status: "Multi-stage Dockerfiles with UBI base but no scanning, no runtime validation"
-  - dimension: "Coverage Tracking"
     score: 4.0
-    status: "Codecov configured but informational-only, no enforced thresholds, 70% patch target not blocking"
+    status: "Dockerfile and Kustomize manifests present but no PR-time build validation in CI"
+  - dimension: "Image Testing"
+    score: 4.0
+    status: "Multi-stage UBI Dockerfile with multi-arch Makefile target but no runtime validation"
+  - dimension: "Coverage Tracking"
+    score: 7.0
+    status: "Codecov with merged Jest+Cypress coverage but informational-only (no enforcement)"
   - dimension: "CI/CD Automation"
     score: 5.0
-    status: "Single test workflow with caching, but no concurrency control, no security scanning, minimal workflows"
+    status: "Single test workflow with caching, missing concurrency, timeouts, and parallelization"
+  - dimension: "Static Analysis"
+    score: 6.0
+    status: "Comprehensive ESLint with strict TypeScript, but Dependabot only covers GitHub Actions"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No .claude directory, no CLAUDE.md, no AGENTS.md, no test creation rules"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory present"
 critical_gaps:
-  - title: "No security scanning in CI"
-    impact: "Vulnerabilities in dependencies and container images go undetected until downstream Konflux pipeline"
+  - title: "No PR-time build validation"
+    impact: "Docker image build failures discovered only after merge in Konflux; broken kustomize overlays not caught until deployment"
     severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No PR-time container image build or validation"
-    impact: "Dockerfile/Konflux build failures discovered only after merge"
+    effort: "8-12 hours"
+  - title: "Coverage enforcement is informational-only"
+    impact: "Coverage can regress without blocking PRs; 50-70% target range is not enforced"
     severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "Coverage is informational-only, no enforcement"
-    impact: "Coverage can drop without blocking PRs — regressions accumulate silently"
+    effort: "2-4 hours"
+  - title: "No container runtime validation"
+    impact: "Image startup issues, missing dependencies, and runtime errors not caught until deployment"
     severity: "HIGH"
-    effort: "2-3 hours"
-  - title: "Backend has only 3 test files for 98 source files"
-    impact: "Fastify route handlers, middleware, and K8s proxy logic are largely untested"
-    severity: "HIGH"
-    effort: "20-40 hours"
-  - title: "No kustomize/manifest validation on PR"
-    impact: "Broken kustomize overlays (ODH/RHOAI) discovered only at deployment time"
+    effort: "6-8 hours"
+  - title: "Dependabot only covers GitHub Actions ecosystem"
+    impact: "npm dependency vulnerabilities and updates not automatically tracked or reported"
     severity: "MEDIUM"
-    effort: "4-6 hours"
-  - title: "No pre-commit hooks"
-    impact: "Lint and format issues caught only in CI, increasing review cycle time"
+    effort: "1-2 hours"
+  - title: "No CI concurrency controls or timeouts"
+    impact: "Duplicate CI runs waste resources; hung workflows can block PRs indefinitely"
     severity: "MEDIUM"
     effort: "1-2 hours"
 quick_wins:
-  - title: "Add concurrency control to test workflow"
+  - title: "Expand Dependabot to cover npm ecosystem"
     effort: "30 minutes"
-    impact: "Cancel superseded runs to save CI minutes and reduce queue time"
-  - title: "Switch Codecov from informational to blocking"
+    impact: "Automated npm security and dependency updates with PR generation"
+  - title: "Add concurrency controls and timeout-minutes to test workflow"
     effort: "1 hour"
-    impact: "Prevent coverage regressions from being merged"
-  - title: "Add Trivy container scanning to PR workflow"
+    impact: "Prevents duplicate runs and hung workflows from blocking PRs"
+  - title: "Enable coverage enforcement (remove informational flag)"
+    effort: "1 hour"
+    impact: "Prevents test coverage regressions on PRs"
+  - title: "Add PR-time Docker build step to test.yml"
+    effort: "2-3 hours"
+    impact: "Catches Dockerfile and build errors before merge"
+  - title: "Add pre-commit hooks for linting and formatting"
     effort: "2 hours"
-    impact: "Catch CVEs in base images and dependencies before merge"
-  - title: "Add pre-commit hooks for lint and format"
-    effort: "1-2 hours"
-    impact: "Shift-left lint failures, reduce CI feedback loops"
-  - title: "Add PR-time Docker build smoke test"
+    impact: "Catches lint/format issues locally before pushing"
+  - title: "Create basic CLAUDE.md with test patterns and coding standards"
     effort: "2-3 hours"
-    impact: "Validate that the image builds successfully before merge"
-  - title: "Create basic agent rules for test patterns"
-    effort: "2-3 hours"
-    impact: "Enable AI-assisted test generation with consistent patterns"
+    impact: "Improves AI-generated code and test quality, consistency across contributors"
 recommendations:
   priority_0:
-    - "Add container vulnerability scanning (Trivy/Snyk) to the PR workflow"
-    - "Enforce Codecov coverage thresholds — switch from informational to required checks"
-    - "Add PR-time Docker image build validation to catch build regressions pre-merge"
+    - "Add PR-time Docker image build validation to the test workflow to catch build failures before merge"
+    - "Enable coverage enforcement by removing informational: true from .codecov.yml"
+    - "Expand Dependabot configuration to include npm ecosystem alongside github-actions"
   priority_1:
-    - "Expand backend test coverage — add tests for route handlers, middleware, and K8s proxy"
-    - "Add kustomize build validation for ODH and RHOAI overlays in CI"
-    - "Add CodeQL/SAST scanning workflow for static analysis"
-    - "Create comprehensive agent rules for test automation (.claude/rules/)"
+    - "Add container runtime validation (image startup test, health check) in CI"
+    - "Add concurrency controls and timeout-minutes to all CI workflows"
+    - "Create comprehensive CLAUDE.md with Jest/Cypress test patterns and coding standards"
+    - "Add kustomize build validation step to PR workflow"
   priority_2:
-    - "Add accessibility testing enforcement (cypress-axe is installed but underutilized)"
-    - "Add pre-commit hooks via .pre-commit-config.yaml"
-    - "Add performance testing for frontend bundle size regression detection"
-    - "Add secret detection (Gitleaks) to CI pipeline"
+    - "Add pre-commit hooks for ESLint and Prettier enforcement"
+    - "Add multi-version Node.js testing matrix (18.x, 20.x)"
+    - "Add contract testing for backend API boundaries"
+    - "Add HEALTHCHECK instruction to Dockerfiles"
 ---
 
-# Quality Analysis: red-hat-odh-dashboard
+# Quality Analysis: red-hat-data-services/red-hat-odh-dashboard
 
 ## Executive Summary
 
-- **Overall Score: 5.2/10**
-- **Repository Type**: TypeScript/React web application (downstream Red Hat fork of opendatahub-io/odh-dashboard)
-- **Architecture**: Frontend (React 18 + PatternFly 6) + Backend (Fastify + Node.js 18)
-- **Key Strengths**: Well-structured Cypress test suite with page object pattern, strong frontend ESLint configuration, mocked + e2e test separation, Codecov integration
-- **Critical Gaps**: No security scanning, no PR-time image build validation, coverage thresholds not enforced, backend nearly untested, no agent rules
-- **Agent Rules Status**: Missing — no `.claude/` directory or `CLAUDE.md`
+- **Overall Score: 5.5/10**
+- **Repository Type**: TypeScript/React web application (downstream fork of opendatahub-io/odh-dashboard)
+- **Stack**: React 18 + PatternFly 6 frontend, Fastify 4 Node.js backend
+- **Tier**: Downstream (RHOAIENG / AI Core Dashboard)
+- **Key Strengths**: Comprehensive Cypress test infrastructure with page object pattern, strong ESLint configuration with strict TypeScript, merged Jest+Cypress coverage reporting to Codecov, well-organized Kustomize manifests for ODH/RHOAI
+- **Critical Gaps**: No PR-time build validation, coverage enforcement is informational-only, no container runtime validation, Dependabot only covers GitHub Actions (not npm)
+- **Agent Rules Status**: Missing - No CLAUDE.md, AGENTS.md, or .claude/ directory
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 6.0/10 | 167 frontend spec files with Jest/RTL, but only 3 backend tests |
-| Integration/E2E | 7.0/10 | 72 Cypress tests (56 mocked + 16 e2e) with page objects |
-| **Build Integration** | **2.0/10** | **No PR-time image build, no Konflux simulation** |
-| Image Testing | 3.0/10 | Multi-stage Dockerfiles but no scanning or runtime validation |
-| Coverage Tracking | 4.0/10 | Codecov exists but informational-only, no enforced thresholds |
-| CI/CD Automation | 5.0/10 | Single test workflow with caching, minimal security |
-| Agent Rules | 0.0/10 | No test automation guidance for AI agents |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 7.0/10 | 15% | 1.05 | 170 Jest specs, strong mock infrastructure |
+| Integration/E2E | 7.0/10 | 20% | 1.40 | 72 Cypress tests with page objects + a11y |
+| Build Integration | 4.0/10 | 15% | 0.60 | Dockerfile exists, no PR-time validation |
+| Image Testing | 4.0/10 | 10% | 0.40 | Multi-stage UBI, no runtime validation |
+| Coverage Tracking | 7.0/10 | 10% | 0.70 | Codecov with merged coverage, informational-only |
+| CI/CD Automation | 5.0/10 | 15% | 0.75 | Basic CI with caching, missing controls |
+| Static Analysis | 6.0/10 | 10% | 0.60 | Strong ESLint, weak dependency alerts |
+| Agent Rules | 0.0/10 | 5% | 0.00 | No agent rules present |
+| **Overall** | **5.5/10** | **100%** | **5.50** | |
 
 ## Critical Gaps
 
-### 1. No Security Scanning in CI
-- **Impact**: Vulnerabilities in npm dependencies and UBI8 base images go undetected until the downstream Konflux pipeline or manual auditing
+### 1. No PR-time Build Validation
+- **Impact**: Docker image build failures and kustomize overlay errors are only discovered after merge in Konflux
 - **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: No Trivy, Snyk, CodeQL, or any SAST/DAST integration. Dependabot is configured but only for GitHub Actions ecosystem updates (not npm packages)
+- **Effort**: 8-12 hours
+- **Details**: The test.yml workflow runs linting, type-checking, Jest, and Cypress tests, but never builds the Docker image or validates kustomize manifests. The Dockerfile.konflux sets RHOAI-specific env vars (ODH_LOGO, ODH_PRODUCT_NAME, etc.) that could fail silently. Kustomize overlays for ODH, RHOAI addon, RHOAI onprem, and dev are never validated in CI.
 
-### 2. No PR-time Container Image Build or Validation
-- **Impact**: Dockerfile or Dockerfile.konflux build failures are discovered only after merge, requiring hotfixes
+### 2. Coverage Enforcement is Informational-Only
+- **Impact**: Test coverage can regress freely without blocking PRs
 - **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Details**: The Makefile has `build` and `docker-buildx` targets, but these are not invoked in any CI workflow. The Konflux Dockerfile pins a specific UBI8 digest — stale pins can break silently
+- **Effort**: 2-4 hours
+- **Details**: The `.codecov.yml` sets both `project` and `patch` statuses to `informational: true`, meaning coverage failures never block PRs. The 70% patch target and 50-70% range are merely advisory. Coverage merging (Jest + Cypress) is well-implemented but the results have no teeth.
 
-### 3. Coverage Enforcement is Informational-Only
-- **Impact**: PR coverage can drop without blocking merge — regressions accumulate over time
+### 3. No Container Runtime Validation
+- **Impact**: Image startup issues, missing dependencies, runtime crashes not caught until deployment
 - **Severity**: HIGH
-- **Effort**: 2-3 hours
-- **Details**: `.codecov.yml` sets both `project` and `patch` status to `informational: true`. The patch target of 70% and the 1% threshold are advisory only. No Jest `coverageThreshold` is configured either
+- **Effort**: 6-8 hours
+- **Details**: No HEALTHCHECK instruction in either Dockerfile. No container startup testing. No Testcontainers usage. The runtime stage copies built artifacts but is never validated to actually start correctly.
 
-### 4. Backend is Severely Under-Tested
-- **Impact**: Fastify route handlers, K8s API proxy, authentication middleware, and metrics endpoints have virtually no test coverage
-- **Severity**: HIGH
-- **Effort**: 20-40 hours
-- **Details**: Only 3 spec files (`objUtils`, `imageUtils`, `dockerRepositoryURL`) exist for 98 backend source files (~3% test-to-code ratio). The backend handles critical RHOAI functionality including K8s resource proxying, RBAC, and SSO
-
-### 5. No Kustomize/Manifest Validation on PR
-- **Impact**: Broken kustomize overlays (ODH/RHOAI variants with `params.yaml`, `params.env`, connection types) are discovered only at deployment time
-- **Severity**: MEDIUM
-- **Effort**: 4-6 hours
-- **Details**: The `manifests/` directory contains ODH and RHOAI overlays with kustomization files, but no CI step validates that `kustomize build` succeeds
-
-### 6. No Pre-Commit Hooks
-- **Impact**: Lint and formatting issues are caught only in CI, increasing review cycle time and wasting CI minutes
+### 4. Dependabot Only Covers GitHub Actions
+- **Impact**: npm dependency vulnerabilities are not automatically tracked
 - **Severity**: MEDIUM
 - **Effort**: 1-2 hours
+- **Details**: `.github/dependabot.yml` only configures the `github-actions` ecosystem. The `npm` ecosystem is not covered, leaving frontend and backend npm dependencies without automated update PRs. This is significant for a project with 80+ npm dependencies.
+
+### 5. No CI Concurrency Controls or Timeouts
+- **Impact**: Duplicate workflow runs waste resources; hung workflows can block PRs indefinitely
+- **Severity**: MEDIUM
+- **Effort**: 1-2 hours
+- **Details**: The test.yml workflow has no `concurrency` group configuration and no `timeout-minutes` setting. Multiple pushes to the same PR branch will trigger parallel redundant runs.
 
 ## Quick Wins
 
-### 1. Add Concurrency Control to Test Workflow
-- **Effort**: 30 minutes
-- **Impact**: Cancel superseded PR runs to save CI minutes
-- **Implementation**:
+### 1. Expand Dependabot to npm Ecosystem (30 minutes)
+Add npm ecosystem to `.github/dependabot.yml`:
 ```yaml
-# Add to .github/workflows/test.yml
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
 ```
 
-### 2. Switch Codecov to Blocking Mode
-- **Effort**: 1 hour
-- **Impact**: Prevent coverage regression from being merged
-- **Implementation**:
+### 2. Add Concurrency Controls and Timeouts (1 hour)
+Add to `.github/workflows/test.yml`:
 ```yaml
-# .codecov.yml - change informational to false
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  Tests:
+    timeout-minutes: 30
+```
+
+### 3. Enable Coverage Enforcement (1 hour)
+Update `.codecov.yml` to enforce coverage:
+```yaml
 coverage:
   status:
     project:
       default:
-        informational: false
-        target: auto
-        threshold: 1%
+        target: 50%
+        threshold: 2%
     patch:
       default:
-        informational: false
         target: 70%
 ```
 
-### 3. Add Trivy Container Scanning
-- **Effort**: 2 hours
-- **Impact**: Catch CVEs in UBI8 base images and npm dependencies
-- **Implementation**:
+### 4. Add PR-time Docker Build Step (2-3 hours)
+Add a build job to `.github/workflows/test.yml`:
 ```yaml
-# Add new workflow or step
-- name: Build image for scanning
-  run: docker build -t dashboard:scan .
-- name: Run Trivy vulnerability scanner
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: 'dashboard:scan'
-    format: 'sarif'
-    output: 'trivy-results.sarif'
-    severity: 'CRITICAL,HIGH'
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -f Dockerfile -t test-build .
+      - name: Build Konflux Docker image
+        run: docker build -f Dockerfile.konflux -t test-build-konflux .
 ```
 
-### 4. Add Pre-Commit Hooks
-- **Effort**: 1-2 hours
-- **Impact**: Shift-left lint and format checking
-- **Implementation**:
+### 5. Add Pre-commit Hooks (2 hours)
+Create `.pre-commit-config.yaml`:
 ```yaml
-# .pre-commit-config.yaml
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v8.57.0
     hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
+      - id: eslint
+        files: \.[jt]sx?$
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.1.0
+    rev: v2.2.1
     hooks:
       - id: prettier
-        types_or: [typescript, tsx, json, scss]
 ```
 
-### 5. Add PR-time Docker Build Smoke Test
-- **Effort**: 2-3 hours
-- **Impact**: Catch Dockerfile regressions before merge
-- **Implementation**:
-```yaml
-- name: Build Docker image
-  run: docker build -f Dockerfile -t dashboard:pr-${{ github.event.pull_request.number }} .
-- name: Verify image starts
-  run: |
-    docker run -d --name smoke -p 9090:8080 dashboard:pr-${{ github.event.pull_request.number }}
-    sleep 5
-    curl -sf http://localhost:9090/ || exit 1
-    docker stop smoke
-```
+### 6. Create Basic CLAUDE.md (2-3 hours)
+Create agent rules documenting Jest test patterns, Cypress page object conventions, mock file structure, and PatternFly component standards.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflows Inventory** (4 total — minimal for a project this size):
+**Framework**: Jest 28 with ts-jest  
+**Test Environment**: jest-environment-jsdom (frontend), node (backend)  
+**Test Files**: 170 spec files (167 frontend, 3 backend)  
+**Source Files**: ~1,530 (1,432 frontend + 98 backend)  
+**Test-to-Code Ratio**: ~11% (170/1,530)  
+**Mock Infrastructure**: 103 mock files in `frontend/src/__mocks__/`
+
+**Strengths**:
+- Well-organized mock infrastructure with typed Kubernetes resource mocks (`mockServingRuntimeK8sResource.ts`, `mockRegisteredModel.ts`, etc.)
+- Jest configured with clearMocks: true for proper test isolation
+- Coverage collection configured with appropriate exclusions (third_party, tests, mocks)
+- Module path aliases (`~/` prefix) for clean imports
+- Transform ignore patterns properly configured for ESM dependencies
+- Backend has separate Jest config with ts-jest preset
+
+**Gaps**:
+- Low test-to-code ratio (11%) - industry best practice is 30-50%
+- Only 3 backend test files vs. 98 backend source files (~3% ratio)
+- No snapshot testing utilized
+- No test for TypeScript type correctness beyond tsc --noEmit
+
+**Key Files**:
+- `frontend/jest.config.js` - Frontend Jest configuration
+- `backend/jest.config.js` - Backend Jest configuration
+- `frontend/src/__tests__/unit/jest.setup.ts` - Test setup
+- `frontend/src/__mocks__/` - 103 mock resource files
+
+### Integration/E2E Tests
+
+**Framework**: Cypress 13.x  
+**Mocked Tests**: 56 Cypress test files (testing against built app with mocked backend)  
+**E2E Tests**: 16 Cypress test files (testing against real clusters)  
+**Page Objects**: 30+ page object files organized by feature  
+**Total Cypress Test Files**: ~195 (including support, utils, fixtures)
+
+**Strengths**:
+- Mature page object pattern with dedicated `cypress/pages/` directory
+- Two-tier testing strategy: mocked tests (fast, CI) + E2E tests (real cluster)
+- Accessibility testing with cypress-axe
+- High-resolution viewport testing (1920x1080)
+- JUnit + Mochawesome reporters for CI integration
+- Code coverage via @cypress/code-coverage with istanbul
+- E2E retry configuration (runMode: 2 retries)
+- Video recording with automatic cleanup for passing specs
+- Snapshot recording mode for API response capture
+- WebSocket testing support
+
+**Feature Coverage (Mocked Tests)**:
+- Accelerator profiles, applications, cluster settings
+- Connection types, custom serving runtimes
+- Distributed workloads, model registry, model serving
+- Notebook image settings, pipelines, projects
+- Storage classes, user management
+
+**Feature Coverage (E2E)**:
+- Applications, dashboard navigation
+- Data science pipelines, data science projects
+- Learning resources, settings, storage classes
+
+**Gaps**:
+- No multi-version testing (single Node.js version, no OCP version matrix)
+- No cluster setup in CI (Kind/Minikube) - E2E runs appear to be done separately
+- E2E tests are fewer in number (16) compared to mocked tests (56)
+
+**Key Files**:
+- `frontend/src/__tests__/cypress/cypress.config.ts` - Cypress configuration
+- `frontend/src/__tests__/cypress/cypress/tests/mocked/` - Mocked test suite
+- `frontend/src/__tests__/cypress/cypress/tests/e2e/` - E2E test suite
+- `frontend/src/__tests__/cypress/cypress/pages/` - Page objects
+
+### Build Integration
+
+**Dockerfiles**: `Dockerfile` (ODH), `Dockerfile.konflux` (RHOAI/Konflux)  
+**Build Tool**: Makefile with podman/docker support  
+**Manifests**: Kustomize-based with multiple overlays
+
+**Strengths**:
+- Two Dockerfiles: generic (parameterized base image) and Konflux-specific (pinned UBI digest)
+- Multi-stage builds (builder → runtime) in both Dockerfiles
+- Kustomize manifests well-organized across deployment targets (ODH, RHOAI addon, RHOAI onprem, dev)
+- Multi-arch build support in Makefile (s390x, amd64, ppc64le via docker-buildx)
+- CRD manifests in `manifests/common/crd/`
+- Connection type manifests in `manifests/common/connection-types/`
+
+**Gaps**:
+- No PR-triggered Docker image build in CI workflow
+- No kustomize validation (`kustomize build`) in CI
+- No Konflux build simulation on PRs
+- No manifest dry-run validation (`kubectl apply --dry-run`)
+- Build failures only discovered post-merge in Konflux pipeline
+- No image startup testing after build
+
+**Key Files**:
+- `Dockerfile` - Generic multi-stage build
+- `Dockerfile.konflux` - RHOAI Konflux build with pinned UBI digest
+- `Makefile` - Build, push, deploy targets
+- `manifests/` - Kustomize overlays (10 kustomization.yaml files)
+
+### Image Testing
+
+**Base Image**: UBI8/nodejs-18 (FIPS-capable)  
+**Build**: Multi-stage (builder → runtime)  
+**Multi-arch**: Supported via Makefile
+
+**Strengths**:
+- UBI8 base images (FIPS-capable, Red Hat supported)
+- Konflux Dockerfile uses pinned SHA256 digest for reproducibility
+- Multi-stage build properly separates build-time and runtime dependencies
+- Runtime image only includes production artifacts (public/, dist/, package.json)
+- Proper user setup (USER 1001:0, non-root)
+- Multi-arch support for s390x, amd64, ppc64le
+
+**Gaps**:
+- No HEALTHCHECK instruction in Dockerfiles
+- No container startup validation tests
+- No Testcontainers or similar runtime testing
+- No image scanning or validation step
+- `.dockerignore` exists but is minimal (only 3 entries)
+- No readiness/liveness probe validation
+
+**Key Files**:
+- `Dockerfile` - 36 lines, multi-stage build
+- `Dockerfile.konflux` - 50 lines, RHOAI-branded build
+- `.dockerignore` - Minimal exclusions
+
+### Coverage Tracking
+
+**Tool**: Codecov  
+**Configuration**: `.codecov.yml` with informational-only status  
+**Coverage Sources**: Jest (unit) + Cypress (E2E) merged via istanbul-merge
+
+**Strengths**:
+- Codecov integration with PR reporting
+- Coverage merge pipeline: Jest → jest-coverage/, Cypress → cypress/coverage/, merged → coverage/
+- Jest coverageReporters: json + lcov
+- Cypress coverage via @cypress/code-coverage + istanbul
+- nyc for report generation (HTML + JSON summary)
+- Codecov upload in CI via codecov-action v4.6.0
+- PR comment layout configured (reach, diff, flags, files)
+
+**Gaps**:
+- Both project and patch status are `informational: true` - coverage failures never block PRs
+- Coverage range 50-70% is low for a critical dashboard component
+- Patch target 70% is reasonable but not enforced
+- No branch coverage enforcement
+- fail_ci_if_error: false in the Codecov action
+
+**Key Files**:
+- `.codecov.yml` - Coverage configuration
+- `frontend/jest.config.js` - Jest coverage settings (coverageDirectory, collectCoverageFrom)
+- `frontend/package.json` - Coverage merge scripts
+
+### CI/CD Automation
+
+**Workflows**: 3 total  
+**PR-triggered**: 1 (test.yml on push+pull_request)  
+**Manual**: 1 (create-tag-release.yml on workflow_dispatch)  
+**Event-driven**: 1 (pr-close-image-delete.yml on PR close)
+
+**Workflow Details**:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `test.yml` | push, pull_request | Lint, type-check, Jest, Cypress (mocked), coverage upload |
-| `pr-close-image-delete.yml` | PR closed | Delete Quay image for closed PR |
-| `create-tag-release.yml` | workflow_dispatch | Retag Quay image for ODH releases |
-| `dependabot.yml` | monthly | GitHub Actions ecosystem updates only |
+| test.yml | push, pull_request | Lint, type-check, Jest, Cypress, Codecov upload |
+| create-tag-release.yml | workflow_dispatch | Create Quay tag from existing tag (authorized users only) |
+| pr-close-image-delete.yml | pull_request:closed | Delete PR-specific Quay image |
 
 **Strengths**:
-- Good npm caching strategy (repo, backend, frontend caches with lockfile hashing)
+- Good caching strategy with 3 separate npm cache layers (repo, backend, frontend)
+- Cache keys based on package-lock.json hashes
 - Cypress results uploaded as artifacts
-- Coverage uploaded to Codecov
-- Checks for uncommitted changes after install
+- PR image cleanup on close (good hygiene)
+- Tag release with authorized user check
 
-**Weaknesses**:
-- No concurrency control — multiple PR pushes queue redundant runs
-- Single Node.js version matrix (18.x only)
-- No separate job for lint vs. tests (all-or-nothing)
-- No image build step in any workflow
-- `fail_ci_if_error: false` on Codecov upload — failures are silently ignored
-- No workflow for periodic/nightly tasks
+**Gaps**:
+- No concurrency control - duplicate runs on rapid pushes
+- No timeout-minutes on any workflow
+- No test parallelization (single matrix: node 18.x only)
+- No scheduled/periodic test runs
+- No build validation job
+- No multi-version Node.js testing
+- Artifacts not retained for build outputs
 
-### Test Coverage
+**Key Files**:
+- `.github/workflows/test.yml` - Main CI pipeline
+- `.github/workflows/create-tag-release.yml` - Release management
+- `.github/workflows/pr-close-image-delete.yml` - PR cleanup
 
-**Frontend Unit Tests (167 spec files / 1432 source files = 11.7% test-to-code ratio)**:
-- Framework: Jest 28 + React Testing Library + jest-environment-jsdom
-- Well-organized co-located `__tests__/` directories per feature:
-  - Utilities (`valueUnits`, `useFetchState`, `useValidation`, etc.)
-  - API layer (`proxyUtils`, `k8sUtils`, `errorUtils`)
-  - Components (`ErrorBoundary`, `useCheckboxTable`)
-  - Concepts (`connectionTypes`, `modelRegistry`, `pipelines`)
-  - Pages (`BYONImages`, `hardwareProfiles`, `modelServing`)
-- Coverage collection configured (`jest-coverage/` directory)
-- No coverage thresholds enforced in Jest config
+### Static Analysis
 
-**Frontend Cypress Tests (72 test files)**:
-- **Mocked tests (56 files)**: Run in CI — comprehensive UI interaction testing with intercepted API responses
-  - Features: home, projects, pipelines, model registry, model serving, connection types, storage classes, accelerator profiles, distributed workloads, user management
-- **E2E tests (16 files)**: Run against real cluster — project creation, permissions, workbenches, pipelines, cluster settings, storage
-- **Infrastructure**:
-  - 74 page objects (well-structured, feature-organized)
-  - Custom `cy.interceptOdh` command for API mocking
-  - `cy.visitWithLogin` for authenticated navigation
-  - Snapshot-based intercept recording (`CY_RECORD` mode)
-  - Mochawesome + JUnit reporters
-  - Code coverage integration (`@cypress/code-coverage`)
-  - Coverage merging (Jest + Cypress via istanbul-merge)
-  - Video capture with failure-only retention
-  - Retry support for e2e tests (2 retries in run mode)
-  - High-resolution screenshots (1920x1080)
+#### Linting
+- **Frontend ESLint**: Extensive configuration with 30+ rules
+  - TypeScript strict rules (@typescript-eslint/no-unnecessary-condition, no-base-to-string, naming-convention, etc.)
+  - React hooks rules (exhaustive-deps, rules-of-hooks as errors)
+  - Accessibility (jsx-a11y plugin with anchor-is-valid, no-autofocus)
+  - Import ordering and no-relative-import-paths
+  - no-only-tests plugin to prevent committed test.only()
+  - Custom restricted imports (axios, PatternFly Select)
+  - Product name hardcoding prevention (Red Hat OpenShift AI / Open Data Hub)
+  - Prettier integration
+  - Separate Cypress-specific overrides with type-import enforcement
+  - Goal config (.eslintrc.goal.js) for aspirational rules
+- **Backend ESLint**: Basic TypeScript rules with Prettier
+- **TypeScript**: `strict: true` in frontend tsconfig with noImplicitAny, noImplicitReturns, noImplicitThis
+- **Prettier**: Configured (.prettierrc) with consistent formatting
+- **Lint runs in CI**: `--max-warnings 0` enforced for both frontend and backend
 
-**Backend Tests (3 spec files / 98 source files = 3.1% test-to-code ratio)**:
-- Framework: Jest 29 + ts-jest
-- Only utility functions tested (`objUtils`, `imageUtils`, `dockerRepositoryURL`)
-- **Critical gap**: No tests for Fastify route handlers, K8s proxy middleware, auth flows, or metrics endpoints
+#### FIPS Compatibility
+- **Base Images**: UBI8/nodejs-18 (FIPS-capable) - GOOD
+- **Konflux Dockerfile**: Uses pinned SHA256 digest - GOOD
+- **Source Code**: No non-FIPS crypto imports detected - GOOD (TypeScript/Node.js project)
+- **Assessment**: FIPS-ready through UBI base image usage
 
-### Code Quality
+#### Dependency Alerts
+- **Dependabot**: Configured but only for `github-actions` ecosystem (monthly, 2 PR limit)
+- **npm ecosystem NOT covered**: Major gap for a project with 80+ npm dependencies
+- **No Renovate**: Not configured
+- **No auto-merge policies**: Not configured
 
-**Frontend ESLint** — Comprehensive and strict:
-- TypeScript strict mode rules (`@typescript-eslint/no-unnecessary-condition`, `explicit-module-boundary-types`)
-- React hooks rules enforced (`exhaustive-deps`, `rules-of-hooks`)
-- Accessibility: `jsx-a11y` plugin with custom anchor and autofocus rules
-- Import organization enforced with `eslint-plugin-import`
-- Custom rules for product name abstraction (no hardcoded "Red Hat OpenShift AI" or "Open Data Hub")
-- No `.only` tests allowed (`no-only-tests`)
-- No type assertions outside test files
-- Cypress-specific overrides for `import type` enforcement
-- Custom rule against direct `cy.visit` (must use `cy.visitWithLogin`)
-- `--max-warnings 0` enforced in CI
+#### Pre-commit Hooks
+- **Not configured**: No `.pre-commit-config.yaml`
 
-**Backend ESLint** — Basic but adequate:
-- TypeScript + Prettier integration
-- Custom rule against `.toString()` usage (log errors properly)
-- Less strict than frontend (allows `no-explicit-any`)
+**Key Files**:
+- `frontend/.eslintrc` - 250+ line comprehensive ESLint config
+- `backend/.eslintrc` - Basic ESLint config
+- `frontend/tsconfig.json` - Strict TypeScript configuration
+- `.prettierrc` - Prettier configuration
+- `.github/dependabot.yml` - GitHub Actions-only Dependabot
 
-**Prettier**: Configured consistently across both packages (arrowParens, singleQuote, trailingComma, printWidth: 100)
-
-**Missing**:
-- No pre-commit hooks
-- No CodeQL/SAST
-- No secret detection (Gitleaks/TruffleHog)
-- Dependabot only covers GitHub Actions, not npm packages
-
-### Container Images
-
-**Dockerfiles**:
-- `Dockerfile` — Standard build with configurable base image (`ubi8/nodejs-18:latest`)
-- `Dockerfile.konflux` — Pinned UBI8 digest for reproducible Konflux builds, RHOAI branding env vars
-
-**Strengths**:
-- Multi-stage builds (builder → runtime)
-- UBI8 base images for Red Hat compliance
-- Non-root user (1001:0)
-- Production-only dependencies in runtime stage
-- Multi-architecture support via `docker-buildx` Makefile target (s390x, amd64, ppc64le)
-- Proper LABEL metadata
-
-**Weaknesses**:
-- No vulnerability scanning (Trivy/Snyk)
-- No image startup validation in CI
-- No SBOM generation
-- No image signing/attestation
-- Konflux Dockerfile uses pinned digest but no automation to keep it current
-- No `.hadolint.yaml` for Dockerfile linting
-
-### Security
-
-**Current State**: Minimal security tooling
-
-| Practice | Status |
-|----------|--------|
-| Container scanning (Trivy/Snyk) | Not configured |
-| SAST (CodeQL/Semgrep) | Not configured |
-| Dependency scanning | Dependabot for GH Actions only (not npm) |
-| Secret detection | Not configured |
-| SBOM generation | Not configured |
-| Image signing | Not configured |
-| License compliance | Not configured |
-
-### Agent Rules (Agentic Flow Quality)
+### Agent Rules
 
 - **Status**: Missing
-- **Coverage**: No test type rules exist
-- **Quality**: N/A
-- **Gaps**: No `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`, no test creation rules
-- **Impact**: AI agents (Claude Code, Copilot) have no project-specific guidance for generating tests, understanding test patterns, or following established conventions
-- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
-  - Jest unit test patterns (React Testing Library, hooks testing)
-  - Cypress mocked test patterns (interceptOdh, page objects)
-  - Cypress e2e test patterns (visitWithLogin, OC commands)
-  - Backend Fastify test patterns
-  - Coverage requirements and naming conventions
+- **CLAUDE.md**: Not present
+- **AGENTS.md**: Not present
+- **.claude/ directory**: Not present
+- **Test automation guidance**: None
+- **Coverage**: No test types have agent rules
+
+**Gaps**:
+- No guidance for AI agents on Jest test patterns
+- No Cypress page object conventions documented for agents
+- No mock file structure documentation
+- No PatternFly component usage patterns
+- No coding standards for AI-assisted development
+
+**Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
+- Jest unit test patterns (mock usage, test isolation, assertions)
+- Cypress mocked test patterns (interceptors, page objects, fixtures)
+- Cypress E2E test patterns (login, cluster interaction)
+- TypeScript conventions (strict mode, naming, import order)
+- PatternFly component usage (Select alternatives, modal patterns)
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add container vulnerability scanning** — Integrate Trivy or Snyk into the PR workflow to catch CVEs in UBI8 base images and npm dependency tree before merge
-2. **Enforce coverage thresholds** — Switch `.codecov.yml` from `informational: true` to `informational: false` on both project and patch status. Add Jest `coverageThreshold` config
-3. **Add PR-time Docker image build** — Add a CI step that builds both `Dockerfile` and `Dockerfile.konflux` on PRs to catch build regressions early
-4. **Expand backend test coverage** — The backend handles K8s API proxying, auth, and RBAC with only 3 test files. Priority areas: route handlers, middleware, proxy logic
+1. **Add PR-time Docker build validation** to the test workflow to catch build failures before merge. Build both `Dockerfile` and `Dockerfile.konflux` on every PR.
+
+2. **Enable coverage enforcement** by removing `informational: true` from `.codecov.yml` project and patch status. Set minimum thresholds that block PR merges.
+
+3. **Expand Dependabot to npm ecosystem** — the current config only covers GitHub Actions, leaving 80+ npm dependencies without automated vulnerability tracking.
 
 ### Priority 1 (High Value)
 
-1. **Add kustomize manifest validation** — Run `kustomize build` for ODH and RHOAI overlays in CI to catch manifest errors before deployment
-2. **Add CodeQL/SAST scanning** — Enable GitHub CodeQL for TypeScript to catch injection, data flow, and logic issues
-3. **Extend Dependabot to npm ecosystem** — Currently only monitors GitHub Actions; npm packages should be scanned too
-4. **Create comprehensive agent rules** — Generate `.claude/rules/` with test creation guidance covering Jest, Cypress mocked, and Cypress e2e patterns
+4. **Add container runtime validation** — test that the built Docker image starts correctly, responds on the expected port, and serves the dashboard.
+
+5. **Add concurrency controls and timeouts** to all CI workflows to prevent resource waste and hung builds.
+
+6. **Create comprehensive CLAUDE.md** with test patterns, coding standards, and contribution guidelines for AI-assisted development.
+
+7. **Add kustomize build validation** — run `kustomize build` for all overlays (ODH, RHOAI addon, RHOAI onprem) in CI to catch manifest errors.
 
 ### Priority 2 (Nice-to-Have)
 
-1. **Enforce accessibility testing** — `cypress-axe` is installed but barely used; add a11y checks to core Cypress flows
-2. **Add pre-commit hooks** — Shift lint and format checking left to save CI time
-3. **Add bundle size monitoring** — Webpack bundle analyzer is available but not integrated into CI
-4. **Add secret detection** — Integrate Gitleaks into the PR workflow
-5. **Add Dockerfile linting** — Configure Hadolint for both Dockerfiles
-6. **Performance regression testing** — Track Lighthouse scores or bundle metrics across PRs
+8. **Add pre-commit hooks** for ESLint and Prettier to catch issues locally before pushing.
+
+9. **Add multi-version Node.js matrix** — test against both Node.js 18.x and 20.x for forward compatibility.
+
+10. **Add contract testing** for the Fastify backend API to validate API contracts between frontend and backend.
+
+11. **Add HEALTHCHECK** instruction to Dockerfiles for container orchestration readiness.
+
+12. **Increase backend test coverage** — only 3 test files for 98 source files (~3% coverage).
 
 ## Comparison to Gold Standards
 
-| Dimension | red-hat-odh-dashboard | odh-dashboard (upstream) | notebooks | kserve |
-|-----------|----------------------|--------------------------|-----------|--------|
-| Unit Tests | 6/10 (167 frontend, 3 backend) | 8/10 (comprehensive) | 5/10 | 8/10 |
-| Integration/E2E | 7/10 (72 Cypress tests) | 9/10 (mocked + e2e + contract) | 6/10 | 9/10 |
-| Build Integration | 2/10 (none) | 5/10 (basic) | 7/10 | 7/10 |
-| Image Testing | 3/10 (build only) | 4/10 | 9/10 (5-layer) | 6/10 |
-| Coverage Tracking | 4/10 (informational) | 7/10 (enforced) | 5/10 | 8/10 |
-| CI/CD Automation | 5/10 (minimal) | 8/10 (comprehensive) | 8/10 | 9/10 |
-| Agent Rules | 0/10 (none) | 5/10 (partial) | 2/10 | 2/10 |
-| **Overall** | **5.2/10** | **7.5/10** | **7.0/10** | **8.0/10** |
-
-**Key Differentiators vs. Upstream (odh-dashboard)**:
-- Upstream has more comprehensive CI workflows and test suites
-- This downstream fork has minimal CI — primarily relies on the upstream test suite
-- The downstream Konflux build pipeline adds some validation but is not visible in the repo's CI
-- Agent rules are absent in both, but upstream has more documentation
+| Dimension | red-hat-odh-dashboard | odh-dashboard (upstream) | notebooks | Best Practice |
+|-----------|----------------------|--------------------------|-----------|---------------|
+| Unit Tests | 7/10 - 170 specs, 11% ratio | 8/10 - Higher ratio | 6/10 | 30-50% test-to-code ratio |
+| Integration/E2E | 7/10 - Cypress with POM | 8/10 - More E2E coverage | 7/10 | Multi-version, automated cluster |
+| Build Integration | 4/10 - No PR build | 5/10 - Limited PR build | 7/10 - Image validation | PR-time build + Konflux sim |
+| Image Testing | 4/10 - Multi-stage only | 5/10 | 9/10 - 5-layer validation | Runtime + health checks |
+| Coverage Tracking | 7/10 - Informational | 8/10 - Enforced | 6/10 | Enforced thresholds, 80%+ |
+| CI/CD Automation | 5/10 - Basic | 7/10 - More workflows | 8/10 | Concurrency, parallelization |
+| Static Analysis | 6/10 - Strong ESLint | 7/10 | 7/10 | Full Dependabot + pre-commit |
+| Agent Rules | 0/10 - None | 6/10 - Has CLAUDE.md | 2/10 | Comprehensive test rules |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/test.yml` — Main test workflow
-- `.github/workflows/pr-close-image-delete.yml` — PR cleanup
-- `.github/workflows/create-tag-release.yml` — Release tagging
-- `.github/dependabot.yml` — GH Actions updates only
-- `Makefile` — Build, push, deploy targets
+- `.github/workflows/test.yml` - Main test pipeline
+- `.github/workflows/create-tag-release.yml` - Release management
+- `.github/workflows/pr-close-image-delete.yml` - PR cleanup
+- `Makefile` - Build, push, deploy targets
 
 ### Testing
-- `frontend/jest.config.js` — Frontend Jest configuration
-- `backend/jest.config.js` — Backend Jest configuration
-- `frontend/src/__tests__/cypress/cypress.config.ts` — Cypress configuration
-- `frontend/src/__tests__/unit/` — Frontend unit tests
-- `frontend/src/__tests__/cypress/cypress/tests/mocked/` — Mocked Cypress tests (56 files)
-- `frontend/src/__tests__/cypress/cypress/tests/e2e/` — E2E Cypress tests (16 files)
-- `frontend/src/__tests__/cypress/cypress/pages/` — Page objects (74 files)
-- `backend/src/__tests__/` — Backend tests (3 files)
+- `frontend/jest.config.js` - Jest configuration
+- `backend/jest.config.js` - Backend Jest configuration
+- `frontend/src/__tests__/unit/jest.setup.ts` - Test setup
+- `frontend/src/__tests__/cypress/cypress.config.ts` - Cypress configuration
+- `frontend/src/__tests__/cypress/cypress/tests/mocked/` - 56 mocked test files
+- `frontend/src/__tests__/cypress/cypress/tests/e2e/` - 16 E2E test files
+- `frontend/src/__tests__/cypress/cypress/pages/` - 30+ page objects
+- `frontend/src/__mocks__/` - 103 mock K8s resource files
 
 ### Code Quality
-- `frontend/.eslintrc` — Comprehensive frontend ESLint config
-- `backend/.eslintrc` — Backend ESLint config
-- `.prettierrc` — Shared Prettier config
-- `.codecov.yml` — Codecov configuration (informational mode)
-- `.editorconfig` — Editor settings
+- `frontend/.eslintrc` - Comprehensive frontend ESLint (250+ lines)
+- `backend/.eslintrc` - Backend ESLint
+- `frontend/tsconfig.json` - Strict TypeScript config
+- `.prettierrc` - Prettier configuration
+- `.github/dependabot.yml` - GitHub Actions-only Dependabot
 
 ### Container Images
-- `Dockerfile` — Standard build (configurable base)
-- `Dockerfile.konflux` — Konflux build (pinned digest, RHOAI branding)
-- `.dockerignore` — Build context exclusions
+- `Dockerfile` - Generic multi-stage build (UBI8/nodejs-18)
+- `Dockerfile.konflux` - RHOAI Konflux build (pinned digest)
+- `.dockerignore` - Build exclusions
+
+### Coverage
+- `.codecov.yml` - Codecov configuration (informational-only)
 
 ### Manifests
-- `manifests/odh/` — ODH deployment overlays
-- `manifests/rhoai/` — RHOAI deployment overlays
-- `manifests/common/` — Shared resources (connection types)
-- `manifests/core-bases/` — Base configurations
+- `manifests/odh/kustomization.yaml` - ODH overlay
+- `manifests/rhoai/addon/kustomization.yaml` - RHOAI addon overlay
+- `manifests/rhoai/onprem/kustomization.yaml` - RHOAI on-prem overlay
+- `manifests/rhoai/shared/kustomization.yaml` - RHOAI shared base
+- `manifests/core-bases/base/kustomization.yaml` - Core base resources
+- `manifests/common/crd/kustomization.yaml` - CRD definitions

@@ -6,7 +6,8 @@ const {
   extractClonesLinks,
   parseChangelog,
   transformIssue,
-  CUSTOM_FIELDS
+  CUSTOM_FIELDS,
+  numericField
 } = require('../../../server/hygiene/jira-fetch')
 
 // ─── serializeField ──────────────────────────────────────────────────
@@ -61,6 +62,41 @@ describe('serializeField', function () {
   })
 })
 
+
+// ─── numericField ────────────────────────────────────────────────────
+
+describe('numericField', function () {
+  it('returns null for null/undefined', function () {
+    expect(numericField(null)).toBeNull()
+    expect(numericField(undefined)).toBeNull()
+  })
+
+  it('returns plain number as-is', function () {
+    expect(numericField(42)).toBe(42)
+    expect(numericField(3.14)).toBe(3.14)
+    expect(numericField(0)).toBe(0)
+  })
+
+  it('unwraps Jira object format { value: N }', function () {
+    expect(numericField({ value: 100 })).toBe(100)
+    expect(numericField({ value: 4.5 })).toBe(4.5)
+    expect(numericField({ value: 0 })).toBe(0)
+  })
+
+  it('returns null for object with null value', function () {
+    expect(numericField({ value: null })).toBeNull()
+  })
+
+  it('returns null for non-numeric values', function () {
+    expect(numericField('not-a-number')).toBeNull()
+    expect(numericField({ value: 'abc' })).toBeNull()
+  })
+
+  it('coerces numeric strings', function () {
+    expect(numericField('42')).toBe(42)
+    expect(numericField({ value: '3.14' })).toBe(3.14)
+  })
+})
 // ─── computeRiceStatus ──────────────────────────────────────────────
 
 describe('computeRiceStatus', function () {
@@ -571,7 +607,7 @@ describe('transformIssue', function () {
 
 const { fetchHygieneFeatures } = require('../../../server/hygiene/jira-fetch')
 
-describe('fetchHygieneFeatures jqlVersions option', function () {
+describe('fetchHygieneFeatures jqlVersions option', function() {
   // Capture JQL queries without hitting Jira
   function createMockJira() {
     var capturedJqls = []

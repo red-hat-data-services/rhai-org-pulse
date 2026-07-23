@@ -1,377 +1,360 @@
 ---
 repository: "opendatahub-io/kc-rep"
-overall_score: 3.9
+overall_score: 2.1
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No application code or tests - configuration-only repository"
+    status: "No source code or test files — pure build-configuration repository"
   - dimension: "Integration/E2E"
-    score: 2.0
-    status: "No pipeline validation tests; replicator workflow has no test coverage"
+    score: 0.0
+    status: "No integration or E2E tests; no validation that Tekton pipelines render or execute correctly"
   - dimension: "Build Integration"
     score: 5.0
-    status: "Comprehensive Konflux pipeline definitions but no validation that pipeline YAML is correct"
+    status: "Tekton PipelineRun definitions for 26 components with consistent structure; no PR-time YAML validation or dry-run"
   - dimension: "Image Testing"
-    score: 7.0
-    status: "Pipelines include Clair, ClamAV, Snyk, Coverity, SBOM - but only post-push, not validated in this repo"
+    score: 0.0
+    status: "N/A — repo stores pipeline configs, not Dockerfiles or images"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling - no application code to cover"
+    status: "No code to cover; no pipeline-config validation coverage"
   - dimension: "CI/CD Automation"
-    score: 4.0
-    status: "Single dispatch-only replicator workflow; no PR checks, no linting, no YAML validation"
+    score: 3.0
+    status: "Single manual-dispatch workflow (okc-replicator); no PR-triggered validation, linting, or drift detection"
+  - dimension: "Static Analysis"
+    score: 1.0
+    status: "No YAML linting, schema validation, Dependabot, or pre-commit hooks"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
-  - title: "No YAML schema validation for Tekton PipelineRun definitions"
-    impact: "Invalid pipeline YAML can be replicated to target repos, causing silent build failures"
+  - title: "No PR-time validation of Tekton YAML"
+    impact: "Malformed or inconsistent pipeline definitions can be merged without detection, breaking Konflux builds downstream"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No PR-triggered CI checks at all"
-    impact: "All changes merged without automated validation; broken pipelines discovered only at runtime"
+  - title: "No automated drift detection between kc-rep and target repos"
+    impact: "Tekton files in target repos can diverge from the central definitions without any alert"
     severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "OKC Replicator workflow only supports 2 folders (data-science-pipelines, odh-model-controller)"
-    impact: "25 of 26 component folders cannot use the replicator; workflow is incomplete"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No diff/drift detection between OKC and target repos"
-    impact: "No way to detect when target repo Tekton configs diverge from central definitions"
-    severity: "MEDIUM"
     effort: "8-12 hours"
-  - title: "odh-dashboard directory exists but is empty"
-    impact: "Missing Konflux pipeline definition for a critical component"
+  - title: "No schema validation for PipelineRun resources"
+    impact: "Invalid Tekton API fields, missing required params, or wrong task bundle SHAs are only caught at runtime in Konflux"
+    severity: "HIGH"
+    effort: "4-6 hours"
+  - title: "okc-replicator workflow is manual-only"
+    impact: "Version propagation depends entirely on human action; risk of missed or delayed updates across 26 components"
     severity: "MEDIUM"
-    effort: "2-4 hours"
-  - title: "codeflare-operator directory name has trailing space"
-    impact: "Filesystem path inconsistency; scripts may fail on this directory"
-    severity: "MEDIUM"
-    effort: "0.5 hours"
+    effort: "4-8 hours"
 quick_wins:
-  - title: "Add YAML lint CI check for all .tekton/ files"
+  - title: "Add a PR-triggered YAML lint workflow using yamllint"
     effort: "1-2 hours"
-    impact: "Catch YAML syntax errors before merge"
-  - title: "Add all 26 component folders to replicator workflow choice list"
+    impact: "Catches syntax errors, indentation issues, and line-length violations before merge"
+  - title: "Add Tekton schema validation with tektoncd/catlin or kubectl --dry-run"
+    effort: "2-4 hours"
+    impact: "Validates PipelineRun structure against the Tekton API schema"
+  - title: "Enable Dependabot for GitHub Actions"
     effort: "1 hour"
-    impact: "Enable version-bump automation for all components"
-  - title: "Fix codeflare-operator directory name (remove trailing space)"
-    effort: "15 minutes"
-    impact: "Prevent path-related script failures"
-  - title: "Add kubeconform or Tekton schema validation"
-    effort: "2-3 hours"
-    impact: "Validate PipelineRun manifests against Tekton API schema"
+    impact: "Keeps actions/checkout, getsentry/action-github-app-token, and other Actions up to date"
+  - title: "Add a CLAUDE.md with contribution guidelines for pipeline definitions"
+    effort: "1-2 hours"
+    impact: "Guides AI agents and contributors on naming conventions, required fields, and testing expectations"
 recommendations:
   priority_0:
-    - "Add PR-triggered CI workflow with YAML lint + Tekton schema validation for all pipeline files"
-    - "Update replicator workflow to support all 26 component folders"
-    - "Fix the trailing space in 'codeflare-operator ' directory name"
+    - "Add PR-triggered YAML validation workflow — yamllint + Tekton schema check on every PR"
+    - "Implement consistency checks ensuring all 30 pipeline files follow the same task ordering, bundle versions, and parameter sets"
+    - "Add automated drift detection comparing kc-rep definitions against .tekton/ in each target repo"
   priority_1:
-    - "Add drift detection workflow to compare OKC definitions against target repo .tekton/ directories"
-    - "Add Tekton task version consistency checks across all pipelines"
-    - "Create CLAUDE.md with contribution guidelines and pipeline authoring patterns"
-    - "Add odh-dashboard Tekton pipeline definition"
+    - "Convert okc-replicator to support scheduled runs or webhook-triggered execution for automated version propagation"
+    - "Add a task-bundle version inventory and alerting when Konflux catalog bundles are outdated"
+    - "Create CLAUDE.md/agent rules documenting pipeline structure conventions and validation requirements"
   priority_2:
-    - "Add CODEOWNERS file for pipeline review enforcement"
-    - "Add Renovate/Dependabot for Tekton task bundle version updates"
-    - "Create documentation for pipeline onboarding process"
-    - "Add agent rules for pipeline YAML authoring patterns"
+    - "Add a cross-component dependency graph showing which target repos consume which pipeline definitions"
+    - "Implement a changelog or release-notes generator for pipeline version bumps"
+    - "Add CODEOWNERS file to enforce review for critical component pipelines"
 ---
 
-# Quality Analysis: kc-rep (ODH Konflux Central)
+# Quality Analysis: kc-rep (Konflux Central Repository)
 
 ## Executive Summary
-
-- **Overall Score: 3.9/10**
-- **Repository Type**: Configuration-only monorepo (Tekton PipelineRun definitions)
-- **Purpose**: Central store for Konflux build pipeline configurations for ~26 OpenDataHub components
+- **Overall Score: 2.1/10**
+- **Repository Type**: Build configuration / Infrastructure-as-Code (Tekton pipeline definitions)
 - **Primary Language**: YAML (Tekton PipelineRun manifests)
-- **Key Strengths**: Comprehensive security scanning tasks in pipelines (9 security tasks per pipeline); consistent pipeline structure across all components; centralized management of Konflux build configs
-- **Critical Gaps**: Zero CI checks on this repo itself; replicator workflow only covers 2 of 26 components; no YAML validation; no drift detection
-- **Agent Rules Status**: Missing - no CLAUDE.md, no .claude/ directory
+- **Component**: Build and Release (RHOAIENG)
+- **Tier**: Midstream
+
+**kc-rep** is a centralized repository storing Konflux (Tekton) pipeline definitions for 26 OpenDataHub components across 30 PipelineRun YAML files (~18,060 lines). It serves as the single source of truth for build pipeline configurations that get replicated to target repositories via a manual GitHub Actions workflow.
+
+Despite its critical role in the build infrastructure, the repository has virtually no quality safeguards: no YAML validation, no schema checking, no automated tests, no drift detection, and no PR-triggered CI. A single malformed pipeline definition merged here can break Konflux builds across multiple downstream components.
+
+- **Key Strengths**: Consistent pipeline structure across all 30 files; standardized security scan integration (Clair, Snyk, Coverity, ClamAV); trusted artifact pattern; source image generation for 29/30 pipelines
+- **Critical Gaps**: No PR validation, no schema checking, no automated drift detection, no agent rules
+- **Agent Rules Status**: Missing
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 0/10 | No application code or tests - config-only repo |
-| Integration/E2E | 2/10 | No pipeline validation tests; replicator untested |
-| **Build Integration** | **5/10** | **Comprehensive pipeline defs, but no validation they're correct** |
-| Image Testing | 7/10 | Pipelines include 9 security/scan tasks each (Clair, ClamAV, Snyk, Coverity, SBOM) |
-| Coverage Tracking | 0/10 | No coverage tooling (no application code) |
-| CI/CD Automation | 4/10 | Single dispatch-only workflow; no PR checks |
-| Agent Rules | 0/10 | No CLAUDE.md, .claude/ directory, or agent guidance |
+| Dimension | Score | Weight | Status |
+|-----------|-------|--------|--------|
+| Unit Tests | 0.0/10 | 15% | No source code — N/A for a config repo |
+| Integration/E2E | 0.0/10 | 20% | No pipeline validation or rendering tests |
+| Build Integration | 5.0/10 | 15% | 30 well-structured Tekton PipelineRuns; no PR-time validation |
+| Image Testing | 0.0/10 | 10% | N/A — stores pipeline configs, not images |
+| Coverage Tracking | 0.0/10 | 10% | No coverage tooling |
+| CI/CD Automation | 3.0/10 | 15% | Single manual-dispatch workflow; no PR CI |
+| Static Analysis | 1.0/10 | 10% | No YAML lint, no schema validation, no Dependabot |
+| Agent Rules | 0.0/10 | 5% | No CLAUDE.md, AGENTS.md, or .claude/ directory |
+| **Overall** | **2.1/10** | | |
 
 ## Critical Gaps
 
-### 1. No YAML Schema Validation for Tekton PipelineRun Definitions
-- **Impact**: Invalid pipeline YAML can be replicated to target repos, causing silent build failures in Konflux
+### 1. No PR-time Validation of Tekton YAML
 - **Severity**: HIGH
+- **Impact**: Syntax errors, missing parameters, or invalid task references in PipelineRun definitions are only discovered when Konflux attempts to execute the pipeline in a target repo — potentially days after the change was merged
 - **Effort**: 4-6 hours
-- **Details**: All 30 pipeline files are complex (~580 lines each) with 19 Tekton tasks. A typo in task references, parameter names, or bundle SHA digests would not be caught until the pipeline runs in the target repository.
+- **Recommendation**: Add a GitHub Actions workflow triggered on PRs that runs `yamllint` and validates against the Tekton PipelineRun schema
 
-### 2. No PR-Triggered CI Checks
-- **Impact**: All changes merged without automated validation; broken pipelines discovered only at runtime
+### 2. No Drift Detection Between kc-rep and Target Repos
 - **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Details**: The only GitHub Actions workflow (`okc-replicator.yml`) is dispatch-only. There are no PR checks for:
-  - YAML syntax validation
-  - Tekton schema conformance
-  - Bundle digest verification
-  - Naming convention enforcement
-
-### 3. OKC Replicator Only Supports 2 of 26 Components
-- **Impact**: 24 component folders cannot use the version-bump replicator automation
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: The `okc_folder` input in `okc-replicator.yml` only lists `data-science-pipelines` and `odh-model-controller`. The remaining 24 folders must be manually updated. The comment `# Add all valid folder names here` confirms this is known-incomplete.
-
-### 4. No Drift Detection Between Central and Target Repos
-- **Impact**: No way to know when target repo `.tekton/` configs diverge from central definitions
-- **Severity**: MEDIUM
+- **Impact**: The 26 target repositories may have locally-modified `.tekton/` files that diverge from the central definitions. Without periodic comparison, kc-rep's role as "single source of truth" erodes silently
 - **Effort**: 8-12 hours
-- **Details**: The central repo stores the "source of truth" for pipeline configs, but there's no automated check that target repos match. Manual drift is inevitable.
+- **Recommendation**: Add a scheduled workflow that clones target repos and diffs their `.tekton/` against the corresponding kc-rep folder
 
-### 5. Empty odh-dashboard Directory
-- **Impact**: Missing Konflux pipeline definition for odh-dashboard, a critical ODH component
-- **Severity**: MEDIUM
-- **Effort**: 2-4 hours
+### 3. No Schema Validation for PipelineRun Resources
+- **Severity**: HIGH
+- **Impact**: Invalid Tekton API usage (wrong `apiVersion`, malformed `params`, incorrect task bundle references) passes without detection. The 30 pipeline files reference ~15 different Tekton catalog task bundles with pinned SHA digests — a typo in any SHA silently breaks the pipeline
+- **Effort**: 4-6 hours
+- **Recommendation**: Use `tkn bundle list` or `kubectl apply --dry-run=server` to validate pipeline structure
 
-### 6. Directory Naming Issue: `codeflare-operator ` (trailing space)
-- **Impact**: Scripts iterating over directories may fail on this path
+### 4. Manual-Only Replication Workflow
 - **Severity**: MEDIUM
-- **Effort**: 15 minutes
+- **Impact**: The `okc-replicator` workflow requires manual dispatch with 4 inputs (repository, branch, version, folder). Version propagation across 26 components depends entirely on human action, creating risk of missed or inconsistent updates
+- **Effort**: 4-8 hours
+- **Recommendation**: Add a matrix-based scheduled or tag-triggered mode to propagate versions automatically
 
 ## Quick Wins
 
-### 1. Add YAML Lint CI Check (1-2 hours)
+### 1. Add YAML Lint Workflow (1-2 hours)
+Add a PR-triggered GitHub Actions workflow:
 ```yaml
-# .github/workflows/pr-checks.yml
-name: PR Checks
+name: Lint Tekton YAML
 on: [pull_request]
 jobs:
-  yaml-lint:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: YAML Lint
-        uses: ibiqlik/action-yamllint@v3
-        with:
-          file_or_dir: '.'
-          config_data: |
-            extends: default
-            rules:
-              line-length:
-                max: 250
+      - run: pip install yamllint
+      - run: yamllint -c .yamllint.yml $(find . -name '*.yaml' -path '*/.tekton/*')
 ```
 
-### 2. Update Replicator Folder List (1 hour)
-Add all 26 component folders to the `okc_folder` choice list in `okc-replicator.yml`.
-
-### 3. Fix Directory Name (15 minutes)
-Rename `codeflare-operator ` to `codeflare-operator` (remove trailing space).
-
-### 4. Add Tekton Schema Validation (2-3 hours)
+### 2. Enable Dependabot for GitHub Actions (1 hour)
 ```yaml
-  tekton-validate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install kubeconform
-        run: |
-          curl -sL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz
-          sudo mv kubeconform /usr/local/bin/
-      - name: Validate Tekton PipelineRun schemas
-        run: |
-          find . -name "*.yaml" -path "*/.tekton/*" | while read f; do
-            echo "Validating $f..."
-            kubeconform -schema-location default \
-              -schema-location 'https://raw.githubusercontent.com/tektoncd/pipeline/main/pkg/apis/pipeline/v1/openapi_generated.go' \
-              -strict "$f"
-          done
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
 ```
+
+### 3. Add Consistency Checker (2-4 hours)
+A simple script comparing all 30 pipeline files for:
+- Matching task bundle versions (SHAs should be identical across all pipelines)
+- Consistent parameter sets
+- Uniform security scan inclusion
+
+### 4. Add CLAUDE.md (1-2 hours)
+Document pipeline structure conventions, naming patterns, and required fields for AI agents and contributors.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
+**Score: 0.0/10**
+
+This repository contains no source code — it is purely YAML configuration for Tekton pipelines. There are no test files (`*_test.*`, `*.spec.*`) of any kind. While a score of 0 is technically correct, this dimension has limited applicability to a pure-config repository.
+
+**Mitigation**: For config repos, "unit tests" can be interpreted as schema validation tests. See recommendations below.
+
+### Integration/E2E Tests
+**Score: 0.0/10**
+
+No tests verify that:
+- Pipeline YAML renders correctly into valid Tekton PipelineRun resources
+- Task bundle SHA references resolve to existing images in quay.io
+- The `okc-replicator` workflow correctly copies and transforms pipeline files
+- Version tag substitution (`sed` replacement) produces valid output
+
+### Build Integration
+**Score: 5.0/10**
+
+**Strengths:**
+- **Consistent structure**: All 30 PipelineRun files follow an identical pattern: init → clone-repository → prefetch-dependencies → build-container → build-image-index → security scans → apply-tags → push-dockerfile
+- **Security scans integrated**: Every pipeline includes clair-scan, sast-snyk-check, sast-coverity-check, clamav-scan, sast-shell-check, sast-unicode-check, ecosystem-cert-preflight-checks, rpms-signature-scan
+- **Trusted artifacts**: All pipelines use the OCI trusted artifact pattern (`oci-ta` task variants)
+- **Source images**: 29/30 pipelines generate source images for compliance
+
+**Weaknesses:**
+- All pipelines trigger only on `push` events to `konflux-poc` branch — no PR-triggered builds
+- `cancel-in-progress` set to `false` on all pipelines, which could lead to resource contention
+- No dry-run or validation of pipeline definitions before they are distributed
+
+**Component Coverage (26 components, 30 pipelines):**
+
+| Component | Pipeline Files |
+|-----------|---------------|
+| data-science-pipelines | 5 (api-server, driver, launcher, persistenceagent, scheduledworkflow) |
+| kubeflow | 2 (notebook-controller, kf-notebook-controller) |
+| kserve-* | 3 (agent, controller, router) |
+| All others | 1 each |
+
+### Image Testing
+**Score: 0.0/10**
+
+Not applicable — this repository does not contain Dockerfiles or build container images. It stores pipeline configurations that reference Dockerfiles in the target repositories.
+
+### Coverage Tracking
+**Score: 0.0/10**
+
+No code coverage tooling. For a config repo, equivalent metrics would be:
+- What percentage of pipeline files are validated by schema checks? (0%)
+- What percentage of task bundle SHAs are verified as reachable? (0%)
+- What percentage of target repos have been verified against kc-rep? (0%)
+
+### CI/CD Automation
+**Score: 3.0/10**
 
 **Workflow Inventory:**
-- **1 workflow**: `okc-replicator.yml` (GitHub Actions)
-  - Trigger: `workflow_dispatch` only (manual)
-  - Purpose: Copy `.tekton/` files from this repo to a target repo, bump `output-image` version tags, and create a PR
-  - Limitations: Only supports 2 of 26 component folders
 
-**Pipeline Configuration Analysis:**
-- **30 Tekton PipelineRun files** across 26 component directories
-- All pipelines use the `docker-build-oci-ta` pattern (trusted artifacts)
-- All trigger on `push` events to `konflux-poc` branch (not PRs)
-- Consistent task structure: 19 Tekton tasks per pipeline
-- All push to `quay.io/redhat-user-workloads/open-data-hub-tenant/`
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `okc-replicator.yml` | `workflow_dispatch` (manual) | Replicates Tekton files to target repos with version tag updates |
 
-**Tekton Tasks Used (per pipeline):**
-1. `init` - Initialize build
-2. `git-clone-oci-ta` - Clone source via trusted artifacts
-3. `prefetch-dependencies-oci-ta` - Prefetch deps with Cachi2
-4. `buildah-oci-ta` - Build container image
-5. `build-image-index` - Create OCI image index
-6. `source-build-oci-ta` - Build source image
-7. `deprecated-image-check` - Check for deprecated base images
-8. `clair-scan` - Vulnerability scanning
-9. `ecosystem-cert-preflight-checks` - Certification checks
-10. `sast-snyk-check-oci-ta` - SAST via Snyk
-11. `clamav-scan` - Malware scanning
-12. `coverity-availability-check` + `sast-coverity-check-oci-ta` - Coverity SAST
-13. `sast-shell-check-oci-ta` - Shell script analysis
-14. `sast-unicode-check-oci-ta` - Unicode homoglyph detection
-15. `apply-tags` - Apply image tags
-16. `push-dockerfile-oci-ta` - Push Dockerfile as OCI artifact
-17. `rpms-signature-scan` - RPM signature verification
-18. `show-sbom` - SBOM generation (finally block)
+**Analysis:**
+- Single workflow, manual-only dispatch
+- No PR-triggered validation or linting
+- No scheduled drift detection
+- No automated version propagation
+- The workflow uses `getsentry/action-github-app-token@v2` for cross-repo access — but the version is not pinned to a SHA
+- Only 2 of 26 components are listed in the `okc_folder` choice options (data-science-pipelines, odh-model-controller) — the dropdown is incomplete
+- `max-keep-runs: "3"` set on all pipeline definitions for Konflux retention
 
-**Run Retention:**
-- All pipelines set `max-keep-runs: "3"`
-- Concurrency control: `cancel-in-progress: "false"` (all pipelines)
+**Missing CI capabilities:**
+- No `yamllint` or YAML validation
+- No Tekton schema validation
+- No consistency checking across pipeline files
+- No task bundle version pinning verification
+- No automated PR creation for version bumps
 
-### Test Coverage
+### Static Analysis
+**Score: 1.0/10**
 
-**No tests exist in this repository.** This is a configuration-only repo with no application code, so traditional unit/integration/E2E tests don't apply. However, there should be:
-- YAML schema validation tests for pipeline definitions
-- Integration tests for the replicator workflow
-- Conformance tests ensuring pipeline consistency across components
+| Check | Status |
+|-------|--------|
+| YAML linting (yamllint) | Not configured |
+| Tekton schema validation | Not configured |
+| Pre-commit hooks | Not configured |
+| Dependabot | Not configured |
+| Renovate | Not configured |
+| FIPS checks | N/A (config repo) |
 
-### Code Quality
+The only "static" content is 30 structurally-similar PipelineRun YAML files. Without any validation, typos in ~18,000 lines of YAML across 30 files go undetected.
 
-- **No linting configuration**: No yamllint, no pre-commit hooks, no static analysis
-- **No `.pre-commit-config.yaml`**: No pre-commit checks enforced
-- **No CODEOWNERS file**: No review enforcement for pipeline changes
-- **No branch protection visible**: Changes may merge without review
+### Agent Rules
+**Score: 0.0/10**
 
-### Container Images
+| File/Directory | Present? |
+|----------------|----------|
+| `CLAUDE.md` | No |
+| `AGENTS.md` | No |
+| `.claude/` directory | No |
+| `.claude/rules/` | No |
+| `.claude/skills/` | No |
 
-This repo doesn't build images itself but **defines the pipelines** that build images for 26+ ODH components. The pipeline definitions are comprehensive:
-
-- **Security scanning**: 9 security-related tasks per pipeline (Clair, ClamAV, Snyk, Coverity, shell-check, unicode-check, deprecated-image-check, RPM signature scan, ecosystem cert checks)
-- **SBOM generation**: All pipelines include `show-sbom` in the `finally` block
-- **Trusted artifacts**: All pipelines use `oci-ta` (OCI Trusted Artifacts) variants
-- **Source images**: Support for source image builds (`build-source-image` parameter)
-- **Image index**: All pipelines create an OCI image index
-
-### Security
-
-The pipeline definitions themselves include excellent security practices:
-- **Clair vulnerability scanning** - Container vulnerability detection
-- **ClamAV malware scanning** - Antivirus checking of built images
-- **Snyk SAST** - Static application security testing
-- **Coverity SAST** - Enterprise-grade static analysis
-- **Shell-check SAST** - Shell script analysis
-- **Unicode homoglyph detection** - Detects hidden unicode attacks
-- **RPM signature verification** - Validates RPM package signatures
-- **Deprecated base image check** - Flags outdated base images
-- **Ecosystem certification preflight** - Red Hat certification checks
-
-**However**, the repo itself has no security practices:
-- No secret scanning (gitleaks, trufflehog)
-- No CodeQL analysis
-- No dependency scanning (no dependencies to scan)
-- No branch protection enforcement visible
-
-### Agent Rules (Agentic Flow Quality)
-
-- **Status**: Missing
-- **CLAUDE.md**: Not present
-- **AGENTS.md**: Not present
-- **`.claude/` directory**: Not present
-- **`.claude/rules/`**: Not present
-- **Coverage**: No test type rules, no contribution guidelines
-- **Quality**: N/A - no rules exist
-- **Gaps**: Complete absence of agent guidance
-- **Recommendation**: Create CLAUDE.md with:
-  - Pipeline authoring patterns
-  - Tekton PipelineRun conventions
-  - Version bump procedures
-  - Security task requirements
-  - Image naming conventions
+**Impact**: Without agent rules, AI-assisted contributions to pipeline definitions have no guardrails for naming conventions, required fields, task ordering, or security scan inclusion.
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add PR-triggered CI workflow with YAML validation**
-   - YAML lint for syntax
-   - Tekton schema validation via kubeconform
-   - Check that all pipelines include the required security tasks
-   - Verify bundle SHA digests are valid
+1. **Add PR-triggered YAML validation workflow**
+   - yamllint for syntax + style
+   - Tekton schema validation (e.g., `tkn bundle list` or custom schema check)
+   - Consistency checker ensuring all pipelines use the same task bundle versions
+   - Effort: 4-6 hours
 
-2. **Complete the replicator workflow folder list**
-   - Add all 26 component folders to the `okc_folder` choice input
-   - Consider generating the list dynamically from directory listing
+2. **Implement automated drift detection**
+   - Scheduled workflow comparing kc-rep definitions against `.tekton/` in each target repo
+   - Alert or auto-create issues when drift is detected
+   - Effort: 8-12 hours
 
-3. **Fix the `codeflare-operator ` directory name**
-   - Remove the trailing space to prevent script failures
+3. **Fix incomplete okc-replicator dropdown**
+   - Currently only lists 2 of 26 components in the `okc_folder` choice
+   - All 26 component folders should be listed as options
+   - Effort: 1 hour
 
 ### Priority 1 (High Value)
 
-4. **Add drift detection between OKC and target repos**
-   - Periodic workflow to compare `.tekton/` files in target repos against central definitions
-   - Alert when divergence is detected
+4. **Add task bundle version management**
+   - Centralized tracking of Konflux catalog task bundle SHAs
+   - Automated PR creation when new bundle versions are available
+   - Consistency enforcement (all 30 pipelines should use the same bundle version)
+   - Effort: 8-12 hours
 
-5. **Add Tekton task version consistency checks**
-   - Ensure all pipelines use the same task bundle versions
-   - Flag when different pipelines reference different SHA digests for the same task
+5. **Create CLAUDE.md and agent rules**
+   - Document pipeline structure conventions
+   - Define naming patterns (component names, pipeline names, namespace)
+   - List required fields and security scan tasks
+   - Effort: 2-3 hours
 
-6. **Create CLAUDE.md with pipeline authoring guidelines**
-   - Document the standard pipeline structure
-   - List required security tasks
-   - Define naming conventions
-   - Provide version bump procedures
-
-7. **Add odh-dashboard pipeline definition**
-   - The directory exists but is empty
+6. **Enable Dependabot for GitHub Actions**
+   - Keep `actions/checkout`, `getsentry/action-github-app-token` up to date
+   - Pin action versions to SHA digests
+   - Effort: 1 hour
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add CODEOWNERS file** for pipeline review enforcement
+7. **Add CODEOWNERS file**
+   - Require review from Build & Release team for pipeline changes
+   - Component-specific owners for their pipeline definitions
+   - Effort: 1-2 hours
 
-9. **Add Renovate/Dependabot for Tekton task bundle updates**
-   - Track upstream Konflux catalog releases
-   - Auto-create PRs for task version bumps
+8. **Generate component dependency graph**
+   - Visual map of which target repos consume which pipeline definitions
+   - Track which repos have been updated to the latest version
+   - Effort: 4-6 hours
 
-10. **Create comprehensive documentation**
-    - Pipeline onboarding process for new components
-    - Architecture decision records
-    - Troubleshooting guide
-
-11. **Add agent rules for pipeline YAML authoring**
-    - Generate rules with `/test-rules-generator`
-    - Cover pipeline modification patterns
-    - Include security task requirements
+9. **Add automated changelog generation**
+   - Track pipeline version bumps and task bundle updates
+   - Generate release notes when versions are propagated
+   - Effort: 4-6 hours
 
 ## Comparison to Gold Standards
 
-| Practice | kc-rep | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
-|----------|--------|---------------------|-------------------|---------------|
-| PR CI Checks | None | Multi-layer (lint, type, unit, e2e) | Image validation pipeline | Comprehensive test suite |
-| YAML Validation | None | ESLint + TypeScript strict | N/A | CRD validation |
-| Schema Validation | None | Contract tests | N/A | OpenAPI validation |
-| Security Scanning | In pipeline defs (not self) | CodeQL + Snyk | Trivy + SBOM | Snyk + SAST |
-| Coverage Tracking | None | Codecov enforced | N/A | Codecov enforced |
-| Agent Rules | None | Comprehensive | Basic | Basic |
-| Pre-commit Hooks | None | Husky + lint-staged | N/A | Pre-commit |
-| Drift Detection | None | N/A | N/A | N/A |
-
-**Key Observations:**
-- kc-rep is a fundamentally different repo type (config-only vs. application code)
-- The gold standard for config repos should be: schema validation, consistency checks, and drift detection
-- The pipeline *contents* are gold-standard quality (9 security tasks), but the repo *process* around them is minimal
+| Capability | kc-rep | odh-dashboard | notebooks | kserve |
+|------------|--------|---------------|-----------|--------|
+| PR validation | None | Comprehensive CI | Multi-layer | Full CI suite |
+| Schema validation | None | TypeScript strict | N/A | Go vet + lint |
+| Config lint | None | ESLint + Prettier | yamllint | golangci-lint |
+| Drift detection | None | N/A | N/A | N/A |
+| Automated replication | Manual dispatch | N/A | N/A | N/A |
+| Dependabot/Renovate | None | Configured | Configured | Configured |
+| Agent rules | None | Comprehensive | Basic | None |
+| Consistency checks | None | Contract tests | Image matrix | Multi-version |
 
 ## File Paths Reference
 
-| File | Purpose |
-|------|---------|
-| `.github/workflows/okc-replicator.yml` | Dispatch workflow to replicate Tekton files to target repos |
-| `*/tekton/*-push.yaml` | Tekton PipelineRun definitions (30 files, 26 components) |
-| `README.md` | Minimal 2-line description |
-| `odh-dashboard/` | Empty directory (missing pipeline) |
-| `codeflare-operator /` | Directory with trailing space in name |
-| `data-science-pipelines/.tekton/` | 5 pipeline files (most of any component) |
-| `kubeflow/.tekton/` | 2 pipeline files (notebook controllers) |
+| Category | Path | Description |
+|----------|------|-------------|
+| CI Workflow | `.github/workflows/okc-replicator.yml` | Manual-dispatch Tekton file replicator |
+| README | `README.md` | Minimal 2-line description |
+| Tekton Pipelines | `{component}/.tekton/*-push.yaml` | 30 PipelineRun definitions across 26 component directories |
+
+### Component Directory Listing
+
+```
+caikit-nlp/          kserve-agent/         modelmesh/              odh-model-controller/
+codeflare-operator/  kserve-controller/    modelmesh-runtime-adapter/  odh-model-registry-operator/
+data-science-pipelines/  kserve-router/    modelmesh-serving/      rest-proxy/
+data-science-pipelines-operator/  kubeflow/  ml-metadata/          ta-lmes-driver/
+fms-guardrails-hf-detector/  kuberay/      odh-dashboard/          training-operator/
+fms-guardrails-orchestrator/  kueue/       odh-feast-operator/     trustyai-vllm-orchestrator-gateway/
+fms-guardrails-regex-detector/             odh-feature-server/
+```

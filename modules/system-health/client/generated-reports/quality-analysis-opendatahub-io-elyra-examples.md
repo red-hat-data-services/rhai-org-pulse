@@ -1,333 +1,454 @@
 ---
 repository: "opendatahub-io/elyra-examples"
-overall_score: 2.4
+overall_score: 1.5
 scorecard:
   - dimension: "Unit Tests"
     score: 3.0
-    status: "Only 3 test files covering connector sub-packages; no tests for pipeline scripts or notebooks"
+    status: "3 pytest test files for catalog connectors only; tests not executed in CI"
   - dimension: "Integration/E2E"
-    score: 0.0
-    status: "No integration or E2E tests exist; no pipeline execution validation"
+    score: 1.0
+    status: "No integration or E2E test suites; component test dirs contain only sample data"
   - dimension: "Build Integration"
     score: 1.0
-    status: "No PR-time image build or Konflux simulation; Dockerfiles use deprecated Python 3.7"
+    status: "No PR-time build validation; Dockerfiles exist but are never built in CI"
   - dimension: "Image Testing"
     score: 1.0
-    status: "4 Dockerfiles present but no runtime validation, no multi-arch, no startup tests"
+    status: "4 single-stage Dockerfiles using outdated python:3.7-alpine; no runtime validation"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling, no codecov integration, no coverage thresholds"
+    status: "No coverage tooling, thresholds, or PR reporting configured"
   - dimension: "CI/CD Automation"
     score: 2.0
-    status: "Single workflow runs linting only; no test execution, no security scans, outdated Python matrix"
+    status: "Single workflow runs linting only; outdated Python matrix and action versions"
+  - dimension: "Static Analysis"
+    score: 3.0
+    status: "flake8 configured with nbqa for notebooks; no Dependabot, pre-commit, or type checking"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
-  - title: "CI only runs linting - no tests execute on PR"
-    impact: "Regressions in connector logic go undetected until manual testing; broken code can merge freely"
+  - title: "Tests exist but are never executed in CI"
+    impact: "3 connector test suites with pytest are defined but the CI workflow only runs linting — regressions go undetected"
     severity: "HIGH"
     effort: "2-4 hours"
+  - title: "No integration or E2E testing"
+    impact: "Pipeline definitions and notebook examples are never validated end-to-end; broken examples shipped to users"
+    severity: "HIGH"
+    effort: "16-24 hours"
   - title: "No coverage tracking or enforcement"
-    impact: "No visibility into what code is tested; test coverage can silently degrade"
-    severity: "HIGH"
-    effort: "2-3 hours"
-  - title: "No security scanning (Trivy, CodeQL, Snyk, Gitleaks)"
-    impact: "Vulnerability in dependencies or code not caught; supply chain risk"
+    impact: "No visibility into what code is tested; no gates to prevent coverage regression"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "Dockerfiles use Python 3.7 (EOL since June 2023)"
-    impact: "Running on unsupported Python; no security patches; incompatible with modern libraries"
+  - title: "Dockerfiles use outdated base images (python:3.7-alpine)"
+    impact: "Python 3.7 reached EOL Jan 2023; alpine base is not FIPS-capable; potential security vulnerabilities"
     severity: "HIGH"
-    effort: "1-2 hours"
-  - title: "No integration or E2E tests for pipeline examples"
-    impact: "Pipeline examples may be broken without anyone knowing; user experience degrades"
+    effort: "4-6 hours"
+  - title: "No PR-time build validation for container images"
+    impact: "Dockerfile changes not validated until manual testing; broken images can be merged"
     severity: "MEDIUM"
-    effort: "8-16 hours"
-  - title: "Repository appears unmaintained (last commit June 2023)"
-    impact: "Stale examples mislead users; dependency versions drift and become vulnerable"
-    severity: "HIGH"
-    effort: "Ongoing"
+    effort: "4-8 hours"
+  - title: "CI uses outdated GitHub Actions (checkout@v2, setup-python@v1)"
+    impact: "Missing security fixes and features from newer action versions; deprecated Node.js runtimes"
+    severity: "MEDIUM"
+    effort: "1-2 hours"
 quick_wins:
   - title: "Add pytest execution to CI workflow"
+    effort: "2-3 hours"
+    impact: "Immediately validate 3 existing connector test suites on every PR"
+  - title: "Enable Dependabot for dependency alerts"
     effort: "1-2 hours"
-    impact: "The 3 existing connector test suites will run on every PR, catching regressions"
-  - title: "Update GitHub Actions versions (checkout@v2 -> v4, setup-python@v1 -> v5)"
-    effort: "30 minutes"
-    impact: "Fix deprecation warnings, improve CI reliability and speed"
-  - title: "Update Python matrix to 3.9-3.12 (drop EOL 3.7, 3.8)"
+    impact: "Automated security and dependency updates with PR generation"
+  - title: "Update GitHub Actions to current versions"
     effort: "1 hour"
-    impact: "Test on supported Python versions; unblock modern dependency versions"
-  - title: "Add Trivy container scanning workflow"
+    impact: "Fix deprecation warnings and security improvements (checkout@v4, setup-python@v5)"
+  - title: "Add codecov integration with pytest-cov"
+    effort: "2-3 hours"
+    impact: "Coverage visibility and PR reporting for connector packages"
+  - title: "Update Python matrix to supported versions (3.10-3.12)"
     effort: "1-2 hours"
-    impact: "Detect known CVEs in base images and dependencies"
-  - title: "Add basic codecov integration"
-    effort: "2 hours"
-    impact: "Get visibility into test coverage across the connector packages"
+    impact: "Test against actively supported Python versions; drop EOL 3.7/3.8"
 recommendations:
   priority_0:
-    - "Run existing pytest tests in CI - 3 test files exist but are never executed in the workflow"
-    - "Update Dockerfiles from Python 3.7 to 3.11+ to address EOL security risk"
-    - "Update GitHub Actions to current versions (checkout@v4, setup-python@v5)"
+    - "Run existing pytest suites in CI — the tests exist but are never executed in the workflow"
+    - "Update Dockerfile base images from python:3.7-alpine to UBI-based or python:3.12-slim"
+    - "Add coverage tracking with pytest-cov and codecov integration"
   priority_1:
-    - "Add codecov integration with coverage reporting on PRs"
-    - "Add Trivy or Snyk scanning for container images and Python dependencies"
-    - "Add notebook validation tests (nbval or similar) to verify example notebooks execute"
-    - "Add pre-commit hooks for consistent code quality enforcement"
+    - "Add notebook validation tests that verify .ipynb files execute without errors"
+    - "Add pipeline definition validation that checks .pipeline files parse correctly"
+    - "Enable Dependabot for pip ecosystem dependency updates"
+    - "Add pre-commit hooks for consistent local and CI linting"
   priority_2:
-    - "Create comprehensive agent rules (.claude/rules/) for test automation guidance"
-    - "Add pipeline execution smoke tests against a local KFP or Airflow environment"
-    - "Modernize project config (migrate from setup.py to pyproject.toml)"
-    - "Add CODEOWNERS file for review assignment"
+    - "Create CLAUDE.md with test creation and contribution guidelines"
+    - "Add container image build validation in PR workflow"
+    - "Add multi-architecture Docker builds for KFP components"
+    - "Modernize linting from flake8 to ruff for better performance and broader checks"
 ---
 
 # Quality Analysis: elyra-examples
 
 ## Executive Summary
-- **Overall Score: 2.4/10**
-- **Repository Type**: Python example/tutorial repository with Jupyter notebooks, pipeline examples, and component catalog connectors
-- **Primary Language**: Python (43 source files, 20 Jupyter notebooks)
-- **Last Commit**: June 19, 2023 (over 3 years ago - appears unmaintained)
-- **Key Strengths**: Some unit tests exist for catalog connectors with good mock strategies; PR template asks about testing; flake8 linting configured
-- **Critical Gaps**: CI runs only linting (no tests); no coverage tracking; no security scanning; Dockerfiles use EOL Python 3.7; no integration/E2E tests; repository appears abandoned
-- **Agent Rules Status**: Missing - no CLAUDE.md, .claude/ directory, or test automation guidance
+
+- **Overall Score: 1.5/10**
+- **Repository Type**: Examples/Library (Python + Jupyter Notebooks)
+- **Primary Language**: Python
+- **Jira Component**: Notebooks Extensions (RHOAIENG)
+- **Tier**: midstream
+
+The `elyra-examples` repository is an examples and connector library for the Elyra pipeline editor. It contains Jupyter notebook pipeline examples, component catalog connectors (MLX, KFP, Artifactory, Airflow), and associated Dockerfiles. The repository has **critical quality gaps** across nearly all dimensions: tests exist but are never run in CI, there is no coverage tracking, container images use EOL Python 3.7, and the CI workflow is minimal (lint-only).
+
+### Key Strengths
+- Well-structured connector packages with individual Makefiles and test requirements
+- 3 connector packages have meaningful pytest unit tests with request mocking
+- flake8 linting covers both Python scripts and Jupyter notebooks (via nbqa)
+- Good repository documentation (README, CONTRIBUTING, code-of-conduct)
+
+### Critical Gaps
+- **Tests never run in CI** — the single workflow only lints; pytest suites are dead code in CI
+- **Zero coverage tracking** — no codecov, coveragerc, or coverage thresholds
+- **Outdated everything** — Python 3.7 matrix, actions/checkout@v2, python:3.7-alpine base images
+- **No integration/E2E testing** — pipeline examples and notebooks never validated
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 3/10 | Only 3 test files for connectors; 579 lines test vs 3331 lines source (17% ratio) |
-| Integration/E2E | 0/10 | No integration or E2E tests; pipeline examples never validated |
-| **Build Integration** | **1/10** | **No PR-time image builds; no Konflux simulation; Dockerfiles use Python 3.7** |
-| Image Testing | 1/10 | 4 Dockerfiles exist but no runtime validation or scanning |
-| Coverage Tracking | 0/10 | No coverage tooling, no codecov, no thresholds |
-| CI/CD Automation | 2/10 | Single workflow runs flake8 only; no test execution, outdated Actions |
-| Agent Rules | 0/10 | No agent rules, no test automation guidance |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 3.0/10 | 15% | 0.45 | 3 pytest files for connectors; tests not run in CI |
+| Integration/E2E | 1.0/10 | 20% | 0.20 | No integration or E2E suites |
+| Build Integration | 1.0/10 | 15% | 0.15 | No PR-time build validation |
+| Image Testing | 1.0/10 | 10% | 0.10 | Single-stage Dockerfiles; outdated base; no validation |
+| Coverage Tracking | 0.0/10 | 10% | 0.00 | No coverage tooling whatsoever |
+| CI/CD Automation | 2.0/10 | 15% | 0.30 | Single lint-only workflow; outdated actions |
+| Static Analysis | 3.0/10 | 10% | 0.30 | flake8 with nbqa; no Dependabot or pre-commit |
+| Agent Rules | 0.0/10 | 5% | 0.00 | No agent rules present |
+| **Overall** | **1.5/10** | **100%** | **1.50** | **Critical gaps across all dimensions** |
 
 ## Critical Gaps
 
-### 1. CI Only Runs Linting - Tests Never Execute
-- **Impact**: The repository has 3 pytest test suites (artifactory-connector, kfp-example-components-connector, mlx-connector) with reasonable test coverage, but they are **never executed in CI**. The single workflow (`build.yaml`) only runs `make lint` which invokes `flake8`. Connector regressions can merge undetected.
+### 1. Tests Exist but Never Execute in CI
 - **Severity**: HIGH
+- **Impact**: 3 connector test suites (579 lines of pytest code) are completely ignored by the CI workflow, which only runs `make lint`. Regressions in MLX, KFP, and Artifactory connectors go undetected.
 - **Effort**: 2-4 hours
-- **Evidence**: `.github/workflows/build.yaml` line 53: only `make lint` is executed. Each connector has `make test` targets but these are not called.
+- **Evidence**: `.github/workflows/build.yaml` only calls `make lint`; the `make test` targets exist in connector Makefiles but are never invoked.
 
-### 2. No Coverage Tracking or Enforcement
-- **Impact**: No visibility into what code is tested. No `.coveragerc`, no `codecov.yml`, no coverage reporting on PRs. Cannot detect coverage degradation.
+### 2. No Integration or E2E Testing
 - **Severity**: HIGH
-- **Effort**: 2-3 hours
+- **Impact**: Pipeline definitions (`.pipeline` files) and 20 Jupyter notebooks are never validated. Broken examples can be shipped to users without detection.
+- **Effort**: 16-24 hours
+- **Evidence**: No `e2e/` or `integration/` directories. Component test directories under `pipelines/run-pipelines-on-kubeflow-pipelines/components/source/*/test/` contain only sample data files (`.txt`, `.csv`), not test scripts.
 
-### 3. No Security Scanning
-- **Impact**: No Trivy, CodeQL, Snyk, Gitleaks, or any security scanning. Dependencies (including pinned flake8 3.5-3.9) may have known vulnerabilities. Container images built on Python 3.7 Alpine are certainly vulnerable.
+### 3. No Coverage Tracking
 - **Severity**: HIGH
+- **Impact**: No visibility into test coverage. No gates to prevent coverage regression. Impossible to identify undertested code paths.
 - **Effort**: 2-4 hours
+- **Evidence**: No `.codecov.yml`, `.coveragerc`, `pytest-cov` in any requirements file, or `--cov` flags in any Makefile.
 
-### 4. Dockerfiles Use EOL Python 3.7
-- **Impact**: All 4 Dockerfiles use `python:3.7-alpine`. Python 3.7 reached end-of-life June 2023. No security patches, growing incompatibility with modern libraries.
+### 4. Outdated Dockerfile Base Images
 - **Severity**: HIGH
-- **Effort**: 1-2 hours
-- **Evidence**: `pipelines/run-pipelines-on-kubeflow-pipelines/components/source/*/Dockerfile` - all use `FROM python:3.7-alpine`
+- **Impact**: All 4 Dockerfiles use `python:3.7-alpine`. Python 3.7 reached EOL in June 2023. Alpine is not FIPS-capable. Known CVEs in Python 3.7 are unpatched.
+- **Effort**: 4-6 hours
+- **Files**: `pipelines/run-pipelines-on-kubeflow-pipelines/components/source/*/Dockerfile`
 
-### 5. Repository Appears Unmaintained
-- **Impact**: Last commit was June 19, 2023. The CI workflow tests Python 3.7-3.10 but Python 3.12 and 3.13 have since been released. GitHub Actions used are severely outdated (`actions/checkout@v2`, `actions/setup-python@v1`).
-- **Severity**: HIGH
-- **Effort**: Ongoing
-
-### 6. No Integration or E2E Tests
-- **Impact**: Pipeline examples (Kubeflow Pipelines, Apache Airflow) and Jupyter notebooks are never validated. Users may encounter broken examples. The KFP component `test/` directories contain only sample input data files (`file_in.txt`), not actual test scripts.
+### 5. No PR-Time Build Validation
 - **Severity**: MEDIUM
-- **Effort**: 8-16 hours
+- **Impact**: Docker image changes are never built or tested in CI. Broken Dockerfiles can be merged.
+- **Effort**: 4-8 hours
+
+### 6. Outdated GitHub Actions
+- **Severity**: MEDIUM
+- **Impact**: `actions/checkout@v2` and `actions/setup-python@v1` use deprecated Node.js 12/16 runtimes. Missing security fixes from v3/v4/v5.
+- **Effort**: 1-2 hours
 
 ## Quick Wins
 
-### 1. Add pytest to CI Workflow (1-2 hours)
-Tests already exist - just add execution steps:
+### 1. Add pytest to CI workflow (2-3 hours)
+Add test execution to the existing CI workflow. The tests and Makefiles already exist.
+
 ```yaml
+# Add to .github/workflows/build.yaml after the Lint step
 - name: Run connector tests
   run: |
-    cd component-catalog-connectors/artifactory-connector && make test
+    cd component-catalog-connectors/mlx-connector && make test
     cd ../kfp-example-components-connector && make test
-    cd ../mlx-connector && make test
+    cd ../artifactory-connector && make test
 ```
 
-### 2. Update GitHub Actions Versions (30 minutes)
+### 2. Enable Dependabot (1-2 hours)
+Create `.github/dependabot.yml`:
 ```yaml
-- uses: actions/checkout@v4      # was v2
-- uses: actions/setup-python@v5  # was v1
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/pipelines/run-pipelines-on-kubeflow-pipelines/components/source/count-rows"
+    schedule:
+      interval: "monthly"
 ```
 
-### 3. Update Python Matrix (1 hour)
+### 3. Update GitHub Actions versions (1 hour)
 ```yaml
-python-version: ['3.9', '3.10', '3.11', '3.12']  # was 3.7-3.10
+- uses: actions/checkout@v4     # was v2
+- uses: actions/setup-python@v5 # was v1
 ```
 
-### 4. Add Trivy Scanning (1-2 hours)
+### 4. Add coverage with pytest-cov (2-3 hours)
+Add `pytest-cov` to connector test_requirements.txt files and update Makefile test targets:
+```makefile
+test: source-install
+    pytest --cov=$(PACKAGE_PATH) --cov-report=xml tests/
+```
+
+### 5. Update Python matrix (1-2 hours)
 ```yaml
-- name: Run Trivy vulnerability scanner
-  uses: aquasecurity/trivy-action@master
-  with:
-    scan-type: 'fs'
-    scan-ref: '.'
-    severity: 'CRITICAL,HIGH'
+python-version: ['3.10', '3.11', '3.12']  # was 3.7, 3.8, 3.9, 3.10
 ```
-
-### 5. Add Codecov Integration (2 hours)
-Add `pytest --cov` to test commands and upload results to Codecov.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflow Inventory**: Only 1 workflow exists: `build.yaml`
-- **Trigger**: Push and PR to `main` branch
-- **Matrix**: Ubuntu-latest with Python 3.7, 3.8, 3.9, 3.10 (all except 3.10 are EOL)
-- **Steps**: Checkout, setup Python, log versions, run `make lint` (flake8 only)
-- **Missing**: Test execution, image builds, security scans, caching, concurrency control
+**Score: 3.0/10**
 
-**Key Issues**:
-- `actions/checkout@v2` - 2 major versions behind (v4 current)
-- `actions/setup-python@v1` - 4 major versions behind (v5 current)
-- `fail-fast: true` may mask failures in some Python versions
-- No dependency caching (no `pip cache` or `actions/cache`)
-- No concurrency control (parallel runs on same PR possible)
+The repository contains 3 test files, all in the `component-catalog-connectors/` subdirectory:
 
-### Test Coverage
+| Test File | Lines | Framework | Techniques |
+|-----------|-------|-----------|------------|
+| `mlx-connector/tests/test_connector.py` | 163 | pytest + requests-mock | HTTP mocking, tar archive creation, schema validation |
+| `kfp-example-components-connector/tests/test_connector.py` | 93 | pytest | File-based testing, resource directory validation |
+| `artifactory-connector/tests/test_connector.py` | 326 | pytest + requests-mock | Fixtures, class-based tests, recursive mock setup |
 
-**Unit Tests**: 3 test files exist (all for component catalog connectors):
-| Test File | Lines | Framework | Mocking |
-|-----------|-------|-----------|---------|
-| `artifactory-connector/tests/test_connector.py` | 326 | pytest | requests-mock |
-| `kfp-example-components-connector/tests/test_connector.py` | 93 | pytest | None (reads local files) |
-| `mlx-connector/tests/test_connector.py` | 163 | pytest | requests-mock |
+**Strengths**:
+- Good test isolation with request mocking
+- Both valid and invalid scenario coverage
+- Well-documented test docstrings
+- The artifactory connector has the most thorough tests with fixtures and helper functions
 
-**Test Quality** (connector tests only):
-- Good: Tests cover both valid and invalid scenarios
-- Good: Mock strategies used for HTTP APIs (requests-mock)
-- Good: Test fixtures and helpers well-structured
-- Bad: No parameterized tests
-- Bad: No edge case testing (large files, unicode, etc.)
+**Weaknesses**:
+- Tests are never executed in CI (critical!)
+- Only 3 out of 43 Python files have tests (7% file ratio)
+- 579 test lines / 3,910 total lines (15% code ratio)
+- No tests for pipeline scripts (`load_data.py`, `python_script.py`)
+- No tests for the airflow or connector-template packages
+- No test isolation patterns (no `t.Parallel()` equivalent)
 
-**Test-to-Code Ratio**: 579 lines test / 3,331 lines source = **17.4%** (very low)
+### Integration/E2E Tests
 
-**Untested Components**:
-- All pipeline example scripts (Python files, notebooks)
-- 4 KFP pipeline component source files
-- Getting-started examples
-- Connector template
+**Score: 1.0/10**
 
-**Coverage Tracking**: None - no `.coveragerc`, no `codecov.yml`, no coverage thresholds
+There are no integration or E2E test suites in this repository.
 
-### Code Quality
+- No `e2e/`, `integration/`, or `test/e2e/` directories
+- No cluster setup (Kind, Minikube, envtest)
+- No multi-version testing for K8s/OCP
+- No Cypress, Playwright, or Ginkgo usage
+- The `test/` directories under KFP components contain only sample data files (`.txt`, `.csv`), not test scripts
 
-**Linting**:
-- Flake8 configured via `.flake8` with reasonable settings (max-line-length=120)
-- `nbqa` used to lint Jupyter notebooks (good practice)
-- Several rules intentionally ignored (E4, E721, E731, E741, W504, H-series)
-- Flake8 version pinned to 3.5-3.9 (current is 7.x) - severely outdated
+**Missing coverage**:
+- Pipeline definition validation (13 `.pipeline` files never checked for schema correctness)
+- Notebook execution testing (20 `.ipynb` files never validated)
+- KFP component container testing (no Testcontainers or similar)
+- Cross-connector integration testing
 
-**Pre-commit Hooks**: None - no `.pre-commit-config.yaml`
+### Build Integration
 
-**Static Analysis**: None - no CodeQL, gosec, Semgrep, or similar
+**Score: 1.0/10**
 
-**Type Checking**: None - no mypy, pyright, or type annotations enforced
+- The CI workflow does **not** build any Docker images
+- 4 Dockerfiles exist but are never validated in CI
+- No Konflux build simulation
+- No Kustomize overlay validation
+- No `make build` or `docker build` in any CI step
+- Connector packages have `make dist` for building Python distributions, but this is not run in CI either
 
-### Container Images
+**Files analyzed**:
+- `.github/workflows/build.yaml` — lint only, no builds
+- `Makefile` — root Makefile has no build targets
+- `component-catalog-connectors/*/Makefile` — have `dist` targets but not CI-triggered
 
-**Dockerfiles**: 4 Dockerfiles for KFP pipeline components
-- All identical pattern: `FROM python:3.7-alpine` -> install requirements -> copy source
-- No multi-stage builds
-- No `.dockerignore` files in component directories
-- No health checks or entrypoint validation
-- No image labels or metadata
+### Image Testing
 
-**Runtime Testing**: None
-- `test/` directories contain only sample input data files, not test scripts
-- No Testcontainers or container startup validation
-- No image build testing in CI
+**Score: 1.0/10**
 
-**Security Scanning**: None
-- No Trivy, Snyk, or Grype scanning
-- No SBOM generation
-- No image signing or attestation
-- No `.trivyignore`
+4 identical Dockerfiles exist for KFP pipeline components:
 
-**Multi-architecture**: Not supported - no buildx or multi-platform builds
+```dockerfile
+FROM python:3.7-alpine
+COPY requirements.txt .
+RUN pip3 install -r requirements.txt
+COPY ./src /pipelines/component/src
+```
 
-### Security
+**Issues**:
+- Single-stage builds (no separation of build/runtime layers)
+- `python:3.7-alpine` base — Python 3.7 is EOL, alpine is not FIPS-capable
+- No `HEALTHCHECK` instructions
+- No `.dockerignore` file
+- No multi-architecture support
+- No runtime validation or startup testing
+- No Testcontainers usage
+- No `CMD` or `ENTRYPOINT` defined (relying on pipeline runtime to specify)
 
-**Overall Security Posture**: Very weak
-- No vulnerability scanning of any kind
-- No dependency scanning (Dependabot, Renovate, Snyk)
-- No secret detection (Gitleaks, TruffleHog)
-- No SAST tools (CodeQL, Semgrep)
-- No SECURITY.md or security policy
-- Pinned to EOL Python versions with known vulnerabilities
-- No branch protection rules visible
+### Coverage Tracking
 
-### Agent Rules (Agentic Flow Quality)
+**Score: 0.0/10**
 
-- **Status**: Missing
-- **Coverage**: None - no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
-- **Quality**: N/A
-- **Gaps**: Complete absence of agent rules. No test creation guidance, no coding standards for AI agents, no framework-specific patterns documented.
-- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator`. Given this is an examples repo, rules should focus on:
-  - Notebook validation patterns
-  - Connector test patterns (pytest + requests-mock)
-  - Pipeline component testing standards
+There is absolutely no coverage tracking configured:
+
+- No `.codecov.yml` or `codecov.yml`
+- No `.coveragerc`
+- No `pytest-cov` in any requirements file
+- No `--cov` or `--coverprofile` flags in any Makefile or CI step
+- No coverage thresholds or PR reporting
+- No coverage badge in README
+
+### CI/CD Automation
+
+**Score: 2.0/10**
+
+**Single workflow**: `.github/workflows/build.yaml` ("Example validations")
+
+| Aspect | Status |
+|--------|--------|
+| Triggers | push to main, PR to main |
+| Matrix | Python 3.7, 3.8, 3.9, 3.10 (all outdated except 3.10) |
+| OS | ubuntu-latest only |
+| Steps | Checkout, setup Python, log versions, lint |
+| Tests | Not executed |
+| Builds | Not executed |
+| Concurrency | Not configured |
+| Caching | Not configured |
+| Timeout | Not configured |
+| Parallelization | Matrix strategy only |
+
+**Outdated action versions**:
+- `actions/checkout@v2` (current: v4)
+- `actions/setup-python@v1` (current: v5)
+
+**Missing**:
+- Test execution step
+- Build validation step
+- Periodic/scheduled workflows
+- Manual dispatch workflows
+- Any caching (pip cache, etc.)
+
+### Static Analysis
+
+**Score: 3.0/10**
+
+#### Linting
+- **flake8** configured at root level (`.flake8`) and per-connector
+- Root config: max-line-length 120, many rules suppressed (E4, E721, E731, E741, W504, H101, H301, H306, H404, H405)
+- **nbqa** used to lint Jupyter notebooks — a positive practice
+- flake8 version pinned to `>=3.5.0,<3.9.0` — significantly outdated (current: 7.x)
+
+#### FIPS Compatibility
+- No FIPS-incompatible crypto imports found in source code (clean)
+- However, Dockerfiles use `python:3.7-alpine` base, which is **not FIPS-capable** (needs UBI base)
+- No FIPS build tags or BoringCrypto configuration (not applicable for pure Python)
+
+#### Dependency Alerts
+- **No Dependabot** configuration (`.github/dependabot.yml` missing)
+- **No Renovate** configuration
+- Dependencies are manually managed and significantly outdated
+
+#### Pre-commit Hooks
+- **No `.pre-commit-config.yaml`**
+- No automated enforcement of linting before commits
+
+#### Type Checking
+- No mypy, pyright, or type checking configuration
+- No type annotations observed in source code
+
+### Agent Rules
+
+**Score: 0.0/10**
+
+- No `CLAUDE.md` in repository root
+- No `AGENTS.md` in repository root
+- No `.claude/` directory
+- No `.claude/rules/` directory
+- No test creation rules or guidelines
+- No AI agent guidance for contributions
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Run existing tests in CI** - 3 pytest test suites exist but CI only runs linting. Add `make test` for each connector.
-2. **Update Dockerfiles to Python 3.11+** - Python 3.7 is EOL and has known CVEs.
-3. **Update GitHub Actions** - `checkout@v2` and `setup-python@v1` are severely outdated with deprecation warnings.
-4. **Update Python CI matrix** - Drop 3.7/3.8, add 3.11/3.12.
+
+1. **Execute existing tests in CI** — Add `make test` calls for mlx-connector, kfp-example-components-connector, and artifactory-connector to the CI workflow. The tests already exist and work locally.
+
+2. **Update Dockerfile base images** — Replace `python:3.7-alpine` with `registry.access.redhat.com/ubi9/python-312:latest` or `python:3.12-slim` at minimum. Python 3.7 has been EOL since June 2023.
+
+3. **Add coverage tracking** — Install `pytest-cov`, generate coverage reports, and integrate with Codecov for PR-level coverage reporting.
+
+4. **Update Python CI matrix** — Replace Python 3.7/3.8/3.9/3.10 with 3.10/3.11/3.12 to test against supported versions.
 
 ### Priority 1 (High Value)
-1. **Add coverage tracking** - pytest-cov + codecov to get visibility into test coverage.
-2. **Add security scanning** - Trivy for container images, Dependabot for dependency updates.
-3. **Add notebook validation** - Use `nbval` or `papermill` to verify notebooks execute cleanly.
-4. **Add pre-commit hooks** - Enforce linting, formatting, and basic checks locally.
-5. **Update flake8** - Pinned to 3.5-3.9 range, current is 7.x.
+
+5. **Add notebook validation tests** — Use `nbconvert` or `papermill` to execute notebooks in CI and verify they complete without errors.
+
+6. **Add pipeline definition validation** — Write tests that parse `.pipeline` files and verify they conform to the Elyra pipeline schema.
+
+7. **Enable Dependabot** — Configure for pip, github-actions, and docker ecosystems to get automated dependency update PRs.
+
+8. **Add pre-commit hooks** — Configure `.pre-commit-config.yaml` with flake8 (or ruff) and other checks for consistent enforcement.
+
+9. **Update GitHub Actions** — Upgrade `actions/checkout` to v4 and `actions/setup-python` to v5.
 
 ### Priority 2 (Nice-to-Have)
-1. **Create agent rules** - `.claude/rules/` with test patterns for connectors and notebooks.
-2. **Add pipeline smoke tests** - Validate KFP/Airflow pipeline definitions parse correctly.
-3. **Modernize project configuration** - Migrate from `setup.py` to `pyproject.toml`.
-4. **Add CODEOWNERS** - For code review assignment.
-5. **Add SECURITY.md** - Security policy and vulnerability reporting.
-6. **Add contributing tests section** - Document how to run tests in CONTRIBUTING.md.
+
+10. **Create CLAUDE.md** — Add agent rules with test creation guidelines, contribution patterns, and quality gates.
+
+11. **Migrate from flake8 to ruff** — ruff is significantly faster and provides broader checks including import sorting and type checking.
+
+12. **Add Docker image build validation** — Build Dockerfiles in CI on PRs to catch build failures before merge.
+
+13. **Add multi-arch Docker support** — Use `docker buildx` for ARM64/AMD64 builds of KFP components.
+
+14. **Add pip caching to CI** — Cache pip downloads to speed up CI runs.
 
 ## Comparison to Gold Standards
 
 | Dimension | elyra-examples | odh-dashboard | notebooks | kserve |
 |-----------|---------------|---------------|-----------|--------|
-| Unit Tests | 3/10 | 9/10 | 7/10 | 9/10 |
-| Integration/E2E | 0/10 | 9/10 | 8/10 | 9/10 |
+| Unit Tests | 3/10 | 9/10 | 6/10 | 8/10 |
+| Integration/E2E | 1/10 | 9/10 | 7/10 | 9/10 |
 | Build Integration | 1/10 | 8/10 | 8/10 | 7/10 |
-| Image Testing | 1/10 | 7/10 | 9/10 | 8/10 |
-| Coverage Tracking | 0/10 | 8/10 | 6/10 | 9/10 |
+| Image Testing | 1/10 | 6/10 | 9/10 | 6/10 |
+| Coverage Tracking | 0/10 | 8/10 | 5/10 | 8/10 |
 | CI/CD Automation | 2/10 | 9/10 | 8/10 | 9/10 |
-| Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
-| **Overall** | **2.4/10** | **8.5/10** | **7.5/10** | **8.0/10** |
+| Static Analysis | 3/10 | 8/10 | 6/10 | 7/10 |
+| Agent Rules | 0/10 | 7/10 | 3/10 | 2/10 |
+| **Overall** | **1.5/10** | **8.3/10** | **6.8/10** | **7.5/10** |
 
-**Key Differences from Gold Standards**:
-- odh-dashboard: Multi-layer testing (unit, integration, E2E, contract), comprehensive CI/CD, coverage enforcement, agent rules
-- notebooks: 5-layer image validation, multi-architecture support, security scanning
-- kserve: Coverage enforcement with thresholds, multi-version testing, extensive E2E suite
-- elyra-examples: Lint-only CI, no coverage, no security, repository appears abandoned
+The repository scores significantly below all gold standards. The most impactful improvement would be executing the existing tests in CI — this requires minimal effort (2-3 hours) and immediately validates the connector packages.
 
 ## File Paths Reference
 
-| File | Purpose |
-|------|---------|
-| `.github/workflows/build.yaml` | Only CI workflow - runs linting only |
-| `Makefile` | Root makefile with lint targets |
-| `.flake8` | Flake8 configuration |
-| `test_requirements.txt` | Root test dependencies (flake8, nbqa) |
-| `component-catalog-connectors/*/Makefile` | Sub-package makefiles with lint/test/dist targets |
-| `component-catalog-connectors/*/tests/test_connector.py` | Connector unit tests (3 files) |
-| `component-catalog-connectors/*/test_requirements.txt` | Per-connector test dependencies |
-| `pipelines/run-pipelines-on-kubeflow-pipelines/components/source/*/Dockerfile` | 4 KFP component Dockerfiles |
-| `.github/pull_request_template.md` | PR template with testing section |
-| `.gitignore` | Includes coverage-related patterns (`.coverage`, `coverage.xml`) suggesting coverage was once planned |
+### CI/CD
+- `.github/workflows/build.yaml` — Single CI workflow (lint only)
+
+### Testing
+- `component-catalog-connectors/mlx-connector/tests/test_connector.py` — MLX connector tests
+- `component-catalog-connectors/kfp-example-components-connector/tests/test_connector.py` — KFP connector tests
+- `component-catalog-connectors/artifactory-connector/tests/test_connector.py` — Artifactory connector tests
+- `test_requirements.txt` — Root test requirements (flake8, nbqa)
+
+### Build/Container
+- `pipelines/run-pipelines-on-kubeflow-pipelines/components/source/*/Dockerfile` — 4 identical KFP component Dockerfiles
+
+### Static Analysis
+- `.flake8` — Root flake8 configuration
+- `component-catalog-connectors/*/.flake8` — Per-connector flake8 configs
+- `Makefile` — Root Makefile (lint targets)
+- `component-catalog-connectors/*/Makefile` — Per-connector Makefiles
+
+### Examples
+- `pipelines/` — 10 pipeline example directories with 13 `.pipeline` files and 20 notebooks
+- `binder/` — Binder getting-started example
+- `component-catalog-connectors/` — 5 connector packages

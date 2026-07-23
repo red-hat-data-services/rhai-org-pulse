@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 03:41 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 04:23 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/.github</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="407.15006399999993"
+                                stroke-dashoffset="554.176476"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">2.8</div>
+                        <div class="score-value">0.2</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,47 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">N/A — No source code in this repository</div>
+                            <div class="scorecard-status">Not applicable — no source code in this org-level meta-repository</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">N/A — No source code in this repository</div>
+                            <div class="scorecard-status">Not applicable — no source code or testable components</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">N/A — No build artifacts produced</div>
+                            <div class="scorecard-status">Not applicable — no build artifacts or container images</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">N/A — No container images</div>
+                            <div class="scorecard-status">Not applicable — no Dockerfiles or container images</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">N/A — No source code to measure</div>
+                            <div class="scorecard-status">Not applicable — no code to measure coverage against</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">No workflows; missed opportunity for org-wide reusable workflows</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">PR and issue templates present but no CI/CD workflows to validate them</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No YAML or markdown linting configured for the templates</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, .claude/ directory, or agent configuration</div>
-                        </div>
-                        <div class="scorecard-item">
-                            <h3>Community Health</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Basic templates present but incomplete coverage</div>
-                        </div>
-                        <div class="scorecard-item">
-                            <h3>Template Quality</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Functional templates with room for standardization</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
                         </div>
                     </div>
                 </div>
@@ -420,44 +415,28 @@
                 <div class="section-content">
                     <ul class="items-list">
                         
-                        <li class="item-card high">
-                            <div class="item-description">No reusable GitHub Actions workflows</div>
-                            <p>Each repo duplicates CI/CD configuration instead of inheriting org-wide standards</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">16-24 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No organization-wide CODEOWNERS or security policy</div>
-                            <p>No default SECURITY.md, CODEOWNERS, or CONTRIBUTING.md inherited by child repos</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">No org-level agent rules or testing standards</div>
-                            <p>AI-assisted development has no org-wide quality guidance</p>
+                            <div class="item-description">No CI/CD workflows to validate templates</div>
+                            <p>Broken YAML in issue templates or malformed markdown in PR template could go undetected until users file issues</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">PR template lacks test type checklist</div>
-                            <p>Contributors not prompted to verify test coverage by type (unit, integration, e2e)</p>
+                            <div class="item-description">No YAML schema validation for issue templates</div>
+                            <p>Invalid YAML form fields may cause GitHub to silently fall back to blank issue, degrading contributor experience</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Issue templates missing triage automation</div>
-                            <p>No auto-labeling or routing for bug reports and feature requests</p>
+                        <li class="item-card high">
+                            <div class="item-description">Bug report template has stale OpenShift version options</div>
+                            <p>Version dropdown lists &#x27;OpenStack&#x27;, &#x27;OKD&#x27;, &#x27;CodeReady Containers&#x27; — none are OCP version numbers; contributors cannot specify their actual version</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -474,43 +453,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add SECURITY.md with vulnerability disclosure process</div>
-                            <p>Establishes org-wide security reporting across all repos</p>
+                            <div class="item-description">Update bug report template OpenShift version dropdown</div>
+                            <p>Fix misleading version selector so contributors can accurately report their environment</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">30 minutes</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add a GitHub Actions workflow to lint YAML and markdown</div>
+                            <p>Catch template syntax errors before they reach production</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CONTRIBUTING.md with testing requirements</div>
-                            <p>Sets quality bar for all contributions across the org</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Enhance PR template with structured test checklist</div>
-                            <p>Forces contributors to consider all test dimensions before merging</p>
+                            <div class="item-description">Add CLAUDE.md with contribution guidelines for AI-assisted edits</div>
+                            <p>Guide AI agents making changes to org-level templates</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add FUNDING.yml for sponsorship visibility</div>
-                            <p>Standard GitHub community health file for open source projects</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add CODE_OF_CONDUCT.md</div>
-                            <p>Standard community health file expected by contributors</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                     </ul>
@@ -527,15 +490,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Create reusable GitHub Actions workflows (.github/workflows/) for linting, testing, and security scanning that child repos can inherit</li><li>Add SECURITY.md with coordinated vulnerability disclosure process</li><li>Add CONTRIBUTING.md that mandates test coverage expectations for all ODH repos</li></ul>
+                            <ul><li>Fix the bug report template: the &#x27;OpenShift Version&#x27; dropdown does not list actual OCP versions — it conflates platforms (OpenStack, OKD, CRC) with versions</li><li>Add a CI workflow to validate YAML schema of issue templates on every PR</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Create org-level .claude/rules/ with testing standards for AI-assisted development</li><li>Enhance PR template to include structured test verification checklist</li><li>Add workflow_call reusable workflows for common CI patterns (Go test, Python lint, container scan)</li></ul>
+                            <ul><li>Add markdown linting (markdownlint) to validate PR template formatting</li><li>Add a CODEOWNERS file to ensure template changes are reviewed by the right team</li><li>Consider adding a CONTRIBUTING.md at the org level</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add FUNDING.yml and CODE_OF_CONDUCT.md for community health completeness</li><li>Create issue template for security vulnerability reports</li><li>Add auto-labeling workflow for issue triage</li></ul>
+                            <ul><li>Add CLAUDE.md with guidelines for maintaining org-level templates</li><li>Add a SECURITY.md or security policy for the organization</li><li>Consider adding default labels configuration (.github/labels.yml with a label sync action)</li></ul>
                         </div>
                     </div>
                 </div>

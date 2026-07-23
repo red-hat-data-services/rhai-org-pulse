@@ -4,6 +4,7 @@ import { useScroll } from '@vueuse/core'
 import { useProduct, useDrops, useSeries } from '../composables/useDrops'
 import { useArtifacts } from '../composables/useArtifacts'
 import { formatDate, envBadgeClass } from '../utils/formatting'
+import ChiBadge from '../components/ChiBadge.vue'
 
 const PRODUCT_CONFIGS = {
   'rhaiis':            { key: 'rhaiis',        artifactType: 'containers' },
@@ -289,6 +290,7 @@ const groupedDrops = computed(() => {
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Variant</th>
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Architectures</th>
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Environments</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">CHI</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -311,11 +313,15 @@ const groupedDrops = computed(() => {
                       >{{ env }}</span>
                     </div>
                   </td>
+                  <td class="px-4 py-3">
+                    <ChiBadge v-if="art.health_index" :health-index="art.health_index" />
+                    <span v-else class="text-sm text-gray-400 dark:text-gray-500">—</span>
+                  </td>
                 </tr>
               </tbody>
               <tfoot v-if="artifactsLoading">
                 <tr>
-                  <td colspan="4" class="px-4 py-3 text-center text-sm text-gray-500 dark:text-gray-400">
+                  <td colspan="5" class="px-4 py-3 text-center text-sm text-gray-500 dark:text-gray-400">
                     <span class="inline-flex items-center gap-2">
                       <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

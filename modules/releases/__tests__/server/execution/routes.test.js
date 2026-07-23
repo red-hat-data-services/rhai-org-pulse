@@ -8,13 +8,13 @@ const mockFetchArtifacts = vi.fn()
 function makeStorage(data = {}) {
   const store = { ...data }
   return {
-    readFromStorage(key) {
+    async readFromStorage(key) {
       return store[key] ? JSON.parse(JSON.stringify(store[key])) : null
     },
-    writeToStorage(key, value) {
+    async writeToStorage(key, value) {
       store[key] = value
     },
-    listStorageFiles(prefix) {
+    async listStorageFiles(prefix) {
       return Object.keys(store)
         .filter(k => k.startsWith(prefix + '/'))
         .map(k => k.slice(prefix.length + 1))
@@ -51,7 +51,7 @@ function makeRes() {
 describe('execution routes', () => {
   let router, requireAdmin, context, storage
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
     _setFetchFn(mockFetchArtifacts)
 
@@ -66,7 +66,7 @@ describe('execution routes', () => {
       registerDiagnostics: vi.fn(),
       secrets: {}
     }
-    registerExecutionRoutes(router, context)
+    await registerExecutionRoutes(router, context)
   })
 
   describe('route registration', () => {
@@ -101,10 +101,10 @@ describe('execution routes', () => {
   })
 
   describe('GET /status', () => {
-    it('returns expected shape when no data', () => {
+    it('returns expected shape when no data', async () => {
       const handler = router._routes.get['/status'].at(-1)
       const res = makeRes()
-      handler({}, res)
+      await handler({}, res)
 
       expect(res._json).toMatchObject({
         dataAvailable: false,
@@ -117,16 +117,16 @@ describe('execution routes', () => {
       expect(res._json.dataSource).toMatch(/gitlab-ci/)
     })
 
-    it('includes lastFetch when present', () => {
+    it('includes lastFetch when present', async () => {
       const storageWithData = makeStorage({
         'releases/execution/last-fetch.json': { status: 'success', timestamp: '2026-04-08T06:00:00Z' }
       })
       const r = makeRouter()
-      registerExecutionRoutes(r, { storage: storageWithData, requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
+      await registerExecutionRoutes(r, { storage: storageWithData, requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
 
       const handler = r._routes.get['/status'].at(-1)
       const res = makeRes()
-      handler({}, res)
+      await handler({}, res)
 
       expect(res._json.lastFetch).toBeDefined()
       expect(res._json.lastFetch.status).toBe('success')
@@ -143,7 +143,7 @@ describe('execution routes', () => {
         'releases/execution/config.json': { enabled: true }
       })
       const r = makeRouter()
-      registerExecutionRoutes(r, { storage: storageWithConfig, requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn(), secrets: { GITLAB_TOKEN: 'token' } })
+      await registerExecutionRoutes(r, { storage: storageWithConfig, requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn(), secrets: { GITLAB_TOKEN: 'token' } })
 
       const handler = r._routes.post['/refresh'].at(-1)
 
@@ -169,7 +169,7 @@ describe('execution routes', () => {
 
       const storageForConfig = makeStorage()
       const r = makeRouter()
-      registerExecutionRoutes(r, { storage: storageForConfig, requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
+      await registerExecutionRoutes(r, { storage: storageForConfig, requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
 
       const postHandler = r._routes.post['/config'].at(-1)
       const res1 = makeRes()
@@ -189,7 +189,7 @@ describe('execution routes', () => {
       // Load it back
       const getHandler = r._routes.get['/config'].at(-1)
       const res2 = makeRes()
-      getHandler({}, res2)
+      await getHandler({}, res2)
       expect(res2._json.gitlabBaseUrl).toBe('https://custom.gitlab.com')
       expect(res2._json.projectPath).toBe('my/project')
       expect(res2._json.branch).toBe('develop')
@@ -200,7 +200,7 @@ describe('execution routes', () => {
 
     it('rejects http:// in gitlabBaseUrl', async () => {
       const r = makeRouter()
-      registerExecutionRoutes(r, { storage: makeStorage(), requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
+      await registerExecutionRoutes(r, { storage: makeStorage(), requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
 
       const handler = r._routes.post['/config'].at(-1)
       const res = makeRes()
@@ -216,7 +216,7 @@ describe('execution routes', () => {
 
     it('rejects invalid refreshIntervalHours', async () => {
       const r = makeRouter()
-      registerExecutionRoutes(r, { storage: makeStorage(), requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
+      await registerExecutionRoutes(r, { storage: makeStorage(), requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
 
       const handler = r._routes.post['/config'].at(-1)
 
@@ -237,7 +237,7 @@ describe('execution routes', () => {
 
     it('rejects non-string fields', async () => {
       const r = makeRouter()
-      registerExecutionRoutes(r, { storage: makeStorage(), requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
+      await registerExecutionRoutes(r, { storage: makeStorage(), requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
 
       const handler = r._routes.post['/config'].at(-1)
       const res = makeRes()
@@ -250,7 +250,7 @@ describe('execution routes', () => {
 
     it('rejects non-boolean enabled', async () => {
       const r = makeRouter()
-      registerExecutionRoutes(r, { storage: makeStorage(), requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
+      await registerExecutionRoutes(r, { storage: makeStorage(), requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
 
       const handler = r._routes.post['/config'].at(-1)
       const res = makeRes()

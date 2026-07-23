@@ -453,6 +453,21 @@ onMounted(() => {
         </div>
       </div>
 
+      <!-- Section 4: Conforma / ECP -->
+      <div>
+        <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Conforma / ECP</h4>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ECP Base URL</label>
+          <input
+            v-model="config.conformaEcpBaseUrl"
+            type="text"
+            placeholder="https://..."
+            class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500"
+          />
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Base URL for the konflux-release-data ECP YAML files (e.g. raw GitLab URL). Required for AIPCC conforma data ingestion.</p>
+        </div>
+      </div>
+
       <!-- Save / Reset buttons -->
       <div class="flex items-center gap-3">
         <button

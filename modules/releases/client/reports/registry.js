@@ -28,5 +28,21 @@ export const reports = [
     label: 'Release Performance',
     description: 'Cross-releases, and competitive comparisons performance dashboard',
     externalUrl: 'https://aidash.app.intlab.redhat.com/'
+  },
+  {
+    id: 'release-readiness',
+    label: 'RHOAI Release Readiness',
+    description: 'RHOAI Release Readiness and risk highlights.',
+    icon: 'Shield',
+    tags: ['Executive', 'Readiness', 'RAG'],
+    component: defineAsyncComponent(() => import('./ReleaseReadinessDirector.vue'))
+  },
+  {
+    id: 'cve-sustaining',
+    label: 'RHOAI Sustaining (CVEs)',
+    description: 'Open CVE tracking across RHOAI components and versions — due dates, assignee workload, VEX justifications, and trends.',
+    icon: 'ShieldAlert',
+    tags: ['Security', 'CVE', 'Sustaining'],
+    component: defineAsyncComponent(() => import('./CveSustainingReport.vue'))
   }
 ]

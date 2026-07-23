@@ -5,6 +5,8 @@ const {
   getLatestProjection,
   countHistoryEntries
 } = require('./storage');
+const { computeFeatureMetrics } = require('./metrics');
+const { getConfig } = require('../config');
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 const jsonLimit = express.json({ limit: '10mb' });
@@ -116,8 +118,8 @@ module.exports = function registerFeatureRoutes(router, context) {
   // ─── 1. Static routes FIRST ───
 
   // GET /features/status (Admin) — feature data status for settings page
-  router.get('/features/status', requireAdmin, requireScope('ai-impact:read'), function(req, res) {
-    const data = readFeatures(readFromStorage);
+  router.get('/features/status', requireAdmin, requireScope('ai-impact:read'), async function(req, res) {
+    const data = await readFeatures(readFromStorage);
     res.json({
       lastSyncedAt: data.lastSyncedAt,
       lastJiraSyncAt: data.lastJiraSyncAt || null,
@@ -222,17 +224,51 @@ module.exports = function registerFeatureRoutes(router, context) {
     res.json({ status: 'cleared' });
   });
 
-  // GET /features — list all features (slim projection)
-  router.get('/features', requireScope('ai-impact:read'), function(req, res) {
-    const data = readFeatures(readFromStorage);
-    res.json(getLatestProjection(data));
+  const VALID_TIME_WINDOWS = ['week', 'month', '3months'];
+
+  /**
+   * @openapi
+   * /api/modules/ai-impact/features:
+   *   get:
+   *     summary: List all features with computed metrics
+   *     tags: [AI Impact - Features]
+   *     parameters:
+   *       - in: query
+   *         name: timeWindow
+   *         schema:
+   *           type: string
+   *           enum: [week, month, 3months]
+   *           default: month
+   *         description: Time window for metric computation
+   *     responses:
+   *       200:
+   *         description: All features with latest scores and trend metrics
+   */
+  router.get('/features', requireScope('ai-impact:read'), async function(req, res) {
+    const timeWindow = VALID_TIME_WINDOWS.includes(req.query.timeWindow)
+      ? req.query.timeWindow
+      : 'month';
+
+    const data = await readFeatures(readFromStorage);
+    const projection = getLatestProjection(data);
+    const featureList = Object.values(projection.features);
+    const config = await getConfig(readFromStorage);
+    const { metrics, trendData, breakdown, reviewStatus } = computeFeatureMetrics(featureList, timeWindow, config);
+
+    res.json({
+      ...projection,
+      metrics,
+      trendData,
+      breakdown,
+      reviewStatus
+    });
   });
 
   // ─── 2. Parameterized routes AFTER ───
 
   // GET /features/:key — single feature + history
-  router.get('/features/:key', requireScope('ai-impact:read'), function(req, res) {
-    const data = readFeatures(readFromStorage);
+  router.get('/features/:key', requireScope('ai-impact:read'), async function(req, res) {
+    const data = await readFeatures(readFromStorage);
     const entry = data.features[req.params.key];
     if (!entry) {
       return res.status(404).json({ error: 'Not found' });

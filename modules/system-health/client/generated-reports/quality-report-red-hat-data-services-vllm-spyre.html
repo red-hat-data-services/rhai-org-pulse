@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 05:41 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 08:09 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/vllm-spyre</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="508.93757999999997"
+                                stroke-dashoffset="542.8667519999999"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">1.0</div>
+                        <div class="score-value">0.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,32 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No source code or test files present in the repository</div>
+                            <div class="scorecard-status">No source code or test files present — packaging-only repo</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E test infrastructure exists</div>
+                            <div class="scorecard-status">No integration or E2E tests — no test infrastructure of any kind</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">Single Konflux Dockerfile, no PR-time build validation</div>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">Konflux Dockerfile present but no PR-time build validation workflows</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">Dockerfile present but no image testing, scanning, or runtime validation</div>
+                            <div class="scorecard-status">Dockerfile with proper labels and non-root user, but no runtime validation or health checks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tooling — no source code to cover</div>
+                            <div class="scorecard-status">No coverage tracking — no code to cover</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CI/CD workflows (.github/workflows/ absent)</div>
+                            <div class="scorecard-status">No CI/CD workflows, no GitHub Actions, no Makefile</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No linting, no FIPS checks, no dependency alerts, no pre-commit hooks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
@@ -411,40 +416,32 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No CI/CD pipeline exists</div>
-                            <p>No automated checks on PRs — changes merge without any validation</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No container image testing or scanning</div>
-                            <p>Vulnerability and runtime issues in the built image are undetected until deployment</p>
+                            <div class="item-description">No CI/CD pipeline of any kind</div>
+                            <p>No automated validation on PRs — Dockerfile changes go unverified until Konflux build</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No Dockerfile linting or validation</div>
-                            <p>Dockerfile syntax errors, best-practice violations, and base image drift go unchecked</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No image build smoke test on PRs</div>
-                            <p>Dockerfile changes may break the Konflux build, discovered only post-merge</p>
+                            <div class="item-description">No PR-time Dockerfile build validation</div>
+                            <p>Broken Dockerfiles are only caught post-merge in Konflux, causing downstream build failures</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
+                        <li class="item-card high">
+                            <div class="item-description">No container image runtime validation</div>
+                            <p>Image startup, entrypoint, and environment issues are not caught until deployment</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
+                            </div>
+                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">No dependency or base image pinning strategy</div>
-                            <p>Base image updates can introduce breaking changes silently via ARG default</p>
+                            <div class="item-description">No dependency or base image update alerts</div>
+                            <p>Stale base image version (RHAIIS_VERSION) could introduce vulnerabilities or miss patches</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
@@ -464,43 +461,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add hadolint Dockerfile linting workflow</div>
-                            <p>Catch Dockerfile anti-patterns and best-practice violations on every PR</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning workflow</div>
-                            <p>Detect known vulnerabilities in base image and final image layers</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add PR-time docker build smoke test</div>
-                            <p>Verify Dockerfile builds successfully before merge, catching syntax and dependency errors</p>
+                            <div class="item-description">Add a GitHub Actions workflow to validate the Dockerfile builds on PR</div>
+                            <p>Catch broken Dockerfiles before merge — prevents Konflux build failures</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CODEOWNERS file</div>
-                            <p>Ensure PR reviews from appropriate maintainers</p>
+                            <div class="item-description">Add Dependabot or Renovate to track base image version updates</div>
+                            <p>Automated alerts when new RHAIIS versions are available</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">30 minutes</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create basic CLAUDE.md with repo context</div>
-                            <p>Guide AI-assisted contributions with repo-specific context and constraints</p>
+                            <div class="item-description">Add a CLAUDE.md with contribution and Dockerfile update guidelines</div>
+                            <p>Improve AI-assisted contributions and onboarding documentation</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add a basic Makefile with build/lint targets</div>
+                            <p>Standardized build commands and entry point for CI</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Implement a GitHub Actions CI/CD pipeline with at minimum: hadolint, docker build test, and Trivy scan</li><li>Add container image build validation on PRs to prevent broken Konflux builds</li></ul>
+                            <ul><li>Add a GitHub Actions PR workflow that runs `podman build` or `docker build` on the Konflux Dockerfile to catch build errors before merge</li><li>Add a container startup smoke test that verifies the entrypoint runs and the expected ports are exposed</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add SBOM generation and image signing/attestation for supply chain security</li><li>Implement base image version monitoring to detect upstream changes</li><li>Add CODEOWNERS and branch protection rules</li></ul>
+                            <ul><li>Add Dependabot configuration to monitor the base image version (RHAIIS_VERSION) for updates</li><li>Add a Makefile with build, lint, and test targets for local development and CI consistency</li><li>Add a Dockerfile linter (hadolint) to CI for best-practice enforcement</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Create agent rules (.claude/) for consistent contribution patterns</li><li>Add image startup and functional smoke tests using testcontainers or similar</li><li>Document Spyre accelerator context and testing requirements</li></ul>
+                            <ul><li>Add CLAUDE.md with Dockerfile modification guidelines and contribution standards</li><li>Consider adding a multi-arch build matrix if the image needs to support architectures beyond x86_64</li><li>Add HEALTHCHECK instruction to the Dockerfile for container orchestration compatibility</li></ul>
                         </div>
                     </div>
                 </div>

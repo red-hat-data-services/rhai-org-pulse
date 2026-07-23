@@ -1,4 +1,4 @@
-const VALID_COMPLETION_STATUSES = ['completed', 'in-progress'];
+const VALID_COMPLETION_STATUSES = ['completed', 'in-progress', 'in_queue'];
 const VALID_PRODUCT_CONTEXTS = ['RHOAI', 'ODH'];
 const VALID_ONBOARDING_METHODS = ['automated', 'manual'];
 const VALID_KEY_PREFIXES = ['RHOAIENG-'];
@@ -18,6 +18,50 @@ const ONBOARDING_STEP_KEYS = [
   'autoMergeSetup',          // Step 10 — RHOAI only
   'renovateSetup'            // Step 11 — RHOAI only
 ];
+
+/**
+ * Derive dashboard completion status from the current Jira status (+ completion signals).
+ * Always follow the latest status — do not keep a stale in_queue/completed from storage
+ * after the ticket has moved on.
+ *
+ * Mapping:
+ *   New            → in_queue
+ *   Resolved/Closed/Done/Cancelled, or Done resolution/category, or completed label → completed
+ *   anything else  → in-progress
+ *
+ * Legacy stored "new" is only used as a fallback when status is missing.
+ */
+function deriveCompletionStatus(status, completionStatus, context) {
+  const normalized = typeof status === 'string' ? status.trim().toLowerCase() : '';
+
+  if (normalized === 'new') {
+    return 'in_queue';
+  }
+
+  const labels = context?.labels || [];
+  const resolution = context?.resolution || null;
+  const statusCategory = context?.statusCategory || null;
+
+  if (labels.includes('component-onboarding-completed')) {
+    return 'completed';
+  }
+  if (resolution === 'Done' || statusCategory === 'Done') {
+    return 'completed';
+  }
+  if (normalized === 'resolved' || normalized === 'closed' || normalized === 'done' || normalized === 'cancelled') {
+    return 'completed';
+  }
+
+  // Status is present and not New / not completed → in progress (ignore stale stored bucket)
+  if (normalized) {
+    return 'in-progress';
+  }
+
+  // No usable status: fall back to stored value (normalize legacy "new")
+  if (completionStatus === 'new') return 'in_queue';
+  if (VALID_COMPLETION_STATUSES.includes(completionStatus)) return completionStatus;
+  return 'in-progress';
+}
 
 /**
  * Validate a component onboarding request body.
@@ -48,8 +92,9 @@ function validateComponentOnboarding(body) {
     errors.push('status must be a non-empty string');
   }
 
-  // completionStatus: required enum
-  if (!VALID_COMPLETION_STATUSES.includes(body.completionStatus)) {
+  // completionStatus: required enum (legacy "new" is normalized to in_queue)
+  const normalizedCompletionStatus = body.completionStatus === 'new' ? 'in_queue' : body.completionStatus;
+  if (!VALID_COMPLETION_STATUSES.includes(normalizedCompletionStatus)) {
     errors.push(`completionStatus must be one of: ${VALID_COMPLETION_STATUSES.join(', ')}`);
   }
 
@@ -167,6 +212,16 @@ function validateComponentOnboarding(body) {
     errors.push('contextPath must be a string');
   }
 
+  // statusCategory: optional string or null (e.g. "Done")
+  if (body.statusCategory !== undefined && body.statusCategory !== null && typeof body.statusCategory !== 'string') {
+    errors.push('statusCategory must be a string or null');
+  }
+
+  // targetVersion: optional string (Jira customfield_10855, e.g. "rhoai-3.6")
+  if (body.targetVersion !== undefined && body.targetVersion !== null && typeof body.targetVersion !== 'string') {
+    errors.push('targetVersion must be a string or null');
+  }
+
   if (errors.length > 0) {
     return { valid: false, errors };
   }
@@ -177,8 +232,14 @@ function validateComponentOnboarding(body) {
       key: body.key.trim(),
       summary: body.summary.trim(),
       status: body.status.trim(),
-      completionStatus: body.completionStatus,
+      completionStatus: deriveCompletionStatus(body.status, normalizedCompletionStatus, {
+        labels: body.labels || [],
+        resolution: body.resolution || null,
+        statusCategory: body.statusCategory || null
+      }),
       productContext: body.productContext,
+      targetVersion: body.targetVersion?.trim() || null,
+      statusCategory: body.statusCategory || null,
       syncedAt: body.syncedAt,
       componentName: body.componentName || '',
       repoUrl: body.repoUrl || '',
@@ -200,4 +261,11 @@ function validateComponentOnboarding(body) {
   };
 }
 
-module.exports = { validateComponentOnboarding, VALID_COMPLETION_STATUSES, VALID_PRODUCT_CONTEXTS, VALID_ONBOARDING_METHODS, ONBOARDING_STEP_KEYS };
+module.exports = {
+  validateComponentOnboarding,
+  deriveCompletionStatus,
+  VALID_COMPLETION_STATUSES,
+  VALID_PRODUCT_CONTEXTS,
+  VALID_ONBOARDING_METHODS,
+  ONBOARDING_STEP_KEYS
+};

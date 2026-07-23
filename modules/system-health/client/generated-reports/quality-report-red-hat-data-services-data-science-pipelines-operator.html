@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:47 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 06:45 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/data-science-pipelines-operator</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="135.71668799999998"
+                                stroke-dashoffset="163.990998"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.6</div>
+                        <div class="score-value">7.1</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,42 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">178+ test functions with build-tag isolation, testify assertions, strong controller coverage</div>
+                            <div class="scorecard-status">Strong test-to-code ratio (0.77) with testify, envtest, t.Parallel(), and declarative test cases</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">KinD-based integration on PRs, multi-namespace DSPA deployment, external Argo variant, upgrade testing</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">KinD integration tests on PRs, chaos testing (tiered), upgrade testing, BYO-Argo variant</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">PR image builds with ARM64 cross-compile, Go version consistency checks, but no Konflux simulation</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">PR images to Quay, Konflux/Tekton hermetic build, ARM64 verification, Go version consistency</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Multi-stage UBI9 Dockerfile, ARM64 architecture verification, but no runtime validation or Trivy scanning</div>
+                            <div class="scorecard-status">Multi-stage UBI9 builds, architecture verification, but no runtime startup validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">coverprofile generated locally but no codecov/coveralls integration or PR enforcement</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">Coverage generated locally via -coverprofile but no codecov, no thresholds, no PR reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">19 workflows with concurrency control, path filtering, caching, nightly builds, release automation</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">21 workflows, PR-triggered testing, concurrency control, nightly builds, release automation</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">golangci-lint (8 linters), pre-commit hooks, FIPS-compliant builds, but no Dependabot/Renovate</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">CLAUDE.md with architecture and build commands, AGENTS.md symlink, but no .claude/rules/ for test patterns</div>
-                        </div>
-                        <div class="scorecard-item">
-                            <h3>Chaos Testing</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Operator-chaos SDK with tiered experiments, knowledge models, PR validation, and live KinD chaos integration</div>
+                            <div class="scorecard-status">Comprehensive CLAUDE.md with architecture docs but no .claude/rules/ for test patterns</div>
                         </div>
                     </div>
                 </div>
@@ -416,43 +416,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No coverage tracking or enforcement on PRs</div>
-                            <p>Coverage can silently regress without anyone noticing; no visibility into test gaps</p>
+                            <div class="item-description">No coverage tracking or enforcement</div>
+                            <p>Coverage regressions go undetected; no visibility into test coverage trends or PR impact</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container security scanning (Trivy/Snyk/Grype)</div>
-                            <p>Vulnerabilities in base images and dependencies not caught until production scanning</p>
+                            <div class="item-description">No dependency alert configuration (Dependabot/Renovate)</div>
+                            <p>Vulnerable or outdated dependencies remain undetected until manual review</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No PR-time Konflux build simulation</div>
-                            <p>Build failures discovered only post-merge in Konflux; multi-day debug cycles</p>
+                            <div class="item-description">No container runtime validation tests</div>
+                            <p>Image startup failures or misconfiguration not caught until deployment</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No container runtime validation</div>
-                            <p>Image startup failures, missing configs, or entrypoint issues not caught until deployment</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No SAST/CodeQL integration</div>
-                            <p>Security vulnerabilities in Go code not caught by static analysis</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -469,43 +453,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Codecov integration to unit test workflow</div>
-                            <p>PR-level coverage visibility and regression detection</p>
+                            <div class="item-description">Add Codecov integration with coverage thresholds</div>
+                            <p>Immediate visibility into coverage trends, PR coverage delta reporting, regression prevention</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to PR workflow</div>
-                            <p>Early detection of CVEs in base images and dependencies</p>
+                            <div class="item-description">Enable Dependabot for go, docker, and github-actions ecosystems</div>
+                            <p>Automated dependency update PRs and vulnerability alerts</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL/gosec workflow</div>
-                            <p>Automated security analysis on every PR</p>
+                            <div class="item-description">Add .claude/rules/ with test creation patterns</div>
+                            <p>AI-generated tests follow project conventions (build tags, testify, envtest patterns)</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create .claude/rules/ for test patterns</div>
-                            <p>Consistent AI-assisted test generation following project conventions</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Pin pre-commit hook versions to current releases</div>
-                            <p>Avoid supply chain risks from outdated hook versions</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -522,15 +490,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add Codecov or Coveralls integration with PR coverage reporting and minimum threshold enforcement</li><li>Add Trivy or Grype container scanning to the PR image build workflow</li></ul>
+                            <ul><li>Add Codecov integration with .codecov.yml, coverage thresholds, and PR coverage reporting</li><li>Configure Dependabot for gomod, docker, and github-actions ecosystems</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add CodeQL or gosec SAST scanning workflow for Go code</li><li>Add container runtime validation (startup + health check) after PR image builds</li><li>Create .claude/rules/ with unit-tests.md, integration-tests.md, and chaos-tests.md</li></ul>
+                            <ul><li>Add container image startup validation in CI (verify manager binary starts and serves health endpoint)</li><li>Create .claude/rules/ with test creation patterns for unit, functional, and integration tests</li><li>Add multi-version K8s matrix testing to KinD integration workflows</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add PR-time Konflux build simulation to catch production build failures early</li><li>Add SBOM generation and image signing (cosign) to release builds</li><li>Update pre-commit-config.yaml hook versions (currently v3.3.0 from 2020)</li><li>Add performance regression testing for reconciliation latency</li></ul>
+                            <ul><li>Add test parallelization via matrix strategy for integration test variants</li><li>Expand golangci-lint configuration with additional linters (gocyclo, dupl, gosec)</li><li>Add coverage badge to README</li></ul>
                         </div>
                     </div>
                 </div>

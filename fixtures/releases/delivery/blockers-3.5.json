@@ -1,0 +1,178 @@
+{
+  "releaseNumber": "3.5",
+  "fetchedAt": "2026-07-15T10:00:00.000Z",
+  "summary": {
+    "proposed": 2,
+    "approved": 3,
+    "rejected": 1,
+    "noStatus": 1,
+    "total": 7
+  },
+  "timing": {
+    "proposedBeforeCodeFreeze": 4,
+    "proposedAfterCodeFreeze": 3
+  },
+  "aging": {
+    "proposalToDecision": { "avg": 4, "median": 3, "p90": 6, "max": 8, "count": 4 },
+    "approvalToResolution": { "avg": 6, "median": 5, "p90": 9, "max": 12, "count": 2 },
+    "byStatus": {
+      "proposed": { "avg": 2, "median": 2, "p90": 3, "max": 3, "count": 2 },
+      "approved": { "avg": 5, "median": 5, "p90": 6, "max": 6, "count": 3 },
+      "rejected": { "avg": 8, "median": 8, "p90": 8, "max": 8, "count": 1 }
+    }
+  },
+  "blockers": [
+    {
+      "key": "RHOAIENG-40001",
+      "summary": "Model serving crash on multi-GPU inference with large batch sizes",
+      "link": "https://redhat.atlassian.net/browse/RHOAIENG-40001",
+      "priority": "Blocker",
+      "status": "In Progress",
+      "components": ["Model Serving"],
+      "assignee": "Alice Chen",
+      "releaseBlockerStatus": "Approved",
+      "created": "2026-07-10",
+      "daysInCurrentState": 3,
+      "daysToDecision": 1,
+      "proposedBeforeCodeFreeze": true
+    },
+    {
+      "key": "RHOAIENG-40002",
+      "summary": "Dashboard login fails intermittently with SSO token refresh",
+      "link": "https://redhat.atlassian.net/browse/RHOAIENG-40002",
+      "priority": "Blocker",
+      "status": "Open",
+      "components": ["Dashboard"],
+      "assignee": "Bob Kim",
+      "releaseBlockerStatus": "Proposed",
+      "created": "2026-07-12",
+      "daysInCurrentState": 3,
+      "daysToDecision": null,
+      "proposedBeforeCodeFreeze": true
+    },
+    {
+      "key": "RHOAIENG-40003",
+      "summary": "Pipeline execution hangs when upstream dependency times out",
+      "link": "https://redhat.atlassian.net/browse/RHOAIENG-40003",
+      "priority": "Blocker",
+      "status": "Code Review",
+      "components": ["Data Science Pipelines"],
+      "assignee": "Carol Martinez",
+      "releaseBlockerStatus": "Approved",
+      "created": "2026-07-05",
+      "daysInCurrentState": 5,
+      "daysToDecision": 2,
+      "proposedBeforeCodeFreeze": true
+    },
+    {
+      "key": "RHOAIENG-40004",
+      "summary": "Notebook controller memory leak under sustained load",
+      "link": "https://redhat.atlassian.net/browse/RHOAIENG-40004",
+      "priority": "Blocker",
+      "status": "In Progress",
+      "components": ["Notebooks"],
+      "assignee": "David Park",
+      "releaseBlockerStatus": "Approved",
+      "created": "2026-07-08",
+      "daysInCurrentState": 6,
+      "daysToDecision": 3,
+      "proposedBeforeCodeFreeze": true
+    },
+    {
+      "key": "RHOAIENG-40005",
+      "summary": "TrustyAI bias metric returns incorrect values for multi-class models",
+      "link": "https://redhat.atlassian.net/browse/RHOAIENG-40005",
+      "priority": "Blocker",
+      "status": "Open",
+      "components": ["TrustyAI"],
+      "assignee": "Eve Johnson",
+      "releaseBlockerStatus": "Proposed",
+      "created": "2026-07-14",
+      "daysInCurrentState": 1,
+      "daysToDecision": null,
+      "proposedBeforeCodeFreeze": false
+    },
+    {
+      "key": "RHOAIENG-40006",
+      "summary": "KServe autoscaler does not respect custom resource limits",
+      "link": "https://redhat.atlassian.net/browse/RHOAIENG-40006",
+      "priority": "Blocker",
+      "status": "Closed",
+      "components": ["Model Serving"],
+      "assignee": "Frank Lee",
+      "releaseBlockerStatus": "Rejected",
+      "created": "2026-07-02",
+      "daysInCurrentState": 8,
+      "daysToDecision": 6,
+      "proposedBeforeCodeFreeze": false
+    },
+    {
+      "key": "RHOAIENG-40007",
+      "summary": "Operator upgrade path broken from 3.4 to 3.5",
+      "link": "https://redhat.atlassian.net/browse/RHOAIENG-40007",
+      "priority": "Blocker",
+      "status": "In Progress",
+      "components": ["Operator"],
+      "assignee": null,
+      "releaseBlockerStatus": null,
+      "created": "2026-07-13",
+      "daysInCurrentState": null,
+      "daysToDecision": null,
+      "proposedBeforeCodeFreeze": false
+    }
+  ],
+  "criticalMonitoring": [
+    {
+      "key": "RHOAIENG-40010",
+      "summary": "Dashboard timeout on large model registry with 500+ entries",
+      "link": "https://redhat.atlassian.net/browse/RHOAIENG-40010",
+      "priority": "Critical",
+      "status": "Open",
+      "components": ["Dashboard"],
+      "assignee": "Grace Wang",
+      "releaseBlockerStatus": null,
+      "created": "2026-07-05",
+      "daysOpen": 10,
+      "daysInCurrentState": 10
+    },
+    {
+      "key": "RHOAIENG-40011",
+      "summary": "Inference latency spikes during model cache eviction",
+      "link": "https://redhat.atlassian.net/browse/RHOAIENG-40011",
+      "priority": "Critical",
+      "status": "In Progress",
+      "components": ["Model Serving"],
+      "assignee": "Henry Zhang",
+      "releaseBlockerStatus": "Proposed",
+      "created": "2026-07-08",
+      "daysOpen": 7,
+      "daysInCurrentState": 4
+    },
+    {
+      "key": "RHOAIENG-40012",
+      "summary": "Workbench fails to start on disconnected cluster environments",
+      "link": "https://redhat.atlassian.net/browse/RHOAIENG-40012",
+      "priority": "Critical",
+      "status": "Open",
+      "components": ["Notebooks"],
+      "assignee": null,
+      "releaseBlockerStatus": null,
+      "created": "2026-07-11",
+      "daysOpen": 4,
+      "daysInCurrentState": 4
+    },
+    {
+      "key": "RHAIENG-40013",
+      "summary": "Model registry sync fails silently when namespace quota exceeded",
+      "link": "https://redhat.atlassian.net/browse/RHAIENG-40013",
+      "priority": "Blocker",
+      "status": "Open",
+      "components": ["Model Registry"],
+      "assignee": "Irene Lopez",
+      "releaseBlockerStatus": "Rejected",
+      "created": "2026-07-09",
+      "daysOpen": 6,
+      "daysInCurrentState": 3
+    }
+  ]
+}

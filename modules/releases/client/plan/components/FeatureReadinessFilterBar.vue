@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { FPDOR_ITEM_NAMES, KNOWN_PRODUCTS } from '../utils/feature-readiness-export.js'
 
 const props = defineProps({
   filterMeta: {
@@ -15,6 +16,8 @@ const props = defineProps({
       component: [],
       priority: [],
       team: [],
+      product: [],
+      fpdorItems: [],
       readiness: null
     })
   }
@@ -28,6 +31,8 @@ const fixVersionOpen = ref(false)
 const componentOpen = ref(false)
 const teamOpen = ref(false)
 const priorityOpen = ref(false)
+const productOpen = ref(false)
+const fpdorItemsOpen = ref(false)
 
 const outcomeRef = ref(null)
 const targetVersionRef = ref(null)
@@ -35,6 +40,8 @@ const fixVersionRef = ref(null)
 const componentRef = ref(null)
 const teamRef = ref(null)
 const priorityRef = ref(null)
+const productRef = ref(null)
+const fpdorItemsRef = ref(null)
 
 function closeAll() {
   outcomeOpen.value = false
@@ -43,17 +50,28 @@ function closeAll() {
   componentOpen.value = false
   teamOpen.value = false
   priorityOpen.value = false
+  productOpen.value = false
+  fpdorItemsOpen.value = false
 }
 
 function toggleDropdown(name) {
-  var map = { outcome: outcomeOpen, targetVersion: targetVersionOpen, fixVersion: fixVersionOpen, component: componentOpen, team: teamOpen, priority: priorityOpen }
+  var map = {
+    outcome: outcomeOpen,
+    targetVersion: targetVersionOpen,
+    fixVersion: fixVersionOpen,
+    component: componentOpen,
+    team: teamOpen,
+    priority: priorityOpen,
+    product: productOpen,
+    fpdorItems: fpdorItemsOpen
+  }
   var wasOpen = map[name].value
   closeAll()
   if (!wasOpen) map[name].value = true
 }
 
 function handleClickOutside(event) {
-  var refs = [outcomeRef, targetVersionRef, fixVersionRef, componentRef, teamRef, priorityRef]
+  var refs = [outcomeRef, targetVersionRef, fixVersionRef, componentRef, teamRef, priorityRef, productRef, fpdorItemsRef]
   for (var i = 0; i < refs.length; i++) {
     if (refs[i].value && refs[i].value.contains(event.target)) return
   }
@@ -83,6 +101,8 @@ function clearFilters() {
     component: [],
     priority: [],
     team: [],
+    product: [],
+    fpdorItems: [],
     readiness: null
   })
 }
@@ -96,6 +116,8 @@ const hasActiveFilters = computed(() => {
     (f.component && f.component.length) ||
     (f.priority && f.priority.length) ||
     (f.team && f.team.length) ||
+    (f.product && f.product.length) ||
+    (f.fpdorItems && f.fpdorItems.length) ||
     f.readiness
   )
 })
@@ -112,6 +134,8 @@ const fixVersions = computed(() => props.filterMeta.fixVersions || [])
 const components = computed(() => props.filterMeta.components || [])
 const priorities = computed(() => props.filterMeta.priorities || [])
 const teams = computed(() => props.filterMeta.teams || [])
+const products = KNOWN_PRODUCTS
+const fpdorItems = FPDOR_ITEM_NAMES
 
 const btnClass = 'flex items-center gap-1.5 cursor-pointer text-xs rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400'
 const btnActiveClass = 'flex items-center gap-1.5 cursor-pointer text-xs rounded-md border border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400'
@@ -233,6 +257,40 @@ const optionClass = 'flex items-center gap-2 px-3 py-1.5 text-xs text-gray-900 d
           <label v-for="p in priorities" :key="p" :class="optionClass">
             <input type="checkbox" :checked="(modelValue.priority || []).includes(p)" @change="toggleValue('priority', p)" class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500" />
             <span class="truncate">{{ p }}</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product -->
+    <div class="flex flex-col gap-0.5">
+      <label class="text-xs font-medium text-gray-600 dark:text-gray-400">Product</label>
+      <div ref="productRef" class="relative">
+        <button type="button" @click="toggleDropdown('product')" @keydown.escape="productOpen = false" :aria-expanded="productOpen" aria-haspopup="listbox" :class="(modelValue.product || []).length ? btnActiveClass : btnClass">
+          <span class="truncate max-w-[140px]">{{ multiLabel(modelValue.product, 'All products') }}</span>
+          <svg class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+        </button>
+        <div v-if="productOpen" role="group" :class="dropdownClass" @keydown.escape="productOpen = false">
+          <label v-for="p in products" :key="p" :class="optionClass">
+            <input type="checkbox" :checked="(modelValue.product || []).includes(p)" @change="toggleValue('product', p)" class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500" />
+            <span class="truncate">{{ p }}</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Failed FPDoR items -->
+    <div class="flex flex-col gap-0.5">
+      <label class="text-xs font-medium text-gray-600 dark:text-gray-400">Failed FPDoR</label>
+      <div ref="fpdorItemsRef" class="relative">
+        <button type="button" @click="toggleDropdown('fpdorItems')" @keydown.escape="fpdorItemsOpen = false" :aria-expanded="fpdorItemsOpen" aria-haspopup="listbox" :class="(modelValue.fpdorItems || []).length ? btnActiveClass : btnClass">
+          <span class="truncate max-w-[160px]">{{ multiLabel(modelValue.fpdorItems, 'Any failed item') }}</span>
+          <svg class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+        </button>
+        <div v-if="fpdorItemsOpen" role="group" :class="dropdownClass" @keydown.escape="fpdorItemsOpen = false">
+          <label v-for="item in fpdorItems" :key="item" :class="optionClass">
+            <input type="checkbox" :checked="(modelValue.fpdorItems || []).includes(item)" @change="toggleValue('fpdorItems', item)" class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500" />
+            <span class="truncate">{{ item }}</span>
           </label>
         </div>
       </div>

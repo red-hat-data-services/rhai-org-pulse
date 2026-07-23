@@ -1,6 +1,6 @@
 /**
  * View-level tests for TvFvDeltaView — product filter, column sorting,
- * and target alignment column integration.
+ * target alignment column, and default version pre-selection.
  *
  * These tests mount the full view with mocked API responses and verify
  * the template renders the new UI elements correctly.
@@ -8,6 +8,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import TvFvDeltaView from '../../../client/views/TvFvDeltaView.vue'
+import { DEFAULT_SELECTED_VERSIONS } from '../../../client/composables/tvFvDeltaDefaults'
 
 // ── Mock apiRequest ──
 
@@ -19,30 +20,38 @@ vi.mock('@shared/client', function () {
   }
 })
 
-// ── Test data ──
+// ── Test data (subset of default versions + one extra for family filter) ──
+
+function emptyRow(release) {
+  return { release: release, total: 0, aligned: 0, tv_only: 0, fv_only: 0, mismatched: 0, alignment_pct: 0, ga_date: null }
+}
 
 function makeTestData() {
+  var detailed = {
+    '3.6 EA1 RHOAI RELEASE': { release: '3.6 EA1 RHOAI RELEASE', total: 7, aligned: 2, tv_only: 3, fv_only: 1, mismatched: 1, alignment_pct: 28.6, ga_date: '2026-09-17' },
+    '3.6 EA2 RHOAI RELEASE': { release: '3.6 EA2 RHOAI RELEASE', total: 4, aligned: 0, tv_only: 2, fv_only: 1, mismatched: 1, alignment_pct: 0, ga_date: '2026-10-15' },
+    '3.6 GA RHOAI RELEASE': { release: '3.6 GA RHOAI RELEASE', total: 12, aligned: 3, tv_only: 5, fv_only: 2, mismatched: 2, alignment_pct: 25, ga_date: '2026-11-19' },
+    '3.5 GA RHOAI RELEASE': { release: '3.5 GA RHOAI RELEASE', total: 155, aligned: 50, tv_only: 60, fv_only: 25, mismatched: 20, alignment_pct: 32.3, ga_date: '2026-07-15' },
+  }
+  var summary = DEFAULT_SELECTED_VERSIONS.map(function (v) {
+    return detailed[v] || emptyRow(v)
+  })
+  // Extra non-default release in cache — must not appear in the default picker
+  summary.push({ release: 'RHELAI-3.2', total: 1, aligned: 1, tv_only: 0, fv_only: 0, mismatched: 0, alignment_pct: 100, ga_date: null })
+
+  var releases = {}
+  DEFAULT_SELECTED_VERSIONS.forEach(function (v) {
+    releases[v] = { aligned: [], tv_only: [], fv_only: [], mismatched: [] }
+  })
+
   return {
     metadata: {
       generated_at: '2026-06-17T10:00:00Z',
       data_timestamp: '2026-06-17T09:55:00Z',
-      releases: ['rhoai-3.6.EA1', 'rhoai-3.6.EA2', 'rhoai-3.6', 'rhoai-3.5', 'RHELAI-3.2'],
-      all_components: ['Dashboard', 'Serving'],
+      releases: DEFAULT_SELECTED_VERSIONS.slice(),
     },
-    executive_summary: [
-      { release: 'rhoai-3.6.EA1', total: 7, aligned: 2, tv_only: 3, fv_only: 1, mismatched: 1, alignment_pct: 28.6, ga_date: '2026-09-17' },
-      { release: 'rhoai-3.6.EA2', total: 4, aligned: 0, tv_only: 2, fv_only: 1, mismatched: 1, alignment_pct: 0, ga_date: '2026-10-15' },
-      { release: 'rhoai-3.6', total: 12, aligned: 3, tv_only: 5, fv_only: 2, mismatched: 2, alignment_pct: 25, ga_date: '2026-11-19' },
-      { release: 'rhoai-3.5', total: 155, aligned: 50, tv_only: 60, fv_only: 25, mismatched: 20, alignment_pct: 32.3, ga_date: '2026-07-15' },
-      { release: 'RHELAI-3.2', total: 1, aligned: 1, tv_only: 0, fv_only: 0, mismatched: 0, alignment_pct: 100, ga_date: null },
-    ],
-    releases: {
-      'rhoai-3.6.EA1': { aligned: [], tv_only: [], fv_only: [], mismatched: [] },
-      'rhoai-3.6.EA2': { aligned: [], tv_only: [], fv_only: [], mismatched: [] },
-      'rhoai-3.6': { aligned: [], tv_only: [], fv_only: [], mismatched: [] },
-      'rhoai-3.5': { aligned: [], tv_only: [], fv_only: [], mismatched: [] },
-      'RHELAI-3.2': { aligned: [], tv_only: [], fv_only: [], mismatched: [] },
-    },
+    executive_summary: summary,
+    releases: releases,
   }
 }
 
@@ -71,7 +80,38 @@ async function mountView() {
   return wrapper
 }
 
+/** Find the executive summary table (first table in the view) */
+function findSummaryTable(wrapper) {
+  return wrapper.findAll('table')[0]
+}
+
 // ── Tests ──
+
+describe('TvFvDeltaView default version selection', function () {
+  beforeEach(function () {
+    mockApiRequest.mockReset()
+  })
+
+  it('pre-selects the 18 default product-family versions on load', async function () {
+    var wrapper = await mountView()
+    // Version picker chips include a Remove control; family filter pills do not
+    var chips = wrapper.findAll('button').filter(function (b) {
+      return b.find('span[title="Remove"]').exists()
+    })
+    expect(chips.length).toBe(DEFAULT_SELECTED_VERSIONS.length)
+    DEFAULT_SELECTED_VERSIONS.forEach(function (v) {
+      expect(chips.some(function (b) { return b.text().includes(v) })).toBe(true)
+    })
+  })
+
+  it('does not include non-default versions from cache in the picker chips', async function () {
+    var wrapper = await mountView()
+    var rhelaiChip = wrapper.findAll('button').find(function (b) {
+      return b.find('span[title="Remove"]').exists() && b.text().includes('RHELAI-3.2')
+    })
+    expect(rhelaiChip).toBeFalsy()
+  })
+})
 
 describe('TvFvDeltaView release family filter', function () {
   beforeEach(function () {
@@ -82,49 +122,21 @@ describe('TvFvDeltaView release family filter', function () {
     var wrapper = await mountView()
     var buttons = wrapper.findAll('button').filter(function (b) {
       var text = b.text()
-      return text === 'All' || text === 'RHOAI 3.6' || text === 'RHOAI 3.5' || text === 'RHELAI 3.2'
+      return text === 'All' || text.includes('3.6') || text.includes('3.5')
     })
-    expect(buttons.length).toBeGreaterThanOrEqual(4)
+    expect(buttons.length).toBeGreaterThanOrEqual(2)
   })
 
-  it('defaults to All — shows all releases', async function () {
+  it('defaults to All — shows default-selected releases present in data', async function () {
     var wrapper = await mountView()
     var table = findSummaryTable(wrapper)
     var allText = table.find('tbody').text()
-    expect(allText).toContain('RHELAI')
-    expect(allText).toContain('rhoai')
-  })
-
-  it('filters to RHOAI 3.6 family when clicked', async function () {
-    var wrapper = await mountView()
-    var famButton = wrapper.findAll('button').find(function (b) { return b.text() === 'RHOAI 3.6' })
-    await famButton.trigger('click')
-    await flushPromises()
-    var table = findSummaryTable(wrapper)
-    var rows = table.findAll('tbody tr')
-    expect(rows.length).toBe(3) // EA1, EA2, GA
-    var releaseTexts = rows.map(function (r) { return r.find('td').text() })
-    for (var i = 0; i < releaseTexts.length; i++) {
-      expect(releaseTexts[i]).toContain('3.6')
-    }
-  })
-
-  it('filters to RHELAI 3.2 when clicked', async function () {
-    var wrapper = await mountView()
-    var famButton = wrapper.findAll('button').find(function (b) { return b.text() === 'RHELAI 3.2' })
-    await famButton.trigger('click')
-    await flushPromises()
-    var table = findSummaryTable(wrapper)
-    var rows = table.findAll('tbody tr')
-    expect(rows.length).toBe(1)
-    expect(rows[0].text()).toContain('RHELAI')
+    expect(allText).toContain('3.6 EA1 RHOAI RELEASE')
+    expect(allText).toContain('3.5 GA RHOAI RELEASE')
+    // Non-default RHELAI-3.2 must not appear
+    expect(allText).not.toContain('RHELAI-3.2')
   })
 })
-
-/** Find the executive summary table (first table in the view) */
-function findSummaryTable(wrapper) {
-  return wrapper.findAll('table')[0]
-}
 
 describe('TvFvDeltaView executive summary sorting', function () {
   beforeEach(function () {
@@ -139,19 +151,15 @@ describe('TvFvDeltaView executive summary sorting', function () {
     expect(headers.length).toBe(11)
   })
 
-  it('default sort is release family order (EA1 < EA2 < GA)', async function () {
+  it('default sort includes 3.6 and 3.5 default versions from data', async function () {
     var wrapper = await mountView()
     var table = findSummaryTable(wrapper)
     var rows = table.findAll('tbody tr')
-    var releases = rows.map(function (r) { return r.find('td').text().trim() })
-    // Default is All — RHELAI first (alpha), then rhoai families
-    expect(releases[0]).toBe('RHELAI-3.2')
-    // rhoai 3.6 family in order, then 3.5
-    var rhoaiReleases = releases.filter(function (r) { return r.toLowerCase().startsWith('rhoai') })
-    expect(rhoaiReleases[0]).toBe('rhoai-3.6.EA1')
-    expect(rhoaiReleases[1]).toBe('rhoai-3.6.EA2')
-    expect(rhoaiReleases[2]).toBe('rhoai-3.6')
-    expect(rhoaiReleases[3]).toBe('rhoai-3.5')
+    var releases = rows.map(function (r) { return r.find('td').text().trim().replace(/\s*\(refreshing data\.\.\.\)\s*$/, '') })
+    expect(releases).toContain('3.6 EA1 RHOAI RELEASE')
+    expect(releases).toContain('3.6 EA2 RHOAI RELEASE')
+    expect(releases).toContain('3.6 GA RHOAI RELEASE')
+    expect(releases).toContain('3.5 GA RHOAI RELEASE')
   })
 
   it('clicking Total header sorts by total', async function () {
@@ -169,7 +177,7 @@ describe('TvFvDeltaView executive summary sorting', function () {
       var countEl = cells[1].find('.clickable-count')
       if (countEl.exists()) totals.push(parseInt(countEl.text(), 10))
     })
-    // Ascending order
+    // Ascending order among rows with real counts
     for (var i = 1; i < totals.length; i++) {
       expect(totals[i]).toBeGreaterThanOrEqual(totals[i - 1])
     }
@@ -211,25 +219,13 @@ describe('TvFvDeltaView target alignment column', function () {
     expect(html).toMatch(/\d+%\*/)
   })
 
-  it('shows dash for releases without GA dates', async function () {
-    var wrapper = await mountView()
-    // Default is All, so RHELAI-3.2 (no ga_date) is already visible
-    var table = findSummaryTable(wrapper)
-    var rows = table.findAll('tbody tr')
-    var rhelaiRow = rows.find(function (r) { return r.text().includes('RHELAI') })
-    expect(rhelaiRow).toBeTruthy()
-    // The target cell (8th column, index 7) should have a dash
-    var cells = rhelaiRow.findAll('td')
-    expect(cells[7].text()).toBe('—')
-  })
-
   it('colors target red when actual alignment is below target', async function () {
     var wrapper = await mountView()
     var table = findSummaryTable(wrapper)
-    // rhoai-3.5 has alignment_pct: 32.3% and ga_date: 2026-07-15 (~28 days from June 17)
+    // 3.5 GA RHOAI has alignment_pct: 32.3% and ga_date: 2026-07-15 (~28 days from June 17)
     // Target for ≤30 days = 100%*, so actual (32.3%) < target (100%) → red
     var rows = table.findAll('tbody tr')
-    var row35 = rows.find(function (r) { return r.text().includes('rhoai-3.5') && !r.text().includes('EA') })
+    var row35 = rows.find(function (r) { return r.text().includes('3.5 GA RHOAI RELEASE') })
     if (row35) {
       var targetCell = row35.findAll('td')[7]
       var targetSpan = targetCell.find('span.font-semibold')

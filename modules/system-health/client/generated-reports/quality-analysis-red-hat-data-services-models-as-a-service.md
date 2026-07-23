@@ -1,455 +1,552 @@
 ---
 repository: "red-hat-data-services/models-as-a-service"
-overall_score: 7.0
+overall_score: 7.3
 scorecard:
   - dimension: "Unit Tests"
-    score: 8.5
-    status: "Excellent 1.19:1 test-to-code ratio with race detection and coverage generation"
+    score: 8.0
+    status: "56 Go test files across 2 modules; 60% test-to-code ratio with testify/gomega, race detection, and strong parallelism (299 t.Run/t.Parallel calls)"
   - dimension: "Integration/E2E"
     score: 8.0
-    status: "21 comprehensive pytest E2E tests covering multi-tenancy, auth, OIDC, and subscriptions"
+    status: "26 pytest E2E tests covering smoke, multi-tenant isolation, auth, rate limiting, network policy, API keys, and CRD resilience against real OpenShift clusters"
   - dimension: "Build Integration"
     score: 7.0
-    status: "Kustomize validation, codegen verification, OpenAPI breaking changes, operator chaos testing"
+    status: "Kustomize manifest validation, CRD/RBAC codegen verification, operator-chaos breaking change detection, Tekton/Konflux multi-arch PR builds, OpenAPI spec validation"
   - dimension: "Image Testing"
-    score: 4.5
-    status: "Good Dockerfiles with multi-arch Konflux but no runtime validation or vulnerability scanning in CI"
+    score: 6.0
+    status: "Multi-stage UBI9 Dockerfiles with FIPS build config, multi-arch (x86_64/arm64/ppc64le/s390x), but no container runtime validation or HEALTHCHECK directives"
   - dimension: "Coverage Tracking"
     score: 4.0
-    status: "Coverage generated and uploaded as artifacts but no codecov integration or thresholds"
+    status: "Coverage generated via --coverprofile and uploaded as CI artifacts, but no codecov integration, no thresholds, no PR reporting"
   - dimension: "CI/CD Automation"
     score: 9.0
-    status: "12 well-organized workflows with path filtering, concurrency control, pinned SHAs, Renovate"
+    status: "14 workflows with comprehensive PR validation (lint, test, build, OpenAPI, operator-chaos, disconnected-readiness, PR title), concurrency control, Go caching, OpenSSF Scorecard"
+  - dimension: "Static Analysis"
+    score: 8.0
+    status: "golangci-lint v2 with default:all for both modules, Spectral OpenAPI linting, oasdiff breaking change detection, Renovate, govulncheck, strong FIPS build config"
   - dimension: "Agent Rules"
-    score: 7.5
-    status: "Strong AGENTS.md with build commands, codegen rules, PR conventions, but no .claude/rules/"
+    score: 6.0
+    status: "Comprehensive AGENTS.md with repo structure, CRDs, build/test commands, codegen rules, and testing conventions; no .claude/rules/ for test automation guidance"
 critical_gaps:
-  - title: "No container image vulnerability scanning in CI"
-    impact: "CVEs in base images or dependencies not caught until Konflux post-merge scans"
+  - title: "No coverage tracking or enforcement"
+    impact: "Coverage regressions go undetected; no visibility into coverage trends across PRs"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No coverage thresholds or codecov integration"
-    impact: "Test coverage can silently regress without anyone noticing; no PR coverage gates"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No PR-time container image build validation"
-    impact: "Dockerfile/build issues discovered only after merge in Konflux pipeline"
-    severity: "MEDIUM"
     effort: "4-6 hours"
-  - title: "E2E tests not automated in GitHub Actions"
-    impact: "E2E suite requires manual cluster setup; regressions can slip through without CI gate"
+  - title: "No container runtime validation"
+    impact: "Image startup failures and runtime issues not caught until deployment to staging/production"
     severity: "MEDIUM"
-    effort: "8-16 hours"
+    effort: "6-8 hours"
+  - title: "No pre-commit hooks"
+    impact: "Developers may push code that fails CI linting checks, creating unnecessary CI round-trips"
+    severity: "LOW"
+    effort: "2-3 hours"
 quick_wins:
-  - title: "Add Trivy scanning to PR workflows"
+  - title: "Add Codecov integration with coverage thresholds"
+    effort: "3-4 hours"
+    impact: "Automated PR coverage reporting with regression prevention via threshold enforcement"
+  - title: "Add pre-commit hooks for golangci-lint and gofmt"
     effort: "1-2 hours"
-    impact: "Catch CVEs in container images before merge; standard practice across ODH repos"
-  - title: "Add codecov integration with coverage thresholds"
+    impact: "Catch lint issues locally before pushing, reducing CI feedback loop"
+  - title: "Create .claude/rules/ with test creation patterns"
     effort: "2-3 hours"
-    impact: "Enforce minimum coverage and show PR coverage deltas in review"
-  - title: "Add pre-commit hooks for gitleaks and golangci-lint"
-    effort: "1-2 hours"
-    impact: "Catch issues locally before CI, faster developer feedback loop"
-  - title: "Create .claude/rules/ with test automation patterns"
-    effort: "2-3 hours"
-    impact: "Improve AI-generated test quality with repo-specific Go testing patterns"
+    impact: "Improve AI-generated test quality with framework-specific patterns for testify/gomega and pytest"
 recommendations:
   priority_0:
-    - "Add Trivy container scanning to maas-api-ci.yml and maas-controller-ci.yml workflows"
-    - "Integrate codecov with .codecov.yml config and coverage threshold enforcement on PRs"
-    - "Add CodeQL or Semgrep SAST workflow triggered on PRs for Go static analysis"
+    - "Add Codecov integration with .codecov.yml config and coverage threshold enforcement (e.g., 70% patch coverage minimum)"
+    - "Add container image startup validation in CI — verify built images can start and respond to health checks"
   priority_1:
-    - "Add PR-time Docker image build step to validate Dockerfiles compile before merge"
-    - "Create a lightweight E2E smoke test using Kind cluster in GitHub Actions"
-    - "Create .claude/rules/ with unit-tests.md, e2e-tests.md, and webhook-tests.md patterns"
-    - "Add image startup validation test (docker run --rm IMAGE --help or health check)"
+    - "Create .claude/rules/ with Go unit test patterns (testify/gomega conventions) and pytest E2E patterns"
+    - "Add Dockerfile HEALTHCHECK directives for runtime container health monitoring"
+    - "Add pre-commit hooks (.pre-commit-config.yaml) for golangci-lint, gofmt, and yaml validation"
   priority_2:
-    - "Add contract tests between maas-api and maas-controller API boundaries"
-    - "Implement performance regression testing for API endpoints"
-    - "Add SBOM generation to Dockerfiles or CI pipeline"
-    - "Consider adding Ginkgo-based integration tests for controller envtest scenarios"
+    - "Consider adding integration tests for the maas-api/maas-controller interaction boundary"
+    - "Add load/performance testing for API endpoints to establish baseline metrics"
+    - "Enable govulncheck as blocking (currently non-blocking with || true)"
 ---
 
-# Quality Analysis: red-hat-data-services/models-as-a-service
+# Quality Analysis: models-as-a-service
 
 ## Executive Summary
-- Overall Score: 7.0/10
-- Key Strengths: Excellent test-to-code ratio (1.19:1), innovative operator chaos testing, comprehensive OpenAPI validation with breaking change detection, well-structured AGENTS.md, 12 well-organized CI workflows with pinned SHAs and path filtering
-- Critical Gaps: No container vulnerability scanning in CI, no coverage threshold enforcement, no PR-time image build validation, E2E tests not automated in CI
-- Agent Rules Status: Present (AGENTS.md is strong), but missing `.claude/rules/` with test-specific patterns
 
-## Repository Profile
+- **Overall Score: 7.3/10**
+- **Repository**: [red-hat-data-services/models-as-a-service](https://github.com/red-hat-data-services/models-as-a-service)
+- **Type**: Kubernetes controller + HTTP API service (Go monorepo)
+- **Tier**: Downstream (Jira: RHOAIENG / Model as a Service)
+- **Primary Language**: Go (with Python E2E tests)
+- **Framework**: controller-runtime (kubebuilder), Gateway API
 
-| Attribute | Value |
-|-----------|-------|
-| **Type** | Kubernetes operator + HTTP API service (monorepo) |
-| **Languages** | Go (primary), Python (E2E tests) |
-| **Framework** | kubebuilder/controller-runtime, Gateway API |
-| **Components** | `maas-controller/` (K8s controller), `maas-api/` (HTTP API) |
-| **CRDs** | Tenant, MaaSModelRef, MaaSAuthPolicy, MaaSSubscription, ExternalModel |
-| **Go Source Files** | 83 files (~19,094 LOC) |
-| **Go Test Files** | 47 files (~22,721 LOC) |
-| **E2E Test Files** | 21 Python files (~14,226 LOC) |
+**Key Strengths:**
+- Exceptionally comprehensive CI/CD pipeline with 14 workflows covering lint, test, build validation, OpenAPI spec validation, operator-chaos breaking change detection, and OpenSSF Scorecard
+- Strong unit test coverage with 56 test files (60% test-to-code ratio) using race detection and good test parallelism
+- Excellent E2E test suite with 26 pytest tests covering multi-tenant isolation, authentication, rate limiting, and security
+- Best-in-class FIPS compliance configuration (GOEXPERIMENT=strictfipsruntime, CGO_ENABLED=1, UBI9 base images)
+- Sophisticated operator-chaos integration for CRD schema and knowledge model breaking change detection
+
+**Critical Gaps:**
+- No coverage tracking or enforcement — coverage reports are generated but not integrated into PR review
+- No container runtime validation — images are built but not tested for startup/health
+- No pre-commit hooks for local lint enforcement
+
+**Agent Rules Status**: AGENTS.md present and comprehensive; no .claude/rules/ directory for test-specific guidance
 
 ## Quality Scorecard
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 8.5/10 | Excellent 1.19:1 test-to-code ratio with race detection and coverage generation |
-| Integration/E2E | 8.0/10 | 21 comprehensive pytest E2E tests covering multi-tenancy, auth, OIDC, subscriptions |
-| **Build Integration** | **7.0/10** | **Kustomize validation, codegen verify, OpenAPI breaking changes, operator chaos** |
-| Image Testing | 4.5/10 | Good Dockerfiles with multi-arch Konflux but no runtime validation or vuln scanning |
-| Coverage Tracking | 4.0/10 | Coverage generated and uploaded as artifacts but no codecov or thresholds |
-| CI/CD Automation | 9.0/10 | 12 well-organized workflows with path filtering, concurrency, pinned SHAs, Renovate |
-| Agent Rules | 7.5/10 | Strong AGENTS.md with build commands, codegen rules, PR conventions |
+
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 8.0/10 | 15% | 1.20 | 56 Go test files, 60% ratio, testify+gomega, race detection |
+| Integration/E2E | 8.0/10 | 20% | 1.60 | 26 pytest E2E tests, multi-tenant, real cluster |
+| Build Integration | 7.0/10 | 15% | 1.05 | Kustomize validation, codegen verify, Tekton/Konflux multi-arch |
+| Image Testing | 6.0/10 | 10% | 0.60 | Multi-stage UBI9, FIPS-ready, no runtime validation |
+| Coverage Tracking | 4.0/10 | 10% | 0.40 | Generated but not tracked or enforced |
+| CI/CD Automation | 9.0/10 | 15% | 1.35 | 14 workflows, comprehensive PR gates |
+| Static Analysis | 8.0/10 | 10% | 0.80 | golangci-lint v2 all, Spectral, oasdiff, Renovate |
+| Agent Rules | 6.0/10 | 5% | 0.30 | Good AGENTS.md, no .claude/rules/ |
+| **Overall** | **7.3/10** | | **7.30** | |
 
 ## Critical Gaps
 
-1. **No container image vulnerability scanning in CI**
-   - Impact: CVEs in UBI9 base images or Go dependencies not caught until Konflux post-merge scans; late-stage security findings delay releases
-   - Severity: HIGH
-   - Effort: 2-4 hours
-   - Neither Trivy, Snyk, nor Grype is configured in any GitHub Actions workflow
+### 1. No Coverage Tracking or Enforcement
+- **Severity**: HIGH
+- **Impact**: Coverage regressions go undetected; no visibility into coverage trends across PRs; developers have no feedback on whether their PR improves or degrades coverage
+- **Effort**: 4-6 hours
+- **Details**: Both `maas-api/Makefile` and `maas-controller/Makefile` generate `coverage.out` and `coverage.html` via `--coverprofile`, and CI uploads these as artifacts. However, there is no `.codecov.yml`, no Codecov/Coveralls action, no coverage thresholds, and no PR comments showing coverage delta. Coverage artifacts are effectively write-only.
 
-2. **No coverage thresholds or codecov integration**
-   - Impact: Test coverage can silently regress; PRs that reduce coverage are not flagged during review
-   - Severity: HIGH
-   - Effort: 2-4 hours
-   - Coverage files are generated (`coverage.out`, `coverage.html`) and uploaded as artifacts, but no threshold enforcement or PR reporting
+### 2. No Container Runtime Validation
+- **Severity**: MEDIUM
+- **Impact**: Image startup failures, missing runtime dependencies, or misconfigured entrypoints are not caught until deployment to staging/production environments
+- **Effort**: 6-8 hours
+- **Details**: Dockerfiles are well-constructed (multi-stage, UBI9, non-root user, FIPS build flags), but there are no tests that build an image, start a container, and verify it responds to health checks. The Tekton pipeline builds multi-arch images but does not validate runtime behavior.
 
-3. **No PR-time container image build validation**
-   - Impact: Dockerfile syntax errors, missing dependencies, or build context issues discovered only after merge when Konflux pipeline runs
-   - Severity: MEDIUM
-   - Effort: 4-6 hours
-   - Tekton pipeline exists for maas-api but is triggered by comment/label only, not automatically
-
-4. **E2E tests not automated in GitHub Actions**
-   - Impact: The comprehensive 21-file E2E suite requires a live OpenShift cluster; there's no lightweight CI gate to catch regressions pre-merge
-   - Severity: MEDIUM
-   - Effort: 8-16 hours
-   - E2E tests under `test/e2e/tests/` require deployed MaaS system with Gateway, making full automation complex
+### 3. No Pre-commit Hooks
+- **Severity**: LOW
+- **Impact**: Developers may push code that fails CI lint checks (golangci-lint, gofmt), creating unnecessary CI round-trips and slower feedback
+- **Effort**: 2-3 hours
+- **Details**: No `.pre-commit-config.yaml` found. Given the comprehensive golangci-lint configuration (v2 with `default: all`), catching issues locally would save significant developer time.
 
 ## Quick Wins
 
-1. **Add Trivy scanning to PR workflows** (1-2 hours)
-   - Impact: Catch CVEs in container images before merge
-   - Implementation: Add `aquasecurity/trivy-action@master` step to `maas-api-ci.yml` and `maas-controller-ci.yml`
-   ```yaml
-   - name: Build image for scanning
-     run: docker build -t maas-api:test -f Dockerfile .
-   - name: Run Trivy vulnerability scanner
-     uses: aquasecurity/trivy-action@master
-     with:
-       image-ref: 'maas-api:test'
-       format: 'sarif'
-       severity: 'CRITICAL,HIGH'
-   ```
+### 1. Add Codecov Integration (3-4 hours)
+- **Impact**: Automated PR coverage reporting with regression prevention
+- **Implementation**: Add `.codecov.yml` and `codecov/codecov-action` to CI workflows
 
-2. **Add codecov integration** (2-3 hours)
-   - Impact: Enforce minimum coverage and show PR coverage deltas
-   - Implementation: Add `.codecov.yml` and upload step
-   ```yaml
-   # .codecov.yml
-   coverage:
-     status:
-       project:
-         default:
-           target: auto
-           threshold: 2%
-       patch:
-         default:
-           target: 70%
-   ```
-   ```yaml
-   - uses: codecov/codecov-action@v4
-     with:
-       files: coverage.out
-       flags: maas-api
-       fail_ci_if_error: false
-   ```
+```yaml
+# .codecov.yml
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 2%
+    patch:
+      default:
+        target: 70%
+```
 
-3. **Add pre-commit hooks** (1-2 hours)
-   - Impact: Catch linting and secret issues locally before pushing
-   ```yaml
-   # .pre-commit-config.yaml
-   repos:
-     - repo: https://github.com/gitleaks/gitleaks
-       rev: v8.18.0
-       hooks:
-         - id: gitleaks
-     - repo: local
-       hooks:
-         - id: golangci-lint-api
-           name: golangci-lint (maas-api)
-           entry: make -C maas-api lint
-           language: system
-           pass_filenames: false
-           files: ^maas-api/
-   ```
+```yaml
+# Add to maas-api-ci.yml and maas-controller-ci.yml after test step:
+- name: Upload coverage to Codecov
+  uses: codecov/codecov-action@v4
+  with:
+    files: ${{ env.PROJECT_DIR }}/coverage.out
+    flags: ${{ env.PROJECT_DIR }}
+    fail_ci_if_error: false
+```
 
-4. **Create .claude/rules/ with test automation patterns** (2-3 hours)
-   - Impact: Improve AI-generated test quality with repo-specific patterns
-   - Create `unit-tests.md`, `e2e-tests.md`, `webhook-tests.md` with framework-specific examples
+### 2. Add Pre-commit Hooks (1-2 hours)
+- **Impact**: Catch lint issues locally before pushing
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-merge-conflict
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v2.6.2
+    hooks:
+      - id: golangci-lint
+        entry: golangci-lint run --fix
+        args: [--config, maas-api/.golangci.yml]
+        files: ^maas-api/
+```
+
+### 3. Create .claude/rules/ with Test Patterns (2-3 hours)
+- **Impact**: Improve AI-generated test quality with framework-specific patterns
+- **Implementation**: Generate rules using `/test-rules-generator` for both Go test frameworks (testify/gomega) and pytest E2E patterns
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflows (12 total):**
+**Score: 8.0/10**
+
+The repository has strong unit test coverage across both Go modules:
+
+**maas-api (25 test files):**
+- Handler tests: `api_keys/handler_test.go`, `handlers/models_test.go`, `subscription/handler_test.go`, `tenant/handler_test.go`, `token/handler_test.go`
+- Config tests: `config/config_test.go`, `config/tls_test.go`, `config/cluster_config_test.go`
+- Middleware tests: `middleware/request_id_test.go`, `middleware/tenant_logger_test.go`, `tracing/middleware_test.go`
+- Metrics tests: `metrics/server_test.go`, `metrics/recorder_test.go`, `metrics/prometheus_test.go`, `metrics/middleware_tenant_test.go`
+- Auth tests: `auth/sar_admin_checker_test.go`, `auth/cached_admin_checker_test.go`, `authpolicy/checker_test.go`
+- Service tests: `api_keys/service_test.go`, `api_keys/store_test.go`, `api_keys/keygen_test.go`
+- Other: `models/discovery_test.go`, `subscription/selector_test.go`, `logger/redaction_test.go`, `cmd/cors_test.go`
+
+**maas-controller (31 test files):**
+- Controller tests: `aitenant_controller_test.go`, `maassubscription_controller_test.go`, `maasauthpolicy_controller_test.go`, `maasmodelref_controller_test.go`, `self_deployment_controller_test.go`
+- Webhook tests: `aitenant_webhook_test.go`, `aitenant_webhook_gateway_test.go`, `maasauthpolicy_webhook_test.go`, `maassubscription_webhook_test.go`, `tenant_namespace_validator_test.go`
+- Provider tests: `providers_test.go`, `providers_llmisvc_test.go`, `providers_external_test.go`
+- Reconciler tests: `tenant_reconcile_test.go`, `externalmodel/reconciler_test.go`, `externalmodel/resources_test.go`
+- Platform tests: `platform_context_test.go`, `pipeline_test.go`, `patch_test.go`, `params_test.go`, `naming_test.go`
+- Other: `multitenancy_test.go`, `cross_namespace_test.go`, `conflict_detection_test.go`, `helpers_test.go`, `rbac_manifest_test.go`
+
+**Test-to-code ratio**: 56 test files / 93 source files = 60.2%
+
+**Frameworks**:
+- maas-api: `testing` + `testify` (assert/require)
+- maas-controller: `testing` + `testify` (assert/require) + `gomega`
+- Both use `runtime.NewScheme()` with fake clients for Kubernetes object testing
+
+**Test quality signals**:
+- Race detection enabled (`-race` flag in both Makefiles)
+- 299 instances of `t.Run`/`t.Parallel` indicating good subtesting and parallelism
+- Coverage profile generation on every test run
+
+**What's missing for a perfect score**:
+- No test table conventions documented
+- Some test files could benefit from more edge case coverage (e.g., error paths)
+
+### Integration/E2E Tests
+
+**Score: 8.0/10**
+
+Comprehensive E2E test suite with 26 test files using pytest:
+
+**Test categories**:
+- **Smoke**: `test_smoke.py` — health checks, model catalog, chat completions, legacy completions
+- **Multi-tenant**: `test_multi_tenant_maas_api.py`, `test_multi_tenant_integration.py`, `test_tenant.py`, `test_tenant_discovery.py`, `test_tenant_namespace_discovery.py`
+- **Isolation**: `test_tenant_auth_isolation.py`, `test_tenant_discovery_isolation.py`, `test_tenant_subscription_isolation.py`, `test_tenant_rate_limit_isolation.py`
+- **Auth/Security**: `test_x_api_key_auth.py`, `test_negative_security.py`, `test_external_oidc.py`, `test_gateway_scoped_authpolicy.py`
+- **API functionality**: `test_subscription.py`, `test_subscription_list_endpoints.py`, `test_models_endpoint.py`, `test_api_keys.py`
+- **Infrastructure**: `test_networkpolicy.py`, `test_namespace_scoping.py`, `test_crd_watch_resilience.py`, `test_aitenant_lifecycle.py`
+- **External**: `test_external_models.py`, `test_config_tenant.py`
+
+**Test infrastructure**:
+- `conftest.py`: Well-structured session-scoped fixtures for gateway host, auth tokens, API keys, model catalog, shared tenants
+- `multitenancy_helpers.py`: Shared helper module for multi-tenant test setup/teardown
+- `test_helper.py`: Shared utility functions (chat, completions helpers)
+- Kustomize fixtures in `test/e2e/fixtures/` with multiple overlay configurations (distinct, distinct-2, trlp-test, unconfigured)
+- Prow integration via `scripts/prow_run_smoke_test.sh`
+- Local development scripts: `run-tests-quick.sh`, `local-test.sh`, `local-deploy.sh`
+
+**Test environment**:
+- Tests run against real OpenShift clusters (not mocked)
+- TLS verification configurable via `E2E_SKIP_TLS_VERIFY`
+- DNS resolution pre-check with graceful skip on infrastructure failure
+- Port-forward support with Host header injection
+
+**What's missing for a perfect score**:
+- E2E tests are not automated in GitHub Actions (run via Prow/external CI)
+- No pytest-cov integration for E2E coverage
+- No multi-version/matrix testing for different K8s/OCP versions
+
+### Build Integration
+
+**Score: 7.0/10**
+
+Strong build validation pipeline with multiple layers:
+
+**PR-triggered validation (`build-test.yml`)**:
+- Kustomize manifest validation via `scripts/ci/validate-manifests.sh`
+- Generated code verification (CRDs, RBAC, deepcopy) with `make verify-codegen`
+- Concurrency control (`cancel-in-progress: true`)
+- 10-minute timeout
+
+**Operator-chaos validation (`operator-chaos.yml`)**:
+- Knowledge model validation and local preflight checks
+- Breaking change detection between base branch and PR (knowledge model diff)
+- CRD schema diff with breaking change detection
+- Upgrade simulation (dry-run)
+
+**Tekton/Konflux pipeline (`.tekton/odh-maas-api-pull-request.yaml`)**:
+- Multi-architecture builds: linux/x86_64, linux-arm64, linux/ppc64le, linux/s390x
+- Hermetic builds with prefetch (gomod)
+- Triggered via labels (`kfbuild-all`, `kfbuild-maas-billing`) or comment (`/build-konflux`)
+- Image expiry: 5 days for PR images
+
+**OpenAPI validation (`openapi-validation.yml`)**:
+- Spectral linting with custom rules
+- Breaking change detection via oasdiff
+- Changelog entry verification
+- Validation report uploaded as artifact
+
+**What's missing for a higher score**:
+- No Docker image build in GitHub Actions PR workflow (relies on Tekton/Konflux)
+- No Kind/Minikube deployment testing in CI
+
+### Image Testing
+
+**Score: 6.0/10**
+
+Well-constructed container images with production-ready patterns:
+
+**Dockerfile quality**:
+- Multi-stage builds (builder + runtime) for both components
+- UBI9 base images (FIPS-capable): `registry.access.redhat.com/ubi9/go-toolset` (builder), `registry.access.redhat.com/ubi9/ubi-minimal` (runtime)
+- Non-root user (1001) with OpenShift random UID support
+- Proper file permissions (`chgrp -R 0`, `chmod -R g=u`)
+- Build args for platform targeting (`BUILDPLATFORM`, `TARGETPLATFORM`, `TARGETOS`, `TARGETARCH`)
+- Trimmed binaries (`-trimpath -ldflags="-s -w"`)
+
+**FIPS configuration**:
+- `CGO_ENABLED=1` enabled in all Dockerfiles
+- `GOEXPERIMENT=strictfipsruntime` configured
+- UBI9 base images provide FIPS-validated crypto libraries
+- No non-FIPS crypto imports found in source code
+
+**Multi-arch support**:
+- Tekton pipeline builds for 4 architectures (x86_64, arm64, ppc64le, s390x)
+- `--platform` flags in Dockerfiles
+
+**Konflux-specific images**:
+- `Dockerfile.konflux` variants with pinned image digests
+- Proper Red Hat labeling (component, name, description, license)
+
+**What's missing for a higher score**:
+- No `HEALTHCHECK` directives in Dockerfiles
+- No container runtime validation tests (testcontainers or equivalent)
+- No image startup verification in CI
+- No image vulnerability scanning configuration (handled at org level, but worth noting)
+
+### Coverage Tracking
+
+**Score: 4.0/10**
+
+Coverage generation exists but is effectively unused for tracking:
+
+**What exists**:
+- Both Makefiles: `TEST_FLAGS ?= -race -coverprofile=coverage.out`
+- Coverage HTML reports generated: `go tool cover -html=coverage.out -o coverage.html`
+- CI uploads coverage artifacts (`coverage.out` + `coverage.html`) with 30-day retention
+
+**What's missing**:
+- No `.codecov.yml` or `codecov.yml`
+- No `codecov/codecov-action` in CI workflows
+- No coverage thresholds (project or patch)
+- No PR coverage comments or reporting
+- No coverage trend tracking
+- No coverage gates blocking merge
+
+This is the biggest gap relative to gold standard repositories like kserve which enforce coverage thresholds.
+
+### CI/CD Automation
+
+**Score: 9.0/10**
+
+Exceptionally comprehensive CI/CD pipeline:
+
+**Workflow inventory (14 total)**:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `maas-api-ci.yml` | PR (maas-api/) | Lint + test + coverage upload |
-| `maas-controller-ci.yml` | PR (maas-controller/) | Lint + test + coverage upload |
-| `build-test.yml` | PR + push | Kustomize manifest validation + codegen verification |
-| `openapi-validation.yml` | PR + push | Spectral lint + oasdiff breaking changes + changelog check |
-| `operator-chaos.yml` | PR (controller/deploy) | Knowledge model + CRD diff + upgrade simulation |
-| `pr-title-validation.yml` | PR | Semantic PR title enforcement |
-| `docs.yml` | PR + push | MkDocs build/deploy with link validation |
-| `create-release.yml` | Manual dispatch | Full release pipeline (branch, tag, image, docs) |
-| `promote-main-to-stable.yml` | Manual/auto | Promotion pipeline |
-| `promote-stable-to-rhoai.yml` | Manual/auto | RHOAI promotion |
-| `update-docs-latest.yml` | Push | Documentation updates |
-| `update-payload-processing.yml` | Push | Payload processing updates |
+| `maas-api-ci.yml` | PR (maas-api/**) | Lint, govulncheck, test |
+| `maas-controller-ci.yml` | PR (maas-controller/**) | Lint, govulncheck, test |
+| `build-test.yml` | PR + push(main) | Kustomize validate, codegen verify |
+| `openapi-validation.yml` | PR (openapi3.yaml) | Spectral lint, breaking changes, changelog |
+| `pr-title-validation.yml` | PR (all) | Conventional commit format |
+| `operator-chaos.yml` | PR (api/controller/deployment) | Knowledge/CRD breaking changes |
+| `disconnected-readiness.yml` | PR (all) | Disconnected environment readiness |
+| `scorecard.yml` | push(main) + weekly | OpenSSF Scorecard |
+| `create-release.yml` | workflow_dispatch | Release creation |
+| `promote-main-to-stable.yml` | workflow_dispatch | Branch promotion |
+| `promote-stable-to-rhoai.yml` | workflow_dispatch | RHOAI promotion |
+| `update-docs-latest.yml` | push(main) | Documentation deployment |
+| `update-payload-processing.yml` | workflow_dispatch | Payload processing update |
+| `docs.yml` | push(main)/PR | Documentation build |
 
-**Strengths:**
-- Path-based filtering avoids unnecessary CI runs
-- Concurrency control with `cancel-in-progress: true` on key workflows
+**CI quality signals**:
 - Go module caching via `actions/setup-go` with `cache: true`
-- Pinned GitHub Action versions with SHA hashes (security best practice)
-- Renovate bot configured for dependency updates
-- OpenAPI validation is outstanding: Spectral linting + oasdiff breaking change detection + changelog check
-- Operator chaos testing is innovative and rare in the ecosystem
+- Concurrency control with `cancel-in-progress` on build-test workflow
+- Timeout enforcement (10 minutes for build-test)
+- Artifact uploads with 30-day retention
+- Pinned action versions with SHA hashes (supply chain security)
+- `govulncheck` running on both modules (currently non-blocking)
+- Path-based triggering to avoid unnecessary CI runs
 
-**Gaps:**
-- No Docker image build step in PR workflows
-- No E2E test automation in CI
-- No SAST/CodeQL workflow
-- Tekton pipeline only for maas-api, triggered by comment/label not automatically
+**What's missing for a perfect score**:
+- govulncheck is non-blocking (`|| true`) — should be blocking when go-toolset ships >= 1.25.12
+- No test parallelization at the CI level (matrix strategy)
 
-### Test Coverage
+### Static Analysis
 
-**Unit Tests (Go):**
-- **maas-api**: 21 test files covering handlers, services, stores, middleware, config, metrics, auth, token management
-- **maas-controller**: 26 test files covering all controllers (AITenant, MaaSModelRef, MaaSAuthPolicy, MaaSSubscription), webhooks, conflict detection, cross-namespace operations, multi-tenancy, providers
-- **Framework**: Go `testing` package + `gomega` matchers + `testify` (mixed per component)
-- **Race detection**: Enabled via `-race` flag in Makefile
-- **Coverage generation**: `go test -coverprofile=coverage.out` with HTML report
-- **Test-to-code ratio**: 1.19:1 (22,721 test LOC / 19,094 source LOC) - excellent
+**Score: 8.0/10**
 
-**E2E Tests (Python/pytest):**
-- **21 test files** under `test/e2e/tests/`
-- Comprehensive coverage of:
-  - Smoke tests (health, models catalog, chat completions)
-  - AITenant lifecycle
-  - API key management
-  - External models and OIDC
-  - Gateway-scoped auth policies
-  - Multi-tenant integration and isolation
-  - Namespace scoping and discovery
-  - Negative security tests
-  - Rate limit isolation
-  - Subscription management
-- Well-structured pytest fixtures (session-scoped, proper cleanup)
-- Port-forward support for local testing
-- TLS verification control
-- Requires live OpenShift cluster with deployed MaaS
+#### Linting
 
-**Missing:**
-- No integration tests using envtest (controller-runtime test framework)
-- No contract tests between maas-api and maas-controller
-- Coverage not enforced or tracked over time
+**golangci-lint v2** configured for both modules with `default: all` — the most comprehensive approach:
 
-### Code Quality
+- **maas-api**: 21 linters explicitly disabled, rest enabled. Includes `errcheck` with type assertions, `exhaustive` switch checks, `gocritic`, `revive`, import ordering via `gci`, `nolintlint` requiring specificity.
+- **maas-controller**: 29 linters explicitly disabled, rest enabled. Similar configuration with slightly higher complexity threshold (`gocyclo: 40` vs `30`) and longer line length limit (`lll: 220` vs `180`).
 
-**golangci-lint:**
-- Both components use `default: all` (enable all linters, then selectively disable)
-- **maas-api**: 21 disabled linters, strict errcheck, exhaustive switch checks, import ordering
-- **maas-controller**: More disabled (expected for controller patterns), gocyclo min-complexity 40
-- Both use gci, gofmt, goimports formatters
-- Specific exclusions for test files (dupl, ireturn) and kubebuilder markers (lll)
-- Very well-configured - this is a gold-standard golangci-lint setup
+Both use formatters (`gci`, `gofmt`, `goimports`) with custom import section ordering.
 
-**Gitleaks:**
-- Configured with `useDefault = true` plus comprehensive allowlists
-- Excludes test files, fixtures, mocks, sample configs, CI resources
-- Known placeholder credentials whitelisted
+**OpenAPI linting**: Spectral with custom rules requiring operation IDs, descriptions, success responses, and MaaS-specific subscription header documentation hints.
 
-**Semgrep:**
-- Extensive unified ruleset (Template Version 3.0.0)
-- Covers: generic secrets (hardcoded passwords, AWS keys, GitHub tokens, private keys, Slack webhooks, Google API keys), Kubernetes RBAC security (wildcard resources/verbs), and more
-- Cross-language: Go, Python, TypeScript, YAML, generic
+**API compatibility**: oasdiff integrated into CI for detecting breaking API changes between PR and base branch, with ignore files for acknowledged changes.
 
-**Spectral (.spectral.yml):**
-- OpenAPI 3.x linting configured
+#### FIPS Compatibility
 
-**Missing:**
-- No `.pre-commit-config.yaml`
-- No CodeQL or dedicated SAST workflow in GitHub Actions
-- Semgrep rules exist but no CI workflow running them automatically
+**Excellent** — No violations found:
+- No `crypto/md5`, `crypto/des`, `crypto/rc4`, or `math/rand` imports in source code
+- Build configuration: `CGO_ENABLED=1`, `GOEXPERIMENT=strictfipsruntime` in Makefiles and Dockerfiles
+- UBI9 base images provide FIPS-validated OpenSSL
+- Conditional FIPS toggle via `GO_STRICTFIPS` Makefile variable
 
-### Container Images
+#### Dependency Alerts
 
-**Dockerfiles:**
-- 4 Dockerfiles (2 dev + 2 Konflux per component)
-- Multi-stage builds: UBI9 go-toolset builder → ubi-minimal runtime
-- FIPS compliance: `GOEXPERIMENT=strictfipsruntime`
-- OpenShift-ready: `USER 1001`, `chgrp -R 0`, `chmod -R g=u`
-- Konflux versions use pinned base image digests (SHA256)
+- **Renovate**: Configured (`.github/renovate.json`) extending `red-hat-data-services/konflux-central` defaults
+- **Dependabot**: Not configured (Renovate is used instead — this is fine)
+- **govulncheck**: Running in CI for both modules (non-blocking)
 
-**Multi-architecture (via Tekton/Konflux):**
-- x86_64, arm64, ppc64le, s390x
-- `build-image-index: true` for manifest list
+### Agent Rules
 
-**Tekton Pipeline:**
-- Only `odh-maas-api-pull-request.yaml` exists
-- Triggered by `/build-konflux` comment or labels
-- Hermetic builds enabled
-- Image expires after 5 days (PR images)
-- References external pipeline from `red-hat-data-services/konflux-central`
+**Score: 6.0/10**
 
-**Missing:**
-- No Trivy/Snyk/Grype vulnerability scanning in GitHub Actions
-- No image startup/runtime validation test
-- No SBOM generation
-- No image signing/attestation in CI
-- maas-controller has no Tekton pipeline yet
+**CLAUDE.md**: Present, references AGENTS.md via `@AGENTS.md`
 
-### Security
+**AGENTS.md**: Comprehensive and well-structured, covering:
+- Repository structure (2-module layout, key directories)
+- CRD types and API group
+- Build and test commands for both modules and Kustomize
+- Codegen rules (regenerate on API changes)
+- Kustomize/deployment conventions
+- PR title format (conventional commits)
+- PR review process (CodeRabbit integration)
+- PR risk analysis rating system (0-5 scale with specific criteria)
+- Testing conventions (Go frameworks, pytest E2E, new features require tests)
+- Documentation policy (search before writing, no duplication)
+- "Things to never do" section
 
-**Strengths:**
-- Gitleaks configured with proper allowlists
-- Semgrep rules comprehensive (secrets, RBAC, cross-language)
-- Pinned GitHub Action SHAs prevent supply chain attacks
-- Base ref validation in CI scripts prevents script injection
-- OpenAPI breaking change detection prevents unintended API contract breaks
-- Non-root containers with proper group permissions
-
-**Gaps:**
-- No CodeQL or dedicated SAST GitHub Actions workflow
-- No container image vulnerability scanning in CI
-- No dependency vulnerability scanning (beyond Renovate updates)
-- Semgrep rules exist in repo but no CI workflow runs them
-
-### Agent Rules (Agentic Flow Quality)
-
-**Status:** Present (CLAUDE.md + AGENTS.md)
-
-**AGENTS.md Analysis:**
-- **Repository structure**: Clear table mapping directories to purposes
-- **CRDs**: All 5 custom resources documented with API group
-- **Build commands**: Complete for both components (generate, verify-codegen, lint, test)
-- **Codegen rule**: Explicit instructions for when/how to regenerate
-- **Kustomize guidance**: Deployment structure, deploy.sh flow, manifest validation
-- **PR conventions**: Semantic title format, CodeRabbit review trigger, risk analysis scale (0-5)
-- **Testing conventions**: Framework guidance (testing + gomega/testify), E2E location
-- **Documentation policy**: "Search before writing" principle, no duplicate docs
-- **Negative rules**: Clear "never do" list (no root go.mod, no manual edits to generated files)
-
-**Quality Assessment:**
-- Well-structured and comprehensive for general development
-- Risk analysis guidelines are unique and valuable
-- Build commands are actionable and correct
-
-**Gaps:**
-- No `.claude/rules/` directory with test-specific rules
-- No test patterns/examples for unit tests, webhook tests, controller tests, E2E tests
-- No quality gates/checklists for test creation
-- No guidance on envtest usage for controller testing
-
-### Operator Chaos Testing (STANDOUT FEATURE)
-
-This repository includes **operator-chaos** integration, which is an innovative and rare practice:
-
-1. **Knowledge model** (`chaos/knowledge/maas.yaml`): Declares all managed resources, webhooks, finalizers, steady-state checks, and recovery parameters
-2. **CI integration** (`operator-chaos.yml`): Runs on every PR touching controller/deployment code
-3. **Capabilities:**
-   - Knowledge model validation
-   - Local preflight checks
-   - Breaking change detection in knowledge model
-   - CRD schema breaking change detection
-   - Upgrade simulation (dry-run)
-
-This is a best-in-class practice that most K8s operator repos do not have.
+**What's missing**:
+- No `.claude/` directory
+- No `.claude/rules/` with test-specific patterns (e.g., how to write a Go unit test with testify, how to write a pytest E2E test)
+- No test creation guidance beyond "match the style of the package you're editing"
+- No quality gate checklists
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-- **Add Trivy container scanning** to both CI workflows to catch CVEs in UBI9 base images and Go dependencies before merge
-- **Integrate codecov** with `.codecov.yml` config, coverage thresholds (e.g., 70% patch, auto project), and PR coverage reporting
-- **Add Semgrep or CodeQL SAST workflow** to run the existing semgrep.yaml rules on every PR
+1. **Add Codecov integration with coverage threshold enforcement**
+   - Create `.codecov.yml` with project target (auto) and patch target (70%)
+   - Add `codecov/codecov-action` to both `maas-api-ci.yml` and `maas-controller-ci.yml`
+   - Upload `coverage.out` files with component-specific flags
+   - Effort: 3-4 hours
+
+2. **Add container image startup validation in CI**
+   - After building images via `make build-image`, run basic startup verification
+   - Check that the binary starts, listens on expected port, and responds to health endpoint
+   - Can be added to existing Makefile or as a new CI job
+   - Effort: 6-8 hours
 
 ### Priority 1 (High Value)
 
-- **Add PR-time Docker build step** to maas-api-ci.yml and maas-controller-ci.yml to validate Dockerfiles compile before merge
-- **Create lightweight Kind-based E2E smoke test** in CI to catch basic deployment and startup regressions
-- **Create `.claude/rules/`** with test automation patterns:
-  - `unit-tests.md` - Go testing patterns (table-driven, gomega matchers, mock patterns)
-  - `e2e-tests.md` - pytest patterns (fixtures, assertions, cleanup)
-  - `webhook-tests.md` - Admission webhook test patterns with envtest
-  - `controller-tests.md` - Reconciler test patterns with fake client/envtest
-- **Add image startup validation** - `docker run --rm IMAGE --help` or health check in CI
-- **Add Tekton pipeline for maas-controller** (currently only maas-api has one)
+3. **Create .claude/rules/ with test creation patterns**
+   - Go unit test rules: testify assert/require patterns, fake client setup, table-driven test conventions
+   - Go webhook test rules: scheme setup, admission review patterns
+   - Pytest E2E test rules: fixture usage, conftest patterns, TLS handling
+   - Use `/test-rules-generator` to bootstrap from existing test patterns
+   - Effort: 2-3 hours
+
+4. **Add Dockerfile HEALTHCHECK directives**
+   - maas-api: `HEALTHCHECK --interval=30s --timeout=3s CMD ["/app/maas-api", "--health-check"] || exit 1`
+   - maas-controller: Use K8s readiness/liveness probes (already in deployment manifests)
+   - Effort: 1-2 hours
+
+5. **Add pre-commit hooks**
+   - Configure `.pre-commit-config.yaml` with golangci-lint, trailing whitespace, YAML validation
+   - Document in AGENTS.md for contributor onboarding
+   - Effort: 1-2 hours
 
 ### Priority 2 (Nice-to-Have)
 
-- **Add contract tests** between maas-api and maas-controller API boundaries
-- **Add performance regression testing** for API endpoints (e.g., load testing with k6)
-- **Add SBOM generation** to Dockerfiles or CI pipeline (Syft/Cosign)
-- **Add envtest-based integration tests** for controller reconciliation scenarios
-- **Add pre-commit hooks** for local development quality gates
-- **Run Semgrep in CI** rather than just having rules in the repo
+6. **Enable govulncheck as blocking in CI**
+   - Remove `|| true` from govulncheck step when go-toolset >= 1.25.12 ships
+   - Currently runs but ignores failures — making it blocking would catch known vulnerability usage
+   - Effort: 30 minutes (once go-toolset version ships)
+
+7. **Add integration tests for maas-api/maas-controller interaction boundary**
+   - The two modules interact via Kubernetes API objects; test the contract between them
+   - Could use envtest or Kind-based integration tests
+   - Effort: 2-3 days
+
+8. **Add load/performance testing for API endpoints**
+   - Establish baseline latency and throughput metrics for key endpoints
+   - Track regressions across releases
+   - Effort: 2-3 days
 
 ## Comparison to Gold Standards
 
-| Practice | models-as-a-service | odh-dashboard | notebooks | kserve |
-|----------|-------------------|---------------|-----------|--------|
-| Unit test ratio | 1.19:1 (Excellent) | ~0.8:1 | N/A | ~0.7:1 |
-| E2E automation in CI | Manual (cluster required) | Cypress in CI | Image tests in CI | E2E in CI |
-| Coverage enforcement | No thresholds | Codecov + thresholds | No | Codecov + thresholds |
-| Container scanning | None in CI | Trivy in CI | Trivy in CI | Trivy in CI |
-| OpenAPI validation | Spectral + oasdiff (Excellent) | N/A | N/A | Partial |
-| Chaos testing | operator-chaos (Best-in-class) | None | None | None |
-| Agent rules | AGENTS.md (Strong) | .claude/rules/ (Complete) | None | None |
-| Pre-commit hooks | None | Yes | Limited | Yes |
-| Multi-arch builds | 4 architectures (Konflux) | 2 architectures | Multi-arch | 2 architectures |
-| FIPS support | Yes (strictfipsruntime) | No | No | No |
-| Linting strictness | default:all (Excellent) | Custom config | N/A | Standard |
+| Practice | models-as-a-service | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
+|----------|-------------------|---------------------|-------------------|---------------|
+| Unit test ratio | 60% (56/93) | ~50% | ~40% | ~55% |
+| E2E tests | 26 pytest tests | Cypress + Playwright | Shell + Python | Go E2E suite |
+| Coverage enforcement | None | Codecov thresholds | Codecov | Codecov gates |
+| CI workflows | 14 workflows | 15+ workflows | 10+ workflows | 12+ workflows |
+| Linting | golangci-lint v2 all | ESLint strict | golangci-lint | golangci-lint |
+| FIPS compliance | Excellent | N/A (frontend) | UBI + tags | Partial |
+| Agent rules | AGENTS.md | .claude/rules/ | None | None |
+| Container testing | Build only | Build + test | 5-layer validation | Build + E2E |
+| OpenAPI validation | Spectral + oasdiff | N/A | N/A | N/A |
+| Operator chaos | Yes | No | No | No |
+
+**Notable advantages over gold standards**:
+- Operator-chaos integration for CRD/knowledge breaking change detection is unique
+- OpenAPI spec validation with breaking change detection is best-in-class
+- PR risk analysis rating system in AGENTS.md is exemplary
+- FIPS compliance configuration is among the strongest in the org
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/maas-api-ci.yml` - API lint + test
-- `.github/workflows/maas-controller-ci.yml` - Controller lint + test
-- `.github/workflows/build-test.yml` - Kustomize + codegen verification
-- `.github/workflows/openapi-validation.yml` - OpenAPI lint + breaking changes
-- `.github/workflows/operator-chaos.yml` - Chaos testing
-- `.github/workflows/pr-title-validation.yml` - PR title format
-- `.tekton/odh-maas-api-pull-request.yaml` - Konflux build pipeline
+- `.github/workflows/maas-api-ci.yml` — API lint/test/coverage
+- `.github/workflows/maas-controller-ci.yml` — Controller lint/test/coverage
+- `.github/workflows/build-test.yml` — Kustomize validation, codegen verify
+- `.github/workflows/openapi-validation.yml` — Spectral, oasdiff, changelog
+- `.github/workflows/operator-chaos.yml` — Breaking change detection
+- `.github/workflows/pr-title-validation.yml` — Conventional commit format
+- `.github/workflows/disconnected-readiness.yml` — Disconnected readiness check
+- `.github/workflows/scorecard.yml` — OpenSSF Scorecard
+- `.tekton/odh-maas-api-pull-request.yaml` — Konflux multi-arch build
 
 ### Testing
-- `maas-api/internal/**/*_test.go` - API unit tests
-- `maas-controller/pkg/controller/maas/*_test.go` - Controller unit tests
-- `maas-controller/pkg/webhook/*_test.go` - Webhook unit tests
-- `test/e2e/tests/` - Python E2E tests
-- `test/e2e/tests/conftest.py` - pytest fixtures
+- `maas-api/internal/*/` — Go unit tests (25 files)
+- `maas-controller/pkg/*/` — Go unit tests (31 files)
+- `test/e2e/tests/` — Pytest E2E tests (26 files)
+- `test/e2e/conftest.py` — Pytest session fixtures
+- `test/e2e/requirements.txt` — E2E dependencies
 
-### Code Quality
-- `maas-api/.golangci.yml` - API linter config
-- `maas-controller/.golangci.yml` - Controller linter config
-- `.gitleaks.toml` - Secret scanning config
-- `semgrep.yaml` - SAST rules
-- `.spectral.yml` - OpenAPI linting
+### Build
+- `maas-api/Makefile` — API build/test/lint
+- `maas-controller/Makefile` — Controller build/test/lint/manifests
+- `maas-api/Dockerfile` / `maas-api/Dockerfile.konflux` — API container image
+- `maas-controller/Dockerfile` / `maas-controller/Dockerfile.konflux` — Controller container image
+- `maas-api/container.mk` / `maas-controller/container.mk` — Container build targets
 
-### Container Images
-- `maas-api/Dockerfile` - API dev image
-- `maas-api/Dockerfile.konflux` - API production image
-- `maas-controller/Dockerfile` - Controller dev image
-- `maas-controller/Dockerfile.konflux` - Controller production image
+### Static Analysis
+- `maas-api/.golangci.yml` — API linter config (default: all)
+- `maas-controller/.golangci.yml` — Controller linter config (default: all)
+- `.spectral.yml` — OpenAPI linting rules
+- `.github/renovate.json` — Renovate dependency management
 
 ### Agent Rules
-- `CLAUDE.md` - References AGENTS.md
-- `AGENTS.md` - Comprehensive development guidelines
+- `CLAUDE.md` — References AGENTS.md
+- `AGENTS.md` — Comprehensive repo guide, CRDs, build/test, conventions
 
-### Chaos Testing
-- `chaos/knowledge/maas.yaml` - Operator chaos knowledge model
+### Deployment
+- `deployment/base/` — Kustomize base manifests
+- `deployment/components/` — Kustomize components
+- `scripts/ci/validate-manifests.sh` — Kustomize validation
+- `chaos/knowledge/maas.yaml` — Operator-chaos knowledge model

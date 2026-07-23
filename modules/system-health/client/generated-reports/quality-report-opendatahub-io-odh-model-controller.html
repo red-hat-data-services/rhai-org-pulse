@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:22 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 06:09 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/odh-model-controller</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#fd7e14"
+                                stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="231.84934199999992"
+                                stroke-dashoffset="186.61044599999997"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">5.9</div>
+                        <div class="score-value">6.7</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Excellent test-to-code ratio (54%), Ginkgo+envtest for controllers, testify for utilities</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Strong test suite with 67 test files, Ginkgo/Gomega + testify, envtest for controllers</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Multiple E2E suites (Kind, OpenShift, server) but NOT automated on PR</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">3 E2E suites with Kind, PR-triggered xKS and AuthPolicy E2E, but main E2E is manual-only</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">PR builds images but no runtime validation or Konflux simulation</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">PR-time Docker builds for both images, Kustomize validation, but no Konflux simulation on PR</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Multi-stage UBI9 builds, multi-arch on push only, no startup validation</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Multi-stage UBI9 builds, 4-arch support on push, FIPS for server binary, no runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Local coverprofile generated but no codecov integration or PR reporting</div>
+                            <div class="scorecard-status">coverprofile generated locally but no CI reporting, no thresholds, no codecov integration</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Lint+test+build+manifests validation on PR, but E2E manual and limited concurrency</div>
+                            <div class="scorecard-status">9 PR-triggered workflows with concurrency control, Docker caching, but no matrix or Go caching</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">golangci-lint v2 with 18 linters, pre-commit hooks, FIPS tags for server, missing Dependabot</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Excellent AGENTS.md with testing patterns, but no .claude/rules/ for test creation</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Excellent AGENTS.md with testing patterns, project structure, and constraints</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +416,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">E2E tests not automated on PR</div>
-                            <p>Regressions in controller reconciliation, webhooks, and model registry sync discovered only post-merge or during manual validation</p>
+                            <div class="item-description">No coverage tracking or enforcement in CI</div>
+                            <p>Coverage regressions go undetected; no PR-level feedback on test gaps</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No coverage tracking or enforcement</div>
-                            <p>Coverage can silently regress with no PR feedback; no historical trend data</p>
+                            <div class="item-description">Main controller E2E workflow is manual-only (workflow_dispatch)</div>
+                            <p>Controller E2E regressions not caught automatically on PRs</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No security scanning on PR</div>
-                            <p>Vulnerabilities in Go dependencies and container base images only detected post-merge in Konflux pipeline</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No container runtime validation</div>
-                            <p>Image startup failures, missing binaries, or permission issues not caught until deployment</p>
+                            <div class="item-description">No Dependabot or Renovate for dependency alerts</div>
+                            <p>Vulnerable dependencies may go unpatched; manual dependency tracking required</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No container runtime validation or startup testing</div>
+                            <p>Image startup failures not caught until deployment</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No PR-time Konflux build simulation</div>
-                            <p>Tekton pipeline differences (e.g., FIPS constraints, build args) can cause post-merge build failures</p>
+                            <div class="item-description">Main Containerfile lacks FIPS build configuration</div>
+                            <p>Controller binary may not be FIPS-compliant in regulated environments</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,43 +469,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Codecov integration to test workflow</div>
-                            <p>PR coverage reporting, historical trends, and regression detection with zero code changes</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to PR workflow</div>
-                            <p>Catch CVEs in base images and Go dependencies before merge</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Enable E2E workflow on PR (at least core Kind tests)</div>
-                            <p>Catch controller reconciliation regressions before merge</p>
+                            <div class="item-description">Add Codecov integration with coverage thresholds</div>
+                            <p>Automated coverage reporting on PRs with regression detection</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add concurrency control to lint and test workflows</div>
-                            <p>Reduce CI waste from redundant runs on force-pushes</p>
+                            <div class="item-description">Enable Dependabot for Go modules and Docker base images</div>
+                            <p>Automated dependency update PRs and vulnerability alerts</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">30 minutes</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create .claude/rules/ for test creation patterns</div>
-                            <p>Consistent AI-generated tests following envtest and Ginkgo patterns</p>
+                            <div class="item-description">Add FIPS build tags to main Containerfile</div>
+                            <p>Consistent FIPS compliance across both binaries</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add Go module cache to test and lint workflows</div>
+                            <p>Faster CI runs by caching Go module downloads</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +514,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add Codecov integration with coverage thresholds (e.g., 60% minimum, no regression &gt;2%)</li><li>Enable E2E tests on PR using Kind cluster (test-e2e workflow already exists, just needs trigger change)</li><li>Add Trivy scanning to PR workflow for container image and Go dependency vulnerabilities</li></ul>
+                            <ul><li>Add Codecov integration with .codecov.yml and coverage thresholds to enforce minimum coverage on PRs</li><li>Enable the main controller E2E workflow (test-e2e.yml) on pull_request trigger, not just workflow_dispatch</li><li>Add FIPS build configuration (GOEXPERIMENT=strictfipsruntime, -tags strictfipsruntime) to main Containerfile</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add container startup validation in PR CI (build image, run with --help or health check)</li><li>Create .claude/rules/ with test creation rules for envtest, Ginkgo, and standard Go test patterns</li><li>Add CodeQL or gosec SAST scanning to PR workflow</li><li>Add concurrency control to all PR-triggered workflows</li></ul>
+                            <ul><li>Configure Dependabot for gomod and docker ecosystems</li><li>Add multi-version K8s testing via matrix strategy in E2E workflows</li><li>Add container runtime validation (image startup smoke test) in PR build workflow</li><li>Add Go module caching to test.yml and lint.yml workflows</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add PR-time Konflux build simulation for FIPS and multi-arch validation</li><li>Add Gitleaks for secret detection in PRs</li><li>Add contract tests for model-serving-api REST endpoints</li><li>Add performance regression tests for controller reconciliation loop latency</li></ul>
+                            <ul><li>Add .claude/rules/ with specific test pattern rules for unit, envtest, and E2E tests</li><li>Add Testcontainers for container image runtime validation</li><li>Add HEALTHCHECK instruction to Containerfiles for container orchestrator health awareness</li></ul>
                         </div>
                     </div>
                 </div>

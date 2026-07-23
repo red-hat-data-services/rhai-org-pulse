@@ -1,174 +1,175 @@
 ---
 repository: "kubeflow/notebooks"
-overall_score: 6.9
+analyzed_branch: "notebooks-v2"
+overall_score: 6.8
 scorecard:
   - dimension: "Unit Tests"
-    score: 7.5
-    status: "Strong backend/controller unit tests with envtest; frontend has Jest + Cypress mocked tests"
+    score: 7.0
+    status: "Good unit test coverage across Go backend/controller and React frontend with Jest and envtest"
   - dimension: "Integration/E2E"
-    score: 6.5
-    status: "Controller E2E with Kind cluster exists but full-stack E2E is still TODO"
+    score: 7.5
+    status: "Controller E2E with Kind cluster; Cypress mocked UI tests; full-stack E2E still TODO"
   - dimension: "Build Integration"
     score: 7.0
-    status: "PR-time multi-arch image builds for all 3 components; no Konflux simulation"
+    status: "PR-triggered multi-arch image builds with Docker Buildx; no Konflux simulation"
   - dimension: "Image Testing"
-    score: 5.5
-    status: "Multi-arch builds present but no runtime validation, no vulnerability scanning"
+    score: 6.0
+    status: "Multi-stage distroless builds with multi-arch support; no runtime validation or health checks"
   - dimension: "Coverage Tracking"
-    score: 5.0
-    status: "Go coverprofile generated locally but no CI enforcement or codecov integration"
+    score: 4.0
+    status: "Local coverprofile generation but no CI coverage reporting, no codecov, no thresholds"
   - dimension: "CI/CD Automation"
     score: 7.5
-    status: "Well-organized per-component workflows with semantic PRs and path filtering"
+    status: "Well-structured component-scoped workflows with path filtering; limited concurrency controls"
+  - dimension: "Static Analysis"
+    score: 7.0
+    status: "Excellent golangci-lint (27 linters) and ESLint configs; no Dependabot/Renovate, no FIPS"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules of any kind"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory present"
 critical_gaps:
-  - title: "No security scanning (Trivy, CodeQL, SAST)"
-    impact: "Vulnerabilities in dependencies and container images go undetected until production"
+  - title: "No coverage tracking or enforcement in CI"
+    impact: "Coverage regressions go undetected; no visibility into test quality trends"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No coverage enforcement in CI"
-    impact: "Coverage can silently regress on any PR without anyone noticing"
+  - title: "No Dependabot or Renovate for dependency management"
+    impact: "Vulnerable or outdated dependencies may go unnoticed"
     severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "Full-stack E2E tests are still TODO"
-    impact: "No automated validation that controller + backend + frontend work together as a system"
+    effort: "1-2 hours"
+  - title: "Full-stack E2E tests are TODO"
+    impact: "No automated end-to-end validation of controller + backend + frontend integration"
     severity: "HIGH"
     effort: "16-24 hours"
+  - title: "No FIPS compliance checks or UBI base images"
+    impact: "Non-FIPS-compliant for regulated environments; uses distroless and alpine base images"
+    severity: "MEDIUM"
+    effort: "8-16 hours"
   - title: "No container runtime validation"
-    impact: "Built images are never started or health-checked; startup failures discovered only at deployment"
+    impact: "Image startup failures not caught until deployment"
     severity: "MEDIUM"
     effort: "4-8 hours"
-  - title: "No dependabot on v2 branch"
-    impact: "Dependencies can become stale with known vulnerabilities; no automated update PRs"
-    severity: "MEDIUM"
-    effort: "1-2 hours"
 quick_wins:
-  - title: "Add Trivy scanning to PR image build workflow"
+  - title: "Add codecov integration with coverage thresholds"
+    effort: "4-6 hours"
+    impact: "Automated coverage tracking, PR comments, regression detection"
+  - title: "Enable Dependabot for Go modules, npm, and GitHub Actions"
+    effort: "1-2 hours"
+    impact: "Automated security and dependency updates with PR generation"
+  - title: "Add concurrency controls to test workflows"
+    effort: "1 hour"
+    impact: "Prevent redundant CI runs on rapid pushes, reduce resource waste"
+  - title: "Create CLAUDE.md with test creation guidelines"
     effort: "2-3 hours"
-    impact: "Catch CVEs in container images before merge"
-  - title: "Add codecov integration to Go and frontend test workflows"
-    effort: "3-4 hours"
-    impact: "Track coverage trends and enforce minimum thresholds on PRs"
-  - title: "Add dependabot.yml to notebooks-v2 branch"
-    effort: "30 minutes"
-    impact: "Automated dependency update PRs with security alerts"
-  - title: "Add CodeQL/gosec workflow for SAST"
-    effort: "2-3 hours"
-    impact: "Static security analysis on every PR"
-  - title: "Create basic CLAUDE.md with test patterns"
-    effort: "2-3 hours"
-    impact: "Improve AI-generated test quality and consistency"
+    impact: "Improve AI-assisted development consistency and test quality"
 recommendations:
   priority_0:
-    - "Add container vulnerability scanning (Trivy) to the ws-build-image.yml reusable workflow"
-    - "Integrate codecov or coveralls to track and enforce coverage thresholds in CI"
-    - "Add CodeQL or gosec SAST workflow for security analysis"
+    - "Add codecov integration with coverage thresholds and PR reporting for both Go and frontend"
+    - "Enable Dependabot for gomod, npm, and github-actions ecosystems"
+    - "Implement full-stack E2E tests (currently TODO in testing/Makefile)"
   priority_1:
-    - "Implement full-stack E2E tests (currently a TODO in testing/Makefile)"
-    - "Add container runtime validation (startup check) after image build in CI"
-    - "Create comprehensive .claude/rules/ for test automation guidance"
-    - "Add dependabot.yml to notebooks-v2 branch for automated dependency updates"
+    - "Add container runtime validation tests (image startup, health checks)"
+    - "Add FIPS-compatible base images (UBI) and build tags for regulated deployments"
+    - "Add concurrency controls to all test/build workflows"
+    - "Create comprehensive agent rules (CLAUDE.md, .claude/rules/) for test patterns"
   priority_2:
-    - "Add image signing with cosign and SBOM generation with syft"
-    - "Add contract tests between backend API and frontend"
-    - "Add performance regression testing for API endpoints"
-    - "Add accessibility testing to Cypress suite (cypress-axe is already a dependency)"
+    - "Add pre-commit hooks via .pre-commit-config.yaml for repo-wide enforcement"
+    - "Add Cypress E2E tests against real backend (not just mocked)"
+    - "Add contract tests between frontend API layer and backend OpenAPI spec"
 ---
 
 # Quality Analysis: kubeflow/notebooks
 
+**Branch Analyzed:** `notebooks-v2` (active development branch)
+**Analysis Date:** 2026-07-21
+**Repository Type:** Kubernetes Application (Controller + Backend API + React Frontend)
+**Primary Languages:** Go, TypeScript/React
+**Jira Component:** Notebooks Server (RHOAIENG)
+
 ## Executive Summary
 
-- **Overall Score: 6.9/10**
-- **Repository Type**: Kubernetes operator + backend API + React frontend (monorepo)
-- **Primary Languages**: Go (controller + backend), TypeScript/React (frontend)
-- **Branch Structure**: `main` is a meta branch; active code lives on `notebooks-v2` (current) and `notebooks-v1` (legacy)
-- **Key Strengths**: Well-organized CI workflows with per-component path filtering, strong linting configuration (24+ golangci-lint rules), multi-arch container builds, comprehensive Cypress test suite, Tilt-based development workflow
-- **Critical Gaps**: No security scanning whatsoever, no coverage enforcement in CI, full-stack E2E tests still TODO, no agent rules
-- **Agent Rules Status**: Missing - no CLAUDE.md, no `.claude/` directory
+**Overall Score: 6.8/10**
+
+Kubeflow Notebooks v2 is a well-structured monorepo with three components — a Kubernetes controller (Go/kubebuilder), a REST backend (Go/Swagger), and a React frontend (TypeScript/MUI). The project demonstrates strong practices in static analysis, unit testing, and PR-triggered image builds. However, it has significant gaps in coverage tracking, dependency management, FIPS compliance, and agent rules.
+
+**Key Strengths:**
+- Comprehensive golangci-lint configuration with 27 linters across both Go components
+- Rich ESLint configuration with accessibility, spelling, and custom local rules
+- PR-triggered multi-architecture Docker image builds (amd64, ppc64le, arm64)
+- Controller E2E tests with Kind cluster and envtest-based unit tests
+- Cypress UI tests with page object pattern, screenshot/video capture on failure
+- Husky pre-commit hooks for frontend lint enforcement
+
+**Critical Gaps:**
+- No coverage tracking in CI (coverprofile generated locally but not reported)
+- No Dependabot or Renovate configured
+- Full-stack E2E tests are explicitly TODO
+- No FIPS compliance (distroless/alpine base images, no FIPS build tags)
+- No agent rules for AI-assisted development
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 7.5/10 | Strong backend/controller unit tests with envtest; frontend has Jest + Cypress mocked tests |
-| Integration/E2E | 6.5/10 | Controller E2E with Kind cluster exists but full-stack E2E is still TODO |
-| **Build Integration** | **7.0/10** | **PR-time multi-arch image builds for all 3 components; no Konflux simulation** |
-| Image Testing | 5.5/10 | Multi-arch builds present but no runtime validation, no vulnerability scanning |
-| Coverage Tracking | 5.0/10 | Go coverprofile generated locally but no CI enforcement or codecov integration |
-| CI/CD Automation | 7.5/10 | Well-organized per-component workflows with semantic PRs and path filtering |
-| Agent Rules | 0.0/10 | No CLAUDE.md, no .claude/ directory, no agent rules of any kind |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 7.0/10 | 15% | 1.05 | Good coverage with Go envtest and Jest/Cypress |
+| Integration/E2E | 7.5/10 | 20% | 1.50 | Controller E2E + Cypress UI; full-stack TODO |
+| Build Integration | 7.0/10 | 15% | 1.05 | Multi-arch PR builds; no Konflux simulation |
+| Image Testing | 6.0/10 | 10% | 0.60 | Multi-stage distroless; no runtime validation |
+| Coverage Tracking | 4.0/10 | 10% | 0.40 | Local coverprofile only; no CI reporting |
+| CI/CD Automation | 7.5/10 | 15% | 1.13 | Well-structured; limited concurrency |
+| Static Analysis | 7.0/10 | 10% | 0.70 | Excellent linting; missing dep alerts + FIPS |
+| Agent Rules | 0.0/10 | 5% | 0.00 | No agent rules present |
+| **Overall** | **6.8/10** | **100%** | **6.43** | |
 
 ## Critical Gaps
 
-### 1. No Security Scanning (Trivy, CodeQL, SAST)
-- **Impact**: Vulnerabilities in Go dependencies, npm packages, and container base images go completely undetected. No SAST analysis catches code-level security issues.
-- **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: The `ws-build-image.yml` reusable workflow builds and pushes multi-arch images but performs zero security scanning. No Trivy, no Snyk, no CodeQL, no gosec workflow exists. The only security-related artifact is a `SECURITY.md` on the main branch and an OpenSSF Best Practices badge (project 9942).
+### 1. No Coverage Tracking or Enforcement in CI
+- **Severity:** HIGH
+- **Impact:** Coverage regressions go undetected across PRs; no team visibility into test quality
+- **Current State:** Both Go components generate `cover.out` via `go test -coverprofile` and frontend has `test:coverage` npm script with istanbul/nyc, but none are uploaded to any coverage service in CI workflows
+- **Effort:** 4-6 hours
+- **Fix:** Add codecov/codecov-action to all three test workflows with threshold enforcement
 
-### 2. No Coverage Enforcement in CI
-- **Impact**: Coverage can silently regress on any PR. Both Go components generate `cover.out` via `go test -coverprofile` but these files are local-only and never uploaded to a coverage service.
-- **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Details**: Backend and controller Makefiles both generate `cover.out`, and the frontend has `test:coverage` scripts with Istanbul/NYC for merging Jest + Cypress coverage. But none of this is wired into CI. No codecov.yml, no coveralls, no coverage PR comments, no threshold enforcement.
+### 2. No Dependabot or Renovate Configuration
+- **Severity:** HIGH
+- **Impact:** Vulnerable or outdated Go modules, npm packages, and GitHub Actions may go unnoticed
+- **Current State:** No `.github/dependabot.yml` or `renovate.json` found on the `notebooks-v2` branch (main branch had one but it's been removed or not ported)
+- **Effort:** 1-2 hours
+- **Fix:** Add `.github/dependabot.yml` covering `gomod`, `npm`, `docker`, and `github-actions` ecosystems
 
-### 3. Full-Stack E2E Tests Are Still TODO
-- **Impact**: No automated validation that controller + backend + frontend work together as a complete system.
-- **Severity**: HIGH
-- **Effort**: 16-24 hours
-- **Details**: The `testing/Makefile` has a `local-e2e` target that explicitly says "TODO: there are no e2e tests yet, they will be defined in Cypress." The `ws-e2e-test.yml` workflow deploys all three components to Kind but only runs this placeholder. The controller has its own E2E tests (Ginkgo-based, Kind cluster), but these only test the controller in isolation.
+### 3. Full-Stack E2E Tests Are TODO
+- **Severity:** HIGH
+- **Impact:** No automated validation that controller + backend + frontend work together correctly
+- **Current State:** `testing/Makefile` has `local-e2e` target that prints "TODO: there are no e2e tests yet, they will be defined in Cypress..." — the infrastructure (Kind cluster setup, deploy-all, sanity-check) exists but actual tests are missing
+- **Effort:** 16-24 hours
+- **Fix:** Implement Cypress tests against a real deployed stack in Kind, exercising workspace CRUD operations
 
-### 4. No Container Runtime Validation
-- **Impact**: Built images are never started or health-checked. Startup failures (missing env vars, wrong ports, bad entrypoints) discovered only at deployment.
-- **Severity**: MEDIUM
-- **Effort**: 4-8 hours
-- **Details**: `ws-build-image.yml` builds images for amd64/ppc64le/arm64 but never starts them. No docker-run healthcheck, no testcontainers, no port verification.
+### 4. No FIPS Compliance Checks
+- **Severity:** MEDIUM
+- **Impact:** Cannot be used in FIPS-regulated environments without rework
+- **Current State:** Backend and controller use `gcr.io/distroless/static:nonroot`; frontend uses `nginx:alpine`. No FIPS build tags, no BoringCrypto, no UBI base images
+- **Effort:** 8-16 hours
+- **Fix:** Switch to UBI-based images, add FIPS build tags (`GOEXPERIMENT=boringcrypto`), validate crypto imports
 
-### 5. No Dependabot on v2 Branch
-- **Impact**: Dependencies can become stale with known vulnerabilities. No automated update PRs.
-- **Severity**: MEDIUM
-- **Effort**: 1-2 hours
-- **Details**: The `main` branch has `dependabot.yml` but the `notebooks-v2` branch (where all code lives) does not. Go modules, npm packages, and GitHub Actions are not automatically updated.
+### 5. No Container Runtime Validation
+- **Severity:** MEDIUM
+- **Impact:** Image startup failures, port misconfigurations, or missing dependencies not caught until deployment
+- **Current State:** PR workflows build images but don't run them; no health checks or startup tests
+- **Effort:** 4-8 hours
+- **Fix:** Add `docker run` smoke tests after image build to verify startup, port exposure, and basic health
 
 ## Quick Wins
 
-### 1. Add Trivy Scanning to PR Image Build Workflow (2-3 hours)
-Add a Trivy scan step to `ws-build-image.yml` after the image build:
-```yaml
-- name: Run Trivy vulnerability scanner
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: ${{ env.IMAGE_REGISTRY }}/${{ inputs.image_name }}:${{ steps.meta.outputs.version }}
-    format: 'table'
-    exit-code: '1'
-    severity: 'CRITICAL,HIGH'
-```
-
-### 2. Add Codecov Integration (3-4 hours)
-Add coverage upload steps to each test workflow:
-```yaml
-- name: Upload coverage to Codecov
-  uses: codecov/codecov-action@v4
-  with:
-    file: cover.out
-    flags: backend
-    token: ${{ secrets.CODECOV_TOKEN }}
-```
-
-### 3. Add Dependabot to v2 Branch (30 minutes)
-Copy and adapt the `dependabot.yml` from `main` to `notebooks-v2`:
+### 1. Enable Dependabot (1-2 hours)
+Add `.github/dependabot.yml`:
 ```yaml
 version: 2
 updates:
   - package-ecosystem: "gomod"
-    directory: "/workspaces/controller"
+    directory: "/workspaces/backend"
     schedule:
       interval: "weekly"
   - package-ecosystem: "gomod"
-    directory: "/workspaces/backend"
+    directory: "/workspaces/controller"
     schedule:
       interval: "weekly"
   - package-ecosystem: "npm"
@@ -179,219 +180,317 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/workspaces/backend"
+    schedule:
+      interval: "monthly"
+  - package-ecosystem: "docker"
+    directory: "/workspaces/controller"
+    schedule:
+      interval: "monthly"
+  - package-ecosystem: "docker"
+    directory: "/workspaces/frontend"
+    schedule:
+      interval: "monthly"
 ```
 
-### 4. Add CodeQL/gosec Workflow (2-3 hours)
-Create `.github/workflows/codeql.yml` targeting Go and TypeScript.
+### 2. Add Codecov Integration (4-6 hours)
+Add to each test workflow after the test step:
+```yaml
+- name: Upload coverage
+  uses: codecov/codecov-action@v4
+  with:
+    files: ./cover.out  # or coverage/coverage-final.json for frontend
+    flags: backend  # or controller, frontend
+    fail_ci_if_error: true
+```
+Add `.codecov.yml` with thresholds:
+```yaml
+coverage:
+  status:
+    project:
+      default:
+        target: 60%
+        threshold: 5%
+    patch:
+      default:
+        target: 70%
+```
 
-### 5. Create Basic CLAUDE.md (2-3 hours)
-Document test patterns, framework preferences, and quality standards for AI-assisted development.
+### 3. Add Concurrency Controls (1 hour)
+Add to test workflows that currently lack them:
+```yaml
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+```
+
+### 4. Create Agent Rules (2-3 hours)
+Create `CLAUDE.md` with test creation guidelines covering Go envtest patterns, Cypress page object conventions, and naming standards.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests (7.0/10)
+
+**Go Backend (16 test files):**
+- Framework: Go standard `testing` + envtest (kubebuilder)
+- Test files: `api/*_test.go` covering all REST handlers (healthcheck, namespaces, PVCs, secrets, workspaces, workspace kinds)
+- Internal tests: `helper/validation_test.go`, model function tests
+- Suite tests use envtest with Kubernetes API server for realistic controller-runtime testing
+- Coverage profile generated: `go test ./... -coverprofile cover.out`
+- Lint enforced before tests: `make lint` in CI
+
+**Go Controller (10 test files):**
+- Framework: Ginkgo/Gomega + envtest
+- Test files: workspace_controller_test.go, workspacekind_controller_test.go, webhook tests
+- Suite test setup with envtest binary at K8s version 1.31.0
+- E2E tests excluded from unit runs: `go list ./... | grep -v /e2e`
+- Coverage profile generated
+
+**React Frontend (9 Jest spec files):**
+- Framework: Jest 30 + React Testing Library
+- Test files: utility tests (apiUtils, devAuth, imageUtils, valueUnits), form helper tests, hook tests
+- Coverage tooling: jest-coverage with istanbul merge for combined Jest + Cypress coverage
+- Type checking enforced in CI
+
+**Test-to-Code Ratios:**
+- Go: 26 test files / 95 source files = 27% (moderate)
+- Frontend Jest: 9 test files / 164 source files = 5.5% (low — Cypress covers more)
+
+### Integration/E2E Tests (7.5/10)
+
+**Controller E2E (2 test files, 539 lines):**
+- Framework: Ginkgo with Kind cluster
+- PR-triggered with `helm/kind-action` (Kind 1.35)
+- Tests workspace and workspacekind lifecycle in a real Kubernetes cluster
+- Istioctl installed for service mesh validation
+- Run via `go test ./test/e2e/ -v -ginkgo.v`
+
+**Frontend Cypress (21 test files):**
+- Framework: Cypress 13+ with Chrome browser
+- Comprehensive page object pattern with dedicated page files for each feature area
+- Tests cover: workspace CRUD, workspace kinds, secrets management, volume management, form validation, redirect handling, filtering
+- Currently mocked only (`CY_MOCK=1`) — intercepts API calls
+- Accessibility testing via `cypress-axe`
+- CI uploads test reports (JUnit XML), screenshots and videos on failure
+- Coverage support via istanbul/nyc instrumentation
+
+**Full-Stack E2E (TODO):**
+- Infrastructure exists in `testing/`: Kind cluster setup, cert-manager, Istio, deploy-all targets
+- `local-e2e` target is explicitly stubbed: "TODO: there are no e2e tests yet"
+- CI workflow `ws-e2e-test.yml` exists but calls the TODO target
+
+### Build Integration (7.0/10)
+
+**PR Image Builds:**
+- All three components build Docker images on PRs via reusable `ws-build-image.yml` workflow
+- Multi-architecture: `linux/amd64,linux/ppc64le,linux/arm64/v8`
+- Uses Docker Buildx with QEMU for cross-platform builds
+- SHA-based tagging for image traceability
+- Porcelain checks ensure no uncommitted changes after builds
+
+**Deployment Manifests:**
+- Kustomize overlays for Istio integration per component
+- CRD generation via controller-gen for webhook, RBAC, and CRD manifests
+- Deployment to Kind cluster supported for development
+
+**Gaps:**
+- No Konflux build simulation
+- No `kubectl apply --dry-run` manifest validation in CI
+- Image builds don't test runtime behavior
+
+### Image Testing (6.0/10)
+
+**Dockerfiles:**
+- Backend: Multi-stage (golang:1.24 builder → distroless/static:nonroot). Non-root user (65532). Exposes port 4000.
+- Controller: Multi-stage (golang:1.24 builder → distroless/static:nonroot). Non-root user (65532).
+- Frontend: Multi-stage (node:24-slim builder → nginx:alpine). Nginx configured for non-root (UID 101) with proper directory permissions.
 
 **Strengths:**
-- **Well-organized per-component workflows**: 6 workflow files with clear naming (`ws-backend-test.yml`, `ws-controller-test.yml`, `ws-frontend-test.yml`, `ws-e2e-test.yml`, `ws-build-image.yml`, `ws-publish.yml`)
-- **Path-based filtering**: PRs only trigger relevant workflows (e.g., backend tests only run when `workspaces/backend/**` changes)
-- **Smart cross-component triggers**: Backend tests also run when controller changes (because backend depends on controller types)
-- **Reusable workflow pattern**: `ws-build-image.yml` is a `workflow_call` used by all component workflows and publishing
-- **Semantic PR enforcement**: `semantic-prs.yaml` enforces conventional commit types (fix, feat, improve, refactor, etc.)
-- **Porcelain checks**: Both Go workflows verify no uncommitted file changes after `go mod tidy` and code generation
-- **Pinned action versions**: All GitHub Actions use SHA-pinned versions (e.g., `actions/checkout@de0fac2e...`)
+- All Dockerfiles use multi-stage builds for minimal image size
+- Build args for cross-platform compilation (`BUILDPLATFORM`, `TARGETOS`, `TARGETARCH`)
+- Non-root execution in all containers
+- Go builds with `CGO_ENABLED=0` for static binaries
 
-**Weaknesses:**
-- No concurrency control on test workflows (only `semantic-prs.yaml` and `gh-workflow-approve.yaml` have concurrency groups)
-- No caching for Go test dependencies (only Go setup caches `go.sum`)
-- No test result reporting/annotations on PRs
-- No workflow status badges in README
+**Gaps:**
+- No HEALTHCHECK instructions in any Dockerfile
+- No container runtime validation tests (startup, port check, basic request)
+- No Testcontainers or equivalent for integration testing with actual containers
+- Frontend uses `nginx:alpine` (not FIPS-compatible)
+- Backend/controller use `gcr.io/distroless/static:nonroot` (not UBI)
 
-### Test Coverage
+### Coverage Tracking (4.0/10)
 
-**Backend (Go - 12 test files):**
-- Uses Ginkgo/Gomega BDD framework with envtest
-- Tests cover all API handlers: workspaces, workspace kinds, pod template options, assets, actions, storage classes, secrets, PVCs, namespaces, healthcheck, response errors
-- `suite_test.go` bootstraps a full envtest environment with CRDs, RBAC, and k8s manager
-- Coverage: `go test -coverprofile cover.out` (not uploaded)
-- **Test-to-code ratio**: 12 test files / 16 source files = 0.75 (good)
+**Current State:**
+- Go backend: `go test ./... -coverprofile cover.out` (local only)
+- Go controller: `go test ... -coverprofile cover.out` (local only, excludes E2E)
+- Frontend: `test:coverage` npm script with Jest coverage + Cypress coverage merged via istanbul
+- **None of these are uploaded to any coverage service in CI**
 
-**Controller (Go - 13 test files):**
-- Ginkgo/Gomega with envtest for unit tests
-- E2E tests using Kind cluster with Ginkgo
-- Tests cover: workspace controller, workspace kind controller, webhooks (workspace + workspace kind), graph helper
-- E2E validates: CRD installation, deployment, workspace lifecycle, service creation, VirtualService creation, webhook validation
-- Coverage: `go test -coverprofile cover.out` (not uploaded)
-- **Test-to-code ratio**: 13 test files / 14 source files = 0.93 (excellent)
+**Gaps:**
+- No `.codecov.yml` or `coveralls.yml`
+- No `codecov/codecov-action` in any workflow
+- No coverage thresholds or gates
+- No PR coverage comments
+- Coverage data exists but is not tracked or enforced
 
-**Frontend (TypeScript - 3 Jest unit tests + 21 Cypress spec files):**
-- Jest for unit tests (tolerations, hooks)
-- Cypress 14.x for component/integration tests (mocked mode)
-- 21 Cypress spec files covering: workspaces (CRUD, redirects, form styling, volumes, secrets, filtering), workspace kinds (CRUD, summary, editing), application
-- Page Object pattern used for Cypress tests
-- Coverage: Istanbul + NYC for Cypress, Jest coverage reporter, merge script available
-- Cypress reports: HTML + JUnit XML, uploaded as artifacts on failure
-- **Test-to-code ratio**: 24 test/spec files / 166 source files = 0.14 (low)
+### CI/CD Automation (7.5/10)
 
-**V1 Branch Comparison:**
-- V1 has 7 Go test files across 3 controllers + 2 Python tests
-- V1 has 6 integration test workflows + 4 multi-arch test workflows
-- V1 has 21 Dockerfiles for example notebook servers
-- V2 is a ground-up rewrite with significantly better test organization
-
-### Code Quality
-
-**Go Linting (golangci-lint v2.12.2):**
-- **24 linters enabled** including: gosec, gocritic (diagnostic + experimental + opinionated + performance + style), errcheck, errorlint, exhaustive, ginkgolinter, gocyclo, staticcheck, revive
-- goheader enforces Apache 2.0 license headers
-- goimports enforces local package prefixes
-- Sensible exclusions for test files (dupl, errcheck, gosec, gocyclo) and generated code
-- Both backend and controller share nearly identical configs
-
-**Frontend Linting (ESLint):**
-- **Very comprehensive** with 50+ rules configured
-- Includes: `@typescript-eslint/recommended`, `jsx-a11y/recommended`, `react/recommended`, `prettier`
-- Custom plugins: `@cspell/spellchecker`, `no-only-tests`, `no-relative-import-paths`, `local-rules`
-- Custom local rules: `no-react-hook-namespace`, `no-raw-react-router-hook`
-- Restricted imports for PatternFly, date-fns, lodash (enforces tree-shaking)
-- Cypress-specific overrides with `consistent-type-imports`
-
-**Pre-commit Hooks:**
-- Husky pre-commit hook runs ESLint on staged frontend changes
-- No pre-commit hooks for Go components
-
-**Code Formatters:**
-- Go: gofmt + goimports (via golangci-lint formatters)
-- TypeScript: Prettier (enforced via CI with `prettier:check`)
-
-### Container Images
-
-**Build Process:**
-- 3 Dockerfiles: controller, backend, frontend
-- All use multi-stage builds (builder + minimal runtime)
-- **Controller/Backend**: Go 1.24 builder -> `gcr.io/distroless/static:nonroot` (excellent minimal base)
-- **Frontend**: Node 24-slim builder -> `nginx:alpine` with non-root user (UID 101)
-- Multi-arch builds: `linux/amd64,linux/ppc64le,linux/arm64/v8`
-- QEMU + Docker Buildx for cross-platform builds
-- GHCR (GitHub Container Registry) for image storage
+**Workflow Inventory:**
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `ws-backend-test.yml` | PR + push | Build, lint, unit test, image build |
+| `ws-controller-test.yml` | PR + push | Build, lint, unit test, E2E, image build |
+| `ws-frontend-test.yml` | PR + push | Build, lint, type-check, Jest + Cypress, image build |
+| `ws-e2e-test.yml` | PR + push | Full-stack E2E (currently TODO) |
+| `ws-build-image.yml` | Reusable | Multi-arch image build with Buildx/QEMU |
+| `ws-publish.yml` | Push to main | Build and push all images to GHCR |
+| `semantic-prs.yaml` | PR | Enforce conventional commit titles |
+| `gh-workflow-approve.yaml` | PR label | Auto-approve workflows for org members |
 
 **Strengths:**
-- Distroless base images for Go services (minimal attack surface)
-- Non-root execution (USER 65532:65532 for Go, USER 101:101 for frontend)
-- Multi-platform support including ppc64le
-- SHA-tagged images for traceability
-- Backend Dockerfile correctly handles controller dependency via COPY
+- Path-scoped triggers prevent unnecessary CI runs (e.g., backend tests only on backend changes)
+- Cross-component awareness (backend tests also trigger on controller changes)
+- Reusable workflow pattern for image building reduces duplication
+- Semantic PR title enforcement for clean changelogs
+- GitHub Actions pinned to commit SHAs for supply chain security
+- Go dependency caching via `cache-dependency-path`
+- Cypress artifact collection (reports, screenshots, videos)
 
-**Weaknesses:**
-- No vulnerability scanning (Trivy, Snyk, Grype)
-- No SBOM generation (syft)
-- No image signing (cosign)
-- No runtime validation after build
-- No image size optimization analysis
-- No `.dockerignore` files found (potential for large contexts)
+**Gaps:**
+- No concurrency controls on test/build workflows (only on semantic-prs and approve)
+- No timeout-minutes set on any workflow
+- No test parallelization/sharding
+- No scheduled/periodic test runs
 
-### Security
+### Static Analysis (7.0/10)
 
-**Present:**
-- OpenSSF Best Practices badge (project 9942)
-- `SECURITY.md` on main branch
-- gosec linter enabled in golangci-lint
-- Distroless/non-root container images
-- Pinned GitHub Action versions (SHA-pinned)
-- Workflow approval for external contributors
+#### Linting
 
-**Missing:**
-- No container vulnerability scanning (Trivy, Snyk, Grype)
-- No SAST workflow (CodeQL, Semgrep)
-- No dependency scanning workflow (dependabot on v2, Renovate)
-- No secret detection (Gitleaks, TruffleHog)
-- No image signing or attestation
-- No SBOM generation
+**Go (golangci-lint v2.12.2):**
+- 27 linters enabled across both backend and controller
+- Key linters: gosec, govet, errcheck, staticcheck, gocyclo, dupl, goconst, revive, modernize
+- License header enforcement via goheader
+- goimports with local package ordering
+- Version 2 config format with explicit `default: none` (no implicit linters)
 
-### Agent Rules (Agentic Flow Quality)
+**Frontend (ESLint):**
+- Extensive configuration with 14 plugins including:
+  - `@typescript-eslint` for type-aware rules
+  - `jsx-a11y` for accessibility
+  - `react-hooks` for hook correctness
+  - `no-only-tests` to prevent `.only()` leaks
+  - `@cspell/spellchecker` for code spelling
+  - `local-rules` for custom project-specific rules
+  - `prettier` for formatting
+  - `import` for import order enforcement
+- Cypress-specific overrides with `plugin:cypress/recommended`
+- Naming conventions enforced (camelCase variables, PascalCase types)
 
-- **Status**: Missing
-- **Coverage**: None - no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
-- **Quality**: N/A
-- **Gaps**: All test types lack agent rules
-- **Recommendation**: Generate comprehensive rules with `/test-rules-generator` covering:
-  - Go unit tests with envtest (Ginkgo/Gomega patterns)
-  - Go E2E tests with Kind cluster
-  - Cypress mocked component tests (Page Object pattern)
-  - Jest unit tests
-  - API handler test patterns
+#### Pre-commit Hooks
+
+- Husky pre-commit hook for frontend: runs `npm run test:lint` on staged frontend changes
+- No repo-wide `.pre-commit-config.yaml`
+- No pre-commit hooks for Go code (relies on CI)
+
+#### FIPS Compatibility
+
+- No FIPS build tags (`-tags=fips`, `GOEXPERIMENT=boringcrypto`)
+- No non-FIPS crypto imports found (no `crypto/md5`, `crypto/des`, `crypto/rc4`)
+- Base images are not FIPS-capable (distroless, alpine)
+- No FIPS compliance checking in CI
+
+#### Dependency Alerts
+
+- **No Dependabot configured** on `notebooks-v2` branch
+- **No Renovate configured**
+- GitHub Actions are pinned to SHAs (good supply chain practice) but no automated update mechanism
+
+### Agent Rules (0.0/10)
+
+- **No `CLAUDE.md` or `AGENTS.md`** in repository root
+- **No `.claude/` directory** with rules or skills
+- **No test automation guidance** for AI agents
+- No documentation on test patterns, naming conventions, or quality gates for AI-assisted contributions
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add container vulnerability scanning**: Integrate Trivy into `ws-build-image.yml` to scan all built images for CVEs before they're pushed. This is the single highest-impact gap.
-2. **Integrate coverage tracking in CI**: Add codecov/coveralls integration to all test workflows. Set minimum coverage thresholds (e.g., 70% for Go, 50% for frontend).
-3. **Add SAST workflow**: Create a CodeQL or gosec-based security analysis workflow that runs on PRs.
+1. **Add codecov integration with coverage thresholds** — Both Go components already generate coverprofiles and the frontend has istanbul/nyc infrastructure. Wire these into CI with `codecov/codecov-action` and set project-level (60%) and patch-level (70%) thresholds.
+
+2. **Enable Dependabot** for all package ecosystems — Go modules, npm, Docker base images, and GitHub Actions. This is a ~30-minute configuration change with high security value.
+
+3. **Implement full-stack E2E tests** — The Kind cluster infrastructure and deploy-all targets exist. Implement Cypress tests that run against the deployed stack (not mocked) to validate workspace lifecycle end-to-end.
 
 ### Priority 1 (High Value)
 
-1. **Implement full-stack E2E tests**: The `testing/Makefile` infrastructure is already in place (Kind cluster, cert-manager, Istio, deploy-all). Define Cypress-based E2E tests that exercise the full controller + backend + frontend stack.
-2. **Add container runtime validation**: After building each image, run a simple startup check (docker run + healthcheck endpoint) to catch configuration issues early.
-3. **Create agent rules**: Add `.claude/rules/` with test patterns for Go (envtest, Ginkgo), frontend (Cypress, Jest), and E2E testing.
-4. **Add dependabot to v2 branch**: Copy dependabot config from main and adapt for the v2 directory structure.
+4. **Add container runtime validation** — After PR image builds, run basic smoke tests: start the container, verify port is listening, send a health check request. This catches Dockerfile misconfigurations before merge.
+
+5. **Add FIPS-compatible base images** — For Red Hat/RHOAI downstream, switch Go components to UBI-based images and add `GOEXPERIMENT=boringcrypto` build flag. Frontend should use UBI + nginx instead of `nginx:alpine`.
+
+6. **Add concurrency controls and timeouts** — Add `concurrency: cancel-in-progress: true` and `timeout-minutes: 30` to all test/build workflows to prevent resource waste.
+
+7. **Create comprehensive agent rules** — Add `CLAUDE.md` with guidelines for Go envtest patterns, Cypress page object conventions, test naming, and quality gate checklists. Consider using `/test-rules-generator` to bootstrap rules from existing patterns.
 
 ### Priority 2 (Nice-to-Have)
 
-1. **Add image signing with cosign**: Sign published images for supply chain security.
-2. **Add contract tests**: Test the API contract between backend endpoints and frontend API client.
-3. **Add performance testing**: Benchmark API response times, especially for workspace listing/filtering.
-4. **Expand accessibility testing**: `cypress-axe` is already a dependency but doesn't appear to be used in test specs.
-5. **Add concurrency control**: Add concurrency groups to test workflows to cancel superseded runs.
+8. **Add repo-wide `.pre-commit-config.yaml`** — Extend the Husky-based frontend linting to cover Go code with golangci-lint pre-commit hooks.
+
+9. **Add real backend Cypress tests** — Current Cypress tests are all mocked (`CY_MOCK=1`). Add a test suite that runs against the actual backend for higher confidence.
+
+10. **Add contract tests** — Validate frontend generated API types match the backend's OpenAPI spec to prevent API drift.
 
 ## Comparison to Gold Standards
 
-| Dimension | kubeflow/notebooks | odh-dashboard (gold) | notebooks-v1 | kserve |
-|-----------|-------------------|---------------------|--------------|--------|
-| Unit Tests | Ginkgo/Gomega + Jest (good) | Jest + Go (excellent) | Go test only (basic) | Go test (strong) |
-| Integration/E2E | Controller E2E + Cypress mocked (partial) | Multi-layer with contracts (excellent) | 6 integration workflows (good) | Comprehensive (excellent) |
-| Build Integration | Multi-arch PR builds (good) | Konflux simulation (excellent) | Multi-arch tests (good) | PR builds (good) |
-| Coverage | Local only, no CI (weak) | Enforced with thresholds (excellent) | None (weak) | Codecov enforced (strong) |
-| Security Scanning | None (critical gap) | Trivy + CodeQL (excellent) | None (critical gap) | Trivy + SAST (strong) |
-| Linting | 24 golangci-lint rules + ESLint (excellent) | ESLint + Go (good) | Python lint only (weak) | golangci-lint (good) |
-| Agent Rules | None (missing) | Comprehensive (excellent) | None (missing) | None (missing) |
-| Container Images | Distroless, multi-arch (strong) | Multi-stage (good) | 21 images, no scanning (moderate) | Multi-stage (good) |
-| Dev Experience | Tilt + Kind (excellent) | Docker Compose (good) | Manual (basic) | Kind (good) |
+| Capability | kubeflow/notebooks | odh-dashboard | kserve | notebooks (gold) |
+|-----------|-------------------|---------------|--------|-----------------|
+| Unit Tests | Go envtest + Jest | Jest + RTL | Go testing | Go testing |
+| E2E Tests | Controller E2E + Cypress (mocked) | Cypress (mocked + real) | Ginkgo E2E | Multi-layer |
+| Coverage CI | None | Codecov | Codecov | Codecov |
+| Coverage Gate | None | Yes (80%) | Yes | Yes |
+| Dependabot | None | Configured | Configured | Configured |
+| FIPS | None | UBI images | Partial | UBI + BoringCrypto |
+| Pre-commit | Husky (frontend) | .pre-commit-config | .pre-commit-config | .pre-commit-config |
+| Agent Rules | None | CLAUDE.md + rules | None | None |
+| Multi-arch | Yes (3 platforms) | Yes | Yes | Yes |
+| Image Build on PR | Yes | Yes | Yes | Yes |
+| Concurrency | Partial (2/8 workflows) | Full | Full | Full |
+| Semantic PRs | Yes | Yes | No | No |
 
 ## File Paths Reference
 
-### CI/CD
-- `.github/workflows/ws-backend-test.yml` - Backend build, lint, image build, unit tests
-- `.github/workflows/ws-controller-test.yml` - Controller build, lint, image build, unit tests, E2E tests
-- `.github/workflows/ws-frontend-test.yml` - Frontend build, lint, tests, image build
-- `.github/workflows/ws-e2e-test.yml` - Full-stack E2E (currently placeholder)
-- `.github/workflows/ws-build-image.yml` - Reusable multi-arch image build workflow
-- `.github/workflows/ws-publish.yml` - Publishing workflow for merged code
-- `.github/workflows/semantic-prs.yaml` - Semantic PR title enforcement
-
-### Testing
-- `workspaces/backend/api/*_test.go` - Backend API handler tests (12 files)
-- `workspaces/controller/internal/controller/*_test.go` - Controller unit tests
-- `workspaces/controller/internal/webhook/*_test.go` - Webhook validation tests
-- `workspaces/controller/test/e2e/e2e_test.go` - Controller E2E tests
-- `workspaces/frontend/src/__tests__/cypress/` - Cypress test suite (21 spec files)
-- `workspaces/frontend/src/__tests__/unit/` - Jest unit tests
-- `testing/Makefile` - Full-stack E2E orchestration (Kind, cert-manager, Istio)
-
-### Code Quality
-- `workspaces/controller/.golangci.yml` - Controller linting (24 linters)
-- `workspaces/backend/.golangci.yml` - Backend linting (24 linters)
-- `workspaces/frontend/.eslintrc.js` - Frontend ESLint (50+ rules)
-- `workspaces/frontend/.husky/pre-commit` - Husky pre-commit hook
-- `workspaces/frontend/jest.config.js` - Jest configuration
-
-### Container Images
-- `workspaces/controller/Dockerfile` - Controller image (Go -> distroless)
-- `workspaces/backend/Dockerfile` - Backend image (Go -> distroless)
-- `workspaces/frontend/Dockerfile` - Frontend image (Node -> nginx:alpine)
-- `workspaces/frontend/Dockerfile.dev` - Frontend dev image
+### CI/CD Workflows
+- `.github/workflows/ws-backend-test.yml` — Backend build, lint, unit tests, image build
+- `.github/workflows/ws-controller-test.yml` — Controller build, lint, unit + E2E tests, image build
+- `.github/workflows/ws-frontend-test.yml` — Frontend build, lint, type-check, Jest + Cypress, image build
+- `.github/workflows/ws-e2e-test.yml` — Full-stack E2E (TODO)
+- `.github/workflows/ws-build-image.yml` — Reusable multi-arch image build
+- `.github/workflows/ws-publish.yml` — Push images to GHCR
+- `.github/workflows/semantic-prs.yaml` — PR title validation
+- `.github/workflows/gh-workflow-approve.yaml` — Auto-approve for org members
 
 ### Build & Deploy
-- `workspaces/backend/Makefile` - Backend build, test, deploy targets
-- `workspaces/controller/Makefile` - Controller build, test, deploy targets
-- `developing/Makefile` - Tilt development environment
-- `developing/Tiltfile` - Tilt configuration
+- `workspaces/backend/Makefile` — Backend build, test, lint, deploy targets
+- `workspaces/controller/Makefile` — Controller build, test, E2E, deploy targets
+- `workspaces/frontend/Makefile` — Frontend image build and deploy targets
+- `testing/Makefile` — Full-stack E2E cluster setup and test targets
+- `workspaces/backend/Dockerfile` — Multi-stage Go → distroless
+- `workspaces/controller/Dockerfile` — Multi-stage Go → distroless
+- `workspaces/frontend/Dockerfile` — Multi-stage Node → nginx:alpine
+
+### Static Analysis
+- `workspaces/backend/.golangci.yml` — 27 linters, v2 config
+- `workspaces/controller/.golangci.yml` — 27 linters, v2 config
+- `workspaces/frontend/.eslintrc.js` — ESLint with 14 plugins
+
+### Testing
+- `workspaces/backend/api/*_test.go` — Backend handler unit tests (16 files)
+- `workspaces/controller/internal/controller/*_test.go` — Controller unit tests
+- `workspaces/controller/internal/webhook/*_test.go` — Webhook validation tests
+- `workspaces/controller/test/e2e/` — Controller E2E tests with Kind
+- `workspaces/frontend/src/__tests__/cypress/` — Cypress test suite (21 test files)
+- `workspaces/frontend/src/**/*.spec.ts` — Jest unit tests (9 files)
+
+### Pre-commit
+- `workspaces/frontend/.husky/pre-commit` — Frontend lint hook

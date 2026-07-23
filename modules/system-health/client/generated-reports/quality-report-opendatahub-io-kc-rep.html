@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 03:59 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 04:24 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/kc-rep</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="344.946582"
+                                stroke-dashoffset="446.73409799999996"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">3.9</div>
+                        <div class="score-value">2.1</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No application code or tests - configuration-only repository</div>
+                            <div class="scorecard-status">No source code or test files — pure build-configuration repository</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No pipeline validation tests; replicator workflow has no test coverage</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No integration or E2E tests; no validation that Tekton pipelines render or execute correctly</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Comprehensive Konflux pipeline definitions but no validation that pipeline YAML is correct</div>
+                            <div class="scorecard-status">Tekton PipelineRun definitions for 26 components with consistent structure; no PR-time YAML validation or dry-run</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Pipelines include Clair, ClamAV, Snyk, Coverity, SBOM - but only post-push, not validated in this repo</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">N/A — repo stores pipeline configs, not Dockerfiles or images</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tooling - no application code to cover</div>
+                            <div class="scorecard-status">No code to cover; no pipeline-config validation coverage</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Single dispatch-only replicator workflow; no PR checks, no linting, no YAML validation</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">Single manual-dispatch workflow (okc-replicator); no PR-triggered validation, linting, or drift detection</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No YAML linting, schema validation, Dependabot, or pre-commit hooks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
                         </div>
                     </div>
                 </div>
@@ -411,51 +416,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No YAML schema validation for Tekton PipelineRun definitions</div>
-                            <p>Invalid pipeline YAML can be replicated to target repos, causing silent build failures</p>
+                            <div class="item-description">No PR-time validation of Tekton YAML</div>
+                            <p>Malformed or inconsistent pipeline definitions can be merged without detection, breaking Konflux builds downstream</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No PR-triggered CI checks at all</div>
-                            <p>All changes merged without automated validation; broken pipelines discovered only at runtime</p>
+                            <div class="item-description">No automated drift detection between kc-rep and target repos</div>
+                            <p>Tekton files in target repos can diverge from the central definitions without any alert</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">OKC Replicator workflow only supports 2 folders (data-science-pipelines, odh-model-controller)</div>
-                            <p>25 of 26 component folders cannot use the replicator; workflow is incomplete</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No diff/drift detection between OKC and target repos</div>
-                            <p>No way to detect when target repo Tekton configs diverge from central definitions</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">odh-dashboard directory exists but is empty</div>
-                            <p>Missing Konflux pipeline definition for a critical component</p>
+                        <li class="item-card high">
+                            <div class="item-description">No schema validation for PipelineRun resources</div>
+                            <p>Invalid Tekton API fields, missing required params, or wrong task bundle SHAs are only caught at runtime in Konflux</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">codeflare-operator directory name has trailing space</div>
-                            <p>Filesystem path inconsistency; scripts may fail on this directory</p>
+                            <div class="item-description">okc-replicator workflow is manual-only</div>
+                            <p>Version propagation depends entirely on human action; risk of missed or delayed updates across 26 components</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">0.5 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -472,35 +461,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add YAML lint CI check for all .tekton/ files</div>
-                            <p>Catch YAML syntax errors before merge</p>
+                            <div class="item-description">Add a PR-triggered YAML lint workflow using yamllint</div>
+                            <p>Catches syntax errors, indentation issues, and line-length violations before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add all 26 component folders to replicator workflow choice list</div>
-                            <p>Enable version-bump automation for all components</p>
+                            <div class="item-description">Add Tekton schema validation with tektoncd/catlin or kubectl --dry-run</div>
+                            <p>Validates PipelineRun structure against the Tekton API schema</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Enable Dependabot for GitHub Actions</div>
+                            <p>Keeps actions/checkout, getsentry/action-github-app-token, and other Actions up to date</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Fix codeflare-operator directory name (remove trailing space)</div>
-                            <p>Prevent path-related script failures</p>
+                            <div class="item-description">Add a CLAUDE.md with contribution guidelines for pipeline definitions</div>
+                            <p>Guides AI agents and contributors on naming conventions, required fields, and testing expectations</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">15 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add kubeconform or Tekton schema validation</div>
-                            <p>Validate PipelineRun manifests against Tekton API schema</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add PR-triggered CI workflow with YAML lint + Tekton schema validation for all pipeline files</li><li>Update replicator workflow to support all 26 component folders</li><li>Fix the trailing space in &#x27;codeflare-operator &#x27; directory name</li></ul>
+                            <ul><li>Add PR-triggered YAML validation workflow — yamllint + Tekton schema check on every PR</li><li>Implement consistency checks ensuring all 30 pipeline files follow the same task ordering, bundle versions, and parameter sets</li><li>Add automated drift detection comparing kc-rep definitions against .tekton/ in each target repo</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add drift detection workflow to compare OKC definitions against target repo .tekton/ directories</li><li>Add Tekton task version consistency checks across all pipelines</li><li>Create CLAUDE.md with contribution guidelines and pipeline authoring patterns</li><li>Add odh-dashboard Tekton pipeline definition</li></ul>
+                            <ul><li>Convert okc-replicator to support scheduled runs or webhook-triggered execution for automated version propagation</li><li>Add a task-bundle version inventory and alerting when Konflux catalog bundles are outdated</li><li>Create CLAUDE.md/agent rules documenting pipeline structure conventions and validation requirements</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add CODEOWNERS file for pipeline review enforcement</li><li>Add Renovate/Dependabot for Tekton task bundle version updates</li><li>Create documentation for pipeline onboarding process</li><li>Add agent rules for pipeline YAML authoring patterns</li></ul>
+                            <ul><li>Add a cross-component dependency graph showing which target repos consume which pipeline definitions</li><li>Implement a changelog or release-notes generator for pipeline version bumps</li><li>Add CODEOWNERS file to enforce review for critical component pipelines</li></ul>
                         </div>
                     </div>
                 </div>

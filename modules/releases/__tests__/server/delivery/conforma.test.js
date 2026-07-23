@@ -6,9 +6,9 @@ function makeStorage() {
   const store = {}
   return {
     data: store,
-    readFromStorage: (key) => store[key] || null,
-    writeToStorage: (key, val) => { store[key] = val },
-    deleteFromStorage: (key) => { delete store[key] }
+    readFromStorage: async (key) => store[key] || null,
+    writeToStorage: async (key, val) => { store[key] = val },
+    deleteFromStorage: async (key) => { delete store[key] }
   }
 }
 
@@ -33,11 +33,11 @@ function makeRouter() {
       }
       // Run middleware then handler (skip requireAuth/requireAdmin by calling next)
       let i = 0
-      const next = () => {
+      const next = async () => {
         const fn = fns[i++]
-        if (fn) fn(req, res, next)
+        if (fn) await fn(req, res, next)
       }
-      next()
+      await next()
       return res
     }
   }
@@ -54,6 +54,16 @@ const SAMPLE_RELEASE = {
   exceptions: {
     fbc: { configExcludes: ['cve'], volatileExcludes: [{ value: 'test.no_erred_tests:fbc', effectiveUntil: '2026-05-15T00:00:00Z', reference: 'https://example.com/JIRA-1', imageUrl: null, comment: null }] },
     registry: { configExcludes: ['cve.cve_blockers'], volatileExcludes: [] }
+  }
+}
+
+const SAMPLE_PRODUCT_LAYER = {
+  version: 'rhaii',
+  gaDate: null,
+  productLayer: true,
+  displayName: 'RHAII',
+  exceptions: {
+    policy: { configExcludes: ['cve.cve_blockers', 'hermetic_task'], volatileExcludes: [] }
   }
 }
 
@@ -152,7 +162,7 @@ describe('conforma backend routes', () => {
       expect(res._body.count).toBe(1)
       expect(res._body.savedAt).toBeDefined()
 
-      const stored = storage.readFromStorage('releases/delivery/conforma.json')
+      const stored = await storage.readFromStorage('releases/delivery/conforma.json')
       expect(stored.releases).toHaveLength(1)
       expect(stored.releases[0].version).toBe('rhoai-3.4')
     })
@@ -184,12 +194,87 @@ describe('conforma backend routes', () => {
     })
   })
 
+  describe('POST /conforma/bulk with product layers', () => {
+    it('accepts releases with productLayer and no gaDate', async () => {
+      const req = { body: { releases: [SAMPLE_PRODUCT_LAYER] } }
+      const res = await router._dispatch('POST', '/conforma/bulk', req)
+      expect(res._status).toBe(200)
+      expect(res._body.count).toBe(1)
+    })
+
+    it('rejects releases without gaDate and without productLayer', async () => {
+      const req = { body: { releases: [{ version: 'bad', exceptions: {} }] } }
+      const res = await router._dispatch('POST', '/conforma/bulk', req)
+      expect(res._status).toBe(400)
+    })
+  })
+
+  describe('merged RHOAI + AIPCC data', () => {
+    it('GET /conforma/releases returns releases from both storage keys', async () => {
+      storage.writeToStorage('releases/delivery/conforma.json', {
+        fetchedAt: '2026-05-10T00:00:00.000Z',
+        minDate: '2025-05-22',
+        count: 1,
+        releases: [SAMPLE_RELEASE]
+      })
+      storage.writeToStorage('releases/delivery/conforma-aipcc.json', {
+        fetchedAt: '2026-07-10T00:00:00.000Z',
+        count: 1,
+        releases: [SAMPLE_PRODUCT_LAYER]
+      })
+      const res = await router._dispatch('GET', '/conforma/releases')
+      expect(res._status).toBe(200)
+      expect(res._body.releases).toHaveLength(2)
+      expect(res._body.count).toBe(2)
+      expect(res._body.releases.map(r => r.version)).toEqual(['rhoai-3.4', 'rhaii'])
+    })
+
+    it('GET /conforma/releases/:version finds AIPCC product layer', async () => {
+      storage.writeToStorage('releases/delivery/conforma-aipcc.json', {
+        fetchedAt: '2026-07-10T00:00:00.000Z',
+        count: 1,
+        releases: [SAMPLE_PRODUCT_LAYER]
+      })
+      const res = await router._dispatch('GET', '/conforma/releases/:version', { params: { version: 'rhaii' } })
+      expect(res._status).toBe(200)
+      expect(res._body.productLayer).toBe(true)
+      expect(res._body.displayName).toBe('RHAII')
+    })
+
+    it('GET /conforma/status reports combined count', async () => {
+      storage.writeToStorage('releases/delivery/conforma.json', {
+        fetchedAt: '2026-05-10T00:00:00.000Z',
+        count: 1,
+        releases: [SAMPLE_RELEASE]
+      })
+      storage.writeToStorage('releases/delivery/conforma-aipcc.json', {
+        fetchedAt: '2026-07-10T00:00:00.000Z',
+        count: 1,
+        releases: [SAMPLE_PRODUCT_LAYER]
+      })
+      const res = await router._dispatch('GET', '/conforma/status')
+      expect(res._body.count).toBe(2)
+      expect(res._body.fetchedAt).toBe('2026-07-10T00:00:00.000Z')
+    })
+
+    it('GET /conforma/releases works with only AIPCC data', async () => {
+      storage.writeToStorage('releases/delivery/conforma-aipcc.json', {
+        fetchedAt: '2026-07-10T00:00:00.000Z',
+        count: 1,
+        releases: [SAMPLE_PRODUCT_LAYER]
+      })
+      const res = await router._dispatch('GET', '/conforma/releases')
+      expect(res._status).toBe(200)
+      expect(res._body.releases).toHaveLength(1)
+    })
+  })
+
   describe('DELETE /conforma', () => {
     it('deletes existing data and returns 204', async () => {
       storage.writeToStorage('releases/delivery/conforma.json', { releases: [SAMPLE_RELEASE] })
       const res = await router._dispatch('DELETE', '/conforma')
       expect(res._status).toBe(204)
-      expect(storage.readFromStorage('releases/delivery/conforma.json')).toBeNull()
+      expect(await storage.readFromStorage('releases/delivery/conforma.json')).toBeNull()
     })
 
     it('returns 204 even when no data exists', async () => {
@@ -223,7 +308,7 @@ describe('conforma backend routes — demo mode', () => {
     const res = await router._dispatch('POST', '/conforma/bulk', req)
     expect(res._status).toBe(200)
     expect(res._body.status).toBe('skipped')
-    expect(storage.readFromStorage('releases/delivery/conforma.json')).toBeNull()
+    expect(await storage.readFromStorage('releases/delivery/conforma.json')).toBeNull()
   })
 
   it('DELETE /conforma returns 400 in demo mode', async () => {

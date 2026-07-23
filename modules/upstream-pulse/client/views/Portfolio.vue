@@ -103,10 +103,20 @@
       <!-- Organizations -->
       <section class="mb-10">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Organizations
-            <span class="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">({{ filteredOrgs.length }})</span>
-          </h3>
+          <div class="flex items-center gap-3">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Organizations
+              <span class="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">({{ filteredOrgs.length }})</span>
+            </h3>
+            <button
+              v-if="canManageStrategy && !loading"
+              @click="openAddOrg"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/40 border border-blue-200 dark:border-blue-800 rounded-lg transition-colors"
+            >
+              <PlusIcon :size="15" :stroke-width="2.5" />
+              Add Organization
+            </button>
+          </div>
           <div class="flex items-center gap-2">
             <div class="relative">
               <SearchIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
@@ -243,11 +253,20 @@
                 <tr
                   v-for="org in paginatedOrgs"
                   :key="org.githubOrg"
-                  class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+                  class="group/org hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
                   @click="nav.navigateTo('org-detail', { org: org.githubOrg })"
                 >
                   <td class="px-6 py-4">
-                    <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ org.name }}</span>
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ org.name }}</span>
+                      <button
+                        v-if="canManageStrategy"
+                        @click.stop="openEditOrg(org)"
+                        class="inline-flex items-center p-1 rounded-md text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 opacity-0 group-hover/org:opacity-100 transition-all"
+                      >
+                        <PencilIcon :size="13" />
+                      </button>
+                    </div>
                   </td>
                   <td class="px-6 py-4">
                     <span
@@ -471,6 +490,14 @@
       @created="onProjectCreated"
       @navigate="({ view, params }) => nav.navigateTo(view, params)"
     />
+
+    <OrgEditModal
+      :open="showOrgModal"
+      :org="editingOrg"
+      :all-orgs="orgs"
+      @close="showOrgModal = false"
+      @saved="onOrgSaved"
+    />
   </div>
 </template>
 
@@ -495,18 +522,24 @@ import {
   ArrowUp as ArrowUpIcon,
   ArrowDown as ArrowDownIcon,
   Check as CheckIcon,
+  Pencil as PencilIcon,
 } from 'lucide-vue-next'
 import { apiRequest } from '@shared/client/services/api'
 import { useAuth } from '@shared/client/composables/useAuth'
 import OrgActivityCard from '../components/OrgActivityCard.vue'
+import OrgEditModal from '../components/OrgEditModal.vue'
 import AddProjectModal from '../components/AddProjectModal.vue'
 import { OrgCardSkeleton, StatCardSkeleton, TableRowSkeleton } from '../components/SkeletonLoaders.vue'
 import StickyPageHeader from '../components/StickyPageHeader.vue'
 import { getEngagementStatus } from '../composables/useStrategicClassification.js'
+import { useStrategyPermissions } from '../composables/useStrategyPermissions.js'
 
 const nav = inject('moduleNav')
 const { isAdmin } = useAuth()
+const { canManageStrategy, loadPermissions } = useStrategyPermissions()
 const showAddProject = ref(false)
+const showOrgModal = ref(false)
+const editingOrg = ref(null)
 
 const MODULE_API = '/modules/upstream-pulse'
 
@@ -754,6 +787,22 @@ function onProjectCreated() {
   loadData()
 }
 
+function openAddOrg() {
+  editingOrg.value = null
+  showOrgModal.value = true
+}
+
+function openEditOrg(org) {
+  editingOrg.value = org
+  showOrgModal.value = true
+}
+
+function onOrgSaved() {
+  showOrgModal.value = false
+  editingOrg.value = null
+  loadData()
+}
+
 function onClickOutside(e) {
   if (orgSortOpen.value && !e.target.closest('[data-sort-dropdown]')) {
     orgSortOpen.value = false
@@ -763,6 +812,7 @@ function onClickOutside(e) {
 watch(selectedDays, () => loadData())
 onMounted(() => {
   loadData()
+  loadPermissions()
   document.addEventListener('click', onClickOutside)
 })
 onBeforeUnmount(() => {

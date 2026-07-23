@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // but the real pipeline.js is used (vi.mock does not intercept CJS require
 // for the pipeline module inside index.js in this test environment).
 vi.mock('../../../server/planning/config-lock', () => ({
-  withConfigLock: vi.fn(function(fn) { return fn() })
+  withConfigLock: vi.fn(async function(fn) { return await fn() })
 }))
 
 vi.mock('../../../server/planning/config-backup', () => ({
@@ -29,14 +29,14 @@ function makeStorage(data) {
     for (const k in data) store[k] = data[k]
   }
   return {
-    readFromStorage: function(key) {
+    readFromStorage: async function(key) {
       return store[key] ? JSON.parse(JSON.stringify(store[key])) : null
     },
-    writeToStorage: function(key, value) {
+    writeToStorage: async function(key, value) {
       store[key] = value
     },
-    listStorageFiles: vi.fn().mockReturnValue([]),
-    deleteFromStorage: vi.fn(function(key) {
+    listStorageFiles: vi.fn().mockResolvedValue([]),
+    deleteFromStorage: vi.fn(async function(key) {
       delete store[key]
     }),
     _store: store
@@ -115,7 +115,7 @@ const VALID_ROCK = {
 describe('invalidateCache behavior', function() {
   let router, storage, context
 
-  beforeEach(function() {
+  beforeEach(async function() {
     vi.clearAllMocks()
     storage = makeStorage({
       'releases/planning/config.json': { releases: { '3.5': { release: '3.5' } } },
@@ -132,7 +132,7 @@ describe('invalidateCache behavior', function() {
       requireScope: function() { return function(req, res, next) { next() } },
       registerDiagnostics: vi.fn()
     }
-    registerRoutes(router, context)
+    await registerRoutes(router, context)
   })
 
   it('after Big Rock edit, GET returns data (not empty 202)', async function() {
@@ -160,7 +160,7 @@ describe('invalidateCache behavior', function() {
 
     // GET candidates -- should return data (not 202 with empty arrays)
     const getReq = makeReq({ params: { version: '3.5' }, query: {} })
-    const res = callRoute(router._routes, 'GET', '/releases/:version/candidates', getReq)
+    const res = await callRoute(router._routes, 'GET', '/releases/:version/candidates', getReq)
 
     expect(res._status).toBe(200)
     expect(res._json.features).toBeDefined()
@@ -183,7 +183,7 @@ describe('invalidateCache behavior', function() {
 
     // Trigger a refresh
     const refreshReq = makeReq({ params: { version: '3.5' } })
-    callRoute(router._routes, 'POST', '/releases/:version/refresh', refreshReq)
+    await callRoute(router._routes, 'POST', '/releases/:version/refresh', refreshReq)
 
     // Wait for the background refresh promise to settle
     await new Promise(function(resolve) { setTimeout(resolve, 50) })
@@ -258,15 +258,15 @@ describe('invalidateCache behavior', function() {
       }
     })
     var origWrite = spyStorage.writeToStorage
-    spyStorage.writeToStorage = function(key, value) {
+    spyStorage.writeToStorage = async function(key, value) {
       if (key === 'releases/planning/candidates-cache-3.5.json' && value && value._invalidatedAt) {
         markerWritten = true
       }
-      origWrite(key, value)
+      await origWrite(key, value)
     }
 
     var spyRouter = makeRouter()
-    registerRoutes(spyRouter, {
+    await registerRoutes(spyRouter, {
       storage: spyStorage,
       requireAuth: function(req, res, next) { next() },
       requireAdmin: function(req, res, next) { next() },

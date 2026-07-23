@@ -24,6 +24,7 @@ function makeRelease(id, opts = {}) {
     milestones: {
       ga: opts.ga || null,
       codeFreeze: opts.codeFreeze || null,
+      featureFreeze: opts.featureFreeze || null,
       planningFreeze: opts.planningFreeze || null
     }
   }

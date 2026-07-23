@@ -19,6 +19,8 @@ function defaultModelValue() {
     component: [],
     priority: [],
     team: [],
+    product: [],
+    fpdorItems: [],
     readiness: null
   }
 }
@@ -356,5 +358,50 @@ describe('FeatureReadinessFilterBar', function() {
     var classes = outcomeBtn[0].classes().join(' ')
     expect(classes).toContain('border-gray-300')
     expect(classes).not.toContain('border-primary-400')
+  })
+
+  it('renders product and failed FPDoR filters', function() {
+    var wrapper = mount(FeatureReadinessFilterBar, {
+      props: { filterMeta: FILTER_META, modelValue: defaultModelValue() }
+    })
+    expect(wrapper.text()).toContain('All products')
+    expect(wrapper.text()).toContain('Any failed item')
+  })
+
+  it('emits product selection', async function() {
+    var wrapper = mount(FeatureReadinessFilterBar, {
+      props: { filterMeta: FILTER_META, modelValue: defaultModelValue() },
+      attachTo: document.body
+    })
+    var productBtn = findButtonByText(wrapper, 'All products')
+    expect(productBtn.length).toBe(1)
+    await productBtn[0].trigger('click')
+    expect(wrapper.text()).toContain('RHOAI')
+    expect(wrapper.text()).toContain('RHAIIS')
+    expect(wrapper.text()).toContain('RHELAI')
+    var labels = wrapper.findAll('label').filter(function(l) { return l.text().includes('RHOAI') })
+    expect(labels.length).toBeGreaterThan(0)
+    await labels[0].find('input').setValue(true)
+    var emitted = wrapper.emitted('update:modelValue')
+    expect(emitted).toBeDefined()
+    expect(emitted[emitted.length - 1][0].product).toContain('RHOAI')
+    wrapper.unmount()
+  })
+
+  it('emits failed FPDoR item selection', async function() {
+    var wrapper = mount(FeatureReadinessFilterBar, {
+      props: { filterMeta: FILTER_META, modelValue: defaultModelValue() },
+      attachTo: document.body
+    })
+    var fpdorBtn = findButtonByText(wrapper, 'Any failed item')
+    expect(fpdorBtn.length).toBe(1)
+    await fpdorBtn[0].trigger('click')
+    expect(wrapper.text()).toContain('Acceptance Criteria')
+    var labels = wrapper.findAll('label').filter(function(l) { return l.text().includes('Acceptance Criteria') })
+    expect(labels.length).toBeGreaterThan(0)
+    await labels[0].find('input').setValue(true)
+    var emitted = wrapper.emitted('update:modelValue')
+    expect(emitted[emitted.length - 1][0].fpdorItems).toContain('Acceptance Criteria')
+    wrapper.unmount()
   })
 })

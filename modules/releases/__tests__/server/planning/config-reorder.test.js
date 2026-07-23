@@ -11,10 +11,10 @@ function createStorage(configReleases, releaseFiles) {
     }
   }
   return {
-    readFromStorage: vi.fn(function(key) {
+    readFromStorage: vi.fn(async function(key) {
       return store[key] ? JSON.parse(JSON.stringify(store[key])) : null
     }),
-    writeToStorage: vi.fn(function(key, data) {
+    writeToStorage: vi.fn(async function(key, data) {
       store[key] = JSON.parse(JSON.stringify(data))
     })
   }
@@ -35,25 +35,25 @@ function makeRock(name, priority) {
 }
 
 describe('reorderBigRocks', () => {
-  it('reorders Big Rocks to match the provided name list', () => {
+  it('reorders Big Rocks to match the provided name list', async () => {
     const { readFromStorage, writeToStorage } = createStorage(
       { '3.5': { release: '3.5' } },
       { '3.5': { release: '3.5', bigRocks: [makeRock('A', 1), makeRock('B', 2), makeRock('C', 3)] } }
     )
 
-    const result = reorderBigRocks(readFromStorage, writeToStorage, '3.5', ['C', 'A', 'B'])
+    const result = await reorderBigRocks(readFromStorage, writeToStorage, '3.5', ['C', 'A', 'B'])
 
     expect(result.bigRocks.map(r => r.name)).toEqual(['C', 'A', 'B'])
     expect(writeToStorage).toHaveBeenCalledWith('releases/planning/releases/3.5.json', expect.any(Object))
   })
 
-  it('renumbers priorities sequentially after reorder', () => {
+  it('renumbers priorities sequentially after reorder', async () => {
     const { readFromStorage, writeToStorage } = createStorage(
       { '3.5': { release: '3.5' } },
       { '3.5': { release: '3.5', bigRocks: [makeRock('X', 1), makeRock('Y', 2), makeRock('Z', 3)] } }
     )
 
-    const result = reorderBigRocks(readFromStorage, writeToStorage, '3.5', ['Z', 'X', 'Y'])
+    const result = await reorderBigRocks(readFromStorage, writeToStorage, '3.5', ['Z', 'X', 'Y'])
 
     expect(result.bigRocks[0].priority).toBe(1)
     expect(result.bigRocks[0].name).toBe('Z')
@@ -63,88 +63,80 @@ describe('reorderBigRocks', () => {
     expect(result.bigRocks[2].name).toBe('Y')
   })
 
-  it('fails with a missing name', () => {
+  it('fails with a missing name', async () => {
     const { readFromStorage, writeToStorage } = createStorage(
       { '3.5': { release: '3.5' } },
       { '3.5': { release: '3.5', bigRocks: [makeRock('A', 1), makeRock('B', 2), makeRock('C', 3)] } }
     )
 
-    expect(() => {
-      reorderBigRocks(readFromStorage, writeToStorage, '3.5', ['A', 'B'])
-    }).toThrow('Order list does not match')
+    await expect(reorderBigRocks(readFromStorage, writeToStorage, '3.5', ['A', 'B'])).rejects.toThrow('Order list does not match')
     expect(writeToStorage).not.toHaveBeenCalled()
   })
 
-  it('fails with an extra name', () => {
+  it('fails with an extra name', async () => {
     const { readFromStorage, writeToStorage } = createStorage(
       { '3.5': { release: '3.5' } },
       { '3.5': { release: '3.5', bigRocks: [makeRock('A', 1), makeRock('B', 2)] } }
     )
 
-    expect(() => {
-      reorderBigRocks(readFromStorage, writeToStorage, '3.5', ['A', 'B', 'C'])
-    }).toThrow('Order list does not match')
+    await expect(reorderBigRocks(readFromStorage, writeToStorage, '3.5', ['A', 'B', 'C'])).rejects.toThrow('Order list does not match')
     expect(writeToStorage).not.toHaveBeenCalled()
   })
 
-  it('fails with duplicate names in the order list', () => {
+  it('fails with duplicate names in the order list', async () => {
     const { readFromStorage, writeToStorage } = createStorage(
       { '3.5': { release: '3.5' } },
       { '3.5': { release: '3.5', bigRocks: [makeRock('A', 1), makeRock('B', 2)] } }
     )
 
-    expect(() => {
-      reorderBigRocks(readFromStorage, writeToStorage, '3.5', ['A', 'A'])
-    }).toThrow('duplicate name')
+    await expect(reorderBigRocks(readFromStorage, writeToStorage, '3.5', ['A', 'A'])).rejects.toThrow('duplicate name')
     expect(writeToStorage).not.toHaveBeenCalled()
   })
 
-  it('fails for a non-existent release', () => {
+  it('fails for a non-existent release', async () => {
     const { readFromStorage, writeToStorage } = createStorage(
       { '3.5': { release: '3.5' } },
       { '3.5': { release: '3.5', bigRocks: [] } }
     )
 
-    expect(() => {
-      reorderBigRocks(readFromStorage, writeToStorage, '9.9', ['A'])
-    }).toThrow('Release 9.9 not found')
+    await expect(reorderBigRocks(readFromStorage, writeToStorage, '9.9', ['A'])).rejects.toThrow('Release 9.9 not found')
     expect(writeToStorage).not.toHaveBeenCalled()
   })
 
-  it('succeeds with an empty Big Rocks list and empty order', () => {
+  it('succeeds with an empty Big Rocks list and empty order', async () => {
     const { readFromStorage, writeToStorage } = createStorage(
       { '3.5': { release: '3.5' } },
       { '3.5': { release: '3.5', bigRocks: [] } }
     )
 
-    const result = reorderBigRocks(readFromStorage, writeToStorage, '3.5', [])
+    const result = await reorderBigRocks(readFromStorage, writeToStorage, '3.5', [])
 
     expect(result.bigRocks).toEqual([])
     expect(writeToStorage).toHaveBeenCalled()
   })
 
-  it('sets statusCode 409 on mismatch errors', () => {
+  it('sets statusCode 409 on mismatch errors', async () => {
     const { readFromStorage, writeToStorage } = createStorage(
       { '3.5': { release: '3.5' } },
       { '3.5': { release: '3.5', bigRocks: [makeRock('A', 1), makeRock('B', 2)] } }
     )
 
     try {
-      reorderBigRocks(readFromStorage, writeToStorage, '3.5', ['A', 'C'])
+      await reorderBigRocks(readFromStorage, writeToStorage, '3.5', ['A', 'C'])
       expect.unreachable('should have thrown')
     } catch (err) {
       expect(err.statusCode).toBe(409)
     }
   })
 
-  it('includes expected names in mismatch error message', () => {
+  it('includes expected names in mismatch error message', async () => {
     const { readFromStorage, writeToStorage } = createStorage(
       { '3.5': { release: '3.5' } },
       { '3.5': { release: '3.5', bigRocks: [makeRock('Alpha', 1), makeRock('Beta', 2)] } }
     )
 
     try {
-      reorderBigRocks(readFromStorage, writeToStorage, '3.5', ['Alpha', 'Gamma'])
+      await reorderBigRocks(readFromStorage, writeToStorage, '3.5', ['Alpha', 'Gamma'])
       expect.unreachable('should have thrown')
     } catch (err) {
       expect(err.message).toContain('Alpha')

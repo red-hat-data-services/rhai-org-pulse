@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 05:04 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 06:43 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/ml-metadata</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="373.220892"
+                                stroke-dashoffset="390.18547799999993"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">3.4</div>
+                        <div class="score-value">3.1</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Extensive C++ unit tests via Bazel/GoogleTest and Python tests, but not executed in CI</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">32 test files across C++/Python/Go but none executed in CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No integration or E2E tests in CI; multi-DB test files exist but no automated execution</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No integration or E2E testing infrastructure</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">PR workflow builds Docker image only; no test execution, no Konflux simulation at PR time</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">PR image builds via GitHub Actions and Tekton/Konflux multi-arch, no test execution</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">Multi-stage Docker build exists but no runtime validation, startup testing, or health checks</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">4 Dockerfiles with multi-stage builds and multi-arch support, no runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tracking, no codecov/coveralls, no coverage thresholds or PR reporting</div>
+                            <div class="scorecard-status">No coverage tooling, no thresholds, no reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Minimal CI: image build only on PR and master push; no test execution, linting, or security scanning</div>
+                            <div class="scorecard-status">Basic build automation with concurrency control, no test jobs</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">Renovate configured, no linting or pre-commit hooks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules</div>
                         </div>
                     </div>
                 </div>
@@ -412,50 +417,42 @@
                         
                         <li class="item-card high">
                             <div class="item-description">No tests executed in CI</div>
-                            <p>Code regressions can merge undetected; the 35 existing test files are never validated in PRs</p>
+                            <p>Regressions can be merged without detection — test files exist but are never run by any workflow</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">8-16 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No coverage tracking whatsoever</div>
-                            <p>No visibility into test coverage; coverage can degrade silently over time</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No security scanning (Trivy, CodeQL, SAST)</div>
-                            <p>Vulnerabilities in C++ code, Python deps, and container images go undetected</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No linting or static analysis in CI</div>
-                            <p>Code quality issues, style inconsistencies, and potential bugs not caught before merge</p>
+                            <div class="item-description">No coverage tracking</div>
+                            <p>No visibility into tested vs untested code paths; coverage cannot regress because it is not measured</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
+                        <li class="item-card high">
+                            <div class="item-description">No integration or E2E tests</div>
+                            <p>Database backend interactions (MySQL, PostgreSQL, SQLite) are untested in any automated pipeline</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">16-24 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No linting or static analysis</div>
+                            <p>Code style drift, potential bugs, and non-idiomatic patterns not caught before merge</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
+                            </div>
+                        </li>
                         <li class="item-card medium">
                             <div class="item-description">No container runtime validation</div>
-                            <p>Image startup failures, misconfigured entrypoints, or missing dependencies caught only in production</p>
+                            <p>Image startup failures (missing libs, wrong entrypoint, permission issues) not caught until deployment</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card low">
-                            <div class="item-description">No agent rules for AI-assisted development</div>
-                            <p>AI-generated code lacks repo-specific patterns and test standards guidance</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -472,35 +469,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to PR workflow</div>
-                            <p>Immediate detection of CVEs in base images and dependencies</p>
+                            <div class="item-description">Add a CI workflow that runs Bazel test targets</div>
+                            <p>Immediately catches regressions in 27 C++ and 4 Python test suites already written</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add bazel test step to PR workflow</div>
-                            <p>Activate the 35 existing test files that currently never run in CI</p>
+                            <div class="item-description">Add clang-tidy or a Bazel-compatible C++ linter</div>
+                            <p>Catches common C++ bugs and enforces coding standards</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Renovate/Dependabot for Go/Python dependency updates</div>
-                            <p>Renovate already configured for Konflux; extend to cover Go and Python deps</p>
+                            <div class="item-description">Create CLAUDE.md with test patterns and build instructions</div>
+                            <p>Enable AI-assisted test creation consistent with existing Bazel + Google Test patterns</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add basic CLAUDE.md with test creation guidance</div>
-                            <p>Improve AI-assisted development quality with repo-specific patterns</p>
+                            <div class="item-description">Add container startup smoke test to PR workflow</div>
+                            <p>Verify the built gRPC server image starts and responds on port 8080</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +514,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Execute bazel test targets in PR CI workflow to validate C++ and Go tests before merge</li><li>Add Python test execution (pytest or bazel py_test) in PR CI workflow</li><li>Integrate coverage reporting (gcov/lcov for C++, coverage.py for Python) with minimum thresholds</li><li>Add container security scanning (Trivy) to PR and master workflows</li></ul>
+                            <ul><li>Add a GitHub Actions workflow that runs `bazel test //ml_metadata/...` on PRs to execute existing 32 test files</li><li>Add coverage tracking via Bazel --combined_report=lcov and integrate with Codecov</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add gRPC server smoke test after image build (start container, verify gRPC health endpoint)</li><li>Set up static analysis: clang-tidy for C++, pylint/ruff for Python</li><li>Add CodeQL or similar SAST for C++ vulnerability detection</li><li>Create comprehensive agent rules (.claude/rules/) for test automation</li></ul>
+                            <ul><li>Create integration test workflow that tests against MySQL and PostgreSQL backends using docker-compose or testcontainers</li><li>Add container runtime validation — verify image starts, gRPC port responds, basic health check</li><li>Add clang-tidy, cpplint, or Bazel buildifier for static analysis</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add multi-database integration testing (MySQL, PostgreSQL, SQLite) in CI</li><li>Implement pre-commit hooks for formatting and linting</li><li>Add SBOM generation for container images</li><li>Add performance regression testing for metadata store operations</li></ul>
+                            <ul><li>Create CLAUDE.md and .claude/rules/ with test creation patterns for C++ (Google Test) and Python</li><li>Add pre-commit hooks for formatting and basic checks</li><li>Add FIPS build validation workflow for downstream Red Hat builds</li></ul>
                         </div>
                     </div>
                 </div>

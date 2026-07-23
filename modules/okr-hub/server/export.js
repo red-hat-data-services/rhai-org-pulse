@@ -1,5 +1,5 @@
 module.exports = async function okrHubExport(addFile, storage) {
-  var cveSla = storage.readFromStorage('okr-hub/cve-sla-data.json')
+  var cveSla = await storage.readFromStorage('okr-hub/cve-sla-data.json')
   if (cveSla) {
     addFile('okr-hub/cve-sla-data.json', {
       year: cveSla.year || 2026,
@@ -8,7 +8,7 @@ module.exports = async function okrHubExport(addFile, storage) {
     })
   }
 
-  var supportCases = storage.readFromStorage('okr-hub/support-case-data.json')
+  var supportCases = await storage.readFromStorage('okr-hub/support-case-data.json')
   if (supportCases) {
     addFile('okr-hub/support-case-data.json', {
       year: supportCases.year || 2026,
@@ -17,7 +17,7 @@ module.exports = async function okrHubExport(addFile, storage) {
     })
   }
 
-  var overrides = storage.readFromStorage('okr-hub/on-time-overrides.json')
+  var overrides = await storage.readFromStorage('okr-hub/on-time-overrides.json')
   if (overrides) {
     addFile('okr-hub/on-time-overrides.json', {
       releases: (overrides.releases || []).map(function(r) {
@@ -26,7 +26,7 @@ module.exports = async function okrHubExport(addFile, storage) {
     })
   }
 
-  var trackingConfig = storage.readFromStorage('okr-hub/90day-tracking-config.json')
+  var trackingConfig = await storage.readFromStorage('okr-hub/90day-tracking-config.json')
   if (trackingConfig) {
     addFile('okr-hub/90day-tracking-config.json', {
       releases: (trackingConfig.releases || []).map(function(r) {
@@ -40,7 +40,7 @@ module.exports = async function okrHubExport(addFile, storage) {
     })
   }
 
-  var featureConfig = storage.readFromStorage('okr-hub/feature-delivery-config.json')
+  var featureConfig = await storage.readFromStorage('okr-hub/feature-delivery-config.json')
   if (featureConfig) {
     addFile('okr-hub/feature-delivery-config.json', {
       releases: (featureConfig.releases || []).map(function(r) {

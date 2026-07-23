@@ -7,12 +7,13 @@ const DEFAULT_CONFIG = {
   riskIssuesPerDayGreen: 1,
   riskIssuesPerDayYellow: 10,
   productPagesReleasesUrl: '',
-  productPagesProductShortnames: ['rhoai', 'rhelai', 'RHAII'],
+  productPagesProductShortnames: ['rhai'],
   productPagesBaseUrl: 'https://productpages.redhat.com',
   productPagesTokenUrl: 'https://auth.redhat.com/auth/realms/EmployeeIDP/protocol/openid-connect/token',
   jiraAllProjects: false,
   targetVersionJqlFragment: '',
-  commitmentTrackingJql: 'cf[10855] is not EMPTY'
+  commitmentTrackingJql: 'cf[10855] is not EMPTY',
+  conformaEcpBaseUrl: ''
 };
 
 const PROJECT_KEY_PATTERN = /^[A-Z][A-Z0-9_]+$/;
@@ -59,6 +60,9 @@ function applyEnvOverrides(config) {
   if (env.PRODUCT_PAGES_TOKEN_URL) {
     config.productPagesTokenUrl = env.PRODUCT_PAGES_TOKEN_URL;
   }
+  if (env.CONFORMA_ECP_BASE_URL) {
+    config.conformaEcpBaseUrl = env.CONFORMA_ECP_BASE_URL;
+  }
   if (env.RELEASE_ANALYSIS_JIRA_ALL_PROJECTS) {
     config.jiraAllProjects = ['1', 'true', 'yes'].includes(
       String(env.RELEASE_ANALYSIS_JIRA_ALL_PROJECTS).toLowerCase()
@@ -71,8 +75,8 @@ function applyEnvOverrides(config) {
   return config;
 }
 
-function getConfig(readFromStorage) {
-  const saved = readFromStorage('releases/delivery/config.json');
+async function getConfig(readFromStorage) {
+  const saved = await readFromStorage('releases/delivery/config.json');
   let config;
 
   // saved is null when file doesn't exist or was cleared by deleteConfig
@@ -90,7 +94,7 @@ function getConfig(readFromStorage) {
   return config;
 }
 
-function saveConfig(writeToStorage, config) {
+async function saveConfig(writeToStorage, config) {
   const merged = { ...DEFAULT_CONFIG };
 
   const knownKeys = new Set(Object.keys(DEFAULT_CONFIG));
@@ -264,13 +268,25 @@ function saveConfig(writeToStorage, config) {
     merged.commitmentTrackingJql = fragment;
   }
 
-  writeToStorage('releases/delivery/config.json', merged);
+  // conformaEcpBaseUrl — empty or valid HTTP(S) URL
+  if (config.conformaEcpBaseUrl !== undefined) {
+    if (typeof config.conformaEcpBaseUrl !== 'string') {
+      throw new Error('conformaEcpBaseUrl must be a string');
+    }
+    const url = config.conformaEcpBaseUrl.trim();
+    if (url && !/^https?:\/\//i.test(url)) {
+      throw new Error('conformaEcpBaseUrl must be an HTTP or HTTPS URL');
+    }
+    merged.conformaEcpBaseUrl = url;
+  }
+
+  await writeToStorage('releases/delivery/config.json', merged);
 }
 
-function deleteConfig(writeToStorage) {
+async function deleteConfig(writeToStorage) {
   // Storage API has no delete-file function. Write a tombstone marker that
   // getConfig recognises as "no stored config" so it falls back to env vars.
-  writeToStorage('releases/delivery/config.json', { _deleted: true });
+  await writeToStorage('releases/delivery/config.json', { _deleted: true });
 }
 
 module.exports = { DEFAULT_CONFIG, getConfig, saveConfig, deleteConfig };

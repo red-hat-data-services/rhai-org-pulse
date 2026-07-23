@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:37 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 06:17 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/workload-orchestration</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="486.31813199999993"
+                                stroke-dashoffset="554.176476"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">1.4</div>
+                        <div class="score-value">0.2</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,32 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No source code or unit tests exist — repo is demo/documentation only</div>
+                            <div class="scorecard-status">No source code or test files — repo contains only demos and documentation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E tests — no testable code present</div>
+                            <div class="scorecard-status">No automated test suites — demos are manually replayed, not CI-executed</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No build pipeline — no artifacts to build</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">Makefile has update-readme target; no PR build validation or image builds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No container images — repo contains only YAML manifests and demo recordings</div>
+                            <div class="scorecard-status">No container images built by this repository</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tracking — no code to measure</div>
+                            <div class="scorecard-status">No coverage tooling — no source code to cover</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No CI/CD workflows — only a Makefile with a single readme-update target</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No CI/CD workflows — no .github/workflows/ directory exists</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No linting, no shellcheck, no dependency alerts, no pre-commit hooks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
@@ -411,35 +416,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No CI/CD pipeline at all</div>
-                            <p>No automated validation of YAML correctness, link integrity, or demo asset consistency</p>
+                            <div class="item-description">No CI/CD pipeline of any kind</div>
+                            <p>No automated validation on PRs — YAML syntax errors, broken links, and script bugs can merge unchecked</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No YAML validation or linting</div>
-                            <p>Kubernetes manifests could contain syntax errors, invalid API versions, or deprecated fields without detection</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No link/asset validation</div>
-                            <p>Broken asciinema links, missing .cast files, or stale README references go undetected</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
+                        <li class="item-card high">
+                            <div class="item-description">No YAML validation for Kubernetes resources</div>
+                            <p>Demo YAML files referencing invalid API versions or missing required fields won&#x27;t be caught until a user tries them</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">No PR review automation</div>
-                            <p>All quality checks are manual — relies entirely on reviewer diligence</p>
+                            <div class="item-description">No shellcheck or linting for hack scripts</div>
+                            <p>Shell script bugs in update-readme.sh could silently corrupt READMEs</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No link validation for asciinema URLs</div>
+                            <p>Demo recording links may go stale without detection</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +461,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add a GitHub Actions workflow with yamllint</div>
-                            <p>Catch YAML syntax errors and enforce consistent formatting on every PR</p>
+                            <div class="item-description">Add a GitHub Actions PR workflow with YAML linting (yamllint)</div>
+                            <p>Catches YAML syntax errors in demo resource files before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add kubeconform validation for Kubernetes manifests</div>
-                            <p>Validate CRD schemas and API versions against Kubernetes + Kueue specs</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add a Makefile check target to verify make update-readme produces no diff</div>
-                            <p>Ensure READMEs are always in sync with YAML resource files</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add a markdown link checker</div>
-                            <p>Detect broken links in documentation and demo READMEs</p>
+                            <div class="item-description">Add shellcheck to CI for hack/update_readme/update-readme.sh</div>
+                            <p>Prevents shell script regressions in the readme update tooling</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add a basic CLAUDE.md with contribution guidelines</div>
+                            <p>Enables AI-assisted contributions with repo-specific context</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add .github/dependabot.yml for GitHub Actions version updates</div>
+                            <p>Keeps future CI actions pinned and updated (once CI exists)</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Create a basic GitHub Actions workflow with yamllint + kubeconform to validate all YAML on PRs</li><li>Add a CI check that runs &#x27;make update-readme&#x27; and fails if there&#x27;s a diff (README/YAML sync)</li></ul>
+                            <ul><li>Create a minimal GitHub Actions workflow that validates YAML files and runs shellcheck on PRs</li><li>Add kubeval or kubeconform to validate Kubernetes resource YAML against API schemas</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add markdown-link-check to validate all links in README files</li><li>Add a pre-commit config with yamllint, trailing-whitespace, and end-of-file-fixer hooks</li><li>Add OWNERS_ALIASES or CODEOWNERS for GitHub-native review assignment</li></ul>
+                            <ul><li>Add a link-checker workflow to detect stale asciinema and external URLs</li><li>Add a pre-commit config with yamllint, shellcheck, and trailing-whitespace checks</li><li>Create CLAUDE.md or AGENTS.md with demo creation guidelines</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add a CLAUDE.md with contribution guidelines and demo creation standards</li><li>Consider adding shellcheck validation for hack/ scripts</li><li>Add a CONTRIBUTING.md with demo authoring checklist</li></ul>
+                            <ul><li>Consider adding automated demo replay testing (asciinema + expect-based validation)</li><li>Add a Makefile target for local YAML validation (make lint)</li></ul>
                         </div>
                     </div>
                 </div>

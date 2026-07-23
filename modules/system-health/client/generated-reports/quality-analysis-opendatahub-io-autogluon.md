@@ -1,470 +1,429 @@
 ---
 repository: "opendatahub-io/autogluon"
-overall_score: 6.4
+overall_score: 4.7
 scorecard:
   - dimension: "Unit Tests"
-    score: 7.5
-    status: "Good coverage across all 7 modules with pytest; 206 test files, ~40K lines of tests"
+    score: 7.0
+    status: "207 test files across 7 packages with pytest, strong parametrize usage (596), but no coverage enforcement"
   - dimension: "Integration/E2E"
-    score: 6.0
-    status: "Regression and smoke test tiers exist but limited to tabular/timeseries; no cross-module integration tests"
+    score: 5.0
+    status: "Smoke and regression test tiers exist; cross-platform matrix testing; no formal integration or E2E suite"
   - dimension: "Build Integration"
     score: 3.0
-    status: "No PR-time container image build validation; images built on schedule only"
+    status: "Docker images built on nightly schedule only; no PR-time build validation or Konflux simulation"
   - dimension: "Image Testing"
-    score: 3.5
-    status: "8 Dockerfiles for CI/inference but no runtime validation or startup testing"
+    score: 3.0
+    status: "8 Dockerfiles for CI/inference but no runtime validation, health checks, or multi-stage builds"
   - dimension: "Coverage Tracking"
-    score: 1.0
-    status: "No coverage tool integration (no codecov, coveralls, or .coveragerc); no thresholds"
+    score: 0.0
+    status: "No coverage tooling configured — no codecov, no pytest-cov, no coverage thresholds"
   - dimension: "CI/CD Automation"
-    score: 7.5
-    status: "Comprehensive AWS Batch-based CI with per-module tests, concurrency control, and path filtering"
+    score: 7.0
+    status: "Comprehensive AWS Batch CI with concurrency control and path filtering; no dependency caching"
+  - dimension: "Static Analysis"
+    score: 5.0
+    status: "Ruff + Bandit + Codespell configured; missing Dependabot/Renovate and FIPS-capable base images"
   - dimension: "Agent Rules"
     score: 7.0
-    status: "AGENTS.md present with build/test/lint commands and architecture docs; no .claude/rules/ for test patterns"
+    status: "Comprehensive AGENTS.md with build/test commands and architecture; no .claude/rules/ for test patterns"
 critical_gaps:
-  - title: "No test coverage tracking or enforcement"
-    impact: "Impossible to measure test quality, detect coverage regressions, or enforce minimum thresholds"
+  - title: "No coverage tracking or enforcement"
+    impact: "Test quality and coverage regressions are invisible; no way to identify untested code paths"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No PR-time container image build validation"
-    impact: "Image build failures discovered only in scheduled nightly builds, not at PR time"
+  - title: "No PR-time Docker image build validation"
+    impact: "Image build failures discovered only on nightly schedule, not on the PR that introduced them"
     severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "No container vulnerability scanning"
-    impact: "Security vulnerabilities in base images and dependencies go undetected until production"
+    effort: "4-8 hours"
+  - title: "No container runtime validation"
+    impact: "Images may fail at startup or have missing dependencies; issues caught only in deployment"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No cross-module integration tests"
-    impact: "Dependency chain breakages (common -> core -> tabular) not caught until full install"
-    severity: "MEDIUM"
-    effort: "8-16 hours"
-  - title: "Bandit only runs on multimodal module"
-    impact: "Security analysis misses 6 of 7 sub-packages"
+    effort: "6-10 hours"
+  - title: "No dependency alert configuration (Dependabot/Renovate)"
+    impact: "Vulnerable or outdated dependencies go unnoticed until manual audit"
     severity: "MEDIUM"
     effort: "1-2 hours"
 quick_wins:
-  - title: "Add pytest-cov and codecov integration"
-    effort: "4-6 hours"
-    impact: "Immediate visibility into test coverage across all modules with PR-level reporting"
-  - title: "Extend bandit scanning to all modules"
+  - title: "Add pytest-cov to CI and set baseline coverage thresholds"
+    effort: "3-4 hours"
+    impact: "Immediate visibility into test coverage with regression prevention"
+  - title: "Enable Dependabot for pip ecosystem"
     effort: "1 hour"
-    impact: "Security analysis covers entire codebase instead of just multimodal"
-  - title: "Add Trivy container scanning workflow"
+    impact: "Automated dependency update PRs with vulnerability alerts"
+  - title: "Add PR-time Docker build check for at least one Dockerfile"
     effort: "2-3 hours"
-    impact: "Automated vulnerability detection for all 8 Dockerfiles"
-  - title: "Add pyright/mypy type checking for more modules"
-    effort: "4-8 hours"
-    impact: "Catch type errors at CI time; currently only timeseries mentions pyright"
-  - title: "Create .claude/rules/ with test creation guidelines"
+    impact: "Catch image build regressions before merge instead of on nightly"
+  - title: "Add .claude/rules/ with test creation patterns"
     effort: "2-3 hours"
-    impact: "Standardize AI-generated test quality with module-specific patterns"
+    impact: "Improve AI-generated test quality and consistency across all 7 packages"
 recommendations:
   priority_0:
-    - "Implement pytest-cov with codecov integration and enforce minimum coverage thresholds per module"
-    - "Add Trivy or Snyk container scanning for all Dockerfiles in CI"
-    - "Extend bandit security scanning to all 7 sub-packages, not just multimodal"
+    - "Add pytest-cov integration with codecov and enforce minimum coverage thresholds per package"
+    - "Add PR-triggered Docker image build validation for at least CI batch images"
+    - "Configure Dependabot for pip, docker, and github-actions ecosystems"
   priority_1:
-    - "Add PR-time container image build validation (at least a docker build test)"
-    - "Implement cross-module integration tests for the dependency chain"
-    - "Add type checking (pyright or mypy) across all modules, not just timeseries"
-    - "Create .claude/rules/ directory with test creation guidelines for unit, regression, and smoke tests"
+    - "Add container runtime validation — verify images start, import autogluon, and respond to basic health checks"
+    - "Extend ruff configuration beyond import sorting (add additional lint rules)"
+    - "Add pyright type checking to CI for timeseries (already configured) and extend to other packages"
   priority_2:
-    - "Add dependency scanning (Dependabot or Renovate) for Python dependencies"
-    - "Implement performance regression benchmarks in PR CI (not just scheduled)"
-    - "Add secret detection (gitleaks) to PR workflow"
-    - "Consider adding contract tests between sub-package boundaries"
+    - "Create .claude/rules/ with per-package test creation patterns and framework-specific examples"
+    - "Add multi-stage Docker builds to reduce image size and improve security posture"
+    - "Consider FIPS-compatible UBI base images for downstream consumption"
+    - "Add explicit dependency caching in CI workflows to reduce build times"
 ---
 
 # Quality Analysis: opendatahub-io/autogluon
 
 ## Executive Summary
 
-- **Overall Score: 6.4/10**
-- **Repository Type**: Python ML library monorepo (AutoML)
-- **Version**: 1.5.1
-- **Primary Language**: Python (992 .py files)
-- **Framework**: PyTorch-based AutoML with 7 sub-packages
-
-### Key Strengths
-- Well-structured monorepo with clear module boundaries (common, core, features, tabular, multimodal, timeseries, eda)
-- Comprehensive CI via AWS Batch with per-module test jobs, GPU support, and concurrency control
-- Good test organization with unit/regression/smoke test tiers and pytest markers (slow, regression, multi_gpu)
-- AGENTS.md provides excellent developer onboarding with build, test, lint commands and architecture docs
-- CodeQL and CodeGuru security scanning present
-- Pre-commit hooks with ruff for formatting and import sorting
-
-### Critical Gaps
-- **No test coverage tracking** - No codecov, coveralls, or .coveragerc. Impossible to measure or enforce coverage.
-- **No container image validation at PR time** - Images only built on schedule; breakages discovered post-merge.
-- **No container vulnerability scanning** - No Trivy, Snyk, or equivalent for any of the 8 Dockerfiles.
-- **Partial security scanning** - Bandit only covers multimodal/src, leaving 6 modules unscanned.
-
-### Agent Rules Status
-- **Present**: AGENTS.md with comprehensive build/test/lint instructions
-- **Missing**: `.claude/rules/` directory with test creation patterns
+- **Overall Score**: 4.7/10
+- **Repository Type**: Python ML library (monorepo) — AutoML framework
+- **Primary Language**: Python (992 files across 7 sub-packages)
+- **Tier**: Midstream (RHOAIENG / AutoML)
+- **Key Strengths**: Well-structured test suite across 7 packages with 207 test files; comprehensive AGENTS.md; robust AWS Batch-based CI with concurrency control and path filtering; Ruff + Bandit static analysis
+- **Critical Gaps**: Zero coverage tracking, no PR-time build validation, no container runtime testing, no Dependabot/Renovate
+- **Agent Rules Status**: Present — good AGENTS.md with build/test commands, but no .claude/rules/ directory
 
 ## Quality Scorecard
 
-| Dimension | Score | Weight | Status |
-|-----------|-------|--------|--------|
-| Unit Tests | 7.5/10 | 20% | Good coverage across all 7 modules; 206 test files, ~40K LOC tests vs ~144K LOC source |
-| Integration/E2E | 6.0/10 | 25% | Regression tests (tabular) and smoke tests (timeseries); no cross-module integration |
-| Build Integration | 3.0/10 | — | No PR-time image builds; scheduled-only image build workflow |
-| Image Testing | 3.5/10 | 20% | 8 Dockerfiles exist but no runtime validation, startup testing, or SBOM |
-| Coverage Tracking | 1.0/10 | 15% | No coverage tools configured anywhere |
-| CI/CD Automation | 7.5/10 | 20% | AWS Batch CI with path filtering, concurrency, docs build pipeline |
-| Agent Rules | 7.0/10 | — | AGENTS.md strong; no .claude/rules/ test patterns |
-
-**Weighted Overall: 6.4/10** (excluding unweighted dimensions)
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 7.0/10 | 15% | 1.05 | 207 test files, pytest, 596 parametrize decorators |
+| Integration/E2E | 5.0/10 | 20% | 1.00 | Smoke/regression/platform test tiers; no formal E2E |
+| Build Integration | 3.0/10 | 15% | 0.45 | Nightly Docker builds only; no PR-time validation |
+| Image Testing | 3.0/10 | 10% | 0.30 | 8 Dockerfiles but no runtime validation or health checks |
+| Coverage Tracking | 0.0/10 | 10% | 0.00 | No coverage tooling at all |
+| CI/CD Automation | 7.0/10 | 15% | 1.05 | AWS Batch CI, concurrency control, path filtering |
+| Static Analysis | 5.0/10 | 10% | 0.50 | Ruff + Bandit + Codespell; no Dependabot/Renovate |
+| Agent Rules | 7.0/10 | 5% | 0.35 | Comprehensive AGENTS.md; no .claude/rules/ |
+| **Overall** | **4.7/10** | **100%** | **4.70** | |
 
 ## Critical Gaps
 
-### 1. No Test Coverage Tracking or Enforcement
+### 1. No Coverage Tracking or Enforcement
 - **Severity**: HIGH
-- **Impact**: Cannot measure test quality, detect coverage regressions on PRs, or enforce minimum thresholds. New code may ship entirely untested.
+- **Impact**: Test quality and coverage regressions are invisible. No way to identify untested code paths or prevent coverage decline.
+- **Evidence**: No `.codecov.yml`, no `pytest-cov` usage in CI scripts, no `--cov` flags anywhere in workflow scripts. JUnit XML output is generated (`--junitxml=results.xml`) but no coverage data.
 - **Effort**: 4-6 hours
-- **Details**: No `.coveragerc`, no `codecov.yml`, no `--cov` flags in any test scripts. The `pytest` runs in CI generate JUnit XML (`--junitxml=results.xml`) but not coverage data.
+- **Recommendation**: Add `pytest-cov` to test dependencies, update CI scripts to include `--cov` flags, add `.codecov.yml` with per-package thresholds.
 
-### 2. No PR-time Container Image Build Validation
+### 2. No PR-time Docker Image Build Validation
 - **Severity**: HIGH
-- **Impact**: The `build_latest_image.yml` workflow only runs on schedule (`cron: "59 8 * * *"`) or manual dispatch. Dockerfile changes in PRs are never validated until the nightly build.
-- **Effort**: 8-12 hours
-- **Details**: 8 Dockerfiles exist across `CI/docker/` and `CI/batch/docker/` but none are built as part of PR CI.
+- **Impact**: Docker image build failures are discovered only on the nightly `build_latest_image.yml` schedule, not on the PR that introduced the breaking change. This creates a delay of up to 24 hours between introducing and detecting build issues.
+- **Evidence**: `build_latest_image.yml` runs on `schedule` and `workflow_dispatch` only. No PR-triggered Docker build step exists.
+- **Effort**: 4-8 hours
+- **Recommendation**: Add a lightweight PR-triggered job that builds at least the `CI/batch/docker/Dockerfile.cpu` image to validate build integrity.
 
-### 3. No Container Vulnerability Scanning
+### 3. No Container Runtime Validation
 - **Severity**: HIGH
-- **Impact**: Base images (AWS DLC PyTorch images) and installed dependencies are never scanned for CVEs. No Trivy, Snyk, or equivalent configured.
-- **Effort**: 2-4 hours
-- **Details**: No `.trivyignore`, no Snyk config, no container scanning workflows.
+- **Impact**: Built images may fail at startup (missing dependencies, import errors, incompatible versions) without detection until deployment.
+- **Evidence**: No Testcontainers, no `docker run` validation, no health checks in Dockerfiles, no post-build smoke tests.
+- **Effort**: 6-10 hours
+- **Recommendation**: Add a post-build step that runs `docker run <image> python -c "import autogluon; print(autogluon.__version__)"` to validate basic functionality.
 
-### 4. Incomplete Security Scanning
+### 4. No Dependency Alert Configuration
 - **Severity**: MEDIUM
-- **Impact**: Bandit only runs on `multimodal/src` in the lint check script. The other 6 modules (common, core, features, tabular, timeseries, eda) are not scanned.
+- **Impact**: Vulnerable or outdated dependencies go unnoticed until manual audit. No automated PRs for security patches.
+- **Evidence**: No `.github/dependabot.yml`, no `renovate.json` or `.renovaterc`.
 - **Effort**: 1-2 hours
-- **Details**: In `.github/workflow_scripts/lint_check.sh`: `bandit -r multimodal/src -ll`
-
-### 5. No Cross-Module Integration Tests
-- **Severity**: MEDIUM
-- **Impact**: The dependency chain (common -> core -> features -> tabular/multimodal/timeseries) is tested in isolation per module. A breaking change in `common` might only be caught when `tabular` CI also runs, not via a dedicated integration test.
-- **Effort**: 8-16 hours
+- **Recommendation**: Add `.github/dependabot.yml` covering pip, docker, and github-actions ecosystems.
 
 ## Quick Wins
 
-### 1. Add pytest-cov and Codecov Integration (4-6 hours)
-Add `--cov` flag to test scripts and integrate codecov:
-```yaml
-# In each test script, add:
-python -m pytest --junitxml=results.xml --cov=autogluon --cov-report=xml --runslow tests
-
-# Add .codecov.yml:
-coverage:
-  status:
-    project:
-      default:
-        target: auto
-        threshold: 1%
-    patch:
-      default:
-        target: 80%
-```
-
-### 2. Extend Bandit to All Modules (1 hour)
-Update `.github/workflow_scripts/lint_check.sh`:
+### 1. Add pytest-cov to CI (3-4 hours)
+Add `pytest-cov` to test dependencies and modify CI scripts:
 ```bash
-# Current: only multimodal
-bandit -r multimodal/src -ll
+# In each test script, change:
+python -m pytest --junitxml=results.xml --runslow tests
+# To:
+python -m pytest --junitxml=results.xml --runslow --cov=autogluon --cov-report=xml tests
+```
+Then add a `.codecov.yml` with baseline thresholds.
 
-# Updated: all modules
-for module in common core features tabular multimodal timeseries eda; do
-    bandit -r "$module/src" -ll
-done
+### 2. Enable Dependabot (1 hour)
+Create `.github/dependabot.yml`:
+```yaml
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/CI/docker"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
 ```
 
-### 3. Add Trivy Container Scanning (2-3 hours)
+### 3. PR-time Docker Build Check (2-3 hours)
+Add a job to `continuous_integration.yml`:
 ```yaml
-# .github/workflows/trivy-scan.yml
-name: Container Security Scan
-on:
-  pull_request:
-    paths:
-      - 'CI/docker/**'
-      - 'CI/batch/docker/**'
-  schedule:
-    - cron: '0 6 * * 1'
-jobs:
-  scan:
+  build_docker_check:
+    needs: lint_check
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        dockerfile:
-          - CI/docker/Dockerfile.cpu-training
-          - CI/docker/Dockerfile.gpu-training
     steps:
       - uses: actions/checkout@v4
-      - uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: ${{ matrix.dockerfile }}
-          severity: 'CRITICAL,HIGH'
+      - name: Build CPU batch image
+        run: |
+          cd CI/batch/docker
+          docker build -f Dockerfile.cpu -t autogluon-ci:cpu-test .
+      - name: Verify image starts
+        run: |
+          docker run --rm autogluon-ci:cpu-test python -c "print('Image OK')"
 ```
 
-### 4. Add Type Checking to More Modules (4-8 hours)
-AGENTS.md mentions pyright for timeseries only. Extend to all modules:
-```bash
-# pyproject.toml addition
-[tool.pyright]
-include = ["common/src", "core/src", "features/src", "tabular/src", "multimodal/src", "timeseries/src"]
-reportMissingImports = true
-pythonVersion = "3.10"
-```
-
-### 5. Create .claude/rules/ Test Guidelines (2-3 hours)
-```markdown
-# .claude/rules/unit-tests.md
-- Use pytest as the framework
-- Place tests in <module>/tests/unittests/
-- Use @pytest.mark.slow for tests >5 seconds
-- Train on tiny data subsamples with minimal iterations
-- Use conftest.py fixtures for shared setup
-- Follow existing patterns in each module's test directory
-```
+### 4. Add .claude/rules/ for Test Patterns (2-3 hours)
+Create `.claude/rules/testing.md` with per-package test patterns extracted from the existing AGENTS.md, including pytest fixture examples, parametrize patterns, and package-specific conventions.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflows** (14 total):
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `continuous_integration.yml` | push, pull_request_target | Main CI: lint + per-module tests on AWS Batch |
-| `continuous_integration_multigpu.yaml` | PR (labeled) | Multi-GPU multimodal tests |
-| `codeql.yml` | push, PR, weekly | CodeQL SAST scanning |
-| `codespell.yml` | push, PR to master | Spell checking |
-| `codeguru-reviewer.yml` | push to master | AWS CodeGuru code review |
-| `benchmark-command.yml` | workflow_dispatch (slash command) | PR benchmarking |
-| `benchmark_master.yml` | daily schedule, dispatch | Master branch benchmarks |
-| `build_latest_image.yml` | daily schedule, dispatch | Build Docker images to ECR |
-| `platform_tests-command.yml` | daily schedule, dispatch | Cross-platform tests |
-| `pypi_release.yml` | release created | Publish to PyPI |
-| `pythonpublish.yml` | daily schedule, dispatch | Nightly PyPI publish |
-| `pythonpublish_testpypi.yml` | dispatch | Test PyPI publish |
-| `slash_command_dispatch.yml` | issue_comment | Dispatch slash commands |
-| `update-pre-commit.yml` | weekly, dispatch | Auto-update pre-commit hooks |
+**Score: 7.0/10**
 
-**Strengths**:
-- Concurrency control with `cancel-in-progress: true` on PR CI
-- Path filtering (skips CI for docs-only changes)
-- Per-module parallelization (common, core, features, tabular, multimodal, timeseries tested in parallel)
-- GPU and multi-GPU test tiers
-- Docs build pipeline dependent on all tests passing
-- Slash command support for benchmarking
+**Strengths:**
+- **207 test files** distributed across all 7 packages:
+  - tabular: 49 test files
+  - multimodal: 36 test files
+  - timeseries: 34 test files
+  - core: 26 test files
+  - features: 21 test files
+  - common: 20 test files
+  - eda: 20 test files
+- **Test-to-code ratio**: 29% (207 test files / 712 source files) — reasonable for an ML library
+- **pytest** as primary framework with 143 direct pytest imports
+- **596 parametrize decorators** showing excellent test coverage breadth
+- **12 conftest.py** files providing shared fixtures across test directories
+- **662 pytest markers** for test categorization
+- Well-structured `tests/unittests/` directories per package
 
-**Weaknesses**:
-- Tests run on AWS Batch (not standard GitHub runners) making reproduction harder
-- No caching strategy visible in CI (each run installs from scratch)
-- EDA tests are commented out in CI
-- No PR-time image build validation
+**Gaps:**
+- No coverage measurement or enforcement
+- `@pytest.mark.slow` marker is referenced in AGENTS.md and CI (`--runslow`) but no actual slow markers found in code (count = 0)
+- Pyright type checking configured for timeseries only, not enforced in CI
 
-### Test Coverage
+### Integration/E2E Tests
 
-**Test Structure (per module)**:
+**Score: 5.0/10**
 
-| Module | Test Files | Source Files | Test Tiers |
-|--------|-----------|-------------|------------|
-| common | 20 | 42 | unittests |
-| core | 26 | 69 | unittests |
-| features | 21 | 43 | features (flat) |
-| eda | 20 | 23 | unittests |
-| tabular | 49 | 134 | unittests, regressiontests |
-| multimodal | 36 | 128 | unittests |
-| timeseries | 34 | 71 | unittests, smoketests |
+**Strengths:**
+- **Multi-tier test structure**: unit tests, smoke tests (timeseries), regression tests (tabular)
+- **Cross-platform testing**: Platform tests run on macOS, Windows, Ubuntu with Python 3.10-3.13 matrix
+- **Multi-GPU testing**: Separate workflow for multimodal multi-GPU tests (2 GPUs)
+- **Benchmark system**: Slash command-triggered benchmarks (`/benchmark`) with module/preset selection
+- **AWS Batch infrastructure**: Tests run on scalable cloud infrastructure with CPU/GPU job types
 
-**Total**: 206 test files / 510 source files (~0.40 test-to-source ratio)
-**Lines**: ~40K test LOC / ~144K source LOC (~0.28 test-to-source line ratio)
+**Gaps:**
+- No formal `e2e/` or `integration/` directories
+- No end-to-end pipeline tests (train → predict → evaluate flow)
+- Smoke tests and regression tests require external infrastructure and are CI-only
+- No container-based integration testing (no Kind/Minikube — though not applicable for a library)
 
-**Testing Framework**: pytest with:
-- Custom markers: `@pytest.mark.slow`, `@pytest.mark.regression`, `@pytest.mark.pyodide`, `@pytest.mark.multi_gpu`
-- conftest.py with `--runslow`, `--runregression`, `--runpyodide`, `--run-multi-gpu` options
-- JUnit XML output (`--junitxml=results.xml`)
-- Parallel execution via pytest-xdist (timeseries: `--numprocesses 4`)
-- Resource mocking fixtures for CPU/GPU counts
+### Build Integration
 
-**Strengths**:
-- Every module has a dedicated test directory
-- Tiered test approach (fast unit tests by default, slow tests opt-in via `--runslow`)
-- Regression test suite for tabular predictions
-- Smoke tests for all timeseries models
-- Style check tests (`test_check_style.py`) in each module
+**Score: 3.0/10**
 
-**Weaknesses**:
-- No coverage measurement or reporting anywhere
-- EDA tests commented out in CI
-- No contract tests between module boundaries
-- No test data management strategy visible
+**Strengths:**
+- Nightly Docker image builds for 4 variants: CPU training, CPU inference, GPU training, GPU inference
+- AWS Batch Docker images (CPU/GPU/Pyodide) for CI execution
+- Free disk space optimization in build workflows
 
-### Code Quality
+**Gaps:**
+- Docker images built only on nightly schedule (`build_latest_image.yml`) — no PR-time build validation
+- No Konflux build simulation
+- No multi-architecture support
+- No dry-run build validation
+- No image startup testing post-build
+- AWS Batch images are separate from deployment images — no alignment validation
 
-**Linting**:
-- **Ruff**: Configured in `pyproject.toml` with line-length=119, targeting Python 3.10+
-- Ignores: E501 (line length), E731 (lambda), E722 (bare except)
-- isort integration via ruff for import ordering
-- Applied to all modules: multimodal, timeseries, common, core, features, tabular
+### Image Testing
 
-**Pre-commit Hooks**:
-- `.pre-commit-config.yaml` present with ruff-format and ruff-lint
-- Auto-update workflow runs weekly (`update-pre-commit.yml`)
-- Hooks run `--diff` mode (check only, not auto-fix)
+**Score: 3.0/10**
 
-**Static Analysis**:
-- **Bandit**: Runs on multimodal/src only (partial coverage)
-- **CodeQL**: Runs on all pushes, PRs, and weekly schedule
-- **CodeGuru**: Runs on pushes to master (AWS-specific)
-- **Codespell**: Spell checking on pushes and PRs to master
+**Strengths:**
+- 8 Dockerfiles covering different use cases (CI batch, training, inference, Pyodide, HF mirror)
+- AWS ECR base images with PyTorch pre-installed
 
-**Type Checking**:
-- **pyright**: Mentioned in AGENTS.md for timeseries only
-- No mypy configuration
-- No strict type checking enforced across modules
+**Gaps:**
+- No multi-stage builds (all Dockerfiles use single-stage FROM → RUN pattern)
+- No `.dockerignore` file
+- No `HEALTHCHECK` directives
+- No Testcontainers or runtime validation
+- No multi-architecture support (`--platform`, `docker buildx`)
+- Base images are AWS ECR Ubuntu-based, not UBI/FIPS-capable
+- No container scanning integration
 
-### Container Images
+### Coverage Tracking
 
-**Dockerfiles** (8 total):
-| File | Purpose | Base Image |
-|------|---------|------------|
-| `CI/docker/Dockerfile.cpu-inference` | SageMaker CPU inference | AWS PyTorch 2.5.1 CPU |
-| `CI/docker/Dockerfile.cpu-training` | SageMaker CPU training | AWS PyTorch 2.5.1 CPU |
-| `CI/docker/Dockerfile.gpu-inference` | SageMaker GPU inference | AWS PyTorch 2.5.1 GPU CUDA 12.4 |
-| `CI/docker/Dockerfile.gpu-training` | SageMaker GPU training | AWS PyTorch 2.5.1 GPU CUDA 12.4 |
-| `CI/batch/docker/Dockerfile.cpu` | CI batch CPU | AWS PyTorch 2.8.0 CPU |
-| `CI/batch/docker/Dockerfile.gpu` | CI batch GPU | AWS PyTorch 2.8.0 GPU CUDA 12.9 |
-| `CI/batch/docker/Dockerfile.pyodide` | Pyodide/WASM testing | pyodide/pyodide-env |
-| `CI/hf_mirror/Dockerfile` | HuggingFace model mirror | (not examined) |
+**Score: 0.0/10**
 
-**Strengths**:
-- Multi-variant images (CPU/GPU, training/inference)
-- AWS DLC (Deep Learning Container) base images
-- Separate CI batch images from deployment images
+**Evidence of absence:**
+- No `.codecov.yml` or `codecov.yml`
+- No `.coveragerc`
+- No `pytest-cov` or `--cov` flags in any CI script
+- No coverage threshold enforcement
+- No PR coverage reporting
+- JUnit XML reports are generated but contain only pass/fail results, not coverage data
 
-**Weaknesses**:
-- No runtime validation or startup testing
-- No multi-architecture support (amd64 only)
-- No SBOM generation
-- No image signing/attestation
-- No vulnerability scanning
-- Images build from `git clone` of main repo (not from PR context)
-- Outdated `actions/checkout@v2` references
+This is the most critical gap in the repository. With 207 test files and 712 source files, there is no way to know what percentage of the codebase is actually tested.
 
-### Security
+### CI/CD Automation
 
-**Present**:
-- CodeQL SAST on push/PR/weekly schedule
-- CodeGuru Reviewer on master pushes
-- Bandit for Python security (multimodal only)
-- Codespell for typo detection
-- Permissions scoped per workflow (least privilege principle)
+**Score: 7.0/10**
 
-**Missing**:
-- No container image vulnerability scanning (Trivy, Snyk)
-- No dependency scanning (Dependabot, Renovate)
-- No secret detection (gitleaks, TruffleHog)
-- No SBOM generation
-- No supply chain security (Sigstore, SLSA)
-- Bandit coverage incomplete (only 1 of 7 modules)
+**Strengths:**
+- **13 workflow files** covering CI, benchmarks, builds, releases, and maintenance
+- **PR-triggered CI** (`continuous_integration.yml`) running lint + per-package tests on push and `pull_request_target`
+- **Concurrency control**: `cancel-in-progress: true` on CI workflows to prevent resource waste
+- **Smart path filtering**: `dorny/paths-filter` skips test jobs when only docs change
+- **AWS Batch infrastructure**: Scalable test execution with different job types (CPU, GPU, multi-GPU)
+- **Slash command dispatch**: `/benchmark` and `/platform_tests` commands for on-demand testing
+- **Automated pre-commit updates**: Weekly auto-update of ruff pre-commit hooks via PR
+- **Documentation pipeline**: Tutorial builds run after tests pass; docs uploaded to S3
 
-### Agent Rules (Agentic Flow Quality)
+**Gaps:**
+- No explicit dependency caching strategies (pip/conda cache)
+- Uses `actions/checkout@v2` (outdated — v4 is current)
+- No timeout-minutes on most jobs
+- No test parallelization within packages (tests run sequentially per AWS Batch job)
+- Build image workflow is dispatch/schedule only, not PR-triggered
 
-**Status**: Partially Present
-- **CLAUDE.md**: Exists but only contains `@AGENTS.md` (redirect)
-- **AGENTS.md**: Comprehensive with:
-  - Build and install instructions per module
-  - Test execution commands (per module, single file)
+### Static Analysis
+
+**Score: 5.0/10**
+
+**Strengths:**
+- **Ruff**: Configured in `pyproject.toml` for formatting and import sorting across all 7 packages
+- **Bandit**: Security linting for multimodal module (`bandit -r multimodal/src -ll`)
+- **Codespell**: Spelling checks on push/PR to master
+- **Pre-commit hooks**: ruff-format and ruff-lint configured with auto-update workflow
+- **Pyright**: Type checking configured for timeseries module (in `pyproject.toml`)
+- **Flake8**: Basic configuration in `setup.cfg` (line-length)
+
+**Gaps:**
+- **No Dependabot/Renovate**: No automated dependency update mechanism
+- **Ruff lint rules are minimal**: Only import sorting (`--select I`) is enforced; many useful rules disabled
+- **Pyright not in CI**: Configured but not enforced — not included in any workflow
+- **Bandit only on multimodal**: Other packages not scanned
+- **FIPS**: Base Docker images are AWS ECR Ubuntu-based (not UBI/FIPS-capable); however, no non-FIPS crypto imports found in Python source code
+- **No dedicated linting config file**: Ruff config embedded in `pyproject.toml` (acceptable but less visible)
+
+### Agent Rules
+
+**Score: 7.0/10**
+
+**Strengths:**
+- **CLAUDE.md** present (references AGENTS.md via `@AGENTS.md`)
+- **AGENTS.md** is comprehensive and well-structured:
+  - Package dependency order diagram
+  - Per-package install commands with dependency chains
+  - Per-package test commands with directory paths
+  - Test tier table with local-safety indicators
   - Lint commands (check and auto-fix)
-  - Architecture overview with dependency graph
-  - Test structure documentation (unit/smoke/regression tiers)
-  - Key conventions (lazy imports, NumPy docstrings, small tests)
+  - Type check instructions (pyright for timeseries)
+  - Pre-commit setup
+  - Key conventions (lazy imports, docstrings, small tests)
   - PR conventions
 
-**Coverage**: Build, test, and lint workflows documented. No specific test creation rules.
-**Quality**: AGENTS.md is well-structured, actionable, and up-to-date.
-**Gaps**:
-- No `.claude/rules/` directory with test creation patterns
-- No test template or example rules
-- No module-specific testing guidelines (e.g., how to test a new tabular model vs. a new timeseries model)
-- **Recommendation**: Generate missing rules with `/test-rules-generator`
+**Gaps:**
+- No `.claude/` directory or `.claude/rules/` files
+- No framework-specific test creation rules (e.g., how to write parametrized tests, fixture patterns)
+- No quality gate checklists
+- Missing test examples/templates for each package
+- No CI-specific agent guidance (e.g., how to debug AWS Batch failures)
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Implement test coverage tracking** - Add `pytest-cov` to test scripts, create `.coveragerc` per module, integrate Codecov with PR reporting. Enforce minimum thresholds (e.g., 60% project, 80% patch).
-2. **Add container vulnerability scanning** - Add Trivy or Snyk workflow scanning all 8 Dockerfiles, at minimum on schedule and on Dockerfile changes.
-3. **Extend bandit to all modules** - Single-line change in `lint_check.sh` to scan all `*/src` directories, not just multimodal.
+1. **Add pytest-cov integration with codecov**: Install `pytest-cov`, add `--cov` flags to all CI test scripts, configure `.codecov.yml` with per-package thresholds starting at current baseline.
+
+2. **Add PR-triggered Docker image build validation**: Add a job to `continuous_integration.yml` that builds at least one Docker image to catch build regressions before merge.
+
+3. **Configure Dependabot**: Create `.github/dependabot.yml` covering pip, docker, and github-actions ecosystems for automated security and version update PRs.
 
 ### Priority 1 (High Value)
 
-4. **Add PR-time Docker build validation** - At minimum, run `docker build` for all Dockerfiles on PRs that modify them. Validates Dockerfile syntax and dependency resolution before merge.
-5. **Add cross-module integration tests** - Test the full dependency chain installation and basic imports across module boundaries.
-6. **Expand type checking** - Configure pyright or mypy for all modules in CI, not just timeseries.
-7. **Create `.claude/rules/` test patterns** - Add rules for unit test creation, regression test patterns, and module-specific testing guidelines.
-8. **Add dependency scanning** - Enable Dependabot or Renovate for automated dependency update PRs.
+4. **Add container runtime validation**: After Docker builds, run a simple smoke test (`python -c "import autogluon"`) to verify image functionality.
+
+5. **Extend Ruff lint rules**: Enable additional useful rules beyond import sorting (e.g., `E`, `F`, `W`, `UP`, `B`, `SIM`) to catch more issues at lint time.
+
+6. **Add pyright to CI**: The type checking is already configured for timeseries; add it as a CI step and gradually extend to other packages.
+
+7. **Expand Bandit to all packages**: Currently only multimodal is scanned; extend to common, core, features, tabular, timeseries.
 
 ### Priority 2 (Nice-to-Have)
 
-9. **Add secret detection** - Integrate gitleaks into PR workflow.
-10. **PR-time benchmarks** - Run lightweight benchmarks on PRs (currently scheduled/dispatch only).
-11. **Re-enable EDA tests** - The EDA module tests are commented out in CI; re-enable or remove the dead code.
-12. **Update GitHub Actions versions** - Many workflows use `actions/checkout@v2` (deprecated); upgrade to `v4`.
-13. **Add SBOM generation** - Generate Software Bill of Materials for container images.
-14. **Consider contract tests** - Define and test the API contracts between sub-packages.
+8. **Create `.claude/rules/`**: Add test creation rules with per-package patterns, fixture examples, and parametrize templates.
+
+9. **Add multi-stage Docker builds**: Reduce image size and improve security by separating build and runtime stages.
+
+10. **Consider UBI base images**: For downstream RHOAI consumption, evaluate using UBI-based images for FIPS compatibility.
+
+11. **Update GitHub Actions versions**: Migrate from `actions/checkout@v2` to `actions/checkout@v4` and update other actions.
+
+12. **Add dependency caching**: Configure pip/conda caching in CI workflows to reduce build times.
 
 ## Comparison to Gold Standards
 
-| Practice | autogluon | odh-dashboard | notebooks | kserve |
-|----------|-----------|---------------|-----------|--------|
-| Unit test framework | pytest | Jest/Vitest | pytest | Go testing |
-| Coverage tracking | None | Codecov | Partial | Codecov |
-| Coverage enforcement | None | PR thresholds | None | Min thresholds |
-| Integration tests | Partial (regression) | Contract tests | Image validation | E2E suite |
-| E2E tests | Smoke tests (TS) | Cypress | Notebook execution | Multi-version |
-| Container scanning | None | Trivy | Trivy | Trivy |
-| SAST | CodeQL + Bandit (partial) | CodeQL | Limited | CodeQL + gosec |
-| Pre-commit hooks | Ruff | Husky | Pre-commit | Pre-commit |
-| Agent rules | AGENTS.md | .claude/rules/ | None | None |
-| Concurrency control | Yes | Yes | Yes | Yes |
-| Multi-GPU testing | Yes (labeled) | N/A | N/A | N/A |
-| Benchmark suite | Yes (slash cmd) | Performance tests | None | Load tests |
+| Dimension | autogluon | odh-dashboard | notebooks | kserve |
+|-----------|-----------|---------------|-----------|--------|
+| Unit Tests | 7.0 | 9.0 | 7.0 | 8.0 |
+| Integration/E2E | 5.0 | 9.0 | 8.0 | 9.0 |
+| Build Integration | 3.0 | 8.0 | 7.0 | 7.0 |
+| Image Testing | 3.0 | 7.0 | 9.0 | 6.0 |
+| Coverage Tracking | 0.0 | 8.0 | 6.0 | 8.0 |
+| CI/CD Automation | 7.0 | 9.0 | 8.0 | 9.0 |
+| Static Analysis | 5.0 | 8.0 | 6.0 | 7.0 |
+| Agent Rules | 7.0 | 8.0 | 5.0 | 5.0 |
+| **Overall** | **4.7** | **8.5** | **7.2** | **7.6** |
+
+The biggest gaps compared to gold standards are **coverage tracking** (0 vs 6-8) and **build integration** (3 vs 7-8). The agent rules score is competitive with gold standards thanks to the comprehensive AGENTS.md.
 
 ## File Paths Reference
 
-### CI/CD
-- `.github/workflows/continuous_integration.yml` - Main CI pipeline
-- `.github/workflows/continuous_integration_multigpu.yaml` - Multi-GPU CI
-- `.github/workflows/codeql.yml` - CodeQL SAST
-- `.github/workflows/codeguru-reviewer.yml` - AWS CodeGuru
-- `.github/workflows/build_latest_image.yml` - Nightly image builds
-- `.github/actions/submit-job/action.yml` - AWS Batch job submission
-- `.github/workflow_scripts/lint_check.sh` - Lint and bandit script
-- `.github/workflow_scripts/test_*.sh` - Per-module test scripts
+### CI/CD Configuration
+- `.github/workflows/continuous_integration.yml` — Main PR CI (lint + per-package tests)
+- `.github/workflows/continuous_integration_multigpu.yaml` — Multi-GPU multimodal tests
+- `.github/workflows/platform_tests-command.yml` — Cross-platform test matrix
+- `.github/workflows/build_latest_image.yml` — Nightly Docker image builds
+- `.github/workflows/benchmark-command.yml` — On-demand benchmarks
+- `.github/workflows/codespell.yml` — Spelling checks
+- `.github/workflows/codeguru-reviewer.yml` — AWS CodeGuru review
+- `.github/workflows/update-pre-commit.yml` — Weekly pre-commit auto-update
+- `.github/workflows/slash_command_dispatch.yml` — /benchmark and /platform_tests
 
-### Testing
-- `{module}/tests/unittests/` - Unit tests (all modules)
-- `tabular/tests/regressiontests/` - Tabular regression tests
-- `timeseries/tests/smoketests/` - Timeseries smoke tests
-- `{module}/tests/conftest.py` - Pytest configuration per module
-- `{module}/tests/test_check_style.py` - Style check per module
-
-### Code Quality
-- `pyproject.toml` - Ruff configuration
-- `.pre-commit-config.yaml` - Pre-commit hooks (ruff-format, ruff-lint)
-- `setup.cfg` - Flake8 configuration (legacy)
+### Test Scripts
+- `.github/workflow_scripts/test_common.sh` — Common package tests
+- `.github/workflow_scripts/test_tabular.sh` — Tabular package tests
+- `.github/workflow_scripts/lint_check.sh` — Lint check (ruff + bandit)
 
 ### Container Images
-- `CI/docker/Dockerfile.*` - SageMaker deployment images (4 variants)
-- `CI/batch/docker/Dockerfile.*` - CI batch images (3 variants)
-- `CI/hf_mirror/Dockerfile` - HuggingFace mirror
+- `CI/batch/docker/Dockerfile.cpu` — AWS Batch CPU runner
+- `CI/batch/docker/Dockerfile.gpu` — AWS Batch GPU runner
+- `CI/docker/Dockerfile.cpu-training` — SageMaker CPU training
+- `CI/docker/Dockerfile.gpu-training` — SageMaker GPU training
+- `CI/docker/Dockerfile.cpu-inference` — SageMaker CPU inference
+- `CI/docker/Dockerfile.gpu-inference` — SageMaker GPU inference
+
+### Static Analysis
+- `pyproject.toml` — Ruff, codespell, pyright configuration
+- `setup.cfg` — Flake8 configuration
+- `.pre-commit-config.yaml` — Pre-commit hooks (ruff-format, ruff-lint)
 
 ### Agent Rules
-- `CLAUDE.md` - Redirects to AGENTS.md
-- `AGENTS.md` - Comprehensive developer guide
+- `CLAUDE.md` — References AGENTS.md
+- `AGENTS.md` — Comprehensive build/test/architecture guide
+
+### Test Directories
+- `common/tests/unittests/` — 20 test files
+- `core/tests/unittests/` — 26 test files
+- `features/tests/features/` — 21 test files
+- `tabular/tests/unittests/` + `tabular/tests/regressiontests/` — 49 test files
+- `timeseries/tests/unittests/` + `timeseries/tests/smoketests/` — 34 test files
+- `multimodal/tests/unittests/` — 36 test files
+- `eda/tests/unittests/` — 20 test files

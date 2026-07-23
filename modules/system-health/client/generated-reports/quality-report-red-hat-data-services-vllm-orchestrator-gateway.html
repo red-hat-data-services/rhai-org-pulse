@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 05:41 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 08:10 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/vllm-orchestrator-gateway</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="361.911168"
+                                stroke-dashoffset="384.53061599999995"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">3.6</div>
+                        <div class="score-value">3.2</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.5/10</div>
-                            <div class="scorecard-status">Only 4 tests in config.rs; main.rs and api.rs have zero tests</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">Only 4 tests in config module; core API/handler logic untested</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E tests exist; no test infrastructure</div>
+                            <div class="scorecard-status">No integration or E2E tests exist</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Konflux pipeline with multi-arch builds; no PR-time Konflux simulation</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">PR CI runs fmt/clippy/test/build; Konflux Tekton pipeline with multi-arch</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Multi-stage Dockerfile with test stage; no runtime validation</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Multi-stage Dockerfiles with UBI base; no runtime validation or HEALTHCHECK</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage generation, no codecov/coveralls integration</div>
+                            <div class="scorecard-status">No coverage tooling, thresholds, or PR reporting configured</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">PR workflows for tests, linting, and security; good caching; missing coverage</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Basic PR-triggered CI with caching; no concurrency control or timeouts</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Clippy + rustfmt enforced; missing Dependabot/Renovate and pre-commit</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory present</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +416,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Near-zero unit test coverage</div>
-                            <p>Only 4 tests cover config validation; main.rs (547 LOC) and api.rs (109 LOC) are completely untested. Core request routing, streaming, mTLS client construction, header forwarding, and detection fallback logic have no test coverage.</p>
+                            <div class="item-description">No integration or E2E tests for HTTP gateway</div>
+                            <p>Routing, streaming, mTLS, and orchestrator communication are entirely untested end-to-end; regressions ship undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">16-24 hours</span>
+                                <span class="meta-tag effort-tag">12-16 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No integration or E2E tests</div>
-                            <p>The gateway&#x27;s primary function — routing requests to the orchestrator with detector injection — is never tested end-to-end. Breaking changes to the orchestrator API or detector configuration would not be caught.</p>
+                            <div class="item-description">Core API handler logic has zero unit test coverage</div>
+                            <p>get_orchestrator_detectors, check_payload_detections, handle_chat_completions, and streaming logic untested — silent breakage risk on any refactor</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">24-40 hours</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
                             <div class="item-description">No coverage tracking or enforcement</div>
-                            <p>No visibility into what is tested. Cannot enforce coverage thresholds on PRs. Regression risk is invisible.</p>
+                            <p>No visibility into what is tested; impossible to set quality gates or track regression</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No container image runtime validation</div>
-                            <p>Image builds are tested in Dockerfile stages, but the built image is never started or health-checked. Startup failures (missing config, TLS issues) are not caught until deployment.</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No agent rules for test automation</div>
-                            <p>AI-assisted development has no guidance on test patterns, conventions, or quality gates for this repository.</p>
+                            <div class="item-description">No dependency alert configuration</div>
+                            <p>Vulnerable dependencies (openssl, reqwest, tokio) will not trigger automated alerts or PRs</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,40 +461,40 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add cargo-tarpaulin coverage to CI</div>
-                            <p>Immediate visibility into test coverage; enables enforcement via codecov thresholds</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add unit tests for get_orchestrator_detectors()</div>
-                            <p>Test the core detector routing logic that powers every request</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add unit tests for check_payload_detections()</div>
-                            <p>Validate fallback message injection logic</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add a Makefile with standard targets</div>
-                            <p>Consistent developer experience: make test, make lint, make build</p>
+                            <div class="item-description">Add Dependabot configuration for cargo and docker ecosystems</div>
+                            <p>Automated vulnerability alerts and dependency update PRs for critical crates (openssl, reqwest)</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create CLAUDE.md with test conventions</div>
-                            <p>Guide AI agents to write correct, idiomatic tests</p>
+                            <div class="item-description">Add unit tests for get_orchestrator_detectors and check_payload_detections</div>
+                            <p>Cover two pure functions that form the core routing logic — highest test ROI</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add cargo-llvm-cov to CI for coverage reporting</div>
+                            <p>Immediate visibility into test coverage; baseline for setting thresholds</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add concurrency control and timeout to GitHub Actions workflow</div>
+                            <p>Prevent duplicate CI runs on rapid pushes; avoid stuck jobs</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">30 minutes</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create basic CLAUDE.md with test patterns and project context</div>
+                            <p>Guide AI-assisted development with project-specific conventions and test expectations</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
@@ -517,15 +514,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add comprehensive unit tests for main.rs functions: get_orchestrator_detectors, check_payload_detections, build_orchestrator_client, URL construction logic</li><li>Add cargo-tarpaulin to CI for coverage tracking and set minimum threshold (e.g., 60%)</li><li>Add integration tests using mockito or wiremock-rs to test orchestrator request/response handling</li></ul>
+                            <ul><li>Add unit tests for all handler functions in main.rs (get_orchestrator_detectors, check_payload_detections, handle_chat_completions)</li><li>Integrate cargo-llvm-cov or grcov into CI with a minimum coverage threshold (target: 60%+)</li><li>Add Dependabot configuration covering cargo and docker base images</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add E2E test infrastructure with docker-compose (gateway + mock orchestrator + mock detector)</li><li>Add container runtime validation: build image, start it, health-check, send test request</li><li>Create .claude/rules/ with test-creation guidelines for Rust unit and integration tests</li><li>Add pre-commit hooks for cargo fmt and cargo clippy</li></ul>
+                            <ul><li>Add integration tests using axum::test or tower::ServiceExt to test HTTP endpoints without a live orchestrator</li><li>Add mock-based tests for orchestrator_post_request and orchestrator_streaming_request</li><li>Create agent rules (CLAUDE.md) with Rust testing conventions and project-specific patterns</li><li>Add HEALTHCHECK instruction to Dockerfiles</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add property-based testing with proptest for config parsing</li><li>Add benchmark tests for streaming vs. non-streaming paths</li><li>Add SBOM generation to container build pipeline</li><li>Add secret detection (gitleaks) to CI</li></ul>
+                            <ul><li>Add pre-commit hooks for cargo fmt and clippy</li><li>Add contract tests validating OpenAI-compatible request/response schemas</li><li>Add timeout and concurrency configuration to GitHub Actions workflows</li><li>Add image startup validation in CI (docker run --rm with health check)</li></ul>
                         </div>
                     </div>
                 </div>

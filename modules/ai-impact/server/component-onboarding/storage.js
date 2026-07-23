@@ -1,16 +1,18 @@
+const { deriveCompletionStatus } = require('./validation');
+
 const STORAGE_KEY = 'ai-impact/component-onboarding-data.json';
 const MAX_HISTORY = 20;
 
-function readComponentOnboarding(readFromStorage) {
-  const data = readFromStorage(STORAGE_KEY);
+async function readComponentOnboarding(readFromStorage) {
+  const data = await readFromStorage(STORAGE_KEY);
   if (!data || typeof data !== 'object' || !data.components) {
     return { fetchedAt: null, totalComponents: 0, components: {} };
   }
   return data;
 }
 
-function writeComponentOnboardingAtomic(writeToStorageAtomic, data) {
-  writeToStorageAtomic(STORAGE_KEY, data);
+async function writeComponentOnboardingAtomic(writeToStorage, data) {
+  await writeToStorage(STORAGE_KEY, data);
 }
 
 function trimForHistory(component) {
@@ -68,34 +70,64 @@ function upsertComponent(data, key, component) {
   return 'updated';
 }
 
-function getLatestProjection(data) {
+function projectComponent(entry) {
+  const latest = entry.latest;
+  // Re-derive from the latest stored Jira status so the bucket always matches
+  // current status (New→in_queue, Resolved→completed, else in-progress).
+  return {
+    key: latest.key,
+    summary: latest.summary,
+    status: latest.status,
+    completionStatus: deriveCompletionStatus(latest.status, latest.completionStatus, {
+      labels: latest.labels || [],
+      resolution: latest.resolution || null,
+      statusCategory: latest.statusCategory || null
+    }),
+    productContext: latest.productContext,
+    targetVersion: latest.targetVersion || null,
+    componentName: latest.componentName,
+    repoUrl: latest.repoUrl || '',
+    branch: latest.branch || '',
+    dockerfilePath: latest.dockerfilePath || '',
+    isOperator: latest.isOperator || false,
+    linkedFeatures: latest.linkedFeatures,
+    featureTitles: latest.featureTitles || {},
+    labels: latest.labels || [],
+    onboardingSteps: latest.onboardingSteps,
+    created: latest.created,
+    resolution: latest.resolution || null,
+    resolved: latest.resolved,
+    validationDate: latest.validationDate || null,
+    onboardingMethod: latest.onboardingMethod || 'automated',
+    firstCommentDate: latest.firstCommentDate || null,
+    contextPath: latest.contextPath || '',
+    statusCategory: latest.statusCategory || null,
+    syncedAt: latest.syncedAt
+  };
+}
+
+function getLatestProjection(data, options) {
+  const versionFilter = options?.version || null;
   const projected = {};
   for (const [key, entry] of Object.entries(data.components)) {
-    projected[key] = {
-      key: entry.latest.key,
-      summary: entry.latest.summary,
-      status: entry.latest.status,
-      completionStatus: entry.latest.completionStatus,
-      productContext: entry.latest.productContext,
-      componentName: entry.latest.componentName,
-      linkedFeatures: entry.latest.linkedFeatures,
-      featureTitles: entry.latest.featureTitles || {},
-      onboardingSteps: entry.latest.onboardingSteps,
-      created: entry.latest.created,
-      resolution: entry.latest.resolution || null,
-      resolved: entry.latest.resolved,
-      validationDate: entry.latest.validationDate || null,
-      onboardingMethod: entry.latest.onboardingMethod || 'automated',
-      firstCommentDate: entry.latest.firstCommentDate || null,
-      contextPath: entry.latest.contextPath || '',
-      syncedAt: entry.latest.syncedAt
-    };
+    const item = projectComponent(entry);
+    if (versionFilter && item.targetVersion !== versionFilter) continue;
+    projected[key] = item;
   }
   return {
     fetchedAt: data.fetchedAt,
-    totalComponents: data.totalComponents,
-    components: projected
+    totalComponents: versionFilter ? Object.keys(projected).length : data.totalComponents,
+    components: projected,
+    availableVersions: getAvailableVersions(data)
   };
+}
+
+function getAvailableVersions(data) {
+  const versions = new Set();
+  for (const entry of Object.values(data.components)) {
+    if (entry.latest?.targetVersion) versions.add(entry.latest.targetVersion);
+  }
+  return Array.from(versions).sort();
 }
 
 function countHistoryEntries(data) {
@@ -113,6 +145,8 @@ module.exports = {
   writeComponentOnboardingAtomic,
   trimForHistory,
   upsertComponent,
+  projectComponent,
   getLatestProjection,
+  getAvailableVersions,
   countHistoryEntries
 };

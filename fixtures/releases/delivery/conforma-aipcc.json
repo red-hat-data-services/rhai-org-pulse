@@ -1,0 +1,99 @@
+{
+  "fetchedAt": "2026-07-10T06:00:00.000Z",
+  "count": 2,
+  "releases": [
+    {
+      "version": "rhaii",
+      "gaDate": null,
+      "productLayer": true,
+      "displayName": "RHAII",
+      "exceptions": {
+        "policy": {
+          "configExcludes": [
+            "cve.cve_blockers",
+            "hermetic_task",
+            "rpm_packages.unique_version:ibm-aiu-toolbox-e2e",
+            "rpm_packages.unique_version:ibm-deeptools",
+            "rpm_packages.unique_version:ibm-flex",
+            "rpm_packages.unique_version:ibm-sendnn",
+            "rpm_packages.unique_version:ibm-senlib-core",
+            "rpm_packages.unique_version:ibm-senlib-dd2",
+            "rpm_packages.unique_version:ibm-spyre-model-cache",
+            "rpm_packages.unique_version:ibm-libaiupti"
+          ],
+          "volatileExcludes": []
+        }
+      },
+      "ruleData": {
+        "allowedRpmSignatureKeys": [
+          "910ea37ba2d18d0c",
+          "9cd0a493d42d0685",
+          "bac6f0c353d04109",
+          "9386b48a1a693c5c",
+          "fa296b056c5bb456",
+          "199e2f91fd431d51",
+          "94db5b8b35f2e93f",
+          "42548fd2af04c141",
+          "a8e2f24babaf900f",
+          "5749cad8646d9185"
+        ],
+        "allowedRegistryPrefixes": [
+          "registry.access.redhat.com/",
+          "registry.redhat.io/",
+          "quay.io/aipcc/base-images"
+        ],
+        "disallowedPlatformPatterns": []
+      },
+      "jiraReferences": [
+        "https://issues.redhat.com/browse/AIPCC-12203",
+        "https://issues.redhat.com/browse/AIPCC-17548",
+        "https://issues.redhat.com/browse/AIPCC-5124",
+        "https://issues.redhat.com/browse/AIPCC-6247",
+        "https://issues.redhat.com/browse/AIPCC-9821",
+        "https://issues.redhat.com/browse/AIPCC-1125"
+      ]
+    },
+    {
+      "version": "rhel-ai",
+      "gaDate": null,
+      "productLayer": true,
+      "displayName": "RHEL AI",
+      "exceptions": {
+        "policy": {
+          "configExcludes": [
+            "cve.cve_blockers",
+            "hermetic_task",
+            "labels.disallowed_inherited_labels",
+            "buildah_build_task.privileged_nested_param",
+            "buildah_build_task.add_capabilities_param",
+            "rpm_packages.unique_version:libatomic",
+            "rpm_packages.unique_version:libnvidia-container-tools",
+            "rpm_packages.unique_version:libnvidia-container1",
+            "rpm_packages.unique_version:nvidia-container-toolkit-base",
+            "rpm_packages.unique_version:nvidia-container-toolkit"
+          ],
+          "volatileExcludes": []
+        }
+      },
+      "ruleData": {
+        "allowedRpmSignatureKeys": [
+          "323dcf8585eb2859",
+          "9cd0a493d42d0685",
+          "bac6f0c353d04109",
+          "9386b48a1a693c5c",
+          "199e2f91fd431d51"
+        ],
+        "allowedRegistryPrefixes": [
+          "registry.access.redhat.com/",
+          "registry.redhat.io/"
+        ],
+        "disallowedPlatformPatterns": []
+      },
+      "jiraReferences": [
+        "https://issues.redhat.com/browse/RHELAI-2888",
+        "https://issues.redhat.com/browse/AIPCC-5892",
+        "https://issues.redhat.com/browse/RHELAI-6348"
+      ]
+    }
+  ]
+}

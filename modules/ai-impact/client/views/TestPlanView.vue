@@ -13,14 +13,17 @@ const selectedPlan = ref(null)
 const searchQuery = ref('')
 const verdictFilter = ref('all')
 const sortBy = ref('default')
+const chartExpanded = ref(true)
 
-const { testPlans, testPlanMeta, testPlanLoading, testPlanError, loadTestPlans, loadTestPlanDetail } = useTestPlans()
-
-loadTestPlans()
+const {
+  testPlans, testPlanMeta, metrics, trendData, breakdown, reviewStatus,
+  testPlanLoading, testPlanError, loadTestPlans, loadTestPlanDetail,
+  timeWindow
+} = useTestPlans()
 
 // Load RFE data only for jiraHost (used by detail panel links)
-const timeWindow = ref('month')
-const { rfeData } = useAIImpact(timeWindow)
+const rfeTimeWindow = ref('month')
+const { rfeData } = useAIImpact(rfeTimeWindow)
 
 function handleRetry() {
   loadTestPlans()
@@ -78,10 +81,18 @@ watch(() => Object.keys(testPlans.value).length, () => {
       :error="testPlanError"
       :testPlans="testPlans"
       :testPlanMeta="testPlanMeta"
+      :metrics="metrics"
+      :trendData="trendData"
+      :breakdown="breakdown"
+      :reviewStatus="reviewStatus"
+      :timeWindow="timeWindow"
+      :chartExpanded="chartExpanded"
       :searchQuery="searchQuery"
       :verdictFilter="verdictFilter"
       :sortBy="sortBy"
       :selectedPlan="selectedPlan"
+      @update:timeWindow="timeWindow = $event"
+      @update:chartExpanded="chartExpanded = $event"
       @update:searchQuery="searchQuery = $event"
       @update:verdictFilter="verdictFilter = $event"
       @update:sortBy="sortBy = $event"

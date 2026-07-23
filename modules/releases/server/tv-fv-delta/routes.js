@@ -1,4 +1,5 @@
 const { jiraRequest, JIRA_HOST, fetchAllJqlResults, fetchProjectVersions } = require('../../../../shared/server/jira')
+const { normalizeVersionName: sharedNormalize } = require('../version-utils')
 
 const JIRA_BROWSE = JIRA_HOST + '/browse'
 const JIRA_SEARCH = JIRA_HOST + '/issues/?jql='
@@ -7,9 +8,29 @@ const CACHE_MAX_AGE_MS = 60 * 60 * 1000 // 1 hour
 const VERSIONS_CACHE_KEY = 'releases/tv-fv-delta-versions.json'
 const VERSIONS_CACHE_MAX_AGE_MS = 4 * 60 * 60 * 1000 // 4 hours
 
-// Default releases — EA1, EA2, then GA (timeline order)
-// Fallback if Smartsheet/planning releases are not configured
-const DEFAULT_RELEASES = ['rhoai-3.5.EA1', 'rhoai-3.5.EA2', 'rhoai-3.5']
+// Default releases — 3.5/3.6 product-family Jira versions (EA1, EA2, GA × RHOAI/RHAII/RHELAI)
+// Fallback if Smartsheet/planning releases are not configured.
+// Keep in sync with client DEFAULT_SELECTED_VERSIONS (tvFvDeltaDefaults.js).
+const DEFAULT_RELEASES = [
+  '3.6 GA RHOAI RELEASE',
+  '3.6 GA RHAII RELEASE',
+  '3.6 GA RHELAI RELEASE',
+  '3.6 EA2 RHOAI RELEASE',
+  '3.6 EA2 RHAII RELEASE',
+  '3.6 EA2 RHELAI RELEASE',
+  '3.6 EA1 RHOAI RELEASE',
+  '3.6 EA1 RHAII RELEASE',
+  '3.6 EA1 RHELAI RELEASE',
+  '3.5 GA RHOAI RELEASE',
+  '3.5 GA RHAII RELEASE',
+  '3.5 GA RHELAI RELEASE',
+  '3.5 EA2 RHOAI RELEASE',
+  '3.5 EA2 RHAII RELEASE',
+  '3.5 EA2 RHELAI RELEASE',
+  '3.5 EA1 RHOAI RELEASE',
+  '3.5 EA1 RHAII RELEASE',
+  '3.5 EA1 RHELAI RELEASE',
+]
 const DEFAULT_JIRA_PROJECT = 'RHAISTRAT'
 
 // JQL-safe release name pattern — allows spaces for version names like "RHAII-3.5 EA1"
@@ -24,10 +45,10 @@ const jqlSafePattern = /^[a-zA-Z0-9._ -]+$/
  * Fetch configured releases from planning module and expand to EA1, EA2, GA variants.
  * Returns array of release strings in timeline order: [...EA1s, ...EA2s, ...GAs]
  */
-function fetchReleasesFromPlanning(storage) {
+async function fetchReleasesFromPlanning(storage) {
   try {
     // Try to read from planning module's config
-    const planningData = storage.readFromStorage('releases/planning/config.json')
+    const planningData = await storage.readFromStorage('releases/planning/config.json')
     if (!planningData || !planningData.releases) {
       console.warn('[releases/tv-fv-delta] No planning config found — falling back to DEFAULT_RELEASES. Update the constant if the current release has changed.')
       return { releases: DEFAULT_RELEASES, source: 'default' }
@@ -78,12 +99,8 @@ const JQL_FIELDS = [
 
 function normVer(v) {
   if (!v || v === 'null' || v === 'undefined') return null
-  v = String(v).trim()
-  const upper = v.toUpperCase()
-  if (upper.startsWith('RHOAI_')) {
-    v = 'rhoai-' + upper.slice(6).replace(/\.0(?=_|$)/g, '').replace(/_/g, '.')
-  }
-  return v.toLowerCase()
+  var result = sharedNormalize(v)
+  return result || null
 }
 
 function parseVersions(vStr) {
@@ -101,14 +118,13 @@ function extractVersionNames(fixVersions) {
 }
 
 /**
- * Detect z-stream (patch) releases — e.g. rhoai-3.4.1, rhoai-3.5.2.
+ * Detect z-stream (patch) releases — e.g. rhoai-3.4.1, rhaii-3.5.2.
  * These carry bug fixes only, not features, so they don't belong in TV/FV analysis.
- * Pattern: rhoai-X.Y.Z where Z is purely numeric (vs EA1, EA2 which are feature milestones).
+ * Pattern: {product}-X.Y.Z where Z is purely numeric (vs EA1, EA2 which are feature milestones).
  */
 function isZStream(versionName) {
   if (!versionName) return false
-  // Match rhoai-<major>.<minor>.<patch> where patch is a number
-  return /^rhoai-\d+\.\d+\.\d+$/i.test(versionName.trim())
+  return /^(?:rhoai|rhaiis|rhaii|rhelai|rhai)-\d+\.\d+\.\d+$/i.test(versionName.trim())
 }
 
 // ---------------------------------------------------------------------------
@@ -429,7 +445,7 @@ async function fetchAndClassify(releases, storage, jiraProject) {
 
   // Look up release dates from Product Pages delivery cache
   const releaseDates = {}
-  const ppCache = storage.readFromStorage('releases/delivery/product-pages-releases-cache.json')
+  const ppCache = await storage.readFromStorage('releases/delivery/product-pages-releases-cache.json')
   if (ppCache && Array.isArray(ppCache.releases)) {
     for (let pi = 0; pi < ppCache.releases.length; pi++) {
       const ppRel = ppCache.releases[pi]
@@ -447,7 +463,7 @@ async function fetchAndClassify(releases, storage, jiraProject) {
   const result = buildExport(classifications, releases, fetchTimestamp, allComponents, jiraProject, releaseDates)
 
   // Cache
-  storage.writeToStorage(CACHE_KEY, result)
+  await storage.writeToStorage(CACHE_KEY, result)
   console.log('[releases/tv-fv-delta] Cached TV/FV delta (' + classifications.length + ' classifications, ' + (allComponents ? allComponents.length : 0) + ' components)')
 
   return result
@@ -470,7 +486,7 @@ module.exports.DEFAULT_RELEASES = DEFAULT_RELEASES
 module.exports.DEFAULT_JIRA_PROJECT = DEFAULT_JIRA_PROJECT
 module.exports.jqlSafePattern = jqlSafePattern
 
-function registerRoutes(router, context) {
+async function registerRoutes(router, context) {
   const storage = context.storage
   const requireAuth = context.requireAuth
   const requireScope = context.requireScope
@@ -481,7 +497,7 @@ function registerRoutes(router, context) {
   const REFRESH_COOLDOWN_MS = 5 * 60 * 1000 // 5 minutes
   const refreshState = { running: false, lastResult: null, startedAt: null, completedAt: null }
 
-  function triggerBackgroundRefresh(releases, force) {
+  async function triggerBackgroundRefresh(releases, force) {
     if (refreshState.running) return
     if (!force && refreshState.completedAt) {
       const elapsed = Date.now() - new Date(refreshState.completedAt).getTime()
@@ -497,8 +513,8 @@ function registerRoutes(router, context) {
     refreshState.startedAt = new Date().toISOString()
 
     console.log('[releases/tv-fv-delta] Background refresh started')
-    setImmediate(function() {
-      fetchAndClassify(releases, storage, JIRA_PROJECT)
+    setImmediate(async function() {
+      await fetchAndClassify(releases, storage, JIRA_PROJECT)
       .then(function(result) {
         refreshState.running = false
         refreshState.completedAt = new Date().toISOString()
@@ -535,8 +551,8 @@ function registerRoutes(router, context) {
    *       404:
    *         description: No data available — trigger a refresh
    */
-  router.get('/', requireAuth, requireScope('releases:read'), function (req, res) {
-    const data = storage.readFromStorage(CACHE_KEY)
+  router.get('/', requireAuth, requireScope('releases:read'), async function (req, res) {
+    const data = await storage.readFromStorage(CACHE_KEY)
 
     if (data) {
       // Check staleness
@@ -556,7 +572,7 @@ function registerRoutes(router, context) {
     }
 
     // No cache — trigger first fetch using planning config if available
-    triggerBackgroundRefresh(fetchReleasesFromPlanning(storage).releases)
+    triggerBackgroundRefresh(await fetchReleasesFromPlanning(storage).releases)
     res.status(202).json({
       _refreshing: true,
       _noCache: true,
@@ -580,12 +596,12 @@ function registerRoutes(router, context) {
    *               releases:
    *                 type: array
    *                 items: { type: string }
-   *                 description: Release versions to analyse (defaults to EA1, EA2, 3.5)
+   *                 description: Release versions to analyse (defaults to 3.5/3.6 product-family versions)
    *     responses:
    *       200:
    *         description: Refresh started or already running
    */
-  router.post('/refresh', requireAuth, requireScope('releases:write'), function (req, res) {
+  router.post('/refresh', requireAuth, requireScope('releases:write'), async function (req, res) {
     if (refreshState.running) {
       return res.json({ status: 'already_running', startedAt: refreshState.startedAt })
     }
@@ -596,7 +612,7 @@ function registerRoutes(router, context) {
       releases = req.body.releases
     } else {
       // Auto-discover from planning module (Smartsheet SSOT)
-      releases = fetchReleasesFromPlanning(storage).releases
+      releases = await fetchReleasesFromPlanning(storage).releases
     }
 
     // Cap releases array to prevent excessive API load
@@ -643,9 +659,9 @@ function registerRoutes(router, context) {
    *       200:
    *         description: Release list expanded to EA1, EA2, GA variants
    */
-  router.get('/releases', requireAuth, requireScope('releases:read'), function (req, res) {
+  router.get('/releases', requireAuth, requireScope('releases:read'), async function (req, res) {
     try {
-      const result = fetchReleasesFromPlanning(storage)
+      const result = await fetchReleasesFromPlanning(storage)
       res.json({
         releases: result.releases,
         source: result.source,
@@ -669,7 +685,7 @@ function registerRoutes(router, context) {
    */
   router.get('/versions', requireAuth, requireScope('releases:read'), async function (req, res) {
     // Check cache first
-    const cached = storage.readFromStorage(VERSIONS_CACHE_KEY)
+    const cached = await storage.readFromStorage(VERSIONS_CACHE_KEY)
     if (cached && cached.fetchedAt) {
       const age = Date.now() - new Date(cached.fetchedAt).getTime()
       if (age < VERSIONS_CACHE_MAX_AGE_MS) {
@@ -681,7 +697,7 @@ function registerRoutes(router, context) {
       const allVersions = await fetchProjectVersions(jiraRequest, [JIRA_PROJECT])
       if (!Array.isArray(allVersions)) {
         const result = { versions: [], fetchedAt: new Date().toISOString() }
-        storage.writeToStorage(VERSIONS_CACHE_KEY, result)
+        await storage.writeToStorage(VERSIONS_CACHE_KEY, result)
         return res.json(result)
       }
       const versions = allVersions
@@ -689,7 +705,7 @@ function registerRoutes(router, context) {
         .sort(function(a, b) { return (a.name || '').localeCompare(b.name || '') })
 
       const result = { versions: versions, fetchedAt: new Date().toISOString() }
-      storage.writeToStorage(VERSIONS_CACHE_KEY, result)
+      await storage.writeToStorage(VERSIONS_CACHE_KEY, result)
       res.json(result)
     } catch (err) {
       console.error('[releases/tv-fv-delta] Failed to fetch versions:', err.message)
@@ -702,7 +718,7 @@ function registerRoutes(router, context) {
   // Diagnostics hook
   if (context.registerDiagnostics) {
     context.registerDiagnostics(async function () {
-      const tvfv = storage.readFromStorage(CACHE_KEY)
+      const tvfv = await storage.readFromStorage(CACHE_KEY)
       return {
         tvFvDelta: tvfv ? { generatedAt: tvfv.metadata?.generated_at, releases: tvfv.metadata?.releases } : null,
         refresh: refreshState

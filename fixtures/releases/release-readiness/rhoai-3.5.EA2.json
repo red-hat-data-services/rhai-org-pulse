@@ -1,0 +1,95 @@
+{
+  "version": "rhoai-3.5.EA2",
+  "generated_at": "2026-07-01T10:00:00Z",
+  "summary": {
+    "total_work": 120,
+    "work_done": 96,
+    "work_in_progress": 15,
+    "work_remaining": 9,
+    "progress_pct": 80
+  },
+  "director_summary": {
+    "overall_pct": 75,
+    "gate_statuses": [
+      { "gate": "Product Sign Off", "done": 8, "total": 10, "pct": 80, "rag": "AMBER" },
+      { "gate": "Test Execution", "done": 23, "total": 24, "pct": 96, "rag": "GREEN", "initiative_key": "RHOAIENG-68791" }
+    ],
+    "test_timeline": [
+      { "epic_key": "RHOAIENG-70001", "name": "Nightly", "done": 12, "total": 12, "pct": 100, "rag": "GREEN" },
+      { "epic_key": "RHOAIENG-70002", "name": "RC1", "done": 8, "total": 12, "pct": 67, "rag": "AMBER" }
+    ]
+  },
+  "component_readiness": {
+    "all_components": ["TestOps", "ModelServing", "Dashboard"],
+    "phases": [
+      {
+        "phase": "Nightly",
+        "tiles": [
+          {
+            "component": "TestOps",
+            "tfa": { "done": 10, "total": 12 },
+            "execution": { "done": 20, "total": 22, "done_pct": 91, "jql_url": "https://redhat.atlassian.net/issues/?jql=parent%3DRHOAIENG-68791" },
+            "failed_breakdown": { "new": 1, "in_progress": 2, "done": 5, "total": 8 },
+            "failed_jql_url": "https://redhat.atlassian.net/issues/?jql=project%3DRHOAIENG",
+            "skipped_breakdown": { "new": 0, "in_progress": 1, "done": 3, "total": 4 },
+            "skipped_jql_url": "https://redhat.atlassian.net/issues/?jql=project%3DRHOAIENG"
+          },
+          {
+            "component": "ModelServing",
+            "tfa": { "done": 5, "total": 5 },
+            "execution": { "done": 10, "total": 10, "done_pct": 100 },
+            "failed_breakdown": { "new": 0, "in_progress": 0, "done": 2, "total": 2 },
+            "failed_jql_url": "https://redhat.atlassian.net/issues/?jql=project%3DRHOAIENG",
+            "skipped_breakdown": { "new": 0, "in_progress": 0, "done": 1, "total": 1 },
+            "skipped_jql_url": "https://redhat.atlassian.net/issues/?jql=project%3DRHOAIENG"
+          },
+          {
+            "component": "Dashboard",
+            "tfa": { "done": 3, "total": 4 },
+            "execution": { "done": 6, "total": 8, "done_pct": 75 },
+            "failed_breakdown": { "new": 1, "in_progress": 0, "done": 1, "total": 2 },
+            "failed_jql_url": "https://redhat.atlassian.net/issues/?jql=project%3DRHOAIENG",
+            "skipped_breakdown": { "new": 0, "in_progress": 0, "done": 0, "total": 0 },
+            "skipped_jql_url": "https://redhat.atlassian.net/issues/?jql=project%3DRHOAIENG"
+          }
+        ]
+      }
+    ]
+  },
+  "product_blockers": {
+    "total_open": 2,
+    "issues": [
+      { "key": "RHOAIENG-99001", "summary": "Critical blocker for EA2 release", "status": "In Progress", "priority": "Blocker", "component": "ModelServing" },
+      { "key": "RHOAIENG-99002", "summary": "Regression in dashboard login", "status": "Open", "priority": "Blocker", "component": "Dashboard" }
+    ],
+    "components": [
+      { "component": "ModelServing", "count": 1, "jql_url": "https://redhat.atlassian.net/issues/?jql=project%3DRHOAIENG", "issues": [{ "key": "RHOAIENG-99001", "summary": "Critical blocker for EA2 release", "status": "In Progress", "status_category": "In Progress" }] },
+      { "component": "Dashboard", "count": 1, "jql_url": "https://redhat.atlassian.net/issues/?jql=project%3DRHOAIENG", "issues": [{ "key": "RHOAIENG-99002", "summary": "Regression in dashboard login", "status": "Open", "status_category": "To Do" }] }
+    ]
+  },
+  "tfa_signoff_done": 18,
+  "tfa_signoff_total": 21,
+  "version_variants": ["rhoai-3.5.EA2", "3.5 EA2 RHOAI RELEASE"],
+  "breakdowns": {
+    "RHOAIENG-68791": {
+      "test_execution": {
+        "phases": [
+          {
+            "epic_key": "RHOAIENG-70001",
+            "tasks": [
+              { "key": "RHOAIENG-70101", "summary": "Nightly smoke tests", "status": "Done", "status_category": "Done" },
+              { "key": "RHOAIENG-70102", "summary": "Nightly regression suite", "status": "In Progress", "status_category": "In Progress" }
+            ]
+          },
+          {
+            "epic_key": "RHOAIENG-70002",
+            "tasks": [
+              { "key": "RHOAIENG-70201", "summary": "RC1 validation", "status": "To Do", "status_category": "To Do" },
+              { "key": "RHOAIENG-70202", "summary": "RC1 sign-off tests", "status": "Done", "status_category": "Done" }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,5 +1,6 @@
-const { readSheet, appendRows, updateRow, deleteRow, clearAndWrite, ensureHeaders } = require('./sheetsClient')
+const { getSheetsApi, readSheet, appendRows, updateRow, deleteRow, clearAndWrite, ensureHeaders } = require('./sheetsClient')
 const { getCached, setCache, invalidate } = require('./sheetsCache')
+const { getConfig } = require('../sheet-config')
 const crypto = require('crypto')
 
 // Simple UUID v4 generator
@@ -29,9 +30,13 @@ const HEADERS = [
   'status',
   'createdAt',
   'updatedAt',
+  'owner',
+  'meetingNotes',
 ]
 
 const ARRAY_FIELDS = new Set(['toolsOfChoice', 'futureWishlist'])
+
+const LAST_COL = String.fromCharCode(64 + HEADERS.length)
 
 /**
  * Serialize an interaction object to a spreadsheet row
@@ -68,13 +73,15 @@ function deserializeRow(row) {
 
 /**
  * Get all interactions from Google Sheets (with caching)
+ * @param {import('googleapis').sheets_v4.Sheets} sheets - Sheets API client
+ * @param {string} spreadsheetId - Google Spreadsheet ID
  */
-async function getAllFromSheet(secrets) {
+async function getAllFromSheet(sheets, spreadsheetId) {
   const cached = getCached(CACHE_KEY)
   if (cached) return cached
 
-  await ensureHeaders(secrets, SHEET_NAME, HEADERS)
-  const rows = await readSheet(secrets, `${SHEET_NAME}!A2:R`)
+  await ensureHeaders(sheets, spreadsheetId, SHEET_NAME, HEADERS)
+  const rows = await readSheet(sheets, spreadsheetId, `${SHEET_NAME}!A2:${LAST_COL}`)
   const data = rows.map(deserializeRow)
 
   setCache(CACHE_KEY, data)
@@ -82,17 +89,36 @@ async function getAllFromSheet(secrets) {
 }
 
 /**
- * Create storage service instance bound to module secrets
- * @param {object} secrets - Module secrets from context
+ * Create storage service instance bound to service account client
+ * @param {object} context - Module context from route handler
+ * @returns {object} Storage instance with CRUD methods
  */
-function createStorage(secrets) {
+async function createStorage(context) {
+  const configSheetId = (await getConfig(context.storage.readFromStorage)).sheetId
+  const spreadsheetId = configSheetId || context.secrets.GOOGLE_SPREADSHEET_ID
+  if (!spreadsheetId) {
+    throw new Error('Google Spreadsheet ID not configured — set it in Settings or via GOOGLE_SPREADSHEET_ID secret')
+  }
+
+  const keyFile = context.resolveSecret('GOOGLE_SERVICE_ACCOUNT_KEY_FILE')
+  let sheetsApi = null
+
+  // Lazy initialization of sheets API client
+  async function getSheets() {
+    if (!sheetsApi) {
+      sheetsApi = await getSheetsApi(keyFile)
+    }
+    return sheetsApi
+  }
+
   return {
     /**
      * Get all interactions
-     * @param {object} filters - Optional filters { component, status, geo, industry }
+     * @param {object} filters - Optional filters { component, status, geo, industryVertical }
      */
     async getAll(filters = {}) {
-      let data = await getAllFromSheet(secrets)
+      const sheets = await getSheets()
+      let data = await getAllFromSheet(sheets, spreadsheetId)
 
       // Apply filters
       if (filters.component && filters.component !== 'all') {
@@ -115,7 +141,8 @@ function createStorage(secrets) {
      * Get interaction by ID
      */
     async getById(id) {
-      const data = await getAllFromSheet(secrets)
+      const sheets = await getSheets()
+      const data = await getAllFromSheet(sheets, spreadsheetId)
       return data.find((item) => item.id === id) || null
     },
 
@@ -123,6 +150,7 @@ function createStorage(secrets) {
      * Create new interaction
      */
     async create(interaction) {
+      const sheets = await getSheets()
       const now = new Date().toISOString()
       const newItem = {
         id: generateId(),
@@ -131,8 +159,8 @@ function createStorage(secrets) {
         ...interaction,
       }
 
-      await ensureHeaders(secrets, SHEET_NAME, HEADERS)
-      await appendRows(secrets, SHEET_NAME, [serializeRow(newItem)])
+      await ensureHeaders(sheets, spreadsheetId, SHEET_NAME, HEADERS)
+      await appendRows(sheets, spreadsheetId, SHEET_NAME, [serializeRow(newItem)])
       invalidate(CACHE_KEY)
 
       return newItem
@@ -142,7 +170,8 @@ function createStorage(secrets) {
      * Update existing interaction
      */
     async update(id, updates) {
-      const data = await getAllFromSheet(secrets)
+      const sheets = await getSheets()
+      const data = await getAllFromSheet(sheets, spreadsheetId)
       const index = data.findIndex((item) => item.id === id)
 
       if (index === -1) return null
@@ -155,7 +184,7 @@ function createStorage(secrets) {
       }
 
       // Row number in sheet (header is row 1, data starts at row 2)
-      await updateRow(secrets, SHEET_NAME, index + 2, serializeRow(merged))
+      await updateRow(sheets, spreadsheetId, SHEET_NAME, index + 2, serializeRow(merged))
       invalidate(CACHE_KEY)
 
       return merged
@@ -165,12 +194,13 @@ function createStorage(secrets) {
      * Delete interaction
      */
     async delete(id) {
-      const data = await getAllFromSheet(secrets)
+      const sheets = await getSheets()
+      const data = await getAllFromSheet(sheets, spreadsheetId)
       const index = data.findIndex((item) => item.id === id)
 
       if (index === -1) return false
 
-      await deleteRow(secrets, SHEET_NAME, index + 2)
+      await deleteRow(sheets, spreadsheetId, SHEET_NAME, index + 2)
       invalidate(CACHE_KEY)
 
       return true
@@ -182,6 +212,7 @@ function createStorage(secrets) {
     async createMany(items) {
       if (!items.length) return items
 
+      const sheets = await getSheets()
       const now = new Date().toISOString()
       const newItems = items.map(item => ({
         id: generateId(),
@@ -190,8 +221,8 @@ function createStorage(secrets) {
         ...item,
       }))
 
-      await ensureHeaders(secrets, SHEET_NAME, HEADERS)
-      await appendRows(secrets, SHEET_NAME, newItems.map(serializeRow))
+      await ensureHeaders(sheets, spreadsheetId, SHEET_NAME, HEADERS)
+      await appendRows(sheets, spreadsheetId, SHEET_NAME, newItems.map(serializeRow))
       invalidate(CACHE_KEY)
 
       return newItems
@@ -201,7 +232,8 @@ function createStorage(secrets) {
      * Upsert many interactions (merge by customerCompany + component)
      */
     async upsertMany(items) {
-      const data = await getAllFromSheet(secrets)
+      const sheets = await getSheets()
+      const data = await getAllFromSheet(sheets, spreadsheetId)
       let created = 0
       let updated = 0
       const results = []
@@ -240,7 +272,7 @@ function createStorage(secrets) {
       }
 
       // Rewrite entire sheet
-      await clearAndWrite(secrets, SHEET_NAME, HEADERS, data.map(serializeRow))
+      await clearAndWrite(sheets, spreadsheetId, SHEET_NAME, HEADERS, data.map(serializeRow))
       invalidate(CACHE_KEY)
 
       return { created, updated, items: results }

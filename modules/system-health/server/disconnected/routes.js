@@ -1,6 +1,6 @@
 const {
   readReports,
-  writeReportsAtomic,
+  writeReports,
   getSummaryProjection
 } = require('./storage');
 
@@ -85,10 +85,10 @@ const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
 module.exports = function registerDisconnectedRoutes(router, context) {
   const { storage, requireAuth, requireAdmin, requireScope } = context;
-  const { readFromStorage, writeToStorageAtomic } = storage;
+  const { readFromStorage, writeToStorage } = storage;
 
-  router.get('/summary', requireAuth, requireScope('system-health:read'), function(req, res) {
-    const data = readReports(readFromStorage);
+  router.get('/summary', requireAuth, requireScope('system-health:read'), async function(req, res) {
+    const data = await readReports(readFromStorage);
     const summary = getSummaryProjection(data);
 
     let repos = summary.repos;
@@ -114,7 +114,7 @@ module.exports = function registerDisconnectedRoutes(router, context) {
     res.json({ ...summary, repos });
   });
 
-  router.get('/repos/:repoKey', requireAuth, requireScope('system-health:read'), function(req, res) {
+  router.get('/repos/:repoKey', requireAuth, requireScope('system-health:read'), async function(req, res) {
     const repoKey = req.params.repoKey;
 
     if (!/^[a-zA-Z0-9._-]+--[a-zA-Z0-9._-]+$/.test(repoKey)) {
@@ -123,7 +123,7 @@ module.exports = function registerDisconnectedRoutes(router, context) {
 
     const sepIdx = repoKey.indexOf('--');
     const repoSlug = repoKey.slice(0, sepIdx) + '/' + repoKey.slice(sepIdx + 2);
-    const data = readReports(readFromStorage);
+    const data = await readReports(readFromStorage);
     const entry = data.repos[repoSlug];
 
     if (!entry) {
@@ -136,8 +136,8 @@ module.exports = function registerDisconnectedRoutes(router, context) {
     });
   });
 
-  router.get('/status', requireAuth, requireScope('system-health:read'), function(req, res) {
-    const data = readReports(readFromStorage);
+  router.get('/status', requireAuth, requireScope('system-health:read'), async function(req, res) {
+    const data = await readReports(readFromStorage);
     res.json({
       dataAvailable: Object.keys(data.repos).length > 0,
       lastSyncedAt: data.lastSyncedAt,
@@ -145,11 +145,11 @@ module.exports = function registerDisconnectedRoutes(router, context) {
     });
   });
 
-  router.delete('/', requireAdmin, requireScope('system-health:write'), function(req, res) {
+  router.delete('/', requireAdmin, requireScope('system-health:write'), async function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Disabled in demo mode' });
     }
-    writeReportsAtomic(writeToStorageAtomic, { lastSyncedAt: null, repoCount: 0, repos: {} });
+    await writeReports(writeToStorage, { lastSyncedAt: null, repoCount: 0, repos: {} });
     res.json({ status: 'cleared' });
   });
 

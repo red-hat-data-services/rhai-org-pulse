@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:31 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 04:23 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/sample-gam-trigger-workflow</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="497.62785599999995"
+                                stroke-dashoffset="531.557028"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">1.2</div>
+                        <div class="score-value">0.6</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,7 +365,7 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No source code or test files exist — repository contains only workflow YAML and a shell script</div>
+                            <div class="scorecard-status">No source code or tests exist — repo contains only workflow YAML and one shell script</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
@@ -374,23 +374,28 @@
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No build process — no Dockerfile, Makefile, or build configuration</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">Workflows trigger external GAM builds but no local build validation or Dockerfile</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No container images built or tested</div>
+                            <div class="scorecard-status">No container images, Dockerfiles, or image testing present</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tooling — nothing to cover</div>
+                            <div class="scorecard-status">No coverage configuration — no code to cover</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Three workflow variants for GAM triggering with proper GitHub App auth and artifact handling</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">Three workflow files with manual dispatch only; no PR triggers, concurrency, or caching</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No linting, FIPS checks, dependency alerts, or pre-commit hooks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
@@ -411,43 +416,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No workflow validation or testing</div>
-                            <p>Workflow syntax errors, incorrect secret references, or broken shell scripts are only discovered at runtime</p>
+                            <div class="item-description">No tests for workflow logic or shell script</div>
+                            <p>Custom decider script and workflow orchestration logic are completely untested — failures discovered only at runtime</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">README is effectively empty</div>
+                            <p>No documentation on how to use, configure, or adapt these sample workflows — defeats the purpose of a sample repo</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">Shell script has no validation or error handling</div>
-                            <p>custom_decider.sh uses random logic as placeholder — no actual decision criteria, no input validation, no error handling</p>
+                        <li class="item-card medium">
+                            <div class="item-description">No PR-triggered workflows</div>
+                            <p>YAML syntax errors or shell script bugs are not caught before merge; all workflows are manual dispatch only</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No linting for YAML workflows or shell scripts</div>
-                            <p>YAML syntax issues and shell anti-patterns go undetected until execution</p>
+                            <div class="item-description">Schedule triggers commented out</div>
+                            <p>GAM is not triggered on any automated cadence — requires manual intervention every time</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Hardcoded workflow ID and component name</div>
-                            <p>GAM_WORKFLOW_ID (136351503) will break if the upstream workflow file is renamed; COMPONENT is hardcoded in multiple places</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No security scanning of any kind</div>
-                            <p>No secret detection, no dependency scanning — GitHub App private key handling is not validated</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -464,35 +461,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add actionlint workflow validation</div>
-                            <p>Catches workflow syntax errors, expression mistakes, and deprecated action versions before merge</p>
+                            <div class="item-description">Add a YAML lint workflow for PR validation</div>
+                            <p>Catches syntax errors in workflow files before merge</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add ShellCheck to validate custom_decider.sh</div>
+                            <p>Catches common shell scripting bugs and ensures POSIX compliance</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add shellcheck for custom_decider.sh</div>
-                            <p>Validates shell script correctness and flags common anti-patterns</p>
+                            <div class="item-description">Write a comprehensive README with usage examples</div>
+                            <p>Makes the sample repo actually useful as a reference for other teams</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">30 minutes</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add YAML linting with yamllint</div>
-                            <p>Ensures consistent YAML formatting and catches syntax issues</p>
+                            <div class="item-description">Enable Dependabot for GitHub Actions version updates</div>
+                            <p>Automated security updates for GitHub Actions dependencies (actions/checkout, actions/download-artifact, etc.)</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Replace hardcoded workflow ID with dynamic lookup</div>
-                            <p>Prevents breakage when upstream GAM workflow is renamed or recreated</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add actionlint CI step to validate all workflow files on PRs</li><li>Add shellcheck validation for all shell scripts in .github/scripts/</li><li>Replace placeholder random decider with actual decision logic or document intended customization</li></ul>
+                            <ul><li>Add a PR-triggered workflow that validates YAML syntax and runs ShellCheck on shell scripts</li><li>Write comprehensive README documenting all three GAM trigger patterns with setup instructions</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add Gitleaks or similar secret detection to prevent accidental secret exposure</li><li>Make COMPONENT and GAM_WORKFLOW_ID configurable via workflow inputs instead of hardcoded env vars</li><li>Add a CODEOWNERS file for workflow review requirements</li></ul>
+                            <ul><li>Add basic tests for custom_decider.sh (unit tests using bats-core or similar)</li><li>Enable Dependabot for github-actions ecosystem to keep action versions current</li><li>Uncomment and configure schedule triggers for at least one workflow</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add comprehensive README documenting each workflow variant, when to use each, and required secrets</li><li>Create CLAUDE.md or AGENTS.md with contribution guidelines</li><li>Add workflow_dispatch inputs for component selection instead of editing YAML</li></ul>
+                            <ul><li>Add CLAUDE.md with contribution guidelines and workflow modification rules</li><li>Add a pre-commit config with YAML lint and ShellCheck hooks</li><li>Consider adding a Makefile with lint/test targets for local development</li></ul>
                         </div>
                     </div>
                 </div>

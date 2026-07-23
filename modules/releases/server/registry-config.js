@@ -22,9 +22,9 @@ function getDefaults() {
  * @param {{ readFromStorage: function }} storage
  * @returns {{ jiraProjects: string[] }}
  */
-function loadRegistryConfig(storage) {
+async function loadRegistryConfig(storage) {
   var defaults = getDefaults()
-  var stored = storage.readFromStorage(STORAGE_KEY)
+  var stored = await storage.readFromStorage(STORAGE_KEY)
 
   if (!stored || typeof stored !== 'object') {
     return defaults
@@ -40,7 +40,7 @@ function loadRegistryConfig(storage) {
  * @param {{ writeToStorage: function }} storage
  * @param {{ jiraProjects?: string[] }} config
  */
-function saveRegistryConfig(storage, config) {
+async function saveRegistryConfig(storage, config) {
   if (!config || typeof config !== 'object') {
     throw new Error('Config must be an object')
   }
@@ -51,7 +51,7 @@ function saveRegistryConfig(storage, config) {
       : DEFAULT_JIRA_PROJECTS.slice()
   }
 
-  storage.writeToStorage(STORAGE_KEY, toSave)
+  await storage.writeToStorage(STORAGE_KEY, toSave)
 }
 
 module.exports = {

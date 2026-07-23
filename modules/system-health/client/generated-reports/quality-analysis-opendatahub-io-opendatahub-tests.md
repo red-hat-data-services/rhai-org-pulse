@@ -1,413 +1,464 @@
 ---
 repository: "opendatahub-io/opendatahub-tests"
-overall_score: 7.4
+overall_score: 6.5
 scorecard:
   - dimension: "Unit Tests"
     score: 3.0
-    status: "No unit tests — repo is entirely integration/E2E tests against live clusters"
+    status: "No unit tests — this is a pure integration/E2E test repository"
   - dimension: "Integration/E2E"
-    score: 9.5
-    status: "275 test files, 40K+ LOC, 9 component suites, rich pytest infrastructure"
+    score: 9.0
+    status: "Excellent E2E coverage with 311 test files across 9 components, well-organized hierarchy"
   - dimension: "Build Integration"
     score: 6.0
-    status: "PR-time container build validation, but no runtime or startup testing"
+    status: "PR container build verification present; no Konflux simulation or operator manifest validation"
   - dimension: "Image Testing"
     score: 5.0
-    status: "Dockerfile builds on PR, but no image scanning, no SBOM, no startup validation"
+    status: "Dockerfile present with Fedora base; no multi-stage builds, no runtime validation, no multi-arch"
   - dimension: "Coverage Tracking"
-    score: 2.0
-    status: "No coverage tooling — no codecov, no .coveragerc, no coverage enforcement"
+    score: 1.0
+    status: "No coverage tooling — codecov, coveragerc, or pytest-cov absent"
   - dimension: "CI/CD Automation"
-    score: 7.5
-    status: "Tox + container build on PRs, concurrency control, but no E2E in CI"
+    score: 7.0
+    status: "Well-organized PR workflows with concurrency control; tox CI validation; limited test execution in CI"
+  - dimension: "Static Analysis"
+    score: 9.0
+    status: "Comprehensive pre-commit with ruff, flake8, mypy, pyrefly, semgrep, detect-secrets; Renovate configured"
   - dimension: "Agent Rules"
-    score: 8.5
-    status: "Mature AGENTS.md + CONSTITUTION.md with comprehensive patterns; missing .claude/rules/"
+    score: 9.0
+    status: "AGENTS.md, CONSTITUTION.md, detailed style/dev guides; no .claude/rules/ directory"
 critical_gaps:
-  - title: "No test coverage tracking or enforcement"
-    impact: "Cannot measure what % of utility code is exercised; regressions go undetected"
+  - title: "No code coverage tracking"
+    impact: "Impossible to measure test completeness or detect regressions in utility code coverage"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No container image security scanning in CI"
-    impact: "Vulnerable base images or dependencies ship without detection"
-    severity: "HIGH"
-    effort: "2-3 hours"
-  - title: "No E2E tests run in GitHub Actions CI"
-    impact: "All integration/E2E tests require external cluster; PRs merge with only lint+collect validation"
-    severity: "HIGH"
-    effort: "16-24 hours"
-  - title: "No image startup or runtime validation on PR"
-    impact: "Container may build successfully but fail at runtime (missing deps, bad entrypoint)"
-    severity: "MEDIUM"
-    effort: "3-4 hours"
   - title: "No unit tests for utility code"
-    impact: "73 utility files with no isolated unit tests; bugs caught only at integration level"
+    impact: "756 Python files include substantial utility code (utilities/, conftest.py, scripts/) with zero unit test coverage"
+    severity: "HIGH"
+    effort: "20-40 hours"
+  - title: "E2E tests not executed in GitHub Actions CI"
+    impact: "Test validation relies entirely on external CI (Jenkins/OpenShift CI); no PR-gated test execution"
     severity: "MEDIUM"
     effort: "8-16 hours"
+  - title: "Single-stage Dockerfile with no runtime validation"
+    impact: "Larger image size, no build-time validation of test container functionality"
+    severity: "MEDIUM"
+    effort: "4-8 hours"
 quick_wins:
-  - title: "Add Trivy container scanning to PR workflow"
-    effort: "1-2 hours"
-    impact: "Catch CVEs in base image and pip dependencies before merge"
-  - title: "Add pytest-cov and coverage reporting to tox"
+  - title: "Add pytest-cov and codecov integration for utility code"
+    effort: "2-4 hours"
+    impact: "Baseline coverage measurement for utilities/ and conftest files; PR coverage gates"
+  - title: "Create .claude/rules/ directory with test creation rules"
     effort: "2-3 hours"
-    impact: "Visibility into utility code coverage; baseline for enforcement"
-  - title: "Add container startup validation to verify_build_container workflow"
+    impact: "Framework-specific guidance for AI agents generating tests, building on existing AGENTS.md"
+  - title: "Add unit tests for scripts/ and key utility modules"
+    effort: "8-12 hours"
+    impact: "Catch regressions in shared infrastructure code (check_stray_images.py, pr_workflow.py, etc.)"
+  - title: "Convert Dockerfile to multi-stage build"
     effort: "2-3 hours"
-    impact: "Catch missing dependencies or broken entrypoint at PR time"
-  - title: "Create .claude/rules/ directory with test-type-specific rules"
-    effort: "2-3 hours"
-    impact: "AI-generated tests follow exact repo patterns; use /test-rules-generator"
-  - title: "Enable pytest-xdist parallel execution markers"
-    effort: "1-2 hours"
-    impact: "Faster test execution; 0 tests currently marked for parallel"
+    impact: "Smaller final image, better layer caching, improved security posture"
 recommendations:
   priority_0:
-    - "Add pytest-cov integration with coverage thresholds for utilities/ code"
-    - "Integrate Trivy/Grype scanning into PR container build workflow"
-    - "Add image startup validation (docker run --entrypoint health-check) to verify_build_container"
+    - "Add coverage tracking with pytest-cov and codecov to measure and enforce utility code coverage"
+    - "Write unit tests for scripts/ directory (check_stray_images.py, generate_image_manifest.py, pr_workflow.py)"
   priority_1:
-    - "Write unit tests for utilities/ modules (73 files, 0 unit tests)"
-    - "Create .claude/rules/ with integration-test-specific rules from existing patterns"
-    - "Add SBOM generation (syft/cosign) to container build pipeline"
-    - "Enable pytest parallel markers and document xdist usage"
+    - "Add tox test execution in PR CI that runs --collect-only and --setup-plan (already configured but could be expanded)"
+    - "Create .claude/rules/ with framework-specific test patterns for E2E, fixture, and utility code"
+    - "Convert Dockerfile to multi-stage build with dependency caching layer"
   priority_2:
-    - "Add a lightweight Kind-based E2E smoke test to GitHub Actions"
-    - "Add mutation testing (mutmut) for critical utility functions"
-    - "Integrate CodeQL/Semgrep into GitHub Actions (currently only local semgrep.yaml)"
-    - "Add Dependabot/Renovate vulnerability PR alerts to Slack/Teams"
+    - "Add container runtime validation (health check, smoke test) in verify_build_container workflow"
+    - "Expand parallel testing beyond ai_safety to more component areas"
+    - "Add Dependabot alongside Renovate for GitHub Actions security alerts"
 ---
 
-# Quality Analysis: opendatahub-io/opendatahub-tests
+# Quality Analysis: opendatahub-tests
 
 ## Executive Summary
-- Overall Score: 7.4/10
-- Key Strengths: Massive, well-structured integration/E2E test suite (275 test files, 40K LOC) with mature project governance (CONSTITUTION.md, AGENTS.md), strong pre-commit pipeline (12 hooks including ruff, flake8, mypy, detect-secrets, gitleaks, semgrep, pyrefly), comprehensive pytest marker system, and automated dependency management via Renovate
-- Critical Gaps: No test coverage tracking, no container security scanning, no E2E tests in CI (all require external clusters), no unit tests for 73 utility modules, no image runtime validation
-- Agent Rules Status: Strong — AGENTS.md and CONSTITUTION.md provide comprehensive guidance; missing `.claude/rules/` for granular test-type rules
+
+- **Overall Score: 6.5/10**
+- **Repository Type**: Pure integration/E2E test repository (Python/pytest)
+- **Primary Language**: Python (756 files, Python 3.14)
+- **Jira**: RHOAIENG / QE (midstream tier)
+- **Key Strengths**: Exceptional test organization with 311 test files across 9 components; comprehensive static analysis pipeline with ruff, flake8, mypy, pyrefly, semgrep, and detect-secrets; excellent developer documentation (AGENTS.md, CONSTITUTION.md, DEVELOPER_GUIDE.md, STYLE_GUIDE.md); Renovate for automated dependency updates
+- **Critical Gaps**: No code coverage tracking; no unit tests for substantial utility code; E2E tests not executed in GitHub Actions CI
+- **Agent Rules Status**: Present and comprehensive (AGENTS.md + CONSTITUTION.md), no `.claude/rules/` directory
 
 ## Quality Scorecard
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 3.0/10 | No unit tests — repo is entirely integration/E2E tests against live clusters |
-| Integration/E2E | 9.5/10 | 275 test files, 40K+ LOC, 9 component suites, rich pytest infrastructure |
-| **Build Integration** | **6.0/10** | **PR-time container build validation, but no runtime or startup testing** |
-| Image Testing | 5.0/10 | Dockerfile builds on PR, but no image scanning, no SBOM, no startup validation |
-| Coverage Tracking | 2.0/10 | No coverage tooling — no codecov, no .coveragerc, no coverage enforcement |
-| CI/CD Automation | 7.5/10 | Tox + container build on PRs, concurrency control, but no E2E in CI |
-| Agent Rules | 8.5/10 | Mature AGENTS.md + CONSTITUTION.md with comprehensive patterns; missing .claude/rules/ |
+
+| Dimension | Score | Weight | Status |
+|-----------|-------|--------|--------|
+| Unit Tests | 3.0/10 | 15% | No unit tests — pure integration/E2E repo |
+| Integration/E2E | 9.0/10 | 20% | 311 test files, 9 component areas, multi-tier markers |
+| Build Integration | 6.0/10 | 15% | PR container build verification; no Konflux simulation |
+| Image Testing | 5.0/10 | 10% | Dockerfile present; no multi-stage, no runtime validation |
+| Coverage Tracking | 1.0/10 | 10% | No coverage tooling whatsoever |
+| CI/CD Automation | 7.0/10 | 15% | Well-organized workflows with concurrency; tox validation |
+| Static Analysis | 9.0/10 | 10% | Comprehensive linting, type checking, security scanning |
+| Agent Rules | 9.0/10 | 5% | AGENTS.md + CONSTITUTION.md; missing .claude/rules/ |
+
+**Weighted Score**: (3.0×0.15) + (9.0×0.20) + (6.0×0.15) + (5.0×0.10) + (1.0×0.10) + (7.0×0.15) + (9.0×0.10) + (9.0×0.05) = **6.5/10**
 
 ## Critical Gaps
 
-1. **No test coverage tracking or enforcement**
-   - Impact: Cannot measure what percentage of utility code is exercised by tests; regressions in utility functions go undetected
-   - Severity: HIGH
-   - Effort: 4-6 hours
-   - Details: No `.coveragerc`, no `codecov.yml`, no `pytest-cov` in tox configuration. The `pyproject.toml` includes `pytest` but not `pytest-cov` as a dependency.
+### 1. No Code Coverage Tracking (HIGH)
+- **Impact**: Cannot measure test completeness or enforce coverage thresholds on PR changes
+- **Details**: No `.codecov.yml`, no `.coveragerc`, no `pytest-cov` in dependencies or CI. While this is primarily an E2E test repo, the `utilities/` directory contains substantial shared code (constants, infra helpers, manifests, plugins) that warrants unit test coverage tracking
+- **Effort**: 4-6 hours
+- **Recommendation**: Add `pytest-cov` to dependencies, configure `.codecov.yml`, add coverage reporting to tox-tests workflow
 
-2. **No container image security scanning in CI**
-   - Impact: Vulnerable base images (Fedora 43) or pip dependencies ship without CVE detection
-   - Severity: HIGH
-   - Effort: 2-3 hours
-   - Details: Despite having strong secret detection (gitleaks + detect-secrets), there is no Trivy, Grype, or Snyk scanning in any workflow. The Dockerfile installs system packages and pip dependencies without vulnerability scanning.
+### 2. No Unit Tests for Utility Code (HIGH)
+- **Impact**: Regressions in shared utility code (used across all 311 test files) are only caught when E2E tests happen to exercise the affected path
+- **Details**: The `utilities/` directory and `scripts/` directory contain critical infrastructure code with zero direct test coverage. Files like `check_stray_images.py`, `generate_image_manifest.py`, and `pr_workflow.py` implement complex logic without tests
+- **Effort**: 20-40 hours
+- **Recommendation**: Start with unit tests for `scripts/` (3 files, well-bounded), then expand to key `utilities/` modules
 
-3. **No E2E tests run in GitHub Actions CI**
-   - Impact: All 275 test files require a live OpenShift cluster. PR validation only runs `pytest --collect-only` and `pytest --setup-plan` (via tox), confirming test structure but never executing tests.
-   - Severity: HIGH
-   - Effort: 16-24 hours
-   - Details: The tox `[testenv:pytest]` only runs collect and setup-plan. Actual test execution happens in external CI systems (likely Jenkins/OpenShift CI). This creates a gap where test logic errors pass PR checks.
+### 3. E2E Tests Not Executed in GitHub Actions CI (MEDIUM)
+- **Impact**: PR validation limited to syntax checks (tox --collect-only, --setup-plan) and static analysis; actual test execution happens externally
+- **Details**: The `tox-tests.yml` workflow runs `tox` which only validates test collection and setup plans. No E2E tests run in GitHub Actions — they rely on external CI systems (likely Jenkins/OpenShift CI). This is understandable given the cluster requirements, but means GitHub CI provides limited quality gates
+- **Effort**: 8-16 hours (for adding subset of tests that don't require cluster)
 
-4. **No image startup or runtime validation on PR**
-   - Impact: Container may build successfully (via `make build`) but fail at runtime due to missing system dependencies, broken entrypoint, or import errors
-   - Severity: MEDIUM
-   - Effort: 3-4 hours
-   - Details: `verify_build_container.yml` only runs `make build` (podman/docker build). No `docker run` with health check or smoke test.
-
-5. **No unit tests for utility code**
-   - Impact: 73 utility files in `utilities/` with complex logic (registry_utils, serving_runtime, path_utils, user_utils) have no isolated unit tests
-   - Severity: MEDIUM
-   - Effort: 8-16 hours
-   - Details: The repo is a pure integration/E2E test repository by design, but the utilities layer has grown substantial enough to warrant its own unit tests.
+### 4. Single-Stage Dockerfile Without Runtime Validation (MEDIUM)
+- **Impact**: Larger image size (~1GB+), no layered caching for dependency changes, no post-build validation
+- **Details**: Dockerfile uses `FROM fedora:43` (single stage), installs system deps + Python deps in one layer. No HEALTHCHECK, no multi-arch support, no runtime smoke test in CI
+- **Effort**: 4-8 hours
 
 ## Quick Wins
 
-1. **Add Trivy container scanning to PR workflow**
-   - Effort: 1-2 hours
-   - Impact: Catch CVEs in Fedora 43 base image and pip dependencies before merge
-   - Implementation:
-     ```yaml
-     # Add to verify_build_container.yml after build step
-     - name: Run Trivy vulnerability scanner
-       uses: aquasecurity/trivy-action@master
-       with:
-         image-ref: 'quay.io/opendatahub/opendatahub-tests:latest'
-         format: 'sarif'
-         severity: 'CRITICAL,HIGH'
-     ```
+### 1. Add pytest-cov and codecov Integration (2-4 hours)
+Add `pytest-cov` to dependencies and configure coverage for `utilities/` and `scripts/`:
+```ini
+# pytest.ini addition
+addopts = --cov=utilities --cov=scripts --cov-report=xml
+```
+```yaml
+# .codecov.yml
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: 50%
+```
 
-2. **Add pytest-cov and coverage reporting to tox**
-   - Effort: 2-3 hours
-   - Impact: Visibility into utility code coverage; establishes a baseline for future enforcement
-   - Implementation: Add `pytest-cov` to dependencies, update tox to run `pytest --cov=utilities --cov-report=term-missing`
+### 2. Create .claude/rules/ Directory (2-3 hours)
+Build on the excellent AGENTS.md by adding framework-specific rules:
+```
+.claude/rules/
+├── e2e-tests.md       # E2E test patterns with openshift-python-wrapper
+├── fixtures.md        # Fixture creation patterns (context managers, scoping)
+└── utility-code.md    # Utility function patterns (type annotations, docstrings)
+```
 
-3. **Add container startup validation**
-   - Effort: 2-3 hours
-   - Impact: Catch missing dependencies or broken entrypoint at PR time
-   - Implementation: Add `docker run --rm <image> --collect-only --quiet` after build in `verify_build_container.yml`
+### 3. Add Unit Tests for scripts/ (8-12 hours)
+The 3 scripts in `scripts/` are self-contained and testable:
+- `check_stray_images.py` — test image detection logic
+- `generate_image_manifest.py` — test manifest generation
+- `check_incorrect_wrapper_usage.py` — test pattern detection
 
-4. **Create .claude/rules/ directory with test-type-specific rules**
-   - Effort: 2-3 hours
-   - Impact: AI-generated tests follow exact repo patterns (fixture naming, markers, K8s wrapper usage)
-   - Implementation: Use `/test-rules-generator` skill to extract rules from existing patterns
-
-5. **Enable pytest-xdist parallel execution markers**
-   - Effort: 1-2 hours
-   - Impact: Faster test execution; 0 out of 275 test files currently marked for parallel execution despite pytest-xdist being a dependency
-   - Implementation: Add `@pytest.mark.parallel` to independent test files; document parallel testing guidelines
+### 4. Convert to Multi-Stage Dockerfile (2-3 hours)
+Separate system dependencies from Python dependencies for better caching:
+```dockerfile
+FROM fedora:43 AS base
+# system deps
+FROM base AS deps  
+# uv sync
+FROM deps AS runtime
+# copy tests
+```
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
+**Score: 3.0/10**
+
+This repository is a dedicated integration/E2E test suite — it intentionally does not contain unit tests for product code. However, it contains substantial utility code that warrants unit testing:
+
+- **756 Python files** total
+- **311 test files** (all integration/E2E, none unit)
+- **utilities/ directory**: Shared code used across all test components
+- **scripts/ directory**: 3 standalone scripts with complex logic
+- **conftest.py files**: 30+ conftest files with fixture logic
+- **Test framework**: pytest with extensive plugins (pytest-xdist, pytest-dependency, pytest-order, pytest-asyncio, pytest-testconfig, syrupy)
+- **Test-to-code ratio**: N/A — all tests are integration tests targeting external systems
+
+The score reflects the absence of unit tests for the repo's own infrastructure code, not the absence of unit tests for product code.
+
+### Integration/E2E Tests
+**Score: 9.0/10**
+
+Outstanding E2E test coverage with excellent organization:
+
+- **311 test files** across 9 major component areas:
+  - `model_serving/` — 210 files (model server, runtime, MaaS billing)
+  - `ai_hub/` — 127 files (model registry, catalog, MCP servers, agent catalog)
+  - `ai_safety/` — 70 files (TrustyAI, guardrails, LM eval, EvalHub)
+  - `workbenches/` — 16 files (notebooks server, notebook images)
+  - `ogx/` — 13 files (vector IO, inference, dataset, operator)
+  - `pipelines_components/` — 6 files (AutoRAG, AutoML)
+  - `spark/` — 2 files
+  - `cluster_health/` — 2 files
+  - `fixtures/` — 5 files
+
+- **Multi-tier test markers**: smoke, sanity, tier1, tier2, tier3, pre_upgrade, post_upgrade
+- **Infrastructure markers**: gpu, parallel, slow, multinode, downstream_only
+- **Component markers**: ai_safety, ogx, rag for cross-directory ownership
+- **Parallel testing**: pytest-xdist support documented with `--dist loadfile`
+- **Test dependencies**: pytest-dependency for ordered test execution
+- **Snapshot testing**: syrupy for response validation
+- **Fixture hierarchy**: Deep fixture composition with proper scoping (30+ conftest.py files)
+- **Kubernetes interaction**: openshift-python-wrapper for all K8s API calls
+
+**Strengths**:
+- Excellent directory organization by component and feature
+- Clear test marker taxonomy for filtering
+- Documented parallel testing strategy
+- Proper fixture scoping and composition
+
+**Minor gaps**:
+- No multi-version/multi-OCP testing in GitHub Actions
+- Parallel testing documented but not yet integrated into CI
+
+### Build Integration
+**Score: 6.0/10**
+
+- **PR build verification**: `verify_build_container.yml` runs `make build` on every PR (builds container image)
+- **Post-merge build**: `build-push-container-on-merge.yml` builds and pushes to quay.io on merge
+- **PR image builds**: `push-container-on-comment.yml` allows on-demand PR image builds via `/build-push-pr-image` comment
+- **Image cleanup**: `delete-image-tag.yml` removes PR images on PR close
+- **Stray image check**: `check-stray-images.yml` detects container images referenced directly in code vs. constants
+
+**Gaps**:
+- No Konflux build simulation
+- No operator manifest validation (not applicable — test-only repo)
+- No Kustomize overlay verification
+- No multi-architecture build support
+- Build only validates that `make build` succeeds — no runtime validation of built image
+
+### Image Testing
+**Score: 5.0/10**
+
+- **Dockerfile**: Single-stage build from `fedora:43`
+  - Installs system dependencies, grpcurl, must-gather-clean, cosign
+  - Uses `uv sync` for Python dependencies
+  - Non-root user (`odh`)
+  - Entry point: `uv run pytest`
+- **.dockerignore**: Present, excludes unnecessary files
+- **Base image**: Fedora 43 (not UBI — acceptable for test container, not FIPS-compliant)
+
+**Gaps**:
+- No multi-stage build (larger image size, slower builds)
+- No HEALTHCHECK directive
+- No multi-architecture support (x86_64 only from grpcurl/must-gather-clean binaries)
+- No runtime validation tests (no Testcontainers, no container smoke tests)
+- No build caching optimization (all deps in one layer)
+
+### Coverage Tracking
+**Score: 1.0/10**
+
+- No `.codecov.yml` or `codecov.yml`
+- No `.coveragerc`
+- No `pytest-cov` in dependencies
+- No `--coverprofile` or coverage flags in CI
+- No coverage threshold enforcement
+- No PR coverage reporting
+
+This is the most significant gap. While E2E tests targeting external clusters don't produce traditional code coverage, the `utilities/` and `scripts/` directories contain testable Python code that should have coverage tracking.
+
+### CI/CD Automation
+**Score: 7.0/10**
 
 **Workflow Inventory** (16 workflows):
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `tox-tests.yml` | PR opened/sync | Run tox (unused-code check + pytest collect/setup-plan) |
-| `verify_build_container.yml` | PR opened/sync/reopen | Build container image from PR |
-| `build-push-container-on-merge.yml` | PR merged | Build + push container to quay.io |
-| `push-container-on-comment.yml` | `/build-push-pr-image` comment | Build + push PR-specific image |
-| `unicode-safety.yml` | PR to main + weekly cron | Detect hidden unicode characters |
-| `add-remove-labels.yml` | PR sync + issue comment | Label management (/wip, /verified, /lgtm) |
-| `add-welcome-comment-set-assignee.yml` | PR opened | Welcome message + auto-assign |
-| `cherry-pick-comment.yml` | Issue comment | Cherry-pick on `/cherry-pick` command |
-| `close-stale-issues.yml` | Daily cron | Close stale issues after 60 days |
-| `delete-image-tag.yml` | PR closed | Clean up PR-specific quay.io tags |
-| `labeler.yml` | PR target | Auto-label by file path |
-| `on-review-add-label.yml` | Workflow run | Add labels based on review events |
-| `size-labeler.yml` | PR opened/sync | Add size labels (XS/S/M/L/XL) |
-| `workflow-review.yml` | PR review | Dummy workflow for review event handling |
+| tox-tests.yml | PR open/sync | Run tox (collect-only + setup-plan) |
+| verify_build_container.yml | PR open/sync/reopen | Build container image |
+| check-stray-images.yml | PR open/sync (test/utility changes) | Detect unregistered container images |
+| unicode-safety.yml | PR to main + weekly schedule | Detect hidden unicode characters |
+| build-push-container-on-merge.yml | PR merge | Build and push to quay.io |
+| push-container-on-comment.yml | Comment `/build-push-pr-image` | On-demand PR image build |
+| delete-image-tag.yml | PR close | Clean up PR image from quay.io |
+| add-remove-labels.yml | PR sync + comments | Label management (wip, verified, lgtm, hold) |
+| add-welcome-comment-set-assignee.yml | PR open | Welcome comment + auto-assignee |
+| size-labeler.yml | PR open/sync | PR size labels |
+| labeler.yml | PR | Auto-labeling |
+| on-review-add-label.yml | Review workflow | Review-based label management |
+| cherry-pick-comment.yml | Comment `/cherry-pick` | Cherry-pick to release branches |
+| close-stale-issues.yml | Daily schedule | Close stale issues (60 days) |
+| workflow-review.yml | PR review | Proxy for review events |
 
 **Strengths**:
-- Concurrency control on PR workflows prevents redundant runs
-- Container image lifecycle (build on PR, push on merge, delete on close)
-- Unicode safety scanning (weekly full + PR-changed files)
-- Mature label automation pipeline
+- Concurrency control on 4 workflows (cancel-in-progress)
+- uv used consistently for dependency management
+- Custom PR workflow automation (labels, size, reviews)
+- Stale issue management
+- Image lifecycle management (build, push, cleanup)
 
 **Gaps**:
-- No actual test execution in CI — only structural validation
-- No CodeQL or Semgrep scanning in workflows (only local semgrep.yaml)
-- No dependency vulnerability checks in CI (relies on Renovate alerts)
+- No test execution in CI (only collection/setup validation)
+- No caching strategy in workflows
+- No timeout-minutes set on any workflow
+- No matrix strategy for multi-version testing
+- No test parallelization in CI
 
-### Test Coverage
+### Static Analysis
+**Score: 9.0/10**
 
-**Test Architecture**:
-- **Framework**: pytest with extensive custom plugins and markers
-- **Test Files**: 275 test files across 9 component directories
-- **Conftest Files**: 93 conftest.py files providing hierarchical fixture scoping
-- **Lines of Test Code**: ~40,600 LOC in test files + ~28,300 LOC in conftest files
-- **Total Python LOC**: ~106,200
+Excellent, comprehensive static analysis pipeline:
 
-**Component Breakdown**:
-| Component | Test Files | Description |
-|-----------|-----------|-------------|
-| model_serving | 134 | KServe, vLLM, MaaS billing, model runtime |
-| ai_hub | 74 | Model registry, model catalog, MCP servers |
-| ai_safety | 42 | TrustyAI, guardrails, LM eval, NeMo |
-| workbenches | 11 | Notebook images, notebook server |
-| ogx | 9 | Vector IO, datasets, inference |
-| cluster_health | 2 | Node health validation |
-| pipelines_components | 2 | AutoML, AutoRAG |
-| spark | 1 | Spark integration |
+**Pre-commit hooks** (`.pre-commit-config.yaml`):
+1. **pre-commit-hooks**: merge conflict, debug statements, trailing whitespace, EOF fixer, AST check, builtin literals, docstring-first, TOML check
+2. **flake8**: With custom RedHatQE plugins (FCN, UFN, NIC, NIT) + flake8-mutable
+3. **detect-secrets**: Secret detection with exclusions for snapshots
+4. **ruff**: Linting + formatting (line-length 120, preview mode)
+5. **gitleaks**: Git secret scanning
+6. **pyrefly**: Type checking (Meta's type checker, Python 3.14 compatible)
+7. **check-signoff**: Signed-off-by enforcement on commit messages
+8. **conventional-precommit-linter**: Conventional commit message enforcement
+9. **check-prohibited-patterns**: Custom script for wrapper usage validation
+10. **actionlint**: GitHub Actions workflow linting
+11. **markdownlint-cli2**: Markdown linting
 
-**Marker Distribution**:
-| Marker | Count | Purpose |
-|--------|-------|---------|
-| smoke | 33 | Critical path tests |
-| tier1 | 75 | High priority |
-| tier2 | 42 | Medium/low priority positive |
-| tier3 | 27 | Negative/destructive |
-| gpu | 2 | GPU-dependent |
-| parallel | 0 | Parallel-safe (unused!) |
-| upgrade | 25 files | Pre/post upgrade validation |
+**Type checking**:
+- **mypy**: Strict configuration (`disallow_any_generics`, `disallow_incomplete_defs`, `disallow_untyped_defs`)
+- **pyrefly**: Additional type checking with legacy preset
 
-**Testing Patterns**:
-- Extensive use of `pytest.mark.parametrize` for test variations
-- Snapshot testing via `syrupy` for model serving inference validation
-- Fixture-driven resource lifecycle with context managers
-- `openshift-python-wrapper` for all K8s API interactions
-- Global config via `pytest-testconfig` for distribution-specific settings
-- Test dependency management via `pytest-dependency`
-- Structured logging via `structlog`
+**Security scanning**:
+- **semgrep.yaml**: Comprehensive security rules (64KB, covering Python, Go, TypeScript, YAML, generic patterns)
+- **detect-secrets**: Pre-commit integration
+- **gitleaks**: Pre-commit + standalone config (`.gitleaks.toml`, `.gitleaksignore`)
 
-**Coverage**: No coverage tracking. No `pytest-cov`, no `.coveragerc`, no `codecov.yml`.
+**Dependency management**:
+- **Renovate**: Well-configured with grouped updates (Python minor/patch weekly, major Thursday, GitHub Actions Wednesday, pre-commit hooks Tuesday), vulnerability alerts enabled, semantic commit messages
+- **No Dependabot**: Renovate covers this role
 
-### Code Quality
+**FIPS compatibility**:
+- No non-FIPS-compliant crypto imports detected in Python code
+- Dockerfile uses Fedora base (not UBI) — acceptable for test containers
+- Uses `cryptography` and `bcrypt` packages (FIPS-compatible libraries)
 
-**Strong**:
-- **Pre-commit hooks** (12 hooks): ruff (lint + format), flake8, mypy, detect-secrets, gitleaks, pyrefly (type checking), actionlint, markdownlint, conventional-commit-linter, check-signoff, check-prohibited-patterns
-- **Type checking**: mypy strict mode + pyrefly for Python 3.14 compatibility
-- **Linting**: ruff + flake8 with custom RedHatQE plugins (function naming, unused code)
-- **Static analysis**: 1,873-line semgrep.yaml with comprehensive security rules (secrets, AWS keys, Python/Go/TS patterns)
-- **Tox**: Unused code detection + pytest structural validation
-- **CodeRabbit**: AI-powered code review with constitution-aware instructions
-- **Renovate**: Automated dependency updates with grouped scheduling
+**Score justification**: Comprehensive coverage of linting, type checking, security scanning, and dependency management. Only missing Dependabot (covered by Renovate) and FIPS build tags (not applicable for test container).
 
-**Gaps**:
-- Semgrep rules exist locally but are not enforced in CI workflows
-- No GitHub Actions integration for semgrep scanning
-- No CodeQL/GHAS integration
+### Agent Rules
+**Score: 9.0/10**
 
-### Container Images
+Exceptional agent documentation for a test repository:
 
-**Dockerfile Analysis**:
-- Base: `fedora:43`
-- Python: 3.14 (cutting-edge)
-- Package manager: `uv` for fast dependency resolution
-- System deps: python3, pip, ssh, gnupg, curl, openssl, skopeo, gcc-c++
-- Additional tools: grpcurl, must-gather-clean, cosign
-- Non-root user: `odh` (good security practice)
-- Entrypoint: `uv run pytest`
-
-**Build Process**:
-- `make build` via podman/docker
-- PR-time build validation in `verify_build_container.yml`
-- Merge-time build + push to `quay.io/opendatahub/opendatahub-tests`
-- On-demand PR image builds via `/build-push-pr-image` comment
-
-**Gaps**:
-- No multi-architecture support (x86_64 only)
-- No image scanning (Trivy/Grype/Snyk)
-- No SBOM generation (syft/cosign)
-- No image signing/attestation
-- No runtime startup validation
-- Base image pinned to `fedora:43` without digest — renovate disabled for this image
-
-### Security
-
-**Strong**:
-- **Gitleaks**: Configured with `.gitleaks.toml` — comprehensive allowlist for test fixtures, mock data, and known test credentials
-- **Detect-secrets**: Pre-commit hook with snapshot-based detection
-- **Semgrep**: 1,873 lines of custom security rules covering secrets, AWS keys, Python injection patterns
-- **Cosign**: Installed in container for image verification capabilities
-- **Signed commits**: Pre-commit hook enforces `Signed-off-by` trailer
-- **Unicode safety**: Weekly full scan + PR-scoped checks for hidden characters
-
-**Gaps**:
-- No container vulnerability scanning in CI
-- No SAST/CodeQL in GitHub Actions
-- Semgrep rules are local-only (not enforced in CI)
-- No dependency vulnerability scanning in CI (only Renovate alerts)
-
-### Agent Rules (Agentic Flow Quality)
-
-**Status**: Strong — Present and comprehensive
-
-**AGENTS.md**:
-- Project overview (testing repo for ODH/RHOAI)
-- Validation commands (pre-commit, tox, pytest)
+**AGENTS.md** (4,397 bytes):
+- Clear project overview and purpose
+- Validation commands (pre-commit, tox)
+- Test execution examples with markers
 - Project structure documentation
-- Essential patterns: test docstrings, fixture naming, K8s wrapper usage
+- Essential patterns for tests, fixtures, K8s resources
 - Common pitfalls section
-- Clear boundaries: Always/Ask First/Never
+- Clear boundaries (Always/Ask First/Never)
+- Documentation references
 
-**CONSTITUTION.md**:
-- 7 core principles (Simplicity, Consistency, Clarity, Fixture Discipline, K8s Resources, Locality, Security)
-- Test development standards
+**CONSTITUTION.md** (7,559 bytes):
+- 7 core principles (Simplicity, Consistency, Clarity, Fixtures, K8s Resources, Locality, Security)
+- Test development standards (documentation, markers, organization)
 - AI-assisted development guidelines
 - Governance and amendment process
-- Ratified 2026-01-08
+- Specification-driven development guidance
+
+**Supporting documentation**:
+- `DEVELOPER_GUIDE.md` — Contribution workflow, fixture examples
+- `STYLE_GUIDE.md` — Naming, typing, docstrings
+- `GETTING_STARTED.md` — Setup instructions
+- `PARALLEL_TESTING.md` — Parallel execution strategy
+- `GITHUB_WORKFLOWS.md` — Workflow documentation
+- `CONTRIBUTING.md` — Contributing guidelines
+- `UPGRADE.md` — Upgrade testing guidance
+
+**Additional AI tooling**:
+- `.coderabbit.yaml` — CodeRabbit AI review configuration with Python-specific instructions
 
 **Gaps**:
-- No `.claude/` directory or `.claude/rules/` for granular, test-type-specific rules
-- No `.claude/skills/` for automated test generation workflows
-- Rules are in markdown docs but not in the structured format that Claude Code rules use
-- No specific rules for: snapshot tests, upgrade tests, parametrized tests, fixture patterns
-
-### Documentation
-
-**Strong**:
-- `README.md` — Project overview
-- `AGENTS.md` — Comprehensive AI agent instructions
-- `CONSTITUTION.md` — Non-negotiable project principles
-- `PARALLEL_TESTING.md` — Parallel test execution guide
-- `VSCODE_CONFIG.md` — IDE setup
-- `docs/CONTRIBUTING.md` — Contribution workflow
-- `docs/DEVELOPER_GUIDE.md` — Development practices
-- `docs/GETTING_STARTED.md` — Onboarding
-- `docs/GITHUB_WORKFLOWS.md` — CI documentation
-- `docs/STYLE_GUIDE.md` — Code style reference
-- `docs/UPGRADE.md` — Upgrade testing guide
-- `tests/fixtures/README.md` — Fixture documentation
+- No `CLAUDE.md` (AGENTS.md serves similar purpose)
+- No `.claude/` directory or `.claude/rules/` — would benefit from framework-specific test creation rules
+- No `.claude/skills/` for custom analysis skills
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-- **Add pytest-cov integration with coverage thresholds for utilities/ code** — Install `pytest-cov`, add `.coveragerc` targeting `utilities/`, update tox to run with `--cov`, set minimum coverage threshold (start at 30%, increase over time)
-- **Integrate Trivy/Grype scanning into PR container build workflow** — Add `aquasecurity/trivy-action` to `verify_build_container.yml` after the `make build` step; fail on CRITICAL/HIGH CVEs
-- **Add image startup validation to verify_build_container** — After building, run `docker run --rm <image> --collect-only --quiet` to verify the container starts correctly and pytest can collect tests
+1. **Add coverage tracking for utility code** — Install `pytest-cov`, configure `.codecov.yml`, add coverage reporting to tox-tests workflow. Focus on `utilities/` and `scripts/` directories. This is the single highest-ROI improvement.
+
+2. **Write unit tests for scripts/ directory** — The 3 scripts (`check_stray_images.py`, `generate_image_manifest.py`, `check_incorrect_wrapper_usage.py`) contain self-contained logic that is highly testable. Add a `tests/unit/` directory with dedicated unit tests.
 
 ### Priority 1 (High Value)
 
-- **Write unit tests for utilities/ modules** — Start with `path_utils.py`, `registry_utils.py`, `user_utils.py` which have testable logic. Target 60%+ coverage for utility code.
-- **Create `.claude/rules/` with integration-test-specific rules** — Extract patterns from AGENTS.md/CONSTITUTION.md into structured rules. Use `/test-rules-generator` to generate rules for: integration tests, fixture patterns, parametrized tests, upgrade tests.
-- **Add SBOM generation to container build pipeline** — Use `syft` or `cosign attest` (cosign is already installed in the container) to generate SBOMs during merge-time builds
-- **Enable pytest parallel markers and document xdist usage** — pytest-xdist is already a dependency but 0 tests are marked `@pytest.mark.parallel`. Audit test independence and add markers.
+3. **Expand tox CI validation** — The current tox workflow only runs `--collect-only` and `--setup-plan`. Consider adding a small subset of cluster-independent tests (if any exist) or expanding utility code testing.
+
+4. **Create .claude/rules/ directory** — Leverage the excellent AGENTS.md and CONSTITUTION.md by adding machine-readable rules for AI agents. Include test creation patterns, fixture patterns, and utility code patterns.
+
+5. **Convert Dockerfile to multi-stage build** — Separate system deps, Python deps, and test code into build stages for better caching and smaller final image.
 
 ### Priority 2 (Nice-to-Have)
 
-- **Add a lightweight Kind-based E2E smoke test to GitHub Actions** — Deploy a minimal Kind cluster with basic ODH resources, run cluster_health tests to validate core test infrastructure works
-- **Add mutation testing for critical utility functions** — Use `mutmut` on `utilities/` to identify weak test assertions
-- **Integrate Semgrep into GitHub Actions** — The 1,873-line `semgrep.yaml` is only used locally; add a CI workflow to enforce it on PRs
-- **Add Dependabot/Renovate vulnerability alerts to Slack/Teams** — Currently Renovate creates PRs, but there's no alerting channel for critical vulnerabilities
-- **Add CodeQL scanning** — GitHub native SAST for Python code analysis
+6. **Add runtime validation to verify_build_container workflow** — After `make build`, run a simple container smoke test (e.g., `docker run --rm <image> --collect-only tests/cluster_health/`).
+
+7. **Add workflow timeouts** — No workflows have `timeout-minutes` set; add reasonable timeouts to prevent hung builds.
+
+8. **Expand parallel testing to CI** — The parallel testing strategy documented in `PARALLEL_TESTING.md` is not yet integrated into GitHub Actions workflows.
 
 ## Comparison to Gold Standards
 
-| Dimension | opendatahub-tests | odh-dashboard (Gold) | notebooks (Gold) | Gap |
-|-----------|------------------|---------------------|-------------------|-----|
-| Test Architecture | Integration/E2E only | Multi-layer (unit+integ+E2E+contract) | 5-layer validation | No unit tests |
-| Coverage Tracking | None | Codecov with enforcement | Coverage reporting | Critical gap |
-| CI Test Execution | Collect-only | Full test suite on PR | Image validation suite | No PR test execution |
-| Container Scanning | None | Trivy + Snyk | Trivy scanning | No scanning |
-| Pre-commit Quality | 12 hooks (excellent) | 8 hooks | 5 hooks | Exceeds gold standard |
-| Security Scanning | Gitleaks + detect-secrets + semgrep (local) | CodeQL + gitleaks | Trivy | Strong locally, weak in CI |
-| Agent Rules | AGENTS.md + CONSTITUTION.md | .claude/rules/ + CLAUDE.md | None | Missing structured rules |
-| Documentation | Excellent (12 docs) | Good (8 docs) | Basic (3 docs) | Exceeds gold standard |
-| Type Checking | mypy strict + pyrefly | TypeScript strict | N/A | Exceeds gold standard |
-| Dependency Mgmt | Renovate with grouping | Dependabot | Renovate | Strong |
+| Practice | opendatahub-tests | odh-dashboard | notebooks | kserve |
+|----------|-------------------|---------------|-----------|--------|
+| Unit Tests | None (test repo) | Comprehensive | Moderate | Strong |
+| E2E/Integration | Excellent (311 files) | Strong | Strong | Strong |
+| Coverage Tracking | None | Codecov | Moderate | Enforced |
+| CI/CD Workflows | Good (16 workflows) | Comprehensive | Comprehensive | Strong |
+| Static Analysis | Excellent | Strong | Moderate | Strong |
+| Pre-commit | Excellent (11 hooks) | Good | Basic | Good |
+| Agent Rules | Excellent (AGENTS.md + CONSTITUTION) | Good | None | None |
+| Container Build | PR verification | Multi-stage | Multi-layer | Multi-stage |
+| Dependency Mgmt | Renovate | Dependabot | Renovate | Dependabot |
+| Parallel Testing | Documented, not in CI | In CI | In CI | In CI |
+
+**Standout strengths relative to gold standards**:
+- Best-in-class agent documentation (AGENTS.md + CONSTITUTION.md + supporting docs)
+- Most comprehensive pre-commit pipeline (11 hooks)
+- Strong PR workflow automation (labels, reviews, image lifecycle)
+- Excellent test organization with clear component boundaries
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/tox-tests.yml` — PR validation (lint + collect)
+- `.github/workflows/tox-tests.yml` — PR test validation
 - `.github/workflows/verify_build_container.yml` — PR container build
-- `.github/workflows/build-push-container-on-merge.yml` — Merge-time build + push
+- `.github/workflows/build-push-container-on-merge.yml` — Post-merge image push
+- `.github/workflows/check-stray-images.yml` — Stray image detection
 - `.github/workflows/unicode-safety.yml` — Unicode safety scanning
+- `Makefile` — Build and push targets
 
 ### Testing
-- `pytest.ini` — Test configuration with 40+ markers
-- `conftest.py` — Root conftest (21K LOC)
-- `tests/global_config.py` — Distribution-specific configuration
-- `tox.ini` — Tox environments (unused-code + pytest validation)
-- `tests/fixtures/` — Shared fixture modules
+- `tests/` — All test files (311 test files across 9 components)
+- `conftest.py` — Root conftest with pytest hooks and shared fixtures
+- `tests/global_config.py` — Test configuration
+- `pytest.ini` — Pytest configuration with markers and addopts
+- `tox.ini` — Tox environments (unused-code, pytest)
 
-### Code Quality
-- `.pre-commit-config.yaml` — 12 pre-commit hooks
+### Code Quality / Static Analysis
+- `.pre-commit-config.yaml` — 11 pre-commit hooks
+- `pyproject.toml` — ruff, mypy, pyrefly configuration
 - `.flake8` — Flake8 configuration with custom plugins
-- `pyproject.toml` — ruff, mypy, pyrefly, project deps
-- `semgrep.yaml` — 1,873 lines of security rules
-- `.gitleaks.toml` — Secret detection configuration
-- `.coderabbit.yaml` — AI code review configuration
+- `semgrep.yaml` — Comprehensive security scanning rules
+- `.gitleaks.toml` — Gitleaks configuration
+- `renovate.json` — Renovate dependency management
+- `.markdownlint.json` — Markdown linting rules
 
-### Container
-- `Dockerfile` — Fedora 43-based test runner image
-- `Makefile` — Build/push targets
-- `.dockerignore` — Build context exclusions
+### Container Images
+- `Dockerfile` — Test container image (Fedora 43 base)
+- `.dockerignore` — Docker build exclusions
 
-### Documentation
-- `AGENTS.md` — AI agent development instructions
-- `CONSTITUTION.md` — Non-negotiable project principles
-- `PARALLEL_TESTING.md` — Parallel test execution guide
-- `docs/DEVELOPER_GUIDE.md` — Development practices
-- `docs/STYLE_GUIDE.md` — Code style reference
+### Agent Rules
+- `AGENTS.md` — AI assistant instructions
+- `CONSTITUTION.md` — Non-negotiable development principles
+- `docs/DEVELOPER_GUIDE.md` — Contribution workflow
+- `docs/STYLE_GUIDE.md` — Code style guidelines
+- `docs/GETTING_STARTED.md` — Setup instructions
+- `PARALLEL_TESTING.md` — Parallel testing strategy

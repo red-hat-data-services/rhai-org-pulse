@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 05:31 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 06:34 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/rhods-operator</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#28a745"
+                                stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="101.78751600000001"
+                                stroke-dashoffset="130.06182599999997"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">8.2</div>
+                        <div class="score-value">7.7</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">210 unit test files across 105 packages; Ginkgo/Gomega framework; envtest for controller tests; Codecov integration</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">260 test files with Ginkgo/Gomega + Go testing; 351 t.Parallel() calls; envtest and fakeclient patterns</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">51 E2E test files covering 16+ components; KinD-based E2E with label-gated trigger; dedicated gateway integration tests with envtest; cloud manager E2E with multi-provider matrix</div>
+                            <div class="scorecard-status">49 E2E test files covering 16+ components; KinD cluster testing; cloud manager matrix (azure/coreweave/aws)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">PR-time operator + bundle + catalog image builds; Konflux multi-arch pipeline (x86_64, ppc64le, s390x, arm64); no PR-time Konflux simulation but Tekton pipelines defined</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">PR-triggered image builds; Konflux/Tekton pipelines; operator+bundle+catalog builds on PR; early-gate pipeline</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">9 Dockerfiles including Konflux variant; multi-arch builds via Tekton; SBOM generation via Syft; no image startup validation or runtime testing in CI</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Multi-stage UBI9 Dockerfiles; dedicated E2E test image; no runtime validation or Testcontainers</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Codecov integration present but set to informational-only (no enforcement); gateway integration tests generate coverage profiles; no coverage thresholds or PR blocking</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Codecov integration with coverprofile; thresholds set to informational only (not enforced)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">25+ workflows; PR-triggered linting/tests/builds; Tekton/Konflux; path-filtered triggers; prior-run dedup</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">32 GitHub Actions workflows; comprehensive PR checks (lint, unit, E2E, kube-lint, generated files, related images); Tekton/Konflux for production builds; nightly operator builds; automated branch syncing</div>
+                            <div class="scorecard-status">golangci-lint v2 default:all; kube-linter with SARIF; pre-commit hooks; Dependabot (gomod/actions/docker); FIPS-compliant builds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">AGENTS.md with build/test/quality gates; CLAUDE.md; .claude/ directory with rules (symlinked .rules/), skills (diagnose), MCP server; 5 detailed controller pattern rules; AI reviewer meta-guidance</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">CLAUDE.md + AGENTS.md; 6 rule files covering controllers/testing/review; diagnose skill; MCP server integration</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +416,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Coverage enforcement is informational-only</div>
-                            <p>Coverage can silently regress without blocking PRs; no minimum thresholds enforced</p>
+                            <div class="item-description">Coverage thresholds are informational-only (not enforced)</div>
+                            <p>Coverage can silently regress without blocking PRs; no minimum coverage gate</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No container image runtime validation</div>
-                            <p>Image startup failures not caught until deployment; images built on PR but not validated</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">E2E tests require manual label trigger</div>
-                            <p>E2E tests only run when maintainer adds &#x27;run-xks-e2e&#x27; or &#x27;run-integration-tests&#x27; label; easy to skip on PRs</p>
+                            <div class="item-description">No container image runtime validation testing</div>
+                            <p>Image startup issues or missing dependencies not caught until deployment</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No SAST/CodeQL in GitHub Actions</div>
-                            <p>Semgrep rules exist (1873 lines) but no CI workflow runs them; security analysis depends on external tooling</p>
+                            <div class="item-description">Limited CI caching strategy</div>
+                            <p>Slower CI builds; no explicit Go module or Docker layer caching in most workflows</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +453,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Enforce Codecov coverage thresholds</div>
-                            <p>Prevent coverage regression by setting project/patch thresholds in codecov.yml</p>
+                            <div class="item-description">Enforce codecov coverage thresholds</div>
+                            <p>Prevents silent coverage regression on PRs</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Semgrep CI workflow</div>
-                            <p>Activate the existing 1873-line semgrep.yaml ruleset on PRs for automated SAST scanning</p>
+                            <div class="item-description">Add Go module caching to CI workflows</div>
+                            <p>Faster CI builds by caching Go module downloads across runs</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add container startup smoke test to PR build</div>
-                            <p>Validate built operator image starts and responds to health probes before merge</p>
+                            <div class="item-description">Add container startup smoke test to PR workflow</div>
+                            <p>Catches image startup failures before merge</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add agent rules for test patterns</div>
-                            <p>Guide AI agents on unit/E2E test creation patterns specific to this operator&#x27;s Ginkgo framework</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +490,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Enforce Codecov coverage thresholds — switch from informational to blocking with project target ≥ current baseline and patch target ≥ 70%</li><li>Add Semgrep CI workflow to run the existing 1873-line security ruleset on every PR</li></ul>
+                            <ul><li>Enforce codecov coverage thresholds (change informational:true to target values with minimum patch coverage)</li><li>Add container startup validation — build image on PR and verify it starts cleanly with health endpoints</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add container image startup validation — smoke test the built operator image (health endpoint, basic CRD handling) in the PR build workflow</li><li>Create agent rules for test creation patterns (unit-tests.md, e2e-tests.md) under .claude/rules/</li><li>Consider making a lightweight E2E suite that runs automatically on PRs (without label gating) for core reconciliation paths</li></ul>
+                            <ul><li>Add explicit Go module caching (actions/cache) to unit-test and linter workflows</li><li>Add concurrency controls to more PR workflows to cancel stale runs</li><li>Add coverage reporting to gateway integration tests (upload to Codecov)</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add Trivy or similar container vulnerability scanning to PR workflow</li><li>Add integration test coverage reporting to Codecov alongside unit tests</li><li>Consider adding contract tests for cross-component API boundaries</li></ul>
+                            <ul><li>Add multi-architecture image build validation in PR workflows</li><li>Add Testcontainers or equivalent for operator container runtime validation</li><li>Add performance/resource benchmarking for operator reconciliation</li></ul>
                         </div>
                     </div>
                 </div>

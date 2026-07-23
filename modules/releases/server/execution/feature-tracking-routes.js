@@ -14,6 +14,7 @@
 const { readRegistry } = require('../registry')
 const { fetchPlanningFreezeDatesFromSchedule } = require('../delivery/product-pages')
 const { CUSTOM_FIELDS, transformIssue } = require('../hygiene/jira-fetch')
+const versionUtils = require('../version-utils')
 
 const PP_CACHE_FILE = 'releases/delivery/product-pages-releases-cache.json'
 const PLANNING_CONFIG_FILE = 'releases/planning/config.json'
@@ -21,10 +22,66 @@ const TRACKING_CONFIG_FILE = 'releases/execution/feature-tracking-config.json'
 const TRACKING_CACHE_PREFIX = 'releases/execution/tracking-data-'
 const CACHE_TTL_MS = 10 * 60 * 1000
 const DEFAULT_PRODUCTS = ['rhoai', 'rhelai', 'RHAII']
-const DEFAULT_PROJECTS = ['RHAISTRAT', 'RHOAIENG', 'AIPCC', 'RHAIENG', 'INFERENG']
-const DEFAULT_ISSUE_TYPES = ['Feature', 'Initiative']
+const DEFAULT_PROJECTS = ['RHAISTRAT', 'AIPCC', 'INFERENG']
+const DEFAULT_ISSUE_TYPES = ['Feature']
 
 const EXCLUDE_VERSION_RE = /^\d+\.\d+\.\d+$/
+
+// Map: new version name (lowercased) -> old version names (lowercased)
+// Used to detect version renames in changelog so they aren't counted as
+// late additions or drops.
+const VERSION_RENAMES = {
+  '3.5 ga rhoai release': ['rhoai-3.5'],
+  '3.5 ea2 rhoai release': ['rhoai-3.5.ea2'],
+  '3.5 ea1 rhoai release': ['rhoai-3.5 ea1'],
+  '3.5 ga rhaii release': ['rhaii-3.5 ga'],
+  '3.5 ea2 rhaii release': ['rhaii-3.5 ea2'],
+  '3.5 ea1 rhaii release': ['rhaii-3.5 ea1'],
+  '3.5 ga rhel ai release': ['rhel ai 3.5 ga'],
+  '3.5 ea2 rhel ai release': ['rhel ai-3.5 ea2'],
+  '3.5 ea1 rhel ai release': ['rhel ai-3.5 ea1'],
+  '3.6 ga rhoai release': ['rhoai-3.6'],
+  '3.6 ea2 rhoai rlease': ['rhoai-3.6 ea2'],
+  '3.6 ea1 rhoai release': ['rhoai-3.6 ea1'],
+  '3.6 ga rhaii release': ['rhaii-3.6'],
+  '3.6 ea1 rhaii release': ['rhaii-3.6-ea1'],
+  '3.6 ga rhel ai release': ['rhel ai 3.6 ga'],
+  '3.6 ea2 rhel ai release': ['rhel ai-3.6 ea2'],
+  '3.6 ea1 rhel ai release': ['rhel ai-3.6 ea1']
+}
+
+// Reverse map: old version name (lowercased) -> new version names (lowercased)
+const VERSION_RENAMES_REVERSE = {}
+for (const newName of Object.keys(VERSION_RENAMES)) {
+  for (const oldName of VERSION_RENAMES[newName]) {
+    if (!VERSION_RENAMES_REVERSE[oldName]) VERSION_RENAMES_REVERSE[oldName] = []
+    VERSION_RENAMES_REVERSE[oldName].push(newName)
+  }
+}
+
+function getOldVersionNames(fixVersionNames) {
+  const names = Array.isArray(fixVersionNames) ? fixVersionNames : [fixVersionNames]
+  const oldNames = {}
+  for (let i = 0; i < names.length; i++) {
+    const old = VERSION_RENAMES[names[i].toLowerCase()]
+    if (old) {
+      for (let j = 0; j < old.length; j++) oldNames[old[j]] = true
+    }
+  }
+  return oldNames
+}
+
+function getNewVersionNames(fixVersionNames) {
+  const names = Array.isArray(fixVersionNames) ? fixVersionNames : [fixVersionNames]
+  const newNames = {}
+  for (let i = 0; i < names.length; i++) {
+    const renamed = VERSION_RENAMES_REVERSE[names[i].toLowerCase()]
+    if (renamed) {
+      for (let j = 0; j < renamed.length; j++) newNames[renamed[j]] = true
+    }
+  }
+  return newNames
+}
 
 const FIELDS_TO_FETCH = [
   'summary', 'status', 'issuetype', 'assignee', 'fixVersions', 'versions',
@@ -32,70 +89,20 @@ const FIELDS_TO_FETCH = [
   CUSTOM_FIELDS.team,
   CUSTOM_FIELDS.statusSummary,
   CUSTOM_FIELDS.colorStatus,
-  CUSTOM_FIELDS.productManager
+  CUSTOM_FIELDS.productManager,
+  CUSTOM_FIELDS.blockedDropdown
 ].join(',')
 
 function cacheKey(portfolioVersion) {
   return TRACKING_CACHE_PREFIX + portfolioVersion + '.json'
 }
 
-/**
- * Extract the product prefix from a release number.
- * e.g. "rhoai-3.5.EA1" → "rhoai", "RHAII-3.5" → "rhaii"
- */
 function extractProduct(releaseNumber) {
-  const s = (releaseNumber || '').toLowerCase()
-  const dash = s.indexOf('-')
-  return dash > 0 ? s.slice(0, dash) : s
-}
-
-/**
- * Normalize a version string for comparison: lowercase, strip separators
- * between version number and EA/GA tag, and strip trailing suffixes like
- * "release". Handles all observed naming conventions:
- *   "rhoai-3.5.EA2"            → "rhoai-3.5ea2"
- *   "RHAII-3.5 EA2"            → "rhaii-3.5ea2"
- *   "rhelai-3.5EA2"            → "rhelai-3.5ea2"
- *   "rhelai-3.5 EA2 release"   → "rhelai-3.5ea2"
- *   "RHELAI-3.4 EA-1"          → "rhelai-3.4ea1"
- */
-function stripZStream(value) {
-  if (!value) return value
-  return String(value).replace(/\.z\b/gi, '')
+  return versionUtils.extractProduct(releaseNumber) || (releaseNumber || '').toLowerCase()
 }
 
 function normalizeVersionName(name) {
-  let s = (name || '').toLowerCase()
-  s = stripZStream(s)
-  if (s.endsWith(' release')) s = s.slice(0, -8)
-  s = s.trimEnd()
-
-  const SEPS = ' ._-'
-  let result = ''
-  let i = 0
-  while (i < s.length) {
-    const ch = s[i]
-
-    if (SEPS.includes(ch) && i > 0 && s.charCodeAt(i - 1) >= 48 && s.charCodeAt(i - 1) <= 57) {
-      let j = i
-      while (j < s.length && SEPS.includes(s[j])) j++
-      const tag = s.slice(j, j + 2)
-      if (tag === 'ea' || tag === 'ga') {
-        i = j
-        continue
-      }
-    }
-
-    if (ch === 'e' && i + 3 < s.length && s[i + 1] === 'a' && s[i + 2] === '-' && s.charCodeAt(i + 3) >= 48 && s.charCodeAt(i + 3) <= 57) {
-      result += 'ea'
-      i += 3
-      continue
-    }
-
-    result += s[i]
-    i++
-  }
-  return result
+  return versionUtils.normalizeVersionName(name || '')
 }
 
 const jiraVersionsCache = { versions: null, fetchedAt: 0 }
@@ -148,7 +155,7 @@ async function resolveProductVersionsFromJira(portfolioVersion, jiraRequestFn, t
     if (!product) continue
 
     const normalizedName = normalizeVersionName(v.name)
-    const versionPart = normalizedName.replace(/^[a-z]+-/, '')
+    const versionPart = normalizedName.replace(/^(?:rhoai|rhaiis|rhaii|rhelai|rhai)\s+/, '')
 
     if (versionPart === normalizedPortfolio) {
       if (!productMap[product]) {
@@ -224,6 +231,8 @@ async function fetchFeaturesByFixVersion(fixVersions, jiraRequestFn, fetchAllJql
     seen[raw.key] = true
     const transformed = transformIssue(raw, {})
     transformed.fixVersionAddedAt = findFixVersionAddedDate(raw.changelog, versions)
+    var blockedField = raw.fields && raw.fields[CUSTOM_FIELDS.blockedDropdown]
+    transformed.isBlocked = !!(blockedField && blockedField.value === 'True')
     features.push(transformed)
   }
 
@@ -234,6 +243,11 @@ async function fetchFeaturesByFixVersion(fixVersions, jiraRequestFn, fetchAllJql
  * Parse changelog to find when a fixVersion was added to the issue.
  * Accepts a single version name or an array of names to match against
  * (handles naming variants like "rhelai-3.5EA2" / "rhelai-3.5 EA2 release").
+ *
+ * If the addition was part of a version rename (old version removed in the
+ * same changelog entry), returns when the OLD version was originally added
+ * instead, so that renames aren't counted as late additions.
+ *
  * Returns ISO timestamp string or null if not found in changelog.
  */
 function findFixVersionAddedDate(changelog, fixVersionNames) {
@@ -245,6 +259,8 @@ function findFixVersionAddedDate(changelog, fixVersionNames) {
     normalizedTargets[targets[ti].toLowerCase()] = true
   }
 
+  const oldNames = getOldVersionNames(targets)
+
   for (let i = 0; i < changelog.histories.length; i++) {
     const history = changelog.histories[i]
     const items = history.items || []
@@ -254,6 +270,18 @@ function findFixVersionAddedDate(changelog, fixVersionNames) {
       if (item.field !== 'Fix Version' && item.fieldId !== 'fixVersions') continue
       const toString = (item.toString || '').toLowerCase()
       if (normalizedTargets[toString]) {
+        if (Object.keys(oldNames).length > 0) {
+          var isRename = false
+          for (let k = 0; k < items.length; k++) {
+            if (items[k].field !== 'Fix Version' && items[k].fieldId !== 'fixVersions') continue
+            var fromStr = (items[k].fromString || '').toLowerCase()
+            if (oldNames[fromStr]) { isRename = true; break }
+          }
+          if (isRename) {
+            var oldDate = findFixVersionAddedDate(changelog, Object.keys(oldNames))
+            if (oldDate) return oldDate
+          }
+        }
         return history.created
       }
     }
@@ -311,12 +339,25 @@ async function fetchDroppedFeatures(fixVersions, jiraRequestFn, fetchAllJqlResul
       expand: 'renderedFields,changelog'
     })
 
+    const renamedToNames = getNewVersionNames(versions)
+
     const dropped = []
     for (let i = 0; i < rawIssues.length; i++) {
       const raw = rawIssues[i]
       if (currentKeys[raw.key]) continue
+
+      var currentFixVersions = (raw.fields && raw.fields.fixVersions) || []
+      var wasRenamed = false
+      for (let fvi = 0; fvi < currentFixVersions.length; fvi++) {
+        var fvName = (currentFixVersions[fvi].name || '').toLowerCase()
+        if (renamedToNames[fvName]) { wasRenamed = true; break }
+      }
+      if (wasRenamed) continue
+
       const transformed = transformIssue(raw, {})
       transformed.fixVersionRemovedAt = findFixVersionRemovedDate(raw.changelog, versions)
+      var droppedBlockedField = raw.fields && raw.fields[CUSTOM_FIELDS.blockedDropdown]
+      transformed.isBlocked = !!(droppedBlockedField && droppedBlockedField.value === 'True')
 
       if (freezeDate) {
         const removedDate = transformed.fixVersionRemovedAt
@@ -376,8 +417,8 @@ function findFixVersionRemovedDate(changelog, fixVersionNames) {
  * Returns a map: { "rhoai-3.5.EA1": "2026-05-15", "rhelai-3.5.EA1": "2026-04-17", ... }
  * Also returns the earliest date across products as a portfolio-level fallback.
  */
-function getFeatureFreezeDatesFromCache(portfolioVersion, readFromStorage) {
-  const ppCache = readFromStorage(PP_CACHE_FILE)
+async function getFeatureFreezeDatesFromCache(portfolioVersion, readFromStorage) {
+  const ppCache = await readFromStorage(PP_CACHE_FILE)
   const ppReleases = Array.isArray(ppCache) ? ppCache : (ppCache && ppCache.releases) || []
 
   const normalizedPortfolio = normalizeVersionName(portfolioVersion)
@@ -495,24 +536,25 @@ function validateTrackingConfig(body) {
   return null
 }
 
-function loadTrackingConfig(readFromStorage) {
-  var config = readFromStorage(TRACKING_CONFIG_FILE)
+async function loadTrackingConfig(readFromStorage) {
+  var config = await readFromStorage(TRACKING_CONFIG_FILE)
   return config || { releases: {} }
 }
 
-module.exports = function registerFeatureTrackingRoutes(router, context) {
+module.exports = async function registerFeatureTrackingRoutes(router, context) {
   const storage = context.storage
   const requireAuth = context.requireAuth
   const requireScope = context.requireScope
 
   // GET /tracking/versions
-  router.get('/tracking/versions', requireAuth, requireScope('releases:read'), function (req, res) {
+  router.get('/tracking/versions', requireAuth, requireScope('releases:read'), async function (req, res) {
     const versionMap = {}
 
     function addVersion(releaseNumber) {
-      const normalized = stripZStream(releaseNumber)
-      const product = extractProduct(normalized)
-      const versionPart = (normalized || '').replace(/^[a-z]+-/i, '')
+      const components = versionUtils.parseVersionComponents(releaseNumber)
+      if (!components) return
+      const product = components.product
+      const versionPart = components.version + (components.phase ? '.' + components.phase : '')
       if (!versionPart || !product) return
       if (EXCLUDE_VERSION_RE.test(versionPart)) return
       if (!versionMap[versionPart]) {
@@ -523,7 +565,7 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
       }
     }
 
-    const registry = readRegistry(storage.readFromStorage)
+    const registry = await readRegistry(storage.readFromStorage)
     const registryReleases = registry.releases || []
     for (let ri = 0; ri < registryReleases.length; ri++) {
       const rel = registryReleases[ri]
@@ -531,13 +573,13 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
       addVersion(rel.displayName || rel.id || '')
     }
 
-    const ppCache = storage.readFromStorage(PP_CACHE_FILE)
+    const ppCache = await storage.readFromStorage(PP_CACHE_FILE)
     const ppReleases = Array.isArray(ppCache) ? ppCache : (ppCache && ppCache.releases) || []
     for (let pi = 0; pi < ppReleases.length; pi++) {
       if (ppReleases[pi].releaseNumber) addVersion(ppReleases[pi].releaseNumber)
     }
 
-    const planningConfig = storage.readFromStorage(PLANNING_CONFIG_FILE)
+    const planningConfig = await storage.readFromStorage(PLANNING_CONFIG_FILE)
     if (planningConfig && planningConfig.releases) {
       const configVersions = Object.keys(planningConfig.releases)
       for (let ci = 0; ci < configVersions.length; ci++) {
@@ -549,7 +591,7 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
     }
 
     // Source 4: feature tracking config (user-defined releases)
-    const trackingConfig = loadTrackingConfig(storage.readFromStorage)
+    const trackingConfig = await loadTrackingConfig(storage.readFromStorage)
     if (trackingConfig.releases) {
       const trackingVersions = Object.keys(trackingConfig.releases)
       for (let ti = 0; ti < trackingVersions.length; ti++) {
@@ -581,7 +623,7 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
       if (userDate) {
         versions[vi].planningFreezeDate = userDate
       } else {
-        const fd = getFeatureFreezeDatesFromCache(vKey, storage.readFromStorage)
+        const fd = await getFeatureFreezeDatesFromCache(vKey, storage.readFromStorage)
         versions[vi].planningFreezeDate = fd.earliest || null
       }
     }
@@ -604,28 +646,43 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
     }
 
     const forceRefresh = req.query.refresh === 'true'
+    const demoMode = process.env.DEMO_MODE === 'true'
 
     try {
       if (!forceRefresh) {
-        const cached = storage.readFromStorage(cacheKey(version))
+        const cached = await storage.readFromStorage(cacheKey(version))
         if (cached && cached.fetchedAt) {
           const age = Date.now() - new Date(cached.fetchedAt).getTime()
-          if (age < CACHE_TTL_MS) {
+          if (age < CACHE_TTL_MS || demoMode) {
             if (!cached.planningFreezeDate && cached.featureFreezeDate) {
               cached.planningFreezeDate = cached.featureFreezeDate
             }
             return res.json(cached)
           }
         }
+        if (demoMode) {
+          return res.json({ portfolioVersion: version, planningFreezeDate: null, fetchedAt: new Date().toISOString(), totalUniqueFeatures: 0, groups: [] })
+        }
+      }
+
+      if (demoMode) {
+        const cached = await storage.readFromStorage(cacheKey(version))
+        if (cached) {
+          if (!cached.planningFreezeDate && cached.featureFreezeDate) {
+            cached.planningFreezeDate = cached.featureFreezeDate
+          }
+          return res.json(cached)
+        }
+        return res.json({ portfolioVersion: version, planningFreezeDate: null, fetchedAt: new Date().toISOString(), totalUniqueFeatures: 0, groups: [] })
       }
 
       const jira = require('../../../../shared/server/jira')
       const jiraRequest = jira.jiraRequest
       const fetchAllJqlResults = jira.fetchAllJqlResults
 
-      const tConfig = loadTrackingConfig(storage.readFromStorage)
+      const tConfig = await loadTrackingConfig(storage.readFromStorage)
       const productVersions = await resolveProductVersionsFromJira(version, jiraRequest, tConfig)
-      const freezeDates = getFeatureFreezeDatesFromCache(version, storage.readFromStorage)
+      const freezeDates = await getFeatureFreezeDatesFromCache(version, storage.readFromStorage)
       const cacheDates = Object.assign({}, freezeDates.byProduct)
 
       // Always try the schedule API — it returns EA-specific freeze dates
@@ -712,6 +769,7 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
             return {
               key: f.key,
               summary: f.summary || '',
+              issueType: f.issueType || null,
               colorStatus: f.colorStatus || null,
               statusSummary: f.statusSummary || null,
               isBlocked: f.isBlocked || false,
@@ -719,6 +777,7 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
               assignee: f.assignee || null,
               pmOwner: f.pmOwner || null,
               status: f.status || null,
+              team: f.team || null,
               scopeChange: f.scopeChange || null,
               fixVersionAddedAt: f.fixVersionAddedAt || null,
               fixVersionRemovedAt: f.fixVersionRemovedAt || null
@@ -727,17 +786,28 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
         })
       }
 
+      const allKeys = {}
+      for (let gi = 0; gi < groups.length; gi++) {
+        var gFeatures = groups[gi].features || []
+        for (let fi = 0; fi < gFeatures.length; fi++) {
+          if (gFeatures[fi].scopeChange !== 'dropped') {
+            allKeys[gFeatures[fi].key] = true
+          }
+        }
+      }
+
       const responseData = {
         portfolioVersion: version,
         planningFreezeDate: freezeDates.earliest,
         fetchedAt: new Date().toISOString(),
+        totalUniqueFeatures: Object.keys(allKeys).length,
         groups: groups,
         _freezeDateSource: scheduleSource,
         _freezeDatesCache: cacheDates,
         _freezeDatesFinal: Object.assign({}, freezeDates.byProduct)
       }
 
-      storage.writeToStorage(cacheKey(version), responseData)
+      await storage.writeToStorage(cacheKey(version), responseData)
 
       res.json(responseData)
     } catch (err) {
@@ -747,16 +817,16 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
   })
 
   // GET /tracking/config
-  router.get('/tracking/config', requireAuth, requireScope('releases:read'), function (req, res) {
-    res.json(loadTrackingConfig(storage.readFromStorage))
+  router.get('/tracking/config', requireAuth, requireScope('releases:read'), async function (req, res) {
+    res.json(await loadTrackingConfig(storage.readFromStorage))
   })
 
   // PUT /tracking/config
-  router.put('/tracking/config', requireAuth, requireScope('releases:write'), function (req, res) {
+  router.put('/tracking/config', requireAuth, requireScope('releases:write'), async function (req, res) {
     var err = validateTrackingConfig(req.body)
     if (err) return res.status(400).json({ error: err })
     var config = { releases: req.body.releases }
-    storage.writeToStorage(TRACKING_CONFIG_FILE, config)
+    await storage.writeToStorage(TRACKING_CONFIG_FILE, config)
     res.json(config)
   })
 

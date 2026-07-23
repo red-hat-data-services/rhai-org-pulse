@@ -39,6 +39,7 @@ import { useConformaExceptions } from '../deliver/composables/useConformaExcepti
 import ReleaseChipBar from '../deliver/components/ReleaseChipBar.vue'
 
 const RiskDashboard = defineAsyncComponent(() => import('../deliver/views/MainView.vue'))
+const ReleaseBlockers = defineAsyncComponent(() => import('../deliver/views/ReleaseBlockersView.vue'))
 const ConformaInsights = defineAsyncComponent(() => import('../deliver/views/ConformaExceptionsView.vue'))
 
 const { loading, refreshing, error, analysis, refreshAnalysis } = useReleaseAnalysis()
@@ -61,6 +62,7 @@ provide('conformaState', conformaState)
 
 const tabs = [
   { id: 'risk-dashboard', label: 'Risk Dashboard' },
+  { id: 'release-blockers', label: 'Release Blockers' },
   { id: 'conforma-insights', label: 'Conforma Insights' },
 ]
 
@@ -91,6 +93,7 @@ if (moduleNav && moduleNav.params) {
 
 const componentMap = {
   'risk-dashboard': RiskDashboard,
+  'release-blockers': ReleaseBlockers,
   'conforma-insights': ConformaInsights,
 }
 

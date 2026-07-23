@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:13 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 04:04 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/model-metadata-collection</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#ffc107"
+                                stroke="#fd7e14"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="214.88475599999998"
+                                stroke-dashoffset="260.12365199999994"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">6.2</div>
+                        <div class="score-value">5.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Strong coverage with 23 test files, 8753 LOC tests vs 7636 LOC source (1.15:1 ratio)</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Excellent 1.14:1 test-to-code ratio with well-structured table-driven tests across all major packages</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Registry integration tests exist but are skipped; no E2E test suite</div>
+                            <div class="scorecard-status">Integration tests exist but are skipped by default; no E2E test infrastructure</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Docker build on PRs (path-filtered) with multi-arch; no Konflux simulation</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">PR-time Docker build with multi-arch support (amd64/arm64/ppc64le); no Konflux simulation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.5/10</div>
-                            <div class="scorecard-status">Multi-arch build with caching; no runtime validation or startup tests</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">UBI9-micro base image with non-root user; no runtime validation or HEALTHCHECK</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Makefile target exists (test-coverage) but no CI integration or enforcement</div>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">Local coverage tooling in Makefile but no CI integration, thresholds, or PR reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Lint + test on PRs; Docker build on path changes; branch sync automation</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">PR lint+test+build pipelines with branch sync; missing concurrency control and timeouts</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">golangci-lint v2.11.4 in CI with pre-commit hooks; no Dependabot/Renovate configured</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Comprehensive CLAUDE.md with architecture and commands; no .claude/rules/ directory</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Comprehensive CLAUDE.md with architecture docs and checklists; missing .claude/rules/ for test patterns</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +416,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No coverage tracking or enforcement in CI</div>
-                            <p>Coverage regressions go undetected; no visibility into test quality trends</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No security scanning (Trivy, CodeQL, SAST)</div>
-                            <p>Vulnerabilities in dependencies and container images not detected before merge</p>
+                            <div class="item-description">No coverage tracking in CI</div>
+                            <p>Coverage regressions go undetected; no visibility into test effectiveness on PRs</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container runtime validation</div>
-                            <p>Image startup issues and data integrity not verified until deployment</p>
+                            <div class="item-description">Integration tests skipped by default</div>
+                            <p>Registry interaction code not validated in CI; regressions only caught manually</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No E2E or integration test automation</div>
-                            <p>End-to-end pipeline correctness only verified manually; registry tests skipped in CI</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">12-20 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Two packages have zero test coverage</div>
-                            <p>cmd/metadata-report and internal/report have no tests</p>
+                            <div class="item-description">No dependency alert configuration</div>
+                            <p>Vulnerable or outdated dependencies not flagged automatically</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No concurrency control in CI workflows</div>
+                            <p>Redundant CI runs on rapid pushes waste resources and can cause conflicts</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -464,35 +461,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to CI</div>
-                            <p>Catch vulnerabilities in UBI9-micro base image and copied data files</p>
+                            <div class="item-description">Add Dependabot configuration for Go modules and GitHub Actions</div>
+                            <p>Automated dependency update PRs with security alerts</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Codecov integration to CI workflow</div>
-                            <p>Automated coverage tracking with PR comments and trend visibility</p>
+                            <div class="item-description">Add codecov integration to CI workflow</div>
+                            <p>Coverage visibility on every PR with threshold enforcement</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add golangci-lint config file</div>
-                            <p>Explicit linter selection and consistent config across CI and local runs</p>
+                            <div class="item-description">Add concurrency control to CI workflows</div>
+                            <p>Cancel redundant CI runs on rapid pushes</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add unit tests for cmd/metadata-report and internal/report</div>
-                            <p>Close the two zero-coverage package gaps</p>
+                            <div class="item-description">Pin action SHAs in all workflows (not just ci.yml)</div>
+                            <p>Consistent supply chain security across all workflows</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">3-4 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add Codecov/Coveralls integration to CI with coverage thresholds</li><li>Add container security scanning (Trivy) to PR and push workflows</li><li>Enable CodeQL or gosec for static application security testing</li></ul>
+                            <ul><li>Add codecov/coveralls integration with coverage thresholds to CI pipeline</li><li>Enable integration tests in CI (at minimum the registry tests) with proper mocking or test registries</li><li>Configure Dependabot for gomod and github-actions ecosystems</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Create integration tests that validate catalog generation end-to-end</li><li>Add container runtime validation (startup test, data file integrity checks)</li><li>Add .claude/rules/ with test creation guidelines for unit, integration, and catalog tests</li><li>Add tests for cmd/metadata-report and internal/report packages</li></ul>
+                            <ul><li>Add concurrency control and timeout-minutes to all CI workflows</li><li>Create a .golangci.yaml config to enforce stricter linting rules beyond defaults</li><li>Add .claude/rules/ with test creation patterns (unit-tests.md, integration-tests.md)</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add Dependabot or Renovate for automated dependency updates</li><li>Create a golangci-lint config file with explicit linter selection</li><li>Add SBOM generation to container image builds</li><li>Add secret detection (Gitleaks) to pre-commit and CI</li></ul>
+                            <ul><li>Add HEALTHCHECK to Dockerfile for container runtime validation</li><li>Add container startup validation test in CI (build image, run, verify data files exist)</li><li>Pin all GitHub Action references to SHA (sync workflows currently use version tags)</li></ul>
                         </div>
                     </div>
                 </div>

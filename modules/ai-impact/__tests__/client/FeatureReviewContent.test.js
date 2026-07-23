@@ -4,13 +4,17 @@ import FeatureReviewContent from '../../client/components/FeatureReviewContent.v
 
 // Mock chart.js to avoid canvas errors in tests
 vi.mock('vue-chartjs', () => ({
-  Bar: { template: '<div class="mock-bar-chart" />' }
+  Bar: { template: '<div class="mock-bar-chart" />' },
+  Line: { template: '<div class="mock-line-chart" />' }
 }));
 vi.mock('chart.js', () => ({
   Chart: { register: vi.fn() },
   CategoryScale: {},
   LinearScale: {},
+  PointElement: {},
+  LineElement: {},
   BarElement: {},
+  Filler: {},
   Title: {},
   Tooltip: {},
   Legend: {}
@@ -64,11 +68,14 @@ describe('FeatureReviewContent', () => {
         reviewedAt: '2026-04-19T12:00:00Z'
       }
     };
+    const metrics = {
+      windowTotal: 1, priorWindowTotal: 0, volumeChange: 1, trend: 'growing',
+      approvalRate: 100, needsAttentionCount: 0, priorNeedsAttentionCount: 0, totalFeatures: 1
+    };
     const wrapper = mount(FeatureReviewContent, {
-      props: { features }
+      props: { features, metrics }
     });
-    // Should render metrics row with total count
     expect(wrapper.text()).toContain('1');
-    expect(wrapper.text()).toContain('100%'); // approval rate
+    expect(wrapper.text()).toContain('100%');
   });
 });

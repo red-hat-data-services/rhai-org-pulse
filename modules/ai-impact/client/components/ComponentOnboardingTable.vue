@@ -37,6 +37,16 @@ function sortIcon(key) {
 const search = ref('')
 const completionFilter = ref('all')
 const productFilter = ref('all')
+const targetVersionFilter = ref('all')
+
+const targetVersionOptions = computed(() => {
+  const versions = new Set()
+  Object.values(props.components).forEach(c => {
+    if (c.targetVersion) versions.add(c.targetVersion)
+  })
+  return [...versions].sort()
+})
+
 // ── Derived list ──────────────────────────────────────────────────────────────
 const selectedKey = ref(null)
 
@@ -59,8 +69,11 @@ const componentList = computed(() => {
   return Object.values(props.components)
     .filter(c => (c.onboardingMethod || 'automated') === 'automated')
     .filter(c => {
-      if (completionFilter.value !== 'all' && c.completionStatus !== completionFilter.value) return false
+      if (completionFilter.value !== 'all') {
+        if (c.completionStatus !== completionFilter.value) return false
+      }
       if (productFilter.value !== 'all' && c.productContext !== productFilter.value) return false
+      if (targetVersionFilter.value !== 'all' && (c.targetVersion || '') !== targetVersionFilter.value) return false
       if (!q) return true
       return (
         c.key.toLowerCase().includes(q) ||
@@ -135,6 +148,39 @@ function selectRow(key) {
 function stepsDone(component) {
   return Object.values(component.onboardingSteps || {}).filter(Boolean).length
 }
+
+function completionStatusLabel(status) {
+  switch (status) {
+    case 'completed': return 'Completed'
+    case 'in_queue':
+    case 'new': // legacy history entries
+      return 'In Queue'
+    case 'in-progress': return 'In Progress'
+    default: return status
+  }
+}
+
+function completionStatusBadgeClass(status) {
+  switch (status) {
+    case 'completed':
+      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+    case 'in_queue':
+    case 'new': // legacy history entries
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+    default:
+      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+  }
+}
+
+function completionStatusDotClass(status) {
+  switch (status) {
+    case 'completed': return 'bg-green-500'
+    case 'in_queue':
+    case 'new': // legacy history entries
+      return 'bg-blue-500'
+    default: return 'bg-amber-500'
+  }
+}
 </script>
 
 <template>
@@ -162,6 +208,7 @@ function stepsDone(component) {
         <option value="all">All statuses</option>
         <option value="completed">Completed</option>
         <option value="in-progress">In Progress</option>
+        <option value="in_queue">In Queue</option>
       </select>
 
       <!-- Product filter -->
@@ -172,6 +219,15 @@ function stepsDone(component) {
         <option value="all">All products</option>
         <option value="RHOAI">RHOAI</option>
         <option value="ODH">ODH</option>
+      </select>
+
+      <!-- Target Version filter -->
+      <select
+        v-model="targetVersionFilter"
+        class="text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="all">All versions</option>
+        <option v-for="v in targetVersionOptions" :key="v" :value="v">{{ v }}</option>
       </select>
 
       <span class="ml-auto text-xs text-gray-400 dark:text-gray-500">
@@ -206,6 +262,9 @@ function stepsDone(component) {
             @click="setSort('status')"
           >
             Status <span class="ml-1 opacity-60">{{ sortIcon('status') }}</span>
+          </th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-28">
+            Target Version
           </th>
           <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
             Features
@@ -262,15 +321,16 @@ function stepsDone(component) {
             <td class="px-4 py-3">
               <span
                 class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
-                :class="component.completionStatus === 'completed'
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                  : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'"
+                :class="completionStatusBadgeClass(component.completionStatus)"
               >
                 <span class="h-1.5 w-1.5 rounded-full"
-                  :class="component.completionStatus === 'completed' ? 'bg-green-500' : 'bg-amber-500'"
+                  :class="completionStatusDotClass(component.completionStatus)"
                 />
-                {{ component.completionStatus === 'completed' ? 'Completed' : 'In Progress' }}
+                {{ completionStatusLabel(component.completionStatus) }}
               </span>
+            </td>
+            <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">
+              {{ component.targetVersion || '—' }}
             </td>
             <td class="px-4 py-3">
               <div class="flex flex-wrap gap-1">
@@ -320,7 +380,7 @@ function stepsDone(component) {
 
           <!-- Expanded detail row -->
           <tr v-if="selectedKey === component.key" class="bg-gray-50 dark:bg-gray-800/50">
-            <td colspan="8" class="px-6 py-5">
+            <td colspan="9" class="px-6 py-5">
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-sm">
 
                 <!-- Repo & metadata -->
@@ -334,6 +394,10 @@ function stepsDone(component) {
                           ? 'text-red-700 dark:text-red-300'
                           : 'text-blue-700 dark:text-blue-300'"
                       >{{ component.productContext }}</span>
+                    </div>
+                    <div v-if="component.targetVersion" class="flex gap-2">
+                      <span class="text-gray-400 w-20 flex-shrink-0">Version</span>
+                      <span class="font-medium text-gray-700 dark:text-gray-300">{{ component.targetVersion }}</span>
                     </div>
                     <div v-if="component.isOperator || detailCache[component.key]?.latest?.isOperator" class="flex gap-2">
                       <span class="text-gray-400 w-20 flex-shrink-0">Type</span>
@@ -394,10 +458,8 @@ function stepsDone(component) {
                         <span class="text-gray-400 dark:text-gray-500">{{ new Date(h.syncedAt).toLocaleDateString() }}</span>
                         <span
                           class="px-1.5 py-0.5 rounded-full"
-                          :class="h.completionStatus === 'completed'
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                            : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'"
-                        >{{ h.completionStatus }}</span>
+                          :class="completionStatusBadgeClass(h.completionStatus)"
+                        >{{ completionStatusLabel(h.completionStatus) }}</span>
                         <span class="text-gray-400">{{ Object.values(h.onboardingSteps || {}).filter(Boolean).length }}/{{ STEPS.length }} steps</span>
                       </div>
                     </div>

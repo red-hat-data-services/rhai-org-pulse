@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:05 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 06:00 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/ogx</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#28a745"
+                                stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="90.47779199999995"
+                                stroke-dashoffset="124.40696399999997"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">8.4</div>
+                        <div class="score-value">7.8</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">230 test files with pytest, coverage generation, pytest-socket network isolation</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Strong coverage with 1096+ test functions, pytest-socket for network isolation, coverage generation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">96 integration test files, recording/replay system with 3,406 recordings, OpenResponses conformance, backward compatibility checks</div>
+                            <div class="scorecard-status">Exceptional recording/replay system, multi-provider matrix, real database integration tests, Playwright E2E</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">PR-time provider builds (venv mode), distribution matrix builds, container build on push/schedule but not container on PR</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">PR-triggered Docker builds with multi-arch validation and container startup checks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Containerfile with multi-arch support, installer smoke test, but limited runtime validation and no image scanning on PR</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Multi-arch builds and basic runtime validation but no HEALTHCHECK or Testcontainers</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Coverage generation via coverage.py with HTML reports, SVG badge, but no codecov/coveralls integration or enforcement thresholds</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Coverage generated locally but no codecov integration, no thresholds, no PR reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
-                            <div class="scorecard-status">42+ workflows, concurrency control, SHA-pinned actions, merge group support, CI status aggregator, dynamic matrix generation</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">40+ workflows with concurrency control, matrix strategies, SHA-pinned actions, scheduled runs</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Ruff + mypy + 25+ pre-commit hooks including FIPS compliance, SQL injection prevention, actionlint</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">CLAUDE.md and AGENTS.md with comprehensive coding standards, testing patterns, and provider architecture guidance</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Comprehensive AGENTS.md with testing guidance, CLAUDE.md present, no .claude/rules/ directory</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +416,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No coverage enforcement or threshold gates</div>
-                            <p>Coverage can silently regress without any PR checks failing</p>
+                            <div class="item-description">No coverage tracking or enforcement in CI</div>
+                            <p>Coverage regressions go undetected; no visibility into coverage trends across PRs</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">No codecov/coveralls PR reporting</div>
-                            <p>Developers cannot see coverage impact of their changes in PR</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">Container image not scanned on PR</div>
-                            <p>Trivy scans run on filesystem only; built images not validated for CVEs on PR</p>
+                            <div class="item-description">No HEALTHCHECK in container images</div>
+                            <p>Kubernetes liveness/readiness probes rely solely on external manifests; container self-checks absent</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">UI E2E tests minimal</div>
-                            <p>Only 1 Playwright E2E spec; UI regressions may slip through</p>
+                            <div class="item-description">UI E2E test coverage is minimal</div>
+                            <p>Only 1 Playwright spec file for the entire ogx_ui component; UI regressions not caught in CI</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">8-16 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No Konflux build simulation in PR workflows</div>
+                            <p>Downstream Konflux/RHOAI build failures only discovered post-merge</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +461,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add codecov integration with PR reporting</div>
-                            <p>Immediate visibility into coverage changes per PR, regression prevention</p>
+                            <div class="item-description">Add Codecov integration to CI</div>
+                            <p>PR-level coverage reports, trend tracking, and regression detection</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add coverage threshold to unit-tests.sh</div>
-                            <p>Prevent coverage from dropping below current baseline</p>
+                            <div class="item-description">Add HEALTHCHECK to Containerfiles</div>
+                            <p>Container orchestrators can detect unhealthy instances without external probes</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add coverage threshold enforcement</div>
+                            <p>Prevent coverage regressions with fail_under in .coveragerc or pytest-cov</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add container image Trivy scan to providers-build workflow</div>
-                            <p>Catch image-level vulnerabilities before merge</p>
+                            <div class="item-description">Create .claude/rules/ directory with test creation rules</div>
+                            <p>Improve AI-generated test quality with framework-specific patterns for pytest, recording/replay</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add .claude/rules/ directory with test-type-specific rules</div>
-                            <p>Better AI-generated test consistency aligned with recording/replay system</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add codecov/coveralls integration with PR comments and minimum threshold enforcement</li><li>Add coverage fail threshold (--fail-under) to unit-tests.sh to prevent regressions</li></ul>
+                            <ul><li>Integrate Codecov or Coveralls with coverage threshold enforcement to prevent regressions</li><li>Add Konflux build simulation to PR workflows for downstream build validation</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Expand UI E2E test suite with Playwright beyond the single spec</li><li>Add container image vulnerability scanning (Trivy) to PR workflow for built images</li><li>Create .claude/rules/ with test-type-specific rules for unit, integration, and recording/replay patterns</li></ul>
+                            <ul><li>Expand Playwright E2E coverage for ogx_ui beyond the single spec file</li><li>Add HEALTHCHECK instructions to both Containerfiles</li><li>Create .claude/rules/ with test creation rules for pytest patterns, recording/replay integration tests</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add performance regression testing for API response latency</li><li>Add SBOM generation to container builds</li><li>Add load/stress testing workflow using the existing benchmarking/locust infrastructure</li></ul>
+                            <ul><li>Add Testcontainers for container runtime validation in CI</li><li>Add performance regression testing for API endpoints using the existing benchmarking framework</li><li>Consider UBI-based images for FIPS-capable container deployments</li></ul>
                         </div>
                     </div>
                 </div>

@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:21 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 03:51 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/odh-dashboard</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#28a745"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="79.168068"
+                                stroke-dashoffset="84.82293"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">8.6</div>
+                        <div class="score-value">8.5</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">908 test files across Jest + React Testing Library with shared config package</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">1,024 test files across monorepo with Jest, shared mock factories, and 0.20 test-to-code ratio</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Multi-layer Cypress (mock + E2E + package-level) with contract tests and live cluster failover</div>
+                            <div class="scorecard-status">756 Cypress test files, cluster failover E2E, contract tests across 8 packages, BFF Go tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
-                            <div class="scorecard-status">Gold-standard PR-time Konflux simulation with hermetic preflight, runtime validation, and Kind operator integration</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">5-phase Konflux simulator with hermetic build, dual-mode Docker, Kind operator integration</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Multi-stage Docker builds with runtime branding validation but no container vulnerability scanning in CI</div>
+                            <div class="scorecard-status">Multi-stage UBI9 Dockerfile, runtime validation, FIPS compliance checks, multi-arch support</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Codecov integration with 70% patch target but informational-only (non-blocking) thresholds</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Codecov with merged unit+Cypress coverage, but enforcement is informational-only (no hard gates)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
-                            <div class="scorecard-status">26 workflows with concurrency control, Turbo caching, smart test selection, and Claude AI preflight</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">28+ workflows, concurrency controls, smart Cypress test selection, Tekton pipelines</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Shared ESLint config package, golangci-lint, Husky pre-commit, Dependabot with grouping</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
-                            <div class="scorecard-status">22 specialized rules, 25 custom skills, package-level AGENTS.md, Claude preflight workflow</div>
+                            <div class="scorecard-score" style="color: #28a745;">10.0/10</div>
+                            <div class="scorecard-status">Gold standard: 21 rule files (6,400+ lines), 26 skills, contract test rules, testing standards</div>
                         </div>
                     </div>
                 </div>
@@ -410,28 +415,28 @@
                 <div class="section-content">
                     <ul class="items-list">
                         
-                        <li class="item-card high">
-                            <div class="item-description">No container vulnerability scanning in GitHub Actions CI</div>
-                            <p>Security vulnerabilities in container images and dependencies not caught at PR time despite semgrep.yaml (1875 rules) and gitleaks.toml existing but not wired into workflows</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">Coverage thresholds are informational-only</div>
-                            <p>PRs can merge with declining coverage; 50-70% range is moderate for a critical UI project</p>
+                            <div class="item-description">Coverage enforcement is informational-only</div>
+                            <p>PRs can merge with 0% coverage without blocking; 70% patch target not enforced</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card low">
+                            <div class="item-description">No pre-commit-config.yaml for standardized hooks</div>
+                            <p>Husky hooks are npm-only; Go/Python contributors bypass linting unless they run npm</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-low">LOW</span>
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card low">
-                            <div class="item-description">No pre-commit-config.yaml (only Husky lint-staged)</div>
-                            <p>Missing standardized security checks (gitleaks, semgrep) at commit time; Husky only runs lint-staged</p>
+                            <div class="item-description">Phase 5 manifest validation not yet implemented</div>
+                            <p>PR build validation pipeline has a gap in ConfigMap/resource manifest validation</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -448,35 +453,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to PR workflow</div>
-                            <p>Catch CVEs in container images before merge; complements existing semgrep.yaml rules</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Wire semgrep.yaml into a GitHub Actions workflow</div>
-                            <p>Activate the 1875 existing SAST rules that are currently dormant in CI</p>
+                            <div class="item-description">Switch Codecov coverage from informational to enforcing</div>
+                            <p>Prevent regressions by blocking PRs that drop below coverage thresholds</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Switch codecov from informational to enforcing mode</div>
-                            <p>Prevent coverage regression by blocking PRs that drop below threshold</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1 hour</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add pre-commit hooks for gitleaks and semgrep</div>
-                            <p>Catch secrets and security issues at commit time, before push</p>
+                            <div class="item-description">Add pre-commit-config.yaml for cross-language hook enforcement</div>
+                            <p>Ensure Go/Python contributors also run linting and formatting checks</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Implement Phase 5 manifest validation in PR build workflow</div>
+                            <p>Complete the Konflux simulator pipeline with ConfigMap and resource validation</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -493,15 +490,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add Trivy or Snyk container scanning to the pr-build-validation.yml workflow to scan built images before merge</li><li>Create a Semgrep CI workflow using the existing 1875-rule semgrep.yaml configuration</li></ul>
+                            <ul><li>Enable coverage enforcement by setting informational: false in .codecov.yml for both project and patch status</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Switch codecov coverage thresholds from informational to enforcing with a 65% project target</li><li>Add CodeQL or Semgrep SAST scanning as a required PR check</li><li>Add performance regression testing for dashboard load times and API response times</li></ul>
+                            <ul><li>Implement Phase 5 manifest validation in PR Build Validation workflow</li><li>Add pre-commit-config.yaml with hooks for ESLint, golangci-lint, prettier, and markdown-lint</li><li>Expand contract tests beyond gen-ai to all BFF packages (most have only 1 test file)</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Expand cypress-axe accessibility testing beyond its current integration</li><li>Add Storybook for component documentation and visual regression testing</li><li>Implement chaos engineering tests for operator resilience</li></ul>
+                            <ul><li>Add accessibility testing (axe-core) to Cypress E2E or unit test suite</li><li>Add performance regression testing for page load times and bundle sizes</li><li>Consider adding visual regression testing for PatternFly component changes</li></ul>
                         </div>
                     </div>
                 </div>

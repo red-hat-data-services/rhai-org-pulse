@@ -9,28 +9,28 @@
 const BACKUP_PREFIX = 'releases/planning/config-backup-'
 const MAX_BACKUPS = 10
 
-function backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage) {
-  const config = readFromStorage('releases/planning/config.json')
+async function backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage) {
+  const config = await readFromStorage('releases/planning/config.json')
   if (!config) return
 
   const bundle = { config: config, releases: {} }
   const versions = Object.keys(config.releases || {})
   for (let i = 0; i < versions.length; i++) {
-    const data = readFromStorage('releases/planning/releases/' + versions[i] + '.json')
+    const data = await readFromStorage('releases/planning/releases/' + versions[i] + '.json')
     if (data) bundle.releases[versions[i]] = data
   }
 
   const ts = new Date().toISOString().replace(/[:.]/g, '-')
-  writeToStorage(`${BACKUP_PREFIX}${ts}.json`, bundle)
+  await writeToStorage(`${BACKUP_PREFIX}${ts}.json`, bundle)
 
-  pruneOldBackups(listStorageFiles, deleteFromStorage)
+  await pruneOldBackups(listStorageFiles, deleteFromStorage)
 }
 
-function pruneOldBackups(listStorageFiles, deleteFromStorage) {
+async function pruneOldBackups(listStorageFiles, deleteFromStorage) {
   if (!listStorageFiles || !deleteFromStorage) return
 
   try {
-    const files = listStorageFiles('releases/planning')
+    const files = await listStorageFiles('releases/planning')
     const backupFiles = files
       .filter(function(f) { return f.startsWith('config-backup-') && f.endsWith('.json') })
       .sort()
@@ -38,7 +38,7 @@ function pruneOldBackups(listStorageFiles, deleteFromStorage) {
     if (backupFiles.length > MAX_BACKUPS) {
       const toDelete = backupFiles.slice(0, backupFiles.length - MAX_BACKUPS)
       for (const file of toDelete) {
-        deleteFromStorage(`releases/planning/${file}`)
+        await deleteFromStorage(`releases/planning/${file}`)
       }
     }
   } catch (err) {

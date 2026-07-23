@@ -91,6 +91,11 @@ var releasePhaseMode = computed(function() {
   return healthData.value ? healthData.value.releasePhaseMode || 'unknown' : 'unknown'
 })
 
+var fpdorReadiness = computed(function() {
+  if (!healthData.value || !healthData.value.summary) return null
+  return healthData.value.summary.fpdorReadiness || null
+})
+
 var planningReadiness = computed(function() {
   if (!healthData.value || !healthData.value.summary) return null
   return healthData.value.summary.planningReadiness || null
@@ -472,7 +477,7 @@ onUnmounted(function() {
       </div>
 
       <!-- Summary Cards -->
-      <HealthSummaryCards :cardCounts="summaryCardCounts" :planningDeadline="planningDeadline" :releasePhaseMode="releasePhaseMode" :planningReadiness="planningReadiness" @filterByCheck="handleCardFilter" />
+      <HealthSummaryCards :cardCounts="summaryCardCounts" :planningDeadline="planningDeadline" :releasePhaseMode="releasePhaseMode" :planningReadiness="planningReadiness" :fpdorReadiness="fpdorReadiness" @filterByCheck="handleCardFilter" />
 
       <!-- Phase Tabs -->
       <div>
