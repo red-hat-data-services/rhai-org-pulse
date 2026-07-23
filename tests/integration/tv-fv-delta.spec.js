@@ -10,6 +10,7 @@ const { setupErrorTracking, logCapturedErrors } = require('./helpers');
  * - Release picker renders with the 18 default product-family versions
  * - API endpoints are called (registry, versions, tv-fv-delta)
  * - Executive summary table renders with correct columns
+ * - Executive summary / selector ordered cycle → milestone → product (numeric desc)
  * - Release tab switching works
  * - Category sections (TV-Only, FV-Only, Mismatched, Aligned) render
  * - Component breakdown updates per release
@@ -216,6 +217,22 @@ const JIRA_VERSIONS_DATA = {
 /** Version picker chip (has Remove control) — distinct from family-filter pills */
 function versionChip(page, release) {
   return page.locator('button', { hasText: release }).filter({ has: page.locator('span[title="Remove"]') });
+}
+
+/** First-column labels from the Executive Summary tbody, in DOM order */
+async function summaryReleaseLabels(page) {
+  const summarySection = page.locator('div:has(> div > h2:has-text("Executive Summary"))').first();
+  const texts = await summarySection.locator('tbody tr td:first-child').allTextContents();
+  return texts.map(t => t.replace(/\s+/g, ' ').trim());
+}
+
+/** Assert needle appears before other in an ordered string list */
+function expectBefore(ordered, needle, other) {
+  const i = ordered.findIndex(t => t.includes(needle));
+  const j = ordered.findIndex(t => t.includes(other));
+  expect(i, `"${needle}" should be present`).toBeGreaterThanOrEqual(0);
+  expect(j, `"${other}" should be present`).toBeGreaterThanOrEqual(0);
+  expect(i, `"${needle}" should appear before "${other}"`).toBeLessThan(j);
 }
 
 /**
@@ -472,21 +489,56 @@ test.describe('TV/FV Delta — Executive Summary @tv-fv-delta', () => {
     expect(relevantErrors(page)).toHaveLength(0);
   });
 
-  test('should render one row per default release version', async ({ page }) => {
+  test('should render product rows plus cycle/milestone rollups', async ({ page }) => {
     await page.goto('/#/releases/reports?report=tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    // Find the executive summary table
+    // 18 product rows + 2 cycle headers + 6 milestone headers (GA/EA2/EA1 × 3.6/3.5)
     const summarySection = page.locator('div:has(> div > h2:has-text("Executive Summary"))').first();
     const rows = summarySection.locator('tbody tr');
-    await expect(rows).toHaveCount(18);
+    await expect(rows).toHaveCount(26);
 
-    // Verify key default versions are present
+    await expect(summarySection.locator('tbody tr', { hasText: '3.6 Release Cycle' })).toBeVisible();
+    await expect(summarySection.locator('tbody tr', { hasText: '3.5 Release Cycle' })).toBeVisible();
+    await expect(summarySection.locator('tbody tr', { hasText: '3.6 GA Release' })).toBeVisible();
     await expect(summarySection.locator('tbody tr', { hasText: '3.5 EA1 RHOAI RELEASE' })).toBeVisible();
-    await expect(summarySection.locator('tbody tr', { hasText: '3.5 EA2 RHOAI RELEASE' })).toBeVisible();
-    await expect(summarySection.locator('tbody tr', { hasText: '3.5 GA RHOAI RELEASE' })).toBeVisible();
     await expect(summarySection.locator('tbody tr', { hasText: '3.6 GA RHOAI RELEASE' })).toBeVisible();
+
+    expect(relevantErrors(page)).toHaveLength(0);
+  });
+
+  test('should order executive summary cycle → milestone → product descending', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=tv-fv-delta');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const labels = await summaryReleaseLabels(page);
+
+    // Cycles: newer first
+    expectBefore(labels, '3.6 Release Cycle', '3.5 Release Cycle');
+    // Within 3.6: GA → EA2 → EA1
+    expectBefore(labels, '3.6 GA Release', '3.6 EA2 Release');
+    expectBefore(labels, '3.6 EA2 Release', '3.6 EA1 Release');
+    // Within a milestone: RHOAI → RHAII → RHELAI
+    expectBefore(labels, '3.6 GA RHOAI RELEASE', '3.6 GA RHAII RELEASE');
+    expectBefore(labels, '3.6 GA RHAII RELEASE', '3.6 GA RHELAI RELEASE');
+    // Product rows sit under their milestone header
+    expectBefore(labels, '3.6 GA Release', '3.6 GA RHOAI RELEASE');
+    expectBefore(labels, '3.6 GA RHELAI RELEASE', '3.6 EA2 Release');
+
+    expect(relevantErrors(page)).toHaveLength(0);
+  });
+
+  test('should render cycle filter pills in numeric descending order', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=tv-fv-delta');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const filterRow = page.locator('div.flex.items-center.gap-1\\.5.mb-4').first();
+    const texts = (await filterRow.locator('button').allTextContents()).map(t => t.trim());
+    expect(texts[0]).toBe('All');
+    expect(texts.slice(1)).toEqual(['3.6', '3.5']);
 
     expect(relevantErrors(page)).toHaveLength(0);
   });
@@ -604,6 +656,64 @@ test.describe('TV/FV Delta — Release Tabs @tv-fv-delta', () => {
       const chip = versionChip(page, release);
       await expect(chip).toBeVisible();
     }
+
+    expect(relevantErrors(page)).toHaveLength(0);
+  });
+
+  test('should organize version selector by cycle → milestone → product', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=tv-fv-delta');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Hierarchical chip groups live in the space-y-4 selector stack below the summary
+    const selector = page.locator('div.mb-6.space-y-4');
+    const cycleHeaders = selector.locator('div.uppercase.tracking-wide', { hasText: 'Release Cycle' });
+    await expect(cycleHeaders).toHaveCount(2);
+    await expect(cycleHeaders.nth(0)).toHaveText(/3\.6 Release Cycle/i);
+    await expect(cycleHeaders.nth(1)).toHaveText(/3\.5 Release Cycle/i);
+
+    const cycle36 = selector.locator('div.rounded-lg.border').filter({ hasText: '3.6 Release Cycle' }).first();
+    const milestoneLabels = (await cycle36.locator('div.border-t > div').allTextContents())
+      .map(t => t.trim())
+      .filter(t => /^(3\.6 (GA|EA\d+) Release)$/.test(t));
+    expect(milestoneLabels).toEqual([
+      '3.6 GA Release',
+      '3.6 EA2 Release',
+      '3.6 EA1 Release',
+    ]);
+
+    // Product chips under the first milestone (GA), in product order
+    const gaGroup = cycle36.locator('div.border-t').first();
+    const gaChipTexts = (await gaGroup.locator('button').filter({ has: page.locator('span[title="Remove"]') }).allTextContents())
+      .map(t => t.replace(/×/g, '').replace(/\s+/g, ' ').trim());
+    expect(gaChipTexts).toEqual([
+      '3.6 GA RHOAI RELEASE',
+      '3.6 GA RHAII RELEASE',
+      '3.6 GA RHELAI RELEASE',
+    ]);
+
+    expect(relevantErrors(page)).toHaveLength(0);
+  });
+
+  test('should group Add release dropdown by cycle → milestone', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=tv-fv-delta');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await page.getByRole('button', { name: '+ Add release' }).click();
+    const dropdown = page.locator('div.absolute.z-20').filter({ has: page.getByPlaceholder('Search versions...') });
+    await expect(dropdown).toBeVisible();
+
+    const cycleLabels = (await dropdown.locator('div.sticky').allTextContents()).map(t => t.trim());
+    expect(cycleLabels[0]).toMatch(/3\.6 Release Cycle/i);
+    expect(cycleLabels).toEqual(expect.arrayContaining([
+      expect.stringMatching(/3\.6 Release Cycle/i),
+      expect.stringMatching(/3\.5 Release Cycle/i),
+    ]));
+    expectBefore(cycleLabels, '3.6 Release Cycle', '3.5 Release Cycle');
+
+    const milestoneLabels = (await dropdown.locator('div.pt-2').allTextContents()).map(t => t.trim());
+    expectBefore(milestoneLabels, '3.6 GA Release', '3.6 EA1 Release');
 
     expect(relevantErrors(page)).toHaveLength(0);
   });
@@ -1577,9 +1687,9 @@ test.describe('TV/FV Delta — Registry fixVersions Edge Cases @tv-fv-delta', ()
       await expect(versionChip(page, release)).toBeVisible();
     }
 
-    // Executive summary should render with all 18 default releases
+    // 18 product rows + 2 cycle headers + 6 milestone headers = 26
     const summarySection = page.locator('div:has(> div > h2:has-text("Executive Summary"))').first();
     const rows = summarySection.locator('tbody tr');
-    await expect(rows).toHaveCount(18);
+    await expect(rows).toHaveCount(26);
   });
 });
