@@ -63,7 +63,7 @@ module.exports = function registerExtractRoutes(router, context) {
    *                   items:
    *                     type: object
    */
-  router.post('/extract/transcript', async (req, res) => {
+  router.post('/extract/transcript', requireAuth, async (req, res) => {
     try {
       const { transcript } = req.body
 
