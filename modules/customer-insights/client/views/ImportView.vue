@@ -156,165 +156,228 @@
           <div class="flex-1">
             <h3 class="text-lg font-semibold text-gray-900 mb-2">Transcript Import</h3>
             <p class="text-gray-600 mb-4">
-              Paste meeting notes, call transcripts, or customer conversation summaries. Fill in the extracted details below.
+              Paste meeting notes or call transcripts. AI will detect all Red Hat AI components discussed and create a separate interaction for each.
             </p>
           </div>
         </div>
 
-        <!-- Transcript Text Area -->
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <label class="block text-sm font-medium text-gray-700">
-              Paste Transcript or Meeting Notes
-            </label>
-            <button
-              @click="autoExtract"
-              :disabled="!transcriptText.trim() || extracting"
-              class="px-4 py-1.5 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-md disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-            >
-              {{ extracting ? 'Extracting...' : '✨ Auto-Extract with AI' }}
-            </button>
-          </div>
-          <textarea
-            v-model="transcriptText"
-            rows="10"
-            placeholder="Paste your meeting notes, call transcript, or customer conversation here...
+        <!-- Phase: Input -->
+        <template v-if="transcriptPhase === 'input'">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-sm font-medium text-gray-700">
+                Paste Transcript or Meeting Notes
+              </label>
+              <button
+                @click="autoExtract"
+                :disabled="!transcriptText.trim() || extracting"
+                class="px-4 py-1.5 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-md disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              >
+                {{ extracting ? 'Extracting...' : 'Auto-Extract with AI' }}
+              </button>
+            </div>
+            <textarea
+              v-model="transcriptText"
+              rows="12"
+              placeholder="Paste your meeting notes, call transcript, or customer conversation here...
 
 Example:
 Meeting with John Smith from Acme Financial Corp (Banking, North America)
-- Discussed fraud detection use case for real-time transaction monitoring
+- Discussed model serving latency for real-time inference
+- Also needs better observability for monitoring model drift
 - Currently using PyTorch and Jupyter notebooks
-- Main pain point: Kubernetes complexity is overwhelming their data science team
-- Interested in automated deployment features
-- Requested: better GPU scheduling, simplified workflows
-- High priority account with 500+ data scientists"
-            class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 font-mono text-sm"
-          ></textarea>
-        </div>
+- Pain points: GPU scheduling, no drift alerting
+- Requested: autoscaling support, custom metrics dashboard"
+              class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 font-mono text-sm"
+            ></textarea>
+          </div>
 
-        <!-- Quick Extract Helper -->
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h4 class="text-sm font-medium text-blue-900 mb-2">💡 Quick Extract Tip</h4>
-          <p class="text-sm text-blue-800">
-            The form below will help you manually extract key information from your transcript.
-            Look for: customer/company names, industry, pain points, use cases, and feature requests.
-          </p>
-        </div>
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 class="text-sm font-medium text-blue-900 mb-2">Multi-Component Detection</h4>
+            <p class="text-sm text-blue-800">
+              AI will identify all Red Hat AI components discussed in the transcript and create a separate interaction for each, with pain points and feedback attributed per component. You can review and edit before submitting.
+            </p>
+          </div>
+        </template>
 
-        <!-- Extracted Data Form -->
-        <div class="bg-white border border-gray-200 rounded-lg p-6">
-          <h4 class="text-lg font-semibold text-gray-900 mb-4">Extract Customer Interaction Details</h4>
+        <!-- Phase: Review -->
+        <template v-if="transcriptPhase === 'review'">
+          <button
+            @click="transcriptPhase = 'input'"
+            class="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to Transcript
+          </button>
 
-          <div class="space-y-4">
-            <!-- Basic Info -->
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Customer Company *</label>
-                <input
-                  v-model="extractedData.customerCompany"
-                  type="text"
-                  placeholder="e.g., Acme Financial Corp"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
+          <!-- Shared Customer Information -->
+          <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <h4 class="text-lg font-semibold text-gray-900 mb-4">Shared Customer Information</h4>
+            <div class="space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Customer Company *</label>
+                  <input
+                    v-model="sharedData.customerCompany"
+                    type="text"
+                    placeholder="e.g., Acme Financial Corp"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Contact Name *</label>
+                  <input
+                    v-model="sharedData.contactName"
+                    type="text"
+                    placeholder="e.g., John Smith"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
               </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Contact Name *</label>
-                <input
-                  v-model="extractedData.contactName"
-                  type="text"
-                  placeholder="e.g., John Smith"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
+              <div class="grid grid-cols-3 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Industry Vertical</label>
+                  <input
+                    v-model="sharedData.industryVertical"
+                    type="text"
+                    placeholder="e.g., Banking & Financial Services"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Geography</label>
+                  <select
+                    v-model="sharedData.geo"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="">-- Select --</option>
+                    <option value="NA">North America</option>
+                    <option value="EMEA">EMEA</option>
+                    <option value="APAC">APAC</option>
+                    <option value="LATAM">LATAM</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <select
+                    v-model="sharedData.status"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="Lead">Lead</option>
+                    <option value="Discovery">Discovery</option>
+                    <option value="Evaluating">Evaluating</option>
+                    <option value="Feedback Received">Feedback Received</option>
+                    <option value="Closed">Closed</option>
+                  </select>
+                </div>
               </div>
-            </div>
-
-            <div class="grid grid-cols-3 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Component *</label>
-                <select
-                  v-model="extractedData.component"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">-- Select Component --</option>
-                  <optgroup v-for="pillar in pillars" :key="pillar.name" :label="pillar.name">
-                    <option v-for="c in pillar.components" :key="c.id" :value="c.id">
-                      {{ c.label }}
-                    </option>
-                  </optgroup>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Industry Vertical</label>
-                <input
-                  v-model="extractedData.industryVertical"
-                  type="text"
-                  placeholder="e.g., Banking & Financial Services"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Geography</label>
-                <select
-                  v-model="extractedData.geo"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">-- Select --</option>
-                  <option value="NA">North America</option>
-                  <option value="EMEA">EMEA</option>
-                  <option value="APAC">APAC</option>
-                  <option value="LATAM">LATAM</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Use Case & Pain Points -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Main Use Case</label>
-              <input
-                v-model="extractedData.mainAIUseCase"
-                type="text"
-                placeholder="e.g., Fraud detection for real-time transaction monitoring"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Pain Points</label>
-              <textarea
-                v-model="extractedData.painPoints"
-                rows="3"
-                placeholder="What challenges or issues did the customer mention?"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              ></textarea>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Feature Feedback / Requests</label>
-              <textarea
-                v-model="extractedData.featureFeedback"
-                rows="3"
-                placeholder="What features or improvements did they request?"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              ></textarea>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-              <select
-                v-model="extractedData.status"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="Lead">Lead</option>
-                <option value="Discovery">Discovery</option>
-                <option value="Evaluating">Evaluating</option>
-                <option value="Feedback Received">Feedback Received</option>
-                <option value="Closed">Closed</option>
-              </select>
             </div>
           </div>
 
-          <!-- Submit Button -->
-          <div class="mt-6 flex justify-end space-x-3">
+          <!-- Detected Components -->
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-lg font-semibold text-gray-900">
+                Detected Components ({{ componentInteractions.length }})
+              </h4>
+              <button
+                @click="addComponentCard"
+                class="px-3 py-1.5 text-sm font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-md border border-purple-200 transition-colors"
+              >
+                + Add Component
+              </button>
+            </div>
+
+            <div class="space-y-4">
+              <div
+                v-for="(comp, index) in componentInteractions"
+                :key="index"
+                class="bg-white border border-gray-200 rounded-lg overflow-hidden"
+              >
+                <!-- Card Header -->
+                <div
+                  class="flex items-center justify-between p-4 bg-gray-50 cursor-pointer"
+                  @click="toggleComponentCard(index)"
+                >
+                  <div class="flex items-center gap-3 flex-1">
+                    <svg
+                      class="w-4 h-4 text-gray-500 transition-transform"
+                      :class="{ 'rotate-90': comp._expanded }"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    <select
+                      v-model="comp.component"
+                      @click.stop
+                      class="flex-1 max-w-xs px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    >
+                      <option value="">-- Select Component --</option>
+                      <optgroup v-for="pillar in pillars" :key="pillar.name" :label="pillar.name">
+                        <option v-for="c in pillar.components" :key="c.id" :value="c.id">
+                          {{ c.label }}
+                        </option>
+                      </optgroup>
+                    </select>
+                    <span v-if="comp.component" class="text-xs text-gray-500">
+                      {{ getPillarName(comp.component) }}
+                    </span>
+                  </div>
+                  <button
+                    @click.stop="removeComponentCard(index)"
+                    class="text-gray-400 hover:text-red-600 ml-2 transition-colors"
+                    title="Remove component"
+                  >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                <!-- Card Body -->
+                <div v-if="comp._expanded" class="p-4 space-y-4 border-t border-gray-200">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Main Use Case</label>
+                    <input
+                      v-model="comp.mainAIUseCase"
+                      type="text"
+                      placeholder="Use case relevant to this component"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Pain Points</label>
+                    <textarea
+                      v-model="comp.painPoints"
+                      rows="2"
+                      placeholder="Pain points relevant to this component"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    ></textarea>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Feature Feedback</label>
+                    <textarea
+                      v-model="comp.featureFeedback"
+                      rows="2"
+                      placeholder="Feature feedback relevant to this component"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="componentInteractions.length === 0" class="text-center py-8 text-gray-500">
+              <p>No components detected. Click "Add Component" to manually add one.</p>
+            </div>
+          </div>
+
+          <!-- Submit / Clear -->
+          <div class="flex justify-end space-x-3">
             <button
               @click="clearTranscript"
               class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
@@ -326,10 +389,10 @@ Meeting with John Smith from Acme Financial Corp (Banking, North America)
               :disabled="!canSubmitTranscript || uploading"
               class="px-6 py-2 bg-purple-600 text-white font-medium rounded-md hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
-              {{ uploading ? 'Creating...' : 'Create Interaction' }}
+              {{ uploading ? 'Creating...' : `Create ${componentInteractions.length} Interaction${componentInteractions.length !== 1 ? 's' : ''}` }}
             </button>
           </div>
-        </div>
+        </template>
       </div>
 
       <!-- Google Drive Import -->
@@ -449,17 +512,18 @@ const extracting = ref(false)
 const googleDrive = useGoogleDrive()
 const { pillars } = useComponentSelector()
 const processingDriveFile = ref(false)
-const extractedData = ref({
+const transcriptPhase = ref('input')
+const sharedData = ref({
   customerCompany: '',
   contactName: '',
-  component: '',
   industryVertical: '',
   geo: '',
-  mainAIUseCase: '',
-  painPoints: '',
-  featureFeedback: '',
-  status: 'Discovery'
+  customerType: 'Customer',
+  environment: 'Unknown',
+  toolsOfChoice: [],
+  status: 'Discovery',
 })
+const componentInteractions = ref([])
 
 // Check if AI features are available by checking for API key in env
 const aiEnabled = ref(false)
@@ -490,9 +554,10 @@ const tabs = computed(() => {
 })
 
 const canSubmitTranscript = computed(() => {
-  return extractedData.value.customerCompany &&
-         extractedData.value.contactName &&
-         extractedData.value.component
+  return sharedData.value.customerCompany &&
+         sharedData.value.contactName &&
+         componentInteractions.value.length > 0 &&
+         componentInteractions.value.every(c => c.component)
 })
 
 function handleFileSelect(event) {
@@ -621,17 +686,18 @@ function parseCSVLine(line) {
 
 function clearTranscript() {
   transcriptText.value = ''
-  extractedData.value = {
+  transcriptPhase.value = 'input'
+  sharedData.value = {
     customerCompany: '',
     contactName: '',
-    component: '',
     industryVertical: '',
     geo: '',
-    mainAIUseCase: '',
-    painPoints: '',
-    featureFeedback: '',
-    status: 'Discovery'
+    customerType: 'Customer',
+    environment: 'Unknown',
+    toolsOfChoice: [],
+    status: 'Discovery',
   }
+  componentInteractions.value = []
   uploadError.value = null
   uploadSuccess.value = null
 }
@@ -656,23 +722,42 @@ async function autoExtract() {
       throw new Error(error.error || 'Failed to extract data')
     }
 
-    const extracted = await response.json()
+    const result = await response.json()
 
-    // Populate the form with extracted data
-    extractedData.value = {
-      customerCompany: extracted.customerCompany || '',
-      contactName: extracted.contactName || '',
-      component: extracted.component || '',
-      industryVertical: extracted.industryVertical || '',
-      geo: extracted.geo || '',
-      mainAIUseCase: extracted.mainAIUseCase || '',
-      painPoints: extracted.painPoints || '',
-      featureFeedback: extracted.featureFeedback || '',
-      status: extracted.status || 'Discovery'
+    sharedData.value = {
+      customerCompany: result.shared?.customerCompany || '',
+      contactName: result.shared?.contactName || '',
+      industryVertical: result.shared?.industryVertical || '',
+      geo: result.shared?.geo || '',
+      customerType: result.shared?.customerType || 'Customer',
+      environment: result.shared?.environment || 'Unknown',
+      toolsOfChoice: result.shared?.toolsOfChoice || [],
+      status: result.shared?.status || 'Discovery',
     }
 
-    // Show success notification if in demo mode
-    if (extracted._demoMode) {
+    componentInteractions.value = (result.components || []).map(c => ({
+      component: c.component || '',
+      mainAIUseCase: c.mainAIUseCase || '',
+      painPoints: c.painPoints || '',
+      featureFeedback: c.featureFeedback || '',
+      futureWishlist: c.futureWishlist || [],
+      _expanded: true,
+    }))
+
+    if (componentInteractions.value.length === 0) {
+      componentInteractions.value.push({
+        component: '',
+        mainAIUseCase: '',
+        painPoints: '',
+        featureFeedback: '',
+        futureWishlist: [],
+        _expanded: true,
+      })
+    }
+
+    transcriptPhase.value = 'review'
+
+    if (result._demoMode) {
       uploadError.value = 'Demo mode: Please review and edit the extracted fields manually'
     }
   } catch (error) {
@@ -691,29 +776,38 @@ async function submitTranscript() {
   uploadError.value = null
 
   try {
-    const interaction = {
-      ...extractedData.value,
+    const interactions = componentInteractions.value.map(c => ({
+      customerCompany: sharedData.value.customerCompany,
+      contactName: sharedData.value.contactName,
+      industryVertical: sharedData.value.industryVertical,
+      geo: sharedData.value.geo,
+      customerType: sharedData.value.customerType || 'Customer',
+      environment: sharedData.value.environment || 'Unknown',
+      toolsOfChoice: sharedData.value.toolsOfChoice || [],
+      status: sharedData.value.status,
       fieldContactName: 'Field Team',
-      customerType: extractedData.value.customerType || 'Customer',
-      environment: extractedData.value.environment || 'Unknown',
-      toolsOfChoice: extractedData.value.toolsOfChoice || [],
-      futureWishlist: extractedData.value.futureWishlist || [],
+      component: c.component,
+      mainAIUseCase: c.mainAIUseCase,
+      painPoints: c.painPoints,
+      featureFeedback: c.featureFeedback,
+      futureWishlist: c.futureWishlist || [],
       meetingNotes: transcriptText.value || '',
-      pmComments: ''
-    }
+      pmComments: '',
+    }))
 
-    const response = await fetch('/api/modules/customer-insights/interactions', {
+    const response = await fetch('/api/modules/customer-insights/interactions/batch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(interaction)
+      body: JSON.stringify({ interactions, mode: 'create' })
     })
 
     if (!response.ok) {
       const error = await response.json()
-      throw new Error(error.error || 'Failed to create interaction')
+      throw new Error(error.error || 'Failed to create interactions')
     }
 
-    uploadSuccess.value = 'Successfully created 1 interaction!'
+    const result = await response.json()
+    uploadSuccess.value = `Successfully created ${result.created} interaction${result.created !== 1 ? 's' : ''}!`
     clearTranscript()
   } catch (error) {
     console.error('Transcript submission error:', error)
@@ -721,6 +815,34 @@ async function submitTranscript() {
   } finally {
     uploading.value = false
   }
+}
+
+function addComponentCard() {
+  componentInteractions.value.push({
+    component: '',
+    mainAIUseCase: '',
+    painPoints: '',
+    featureFeedback: '',
+    futureWishlist: [],
+    _expanded: true,
+  })
+}
+
+function removeComponentCard(index) {
+  componentInteractions.value.splice(index, 1)
+}
+
+function toggleComponentCard(index) {
+  componentInteractions.value[index]._expanded = !componentInteractions.value[index]._expanded
+}
+
+function getPillarName(componentId) {
+  for (const pillar of pillars) {
+    if (pillar.components.some(c => c.id === componentId)) {
+      return pillar.name
+    }
+  }
+  return ''
 }
 
 // Google Drive functions
