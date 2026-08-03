@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount, inject, computed } from 'vue'
 import { useFeatureTraffic, useVersions } from '../composables/useFeatureTraffic'
+import { partitionSignalFeatures } from '../utils/signal-groups.js'
 import StatusBadge from '../components/StatusBadge.vue'
 import SignoffBadge from '../components/SignoffBadge.vue'
 
@@ -132,19 +133,17 @@ function formatAge(days) {
 
 // Traffic signal groupings
 const signalGroups = computed(() => {
-  const all = filteredFeatures.value
-
-  // Completion takes priority: 100% done features are complete regardless of
-  // stale health data (the pipeline counts resolved Blocker-priority issues
-  // in blockerCount, inflating RED health on finished features).
-  const complete = all.filter(f => f.completionPct >= 100)
-  const active = all.filter(f => f.completionPct < 100)
-
-  const blocked = active.filter(f => f.health === 'RED' && f.blockerCount > 0)
-  const redOther = active.filter(f => f.health === 'RED' && f.blockerCount === 0)
-  const atRisk = active.filter(f => f.health === 'YELLOW' && f.completionPct > 0)
-  const notStarted = active.filter(f => f.health === 'YELLOW' && f.completionPct === 0)
-  const onTrack = active.filter(f => f.health === 'GREEN')
+  // Completion takes priority: 100% done OR Jira Done-delivery status, so
+  // Closed / Release Pending features with empty topology are not Not Started.
+  // (Pipeline can also leave stale RED health / blockers on finished work.)
+  const {
+    complete,
+    blocked,
+    redOther,
+    atRisk,
+    notStarted,
+    onTrack
+  } = partitionSignalFeatures(filteredFeatures.value)
 
   return [
     {
