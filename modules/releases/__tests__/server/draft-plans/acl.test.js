@@ -20,12 +20,15 @@ function makeStorage(data) {
 describe('draft-plans acl', function() {
   var prevDemo
   var prevVite
+  var prevAuthDomain
 
   beforeEach(function() {
     prevDemo = process.env.DEMO_MODE
     prevVite = process.env.VITE_DEMO_MODE
+    prevAuthDomain = process.env.AUTH_EMAIL_DOMAIN
     process.env.DEMO_MODE = 'false'
     process.env.VITE_DEMO_MODE = 'false'
+    delete process.env.AUTH_EMAIL_DOMAIN
     _setGetAllPeople(async function() {
       return [
         {
@@ -61,6 +64,8 @@ describe('draft-plans acl', function() {
     else process.env.DEMO_MODE = prevDemo
     if (prevVite === undefined) delete process.env.VITE_DEMO_MODE
     else process.env.VITE_DEMO_MODE = prevVite
+    if (prevAuthDomain === undefined) delete process.env.AUTH_EMAIL_DOMAIN
+    else process.env.AUTH_EMAIL_DOMAIN = prevAuthDomain
   })
 
   it('matches assignee names case-insensitively', function() {
@@ -144,6 +149,42 @@ describe('draft-plans acl', function() {
     process.env.DEMO_MODE = 'true'
     var alice = await resolveDraftPlanSession(
       { userEmail: 'alice@redhat.com' },
+      makeStorage()
+    )
+    expect(alice.canViewDraftPlans).toBe(true)
+  })
+
+  it('matches default viewer/admin allowlists when session uses AUTH_EMAIL_DOMAIN', async function() {
+    process.env.AUTH_EMAIL_DOMAIN = 'cluster.local'
+    var session = await resolveDraftPlanSession(
+      { userEmail: 'emarion@cluster.local', userUid: 'emarion' },
+      makeStorage()
+    )
+    expect(session.canViewDraftPlans).toBe(true)
+    expect(session.isPlanAdmin).toBe(true)
+    expect(session.rosterMatched).toBe(true)
+    expect(session.actor).toBe('Emarion')
+
+    var tiffany = await resolveDraftPlanSession(
+      { userEmail: 'trozell@cluster.local' },
+      makeStorage()
+    )
+    expect(tiffany.isPlanAdmin).toBe(true)
+    expect(tiffany.canViewDraftPlans).toBe(false)
+
+    var alice = await resolveDraftPlanSession(
+      { userEmail: 'alice@cluster.local' },
+      makeStorage()
+    )
+    expect(alice.canViewDraftPlans).toBe(false)
+    expect(alice.isPlanAdmin).toBe(false)
+  })
+
+  it('keeps DEMO_MODE open when AUTH_EMAIL_DOMAIN is set', async function() {
+    process.env.DEMO_MODE = 'true'
+    process.env.AUTH_EMAIL_DOMAIN = 'cluster.local'
+    var alice = await resolveDraftPlanSession(
+      { userEmail: 'alice@cluster.local' },
       makeStorage()
     )
     expect(alice.canViewDraftPlans).toBe(true)

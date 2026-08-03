@@ -2,7 +2,13 @@
  * Draft Plans plan-admin allowlist (freeze / Final GA / reset)
  * and UI/API viewer allowlist (who can see Draft Plans at all).
  * Keep emails + fallback display names in sync with product owners.
+ *
+ * Allowlist matching uses the same AUTH_EMAIL_DOMAIN rewrite as platform
+ * roles (shared/server/role-store normalizeEmail) so OAuth proxy emails
+ * like user@cluster.local match allowlist entries stored as user@redhat.com.
  */
+
+var { normalizeEmail: normalizeEmailForAuth } = require('../../../../shared/server/role-store')
 
 var DEFAULT_PLAN_ADMIN_EMAILS = ['emarion@redhat.com', 'trozell@redhat.com']
 
@@ -14,10 +20,33 @@ var DEFAULT_PLAN_ADMIN_NAMES_BY_EMAIL = {
   'trozell@redhat.com': 'Tiffany Rozell'
 }
 
-function normalizeEmail(value) {
+/**
+ * Non-secret platform config (same source as role matching).
+ * @returns {string|null}
+ */
+function getAuthEmailDomain() {
+  var domain = process.env.AUTH_EMAIL_DOMAIN
+  if (!domain) return null
+  domain = String(domain).trim().toLowerCase()
+  return domain || null
+}
+
+/** Trim + lowercase only (preserve configured domain in stored lists). */
+function trimEmail(value) {
   return String(value || '')
     .trim()
     .toLowerCase()
+}
+
+/**
+ * Compare emails the way platform roles do: when AUTH_EMAIL_DOMAIN is set,
+ * rewrite both sides to that domain before equality.
+ */
+function emailsMatch(a, b) {
+  var authDomain = getAuthEmailDomain()
+  var left = normalizeEmailForAuth(a, authDomain)
+  var right = normalizeEmailForAuth(b, authDomain)
+  return !!(left && right && left === right)
 }
 
 function normalizeName(value) {
@@ -32,23 +61,23 @@ function namesMatch(a, b) {
 
 function loadAdminEmails(config) {
   if (config && Array.isArray(config.planAdminEmails) && config.planAdminEmails.length > 0) {
-    return config.planAdminEmails.map(normalizeEmail).filter(Boolean)
+    return config.planAdminEmails.map(trimEmail).filter(Boolean)
   }
   return DEFAULT_PLAN_ADMIN_EMAILS.slice()
 }
 
 function loadViewerEmails(config) {
   if (config && Array.isArray(config.draftPlansViewerEmails) && config.draftPlansViewerEmails.length > 0) {
-    return config.draftPlansViewerEmails.map(normalizeEmail).filter(Boolean)
+    return config.draftPlansViewerEmails.map(trimEmail).filter(Boolean)
   }
   return DEFAULT_VIEWER_EMAILS.slice()
 }
 
 function emailInList(email, list) {
-  var e = normalizeEmail(email)
+  var e = trimEmail(email)
   if (!e) return false
   for (var i = 0; i < list.length; i++) {
-    if (normalizeEmail(list[i]) === e) return true
+    if (emailsMatch(list[i], e)) return true
   }
   return false
 }
@@ -69,6 +98,21 @@ function isPlanAdminName(name, adminNames) {
   return false
 }
 
+function fallbackAdminName(email) {
+  var trimmed = trimEmail(email)
+  if (!trimmed) return null
+  if (DEFAULT_PLAN_ADMIN_NAMES_BY_EMAIL[trimmed]) {
+    return DEFAULT_PLAN_ADMIN_NAMES_BY_EMAIL[trimmed]
+  }
+  // Map keys are @redhat.com; session/config may use AUTH_EMAIL_DOMAIN.
+  var local = trimmed.split('@')[0]
+  var redhatKey = local + '@redhat.com'
+  if (DEFAULT_PLAN_ADMIN_NAMES_BY_EMAIL[redhatKey]) {
+    return DEFAULT_PLAN_ADMIN_NAMES_BY_EMAIL[redhatKey]
+  }
+  return local || null
+}
+
 /**
  * Resolve display names for Acting-as (roster preferred, then fallback map).
  * @param {string[]} adminEmails
@@ -78,20 +122,18 @@ function resolvePlanAdminNames(adminEmails, people) {
   var names = []
   var seen = {}
   for (var i = 0; i < adminEmails.length; i++) {
-    var email = normalizeEmail(adminEmails[i])
+    var email = trimEmail(adminEmails[i])
     var person = null
     if (people && people.length) {
       for (var p = 0; p < people.length; p++) {
-        if (people[p].email && normalizeEmail(people[p].email) === email) {
+        if (people[p].email && emailsMatch(people[p].email, email)) {
           person = people[p]
           break
         }
       }
     }
     var name =
-      (person && (person.jiraDisplayName || person.name)) ||
-      DEFAULT_PLAN_ADMIN_NAMES_BY_EMAIL[email] ||
-      (email ? email.split('@')[0] : null)
+      (person && (person.jiraDisplayName || person.name)) || fallbackAdminName(email)
     if (!name) continue
     var key = normalizeName(name)
     if (seen[key]) continue
@@ -105,6 +147,8 @@ module.exports = {
   DEFAULT_PLAN_ADMIN_EMAILS,
   DEFAULT_VIEWER_EMAILS,
   DEFAULT_PLAN_ADMIN_NAMES_BY_EMAIL,
+  getAuthEmailDomain,
+  emailsMatch,
   loadAdminEmails,
   loadViewerEmails,
   isPlanAdminEmail,

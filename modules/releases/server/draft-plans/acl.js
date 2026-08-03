@@ -15,7 +15,8 @@ const {
   isDraftPlansViewerEmail,
   isPlanAdminName,
   resolvePlanAdminNames,
-  namesMatch
+  namesMatch,
+  emailsMatch
 } = require('./plan-admins')
 
 var getAllPeopleImpl = roster.getAllPeople
@@ -43,9 +44,9 @@ function actorNameFromPerson(person) {
 function findPerson(people, email, uid) {
   var i
   if (email) {
-    var emailLc = email.toLowerCase()
     for (i = 0; i < people.length; i++) {
-      if (people[i].email && people[i].email.toLowerCase() === emailLc) return people[i]
+      // Match roster @redhat.com against OAuth @cluster.local (AUTH_EMAIL_DOMAIN).
+      if (people[i].email && emailsMatch(people[i].email, email)) return people[i]
     }
   }
   if (uid) {
