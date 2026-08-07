@@ -592,12 +592,39 @@ function buildExport(classifications, releases, fetchTimestamp, allComponents, j
       dates = releaseDates[release] || releaseDates[normVer(release)] || {}
     }
 
+    // Build compound aligned_on_time JQL covering all three cases:
+    //   Case 1: TV = R, FV = R (exact match)
+    //   Case 2: TV = R, FV = earlier same-product release (ahead of schedule)
+    //   Case 3: FV = R, TV = later same-product release (also ahead of schedule)
+    // Note: features with FV pointing outside the tracked releases array won't appear
+    // in this JQL — we can only enumerate releases known to the pipeline.
+    var rParsed = parseReleaseName(release)
+    var sameProduct = releases.filter(function(r) {
+      if (r === release) return false
+      var p = parseReleaseName(r)
+      return p && rParsed && p.product === rParsed.product
+    })
+    var earlierReleases = sameProduct.filter(function(r) {
+      var cmp = compareReleasesTemporally(r, release)
+      return cmp !== null && cmp < 0
+    })
+    var laterReleases = sameProduct.filter(function(r) {
+      var cmp = compareReleasesTemporally(r, release)
+      return cmp !== null && cmp > 0
+    })
+    var allFvForAligned = [release].concat(earlierReleases)
+    var case12 = '"Target Version" in (' + quoteRelease(release) + ') AND fixVersion in (' + allFvForAligned.map(quoteRelease).join(', ') + ')'
+    var case3 = laterReleases.length > 0
+      ? 'fixVersion in (' + quoteRelease(release) + ') AND "Target Version" in (' + laterReleases.map(quoteRelease).join(', ') + ')'
+      : null
+    var alignedOnTimeJql = case3 ? '(' + case12 + ') OR (' + case3 + ')' : case12
+
     executiveSummary.push({
       release: release,
       total: nTotal,
       total_jql: jqlUrl(baseJql + ' AND ("Target Version" in (' + quoteRelease(release) + ') OR fixVersion in (' + quoteRelease(release) + '))'),
       aligned_on_time: cats.aligned_on_time,
-      aligned_on_time_jql: jqlUrl(baseJql + ' AND "Target Version" in (' + quoteRelease(release) + ') AND fixVersion in (' + quoteRelease(release) + ')'),
+      aligned_on_time_jql: jqlUrl(baseJql + ' AND (' + alignedOnTimeJql + ')'),
       aligned_late: cats.aligned_late,
       aligned_late_jql: null, // Cannot express temporal + freeze logic in JQL
       misaligned: cats.misaligned,

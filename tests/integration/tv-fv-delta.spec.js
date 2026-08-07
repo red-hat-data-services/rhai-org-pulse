@@ -681,6 +681,48 @@ test.describe('TV/FV Delta — Executive Summary @tv-fv-delta', () => {
 
     expect(relevantErrors(page)).toHaveLength(0);
   });
+
+  test('should render compound aligned_on_time JQL link when fixture contains OR clause (Cases 1-3)', async ({ page }) => {
+    // Fixture where 3.5 GA has compound JQL: Case 1+2 (earlier FV) OR Case 3 (later TV)
+    const compoundJql = encodeURIComponent(
+      'project = RHAISTRAT AND (("Target Version" in ("3.5 GA RHOAI RELEASE") AND fixVersion in ("3.5 GA RHOAI RELEASE", "3.5 EA2 RHOAI RELEASE", "3.5 EA1 RHOAI RELEASE")) OR (fixVersion in ("3.5 GA RHOAI RELEASE") AND "Target Version" in ("3.6 EA1 RHOAI RELEASE")))'
+    );
+    const compoundFixture = {
+      ...FIXTURE_DATA,
+      executive_summary: FIXTURE_DATA.executive_summary.map(row =>
+        row.release === '3.5 GA RHOAI RELEASE'
+          ? { ...row, aligned_on_time_jql: 'https://redhat.atlassian.net/issues/?jql=' + compoundJql }
+          : row
+      )
+    };
+
+    await page.unroute('**/api/modules/releases/tv-fv-delta');
+    await page.route('**/api/modules/releases/tv-fv-delta', route => {
+      if (route.request().method() === 'POST') {
+        route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true }) });
+      } else {
+        route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(compoundFixture) });
+      }
+    });
+
+    await page.goto('/#/releases/reports?report=tv-fv-delta');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const summarySection = page.locator('div:has(> div > h2:has-text("Executive Summary"))').first();
+    const gaRow = summarySection.locator('tbody tr', { hasText: '3.5 GA RHOAI RELEASE' });
+
+    // Aligned On Time is the second Jira link in the row (after Total)
+    const alignedLink = gaRow.locator('a[href*="atlassian.net"]').nth(1);
+    await expect(alignedLink).toBeVisible();
+
+    const href = await alignedLink.getAttribute('href');
+    expect(href).toContain('3.5%20EA2%20RHOAI%20RELEASE');
+    expect(href).toContain('3.5%20EA1%20RHOAI%20RELEASE');
+    expect(href).toContain('3.6%20EA1%20RHOAI%20RELEASE');
+
+    expect(relevantErrors(page)).toHaveLength(0);
+  });
 });
 
 
