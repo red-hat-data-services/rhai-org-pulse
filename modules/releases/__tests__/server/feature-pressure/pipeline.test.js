@@ -8,6 +8,10 @@ const {
   nextMonth,
   generateMonthRange,
   lookbackDate,
+  lookbackCutoff,
+  onOrAfter,
+  jiraOffset,
+  offsetMin,
   classifyByMonth,
   computeComponentPressure,
   computeRfePipeline,
@@ -145,6 +149,133 @@ describe('lookbackDate', function () {
   it('returns a date string in YYYY-MM-DD format', function () {
     var result = lookbackDate(12)
     expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Timezone-aware window helpers (fix for JQL count mismatch)
+// ---------------------------------------------------------------------------
+
+/** Format a ms instant as an ISO string carrying a numeric "+HHMM"/"-HHMM" offset */
+function toOffsetIso(ms, offset) {
+  var offMin = offsetMin(offset)
+  var d = new Date(ms + offMin * 60000)
+  var p = function (n) { return (n < 10 ? '0' : '') + n }
+  return d.getUTCFullYear() + '-' + p(d.getUTCMonth() + 1) + '-' + p(d.getUTCDate()) +
+    'T' + p(d.getUTCHours()) + ':' + p(d.getUTCMinutes()) + ':00.000' +
+    offset.slice(0, 3) + ':' + offset.slice(3)
+}
+
+describe('offsetMin', function () {
+  it('parses positive offsets to minutes east of UTC', function () {
+    expect(offsetMin('+0530')).toBe(330)
+    expect(offsetMin('+0000')).toBe(0)
+  })
+
+  it('parses negative offsets', function () {
+    expect(offsetMin('-0400')).toBe(-240)
+  })
+})
+
+describe('jiraOffset', function () {
+  it('extracts the numeric offset carried by Jira timestamps', function () {
+    var issues = [{ created: '2026-03-15T10:00:00.000-0400', resolved: null }]
+    expect(jiraOffset(issues)).toBe('-0400')
+  })
+
+  it('prefers resolved when created is null', function () {
+    var issues = [{ created: null, resolved: '2026-03-15T10:00:00.000+0530' }]
+    expect(jiraOffset(issues)).toBe('+0530')
+  })
+
+  it('falls back to a valid offset string when only "...Z" data is present', function () {
+    var issues = [{ created: '2026-03-15T10:00:00.000Z', resolved: null }]
+    expect(jiraOffset(issues)).toMatch(/^[+-]\d{4}$/)
+  })
+
+  it('falls back to a valid offset string for empty input', function () {
+    expect(jiraOffset([])).toMatch(/^[+-]\d{4}$/)
+  })
+})
+
+describe('lookbackCutoff', function () {
+  it('returns a YYYY-MM-DD dateStr and a numeric ms instant', function () {
+    var c = lookbackCutoff(12, '+0000')
+    expect(c.dateStr).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    expect(typeof c.ms).toBe('number')
+  })
+
+  it('ms equals midnight of dateStr in the given offset', function () {
+    var utc = lookbackCutoff(12, '+0000')
+    // Midnight UTC of the same calendar date
+    expect(utc.ms).toBe(Date.parse(utc.dateStr + 'T00:00:00.000Z'))
+  })
+
+  it('shifts the instant by the offset (west of UTC is later in absolute time)', function () {
+    var utc = lookbackCutoff(12, '+0000')
+    var west = lookbackCutoff(12, '-0400')
+    // Same calendar date, but -0400 midnight happens 4h after UTC midnight
+    expect(west.dateStr).toBe(utc.dateStr)
+    expect(west.ms - utc.ms).toBe(4 * 60 * 60 * 1000)
+  })
+
+  it('derives dateStr from today in the account timezone, not server-local', function () {
+    // +1400 is far enough east that its calendar day can differ from a UTC/most-server
+    // day. dateStr must reflect the account-TZ day so it matches Jira's JQL evaluation.
+    var offset = '+1400'
+    var acct = new Date(Date.now() + offsetMin(offset) * 60000)
+    var pad = function (n) { return (n < 10 ? '0' : '') + n }
+    var expected = acct.getUTCFullYear() + '-' + pad(acct.getUTCMonth() + 1) + '-' + pad(acct.getUTCDate())
+    expect(lookbackCutoff(0, offset).dateStr).toBe(expected)
+  })
+})
+
+describe('onOrAfter', function () {
+  it('is inclusive of the cutoff instant', function () {
+    var cutoffMs = Date.parse('2026-01-01T00:00:00.000Z')
+    expect(onOrAfter('2026-01-01T00:00:00.000Z', cutoffMs)).toBe(true)
+  })
+
+  it('excludes instants one millisecond before the cutoff', function () {
+    var cutoffMs = Date.parse('2026-01-01T00:00:00.000Z')
+    expect(onOrAfter(new Date(cutoffMs - 1).toISOString(), cutoffMs)).toBe(false)
+  })
+
+  it('compares by instant across timezones, not by raw string prefix', function () {
+    // Cutoff midnight in -0400 happens 4h AFTER UTC midnight of the same date.
+    // onOrAfter must judge by absolute time, not the shared "YYYY-MM-DD" prefix.
+    var cutoff = lookbackCutoff(12, '-0400')
+    // Exactly at the cutoff instant, expressed in -0400 -> included.
+    expect(onOrAfter(toOffsetIso(cutoff.ms, '-0400'), cutoff.ms)).toBe(true)
+    // Same calendar date at UTC midnight is 4h earlier in absolute time -> before cutoff,
+    // even though the raw string prefix "YYYY-MM-DD" is identical (the old lexicographic bug).
+    var sameDateUtc = cutoff.dateStr + 'T00:00:00.000Z'
+    expect(Date.parse(sameDateUtc) < cutoff.ms).toBe(true)
+    expect(onOrAfter(sameDateUtc, cutoff.ms)).toBe(false)
+  })
+
+  it('returns false for null/invalid dates', function () {
+    expect(onOrAfter(null, 0)).toBe(false)
+    expect(onOrAfter('not-a-date', 0)).toBe(false)
+  })
+})
+
+describe('computeComponentPressure — timezone window boundary', function () {
+  it('derives the account offset from data and counts by that offset boundary', function () {
+    var offset = '-0400'
+    var cutoff = lookbackCutoff(12, offset)
+    var features = [
+      // 1 day inside the window (created), carries the account offset
+      makeFeature('F-in', 'Boundary', toOffsetIso(cutoff.ms + 24 * 3600000, offset), null),
+      // 1 day before the window — must be excluded
+      makeFeature('F-out', 'Boundary', toOffsetIso(cutoff.ms - 24 * 3600000, offset), null)
+    ]
+    var result = computeComponentPressure(features, 12)
+    var b = result.find(function (r) { return r.component === 'Boundary' })
+    expect(b).toBeDefined()
+    expect(b.created).toBe(1) // only F-in
+    // JQL date clause uses the same account-tz calendar date as the count boundary
+    expect(b.created_jql).toContain(encodeURIComponent('created >= "' + cutoff.dateStr + '"'))
   })
 })
 

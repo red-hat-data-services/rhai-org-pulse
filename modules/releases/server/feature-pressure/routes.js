@@ -120,13 +120,53 @@ var normalizeRfe = normalizeIssue
 // Date helpers
 // ---------------------------------------------------------------------------
 
-/** Parse ISO date string to YYYY-MM month key */
-function toMonth(dateStr) {
+/** Zero-pad a number to 2 digits */
+function pad2(n) {
+  return (n < 10 ? '0' : '') + n
+}
+
+/** Parse a "+HHMM"/"-HHMM" offset string to minutes east of UTC */
+function offsetMin(offset) {
+  if (!offset) return 0
+  var sign = offset.charAt(0) === '-' ? -1 : 1
+  var h = parseInt(offset.slice(1, 3), 10) || 0
+  var mm = parseInt(offset.slice(3, 5), 10) || 0
+  return sign * (h * 60 + mm)
+}
+
+/** Server-local UTC offset as "+HHMM"/"-HHMM" (fallback when Jira data carries no numeric offset) */
+function localOffset() {
+  var off = -new Date().getTimezoneOffset() // minutes east of UTC
+  var sign = off >= 0 ? '+' : '-'
+  var a = Math.abs(off)
+  return sign + pad2(Math.floor(a / 60)) + pad2(a % 60)
+}
+
+/**
+ * Derive the Jira account's UTC offset from the data itself.  Jira Cloud returns
+ * all timestamps in the requesting account's timezone (numeric offset), and JQL
+ * evaluates dates in that same timezone — so counts computed with this offset match
+ * their JQL verification links exactly.  Falls back to server-local when no numeric
+ * offset is present (e.g. synthetic "...Z" test fixtures).
+ */
+function jiraOffset(issues) {
+  for (var i = 0; i < issues.length; i++) {
+    var s = issues[i] && (issues[i].created || issues[i].resolved)
+    var m = s && s.match(/([+-]\d{4})$/)
+    if (m) return m[1]
+  }
+  return localOffset()
+}
+
+/** Parse ISO date string to YYYY-MM month key, bucketed in `offset` (default server-local) */
+function toMonth(dateStr, offset) {
   if (!dateStr) return null
-  var d = new Date(dateStr)
-  if (isNaN(d.getTime())) return null
-  var m = d.getMonth() + 1
-  return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m
+  var t = Date.parse(dateStr)
+  if (isNaN(t)) return null
+  var off = offset === undefined ? -new Date().getTimezoneOffset() : offsetMin(offset)
+  var d = new Date(t + off * 60000)
+  var m = d.getUTCMonth() + 1
+  return d.getUTCFullYear() + '-' + (m < 10 ? '0' : '') + m
 }
 
 /** Generate array of YYYY-MM strings for the lookback window */
@@ -148,6 +188,30 @@ function lookbackDate(months) {
   return d.toISOString().slice(0, 10)
 }
 
+/**
+ * Cutoff for "last N months" as both a calendar date (for JQL, which Jira evaluates
+ * in the account timezone) and an absolute instant in ms (for in-memory filtering).
+ * The instant is midnight of that date in `offset`, so onOrAfter() matches a JQL
+ * `created >= "<dateStr>"` clause exactly.
+ */
+function lookbackCutoff(months, offset) {
+  var offMin = offsetMin(offset)
+  // Read "today" in the account timezone, not server-local, so the calendar date
+  // matches what Jira considers the current day when it evaluates the JQL clause.
+  var acct = new Date(Date.now() + offMin * 60000)
+  var d = new Date(Date.UTC(acct.getUTCFullYear(), acct.getUTCMonth() - months, acct.getUTCDate()))
+  var dateStr = d.getUTCFullYear() + '-' + pad2(d.getUTCMonth() + 1) + '-' + pad2(d.getUTCDate())
+  var ms = Date.parse(dateStr + 'T00:00:00.000Z') - offMin * 60000
+  return { dateStr: dateStr, ms: ms }
+}
+
+/** True if a Jira timestamp string is on or after the cutoff instant (ms epoch) */
+function onOrAfter(dateStr, cutoffMs) {
+  if (!dateStr) return false
+  var t = Date.parse(dateStr)
+  return !isNaN(t) && t >= cutoffMs
+}
+
 // ---------------------------------------------------------------------------
 // Analysis functions (exported for testing)
 // ---------------------------------------------------------------------------
@@ -158,7 +222,8 @@ function lookbackDate(months) {
  */
 function classifyByMonth(features, lookbackMonths) {
   var monthRange = generateMonthRange(lookbackMonths)
-  var cutoff = lookbackDate(lookbackMonths)
+  var offset = jiraOffset(features)
+  var cutoff = lookbackCutoff(lookbackMonths, offset)
 
   var createdMap = {}
   var resolvedMap = {}
@@ -169,12 +234,12 @@ function classifyByMonth(features, lookbackMonths) {
 
   for (var fi = 0; fi < features.length; fi++) {
     var feat = features[fi]
-    if (feat.created && feat.created >= cutoff) {
-      var cm = toMonth(feat.created)
+    if (onOrAfter(feat.created, cutoff.ms)) {
+      var cm = toMonth(feat.created, offset)
       if (cm && createdMap[cm] !== undefined) createdMap[cm]++
     }
-    if (feat.resolved && feat.resolved >= cutoff) {
-      var rm = toMonth(feat.resolved)
+    if (onOrAfter(feat.resolved, cutoff.ms)) {
+      var rm = toMonth(feat.resolved, offset)
       if (rm && resolvedMap[rm] !== undefined) resolvedMap[rm]++
     }
   }
@@ -216,7 +281,8 @@ function nextMonth(ym) {
  * Returns sorted array of { component, created, resolved, open, net, pressure_ratio, ..._jql }
  */
 function computeComponentPressure(features, lookbackMonths) {
-  var cutoff = lookbackDate(lookbackMonths)
+  var offset = jiraOffset(features)
+  var cutoff = lookbackCutoff(lookbackMonths, offset)
   var compMap = {} // component -> { created, resolved, open }
 
   for (var fi = 0; fi < features.length; fi++) {
@@ -229,10 +295,10 @@ function computeComponentPressure(features, lookbackMonths) {
         compMap[comp] = { created: 0, resolved: 0, open: 0 }
       }
 
-      if (feat.created && feat.created >= cutoff) {
+      if (onOrAfter(feat.created, cutoff.ms)) {
         compMap[comp].created++
       }
-      if (feat.resolved && feat.resolved >= cutoff) {
+      if (onOrAfter(feat.resolved, cutoff.ms)) {
         compMap[comp].resolved++
       }
       if (feat.statusCategory !== 'Done') {
@@ -255,9 +321,9 @@ function computeComponentPressure(features, lookbackMonths) {
     result.push({
       component: name,
       created: data.created,
-      created_jql: jqlUrl(baseJql + compQ + ' AND created >= "' + cutoff + '"'),
+      created_jql: jqlUrl(baseJql + compQ + ' AND created >= "' + cutoff.dateStr + '"'),
       resolved: data.resolved,
-      resolved_jql: jqlUrl(baseJql + compQ + ' AND resolved >= "' + cutoff + '"'),
+      resolved_jql: jqlUrl(baseJql + compQ + ' AND resolved >= "' + cutoff.dateStr + '"'),
       open: data.open,
       open_jql: jqlUrl(baseJql + compQ + ' AND statusCategory != Done'),
       net: net,
@@ -277,7 +343,8 @@ function computeComponentPressure(features, lookbackMonths) {
  * Returns { status_breakdown, monthly_arrivals, per_component_pending }
  */
 function computeRfePipeline(rfes, lookbackMonths) {
-  var cutoff = lookbackDate(lookbackMonths)
+  var offset = jiraOffset(rfes)
+  var cutoff = lookbackCutoff(lookbackMonths, offset)
   var monthRange = generateMonthRange(lookbackMonths)
 
   // Status breakdown
@@ -307,8 +374,8 @@ function computeRfePipeline(rfes, lookbackMonths) {
   for (var mi = 0; mi < monthRange.length; mi++) arrivalMap[monthRange[mi]] = 0
 
   for (var ai = 0; ai < rfes.length; ai++) {
-    if (rfes[ai].created && rfes[ai].created >= cutoff) {
-      var m = toMonth(rfes[ai].created)
+    if (onOrAfter(rfes[ai].created, cutoff.ms)) {
+      var m = toMonth(rfes[ai].created, offset)
       if (m && arrivalMap[m] !== undefined) arrivalMap[m]++
     }
   }
@@ -389,7 +456,8 @@ function computeBacklogHalfLife(componentPressure, lookbackMonths) {
  */
 function buildHeatmapMatrix(features, lookbackMonths) {
   var monthRange = generateMonthRange(lookbackMonths)
-  var cutoff = lookbackDate(lookbackMonths)
+  var offset = jiraOffset(features)
+  var cutoff = lookbackCutoff(lookbackMonths, offset)
 
   // Count created and resolved per component per month
   var compMonthCreated = {} // comp -> { month -> count }
@@ -407,15 +475,15 @@ function buildHeatmapMatrix(features, lookbackMonths) {
       var comp = comps[ci]
       activeComps[comp] = true
 
-      if (feat.created && feat.created >= cutoff) {
-        var cm = toMonth(feat.created)
+      if (onOrAfter(feat.created, cutoff.ms)) {
+        var cm = toMonth(feat.created, offset)
         if (cm) {
           if (!compMonthCreated[comp]) compMonthCreated[comp] = {}
           compMonthCreated[comp][cm] = (compMonthCreated[comp][cm] || 0) + 1
         }
       }
-      if (feat.resolved && feat.resolved >= cutoff) {
-        var rm = toMonth(feat.resolved)
+      if (onOrAfter(feat.resolved, cutoff.ms)) {
+        var rm = toMonth(feat.resolved, offset)
         if (rm) {
           if (!compMonthResolved[comp]) compMonthResolved[comp] = {}
           compMonthResolved[comp][rm] = (compMonthResolved[comp][rm] || 0) + 1
@@ -475,7 +543,8 @@ function buildHeatmapMatrix(features, lookbackMonths) {
  */
 function computeTrend(features, lookbackMonths) {
   var monthRange = generateMonthRange(lookbackMonths)
-  var cutoff = lookbackDate(lookbackMonths)
+  var offset = jiraOffset(features)
+  var cutoff = lookbackCutoff(lookbackMonths, offset)
   var midIdx = Math.floor(monthRange.length / 2)
   var firstHalfMonths = monthRange.slice(0, midIdx)
   var secondHalfMonths = monthRange.slice(midIdx)
@@ -501,16 +570,16 @@ function computeTrend(features, lookbackMonths) {
         compData[comp] = { h1_created: 0, h1_resolved: 0, h2_created: 0, h2_resolved: 0 }
       }
 
-      if (feat.created && feat.created >= cutoff) {
-        var cm = toMonth(feat.created)
+      if (onOrAfter(feat.created, cutoff.ms)) {
+        var cm = toMonth(feat.created, offset)
         if (cm) {
           activeComps[comp] = true
           if (firstHalfSet[cm]) compData[comp].h1_created++
           else if (secondHalfSet[cm]) compData[comp].h2_created++
         }
       }
-      if (feat.resolved && feat.resolved >= cutoff) {
-        var rm = toMonth(feat.resolved)
+      if (onOrAfter(feat.resolved, cutoff.ms)) {
+        var rm = toMonth(feat.resolved, offset)
         if (rm) {
           activeComps[comp] = true
           if (firstHalfSet[rm]) compData[comp].h1_resolved++
@@ -659,15 +728,16 @@ async function fetchAndAnalyze(lookbackMonths, storage) {
   var scorecard = computeScorecard(componentPressure, rfePipeline, backlogHalfLife, trend)
 
   // Executive summary
-  var cutoff = lookbackDate(lookbackMonths)
+  var offset = jiraOffset(features.length ? features : rfes)
+  var cutoff = lookbackCutoff(lookbackMonths, offset)
   var baseJql = 'project = ' + FEATURE_PROJECT + ' AND issuetype = Feature'
   var rfeBaseJql = 'project = ' + RFE_PROJECT + ' AND issuetype = "Feature Request"'
   var pendingStatusJql = 'status in (New, Draft, "Stakeholder review", "Stakeholder Feedback", "Pending Approval")'
   var acceptedStatusJql = 'status in (Approved, "In Progress", Refinement, Planning, Review, Resolved)'
 
   var totalOpen = features.filter(function (f) { return f.statusCategory !== 'Done' }).length
-  var totalCreated = features.filter(function (f) { return f.created && f.created >= cutoff }).length
-  var totalResolved = features.filter(function (f) { return f.resolved && f.resolved >= cutoff }).length
+  var totalCreated = features.filter(function (f) { return onOrAfter(f.created, cutoff.ms) }).length
+  var totalResolved = features.filter(function (f) { return onOrAfter(f.resolved, cutoff.ms) }).length
   var burnRate = Math.round(100 * totalResolved / lookbackMonths) / 100
   var monthsToClear = burnRate > 0 ? Math.round(10 * totalOpen / burnRate) / 10 : Infinity
 
@@ -690,9 +760,9 @@ async function fetchAndAnalyze(lookbackMonths, storage) {
       open_features: totalOpen,
       open_features_jql: jqlUrl(baseJql + ' AND statusCategory != Done'),
       created_in_window: totalCreated,
-      created_in_window_jql: jqlUrl(baseJql + ' AND created >= "' + cutoff + '"'),
+      created_in_window_jql: jqlUrl(baseJql + ' AND created >= "' + cutoff.dateStr + '"'),
       resolved_in_window: totalResolved,
-      resolved_in_window_jql: jqlUrl(baseJql + ' AND resolved >= "' + cutoff + '"'),
+      resolved_in_window_jql: jqlUrl(baseJql + ' AND resolved >= "' + cutoff.dateStr + '"'),
       net_in_window: totalCreated - totalResolved,
       monthly_burn_rate: burnRate,
       months_to_clear: monthsToClear,
@@ -895,6 +965,10 @@ module.exports.toMonth = toMonth
 module.exports.nextMonth = nextMonth
 module.exports.generateMonthRange = generateMonthRange
 module.exports.lookbackDate = lookbackDate
+module.exports.lookbackCutoff = lookbackCutoff
+module.exports.onOrAfter = onOrAfter
+module.exports.jiraOffset = jiraOffset
+module.exports.offsetMin = offsetMin
 module.exports.classifyByMonth = classifyByMonth
 module.exports.computeComponentPressure = computeComponentPressure
 module.exports.computeRfePipeline = computeRfePipeline

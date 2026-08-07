@@ -71,6 +71,13 @@ function formatMonths(val) {
   return val
 }
 
+function formatTimestamp(iso) {
+  if (!iso) return 'unknown'
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return 'unknown'
+  return d.toLocaleString()
+}
+
 function riskColor(level) {
   const colors = {
     critical: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
@@ -221,6 +228,10 @@ onBeforeUnmount(() => { cleanup() })
             'text-gray-600 dark:text-gray-400': summary.backlog_trend === 'stable',
           }">{{ summary.backlog_trend }}</strong></span>
         </div>
+
+        <p v-if="metadata && metadata.data_timestamp" class="mt-2 text-xs text-gray-400 dark:text-gray-500">
+          Data as of {{ formatTimestamp(metadata.data_timestamp) }} · counts are a snapshot; JQL links query Jira live, so live totals may differ by a few.
+        </p>
 
         <!-- Executive Summary — RFEs (RHAIRFE) -->
         <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mt-5 mb-2">Feature Requests (RHAIRFE)</h3>
