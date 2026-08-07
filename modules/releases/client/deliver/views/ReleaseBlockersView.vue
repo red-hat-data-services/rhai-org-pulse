@@ -98,6 +98,9 @@
         </button>
       </div>
 
+      <!-- Test Sign-Off Risk Assessment -->
+      <TfaRiskSection v-if="effectiveReleaseNumber" :version="effectiveReleaseNumber" />
+
       <!-- Timing Breakdown + Aging Metrics row -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
@@ -329,6 +332,7 @@
 <script setup>
 import { ref, computed, inject, watch } from 'vue'
 import { useReleaseBlockers } from '../composables/useReleaseBlockers.js'
+import TfaRiskSection from '../components/TfaRiskSection.vue'
 
 const filter = inject('releaseFilter')
 const moduleNav = inject('moduleNav', null)
