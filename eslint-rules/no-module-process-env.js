@@ -50,7 +50,9 @@ const ALLOWED = new Set([
   // AI Eng: customer-insights module
   'SHEETS_CACHE_TTL_MS',
   'GOOGLE_OAUTH_CALLBACK_URL',
-  'VITE_API_BASE_URL'
+  'VITE_API_BASE_URL',
+  // AI Eng: workflow-validation module (OpenSearch endpoint — no auth, non-secret)
+  'OPENSEARCH_URL'
 ])
 
 module.exports = {

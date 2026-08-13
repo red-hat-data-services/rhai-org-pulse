@@ -1,0 +1,23 @@
+{
+  "name": "Workflow Validation",
+  "slug": "workflow-validation",
+  "description": "AI-driven RHOAI workflow validation — test runs, pass/fail, cost, and bugs across releases",
+  "icon": "flask-conical",
+  "order": 40,
+  "defaultEnabled": true,
+  "requires": [],
+  "client": {
+    "entry": "./client/index.js",
+    "navItems": [
+      { "id": "overview", "label": "Overview", "icon": "layout-dashboard", "default": true },
+      { "id": "runs", "label": "Test Runs", "icon": "list-checks" },
+      { "id": "bugs", "label": "Bugs", "icon": "bug" }
+    ],
+    "hiddenRoutes": {
+      "run-detail": "runs"
+    }
+  },
+  "server": {
+    "entry": "./server/index.js"
+  }
+}
