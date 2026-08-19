@@ -99,5 +99,50 @@
         ]
       }
     }
+  },
+  "release_cycle_metrics": {
+    "code_freeze_date": "2026-02-24",
+    "build_milestones": [
+      {
+        "name": "RC1",
+        "build_complete_date": "2026-03-03",
+        "days_since_code_freeze": 5
+      },
+      {
+        "name": "RC2",
+        "build_complete_date": "2026-03-17",
+        "days_since_code_freeze": 15
+      }
+    ],
+    "test_execution_timelines": [
+      {
+        "phase": "RC1",
+        "build_ready_date": "2026-03-03",
+        "test_started_date": "2026-03-04",
+        "days_to_test_started": 1,
+        "test_finished_date": "2026-03-13",
+        "days_to_test_finished": 8,
+        "tfas_passed_date": "2026-03-05",
+        "days_to_tfas_passed": 2,
+        "tfas_triaged_date": "2026-03-11",
+        "days_to_tfas_triaged": 6,
+        "blockers_resolved_date": "2026-03-12",
+        "days_to_blockers_resolved": 7
+      },
+      {
+        "phase": "RC2",
+        "build_ready_date": "2026-03-17",
+        "test_started_date": "2026-03-18",
+        "days_to_test_started": 1,
+        "test_finished_date": null,
+        "days_to_test_finished": null,
+        "tfas_passed_date": "2026-03-19",
+        "days_to_tfas_passed": 2,
+        "tfas_triaged_date": null,
+        "days_to_tfas_triaged": null,
+        "blockers_resolved_date": null,
+        "days_to_blockers_resolved": null
+      }
+    ]
   }
 }
