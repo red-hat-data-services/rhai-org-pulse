@@ -12,133 +12,112 @@
  */
 export const viewOwners = {
   // ai-catalyst
-  'ai-catalyst/board':                             'Nati Fridman',
-  'ai-catalyst/candidate-detail':                  'Nati Fridman',
-  'ai-catalyst/catalog':                           'Nati Fridman',
-  'ai-catalyst/report':                            'Nati Fridman',
-  'ai-catalyst/showcase-detail':                   'Nati Fridman',
+  'ai-catalyst/board':                             'github-actions[bot]',
+  'ai-catalyst/candidate-detail':                  'github-actions[bot]',
+  'ai-catalyst/catalog':                           'github-actions[bot]',
+  'ai-catalyst/report':                            'github-actions[bot]',
+  'ai-catalyst/showcase-detail':                   'github-actions[bot]',
 
   // ai-impact
-  'ai-impact/ai-factory-guide':                    'Alex Corvin',
-  'ai-impact/autofix':                             'Alex Corvin',
-  'ai-impact/build-release':                       'Deepak Chourasia',
-  'ai-impact/documentation':                       'tarilabs',
-  'ai-impact/feature-decomposer':                  'Eder Ignatowicz',
-  'ai-impact/feature-review':                      'Alex Corvin',
-  'ai-impact/implementation':                      'Alex Corvin',
-  'ai-impact/rfe-review':                          'Alex Corvin',
-  'ai-impact/security':                            'Alex Corvin',
-  'ai-impact/test-plan-review':                    'Kamesh Akella',
+  'ai-impact/ai-factory-guide':                    'github-actions[bot]',
+  'ai-impact/autofix':                             'github-actions[bot]',
+  'ai-impact/build-release':                       'github-actions[bot]',
+  'ai-impact/documentation':                       'github-actions[bot]',
+  'ai-impact/feature-decomposer':                  'github-actions[bot]',
+  'ai-impact/feature-review':                      'github-actions[bot]',
+  'ai-impact/implementation':                      'github-actions[bot]',
+  'ai-impact/rfe-review':                          'github-actions[bot]',
+  'ai-impact/security':                            'github-actions[bot]',
+  'ai-impact/test-plan-review':                    'github-actions[bot]',
 
   // customer-insights
-  'customer-insights/dashboard':                   'ankristo-rh',
-  'customer-insights/import':                      'ankristo-rh',
-  'customer-insights/kanban':                      'ankristo-rh',
-  'customer-insights/rfe-creator':                 'ankristo-rh',
-  'customer-insights/roadmap':                     'ankristo-rh',
+  'customer-insights/dashboard':                   'github-actions[bot]',
+  'customer-insights/import':                      'github-actions[bot]',
+  'customer-insights/kanban':                      'github-actions[bot]',
+  'customer-insights/rfe-creator':                 'github-actions[bot]',
+  'customer-insights/roadmap':                     'github-actions[bot]',
 
   // okr-hub
-  'okr-hub/deep-dive':                             'Saiesh Prabhu',
-  'okr-hub/reports':                               'Saiesh Prabhu',
-  'okr-hub/timeline':                              'Saiesh Prabhu',
+  'okr-hub/deep-dive':                             'github-actions[bot]',
+  'okr-hub/reports':                               'github-actions[bot]',
+  'okr-hub/timeline':                              'github-actions[bot]',
 
   // pm-pipeline
-  'pm-pipeline/learn':                             'Jen Albertson',
-  'pm-pipeline/my-pipeline':                       'Jen Albertson',
-  'pm-pipeline/planning-prep':                     'Jen Albertson',
+  'pm-pipeline/learn':                             'github-actions[bot]',
+  'pm-pipeline/my-pipeline':                       'github-actions[bot]',
+  'pm-pipeline/planning-prep':                     'github-actions[bot]',
 
   // product-builds
-  'product-builds/artifact-detail':                'Pavol Pitonak',
-  'product-builds/base-images':                    'Pavol Pitonak',
-  'product-builds/builder-images':                 'Pavol Pitonak',
-  'product-builds/drop-detail':                    'Pavol Pitonak',
-  'product-builds/overview':                       'Giulia Naponiello',
-  'product-builds/package-analysis':               'Einat Pacifici',
-  'product-builds/rhaiis':                         'Pavol Pitonak',
-  'product-builds/rhel-ai':                        'Pavol Pitonak',
-  'product-builds/search':                         'Rishabh Kothari',
-  'product-builds/series-detail':                  'Giulia Naponiello',
-  'product-builds/wheel-collections':              'Pavol Pitonak',
+  'product-builds/artifact-detail':                'github-actions[bot]',
+  'product-builds/base-images':                    'github-actions[bot]',
+  'product-builds/builder-images':                 'github-actions[bot]',
+  'product-builds/drop-detail':                    'github-actions[bot]',
+  'product-builds/overview':                       'github-actions[bot]',
+  'product-builds/package-analysis':               'github-actions[bot]',
+  'product-builds/rhaiis':                         'github-actions[bot]',
+  'product-builds/rhel-ai':                        'github-actions[bot]',
+  'product-builds/search':                         'github-actions[bot]',
+  'product-builds/series-detail':                  'github-actions[bot]',
+  'product-builds/wheel-collections':              'github-actions[bot]',
 
   // releases
-  'releases/audit':                                'Alex Corvin',
-  'releases/deliver':                              'Alex Corvin',
-  'releases/execute':                              'Alex Corvin',
-  'releases/feature-detail':                       'shuels2',
-  'releases/plan':                                 'Alex Corvin',
-  'releases/registry':                             'Alex Corvin',
-  'releases/reports':                              'Alex Corvin',
-  'releases/schedule':                             'Paul McCarthy',
+  'releases/audit':                                'github-actions[bot]',
+  'releases/deliver':                              'github-actions[bot]',
+  'releases/execute':                              'github-actions[bot]',
+  'releases/feature-detail':                       'github-actions[bot]',
+  'releases/plan':                                 'github-actions[bot]',
+  'releases/registry':                             'github-actions[bot]',
+  'releases/reports':                              'github-actions[bot]',
+  'releases/schedule':                             'github-actions[bot]',
 
   // system-health
-  'system-health/component-maturity':              'Dana Gutride',
-  'system-health/disconnected-repo-detail':        'Ajay Jaganathan',
-  'system-health/e2e-run-detail':                  'Ajay Jaganathan',
-  'system-health/odh-e2e-health':                  'Ajay Jaganathan',
-  'system-health/quality-analysis':                'Dana Gutride',
+  'system-health/component-maturity':              'github-actions[bot]',
+  'system-health/disconnected-repo-detail':        'github-actions[bot]',
+  'system-health/e2e-run-detail':                  'github-actions[bot]',
+  'system-health/odh-e2e-health':                  'github-actions[bot]',
+  'system-health/quality-analysis':                'github-actions[bot]',
 
   // team-tracker
-  'team-tracker/home':                             'Dipanshu Gupta',
-  'team-tracker/jira-taxonomy':                    'Alex Corvin',
-  'team-tracker/manage':                           'Alex Corvin',
-  'team-tracker/manager-dashboard':                'Alex Corvin',
-  'team-tracker/org-dashboard':                    'Alex Corvin',
-  'team-tracker/org-explorer':                     'Dipanshu Gupta',
-  'team-tracker/people':                           'Dipanshu Gupta',
-  'team-tracker/person-detail':                    'Dipanshu Gupta',
-  'team-tracker/reports':                          'Alex Corvin',
-  'team-tracker/team-detail':                      'Alex Corvin',
-  'team-tracker/unassigned':                       'Alex Corvin',
+  'team-tracker/jira-taxonomy':                    'github-actions[bot]',
 
   // upstream-pulse
-  'upstream-pulse/dashboard':                      'Dipanshu Gupta',
-  'upstream-pulse/insights':                       'Dipanshu Gupta',
-  'upstream-pulse/org-detail':                     'Dipanshu Gupta',
-  'upstream-pulse/portfolio':                      'Dipanshu Gupta',
-  'upstream-pulse/project-detail':                 'Dipanshu Gupta',
-  'upstream-pulse/strategy':                       'Dipanshu Gupta',
+  'upstream-pulse/dashboard':                      'github-actions[bot]',
+  'upstream-pulse/insights':                       'github-actions[bot]',
+  'upstream-pulse/org-detail':                     'github-actions[bot]',
+  'upstream-pulse/portfolio':                      'github-actions[bot]',
+  'upstream-pulse/project-detail':                 'github-actions[bot]',
+  'upstream-pulse/strategy':                       'github-actions[bot]',
 
   // ── Sub-tab owners (module/view/tab) ──
   // These override the view-level owner when a specific tab is active.
 
   // releases > execute
-  'releases/execute/feature-list':                 'Alex Corvin',
-  'releases/execute/feature-status':               'Saiesh Prabhu',
+  'releases/execute/feature-list':                 'github-actions[bot]',
+  'releases/execute/feature-status':               'github-actions[bot]',
 
   // releases > plan
-  'releases/plan/bu-feedback':                     'Saiesh Prabhu',
-  'releases/plan/feature-readiness':               'Erle Marion',
-  'releases/plan/outcomes':                        'Erle Marion',
+  'releases/plan/bu-feedback':                     'github-actions[bot]',
+  'releases/plan/feature-readiness':               'github-actions[bot]',
+  'releases/plan/outcomes':                        'github-actions[bot]',
 
   // releases > registry
-  'releases/registry/hygiene':                     'Alex Corvin',
+  'releases/registry/hygiene':                     'github-actions[bot]',
 
   // system-health > component-maturity
-  'system-health/component-maturity/disconnected': 'Ajay Jaganathan',
-
-  // team-tracker > manage
-  'team-tracker/manage/data-quality':              'Alex Corvin',
-  'team-tracker/manage/field-options':             'Alex Corvin',
-  'team-tracker/manage/fields':                    'Alex Corvin',
-  'team-tracker/manage/teams':                     'Alex Corvin',
+  'system-health/component-maturity/disconnected': 'github-actions[bot]',
 
   // ── Report owners (module/view/reportId) ──
   // These override the view-level owner when a specific report is selected.
 
   // releases > reports
-  'releases/reports/ai-adoption':                  'Saiesh Prabhu',
-  'releases/reports/capacity-commitment':          'Alex Corvin',
-  'releases/reports/cve-sustaining':               'Saiesh Prabhu',
-  'releases/reports/feature-pressure':             'Dimitri Saridakis',
-  'releases/reports/program-hygiene':              'Alex Corvin',
-  'releases/reports/release-readiness':            'Arthy Loganathan',
-  'releases/reports/rhoai-component-architectures': 'Waldemar Znoinski',
-  'releases/reports/tv-fv-delta':                  'Dimitri Saridakis',
-
-  // team-tracker > reports
-  'team-tracker/reports/allocation':               'Alex Corvin',
-  'team-tracker/reports/team-comparison':          'Alex Corvin',
-  'team-tracker/reports/trends':                   'Alex Corvin',
+  'releases/reports/ai-adoption':                  'github-actions[bot]',
+  'releases/reports/capacity-commitment':          'github-actions[bot]',
+  'releases/reports/component-architectures':      'github-actions[bot]',
+  'releases/reports/cve-sustaining':               'github-actions[bot]',
+  'releases/reports/feature-pressure':             'github-actions[bot]',
+  'releases/reports/program-hygiene':              'github-actions[bot]',
+  'releases/reports/release-readiness':            'github-actions[bot]',
+  'releases/reports/tv-fv-delta':                  'github-actions[bot]',
 }
 
 /**
