@@ -603,37 +603,44 @@ function buildExport(classifications, releases, fetchTimestamp, allComponents, j
       dates = releaseDates[release] || releaseDates[normVer(release)] || {}
     }
 
-    // Build compound aligned_on_time JQL covering all three cases:
-    //   Case 1: TV = R, FV = R (exact match)
-    //   Case 2: TV = R, FV = earlier same-product release (ahead of schedule)
-    //   Case 3: FV = R, TV = later same-product release (also ahead of schedule)
-    // Note: features with FV pointing outside the tracked releases array won't appear
-    // in this JQL — we can only enumerate releases known to the pipeline.
-    var rParsed = parseReleaseName(release)
-    var sameProduct = releases.filter(function(r) {
-      if (r === release) return false
-      var p = parseReleaseName(r)
-      return p && rParsed && p.product === rParsed.product
-    })
-    var earlierReleases = sameProduct.filter(function(r) {
-      var cmp = compareReleasesTemporally(r, release)
-      return cmp !== null && cmp < 0
-    })
-    var laterReleases = sameProduct.filter(function(r) {
-      var cmp = compareReleasesTemporally(r, release)
-      return cmp !== null && cmp > 0
-    })
-    var allFvForAligned = [release].concat(earlierReleases)
-    var case12 = '"Target Version" in (' + quoteRelease(release) + ') AND fixVersion in (' + allFvForAligned.map(quoteRelease).join(', ') + ')'
-    var case3 = laterReleases.length > 0
-      ? 'fixVersion in (' + quoteRelease(release) + ') AND "Target Version" in (' + laterReleases.map(quoteRelease).join(', ') + ')'
-      : null
-    var alignedOnTimeJql = case3 ? '(' + case12 + ') OR (' + case3 + ')' : case12
+    // Build JQL aliases for TV/FV to handle alternate Jira version name formats.
+    var relNorm = normVer(release)
+    var tvAliasesForRelease = new Set([release])
+    var fvAliasesForRelease = new Set([release])
+
+    for (var ii = 0; ii < items.length; ii++) {
+      var tvParts = items[ii].target_version ? items[ii].target_version.split(',').map(function(s) { return s.trim() }).filter(Boolean) : []
+      var fvParts = items[ii].fix_versions ? items[ii].fix_versions.split(',').map(function(s) { return s.trim() }).filter(Boolean) : []
+      for (var tii = 0; tii < tvParts.length; tii++) {
+        if (normVer(tvParts[tii]) === relNorm) tvAliasesForRelease.add(tvParts[tii])
+      }
+      for (var fii = 0; fii < fvParts.length; fii++) {
+        if (normVer(fvParts[fii]) === relNorm) fvAliasesForRelease.add(fvParts[fii])
+      }
+    }
+
+    var tvAliases = Array.from(tvAliasesForRelease)
+    var fvAliases = Array.from(fvAliasesForRelease)
+    var allAliases = Array.from(new Set(tvAliases.concat(fvAliases)))
+
+    // Key-based JQL: exact issue list guarantees table count == Jira link count.
+    // Cap at 300 keys to stay within CloudFront's ~8 KB URL limit (RHAISTRAT-XXXX
+    // keys are ~20 chars URL-encoded each; 300 keys ≈ 6 KB, safely under the ceiling).
+    // Fall back to alias JQL for very large releases (live filter, may drift slightly).
+    var KEY_JQL_LIMIT = 300
+    var alignedKeys = items
+      .filter(function(it) { return it.category === 'aligned_on_time' })
+      .map(function(it) { return it.key })
+      .filter(function(k) { return k && /^[A-Z]+-\d+$/.test(k) })
+    var aliasFallbackJql = '"Target Version" in (' + tvAliases.map(quoteRelease).join(', ') + ') AND fixVersion in (' + fvAliases.map(quoteRelease).join(', ') + ')'
+    var alignedOnTimeJql = alignedKeys.length > 0 && alignedKeys.length <= KEY_JQL_LIMIT
+      ? 'key in (' + alignedKeys.join(', ') + ')'
+      : aliasFallbackJql
 
     executiveSummary.push({
       release: release,
       total: nTotal,
-      total_jql: jqlUrl(baseJql + ' AND ("Target Version" in (' + quoteRelease(release) + ') OR fixVersion in (' + quoteRelease(release) + '))'),
+      total_jql: jqlUrl(baseJql + ' AND ("Target Version" in (' + allAliases.map(quoteRelease).join(', ') + ') OR fixVersion in (' + allAliases.map(quoteRelease).join(', ') + '))'),
       aligned_on_time: cats.aligned_on_time,
       aligned_on_time_jql: jqlUrl(baseJql + ' AND (' + alignedOnTimeJql + ')'),
       aligned_late: cats.aligned_late,
@@ -643,9 +650,9 @@ function buildExport(classifications, releases, fetchTimestamp, allComponents, j
       misaligned: cats.misaligned,
       misaligned_jql: null, // Cannot express temporal + freeze logic in JQL
       tv_only: cats.tv_only,
-      tv_only_jql: jqlUrl(baseJql + ' AND "Target Version" in (' + quoteRelease(release) + ') AND fixVersion is EMPTY'),
+      tv_only_jql: jqlUrl(baseJql + ' AND "Target Version" in (' + tvAliases.map(quoteRelease).join(', ') + ') AND fixVersion is EMPTY'),
       fv_only: cats.fv_only,
-      fv_only_jql: jqlUrl(baseJql + ' AND fixVersion in (' + quoteRelease(release) + ') AND "Target Version" is EMPTY'),
+      fv_only_jql: jqlUrl(baseJql + ' AND fixVersion in (' + fvAliases.map(quoteRelease).join(', ') + ') AND "Target Version" is EMPTY'),
       alignment_pct: alignPct,
       ga_date: dates.dueDate || null,
       planning_freeze: dates.planningFreezeDate || null,
