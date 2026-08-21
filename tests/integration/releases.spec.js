@@ -1053,6 +1053,33 @@ test.describe('Releases Release Readiness @releases', () => {
     const body = await res.json();
     expect(body).not.toHaveProperty('director_summary');
   });
+
+  test('release readiness metrics API returns release_cycle_metrics shape', async ({ request }) => {
+    const res = await request.get('/api/modules/releases/release-readiness?version=rhoai-3.5.EA2');
+    if (res.status() === 404) {
+      test.skip();
+      return;
+    }
+    expect(res.ok()).toBe(true);
+    const body = await res.json();
+    expect(body).toHaveProperty('release_cycle_metrics');
+    expect(body.release_cycle_metrics).toHaveProperty('build_milestones');
+    expect(body.release_cycle_metrics).toHaveProperty('test_execution_timelines');
+    expect(Array.isArray(body.release_cycle_metrics.build_milestones)).toBe(true);
+    expect(Array.isArray(body.release_cycle_metrics.test_execution_timelines)).toBe(true);
+  });
+
+  test('release readiness report shows Release Cycle Metrics section', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=release-readiness&version=rhoai-3.5.EA2');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.locator('text=Release Cycle Metrics').first()).toBeVisible();
+    await expect(page.locator('text=Build Milestones').first()).toBeVisible();
+    await expect(page.locator('text=Test Execution Timelines').first()).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
 });
 
 /**

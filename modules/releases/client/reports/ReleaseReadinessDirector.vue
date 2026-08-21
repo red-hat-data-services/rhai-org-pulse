@@ -442,6 +442,91 @@
         </div>
       </div>
 
+      <!-- Section 5: Release Cycle Metrics -->
+      <div v-if="releaseCycleMetrics" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
+        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Release Cycle Metrics</h3>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Working days between key milestones (Mon–Fri, excluding weekends)</p>
+        </div>
+
+        <div class="p-4 space-y-6">
+          <!-- Build Milestones -->
+          <div v-if="releaseCycleMetrics.build_milestones?.length">
+            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Build Milestones — days since code freeze</p>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs border-collapse">
+                <thead>
+                  <tr class="bg-gray-50 dark:bg-gray-900">
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Milestone</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Code Freeze</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Build Complete</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Working Days</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                  <tr v-for="m in releaseCycleMetrics.build_milestones" :key="m.name" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                    <td class="px-3 py-2 font-medium text-gray-800 dark:text-gray-200">{{ m.name }} Build</td>
+                    <td class="px-3 py-2 text-gray-500 dark:text-gray-400">{{ formatMetricDate(releaseCycleMetrics.code_freeze_date) }}</td>
+                    <td class="px-3 py-2 text-gray-700 dark:text-gray-300">{{ formatMetricDate(m.build_complete_date) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(m.days_since_code_freeze, 5, 10)">{{ daysLabel(m.days_since_code_freeze) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Test Execution Timelines -->
+          <div v-if="releaseCycleMetrics.test_execution_timelines?.length">
+            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Test Execution Timelines — working days since build ready</p>
+            <div class="space-y-4">
+              <div v-for="timeline in releaseCycleMetrics.test_execution_timelines" :key="timeline.phase">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide">{{ timeline.phase }}</span>
+                  <span class="text-xs text-gray-400">build ready: {{ formatMetricDate(timeline.build_ready_date) }}</span>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-xs border-collapse">
+                    <thead>
+                      <tr class="bg-gray-50 dark:bg-gray-900">
+                        <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Milestone</th>
+                        <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Date</th>
+                        <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Working Days from Build Ready</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                      <tr class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                        <td class="px-3 py-2 text-gray-700 dark:text-gray-300">Test Run Started</td>
+                        <td class="px-3 py-2 text-gray-500 dark:text-gray-400">{{ formatMetricDate(timeline.test_started_date) }}</td>
+                        <td class="px-3 py-2" :class="daysClass(timeline.days_to_test_started, 3, 7)">{{ daysLabel(timeline.days_to_test_started) }}</td>
+                      </tr>
+                      <tr class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                        <td class="px-3 py-2 text-gray-700 dark:text-gray-300">Test Run Finished</td>
+                        <td class="px-3 py-2 text-gray-500 dark:text-gray-400">{{ formatMetricDate(timeline.test_finished_date) }}</td>
+                        <td class="px-3 py-2" :class="daysClass(timeline.days_to_test_finished, 8, 15)">{{ daysLabel(timeline.days_to_test_finished) }}</td>
+                      </tr>
+                      <tr class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                        <td class="px-3 py-2 text-gray-700 dark:text-gray-300">All TFAs Passed to Teams</td>
+                        <td class="px-3 py-2 text-gray-500 dark:text-gray-400">{{ formatMetricDate(timeline.tfas_passed_date) }}</td>
+                        <td class="px-3 py-2" :class="daysClass(timeline.days_to_tfas_passed, 3, 7)">{{ daysLabel(timeline.days_to_tfas_passed) }}</td>
+                      </tr>
+                      <tr class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                        <td class="px-3 py-2 text-gray-700 dark:text-gray-300">All TFAs Fully Triaged</td>
+                        <td class="px-3 py-2 text-gray-500 dark:text-gray-400">{{ formatMetricDate(timeline.tfas_triaged_date) }}</td>
+                        <td class="px-3 py-2" :class="daysClass(timeline.days_to_tfas_triaged, 5, 10)">{{ daysLabel(timeline.days_to_tfas_triaged) }}</td>
+                      </tr>
+                      <tr class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                        <td class="px-3 py-2 text-gray-700 dark:text-gray-300">All Blocker Bugs Resolved</td>
+                        <td class="px-3 py-2 text-gray-500 dark:text-gray-400">{{ formatMetricDate(timeline.blockers_resolved_date) }}</td>
+                        <td class="px-3 py-2" :class="daysClass(timeline.days_to_blockers_resolved, 5, 12)">{{ daysLabel(timeline.days_to_blockers_resolved) }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
     </div>
   </div>
@@ -829,5 +914,28 @@ function phaseBarColor(rag) {
 
 function phasePct(phase) {
   return phase.total > 0 ? Math.round((phase.done / phase.total) * 100) : 0
+}
+
+// --- Release Cycle Metrics ---
+
+const releaseCycleMetrics = computed(() => data.value?.release_cycle_metrics || null)
+
+function formatMetricDate(dateStr) {
+  if (!dateStr) return '—'
+  const d = new Date(dateStr + 'T00:00:00')
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function daysLabel(n) {
+  if (n === null || n === undefined) return '—'
+  if (n === 0) return '0 days'
+  return `${n} day${n === 1 ? '' : 's'}`
+}
+
+function daysClass(n, warnAt, alertAt) {
+  if (n === null || n === undefined) return 'text-gray-400 dark:text-gray-500'
+  if (n >= alertAt) return 'text-red-600 dark:text-red-400 font-semibold'
+  if (n >= warnAt) return 'text-amber-600 dark:text-amber-400 font-semibold'
+  return 'text-green-600 dark:text-green-400 font-semibold'
 }
 </script>

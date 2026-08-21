@@ -128,11 +128,11 @@ export const viewOwners = {
   // releases > reports
   'releases/reports/ai-adoption':                  'Saiesh Prabhu',
   'releases/reports/capacity-commitment':          'Alex Corvin',
+  'releases/reports/component-architectures':      'Waldemar Znoinski',
   'releases/reports/cve-sustaining':               'Saiesh Prabhu',
   'releases/reports/feature-pressure':             'Dimitri Saridakis',
   'releases/reports/program-hygiene':              'Alex Corvin',
   'releases/reports/release-readiness':            'Arthy Loganathan',
-  'releases/reports/rhoai-component-architectures': 'Waldemar Znoinski',
   'releases/reports/tv-fv-delta':                  'Dimitri Saridakis',
 
   // team-tracker > reports
